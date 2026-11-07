@@ -1,0 +1,763 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "clock": "performance.timeOrigin + performance.now; epoch ms",
+  "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "diagnosticSha256": "772e2efead870ae53bdcf4c9ccd19af05e901c99c60a8ecbcaab3c6919328b8d",
+  "events": [
+    {
+      "kind": "submit",
+      "atMs": 1794072785336.5537,
+      "pid": 1666,
+      "job": 1,
+      "poolId": 1,
+      "task": "health",
+      "options": {
+        "ownerKey": "pool-warm",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 600000,
+        "estimatedBytes": 67108864,
+        "inputBytes": 0,
+        "serializationKey": ""
+      },
+      "stats": {
+        "queued": 0,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 0,
+        "peakReservedBytes": 0,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 1,
+        "workerCount": 0,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 0,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "constructor-start",
+      "atMs": 1794072785337.199,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "productionFile": "server/workers/compute-worker.js"
+    },
+    {
+      "kind": "constructor-end",
+      "atMs": 1794072785339.8289,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "threadId": 1
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072785340.7546,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1,
+      "task": "health"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072785340.804,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072785340.8286,
+      "pid": 1666,
+      "job": 1,
+      "poolId": 1,
+      "stats": {
+        "queued": 1,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 100663296,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 67108864,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 100663296,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "worker-boot",
+      "atMs": 1794072785383.712,
+      "threadId": 1,
+      "worker": 1,
+      "pid": 1666
+    },
+    {
+      "kind": "online",
+      "atMs": 1794072785384.7173,
+      "pid": 1666,
+      "worker": 1,
+      "threadId": 1
+    },
+    {
+      "kind": "worker-receive",
+      "atMs": 1794072785429.5452,
+      "threadId": 1,
+      "nativeId": 1,
+      "task": "health",
+      "worker": 1,
+      "pid": 1666
+    },
+    {
+      "kind": "worker-finish",
+      "atMs": 1794072785430.5435,
+      "threadId": 1,
+      "nativeId": 1,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.6658289999999738,
+        "retainedBytes": 9686171,
+        "outputBytes": 1024
+      },
+      "worker": 1,
+      "pid": 1666
+    },
+    {
+      "kind": "main-receive",
+      "atMs": 1794072785430.7693,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "nativeId": 1,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.6658289999999738,
+        "retainedBytes": 9686171,
+        "outputBytes": 1024
+      }
+    },
+    {
+      "kind": "main-receive-return",
+      "atMs": 1794072785431.1414,
+      "pid": 1666,
+      "worker": 1,
+      "job": 1,
+      "nativeId": 1
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072785431.229,
+      "pid": 1666,
+      "job": 1,
+      "poolId": 1,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.6658289999999738,
+        "retainedBytes": 9686171,
+        "outputBytes": 1024,
+        "queueWaitMs": 0.24304899999998497,
+        "durationMs": 94.009975,
+        "postMessageMs": 0.1315490000000068
+      },
+      "stats": {
+        "queued": 1,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 100663296,
+        "totalQueueWaitMs": 0.24304899999998497,
+        "totalDurationMs": 94.009975,
+        "totalPostMessageMs": 0.1315490000000068,
+        "lastQueueWaitMs": 0.24304899999998497,
+        "lastDurationMs": 94.009975,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9686171,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1024,
+        "reservedBytes": 43241627,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "release",
+      "atMs": 1794072785431.2998,
+      "pid": 1666,
+      "job": 1,
+      "poolId": 1
+    },
+    {
+      "kind": "submit",
+      "atMs": 1794072785431.409,
+      "pid": 1666,
+      "job": 2,
+      "poolId": 1,
+      "task": "health",
+      "options": {
+        "ownerKey": "synthetic-held-output",
+        "generation": "1",
+        "priority": "interactive",
+        "timeoutMs": 600000,
+        "estimatedBytes": 67108864,
+        "inputBytes": 0,
+        "serializationKey": ""
+      },
+      "stats": {
+        "queued": 1,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 100663296,
+        "totalQueueWaitMs": 0.24304899999998497,
+        "totalDurationMs": 94.009975,
+        "totalPostMessageMs": 0.1315490000000068,
+        "lastQueueWaitMs": 0.24304899999998497,
+        "lastDurationMs": 94.009975,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9686171,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 43240603,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072785431.5632,
+      "pid": 1666,
+      "worker": 1,
+      "job": 2,
+      "poolId": 1,
+      "nativeId": 2,
+      "task": "health"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072785431.5867,
+      "pid": 1666,
+      "worker": 1,
+      "job": 2,
+      "poolId": 1,
+      "nativeId": 2
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072785431.6018,
+      "pid": 1666,
+      "job": 2,
+      "poolId": 1,
+      "stats": {
+        "queued": 2,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.24304899999998497,
+        "totalDurationMs": 94.009975,
+        "totalPostMessageMs": 0.1315490000000068,
+        "lastQueueWaitMs": 0.24304899999998497,
+        "lastDurationMs": 94.009975,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 67108864,
+        "retainedWorkerBytes": 9686171,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 110349467,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "worker-receive",
+      "atMs": 1794072785431.711,
+      "threadId": 1,
+      "nativeId": 2,
+      "task": "health",
+      "worker": 1,
+      "pid": 1666
+    },
+    {
+      "kind": "worker-finish",
+      "atMs": 1794072785431.827,
+      "threadId": 1,
+      "nativeId": 2,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.060407999999995354,
+        "retainedBytes": 9702179,
+        "outputBytes": 1024
+      },
+      "worker": 1,
+      "pid": 1666
+    },
+    {
+      "kind": "main-receive",
+      "atMs": 1794072785431.9197,
+      "pid": 1666,
+      "worker": 1,
+      "job": 2,
+      "nativeId": 2,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.060407999999995354,
+        "retainedBytes": 9702179,
+        "outputBytes": 1024
+      }
+    },
+    {
+      "kind": "main-receive-return",
+      "atMs": 1794072785431.9583,
+      "pid": 1666,
+      "worker": 1,
+      "job": 2,
+      "nativeId": 2
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072785431.97,
+      "pid": 1666,
+      "job": 2,
+      "poolId": 1,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.060407999999995354,
+        "retainedBytes": 9702179,
+        "outputBytes": 1024,
+        "queueWaitMs": 0.03978499999999485,
+        "durationMs": 0.46531500000003234,
+        "postMessageMs": 0.044677000000035605
+      },
+      "stats": {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.2828339999999798,
+        "totalDurationMs": 94.47529000000003,
+        "totalPostMessageMs": 0.1762260000000424,
+        "lastQueueWaitMs": 0.03978499999999485,
+        "lastDurationMs": 0.46531500000003234,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9702179,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1024,
+        "reservedBytes": 43257635,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "sync-begin",
+      "atMs": 1794072785432.819,
+      "pid": 1666,
+      "scenario": "memory-released",
+      "workbook": "missing"
+    },
+    {
+      "kind": "service-submit",
+      "atMs": 1794072785435.1711,
+      "pid": 1666,
+      "call": 1,
+      "method": "runExcelUtility"
+    },
+    {
+      "kind": "submit",
+      "atMs": 1794072785435.5308,
+      "pid": 1666,
+      "job": 3,
+      "poolId": 1,
+      "task": "excel-utility",
+      "options": {
+        "ownerKey": "utility:synthetic-buyer",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 5000,
+        "estimatedBytes": 268447080,
+        "inputBytes": 1453,
+        "serializationKey": "shared-fx"
+      },
+      "stats": {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.2828339999999798,
+        "totalDurationMs": 94.47529000000003,
+        "totalPostMessageMs": 0.1762260000000424,
+        "lastQueueWaitMs": 0.03978499999999485,
+        "lastDurationMs": 0.46531500000003234,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9702179,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1024,
+        "reservedBytes": 43257635,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072785435.706,
+      "pid": 1666,
+      "job": 3,
+      "poolId": 1,
+      "stats": {
+        "queued": 3,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.2828339999999798,
+        "totalDurationMs": 94.47529000000003,
+        "totalPostMessageMs": 0.1762260000000424,
+        "lastQueueWaitMs": 0.03978499999999485,
+        "lastDurationMs": 0.46531500000003234,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 1,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9702179,
+        "queuedInputBytes": 1453,
+        "leasedOutputBytes": 1024,
+        "reservedBytes": 43259088,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "wait-state",
+      "atMs": 1794072785435.7927,
+      "pid": 1666,
+      "job": 3,
+      "blockers": [
+        "memory"
+      ],
+      "stats": {
+        "queued": 3,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.2828339999999798,
+        "totalDurationMs": 94.47529000000003,
+        "totalPostMessageMs": 0.1762260000000424,
+        "lastQueueWaitMs": 0.03978499999999485,
+        "lastDurationMs": 0.46531500000003234,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 1,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9702179,
+        "queuedInputBytes": 1453,
+        "leasedOutputBytes": 1024,
+        "reservedBytes": 43259088,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "release",
+      "atMs": 1794072786431.8953,
+      "pid": 1666,
+      "job": 2,
+      "poolId": 1
+    },
+    {
+      "kind": "wait-state",
+      "atMs": 1794072786432.2852,
+      "pid": 1666,
+      "job": 3,
+      "blockers": [
+        "slots",
+        "memory"
+      ],
+      "stats": {
+        "queued": 3,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 110349467,
+        "totalQueueWaitMs": 0.2828339999999798,
+        "totalDurationMs": 94.47529000000003,
+        "totalPostMessageMs": 0.1762260000000424,
+        "lastQueueWaitMs": 0.03978499999999485,
+        "lastDurationMs": 0.46531500000003234,
+        "maxQueueWaitMs": 0.24304899999998497,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 1,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 9702179,
+        "queuedInputBytes": 1453,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 43258064,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "controlled-lease-release",
+      "atMs": 1794072786432.289,
+      "pid": 1666
+    },
+    {
+      "kind": "worker-exit",
+      "atMs": 1794072786433.9363,
+      "pid": 1666,
+      "worker": 1,
+      "code": 1
+    },
+    {
+      "kind": "constructor-start",
+      "atMs": 1794072786434.5188,
+      "pid": 1666,
+      "worker": 2,
+      "job": null,
+      "productionFile": "server/workers/compute-worker.js"
+    },
+    {
+      "kind": "constructor-end",
+      "atMs": 1794072786436.59,
+      "pid": 1666,
+      "worker": 2,
+      "job": null,
+      "threadId": 2
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072786436.9258,
+      "pid": 1666,
+      "worker": 2,
+      "job": 3,
+      "poolId": 1,
+      "nativeId": 3,
+      "task": "excel-utility"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072786436.9456,
+      "pid": 1666,
+      "worker": 2,
+      "job": 3,
+      "poolId": 1,
+      "nativeId": 3
+    },
+    {
+      "kind": "worker-boot",
+      "atMs": 1794072786485.6428,
+      "threadId": 2,
+      "worker": 2,
+      "pid": 1666
+    },
+    {
+      "kind": "online",
+      "atMs": 1794072786486.8845,
+      "pid": 1666,
+      "worker": 2,
+      "threadId": 2
+    },
+    {
+      "kind": "worker-receive",
+      "atMs": 1794072786527.4683,
+      "threadId": 2,
+      "nativeId": 3,
+      "task": "excel-utility",
+      "worker": 2,
+      "pid": 1666
+    },
+    {
+      "kind": "worker-finish",
+      "atMs": 1794072786666.0732,
+      "threadId": 2,
+      "nativeId": 3,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 2,
+        "executionMs": 138.3618919999999,
+        "retainedBytes": 32979446,
+        "outputBytes": 1320
+      },
+      "worker": 2,
+      "pid": 1666
+    },
+    {
+      "kind": "main-receive",
+      "atMs": 1794072786666.295,
+      "pid": 1666,
+      "worker": 2,
+      "job": 3,
+      "nativeId": 3,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 2,
+        "executionMs": 138.3618919999999,
+        "retainedBytes": 32979446,
+        "outputBytes": 1320
+      }
+    },
+    {
+      "kind": "main-receive-return",
+      "atMs": 1794072786666.3672,
+      "pid": 1666,
+      "worker": 2,
+      "job": 3,
+      "nativeId": 3
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072786666.3762,
+      "pid": 1666,
+      "job": 3,
+      "poolId": 1,
+      "metrics": {
+        "threadId": 2,
+        "executionMs": 138.3618919999999,
+        "retainedBytes": 32979446,
+        "outputBytes": 1320,
+        "queueWaitMs": 998.875006,
+        "durationMs": 231.91438700000003,
+        "postMessageMs": 0.03618900000014946
+      },
+      "stats": {
+        "queued": 3,
+        "completed": 3,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 302001512,
+        "totalQueueWaitMs": 999.15784,
+        "totalDurationMs": 326.38967700000006,
+        "totalPostMessageMs": 0.21241500000019187,
+        "lastQueueWaitMs": 998.875006,
+        "lastDurationMs": 231.91438700000003,
+        "maxQueueWaitMs": 998.875006,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 302002024,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 32979446,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1320,
+        "reservedBytes": 66535198,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "service-result",
+      "atMs": 1794072786666.4014,
+      "pid": 1666,
+      "call": 1,
+      "method": "runExcelUtility",
+      "metrics": {
+        "threadId": 2,
+        "executionMs": 138.3618919999999,
+        "retainedBytes": 32979446,
+        "outputBytes": 1320,
+        "queueWaitMs": 998.875006,
+        "durationMs": 231.91438700000003,
+        "postMessageMs": 0.03618900000014946,
+        "paramsSerializeMs": 0.14833900000002131,
+        "paramsBytes": 429
+      },
+      "value": {
+        "found": false,
+        "updated": false,
+        "reason": "KUR Excel bulunamadı"
+      }
+    },
+    {
+      "kind": "release",
+      "atMs": 1794072786666.447,
+      "pid": 1666,
+      "job": 3,
+      "poolId": 1
+    },
+    {
+      "kind": "sync-end",
+      "atMs": 1794072786666.4856,
+      "pid": 1666
+    },
+    {
+      "kind": "worker-exit",
+      "atMs": 1794072786668.7166,
+      "pid": 1666,
+      "worker": 2,
+      "code": 1
+    }
+  ]
+}

@@ -1,0 +1,494 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "clock": "performance.timeOrigin + performance.now; epoch ms",
+  "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "diagnosticSha256": "772e2efead870ae53bdcf4c9ccd19af05e901c99c60a8ecbcaab3c6919328b8d",
+  "events": [
+    {
+      "kind": "sync-begin",
+      "atMs": 1794072758442.0408,
+      "pid": 1590,
+      "scenario": "cold-empty",
+      "workbook": "missing"
+    },
+    {
+      "kind": "service-submit",
+      "atMs": 1794072758443.79,
+      "pid": 1590,
+      "call": 1,
+      "method": "runExcelUtility"
+    },
+    {
+      "kind": "submit",
+      "atMs": 1794072758444.0193,
+      "pid": 1590,
+      "job": 1,
+      "poolId": 1,
+      "task": "excel-utility",
+      "options": {
+        "ownerKey": "utility:synthetic-buyer",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 5000,
+        "estimatedBytes": 268447040,
+        "inputBytes": 1448,
+        "serializationKey": "shared-fx"
+      },
+      "stats": {
+        "queued": 0,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 0,
+        "peakReservedBytes": 0,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 2,
+        "workerCount": 0,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 0,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "constructor-start",
+      "atMs": 1794072758444.7146,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "productionFile": "server/workers/compute-worker.js"
+    },
+    {
+      "kind": "constructor-end",
+      "atMs": 1794072758446.8809,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "threadId": 1
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072758447.7637,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1,
+      "task": "excel-utility"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072758447.804,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072758447.828,
+      "pid": 1590,
+      "job": 1,
+      "poolId": 1,
+      "stats": {
+        "queued": 1,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 302001472,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 268447040,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 302001472,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "worker-boot",
+      "atMs": 1794072758495.2788,
+      "threadId": 1,
+      "worker": 1,
+      "pid": 1590
+    },
+    {
+      "kind": "online",
+      "atMs": 1794072758496.5684,
+      "pid": 1590,
+      "worker": 1,
+      "threadId": 1
+    },
+    {
+      "kind": "worker-receive",
+      "atMs": 1794072758542.362,
+      "threadId": 1,
+      "nativeId": 1,
+      "task": "excel-utility",
+      "worker": 1,
+      "pid": 1590
+    },
+    {
+      "kind": "worker-finish",
+      "atMs": 1794072758691.5532,
+      "threadId": 1,
+      "nativeId": 1,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 148.921536,
+        "retainedBytes": 31129646,
+        "outputBytes": 1320
+      },
+      "worker": 1,
+      "pid": 1590
+    },
+    {
+      "kind": "main-receive",
+      "atMs": 1794072758691.732,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "nativeId": 1,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 148.921536,
+        "retainedBytes": 31129646,
+        "outputBytes": 1320
+      }
+    },
+    {
+      "kind": "main-receive-return",
+      "atMs": 1794072758692.062,
+      "pid": 1590,
+      "worker": 1,
+      "job": 1,
+      "nativeId": 1
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072758692.1157,
+      "pid": 1590,
+      "job": 1,
+      "poolId": 1,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 148.921536,
+        "retainedBytes": 31129646,
+        "outputBytes": 1320,
+        "queueWaitMs": 0.33846099999999524,
+        "durationMs": 247.397975,
+        "postMessageMs": 0.1509979999999871
+      },
+      "stats": {
+        "queued": 1,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 302001472,
+        "totalQueueWaitMs": 0.33846099999999524,
+        "totalDurationMs": 247.397975,
+        "totalPostMessageMs": 0.1509979999999871,
+        "lastQueueWaitMs": 0.33846099999999524,
+        "lastDurationMs": 247.397975,
+        "maxQueueWaitMs": 0.33846099999999524,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 31129646,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1320,
+        "reservedBytes": 64685398,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "service-result",
+      "atMs": 1794072758692.1387,
+      "pid": 1590,
+      "call": 1,
+      "method": "runExcelUtility",
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 148.921536,
+        "retainedBytes": 31129646,
+        "outputBytes": 1320,
+        "queueWaitMs": 0.33846099999999524,
+        "durationMs": 247.397975,
+        "postMessageMs": 0.1509979999999871,
+        "paramsSerializeMs": 0.03191599999999539,
+        "paramsBytes": 424
+      },
+      "value": {
+        "found": false,
+        "updated": false,
+        "reason": "KUR Excel bulunamadı"
+      }
+    },
+    {
+      "kind": "release",
+      "atMs": 1794072758692.1855,
+      "pid": 1590,
+      "job": 1,
+      "poolId": 1
+    },
+    {
+      "kind": "sync-end",
+      "atMs": 1794072758692.2297,
+      "pid": 1590
+    },
+    {
+      "kind": "service-submit",
+      "atMs": 1794072758692.6396,
+      "pid": 1590,
+      "call": 2,
+      "method": "runExcelUtility"
+    },
+    {
+      "kind": "submit",
+      "atMs": 1794072758692.8337,
+      "pid": 1590,
+      "job": 2,
+      "poolId": 1,
+      "task": "excel-utility",
+      "options": {
+        "ownerKey": "utility:synthetic-buyer",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 5000,
+        "estimatedBytes": 268447040,
+        "inputBytes": 1448,
+        "serializationKey": "shared-fx"
+      },
+      "stats": {
+        "queued": 1,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 302001472,
+        "totalQueueWaitMs": 0.33846099999999524,
+        "totalDurationMs": 247.397975,
+        "totalPostMessageMs": 0.1509979999999871,
+        "lastQueueWaitMs": 0.33846099999999524,
+        "lastDurationMs": 247.397975,
+        "maxQueueWaitMs": 0.33846099999999524,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 31129646,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 64684078,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072758692.9736,
+      "pid": 1590,
+      "worker": 1,
+      "job": 2,
+      "poolId": 1,
+      "nativeId": 2,
+      "task": "excel-utility"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072758692.9932,
+      "pid": 1590,
+      "worker": 1,
+      "job": 2,
+      "poolId": 1,
+      "nativeId": 2
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072758693.014,
+      "pid": 1590,
+      "job": 2,
+      "poolId": 1,
+      "stats": {
+        "queued": 2,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 333131118,
+        "totalQueueWaitMs": 0.33846099999999524,
+        "totalDurationMs": 247.397975,
+        "totalPostMessageMs": 0.1509979999999871,
+        "lastQueueWaitMs": 0.33846099999999524,
+        "lastDurationMs": 247.397975,
+        "maxQueueWaitMs": 0.33846099999999524,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 268447040,
+        "retainedWorkerBytes": 31129646,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 333131118,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "worker-receive",
+      "atMs": 1794072758693.0989,
+      "threadId": 1,
+      "nativeId": 2,
+      "task": "excel-utility",
+      "worker": 1,
+      "pid": 1590
+    },
+    {
+      "kind": "worker-finish",
+      "atMs": 1794072758693.3323,
+      "threadId": 1,
+      "nativeId": 2,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.14957600000002458,
+        "retainedBytes": 31162326,
+        "outputBytes": 1320
+      },
+      "worker": 1,
+      "pid": 1590
+    },
+    {
+      "kind": "main-receive",
+      "atMs": 1794072758693.3918,
+      "pid": 1590,
+      "worker": 1,
+      "job": 2,
+      "nativeId": 2,
+      "ok": true,
+      "workerMetrics": {
+        "threadId": 1,
+        "executionMs": 0.14957600000002458,
+        "retainedBytes": 31162326,
+        "outputBytes": 1320
+      }
+    },
+    {
+      "kind": "main-receive-return",
+      "atMs": 1794072758693.433,
+      "pid": 1590,
+      "worker": 1,
+      "job": 2,
+      "nativeId": 2
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072758693.4443,
+      "pid": 1590,
+      "job": 2,
+      "poolId": 1,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.14957600000002458,
+        "retainedBytes": 31162326,
+        "outputBytes": 1320,
+        "queueWaitMs": 0.06923100000000204,
+        "durationMs": 0.4808310000000233,
+        "postMessageMs": 0.0352919999999699
+      },
+      "stats": {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 333131118,
+        "totalQueueWaitMs": 0.4076919999999973,
+        "totalDurationMs": 247.87880600000003,
+        "totalPostMessageMs": 0.186289999999957,
+        "lastQueueWaitMs": 0.06923100000000204,
+        "lastDurationMs": 0.4808310000000233,
+        "maxQueueWaitMs": 0.33846099999999524,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 31162326,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 1320,
+        "reservedBytes": 64718078,
+        "maxPendingBytes": 536870912
+      }
+    },
+    {
+      "kind": "service-result",
+      "atMs": 1794072758693.4531,
+      "pid": 1590,
+      "call": 2,
+      "method": "runExcelUtility",
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.14957600000002458,
+        "retainedBytes": 31162326,
+        "outputBytes": 1320,
+        "queueWaitMs": 0.06923100000000204,
+        "durationMs": 0.4808310000000233,
+        "postMessageMs": 0.0352919999999699,
+        "paramsSerializeMs": 0.14848800000004303,
+        "paramsBytes": 424
+      },
+      "value": {
+        "found": false,
+        "updated": false,
+        "reason": "KUR Excel bulunamadı"
+      }
+    },
+    {
+      "kind": "release",
+      "atMs": 1794072758693.4636,
+      "pid": 1590,
+      "job": 2,
+      "poolId": 1
+    },
+    {
+      "kind": "worker-exit",
+      "atMs": 1794072758697.8682,
+      "pid": 1590,
+      "worker": 1,
+      "code": 1
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+overview BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":2329.5999999999767}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":2342.0999999999767}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":2420.5}
+same-tab cp: 5794 ms
+same-tab orders: 1507 ms
+same-tab koleksiyon: 96 ms
+overview BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":2911.5999999999767}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":2932.899999999907}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":2996.29999999993}
+koleksiyon BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":1586.5999999999767}
+koleksiyon BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":1595.7999999999302}
+koleksiyon BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":1621.5}
+cp BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":15073.399999999907}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":15086.09999999986}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":25669.5}
+orders BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":4300.09999999986}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":4315.300000000047}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":4406.300000000047}
+Report: /workspace/buyerlog-benchmark-temp/buyerlog-startup-fx-exact-overlay-missing/measurement.json; retained diagnostics: /workspace/buyerlog-benchmark-temp/buyerlog-startup-fx-exact-overlay-missing

@@ -1,0 +1,10 @@
+
+> buyer-log-desktop@7.0.339 release:notes:validate
+> node scripts/release-notes.js validate
+
+Release notes OK: 36 change(s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

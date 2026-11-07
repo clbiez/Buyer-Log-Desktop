@@ -1,0 +1,159 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "scenario": "cold-empty",
+      "workbook": "missing",
+      "phase": "completed",
+      "queueWaitMs": 0.33846099999999524,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "KUR Excel bulunamadı",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "warm-empty",
+      "workbook": "missing",
+      "phase": "completed",
+      "queueWaitMs": 0.05096299999996745,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "KUR Excel bulunamadı",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "pool-busy",
+      "workbook": "missing",
+      "phase": "queue",
+      "queueWaitMs": 5000.058947,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "key-same",
+      "workbook": "missing",
+      "phase": "queue",
+      "queueWaitMs": 5001.267655,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "key-different",
+      "workbook": "missing",
+      "phase": "completed",
+      "queueWaitMs": 0.31982899999997016,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "KUR Excel bulunamadı",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "memory-held",
+      "workbook": "missing",
+      "phase": "queue",
+      "queueWaitMs": 5000.895903,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "memory-released",
+      "workbook": "missing",
+      "phase": "completed",
+      "queueWaitMs": 998.875006,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "KUR Excel bulunamadı",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "cold-empty",
+      "workbook": "valid",
+      "phase": "completed",
+      "queueWaitMs": 0.34514999999998963,
+      "initialRevision": 1,
+      "finalRevision": 2,
+      "reason": "apply",
+      "dataEquivalentToBefore": false,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "warm-empty",
+      "workbook": "valid",
+      "phase": "completed",
+      "queueWaitMs": 0.1596670000000131,
+      "initialRevision": 1,
+      "finalRevision": 2,
+      "reason": "apply",
+      "dataEquivalentToBefore": false,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "pool-busy",
+      "workbook": "valid",
+      "phase": "queue",
+      "queueWaitMs": 5000.083293,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "key-same",
+      "workbook": "valid",
+      "phase": "queue",
+      "queueWaitMs": 5001.155377,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "key-different",
+      "workbook": "valid",
+      "phase": "completed",
+      "queueWaitMs": 0.08676100000002407,
+      "initialRevision": 1,
+      "finalRevision": 2,
+      "reason": "apply",
+      "dataEquivalentToBefore": false,
+      "folderStatusEquivalent": true
+    },
+    {
+      "scenario": "memory-held",
+      "workbook": "valid",
+      "phase": "queue",
+      "queueWaitMs": 5001.290999,
+      "initialRevision": 1,
+      "finalRevision": 1,
+      "reason": "parse-failed",
+      "dataEquivalentToBefore": true,
+      "folderStatusEquivalent": false
+    },
+    {
+      "scenario": "memory-released",
+      "workbook": "valid",
+      "phase": "completed",
+      "queueWaitMs": 1000.4389890000001,
+      "initialRevision": 1,
+      "finalRevision": 2,
+      "reason": "apply",
+      "dataEquivalentToBefore": false,
+      "folderStatusEquivalent": true
+    }
+  ]
+}

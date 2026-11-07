@@ -1,0 +1,38 @@
+✔ a queued timeout has no worker execution interval; absent telemetry stays unknown (5.294931ms)
+✔ dispatch, startup and worker execution use separate timestamp intervals (0.882311ms)
+✖ a constructor opened by a later queue pump belongs to the first dispatched job on that worker (3.436843ms)
+✔ memory and serialization can block an idle slot independently of worker occupancy (2.776641ms)
+✔ synthetic observer refuses missing metadata and symbolic roots (1.673428ms)
+✔ the generated KUR fixture passes the canonical production parser before measurement (440.014935ms)
+✔ native common worker observer preserves results, lease and source hashes (193.624809ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 867.771746
+
+✖ failing tests:
+
+test at tests/fx-timeout-diagnostic.test.js:24:1
+✖ a constructor opened by a later queue pump belongs to the first dispatched job on that worker (3.436843ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  null !== 10
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-fx-diag/resources/app/tests/fx-timeout-diagnostic.test.js:28:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 10,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

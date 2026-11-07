@@ -1,0 +1,40 @@
+{
+  "synthetic": true,
+  "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "baselineSha": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "reviewAppTree": "2eac277ebd5b918c8ac6a443a2159cf3df5b9c9a",
+  "measuredAppTree": "2eac277ebd5b918c8ac6a443a2159cf3df5b9c9a",
+  "excludes892": true,
+  "pr892MergeSha": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "protectedProductionDiff": [],
+  "finalDiagnosticSha256": "586c9b9d76f03815ea591f7ea1a832fa40e26d19f43750c41cb88d1ea8128e46",
+  "measuredSources": {
+    "diagnostic-measured-source.txt": "772e2efead870ae53bdcf4c9ccd19af05e901c99c60a8ecbcaab3c6919328b8d",
+    "diagnostic-canonical-measured-source.txt": "57de8d38f96d58888314e4f7942e40912e7ed71584c8c5449a1a594c5ecda4c3"
+  },
+  "historicalFourFxTimeoutAttribution": "unknown; not reproduced by diagnostic F0 cohorts",
+  "matrix03": {
+    "cases": 14,
+    "expectedQueueTimeouts": 6,
+    "unexpectedPressureFailures": 0,
+    "parityValidator": "parity.json"
+  },
+  "validation": {
+    "newDiagnosticTests": 7,
+    "relatedFiles": 43,
+    "relatedTests": 183,
+    "relatedFailures": 0,
+    "i18nNew": 0,
+    "i18nBaseline": 0,
+    "releaseNotes": 36,
+    "fullRegression": false
+  },
+  "performanceAcceptance": false,
+  "independentP1ReviewReplacement": false,
+  "merged": false,
+  "testPublished": false,
+  "stablePublished": false,
+  "cpuProfilesCollected": false,
+  "finalTestSha256": "7b687f8eff16249acb03a37c7fbfaf7d16185c3a8fb3ab38cfb186f39cd534a1",
+  "rootReuseProtection": "existing nonempty roots rejected; RED/GREEN retained"
+}

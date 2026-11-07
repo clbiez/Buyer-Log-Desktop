@@ -1,0 +1,34 @@
+✔ a queued timeout has no worker execution interval; absent telemetry stays unknown (2.195328ms)
+✔ dispatch, startup and worker execution use separate timestamp intervals (0.58639ms)
+✔ memory and serialization can block an idle slot independently of worker occupancy (0.284466ms)
+✔ synthetic observer refuses missing metadata and symbolic roots (1.487913ms)
+✖ native common worker observer preserves results, lease and source hashes (7.268391ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105.593377
+
+✖ failing tests:
+
+test at tests/fx-timeout-diagnostic.test.js:41:1
+✖ native common worker observer preserves results, lease and source hashes (7.268391ms)
+  Error: Hesaplama işçisi tamamlanamadı. / Compute worker failed. [{"kind":"constructor-error","atMs":1794072601137.2078,"pid":1019,"worker":1,"job":1,"code":"ERR_WORKER_INVALID_EXEC_ARGV","message":"Initiated Worker with invalid execArgv flags: --v8-pool-size=4, --trace-event-file-pattern=node_trace.${rotation}.log, --secure-heap-min=2, --tls-cipher-list=TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA, --use-largepages=off, --secure-heap=0, --node-snapshot, --stack-trace-limit=10"}]
+      at failure (/workspace/buyerlog-fx-diag/resources/app/server/lib/compute-pool.js:23:85)
+      at start (/workspace/buyerlog-fx-diag/resources/app/server/lib/compute-pool.js:100:31)
+      at pump (/workspace/buyerlog-fx-diag/resources/app/server/lib/compute-pool.js:124:20)
+      at /workspace/buyerlog-fx-diag/resources/app/server/lib/compute-pool.js:184:49
+      at new Promise (<anonymous>)
+      at run (/workspace/buyerlog-fx-diag/resources/app/server/lib/compute-pool.js:172:12)
+      at pool.run (/workspace/buyerlog-fx-diag/resources/app/scripts/diagnose-fx-timeout.js:123:19)
+      at TestContext.<anonymous> (/workspace/buyerlog-fx-diag/resources/app/tests/fx-timeout-diagnostic.test.js:47:26)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25) {
+    code: 'COMPUTE_WORKER_FAILED',
+    statusCode: 500,
+    errorEn: 'Compute worker failed.',
+    computeMetrics: { queueWaitMs: 0.2374279999999942, durationMs: 1.0565200000000061, postMessageMs: 0 }
+  }

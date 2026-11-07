@@ -1,0 +1,14 @@
+missing cold-empty exit=0
+missing warm-empty exit=0
+missing pool-busy exit=0
+missing key-same exit=0
+missing key-different exit=0
+missing memory-held exit=0
+missing memory-released exit=0
+valid cold-empty exit=0
+valid warm-empty exit=0
+valid pool-busy exit=0
+valid key-same exit=0
+valid key-different exit=0
+valid memory-held exit=0
+valid memory-released exit=0

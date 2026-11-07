@@ -1,0 +1,35 @@
+✔ a queued timeout has no worker execution interval; absent telemetry stays unknown (2.039354ms)
+✔ dispatch, startup and worker execution use separate timestamp intervals (0.357817ms)
+✔ a constructor opened by a later queue pump belongs to the first dispatched job on that worker (0.474736ms)
+✔ memory and serialization can block an idle slot independently of worker occupancy (0.248008ms)
+✖ synthetic observer refuses missing metadata and symbolic roots (3.141378ms)
+✔ the generated KUR fixture passes the canonical production parser before measurement (171.745472ms)
+✔ native common worker observer preserves results, lease and source hashes (131.995565ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 400.300148
+
+✖ failing tests:
+
+test at tests/fx-timeout-diagnostic.test.js:39:1
+✖ synthetic observer refuses missing metadata and symbolic roots (3.141378ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception: a diagnostic must not overwrite an existing root
+      at TestContext.<anonymous> (/workspace/buyerlog-fx-diag/resources/app/tests/fx-timeout-diagnostic.test.js:45:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /fresh/i,
+    operator: 'throws',
+    diff: 'simple'
+  }

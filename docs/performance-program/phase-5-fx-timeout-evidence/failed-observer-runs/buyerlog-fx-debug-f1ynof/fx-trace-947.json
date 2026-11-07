@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "clock": "performance.timeOrigin + performance.now; epoch ms",
+  "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "diagnosticSha256": "0aa0ca09d164976cb12b778952ca18842d90a69f75d7b0eb14123bbf95a6ed22",
+  "events": [
+    {
+      "kind": "submit",
+      "atMs": 1794072580777.1042,
+      "pid": 947,
+      "job": 1,
+      "poolId": 1,
+      "task": "health",
+      "options": {
+        "ownerKey": "a",
+        "generation": "1",
+        "priority": "interactive",
+        "timeoutMs": 600000,
+        "estimatedBytes": 67108864,
+        "inputBytes": 0,
+        "serializationKey": ""
+      },
+      "stats": {
+        "queued": 0,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 0,
+        "peakReservedBytes": 0,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 2,
+        "workerCount": 0,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 0,
+        "maxPendingBytes": 134217728
+      }
+    },
+    {
+      "kind": "constructor-start",
+      "atMs": 1794072580777.9507,
+      "pid": 947,
+      "worker": 1,
+      "job": 1,
+      "productionFile": "server/workers/compute-worker.js"
+    },
+    {
+      "kind": "constructor-end",
+      "atMs": 1794072580781.3318,
+      "pid": 947,
+      "worker": 1,
+      "job": 1,
+      "threadId": 1
+    },
+    {
+      "kind": "dispatch",
+      "atMs": 1794072580782.379,
+      "pid": 947,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1,
+      "task": "health"
+    },
+    {
+      "kind": "post-return",
+      "atMs": 1794072580782.4097,
+      "pid": 947,
+      "worker": 1,
+      "job": 1,
+      "poolId": 1,
+      "nativeId": 1
+    },
+    {
+      "kind": "submitted",
+      "atMs": 1794072580782.4343,
+      "pid": 947,
+      "job": 1,
+      "poolId": 1,
+      "stats": {
+        "queued": 1,
+        "completed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 100663296,
+        "totalQueueWaitMs": 0,
+        "totalDurationMs": 0,
+        "totalPostMessageMs": 0,
+        "lastQueueWaitMs": 0,
+        "lastDurationMs": 0,
+        "maxQueueWaitMs": 0,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 67108864,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 100663296,
+        "maxPendingBytes": 134217728
+      }
+    },
+    {
+      "kind": "worker-boot",
+      "atMs": 1794072580845.0688,
+      "threadId": 1,
+      "worker": 1,
+      "pid": 947
+    },
+    {
+      "kind": "settled",
+      "atMs": 1794072580849.436,
+      "pid": 947,
+      "job": 1,
+      "poolId": 1,
+      "code": "COMPUTE_WORKER_FAILED",
+      "metrics": {
+        "queueWaitMs": 0.4760879999999972,
+        "durationMs": 71.36314100000001,
+        "postMessageMs": 0.10889999999999844
+      },
+      "stats": {
+        "queued": 1,
+        "completed": 0,
+        "failed": 1,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 100663296,
+        "totalQueueWaitMs": 0.4760879999999972,
+        "totalDurationMs": 71.36314100000001,
+        "totalPostMessageMs": 0.10889999999999844,
+        "lastQueueWaitMs": 0.4760879999999972,
+        "lastDurationMs": 71.36314100000001,
+        "maxQueueWaitMs": 0.4760879999999972,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 1,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 67108864,
+        "retainedWorkerBytes": 0,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 100663296,
+        "maxPendingBytes": 134217728
+      }
+    },
+    {
+      "kind": "worker-exit",
+      "atMs": 1794072580852.0718,
+      "pid": 947,
+      "worker": 1,
+      "code": 1
+    }
+  ]
+}

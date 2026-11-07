@@ -1,0 +1,100 @@
+[
+  {
+    "scenario": "cold-empty",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-cold-empty",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "warm-empty",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-warm-empty",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "pool-busy",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-pool-busy",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "key-same",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-key-same",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "key-different",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-key-different",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "memory-held",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-memory-held",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "memory-released",
+    "file": "missing",
+    "directory": "/tmp/buyerlog-fx-matrix-03/missing-memory-released",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "cold-empty",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-cold-empty",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "warm-empty",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-warm-empty",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "pool-busy",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-pool-busy",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "key-same",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-key-same",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "key-different",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-key-different",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "memory-held",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-memory-held",
+    "exitCode": 0,
+    "signal": null
+  },
+  {
+    "scenario": "memory-released",
+    "file": "valid",
+    "directory": "/tmp/buyerlog-fx-matrix-03/valid-memory-released",
+    "exitCode": 0,
+    "signal": null
+  }
+]

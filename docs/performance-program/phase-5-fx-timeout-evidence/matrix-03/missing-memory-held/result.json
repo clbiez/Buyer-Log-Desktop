@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "excludes892": true,
+  "kind": "memory-held",
+  "workbook": "missing",
+  "startedAt": "2026-11-07T17:32:59.901Z",
+  "platform": "linux",
+  "node": "v24.19.0",
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "productionHashes": {
+    "server/server.js": "e12ebadc0487c7f79aa5a9c86c6f16b2c357da9ebe3f8e0f651ded16c041a47e",
+    "public/app-main.js": "8b642c758e6221be55d48154f8e0f3665e8fce98d3501437a231028af64af028",
+    "server/lib/compute-pool.js": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+    "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+    "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+    "server/workers/excel-worker.js": "81940ef7ea4da5a82b7e96d2ec05777e12745156e4e2fd3d59107000b3e49509",
+    "server/lib/fxWorkbook.js": "e95e4ff480e9fab02c0e2ba3b5bde76277d2347678baaea127e749cb2ec455cd"
+  },
+  "initial": {
+    "base": "USD",
+    "currencies": [],
+    "months": {
+      "2026-09": {
+        "TRY": 38
+      },
+      "2026-10": {
+        "CHF": 0.88
+      }
+    },
+    "updatedAt": "2026-11-07T17:32:59.893Z",
+    "sourceFile": null,
+    "sourceType": null,
+    "sourceModifiedAt": null,
+    "reportMonth": "2026-09",
+    "sourceFingerprint": null,
+    "parser": null,
+    "_revision": 1,
+    "_updatedAt": "2026-11-07T17:32:59.896Z"
+  },
+  "fxEstimate": 268447048,
+  "initialPool": {
+    "queued": 0,
+    "completed": 0,
+    "failed": 0,
+    "rejected": 0,
+    "peakActiveWorkers": 0,
+    "peakReservedBytes": 0,
+    "totalQueueWaitMs": 0,
+    "totalDurationMs": 0,
+    "totalPostMessageMs": 0,
+    "lastQueueWaitMs": 0,
+    "lastDurationMs": 0,
+    "maxQueueWaitMs": 0,
+    "maxWorkers": 1,
+    "workerCount": 0,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 302001992,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 0,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 0,
+    "maxPendingBytes": 536870912
+  },
+  "heldPool": {
+    "queued": 2,
+    "completed": 2,
+    "failed": 0,
+    "rejected": 0,
+    "peakActiveWorkers": 1,
+    "peakReservedBytes": 113768611,
+    "totalQueueWaitMs": 0.30168299999999704,
+    "totalDurationMs": 108.89427699999999,
+    "totalPostMessageMs": 0.17153700000000072,
+    "lastQueueWaitMs": 0.04726299999998673,
+    "lastDurationMs": 1.830032000000017,
+    "maxQueueWaitMs": 0.2544200000000103,
+    "maxWorkers": 1,
+    "workerCount": 1,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 302001992,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 8541259,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 1024,
+    "reservedBytes": 42096715,
+    "maxPendingBytes": 536870912
+  },
+  "before": {
+    "base": "USD",
+    "currencies": [],
+    "months": {
+      "2026-09": {
+        "TRY": 38
+      },
+      "2026-10": {
+        "CHF": 0.88
+      }
+    },
+    "updatedAt": "2026-11-07T17:32:59.893Z",
+    "sourceFile": null,
+    "sourceType": null,
+    "sourceModifiedAt": null,
+    "reportMonth": "2026-09",
+    "sourceFingerprint": null,
+    "parser": null,
+    "_revision": 1,
+    "_updatedAt": "2026-11-07T17:32:59.896Z",
+    "folderSync": null
+  },
+  "response": {
+    "found": false,
+    "updated": false,
+    "reason": "parse-failed"
+  },
+  "after": {
+    "base": "USD",
+    "currencies": [],
+    "months": {
+      "2026-09": {
+        "TRY": 38
+      },
+      "2026-10": {
+        "CHF": 0.88
+      }
+    },
+    "updatedAt": "2026-11-07T17:32:59.893Z",
+    "sourceFile": null,
+    "sourceType": null,
+    "sourceModifiedAt": null,
+    "reportMonth": "2026-09",
+    "sourceFingerprint": null,
+    "parser": null,
+    "_revision": 1,
+    "_updatedAt": "2026-11-07T17:32:59.896Z",
+    "folderSync": {
+      "file": "KUR.xlsx",
+      "modifiedAt": null,
+      "reportMonth": null,
+      "fingerprint": null,
+      "reason": "parse-failed"
+    }
+  },
+  "failures": [
+    {
+      "key": "fxWorkbookRead",
+      "code": "COMPUTE_TIMEOUT",
+      "metrics": {
+        "queueWaitMs": 5000.895903,
+        "durationMs": 0,
+        "postMessageMs": 0
+      },
+      "message": "Hesaplama zaman aşımına uğradı. / Compute operation timed out."
+    }
+  ],
+  "status": "completed",
+  "pressure": [],
+  "finishedAt": "2026-11-07T17:33:05.126Z",
+  "finalPool": {
+    "queued": 3,
+    "completed": 2,
+    "failed": 1,
+    "rejected": 0,
+    "peakActiveWorkers": 1,
+    "peakReservedBytes": 113768611,
+    "totalQueueWaitMs": 5001.197585999999,
+    "totalDurationMs": 108.89427699999999,
+    "totalPostMessageMs": 0.17153700000000072,
+    "lastQueueWaitMs": 5000.895903,
+    "lastDurationMs": 0,
+    "maxQueueWaitMs": 5000.895903,
+    "maxWorkers": 1,
+    "workerCount": 0,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 302001992,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 0,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 0,
+    "maxPendingBytes": 536870912
+  },
+  "jobs": [
+    {
+      "job": 1,
+      "task": "health",
+      "options": {
+        "ownerKey": "pool-warm",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 600000,
+        "estimatedBytes": 67108864,
+        "inputBytes": 0,
+        "serializationKey": ""
+      },
+      "phase": "completed",
+      "code": null,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.6366390000000024,
+        "retainedBytes": 13105315,
+        "outputBytes": 1024,
+        "queueWaitMs": 0.2544200000000103,
+        "durationMs": 107.06424499999997,
+        "postMessageMs": 0.12187000000000126
+      },
+      "enqueueBoundsMs": [
+        1794072780003.4587,
+        1794072780004.1226
+      ],
+      "dispatchAtMs": 1794072780007.4148,
+      "workerBootAtMs": 1794072780058.8516,
+      "workerReceiveAtMs": 1794072780109.6602,
+      "workerFinishAtMs": 1794072780110.563,
+      "settledAtMs": 1794072780111.981,
+      "constructorMs": 2.37744140625,
+      "dispatchToReceiveMs": 102.245361328125,
+      "workerExecutionMs": 0.90283203125,
+      "waitStates": []
+    },
+    {
+      "job": 2,
+      "task": "health",
+      "options": {
+        "ownerKey": "synthetic-held-output",
+        "generation": "1",
+        "priority": "interactive",
+        "timeoutMs": 600000,
+        "estimatedBytes": 67108864,
+        "inputBytes": 0,
+        "serializationKey": ""
+      },
+      "phase": "completed",
+      "code": null,
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 0.04712000000000671,
+        "retainedBytes": 8541259,
+        "outputBytes": 1024,
+        "queueWaitMs": 0.04726299999998673,
+        "durationMs": 1.830032000000017,
+        "postMessageMs": 0.04966699999999946
+      },
+      "enqueueBoundsMs": [
+        1794072780112.162,
+        1794072780112.3083
+      ],
+      "dispatchAtMs": 1794072780112.3083,
+      "workerBootAtMs": 1794072780058.8516,
+      "workerReceiveAtMs": 1794072780113.6895,
+      "workerFinishAtMs": 1794072780113.7883,
+      "settledAtMs": 1794072780114.1023,
+      "constructorMs": null,
+      "dispatchToReceiveMs": 1.381103515625,
+      "workerExecutionMs": 0.098876953125,
+      "waitStates": []
+    },
+    {
+      "job": 3,
+      "task": "excel-utility",
+      "options": {
+        "ownerKey": "utility:synthetic-buyer",
+        "generation": "1",
+        "priority": "background",
+        "timeoutMs": 5000,
+        "estimatedBytes": 268447048,
+        "inputBytes": 1449,
+        "serializationKey": "shared-fx"
+      },
+      "phase": "queue",
+      "code": "COMPUTE_TIMEOUT",
+      "metrics": {
+        "queueWaitMs": 5000.895903,
+        "durationMs": 0,
+        "postMessageMs": 0
+      },
+      "enqueueBoundsMs": [
+        1794072780116.464,
+        1794072780116.6301
+      ],
+      "dispatchAtMs": null,
+      "workerBootAtMs": null,
+      "workerReceiveAtMs": null,
+      "workerFinishAtMs": null,
+      "settledAtMs": 1794072785117.6746,
+      "constructorMs": null,
+      "dispatchToReceiveMs": null,
+      "workerExecutionMs": null,
+      "waitStates": [
+        {
+          "atMs": 1794072780116.6907,
+          "blockers": [
+            "memory"
+          ],
+          "stats": {
+            "queued": 3,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 0,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 113768611,
+            "totalQueueWaitMs": 0.30168299999999704,
+            "totalDurationMs": 108.89427699999999,
+            "totalPostMessageMs": 0.17153700000000072,
+            "lastQueueWaitMs": 0.04726299999998673,
+            "lastDurationMs": 1.830032000000017,
+            "maxQueueWaitMs": 0.2544200000000103,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 1,
+            "memoryBudgetBytes": 302001992,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8541259,
+            "queuedInputBytes": 1449,
+            "leasedOutputBytes": 1024,
+            "reservedBytes": 42098164,
+            "maxPendingBytes": 536870912
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+overview BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":2202.6999999999534}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":2214.29999999993}
+overview BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":2267.399999999907}
+Report: /tmp/buyerlog-startup-fx-missing/measurement.json; retained diagnostics: /tmp/buyerlog-startup-fx-missing

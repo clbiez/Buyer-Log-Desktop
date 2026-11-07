@@ -1,0 +1,244 @@
+[
+  {
+    "directory": "buyerlog-startup-fx-missing",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+        "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+        "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+      }
+    },
+    "workbook": "missing",
+    "modules": [
+      "overview"
+    ],
+    "fxJobs": 1,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [
+      0.1645490000000791
+    ],
+    "fxWorkerExecutionMs": [
+      313.48388671875
+    ],
+    "filesystem": "tmpfs",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-1875.json",
+      "fx-trace-1913.json"
+    ],
+    "archive": "supplemental-startups.tar.gz"
+  },
+  {
+    "directory": "buyerlog-startup-fx-valid",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+        "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+        "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8",
+        "KUR.xlsx": "16adb7fb15b07336a6a8389edc55a32f14fec9362d2e4b61741bcee61620b1b6"
+      }
+    },
+    "workbook": "invalid-generated-workbook",
+    "modules": [
+      "overview"
+    ],
+    "fxJobs": 0,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [],
+    "fxWorkerExecutionMs": [],
+    "filesystem": "tmpfs",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-2107.json",
+      "fx-trace-2139.json"
+    ],
+    "archive": "supplemental-startups.tar.gz"
+  },
+  {
+    "directory": "buyerlog-startup-fx-full-missing",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+        "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+        "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+      }
+    },
+    "workbook": "missing",
+    "modules": [
+      "overview",
+      "koleksiyon",
+      "cp",
+      "orders"
+    ],
+    "fxJobs": 5,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [
+      0.053998999999748776,
+      0.029642000001331326,
+      0.02244100000098115,
+      0.07103899998764973,
+      0.03942099999403581
+    ],
+    "fxWorkerExecutionMs": [
+      237.53662109375,
+      1.25634765625,
+      154.314208984375,
+      1.65478515625,
+      0.803466796875
+    ],
+    "filesystem": "tmpfs",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-2315.json",
+      "fx-trace-2335.json"
+    ],
+    "archive": "supplemental-startups.tar.gz"
+  },
+  {
+    "directory": "buyerlog-startup-fx-exact-overlay-missing",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "today": "2026-11-05",
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "workbook": "missing",
+    "modules": [
+      "overview",
+      "koleksiyon",
+      "cp",
+      "orders"
+    ],
+    "fxJobs": 5,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [
+      0.07562499999949068,
+      0.030624000006355345,
+      0.05612500000279397,
+      0.026650000014342368,
+      0.0268940000096336
+    ],
+    "fxWorkerExecutionMs": [
+      207.9052734375,
+      1.3583984375,
+      230.687744140625,
+      0.822509765625,
+      0.750732421875
+    ],
+    "filesystem": "overlay",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-2883.json",
+      "fx-trace-2903.json"
+    ]
+  },
+  {
+    "directory": "buyerlog-startup-fx-exact-overlay-valid",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "today": "2026-11-05",
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f",
+        "KUR.xlsx": "16adb7fb15b07336a6a8389edc55a32f14fec9362d2e4b61741bcee61620b1b6"
+      }
+    },
+    "workbook": "invalid-generated-workbook",
+    "modules": [
+      "overview",
+      "koleksiyon",
+      "cp",
+      "orders"
+    ],
+    "fxJobs": 5,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [
+      0.06956600000012259,
+      0.0383979999969597,
+      0.02731100000528386,
+      0.10817999999562744,
+      0.05242000000725966
+    ],
+    "fxWorkerExecutionMs": [
+      193.030517578125,
+      12.896728515625,
+      202.610595703125,
+      7.7978515625,
+      7.170166015625
+    ],
+    "filesystem": "overlay",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-3304.json",
+      "fx-trace-3327.json"
+    ],
+    "archive": "supplemental-startups.tar.gz"
+  },
+  {
+    "directory": "buyerlog-startup-fx-canonical-valid",
+    "measurementStatus": "passed",
+    "sourceFixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "today": "2026-11-05",
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "KUR.xlsx": "466eb00813b0690828d1e42d813bc278b4c8d3e73417ef1da2bbfd04ac2931f3",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "workbook": "canonical-valid",
+    "modules": [
+      "overview",
+      "koleksiyon",
+      "cp",
+      "orders"
+    ],
+    "fxJobs": 5,
+    "fxTimeouts": 0,
+    "fxQueueWaitMs": [
+      0.08055500000045868,
+      0.027863999996043276,
+      0.021674999996321276,
+      0.043639999988954514,
+      0.15377399999124464
+    ],
+    "fxWorkerExecutionMs": [
+      276.742431640625,
+      3.701416015625,
+      177.96875,
+      1.057861328125,
+      1.22314453125
+    ],
+    "filesystem": "overlay",
+    "cpuQuota": "400000 100000",
+    "observerTraceFiles": [
+      "fx-trace-5077.json",
+      "fx-trace-5107.json"
+    ]
+  }
+]

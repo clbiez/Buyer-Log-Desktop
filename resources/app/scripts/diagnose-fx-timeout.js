@@ -1,0 +1,368 @@
+'use strict';
+// Diagnostic only: unchanged native compute-pool/compute-worker; no task runner,
+// replacement scheduler, sleeps in workers, extended FX deadline or network service.
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm');
+const {performance}=require('node:perf_hooks'),wt=require('node:worker_threads');
+const crypto=require('node:crypto');
+const APP=path.resolve(__dirname,'..'),MiB=1024*1024;
+const REVIEW='69950f289a012f0bb7c61290bec9890f340f6c64';
+const clock=()=>performance.timeOrigin+performance.now();
+const plain=value=>JSON.parse(JSON.stringify(value));
+const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
+function validateRoot(root){
+  root=path.resolve(root);
+  if(fs.lstatSync(root).isSymbolicLink()||fs.realpathSync(root)!==root)throw Error('symbolic/linked diagnostic root');
+  let metadata;
+  for(const file of ['fx-diagnostic.json','source/benchmark-fixture.json']){
+    try{metadata=JSON.parse(fs.readFileSync(path.join(root,file),'utf8'));if(metadata.synthetic===true)return root;}catch{}
+  }
+  throw Error('synthetic diagnostic metadata required');
+}
+function blockers(stats,job,active=[]){
+  const reasons=[];
+  if(job.serializationKey&&active.some(a=>a.serializationKey===job.serializationKey))reasons.push('serializationKey');
+  if(stats.activeWorkers>=stats.maxWorkers)reasons.push('slots');
+  // Current reservation only, before idle-cache eviction. These are sampled
+  // necessary obstacles, not a claim that admission was refused.
+  const extra=stats.workerCount<stats.maxWorkers&&stats.activeWorkers===stats.workerCount?32*MiB:0;
+  if(stats.reservedBytes-job.inputBytes+job.estimatedBytes+extra>stats.memoryBudgetBytes)reasons.push('memory');
+  return reasons;
+}
+function summarizeJob(events,job){
+  const own=events.filter(e=>e.job===job),submit=own.find(e=>e.kind==='submit');
+  if(!submit)throw Error('missing submit');
+  const settled=own.find(e=>e.kind==='settled'),dispatched=own.find(e=>e.kind==='dispatch');
+  const workerEvents=dispatched?events.filter(e=>e.worker===dispatched.worker):[];
+  const receive=workerEvents.find(e=>e.kind==='worker-receive'&&e.nativeId===dispatched.nativeId);
+  const finish=workerEvents.find(e=>e.kind==='worker-finish'&&e.nativeId===dispatched.nativeId);
+  // A later pump can open a worker outside any pool.run call. Bind its
+  // constructor by worker identity and first dispatch, not the current caller.
+  const firstDispatch=workerEvents.find(e=>e.kind==='dispatch');
+  const ctor=firstDispatch?.job===job?workerEvents.find(e=>e.kind==='constructor-start'):null;
+  const ctorEnd=ctor?workerEvents.find(e=>e.kind==='constructor-end'):null;
+  const boot=workerEvents.find(e=>e.kind==='worker-boot');
+  let phase='unknown';
+  if(settled){
+    if(!settled.code)phase='completed';
+    else if(settled.code!=='COMPUTE_TIMEOUT')phase=dispatched?'worker-error':'admission-or-cancellation';
+    else if(!dispatched&&settled.metrics?.durationMs===0)phase='queue';
+    else if(!receive)phase='startup-or-message-delivery';
+    else if(!finish)phase='worker-execution';
+    else phase='result-delivery';
+  }
+  const enqueueUpper=Math.min(...own.filter(e=>['submitted','constructor-start','dispatch'].includes(e.kind)).map(e=>e.atMs));
+  return {job,task:submit.task,options:submit.options,phase,code:settled?.code||null,metrics:settled?.metrics||null,
+    enqueueBoundsMs:Number.isFinite(enqueueUpper)?[submit.atMs,enqueueUpper]:null,
+    dispatchAtMs:dispatched?.atMs??null,workerBootAtMs:boot?.atMs??null,workerReceiveAtMs:receive?.atMs??null,
+    workerFinishAtMs:finish?.atMs??null,settledAtMs:settled?.atMs??null,
+    constructorMs:ctor&&ctorEnd?ctorEnd.atMs-ctor.atMs:null,
+    dispatchToReceiveMs:receive?receive.atMs-dispatched.atMs:null,
+    workerExecutionMs:receive&&finish?finish.atMs-receive.atMs:null,
+    waitStates:own.filter(e=>e.kind==='wait-state').map(({atMs,blockers,stats})=>({atMs,blockers,stats}))};
+}
+function createObserver({root}){
+  root=validateRoot(root);
+  const events=[],payloadJobs=new WeakMap(),active=new Map(),pending=new Map(),pools=new Map();
+  let nextJob=0,nextPool=0,nextWorker=0,nextCall=0;
+  const emit=(kind,details={})=>events.push({kind,atMs:clock(),pid:process.pid,...details});
+  const sample=()=>{
+    for(const [job,record] of pending){
+      const stats=record.pool.stats(),why=blockers(stats,record.options,[...active.values()].filter(a=>a.poolId===record.poolId));
+      const signature=JSON.stringify([why,stats.activeWorkers,stats.pending,stats.reservedBytes,stats.leasedOutputBytes]);
+      if(signature!==record.signature){record.signature=signature;emit('wait-state',{job,blockers:why,stats});}
+    }
+  };
+  const timer=setInterval(sample,50);timer.unref();
+  class ObservedWorker extends wt.Worker{
+    constructor(file,options={}){
+      const worker=++nextWorker;
+      emit('constructor-start',{worker,productionFile:path.relative(APP,file)});
+      // Node's test child exposes internal process flags that cannot be passed
+      // explicitly to Worker. Keep explicit worker flags and add only the probe.
+      // Diagnostic runs use no additional CLI VM flags (recorded in metadata).
+      const args=options.execArgv||[];
+      try{super(file,{...options,execArgv:[...args,'--require',__filename],
+        env:{...process.env,...options.env,BUYERLOG_FX_WORKER_TRACE:'1'}});}
+      catch(error){emit('constructor-error',{worker,code:error.code,message:error.message});throw error;}
+      this.diagWorker=worker;emit('constructor-end',{worker,threadId:this.threadId});
+      this.on('online',()=>emit('online',{worker,threadId:this.threadId}));
+      this.once('exit',code=>{active.delete(worker);emit('worker-exit',{worker,code});sample();});
+    }
+    postMessage(message,...args){
+      if(message?.type==='run'){
+        const record=payloadJobs.get(message.payload);
+        if(!record)throw Error('unobserved native dispatch');
+        const {job,poolId,options}=record;pending.delete(job);
+        active.set(this.diagWorker,{job,poolId,...options});
+        emit('dispatch',{worker:this.diagWorker,job,poolId,nativeId:message.id,task:message.task});
+        const value=super.postMessage(message,...args);
+        emit('post-return',{worker:this.diagWorker,job,poolId,nativeId:message.id});return value;
+      }
+      return super.postMessage(message,...args);
+    }
+    emit(name,...args){
+      if(name==='error')emit('worker-error',{worker:this.diagWorker,message:args[0]?.message,stack:args[0]?.stack});
+      if(name==='message'){
+        const message=args[0],worker=this.diagWorker;
+        if(message?.type==='buyerlog-fx-observation'){
+          events.push({...message.event,worker,pid:process.pid});return true;
+        }
+        if(message?.type==='result'){
+          const job=active.get(worker)?.job;active.delete(worker);
+          emit('main-receive',{worker,job,nativeId:message.id,ok:message.ok,workerMetrics:message.metrics,error:message.error});
+          const result=super.emit(name,...args);emit('main-receive-return',{worker,job,nativeId:message.id});sample();return result;
+        }
+      }
+      return super.emit(name,...args);
+    }
+  }
+  function observePool(factory,options={}){
+    const poolId=++nextPool,pool=factory({...options,WorkerClass:ObservedWorker});pools.set(poolId,pool);
+    const run=pool.run;
+    pool.run=function(task,payload={},options={}){
+      const job=++nextJob,record={job,poolId,pool,task,options:{inputBytes:0,...options}};
+      // Do not retain payload contents, authority, directories or FX data in traces.
+      const safe={ownerKey:options.ownerKey,generation:options.generation,priority:options.priority||'interactive',
+        timeoutMs:options.timeoutMs??600000,estimatedBytes:options.estimatedBytes,inputBytes:options.inputBytes||0,serializationKey:options.serializationKey||''};
+      record.options=safe;payloadJobs.set(payload,record);pending.set(job,record);
+      emit('submit',{job,poolId,task,options:safe,stats:pool.stats()});
+      let promise;
+      try{promise=run(task,payload,options);}finally{emit('submitted',{job,poolId,stats:pool.stats()});sample();}
+      return promise.then(lease=>{
+        pending.delete(job);emit('settled',{job,poolId,metrics:lease.metrics,stats:pool.stats()});
+        const release=lease.release;lease.release=()=>{emit('release',{job,poolId});release();sample();};return lease;
+      },error=>{pending.delete(job);emit('settled',{job,poolId,code:error.code,metrics:error.computeMetrics||null,stats:pool.stats()});throw error;});
+    };
+    return pool;
+  }
+  function flush(){
+    fs.writeFileSync(path.join(root,`fx-trace-${process.pid}.json`),JSON.stringify({schemaVersion:1,synthetic:true,
+      clock:'performance.timeOrigin + performance.now; epoch ms',reviewSha:REVIEW,diagnosticSha256:hash(fs.readFileSync(__filename)),events},null,2)+'\n');
+  }
+  function observeService(factory,options){
+    const service=factory(options);
+    for(const method of ['runExcelUtility','runOffice']){
+      const original=service[method];
+      service[method]=async function(...args){
+        const call=++nextCall;emit('service-submit',{call,method});
+        try{
+          const lease=await original.apply(service,args);
+          emit('service-result',{call,method,metrics:lease.metrics,
+            ...(method==='runExcelUtility'?{value:{found:lease.value.found,updated:lease.value.updated,reason:lease.value.reason||null}}:{})});return lease;
+        }catch(error){emit('service-error',{call,method,code:error.code,metrics:error.computeMetrics||null});throw error;}
+      };
+    }
+    return service;
+  }
+  function close(){clearInterval(timer);flush();}
+  return {events,emit,observePool,observeService,flush,close};
+}
+function workerPreload(){
+  if(globalThis.__buyerLogFxWorkerObserver)return;globalThis.__buyerLogFxWorkerObserver=true;
+  const send=(kind,extra={})=>wt.parentPort.postMessage({type:'buyerlog-fx-observation',event:{kind,atMs:clock(),threadId:wt.threadId,...extra}});
+  send('worker-boot');
+  // This preload runs before the production worker installs its message handler.
+  wt.parentPort.on('message',message=>{if(message?.type==='run')send('worker-receive',{nativeId:message.id,task:message.task});});
+  const post=wt.parentPort.postMessage.bind(wt.parentPort);
+  wt.parentPort.postMessage=(message,...args)=>{
+    if(message?.type==='result')send('worker-finish',{nativeId:message.id,ok:message.ok,workerMetrics:message.metrics});
+    return post(message,...args);
+  };
+}
+function serverPreload(){
+  assertPinnedProduction();
+  const root=validateRoot(process.env.BUYERLOG_FX_TRACE_ROOT),observer=createObserver({root});
+  const Module=require('node:module'),original=Module._load;
+  Module._load=function(request,parent,...rest){
+    const value=original.call(this,request,parent,...rest);
+    if(/(?:^|\/)compute-pool$/.test(request)&&value.createComputePool&&!value.__fxObserved){
+      const factory=value.createComputePool;value.createComputePool=options=>observer.observePool(factory,options);value.__fxObserved=true;
+    }
+    if(/(?:^|\/)compute-service$/.test(request)&&value.createComputeService&&!value.__fxObserved){
+      const factory=value.createComputeService;value.createComputeService=options=>observer.observeService(factory,options);value.__fxObserved=true;
+    }
+    return value;
+  };
+  // All observations stay in memory until process exit, outside measured work.
+  process.once('exit',()=>observer.close());
+}
+function productionHashes(){
+  return Object.fromEntries(['server/server.js','public/app-main.js','server/lib/compute-pool.js','server/lib/compute-service.js',
+    'server/workers/compute-worker.js','server/workers/excel-worker.js','server/lib/fxWorkbook.js'].map(file=>[file,hash(fs.readFileSync(path.join(APP,file)))]));
+}
+function assertPinnedProduction(){
+  const {spawnSync}=require('node:child_process');
+  const check=spawnSync('git',['diff','--quiet',REVIEW,'--','CLAUDE.md','AGENTS.md','resources/app/server',
+    'resources/app/public','resources/app/vendor','resources/app/package.json','resources/app/package-lock.json'],
+    {cwd:path.resolve(APP,'../..'),encoding:'utf8'});
+  if(check.status!==0)throw Error('Production must match frozen #885 '+REVIEW+'; no benchmark was started.');
+}
+function writeKurFixture(source){
+  const XLSX=require('xlsx'),wb=XLSX.utils.book_new(),file=path.join(source,'KUR.xlsx');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Currency','Oct 2026','Nov 2026'],['USD',1,1],['TRY',39,40],['EUR',.9,.95],['GBP',.8,null]]),'Synthetic');
+  XLSX.writeFile(wb,file);fs.utimesSync(file,new Date('2026-11-01T12:00:00Z'),new Date('2026-11-01T12:00:00Z'));
+  require('../server/lib/fxWorkbook').readFxWorkbook(file);
+  return file;
+}
+function verifyMatrix(root){
+  const assert=require('node:assert/strict'),index=JSON.parse(fs.readFileSync(path.join(root,'index.json'))),rows=[];
+  assert.equal(index.length,14);
+  const clean=(value,clocks=false)=>Object.fromEntries(Object.entries(value).filter(([k])=>k!=='folderSync'&&(!clocks||!['updatedAt','_updatedAt'].includes(k))));
+  for(const entry of index){
+    assert.equal(entry.exitCode,0);
+    const data=JSON.parse(fs.readFileSync(path.join(root,entry.file+'-'+entry.scenario,'result.json')));
+    assert.equal(data.status,'completed');assert.ok(data.pressure.every(p=>!p.code));
+    const job=data.jobs.find(j=>j.task==='excel-utility'),timeout=['pool-busy','key-same','memory-held'].includes(entry.scenario);
+    if(timeout){
+      assert.equal(job.phase,'queue');assert.equal(job.code,'COMPUTE_TIMEOUT');assert.equal(job.dispatchAtMs,null);
+      assert.equal(job.workerExecutionMs,null);assert.equal(job.metrics.durationMs,0);assert.ok(job.metrics.queueWaitMs>=4990);
+      assert.deepEqual(clean(data.before),clean(data.after));assert.equal(data.after.folderSync.reason,'parse-failed');
+      assert.equal(data.response.reason,'parse-failed');
+    }else{
+      assert.equal(job.phase,'completed');assert.equal(data.after.folderSync,null);
+      if(entry.file==='missing'){assert.deepEqual(data.before,data.after);assert.equal(data.response.reason,'KUR Excel bulunamadı');}
+      else{
+        assert.equal(data.after._revision,2);assert.equal(data.after.months['2026-09'].TRY,38);assert.equal(data.after.months['2026-10'].CHF,.88);
+        assert.deepEqual(data.after.months['2026-11'],{USD:1,TRY:40,EUR:.95});
+        const reference=JSON.parse(fs.readFileSync(path.join(root,'valid-warm-empty/result.json')));
+        assert.deepEqual(clean(data.after,true),clean(reference.after,true));
+      }
+    }
+    if(data.second)assert.deepEqual(data.second,data.after);
+    rows.push({scenario:entry.scenario,workbook:entry.file,phase:job.phase,queueWaitMs:job.metrics.queueWaitMs,
+      initialRevision:data.before._revision,finalRevision:data.after._revision,reason:data.response.reason,
+      dataEquivalentToBefore:JSON.stringify(clean(data.before))===JSON.stringify(clean(data.after)),
+      folderStatusEquivalent:JSON.stringify(data.before.folderSync)===JSON.stringify(data.after.folderSync)});
+  }
+  return {status:'passed',cases:rows};
+}
+function startup(root,workbook){
+  root=path.resolve(root);
+  if(!['missing','valid'].includes(workbook)||path.dirname(root)!==path.resolve(os.tmpdir())||!path.basename(root).startsWith('buyerlog-startup-')||fs.existsSync(root))throw Error('startup requires a fresh buyerlog-startup-* root directly under TMPDIR and missing|valid');
+  prepareRoot(root);const source=path.join(root,'source');fs.mkdirSync(source);
+  const XLSX=require('xlsx'),data=require('./generate-demo-data').build({rows:30000,seed:7,today:new Date('2026-11-05T12:00:00Z')});
+  for(const [file,sheet,rows] of [['ASAS - Demo.xlsx','ASAS',data.asas],['Antrepo - Demo.xlsx','Antrepo Raporu',data.antrepo],['LFL - Demo.xlsx','LFL',data.lfl]]){
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),sheet);XLSX.writeFile(wb,path.join(source,file),{bookType:'xlsx'});
+  }
+  const expected={'ASAS - Demo.xlsx':'2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99',
+    'Antrepo - Demo.xlsx':'c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d',
+    'LFL - Demo.xlsx':'8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f'};
+  for(const [file,digest] of Object.entries(expected))if(hash(fs.readFileSync(path.join(source,file)))!==digest)throw Error('historical source mismatch: '+file);
+  if(workbook==='valid')writeKurFixture(source);
+  const hashes=Object.fromEntries(fs.readdirSync(source).filter(f=>f.endsWith('.xlsx')).sort().map(file=>[file,hash(fs.readFileSync(path.join(source,file)))]));
+  fs.writeFileSync(path.join(source,'benchmark-fixture.json'),JSON.stringify({synthetic:true,rows:30000,seed:7,today:'2026-11-05',hashes},null,2)+'\n');
+  const {spawnSync}=require('node:child_process'),log=fs.openSync(path.join(root,'driver.log'),'wx');
+  const result=spawnSync(process.execPath,[path.join(__dirname,'benchmark-startup-orders.js'),'--rows','30000','--fixture-root',root,'--out',path.join(root,'measurement.json')],
+    {cwd:APP,env:{...process.env,BUYERLOG_FX_TRACE_ROOT:root,NODE_OPTIONS:(process.env.NODE_OPTIONS||'')+' --require '+JSON.stringify(__filename)},stdio:['ignore',log,log]});
+  fs.closeSync(log);fs.writeFileSync(path.join(root,'driver-result.json'),JSON.stringify({exitCode:result.status,signal:result.signal,error:result.error?.message},null,2)+'\n');
+  if(result.status!==0)process.exitCode=1;
+}
+function prepareRoot(root){
+  if(fs.existsSync(root)){
+    if(fs.lstatSync(root).isSymbolicLink()||fs.realpathSync(root)!==root||fs.readdirSync(root).some(name=>name!=='run.log'))throw Error('fresh unlinked diagnostic root required');
+  }
+  fs.mkdirSync(root,{recursive:true});fs.writeFileSync(path.join(root,'fx-diagnostic.json'),JSON.stringify({synthetic:true,reviewSha:REVIEW}));
+}
+async function scenario(root,kind,workbook){
+  prepareRoot(root);
+  for(const [key,dir] of Object.entries({BUYER_LOG_DATA_ROOT:'app',BUYER_LOG_SERVER_DATA_ROOT:'data',BUYER_LOG_AUTH_DATA_ROOT:'data',
+    BUYER_LOG_LOCAL_DATA_ROOT:'local',BUYER_LOG_TEMP_ROOT:'tmp'})){process.env[key]=path.join(root,dir);fs.mkdirSync(process.env[key],{recursive:true});}
+  process.env.BUYER_LOG_CONFIG_PATH=path.join(root,'config.json');process.env.BUYER_LOG_CENTRAL_IAM_ENABLED='0';
+  const source=path.join(root,'source');fs.mkdirSync(source);
+  if(workbook==='valid')writeKurFixture(source);
+  const db=require('../server/db'),{createComputePool}=require('../server/lib/compute-pool'),{createComputeService}=require('../server/lib/compute-service');
+  const initial=db.saveFx({base:'USD',months:{'2026-09':{TRY:38},'2026-10':{CHF:.88}},reportMonth:'2026-09'},db.loadFx()._revision);
+  const fxPayload={directories:[source],current:initial,force:false};
+  const inputBytes=require('../server/lib/compute-ipc').serializeForTransfer({excelTask:'loadFxWorkbookFromDirectories',excelPayload:fxPayload}).byteLength+1024;
+  const fxEstimate=256*MiB+inputBytes*8;
+  const constrained=kind.startsWith('memory-');
+  const observer=createObserver({root}),pool=observer.observePool(createComputePool,{maxPendingBytes:512*MiB,
+    ...(constrained?{memoryBudgetBytes:32*MiB+fxEstimate+512,maxWorkers:1}:{})});
+  const service=observer.observeService(createComputeService,{pool,root:path.join(root,'tmp')});
+  const report={schemaVersion:1,synthetic:true,reviewSha:REVIEW,excludes892:true,kind,workbook,startedAt:new Date().toISOString(),
+    platform:process.platform,node:process.version,cpuQuota:fs.readFileSync('/sys/fs/cgroup/cpu.max','utf8').trim(),
+    memoryLimitBytes:fs.readFileSync('/sys/fs/cgroup/memory.max','utf8').trim(),productionHashes:productionHashes(),initial:plain(initial),fxEstimate,initialPool:pool.stats()};
+  let held,loads=[],memoryTimer;
+  const failures=[];
+  const {extractFunction}=require('../tests/helpers/app-main-functions');
+  const context={require:require('node:module').createRequire(path.join(APP,'server/server.js')),__dirname:path.join(APP,'server'),path,
+    sourceUserId:()=> 'synthetic-buyer',sourceFolderForUser:()=>source,loadFx:db.loadFx,saveFx:db.saveFx,folderFxSyncStatus:null,
+    serverCompute:()=>service,publishSharedMasterChange(){},logRuntimeFailure:(key,error)=>failures.push({key,code:error.code,metrics:error.computeMetrics,message:error.message})};
+  vm.createContext(context);vm.runInContext(extractFunction(fs.readFileSync(path.join(APP,'server/server.js'),'utf8'),'syncFxFromKurWorkbook'),context);
+  // Snapshot is served by the real /api/fx route; only identity middleware is
+  // synthetic. No external server, account or credential is contacted.
+  const app=require('express')();const allow=(_req,_res,next)=>next();
+  require('../server/routes/costing-fx-shipping-routes')(app,{loadFx:db.loadFx,getFolderFxSyncStatus:()=>context.folderFxSyncStatus,
+    userAccess:{requireAnyArea:()=>allow,requireArea:()=>allow,requirePermission:()=>allow}});
+  const endpoint=app._router.stack.find(layer=>layer.route?.path==='/api/fx'&&layer.route.methods.get).route.stack.at(-1).handle;
+  const snapshot=()=>{let value;endpoint({}, {set(){},json(v){value=plain(v);}});return value;};
+  try{
+    if(kind!=='cold-empty')await service.warm();
+    if(constrained){
+      held=await pool.run('health',{}, {ownerKey:'synthetic-held-output',generation:'1',estimatedBytes:64*MiB});
+      report.heldPool=pool.stats();
+      if(kind==='memory-released')memoryTimer=setTimeout(()=>{held.release();held=null;observer.emit('controlled-lease-release');},1000);
+    }
+    if(kind==='pool-busy'||kind.startsWith('key-')){
+      const columns=Array.from({length:20},(_,c)=>({key:'c'+c,header:'Synthetic '+c,type:'text'}));
+      const rows=Array.from({length:5000},(_,r)=>columns.map((_,c)=>`DEMO-${r}-${c}`));
+      const normalized=require('../server/lib/lcwai-output/output-contracts').normalizeWorkbook({title:'Synthetic pressure',
+        sheets:Array.from({length:6},(_,i)=>({name:'Synthetic '+i,columns,rows}))},{lang:'en'});
+      if(!normalized.ok||normalized.warnings.length)throw Error('invalid synthetic Office pressure: '+JSON.stringify(normalized));
+      const job={format:'xlsx',data:normalized.data,options:{date:new Date('2026-11-01T12:00:00Z'),lang:'en'}};
+      // Real production Office workload. No artificial worker delay. key-* is
+      // explicitly a scheduler experiment, not a real Office serialization key.
+      const count=kind==='pool-busy'?14:6;
+      for(let n=0;n<count;n++)loads.push(service.runOffice('synthetic-pressure-'+n,job,
+        {priority:'interactive',...(kind.startsWith('key-')?{serializationKey:kind==='key-same'?'shared-fx':'synthetic-other'}:{})})
+        .then(lease=>{const result={metrics:lease.metrics,bytes:lease.value.buffer.byteLength};lease.release();return result;},error=>({code:error.code,metrics:error.computeMetrics})));
+    }
+    report.before=snapshot();observer.emit('sync-begin',{scenario:kind,workbook});
+    report.response=plain(await context.syncFxFromKurWorkbook('synthetic-buyer'));
+    observer.emit('sync-end');report.after=snapshot();report.failures=failures;
+    // A second ordinary check verifies no-op revision/data/status equivalence.
+    // Never retry a timed-out check, nor any refresh POST.
+    if(!failures.length&&!constrained&&kind.endsWith('empty')){
+      report.secondResponse=plain(await context.syncFxFromKurWorkbook('synthetic-buyer'));report.second=snapshot();
+    }
+    report.status='completed';
+  }catch(error){report.status='failed';report.error={message:error.message,stack:error.stack};process.exitCode=1;}
+  finally{
+    clearTimeout(memoryTimer);held?.release();report.pressure=await Promise.all(loads);
+    if(report.pressure.some(result=>result.code)){report.status='invalid-pressure';process.exitCode=1;}
+    await service.close();observer.close();
+    report.finishedAt=new Date().toISOString();report.finalPool=pool.stats();
+    report.jobs=observer.events.filter(e=>e.kind==='submit').map(e=>summarizeJob(observer.events,e.job));
+    fs.writeFileSync(path.join(root,'result.json'),JSON.stringify(report,null,2)+'\n');
+  }
+}
+async function main(){
+  const [mode,root,kind,workbook]=process.argv.slice(2);
+  if(['matrix','scenario','startup'].includes(mode))assertPinnedProduction();
+  if(mode==='verify'){const result=verifyMatrix(path.resolve(root));console.log(JSON.stringify(result,null,2));return;}
+  if(mode==='startup')return startup(root,kind);
+  if(mode==='scenario'){if(!root||!kind||!['valid','missing'].includes(workbook))throw Error('scenario ROOT KIND valid|missing');return scenario(path.resolve(root),kind,workbook);}
+  if(mode==='matrix'){
+    if(!root||fs.existsSync(root))throw Error('matrix requires a fresh OUTPUT_ROOT');prepareRoot(path.resolve(root));
+    const {spawnSync}=require('node:child_process'),index=[];
+    for(const file of ['missing','valid'])for(const scenario of ['cold-empty','warm-empty','pool-busy','key-same','key-different','memory-held','memory-released']){
+      const dir=path.resolve(root,file+'-'+scenario);fs.mkdirSync(dir,{recursive:true});
+      const log=fs.openSync(path.join(dir,'run.log'),'wx');
+      const run=spawnSync(process.execPath,[__filename,'scenario',dir,scenario,file],{cwd:APP,stdio:['ignore',log,log],timeout:240000});fs.closeSync(log);
+      index.push({scenario,file,directory:dir,exitCode:run.status,signal:run.signal,error:run.error?.message});
+      fs.writeFileSync(path.resolve(root,'index.json'),JSON.stringify(index,null,2)+'\n');
+      console.log(file+' '+scenario+' exit='+run.status);
+    }
+    if(index.some(run=>run.exitCode!==0))process.exitCode=1;return;
+  }
+  if(mode==='analyze'){
+    const files=fs.readdirSync(root).filter(file=>/^fx-trace-\d+\.json$/.test(file));
+    const traces=files.map(file=>{const trace=JSON.parse(fs.readFileSync(path.join(root,file)));return {file,jobs:trace.events.filter(e=>e.kind==='submit').map(e=>summarizeJob(trace.events,e.job))};});
+    fs.writeFileSync(path.join(root,'fx-summary.json'),JSON.stringify(traces,null,2)+'\n');return;
+  }
+  throw Error('Usage: diagnose-fx-timeout.js matrix ROOT | scenario ROOT KIND valid|missing | startup ROOT missing|valid | verify MATRIX_ROOT | analyze TRACE_ROOT');
+}
+module.exports={validateRoot,blockers,summarizeJob,createObserver,productionHashes,verifyMatrix,assertPinnedProduction,writeKurFixture,prepareRoot};
+if(!wt.isMainThread&&process.env.BUYERLOG_FX_WORKER_TRACE==='1')workerPreload();
+else if(wt.isMainThread&&process.env.BUYERLOG_FX_TRACE_ROOT&&process.argv[1]===path.join(APP,'server/server.js'))serverPreload();
+else if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});
