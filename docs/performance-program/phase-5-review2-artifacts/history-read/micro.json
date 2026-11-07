@@ -1,0 +1,96 @@
+{
+  "synthetic": true,
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "workload": "Five reads of an already-trimmed real 30k synthetic refresh history (1,000 retained details, 42,726 total). Six fresh processes, alternating order. Exact before db.js from b2c9bdac compiled with the same filename/dependencies; only the documented one-line idempotence change differs. No simultaneous tests/browser/benchmark.",
+  "beforeSourceSha256": "3a7ebc718088817927541acf7aa19637899c61b7cfa3f5cb321fd641ec8f151c",
+  "afterSourceSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+  "runs": [
+    {
+      "arm": "before",
+      "ms": 254.5822,
+      "fsyncCalls": 30,
+      "reads": 5,
+      "revisionAdvance": 5,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 1,
+      "root": "/tmp/buyerlog-history-micro-h60ljrmr"
+    },
+    {
+      "arm": "after",
+      "ms": 32.612144,
+      "fsyncCalls": 0,
+      "reads": 5,
+      "revisionAdvance": 0,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 1,
+      "root": "/tmp/buyerlog-history-micro-um_yag2b"
+    },
+    {
+      "arm": "after",
+      "ms": 31.53577899999999,
+      "fsyncCalls": 0,
+      "reads": 5,
+      "revisionAdvance": 0,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 2,
+      "root": "/tmp/buyerlog-history-micro-i2l6sbgo"
+    },
+    {
+      "arm": "before",
+      "ms": 198.903543,
+      "fsyncCalls": 30,
+      "reads": 5,
+      "revisionAdvance": 5,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 2,
+      "root": "/tmp/buyerlog-history-micro-kd0dfub4"
+    },
+    {
+      "arm": "before",
+      "ms": 112.52028600000003,
+      "fsyncCalls": 30,
+      "reads": 5,
+      "revisionAdvance": 5,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 3,
+      "root": "/tmp/buyerlog-history-micro-rtvazx53"
+    },
+    {
+      "arm": "after",
+      "ms": 37.63287900000003,
+      "fsyncCalls": 0,
+      "reads": 5,
+      "revisionAdvance": 0,
+      "itemsSha256": "eb07957246765d48b77ccc4d66f754e4fff23b965b81ddc66381b043d8a9124a",
+      "details": 1000,
+      "detailsTotal": 42726,
+      "rep": 3,
+      "root": "/tmp/buyerlog-history-micro-x089eh9v"
+    }
+  ],
+  "medians": {
+    "before": {
+      "ms": 198.903543,
+      "fsyncCalls": 30,
+      "revisionAdvance": 5
+    },
+    "after": {
+      "ms": 32.612144,
+      "fsyncCalls": 0,
+      "revisionAdvance": 0
+    }
+  },
+  "sameItemOutput": true,
+  "limitation": "Micro timings are not endpoint p95, whole startup gains or proof that every >200 ms opening gap is fixed."
+}

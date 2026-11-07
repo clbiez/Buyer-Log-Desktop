@@ -11,16 +11,17 @@
      süresi ve o arada harcanan CPU ile birlikte (uyku/saat sıçraması elenir),
    - heap kullanımı sınırın %80'ini aştığında (dakikada en çok bir kez).
 
-   Kilit profili: V8'in örnekleyici CPU profili arka planda sürekli açık
-   tutulur (5 ms örnek aralığı) ve bir dakikada bir sıfırlanır, böylece bellek
+   İsteğe bağlı kilit profili (BL_STALL_PROFILE=1): V8'in örnekleyici CPU profili arka planda açık
+   tutulur (5 ms örnek aralığı) ve kontrol worker'ında bir dakikada bir sıfırlanır, böylece bellek
    sınırlı kalır. Uzun bir kilit (varsayılan 10 sn) biter bitmez profil
    alınır; en çok CPU harcayan fonksiyonlar ve en ağır çağrı zincirleri
    `[RUNTIME] stall-profile` satırlarıyla loga yazılır, tam profil de
    logs/stall-profiles altına .cpuprofile olarak saklanır (en çok 3 dosya).
    Satırlar yalnız fonksiyon adı ve uygulama içi dosya yolu içerir; iş verisi,
-   kullanıcı adı veya yerel klasör yolu içermez. BL_STALL_PROFILE=0 kapatır. */
+   kullanıcı adı veya yerel klasör yolu içermez. Normal çalışma sayısal stall ve
+   heap takibini sürdürür; CPU profili V8 yeniden başlatma maliyeti nedeniyle
+   yalnız açıkça istenen tanı koşusunda etkinleşir. */
 const v8 = require('v8');
-const fs = require('fs');
 const path = require('path');
 
 const MB = 1048576;
@@ -83,60 +84,7 @@ function summarizeProfile(profile, { topFunctions = 15, topStacks = 4, stackDept
   return { totalMs: Math.round(totalUs / 1000), functions, stacks };
 }
 
-function createStallProfiler({ log, samplingUs = 5000, windowMs = 60000, dir = null, keep = 3 } = {}) {
-  let session = null, running = false, windowStart = 0, busy = false;
-  try {
-    const inspector = require('inspector');
-    session = new inspector.Session();
-    session.connect();
-  } catch (_) { return null; }
-  const post = (method, params) => new Promise(resolve => {
-    try { session.post(method, params || {}, (error, result) => resolve(error ? null : result)); }
-    catch (_) { resolve(null); }
-  });
-  async function start() {
-    if (await post('Profiler.enable') === null) return false;
-    await post('Profiler.setSamplingInterval', { interval: samplingUs });
-    running = (await post('Profiler.start')) !== null;
-    windowStart = Date.now();
-    return running;
-  }
-  function save(profile) {
-    if (!dir) return '';
-    try {
-      fs.mkdirSync(dir, { recursive: true });
-      const name = 'stall-' + new Date().toISOString().replace(/[:.]/g, '-') + '.cpuprofile';
-      fs.writeFileSync(path.join(dir, name), JSON.stringify(profile));
-      const files = fs.readdirSync(dir).filter(file => file.endsWith('.cpuprofile')).sort();
-      for (const file of files.slice(0, Math.max(0, files.length - keep))) { try { fs.unlinkSync(path.join(dir, file)); } catch (_) {} }
-      return name;
-    } catch (_) { return ''; }
-  }
-  // A quiet minute is discarded so the profile buffer stays small.
-  async function rotate() {
-    if (!running || busy || Date.now() - windowStart < windowMs) return;
-    busy = true;
-    try { await post('Profiler.stop'); await post('Profiler.start'); windowStart = Date.now(); }
-    finally { busy = false; }
-  }
-  async function capture(blockedMs) {
-    if (!running || busy) return;
-    busy = true;
-    try {
-      const result = await post('Profiler.stop');
-      if (result && result.profile) {
-        const summary = summarizeProfile(result.profile);
-        const file = save(result.profile);
-        log(formatLine('stall-profile', { blockedMs, sampledMs: summary.totalMs, ...(file ? { file } : {}) }));
-        summary.functions.forEach((item, index) => log(`[RUNTIME] stall-profile top${index + 1} ${item.ms}ms ${item.pct}% ${item.label}`));
-        summary.stacks.forEach((item, index) => log(`[RUNTIME] stall-profile stack${index + 1} ${item.ms}ms ${item.chain.join(' < ')}`));
-      }
-      await post('Profiler.start'); windowStart = Date.now();
-    } catch (_) { /* diagnostics never break the server */ }
-    finally { busy = false; }
-  }
-  return { start, rotate, capture, stop: () => { running = false; void post('Profiler.stop'); try { session.disconnect(); } catch (_) {} } };
-}
+const {createStallProfiler}=require('./runtime-stall-profiler');
 
 function defaultProfileDir() {
   try { return path.join(require('../user-data').LOGS_ROOT, 'stall-profiles'); } catch (_) { return null; }
@@ -144,9 +92,10 @@ function defaultProfileDir() {
 
 const SUSPEND_MS = 10 * 60000;
 function startRuntimePressureMonitor({ log = console.log, intervalMs = 5000, stallMs = 3000, pressureRatio = 0.8, pressureEveryMs = 60000, now = Date.now, cpu = () => { const usage = process.cpuUsage(); return usage.user + usage.system; },
-  profile = process.env.BL_STALL_PROFILE !== '0', profileStallMs = 10000, profileDir } = {}) {
+  profile = process.env.BL_STALL_PROFILE === '1', profileStallMs = 10000, profileDir } = {}) {
   log(formatLine('heap-limit', heapNumbers()));
   const profiler = profile ? createStallProfiler({ log, dir: profileDir === undefined ? defaultProfileDir() : profileDir }) : null;
+  if(!profile)log(formatLine('stall-profiler',{enabled:0,optIn:'BL_STALL_PROFILE=1'}));
   if (profiler) void profiler.start().then(ok => { if (ok) log(formatLine('stall-profiler', { samplingMs: 5, minStallMs: profileStallMs })); });
   let expected = now() + intervalMs, lastPressureAt = 0, lastCpu = cpu();
   const timer = setInterval(() => {
@@ -166,7 +115,7 @@ function startRuntimePressureMonitor({ log = console.log, intervalMs = 5000, sta
     }
   }, intervalMs);
   timer.unref?.();
-  return { stop: () => { clearInterval(timer); profiler?.stop(); } };
+  return { stop: () => { clearInterval(timer); return profiler?.stop(); } };
 }
 
 module.exports = { startRuntimePressureMonitor, formatLine, summarizeProfile };

@@ -1,0 +1,383 @@
+{
+  "synthetic": true,
+  "acceptancePassed": false,
+  "cohort": "/tmp/phase-5-worker-observer-cohort-plan.json",
+  "macros": {
+    "before": {
+      "samples": {
+        "refreshWallMs": [
+          49955.766475000004,
+          63965.428932999996,
+          50731.937353999994
+        ],
+        "refreshElapsedMs": [
+          48712,
+          56735,
+          48775
+        ],
+        "overview.primaryScreenReadyMs": [
+          8323.89999999106,
+          5743.899999991059,
+          5266.0999999940395
+        ],
+        "overview.startupReadyMs": [
+          8405.5,
+          5762.70000000298,
+          5284.5999999940395
+        ],
+        "overview.systemStartupCompleteMs": [
+          8728.89999999106,
+          5871.20000000298,
+          5422.399999991059
+        ],
+        "overview.primaryToGateMs": [
+          81.6000000089407,
+          18.80000001192093,
+          18.5
+        ],
+        "cp.primaryScreenReadyMs": [
+          68779.5,
+          63700.60000000894,
+          76631
+        ],
+        "cp.startupReadyMs": [
+          68805.70000000298,
+          63829.40000000596,
+          76655.79999999702
+        ],
+        "cp.systemStartupCompleteMs": [
+          69020.90000000596,
+          63985.30000001192,
+          76846.70000000298
+        ],
+        "cp.primaryToGateMs": [
+          26.200000002980232,
+          128.79999999701977,
+          24.799999997019768
+        ],
+        "orders.primaryScreenReadyMs": [
+          9633.59999999404,
+          7913.800000011921,
+          7483.29999999702
+        ],
+        "orders.startupReadyMs": [
+          9660.89999999106,
+          7954.800000011921,
+          7562.5
+        ],
+        "orders.systemStartupCompleteMs": [
+          10022.79999999702,
+          8067,
+          7949.100000008941
+        ],
+        "orders.primaryToGateMs": [
+          27.299999997019768,
+          41,
+          79.20000000298023
+        ],
+        "koleksiyon.primaryScreenReadyMs": [
+          17916.70000000298,
+          14977.70000000298,
+          13184.59999999404
+        ],
+        "koleksiyon.startupReadyMs": [
+          17945.5,
+          14990.09999999404,
+          13195.09999999404
+        ],
+        "koleksiyon.systemStartupCompleteMs": [
+          18030.89999999106,
+          15031.20000000298,
+          13331.79999999702
+        ],
+        "koleksiyon.primaryToGateMs": [
+          28.799999997019768,
+          12.399999991059303,
+          10.5
+        ],
+        "cp.sameTabMs": [
+          45623.20000000298,
+          42028.5,
+          43890.29999999702
+        ],
+        "orders.sameTabMs": [
+          2054.300000011921,
+          2626.7000000029802,
+          2347.9000000059605
+        ],
+        "koleksiyon.sameTabMs": [
+          180.29999999701977,
+          127,
+          144.09999999403954
+        ]
+      },
+      "medians": {
+        "refreshWallMs": 50731.937353999994,
+        "refreshElapsedMs": 48775,
+        "overview.primaryScreenReadyMs": 5743.899999991059,
+        "overview.startupReadyMs": 5762.70000000298,
+        "overview.systemStartupCompleteMs": 5871.20000000298,
+        "overview.primaryToGateMs": 18.80000001192093,
+        "cp.primaryScreenReadyMs": 68779.5,
+        "cp.startupReadyMs": 68805.70000000298,
+        "cp.systemStartupCompleteMs": 69020.90000000596,
+        "cp.primaryToGateMs": 26.200000002980232,
+        "orders.primaryScreenReadyMs": 7913.800000011921,
+        "orders.startupReadyMs": 7954.800000011921,
+        "orders.systemStartupCompleteMs": 8067,
+        "orders.primaryToGateMs": 41,
+        "koleksiyon.primaryScreenReadyMs": 14977.70000000298,
+        "koleksiyon.startupReadyMs": 14990.09999999404,
+        "koleksiyon.systemStartupCompleteMs": 15031.20000000298,
+        "koleksiyon.primaryToGateMs": 12.399999991059303,
+        "cp.sameTabMs": 43890.29999999702,
+        "orders.sameTabMs": 2347.9000000059605,
+        "koleksiyon.sameTabMs": 144.09999999403954
+      },
+      "healthEndpointAvailable": [
+        false,
+        false,
+        false
+      ],
+      "observedUnavailableHealthRefreshP95Ms": [
+        204.77000099999714,
+        1583.0819579999988,
+        770.398583000002
+      ],
+      "healthSuccessfulRefreshP95Ms": null,
+      "healthLimitation": "The old /api/health route returns 404; no successful health baseline or health gain is claimed. Failed/timeout wall samples are retained separately."
+    },
+    "after": {
+      "samples": {
+        "refreshWallMs": [
+          64381.58235499999,
+          72695.260747,
+          64807.948534
+        ],
+        "refreshElapsedMs": [
+          63093,
+          71369,
+          63760
+        ],
+        "healthRefreshP95Ms": [
+          132.1942769999987,
+          1420.0343799999973,
+          277.01243899999827
+        ],
+        "overview.primaryScreenReadyMs": [
+          4776.399999991059,
+          3760.5,
+          6377.399999991059
+        ],
+        "overview.startupReadyMs": [
+          4793.5,
+          3791.7999999970198,
+          6399.899999991059
+        ],
+        "overview.systemStartupCompleteMs": [
+          4891.399999991059,
+          3912.7999999970198,
+          6500.5999999940395
+        ],
+        "overview.primaryToGateMs": [
+          17.100000008940697,
+          31.299999997019768,
+          22.5
+        ],
+        "cp.primaryScreenReadyMs": [
+          53692.20000000298,
+          61878.29999999702,
+          59679
+        ],
+        "cp.startupReadyMs": [
+          53710.39999999106,
+          61914.29999999702,
+          59707.89999999106
+        ],
+        "cp.systemStartupCompleteMs": [
+          54228.59999999404,
+          224714.5,
+          60367.5
+        ],
+        "cp.primaryToGateMs": [
+          18.19999998807907,
+          36,
+          28.899999991059303
+        ],
+        "orders.primaryScreenReadyMs": [
+          8317.10000000894,
+          7702.5,
+          7408.29999999702
+        ],
+        "orders.startupReadyMs": [
+          8387.70000000298,
+          7720.29999999702,
+          7425.5999999940395
+        ],
+        "orders.systemStartupCompleteMs": [
+          8531.10000000894,
+          7839.79999999702,
+          7521.9000000059605
+        ],
+        "orders.primaryToGateMs": [
+          70.59999999403954,
+          17.799999997019768,
+          17.299999997019768
+        ],
+        "koleksiyon.primaryScreenReadyMs": [
+          3302.2000000029802,
+          2966.6000000089407,
+          3731.9000000059605
+        ],
+        "koleksiyon.startupReadyMs": [
+          3319.5999999940395,
+          2982.1000000089407,
+          3760.4000000059605
+        ],
+        "koleksiyon.systemStartupCompleteMs": [
+          3410.7999999970198,
+          3028.2000000029802,
+          3864.5
+        ],
+        "koleksiyon.primaryToGateMs": [
+          17.399999991059303,
+          15.5,
+          28.5
+        ],
+        "cp.sameTabMs": [
+          53790.10000000894,
+          79195.79999999702,
+          40685.29999999702
+        ],
+        "orders.sameTabMs": [
+          2520,
+          2843.800000011921,
+          3052.7999999970198
+        ],
+        "koleksiyon.sameTabMs": [
+          116.19999998807907,
+          145.40000000596046,
+          147
+        ]
+      },
+      "medians": {
+        "refreshWallMs": 64807.948534,
+        "refreshElapsedMs": 63760,
+        "healthRefreshP95Ms": 277.01243899999827,
+        "overview.primaryScreenReadyMs": 4776.399999991059,
+        "overview.startupReadyMs": 4793.5,
+        "overview.systemStartupCompleteMs": 4891.399999991059,
+        "overview.primaryToGateMs": 22.5,
+        "cp.primaryScreenReadyMs": 59679,
+        "cp.startupReadyMs": 59707.89999999106,
+        "cp.systemStartupCompleteMs": 60367.5,
+        "cp.primaryToGateMs": 28.899999991059303,
+        "orders.primaryScreenReadyMs": 7702.5,
+        "orders.startupReadyMs": 7720.29999999702,
+        "orders.systemStartupCompleteMs": 7839.79999999702,
+        "orders.primaryToGateMs": 17.799999997019768,
+        "koleksiyon.primaryScreenReadyMs": 3302.2000000029802,
+        "koleksiyon.startupReadyMs": 3319.5999999940395,
+        "koleksiyon.systemStartupCompleteMs": 3410.7999999970198,
+        "koleksiyon.primaryToGateMs": 17.399999991059303,
+        "cp.sameTabMs": 53790.10000000894,
+        "orders.sameTabMs": 2843.800000011921,
+        "koleksiyon.sameTabMs": 145.40000000596046
+      },
+      "healthEndpointAvailable": [
+        true,
+        true,
+        true
+      ]
+    }
+  },
+  "dedicated": [
+    {
+      "rep": 1,
+      "correctness": "passed",
+      "status": "failed",
+      "measurements": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 141,
+          "maxGapMs": 1841.4620219999997,
+          "maxDelayMs": 1831.4620219999997,
+          "gapsOver200ms": 16,
+          "maxGapUpperBoundMs": 1841.4620219999997,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 10,
+          "maxGapMs": 82.69470399999409,
+          "maxDelayMs": 72.69470399999409,
+          "gapsOver200ms": 0,
+          "maxGapUpperBoundMs": 82.69470399999409,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    },
+    {
+      "rep": 2,
+      "correctness": "passed",
+      "status": "failed",
+      "measurements": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 45,
+          "maxGapMs": 107.71648699999969,
+          "maxDelayMs": 97.71648699999969,
+          "gapsOver200ms": 0,
+          "maxGapUpperBoundMs": 107.71648699999969,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 40,
+          "maxGapMs": 255.29179800000566,
+          "maxDelayMs": 245.29179800000566,
+          "gapsOver200ms": 1,
+          "maxGapUpperBoundMs": 255.29179800000566,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    },
+    {
+      "rep": 3,
+      "correctness": "passed",
+      "status": "failed",
+      "measurements": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 59,
+          "maxGapMs": 203.62997299999915,
+          "maxDelayMs": 193.62997299999915,
+          "gapsOver200ms": 1,
+          "maxGapUpperBoundMs": 203.62997299999915,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 24,
+          "maxGapMs": 112.15829300000041,
+          "maxDelayMs": 102.15829300000041,
+          "gapsOver200ms": 0,
+          "maxGapUpperBoundMs": 112.15829300000041,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    }
+  ]
+}
