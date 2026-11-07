@@ -19559,7 +19559,8 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
   return book.xlsx.writeBuffer();
 }
 window.BLBacklogChartContext={
-  prepareQuery:()=>fetchBacklogSourceColumns(),
+  prepareQuery:()=>prepareBacklogChartQuery(),
+  whenRowsReady:()=>waitForBacklogRowsReady(),
   queryParams:(allColumns=false)=>{
     const params=backlogExportQueryParams();
     // Ayar penceresinde ASAS/Antrepo dahil tüm mevcut başlıklar seçilebilir olmalı.
@@ -19729,7 +19730,28 @@ function applyBacklogData(data){
   updateBacklogBuyerGrupBtnLabel();
 }
 let backlogFetchGeneration=0;
+let backlogFetchPending=null;
+async function prepareBacklogChartQuery(){
+  await fetchBacklogSourceColumns();
+  await waitForBacklogRowsReady();
+}
+async function waitForBacklogRowsReady(){
+  // İlk pivot kaynak revizyonunu ortak satır önbelleğine bildirir. Grafik onu
+  // beklemezse henüz başlayan ortak isteği bu bildirim silip tekrar başlatır.
+  while(backlogFetchPending)await backlogFetchPending.ready;
+}
 async function fetchBacklog(params){
+  const previous=backlogFetchPending,entry={ready:null,finish:null};
+  entry.ready=new Promise(resolve=>{entry.finish=resolve;});backlogFetchPending=entry;
+  // Daha yeni filtre eski isteğin tamamlanmasını beklemez; hazırlanan grafik
+  // her uyanışında yalnız son pivotu izler.
+  previous?.finish();
+  return fetchBacklogData(params).finally(()=>{
+    if(backlogFetchPending===entry)backlogFetchPending=null;
+    entry.finish();
+  });
+}
+async function fetchBacklogData(params){
   backlogPrefetch=null;
   showBacklogLoadingState();
   const generation=++backlogFetchGeneration;

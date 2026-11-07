@@ -69,5 +69,12 @@ function createOwnershipResolver(orderAccess, profiles = []) {
 }
 function ownershipFor(actor, orderAccess, profiles) { return createOwnershipResolver(orderAccess, profiles)(actor); }
 function isOwnerWrite(actor, orderAccess, profiles) { return ownershipFor(actor, orderAccess, profiles).allowed; }
+function deniedOrderCodes(resolve,actor,codes){
+  const denied=[];
+  for(const code of new Set((Array.isArray(codes)?codes:[]).map(value=>clean(value)).filter(value=>/^\d{1,20}$/.test(value)))){
+    if(!resolve({...actor,recordId:`cp-order:${code}||`}).allowed)denied.push(code);
+  }
+  return denied;
+}
 
-module.exports = { createOwnershipResolver, ownershipFor, isOwnerWrite };
+module.exports = { createOwnershipResolver, ownershipFor, isOwnerWrite, deniedOrderCodes };

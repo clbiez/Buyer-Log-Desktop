@@ -349,6 +349,16 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
+const { getComputeService:serverCompute, closeComputeService } = require('./lib/compute-runtime');
+const { createComputeReadGuard } = require('./lib/compute-read-guard');
+const { createComputeReadService } = require('./lib/compute-read-service');
+const { sendComputedResponse } = require('./lib/compute-response');
+const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
+const publishedComputeSources = new Map();
+const coldComputeSourcesInFlight = new Map();
+// Thread kurulumu HTTP açılış penceresinde tekrarlanmaz; yalnız kod hazırlanır,
+// kullanıcı kaynağı veya görünmeyen modül verisi sorgulanmaz.
+void serverCompute().warm().catch(error=>logRuntimeFailure('computePoolWarmup',error));
 const { SharedRevisionStore } = require('./lib/shared-revision-store');
 const platform = require('./lib/platform');
 const { buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, deriveOperationalStatus, findAntrepoHit, applyDateOverrides } = require('./lib/parse');
@@ -2227,6 +2237,9 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 app.use(userAccess.requireSelection);
+app.use(require('./lib/compute-access-middleware').createComputeAccessMiddleware({
+  prepare:()=>userAccess.prepareComputeAccessContext(),profileFor:req=>userAccess.sessionProfile(req),
+}));
 // Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
 app.use((req, res, next) => {
   noteModeratorSession(req.currentUser);
@@ -5502,52 +5515,44 @@ app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAcc
     res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:transport === OAB_DESKTOP_TRANSPORT ? 'desktop-session' : 'existing-browser-cdp' } });
   } catch (err) { automationError(res, err, 'PASS bağlantısı kurulamadı.'); }
 });
-app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
+function assertOabMetadataRequest(req,id){
+  const live=userAccess.sessionProfile(req);
+  if(!live||String(live.id)!==String(id)||live.enabled===false||live.status!=='ACTIVE')throw Object.assign(new Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'),{code:'USER_LOGIN_REQUIRED',statusCode:401});
+  try{assertOabCurrentAccess(id);}catch(error){
+    if(error.code==='OAB_ACCESS_REVOKED'){
+      error.message='OAB erişim yetkiniz değişti. / Your OAB access permission changed.';
+      error.errorEn='Your OAB access permission changed.';
+    }
+    throw error;
+  }
+}
+async function computedOabMetadataForRequest(req,operation,ref){
+  const id=req.currentUser.id,assertCurrent=()=>assertOabMetadataRequest(req,id);assertCurrent();
+  const lease=await serverCompute().runOabMetadata(id,operation,ref,{assertCurrent});
+  try{assertCurrent();return {...lease,assertResponse:assertCurrent};}catch(error){lease.release();throw error;}
+}
+app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
   try {
     // Bundled metadata: filtre seçenekleri uygulamayla birlikte gelen JSON'dan
-    // okunur; normal filtre kullanımı PASS bağlantısı kurmaz.
-    const seasons = oabStaticMetadata.getSeasons();
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      seasons,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    // worker'da okunur; normal filtre kullanımı PASS bağlantısı kurmaz.
+    const lease=await computedOabMetadataForRequest(req,'seasons');
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB filtre metadata yüklenemedi.'); }
 });
-app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const seasonRef = req.body && req.body.seasonRef;
     if (seasonRef == null || seasonRef === '') return res.status(400).json({ error:'seasonRef zorunlu.', code:'OAB_SEASON_REQUIRED' });
-    const mag = oabStaticMetadata.getMag(seasonRef);
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      mag,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    const lease=await computedOabMetadataForRequest(req,'mag',seasonRef);
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB MAG metadata yüklenemedi.'); }
 });
-app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const merchSubGroupRef = req.body && req.body.merchSubGroupRef;
     if (merchSubGroupRef == null || merchSubGroupRef === '') return res.status(400).json({ error:'merchSubGroupRef zorunlu.', code:'OAB_MAG_REQUIRED' });
-    const buyerGroups = oabStaticMetadata.getBuyerGroups(merchSubGroupRef);
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      buyerGroups,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    const lease=await computedOabMetadataForRequest(req,'buyer-groups',merchSubGroupRef);
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB Buyer Group metadata yüklenemedi.'); }
 });
 // OAB verisi: rapor cache'i (oabStore, metadata cache'inden AYRI) burada
@@ -6277,8 +6282,18 @@ function endeksmatikApiError(res, err, fallback) {
   if (status >= 500) return apiError(res, err, fallback);
   return res.status(status).json({ error: err && err.message || fallback, code: err && err.code || 'REQUEST_ERROR', details: err && err.details || null });
 }
-app.get('/api/endeksmatik/status', (_req, res) => {
-  try { res.json(endeksmatik.publicStatus()); }
+async function endeksmatikStatusForRequest(req){
+  const id=req.currentUser.id;
+  const status=await endeksmatik.publicStatusAsync(async descriptor=>{
+    const lease=await serverCompute().runEndeksmatikStatus(id,descriptor);
+    try{return lease.value.status;}finally{lease.release();}
+  });
+  const live=userAccess.sessionProfile(req);
+  if(!live||live.id!==id||live.enabled===false||live.status!=='ACTIVE')throw Object.assign(new Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'),{code:'USER_LOGIN_REQUIRED',statusCode:401});
+  return status;
+}
+app.get('/api/endeksmatik/status', async (req, res) => {
+  try { res.json(await endeksmatikStatusForRequest(req)); }
   catch (err) { apiError(res, err, 'Endeksmatik veri durumu okunamadı.'); }
 });
 app.post('/api/endeksmatik/calculate', (req, res) => {
@@ -6315,8 +6330,8 @@ app.post('/api/endeksmatik/structure-report', userAccess.requirePermission('mana
 });
 // Çoklu set yönetimi (v7.0.172). Listeleme/hesap herkese açık; varsayılan
 // seçimi, ad ve silme Endeksmatik yükleme yetkisiyle aynı izne bağlıdır.
-app.get('/api/endeksmatik/sets', (_req, res) => {
-  try { const status = endeksmatik.publicStatus(); res.json({ ok: true, activeSetId: status.activeSetId, sets: status.sets }); }
+app.get('/api/endeksmatik/sets', async (req, res) => {
+  try { const status = await endeksmatikStatusForRequest(req); res.json({ ok: true, activeSetId: status.activeSetId, sets: status.sets }); }
   catch (err) { apiError(res, err, 'Endeksmatik setleri okunamadı.'); }
 });
 app.post('/api/endeksmatik/lookup', (req, res) => {
@@ -6732,6 +6747,7 @@ function refreshPerformanceProfile(value, requestedTargets, sourcePolicy = {}) {
 }
 function sourceFilterReadiness(targets = null,value='moderator') {
   const overrides = loadOverrides();
+  if(overrides.asasSourceMode!=='database')return inspectSourceFilterReadiness([],targets,{asasSourceMode:'excel'});
   const items=userPreferences.applyHorizonOverrides(loadModelConnections().items,sourceUserId(value),targets,userAccess.roleWorkspaceEntries(value));
   return inspectSourceFilterReadiness(items, targets, {
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',
@@ -6827,7 +6843,7 @@ function hydrateSharedModelSnapshot(value) {
 
 async function saveRuntimeModelSnapshot(id, runtime) {
   if (!runtime || !runtime.loadedAt) return null;
-  return saveModelSnapshotAsync(id, {
+  const payload = {
     loadedAt: runtime.loadedAt,
     sources: runtime.sources || null,
     asasOrders: runtime.asasOrders || [],
@@ -6845,7 +6861,18 @@ async function saveRuntimeModelSnapshot(id, runtime) {
     refreshWarningDetails: runtime.refreshWarningDetails || [],
     modelRefresh: runtime.modelRefresh || null,
     lastRefreshResult: runtime.lastRefreshResult || null,
-  });
+  };
+  const operation = (async () => {
+    const metrics = await saveModelSnapshotAsync(id, payload);
+    const descriptor = await serverCompute().seedSource({ownerId:id,generation:crypto.randomBytes(24).toString('hex'),source:payload,
+      uncompressedBytes:await computeSnapshotByteEstimate(id,metrics),publish:false});
+    Object.defineProperty(runtime,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
+    if(cacheForUser(id)===runtime){await serverCompute().publishSource(descriptor);rememberComputeSource(id,runtime,descriptor);}
+    return metrics;
+  })();
+  Object.defineProperty(runtime,'_computeSourcePreparing',{value:operation,enumerable:false,configurable:true});
+  try{return await operation;}
+  finally{if(runtime._computeSourcePreparing===operation)delete runtime._computeSourcePreparing;}
 }
 
 async function loadInitialDataAndLfl(value){
@@ -6898,16 +6925,17 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
   const { decideFolderKurApply, mergeFolderKur } = require('./lib/fxWorkbook');
   const id = sourceUserId(value), appRoot = path.join(__dirname, '..');
   const sourceFolder = sourceFolderForUser(id);
-  let current = loadFx();
+  let current = loadFx(), computeLease;
   const remember = (candidate, reason) => {
     folderFxSyncStatus = { file: candidate.file || 'KUR.xlsx', modifiedAt: candidate.modifiedAt || null,
       reportMonth: candidate.reportMonth || null, fingerprint: candidate.fingerprint || null, reason };
   };
   try {
-    const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
+    computeLease = await serverCompute().runExcelUtility('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
+    }, { ownerId:id,priority:explicit?'interactive':'background',timeoutMs: 5000, serializationKey: 'shared-fx' });
+    const parsed=computeLease.value;
     if (explicit && (!parsed.found || !parsed.fingerprint || parsed.fingerprint !== explicit.fingerprint)) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
@@ -6933,7 +6961,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
     remember({}, 'parse-failed');
     logRuntimeFailure('fxWorkbookRead', err);
     return { found: false, updated: false, reason: 'parse-failed' };
-  }
+  }finally{computeLease?.release();}
 }
 
 // Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat
@@ -7447,6 +7475,7 @@ async function publishRefreshedRuntime(id, next) {
   const snapshotMetrics = await saveRuntimeModelSnapshot(id, next);
   replaceUserCache(id, next);
   userAccess.syncProfiles(next.asasOrders, { authoritative: id === 'moderator' });
+  if(next._computeSourceDescriptor){await serverCompute().publishSource(next._computeSourceDescriptor);rememberComputeSource(id,next,next._computeSourceDescriptor);}
   Object.defineProperty(next, '_refreshPersistenceMetrics', { value:snapshotMetrics || null, enumerable:false, configurable:true });
   return next;
 }
@@ -7929,6 +7958,7 @@ function pageProjectionContext(currentUser = null) {
     schema: pageProjectionCache.CACHE_SCHEMA_VERSION,
     exFactoryApprovalVersion: 1,
     userId: id,
+    resolvedAccessHash: currentUser ? userAccess.computeAccessContext(currentUser).accessHash : null,
     profile: profile ? {
       id: profile.id, role: profile.role, systemRole: profile.systemRole, status: profile.status,
       scopes: profile.scopes, permissions: profile.permissions, accessAreas: profile.accessAreas,
@@ -7968,17 +7998,23 @@ function projectionSourceRevision(runtime){
   // source identity and must not invalidate a generation built by this refresh.
   return stableHashValue({loadedAt:source.loadedAt||null,sources:sources&&Object.keys(sources).length?sources:null});
 }
-function pageProjectionMatchesRuntime(manifest,runtime){
+function pageProjectionMatchesRuntime(manifest,runtime,module=null){
   const expected=String(runtime&&runtime.loadedAt||'');
   // Cold startup'ta runtime henüz disk snapshot'ından açılmamış olabilir; bu
   // durumda doğrulanmış manifest hızlı başlangıç kaynağıdır. Runtime yüklüyse
   // sourceLoadedAt birebir eşleşmeden eski projection kabul edilmez.
   if(!expected)return true;
+  const keys=runtime?._computeSourceDescriptor?.projectionKeys;
+  if(keys){
+    if(!manifest?.sourceProjectionKeys)return false;
+    const modules=module?[module]:Object.keys(manifest.modules||{});
+    if(modules.some(name=>String(keys[name]||'')!==String(manifest.sourceProjectionKeys[name]||'')))return false;
+  }
   if(manifest&&manifest.sourceRevisionKey)return String(manifest.sourceRevisionKey)===projectionSourceRevision(runtime);
   return String(manifest&&manifest.sourceLoadedAt||'')===expected;
 }
-function filterRowsByEffectiveHorizon(currentUser,target,rows){
-  const source=Array.isArray(rows)?rows:[];if(!currentUser)return source;
+function effectiveHorizonForTarget(currentUser,target){
+  if(!currentUser)return null;
   const id=sourceUserId(currentUser),runtime=cacheForUser(id);
   const appliedMap=runtime.modelRefresh&&runtime.modelRefresh.appliedHorizons&&typeof runtime.modelRefresh.appliedHorizons==='object'
     ? runtime.modelRefresh.appliedHorizons : null;
@@ -7993,7 +8029,7 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
       hasApplied=true;
     }
   }
-  if(hasApplied)return horizonFields.filterRows(source,horizon);
+  if(hasApplied)return horizon;
   const connections=loadModelConnections(),roleEntries=userAccess.roleWorkspaceEntries(currentUser||id),effective=userPreferences.applyHorizonOverrides(connections.items,id,[target],roleEntries);
   for(const connection of effective){
     const scopes=Array.isArray(connection.scopes)&&connection.scopes.length?connection.scopes:[{targets:['cp','orders','backlog','lfl','priceanalysis'],horizon:connection.horizon||{}}];
@@ -8007,7 +8043,7 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
      (ve ön ayardan gelen) ufuk artık bağlantıdan bağımsız da çözülür. */
   /* v7.81 — Kişisel/ön ayar ufkuna geri düşüş KALDIRILDI (kullanıcı
      kararı). Kaynakta filtre yoksa satırlar süzülmez. */
-  if(!horizon)return source;
+  if(!horizon)return null;
   /* v7.26 — KOŞUL GRUPLARI DA UYGULANIR.
 
      Bu süzgeç yalnız SEZON ve TARİH biliyordu. "MAG = CK1E" gibi bir ufuk
@@ -8017,24 +8053,115 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
      kullanılıyor; iki yolun sonucu ayrışamaz. */
   // Ufuk bir kez derlenir; satır başına yalnız karşılaştırma kalır
   // (gerçek ASAS'ta 29.923 satır için 191 ms → 96 ms).
-  return horizonFields.filterRows(source,horizon);
+  return horizon;
 }
-function pageCacheRuntimeMeta(runtime) {
-  const src = runtime || {};
-  return {
-    loadedAt: src.loadedAt || null,
-    sources: src.sources || null,
-    cpupdateInfo: src.cpupdateInfo || null,
-    cpupdateOverrides: src.cpupdateOverrides || null,
-    fabricHeaderInfo: src.fabricHeaderInfo || null,
-    antrepoHeaderInfo: src.antrepoHeaderInfo || null,
-    lflMeta: src.lflMeta || null,
-    refreshWarnings: Array.isArray(src.refreshWarnings) ? src.refreshWarnings : [],
-    refreshWarningDetails: Array.isArray(src.refreshWarningDetails) ? src.refreshWarningDetails : [],
-    modelRefresh: src.modelRefresh || null,
-    lastRefreshResult: src.lastRefreshResult || null,
-  };
+function filterRowsByEffectiveHorizon(currentUser,target,rows){
+  const source=Array.isArray(rows)?rows:[],horizon=effectiveHorizonForTarget(currentUser,target);
+  return horizon?horizonFields.filterRows(source,horizon):source;
 }
+function computeSourceBase(id){
+  const active=cacheForUser(id),manifest=active.loadedAt?null:pageProjectionCache.loadManifest(id);
+  return {active,manifest,key:manifest?.sourceRevisionKey||projectionSourceRevision(active.loadedAt?active:manifest?.runtimeMeta||active)};
+}
+function computeSourceToken(id){
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active?.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile?known.descriptor.capability:known.guardToken||'disk:'+base.key;
+  return 'disk:'+base.key;
+}
+function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
+function acceptComputedMetadata(profile,metadata,projectionKeys){
+  if(!metadata?.loadedAt)return;
+  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
+  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt,projectionKeys),active=cacheForUser(id);
+  if(!active.loadedAt)Object.assign(active,metadata);
+  Object.defineProperty(active,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
+  publishedComputeSources.set(id,{...known,key:projectionSourceRevision(metadata),descriptor});
+}
+async function computeSnapshotByteEstimate(id,metrics=null){
+  if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
+  const file=require('./lib/model-snapshot').snapshotPath(id);
+  for(const candidate of [file,file+'.bak']){
+    let handle;
+    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
+      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
+    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
+  }
+  return 1024*1024;
+}
+async function computeSourceFor(profile){
+  const id=sourceUserId(profile),initial=cacheForUser(id);
+  if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
+  if(coldComputeSourcesInFlight.has(id))return coldComputeSourcesInFlight.get(id);
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor;
+  const expected=computeSourceToken(id);
+  const stale=()=>Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+  const operation=(async()=>{
+    const bytes=await computeSnapshotByteEstimate(id);if(computeSourceToken(id)!==expected)throw stale();
+    // A projection manifest is not proof of the disk snapshot's identity after
+    // a crash between snapshot save and projection publication. The worker
+    // verifies the actual snapshot before its first descriptor is exposed.
+    const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||null,uncompressedBytes:bytes,replace:true});
+    if(computeSourceToken(id)!==expected)throw stale();
+    publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});let lease;
+    try{
+      lease=await serverCompute().run('source-info',descriptor,{});
+      if(computeSourceToken(id)!==expected||cacheForUser(id)!==base.active)throw stale();
+      const info=lease.value;acceptComputedMetadata(profile,info.runtimeMeta,info.sourceProjectionKeys);
+      const verified=publishedComputeSources.get(id);if(verified?.descriptor.capability!==descriptor.capability)throw stale();
+      // Already captured callers reject once on a recovered identity. Later
+      // reads use its bound loadedAt and retain all normal generation checks.
+      if(info.loadedAt&&base.manifest?.sourceLoadedAt&&String(info.loadedAt)!==String(base.manifest.sourceLoadedAt))verified.guardToken='disk:'+verified.key;
+      return verified.descriptor;
+    }catch(error){if(publishedComputeSources.get(id)?.descriptor.capability===descriptor.capability)publishedComputeSources.delete(id);throw error;}
+    finally{lease?.release();}
+  })();
+  coldComputeSourcesInFlight.set(id,operation);
+  try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
+}
+function computeReadContext(profile){
+  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
+  return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
+}
+const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
+  hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
+function computeParamsFor(profile,descriptor,task,parts={}){
+  if(task==='source-info')return {};
+  if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
+  if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
+  const shared=loadOverrides();
+  const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
+    mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
+    cpAllowed:!profile||['overview','cp','orders','koleksiyon','shipping','source'].some(area=>userAccess.hasArea(profile,area)),summaryAllowed:!profile||['overview','backlog','source'].some(area=>userAccess.hasArea(profile,area)),
+    cpModelColumns:loadModelConnections().items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
+    calendar:require('./lib/merch-calendar-store').publicProjection()};
+  if(task.startsWith('backlog-')){
+    data.headers=BACKLOG_TEMPLATE_HEADERS;
+    data.sourceRevision=stableHashValue([descriptor.generation,computeReadContext(profile).contextHash]);
+    data.rowsRevision=stableHashValue([data.sourceRevision,parts]);
+  }
+  return data;
+}
+const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
+async function prepareComputeBacklog(req){
+  const lease=await computeReads.run(req,'backlog','source-info',{});let info;
+  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
+  const shared=loadOverrides();
+  if(!info.loadedAt){
+    const id=sourceUserId(req),runtime=await ensureBacklogRuntime(id);
+    if(runtime?.loadedAt)await saveRuntimeModelSnapshot(id,runtime);
+  }
+  if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
+    ||(!['database','dashboard'].includes(shared.antrepoSourceMode)&&!info.antrepoSourceFields)){
+    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureDataLoaded(id);await ensureBacklogSourceFields(id);
+  }
+}
+function pageCacheRuntimeMeta(runtime) { return projectionRuntimeMeta(runtime); }
+
 function cachedRuntimeFromManifest(manifest) {
   return { ...emptySourceCache(), ...((manifest && manifest.runtimeMeta) || {}) };
 }
@@ -8069,94 +8196,46 @@ function buildCpAndOrdersProjectionRows(cpSource, ordersSource, cpAntrepo, order
   };
 }
 async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
+  await userAccess.prepareComputeAccessContext?.();
   const ctx = pageProjectionContext(currentUser), id = ctx.id;
   if (!ctx.filterStatus.ready) return null;
   const active = runtime || cacheForUser(id);
   if (!Array.isArray(active.asasOrders)) return null;
+  const expectedSourceToken=computeSourceToken(id);
+  const assertCurrent=()=>{
+    const latest=currentUser?userAccess.profileById(id):null;
+    if((currentUser&&(!latest||latest.enabled===false||latest.status!=='ACTIVE'))
+      ||pageProjectionContext(latest).contextHash!==ctx.contextHash||computeSourceToken(id)!==expectedSourceToken){
+      throw Object.assign(new Error('Veri veya yetki sürümü değişti. / The data or permission generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+    }
+  };
   const overrides = effectiveOverridesForUser(id);
   const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
   const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
+  assertCurrent();
   const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
   const extra={runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),moduleInputKeys,backlogInputKey,performance:{reusedModules:Object.keys(reused.projections)}};
   if(!wanted.size){
-    const hit=await pageProjectionCache.reuseGeneration(id,{contextHash:ctx.contextHash,generation:reused.manifest.activeGeneration,moduleInputKeys,sourceLoadedAt:active.loadedAt||null,extra});
+    const hit=await pageProjectionCache.reuseGeneration(id,{contextHash:ctx.contextHash,generation:reused.manifest.activeGeneration,moduleInputKeys,sourceLoadedAt:active.loadedAt||null,extra,assertCurrent});
     if(hit)return hit;
     Object.keys(moduleInputKeys).forEach(module=>wanted.add(module));reused.projections={};
   }
-  const cpDataAllowed = !currentUser || ['overview','cp','orders','koleksiyon','shipping','source'].some(area => userAccess.hasArea(currentUser, area));
-  const orderSummaryDataAllowed = !currentUser || ['overview','backlog','source'].some(area => userAccess.hasArea(currentUser, area));
-  const scoped = (target,rows) => currentUser ? userAccess.filterRowsByScope(currentUser, filterRowsByEffectiveHorizon(currentUser,target,rows)) : rows;
-  const scopedCpSource = scoped('cp',ordersForTarget(active, 'cp', overrides));
-  const scopedOrdersSource = scoped('orders',ordersForTarget(active, 'orders', overrides));
-  const cpAntrepo = antrepoForTarget(active, 'cp'), ordersAntrepo = antrepoForTarget(active, 'orders');
-  const cpModelColumns = cpDataAllowed ? loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server}))) : [];
-  const workerMinRows=Math.max(1000,Number(process.env.BL_PROJECTION_WORKER_MIN_ROWS)||5000);
-  if(cpDataAllowed&&process.env.BL_DISABLE_PROJECTION_WORKER!=='1'&&Math.max(scopedCpSource.length,scopedOrdersSource.length)>=workerMinRows){
-    try{
-      // v7.16: aynı sipariş kodu binlerce satırda tekrar ediyor; karar kod başına
-      // bir kez alınır ve kullanıcı düzeyindeki manageAll kontrolü dışarı çıkarılır.
-      const workerEditContext = { manageAll: currentUser ? Boolean(userAccess.hasPermission(currentUser, 'manageAllOrders')) : true };
-      const workerEditByCode = new Map();
-      const editableOrderCodes = currentUser ? scopedCpSource.filter(row => {
-        const code = row && row.ocode, key = String(code == null ? '' : code);
-        if (!workerEditByCode.has(key)) workerEditByCode.set(key, Boolean(canUserEditOrderCode(currentUser, code, workerEditContext)));
-        return workerEditByCode.get(key);
-      }).map(row => row.ocode) : scopedCpSource.map(row => row && row.ocode);
-      const worker=await runProjectionWorker({
-        cpSource:scopedCpSource,ordersSource:scopedOrdersSource,cpAntrepo,ordersAntrepo,overrides,cpModelColumns,
-        modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null,
-        shared:cpAntrepo===ordersAntrepo&&sameProjectionSourceRows(scopedCpSource,scopedOrdersSource),
-        orderSummaryAllowed:orderSummaryDataAllowed,editableOrderCodes,
-      });
-      const compressed={...reused.projections,...Object.fromEntries(Object.entries(worker.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
-      return pageProjectionCache.writeCompressedGeneration(id,{
-        contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,
-        extra:{...extra,performance:{...extra.performance,projectionWorker:true,...(worker.metrics||{})}},
-      });
-    }catch(workerError){logRuntimeFailure('projectionWorkerFallback',workerError);}
-  }
-  const projected = wanted.has('cp')&&wanted.has('orders')?buildCpAndOrdersProjectionRows(scopedCpSource, scopedOrdersSource, cpAntrepo, ordersAntrepo, overrides, cpDataAllowed):{
-    cpRows:cpDataAllowed&&wanted.has('cp')?buildCPRowsFromASAS(scopedCpSource,cpAntrepo,overrides):[],
-    ordersRows:cpDataAllowed&&wanted.has('orders')?buildOrdersRowsFromASAS(scopedOrdersSource,ordersAntrepo,overrides):[],
-  };
-  const cpRows = projected.cpRows, ordersRows = projected.ordersRows;
-  const orderSummaryRows = wanted.has('order-summary')&&orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overrides) : [];
-  const overviewRows = (wanted.has('overview')||wanted.has('collection-catalog'))&&orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overrides) : [];
-  // v7.16: _canEdit her satır için ayrı hesaplanıyordu ve her hesap alt kullanıcı
-  // ağacını yürüyüp izin kümesini yeniden kuruyordu. Gerçek ölçüm: çağrı başına
-  // 35 ms; 1.155 satırlık bir yenilemede page-cache aşaması 28 saniye sürüyordu.
-  // Karar artık (a) kullanıcı için bir kez, (b) sipariş kodu başına bir kez alınır.
-  const editContext = { manageAll: currentUser ? Boolean(userAccess.hasPermission(currentUser, 'manageAllOrders')) : true };
-  const editByOrderCode = new Map();
-  const rowCanEdit = row => {
-    if (!currentUser || editContext.manageAll) return true;
-    const key = String(row && row['Order Code'] == null ? '' : row['Order Code']);
-    if (!editByOrderCode.has(key)) editByOrderCode.set(key, Boolean(canUserEditOrderCode(currentUser, row && row['Order Code'], editContext)));
-    return editByOrderCode.get(key);
-  };
-  cpRows.forEach(row => { row._canEdit = rowCanEdit(row); });
-  ordersRows.forEach(row => { row._canEdit = false; });
-  orderSummaryRows.forEach(row => { row._canEdit = rowCanEdit(row); });
-  let catalogRows=ordersRows;
-  if(wanted.has('collection-catalog')&&reused.projections.orders)catalogRows=(await pageProjectionCache.decodeProjection(reused.projections.orders.buffer)).rows||[];
-  const projections = {
-    cp: { rows: cpRows, cpModelColumns },
-    overview: { rows: overviewRows },
-    orders: { rows: ordersRows },
-    'order-summary': { rows: orderSummaryRows },
-    'collection-catalog': {
-      catalogs: cpDataAllowed ? buildCollectionCatalogs(catalogRows.length ? catalogRows : overviewRows) : {},
-      catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-    },
-  };
-  return pageProjectionCache.writeGeneration(id, {
-    contextHash: ctx.contextHash,
-    sourceLoadedAt: active.loadedAt || null,
-    projections:Object.fromEntries(Object.entries(projections).filter(([module])=>wanted.has(module))),
-    reused:reused.projections,
-    extra,
-  });
+  return buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,assertCurrent);
 }
+async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,assertCurrent){
+  const id=ctx.id;
+  const descriptor=await computeSourceFor(currentUser||id);assertCurrent();
+  const params=computeParamsFor(currentUser,descriptor,'projections',{modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null});
+  const lease=await serverCompute().run('projections',descriptor,params,{priority:'background'});
+  try{
+    assertCurrent();
+    if(lease.value.sourceMeta)acceptComputedMetadata(currentUser||id,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
+    const compressed={...reused.projections,...Object.fromEntries(Object.entries(lease.value.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
+    return await pageProjectionCache.writeCompressedGeneration(id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,assertCurrent,
+      extra:{...extra,sourceProjectionKeys:lease.value.sourceProjectionKeys||descriptor.projectionKeys,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
+  }finally{lease.release();}
+}
+
 async function warmPageProjectionCachesFromSnapshots() {
   const profiles = userAccess.allPublicProfiles().filter(profile => profile && profile.enabled !== false);
   const bySnapshotId = new Map();
@@ -8392,6 +8471,40 @@ app.get('/api/data', async (req, res) => {
 // ayrıştırır. Context hash kontrolü kullanıcı/yetki/horizon izolasyonunu korur.
 const PAGE_PROJECTION_AREAS = Object.freeze({ cp:'cp', overview:'overview', orders:'orders', 'collection-catalog':'koleksiyon' });
 const PAGE_PROJECTION_TARGETS = Object.freeze({ cp:['cp'], overview:['cp'], orders:['orders'], 'collection-catalog':['cp'] });
+async function ensureComputedProjection(req,module,{legacy=false}={}){
+  const area=PAGE_PROJECTION_AREAS[module];assertSourceFilters(PAGE_PROJECTION_TARGETS[module],req);
+  const captured=computeReadGuard.capture(req,area),ctx=pageProjectionContext(captured.profile);
+  const cached=await pageProjectionCache.readProjectionCompressed(ctx.id,module,ctx.contextHash);captured.assertResponse();
+  if(cached&&pageProjectionMatchesRuntime(cached.manifest,cacheForUser(ctx.id),module)){
+    if(!legacy)return {value:{buffer:cached.buffer,uncompressedBytes:cached.meta?.uncompressedBytes},metrics:{},manifest:cached.manifest,
+      cacheState:cached.fallback?'fallback':'hit',assertResponse:captured.assertResponse,release(){}};
+    const cachedModules={[module]:cached.buffer};let readMs=Number(cached.ms)||0;
+    if(module==='orders'){
+      const catalog=await pageProjectionCache.readProjectionCompressed(ctx.id,'collection-catalog',ctx.contextHash);
+      if(catalog&&pageProjectionMatchesRuntime(catalog.manifest,cacheForUser(ctx.id),'collection-catalog')){cachedModules['collection-catalog']=catalog.buffer;readMs+=Number(catalog.ms)||0;}
+    }
+    captured.assertResponse();
+    const envelope=await computeReads.run(req,area,'projection-envelope',{legacyModule:module,cachedGeneration:cached.manifest.activeGeneration},
+      {payload:{cachedModules,metadata:cached.manifest.runtimeMeta||{},pageCache:{hit:true,readMs,generation:cached.manifest.activeGeneration}}});
+    if(!envelope.value.needsRebuild)return {...envelope,manifest:cached.manifest,cacheState:'hit'};
+    envelope.release();
+  }
+  const plan=await computeReads.run(req,area,'projection-plan',{projectionContextHash:ctx.contextHash,appVersion:APP_VERSION});
+  let inputKeys;
+  try{plan.assertBuild();acceptComputedMetadata(captured.profile,plan.value.sourceMeta,plan.value.sourceProjectionKeys);inputKeys=plan.value.inputKeys;plan.assertResponse();}
+  finally{plan.release();}
+  const modules=legacy&&module==='orders'?['orders','order-summary','collection-catalog']:[module];
+  const lease=await computeReads.run(req,area,'projections',{modules,...(legacy?{legacyModule:module}:{}),...(module==='collection-catalog'?{catalogSource:'cp-overview'}:{})});
+  try{
+    lease.assertBuild();acceptComputedMetadata(captured.profile,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
+    const active=cacheForUser(ctx.id),{backlog:backlogInputKey,...moduleInputKeys}=inputKeys;
+    const projections=Object.fromEntries(Object.entries(lease.value.compressed).map(([name,entry])=>[name,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]));
+    const manifest=await pageProjectionCache.writeCompressedGeneration(ctx.id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections,mergePrevious:true,assertCurrent:lease.assertBuild,
+      extra:{runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),sourceProjectionKeys:lease.value.sourceProjectionKeys,moduleInputKeys,backlogInputKey}});
+    lease.assertResponse();
+    return {...lease,value:legacy?lease.value.response:lease.value.compressed[module],manifest,cacheState:'miss'};
+  }catch(error){lease.release();throw error;}
+}
 function sendCompressedPageProjection(res, cached) {
   res.status(200);
   res.set('Content-Type', 'application/json; charset=utf-8');
@@ -8412,10 +8525,8 @@ app.get('/api/page-projection/:module', async (req, res) => {
     if (!userAccess.hasArea(req.currentUser, area)) return res.status(403).json({ error:'Bu alana erişim yetkiniz yok.', code:'AREA_FORBIDDEN' });
     const filterStatus = sourceFilterReadiness(PAGE_PROJECTION_TARGETS[module], req);
     if (!filterStatus.ready) return res.status(409).json({ error:sourceFilterReadinessMessage(filterStatus, 'tr'), code:'SOURCE_FILTER_REQUIRED', sourceFilterStatus:filterStatus });
-    const ctx = pageProjectionContext(req.currentUser);
-    const cached = await pageProjectionCache.readProjectionCompressed(ctx.id, module, ctx.contextHash);
-    if (!cached||!pageProjectionMatchesRuntime(cached.manifest,cacheForUser(ctx.id))) return res.status(404).json({ error:'Hazır ekran önbelleği bulunamadı.', code:'PAGE_CACHE_MISS' });
-    return sendCompressedPageProjection(res, cached);
+    const lease=await ensureComputedProjection(req,module);
+    return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
   } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
 });
 
@@ -8425,11 +8536,12 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
 // kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
 const CP_SHARED_EDIT_MAX_CODES = 200000;
-app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), (req, res) => {
+app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), async (req, res) => {
   try {
-    const profile = req.currentUser, codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    const codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
     if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ ok:false, code:'CP_SHARED_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
-    res.set('Cache-Control','no-store').json({ ok:true, denied: userAccess.sharedEditDeniedOrderCodes(profile && profile.id, codes) });
+    const lease=await computeReads.run(req,'cp','cp-shared-edit-codes',{codes},{cache:false});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Paylaşılan alan yetkisi okunamadı.'); }
 });
 
@@ -8457,33 +8569,14 @@ async function storeOnDemandProjection(currentUser, ctx, module, value, runtime)
 }
 app.get('/api/data/overview', userAccess.requireArea('overview'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'overview', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'overview', ctx.contextHash);
-      if (cached&&pageProjectionMatchesRuntime(cached.manifest,active)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const rows = buildOverviewSummaryRowsFromASAS(scoped, overrides);
-      return storeOnDemandProjection(req.currentUser, ctx, 'overview', { rows }, active);
-    });
-    sendDateSafeJson(res, value);
+    const lease=await ensureComputedProjection(req,'overview',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Genel Bakış verisi yüklenemedi.'); }
 });
 app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'cp', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
-      if (cached&&pageProjectionMatchesRuntime(cached.manifest,active)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const rows = buildCPRowsFromASAS(scoped, antrepoForTarget(active, 'cp'), overrides);
-      const rowCanEdit=pageProjectionEditResolver(req.currentUser);
-      rows.forEach(row => { row._canEdit = rowCanEdit(row); });
-      const cpModelColumns = loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server})));
-      return storeOnDemandProjection(req.currentUser, ctx, 'cp', { rows, cpModelColumns }, active);
-    });
-    sendDateSafeJson(res, { ...value, rows:sharedAccessRows(value.rows, req.currentUser) });
+    const lease=await ensureComputedProjection(req,'cp',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'CP verisi yüklenemedi.'); }
 });
 
@@ -8492,34 +8585,20 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
    anahtarları döner; tüm imagemap veya görsel dosyaları sızdırılmaz.
    PLM/ASAS erişimi yoktur. */
 app.get('/api/model-images/registry/cp', userAccess.requireArea('cp'), async (req, res) => {
+  let cp;
   try {
-    const ctx = pageProjectionContext(req.currentUser);
-    const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
-    if (!cached || !pageProjectionMatchesRuntime(cached.manifest, cacheForUser(ctx.id))) {
-      return res.status(409).set('Cache-Control','no-store').json({ error:'CP image scope is not ready.', code:'CP_IMAGE_SCOPE_UNAVAILABLE' });
-    }
-    const scoped = scopedCpImageRegistry(cached.data.rows, loadOverrides().imagemap);
-    res.set('Cache-Control','no-store').json({ ok:true, ...scoped });
+    cp=await ensureComputedProjection(req,'cp');cp.assertResponse();
+    const lease=await computeReads.run(req,'cp','cp-image-registry',{cachedGeneration:cp.manifest.activeGeneration},
+      {payload:{cachedCp:cp.value.buffer}});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'CP model image registry could not be loaded.'); }
+  finally{cp?.release();}
 });
 
 app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'collection-catalog', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'collection-catalog', ctx.contextHash);
-      if (cached
-        && pageProjectionMatchesRuntime(cached.manifest,active)
-        && collectionCatalogProjectionComplete(cached.data)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const catalogs = buildCollectionCatalogs(buildOverviewSummaryRowsFromASAS(scoped, overrides));
-      return storeOnDemandProjection(req.currentUser, ctx, 'collection-catalog', {
-        catalogs,
-        catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-      }, active);
-    });
-    sendDateSafeJson(res, value);
+    const lease=await ensureComputedProjection(req,'collection-catalog',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Koleksiyon filtre kataloğu yüklenemedi.'); }
 });
 
@@ -8563,59 +8642,8 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
         sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr'),
       });
     }
-    const ctx = pageProjectionContext(req.currentUser);
-    const [cachedOrders, cachedCatalog] = await Promise.all([
-      pageProjectionCache.readProjection(id, 'orders', ctx.contextHash),
-      pageProjectionCache.readProjection(id, 'collection-catalog', ctx.contextHash),
-    ]);
-    const loadedRuntime=cacheForUser(id);
-    if (cachedOrders&&pageProjectionMatchesRuntime(cachedOrders.manifest,loadedRuntime)) {
-      const runtimeMeta = cachedRuntimeFromManifest(cachedOrders.manifest);
-      const cachedOrderRows = cachedOrders.data.rows || [];
-      let collectionCatalogs;
-      let catalogReadMs = Number(cachedCatalog&&cachedCatalog.ms)||0;
-      if (cachedCatalog
-        && pageProjectionMatchesRuntime(cachedCatalog.manifest,loadedRuntime)
-        && collectionCatalogProjectionComplete(cachedCatalog.data)) {
-        collectionCatalogs = cachedCatalog.data.catalogs;
-      } else {
-        collectionCatalogs = buildCollectionCatalogs(cachedOrderRows);
-        try {
-          await storeOnDemandProjection(req.currentUser,ctx,'collection-catalog',{
-            catalogs: collectionCatalogs,
-            catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-          },loadedRuntime);
-        } catch (cacheError) { logRuntimeFailure('ordersCollectionCatalogSchemaRepair', cacheError); }
-        catalogReadMs = 0;
-      }
-      return sendDateSafeJson(res, {
-        loadedAt: runtimeMeta.loadedAt,
-        sources: runtimeMeta.sources || {},
-        orders: cachedOrderRows,
-        collectionCatalogs,
-        pageCache: { hit: true, readMs: (Number(cachedOrders.ms)||0) + catalogReadMs, generation: cachedOrders.manifest.activeGeneration },
-      });
-    }
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const scopedOrders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'orders',ordersForTarget(active, 'orders', overrides)));
-    const orders = buildOrdersRowsFromASAS(scopedOrders, antrepoForTarget(active, 'orders'), overrides);
-    orders.forEach(row => { row._canEdit = false; });
-    const scopedCp = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-    const orderSummary = buildOrderSummaryRowsFromASAS(scopedCp, antrepoForTarget(active, 'cp'), overrides);
-    const summaryCanEdit=pageProjectionEditResolver(req.currentUser);
-    orderSummary.forEach(row => { row._canEdit = summaryCanEdit(row); });
-    const catalogs = buildCollectionCatalogs(orders);
-    try {
-      await storeOnDemandProjection(req.currentUser,ctx,'orders',{rows:orders},active);
-      await storeOnDemandProjection(req.currentUser,ctx,'order-summary',{rows:orderSummary},active);
-      await storeOnDemandProjection(req.currentUser,ctx,'collection-catalog',{
-        catalogs,
-        catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-      },active);
-    } catch (cacheError) { logRuntimeFailure('ordersPageCacheWrite', cacheError); }
-    sendDateSafeJson(res, { loadedAt: active.loadedAt, sources: active.sources || {}, orders, collectionCatalogs: catalogs, pageCache: { hit: false } });
+    const lease=await ensureComputedProjection(req,'orders',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Siparişler verisi yüklenemedi.'); }
 });
 
@@ -8666,30 +8694,17 @@ async function ensureBacklogSourceFields(value) {
 
 app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
-    const { retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, buyerGrup, groupBy, dimFilters, antrepoFrom, antrepoTo, antrepoDateLevels } = req.query;
-    const dims = groupBy ? String(groupBy).split(',').filter(Boolean) : [];
-    const dateLevels = antrepoDateLevels ? String(antrepoDateLevels).split(',').filter(Boolean) : undefined;
-    let parsedDimFilters = {};
-    if (dimFilters) { try { parsedDimFilters = JSON.parse(dimFilters); } catch { parsedDimFilters = {}; } }
-    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, analysisFilters:req.query.analysisFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[],lazyDimensions:req.query.lazyDimensions==='1',valueDimensions:String(req.query.valueDimensions||'').split(',').filter(Boolean) };
-    if (!filterStatus.ready) {
-      const overrides = loadOverrides();
-      const emptyReport = buildBacklogGrouped([], {}, overrides, params);
-      return sendDateSafeJson(res, { ...emptyReport, sourceFilterRequired: true, sourceFilterStatus: filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    const filterStatus=sourceFilterReadiness(['backlog'],req),q=req.query;
+    let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
+    const options={retailFrom:q.retailFrom||'',retailTo:q.retailTo||'',inStoreFrom:q.inStoreFrom||'',inStoreTo:q.inStoreTo||'',exFactoryFrom:q.exFactoryFrom||'',exFactoryTo:q.exFactoryTo||'',buyerGrup:q.buyerGrup||'',groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom||'',antrepoTo:q.antrepoTo||'',antrepoDateLevels:String(q.antrepoDateLevels||'').split(',').filter(Boolean),lazyDimensions:q.lazyDimensions==='1',valueDimensions:String(q.valueDimensions||'').split(',').filter(Boolean)};
+    if(!filterStatus.ready){
+      const emptyReport=buildBacklogGrouped([],{},loadOverrides(),options);
+      return sendDateSafeJson(res,{...emptyReport,sourceFilterRequired:true,sourceFilterStatus:filterStatus,sourceFilterMessage:sourceFilterReadinessMessage(filterStatus,'tr')});
     }
-    const ctx = pageProjectionContext(req.currentUser), key = backlogCacheKey(params);
-    const cached = await pageProjectionCache.readBacklog(id, ctx.contextHash, key);
-    if (cached) return sendDateSafeJson(res, { ...cached.data, pageCache: { hit:true, readMs:Number(cached.ms)||0, generation:cached.manifest.activeGeneration } });
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    await ensureBacklogSourceFields(id);
-    const prepared=backlogQueryForRequest(req,params,!params.lazyDimensions || params.valueDimensions.length>0,ctx);
-    const report = {...buildBacklogGrouped(prepared.orders,prepared.antrepo,prepared.overrides,params,prepared.query),rowsInputRevision:prepared.sourceRevision};
-    try { await pageProjectionCache.writeBacklog(id, ctx.contextHash, key, report); }
-    catch (cacheError) { logRuntimeFailure('backlogPageCacheWrite', cacheError); }
-    sendDateSafeJson(res, { ...report, pageCache: { hit:false } });
-  } catch (err) { apiError(res, err, 'Backlog raporu hesaplanamadı.'); }
+    await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-grouped',{options,pageCache:{hit:false}});
+    return sendComputedResponse(req,res,lease);
+  }catch(err){apiError(res,err,'Backlog raporu hesaplanamadı.');}
 });
 
 
@@ -8706,14 +8721,9 @@ const BACKLOG_TEMPLATE_HEADERS = [
 // değilken boş raporla dönebilir.
 app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
-    assertSourceFilters(['backlog'], req);
-    const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
-    const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
-    const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
-    const columns=parseLib.backlogCustomDimensionContext(backlogOrders,antrepoForTarget(active,'backlog')).customDimensions;
-    sendDateSafeJson(res,{columns,defaultHeaders:BACKLOG_TEMPLATE_HEADERS});
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-source-columns',{});
+    return sendComputedResponse(req,res,lease);
   }catch(err){apiError(res,err,'Backlog kaynak sütunları listelenemedi.');}
 });
 
@@ -8775,64 +8785,42 @@ function backlogQueryForRequest(req,options={},includeWindowed=false,context=nul
 
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
-    assertSourceFilters(['backlog'], req);
-    const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
-    const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
-    const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
-    const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
-    let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
-    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,analysisFilters:req.query.analysisFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
-    const prepared=backlogQueryForRequest(req,filterOpts);
-    const overrides=prepared.overrides;
-    const backlogOrders=prepared.orders;
-    const backlogAntrepo=prepared.antrepo;
-    // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
-    // kullanır. CP'nin birincil cache'i bu akışa kesinlikle karışmaz.
-    const sourceCatalog=prepared.query.custom.customDimensions;
-    const requestedIds=String(req.query.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean);
-    const sourceById=new Map(sourceCatalog.map(column=>[column.id,column]));
-    const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
-    const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
-    const includeSourceDetails=req.query.includeSourceDetails==='1';
-    const detailRowsKey=JSON.stringify([prepared.sourceRevision,backlogRowFilterOptions(filterOpts),sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
-    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails,queryContext:prepared.query}));
-    const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
-    // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
-    if(req.query.format==='json'){
-      // rowsRevision: aynı girdiler = aynı satırlar. İstemci aynı revizyonda
-      // elindeki normalleştirilmiş/analiz edilmiş veriyi yeniden kullanır.
-      const rowsRevision=crypto.createHash('sha1').update(BACKLOG_ROWS_PROCESS_NONCE).update(detailRowsKey).digest('hex');
-      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision, merchCalendar:require('./lib/merch-calendar-store').publicProjection() });
-    }
-    const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,importanceValues:BLOrderImportance.excelValues(overrides.importanceSettings),templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
-    const buffer=Buffer.from(workerResult.data);
-    const d=new Date(),p=x=>String(x).padStart(2,'0');
-    const name=`Backlog_Report_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
-    res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition',`attachment; filename="${name}"`);
-    res.send(buffer);
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const q=req.query;let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
+    const options={retailFrom:q.retailFrom,retailTo:q.retailTo,inStoreFrom:q.inStoreFrom,inStoreTo:q.inStoreTo,exFactoryFrom:q.exFactoryFrom,exFactoryTo:q.exFactoryTo,buyerGrup:q.buyerGrup,groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom,antrepoTo:q.antrepoTo,antrepoDateLevels:q.antrepoDateLevels?String(q.antrepoDateLevels).split(',').filter(Boolean):undefined};
+    const json=q.format==='json',task=json?'backlog-export':'backlog-workbook';
+    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json});
+    if(json)return sendComputedResponse(req,res,lease);
+    const d=new Date(),pad=value=>String(value).padStart(2,'0'),filename=`Backlog_Report_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
+    return sendComputedResponse(req,res,lease,{contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',filename,gzip:false});
   }catch(err){apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}
 });
 
 app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req,res)=>{
   try{
-    assertSourceFilters(['backlog'],req);
-    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
     let dimFilters={};try{dimFilters=JSON.parse(req.query.dimFilters||'{}');}catch{}
-    // Preserve the pre-analysis option universe without transferring its rows.
     const options={...req.query,dimFilters,analysisFilters:undefined};
-    const prepared=backlogQueryForRequest(req,options);
-    const idValue=String(req.query.field||'');
-    if(!BACKLOG_TEMPLATE_HEADERS.some(header=>'cp:'+header===idValue) && !prepared.query.custom.customDimensions.some(column=>column.id===idValue))return res.status(400).json({error:'Unknown Backlog filter field',code:'BACKLOG_FILTER_FIELD_INVALID'});
-    sendDateSafeJson(res,{...parseLib.buildBacklogFilterValues(prepared.orders,prepared.antrepo,prepared.overrides,options,idValue,prepared.query),rowsInputRevision:prepared.sourceRevision});
+    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')});
+    return sendComputedResponse(req,res,lease);
   }catch(err){apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}
 });
 
 // Backlog pivot'unda bir düğüme tıklanınca veya CP/Siparişler sayfasında seçili
 // siparişler için rapor istendiğinde aynı operasyon satırı detayını döner.
+app.post('/api/backlog-map-details', userAccess.requireArea('backlog'), async (req,res)=>{
+  try{
+    const body=req.body||{},items=body.identities;
+    if(!Array.isArray(items)||!items.length||items.length>5000||typeof body.sourceRevision!=='string'||body.sourceRevision.length>256)
+      return res.status(400).json({code:'BACKLOG_SELECTION_INVALID',error:'Geçersiz harita detay seçimi.',errorEn:'Invalid map detail selection.'});
+    const identities=items.map(item=>({orderCode:item?.orderCode,modelName:item?.modelName,colourCode:item?.colourCode}));
+    if(identities.some(item=>Object.values(item).some(value=>!['string','number'].includes(typeof value)||!String(value).trim()||String(value).length>512)))
+      return res.status(400).json({code:'BACKLOG_SELECTION_INVALID',error:'Geçersiz sipariş kimliği.',errorEn:'Invalid order identity.'});
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-map-details',{target:'backlog',selector:{identities},expectedSourceRevision:body.sourceRevision,includeSourceDetails:true});
+    return sendComputedResponse(req,res,lease);
+  }catch(err){apiError(res,err,'Harita detayları alınamadı.');}
+});
 app.post('/api/backlog-detail', userAccess.requireAnyArea('backlog','cp','orders'), async (req, res) => {
   try {
     const body = req.body || {};
@@ -12078,6 +12066,8 @@ require('./routes/model-connection-routes')(app, {
 // ---- LFL verisi route'ları → server/routes/lfl-routes.js ----
 require('./routes/lfl-routes')(app, {
   collectionLflCache: require('./lib/collection-lfl-reference').createReferenceCache({directory:path.join(LOCAL_DATA_ROOT,'collection-lfl-reference')}),
+  computedCollectionReferenceSource:require('./lib/compute-collection-lfl-reference').createComputedCollectionReferenceSource({
+    compute:serverCompute,guard:computeReadGuard,userAccess,calendar:()=>require('./lib/merch-calendar-store').publicProjection()}),
   apiError,
   attachModelImageIdentities,
   cacheForUser,
@@ -12094,6 +12084,9 @@ require('./routes/lfl-routes')(app, {
   userAccess,
   withFabricDimensions,
 
+});
+app.get('/api/health', (_req,res) => {
+  res.set('Cache-Control','no-store').json({ok:true,app:'Buyer Log',appVersion:APP_VERSION});
 });
 app.get('/api/status', (req, res) => {
   res.set('Cache-Control', 'no-store');
@@ -12795,6 +12788,7 @@ if (process.env.NODE_ENV !== 'test') {
   console.log(`Buyer Log runtime config: ${CONFIG_PATH} · port=${PORT} · host=${REQUESTED_HOST}`);
 }
 
+let runtimePressureMonitor=null;
 const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
   if (backendCompileCacheState.status !== 'disabled') backendCompileCache.scheduleCompileCacheFlush();
@@ -12813,7 +12807,7 @@ const httpServer = app.listen(PORT, HOST, () => {
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);
   console.log(`Moderatör kaynak klasörü: ${sourceFolderForUser('moderator') || '(seçilmedi)'}`);
   // Bellek baskısı / olay döngüsü kilitlenmesi yalnız sayısal olarak loglanır.
-  if (process.env.BL_AUTOMATION_RUN !== '1') require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
+  if (process.env.BL_AUTOMATION_RUN !== '1') runtimePressureMonitor=require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
   // Açılışta kimlik doğrulama yolu MUTLAKA hafif kalır. Büyük model snapshot'ı
   // burada hydrate edilmez ve tüm kullanıcı page-cache warm-up'ı ana HTTP
   // sürecinde başlatılmaz. gzip/JSON parse ile CP/Orders/Overview projection
@@ -12888,5 +12882,18 @@ function cleanupOrphanExcel() {
   } catch (e) { /* best-effort, sessiz geç */ }
 }
 process.on('exit', cleanupOrphanExcel);
-process.on('SIGINT', () => { cleanupOrphanExcel(); process.exit(0); });
-process.on('SIGTERM', () => { cleanupOrphanExcel(); process.exit(0); });
+let computeShutdownPromise;
+function shutdownComputeRuntime(){
+  if(computeShutdownPromise)return computeShutdownPromise;
+  const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
+  httpServer.close();computeReads.clear();
+  computeShutdownPromise=Promise.resolve().then(async()=>{
+    const results=await Promise.allSettled([closeComputeService(),runtimePressureMonitor?.stop()]);
+    const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;
+  }).catch(error=>{
+    process.exitCode=1;logRuntimeFailure('computePoolShutdown',error);
+  }).finally(()=>{clearTimeout(deadline);cleanupOrphanExcel();process.exit(process.exitCode||0);});
+  return computeShutdownPromise;
+}
+process.on('SIGINT', shutdownComputeRuntime);
+process.on('SIGTERM', shutdownComputeRuntime);

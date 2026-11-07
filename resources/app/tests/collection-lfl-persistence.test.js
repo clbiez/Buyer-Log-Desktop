@@ -47,6 +47,30 @@ test('an empty initial read is not persisted and cannot prevent later source rec
  assert.equal((await cache.get({...args,loadRows:()=>[order()]})).references[0].average,10);
 });
 
+test('a computed summary never loads raw rows and retains durable refresh and legacy upgrade rules',async t=>{
+ const directory=temporary(t),cache=createReferenceCache({directory}),Engine=require('../public/collection-lfl-engine');
+ let builds=0;const args={identity:'worker-buyer',version:'v1',loadRows:()=>{throw Error('main-thread rows are forbidden');},buildReferences:async()=>{builds++;return Engine.buildReferences([order()]);}};
+ const saved=await cache.get(args);assert.equal(saved.references[0].average,10);assert.equal(builds,1);
+ assert.deepEqual(await cache.get({...args,version:'v2',buildReferences:()=>{throw Error('ordinary reads preserve the saved summary');}}),saved);
+ await assert.rejects(cache.get({...args,version:'v2',rebuild:true,buildReferences:async()=>[]}),{code:'LFL_REFERENCE_INCOMPLETE'});
+ assert.deepEqual(await createReferenceCache({directory}).read({identity:args.identity}),saved);
+ const legacy={...saved,schema:4};for(const ref of legacy.references)delete ref.countries;
+ const file=path.join(directory,fs.readdirSync(directory)[0]);fs.writeFileSync(file,JSON.stringify(legacy));
+ const upgraded=await createReferenceCache({directory}).get(args);assert.equal(upgraded.schema,5);assert.equal(upgraded.calculatedAt,saved.calculatedAt);assert.equal(upgraded.references[0].average,10);
+});
+
+test('computed publication rechecks authority and queued revisions keep their own summary builder',async t=>{
+ const directory=temporary(t),cache=createReferenceCache({directory}),Engine=require('../public/collection-lfl-engine');
+ const args={identity:'queued-worker-buyer',version:'v1',buildReferences:async()=>Engine.buildReferences([order()])};
+ const saved=await cache.get(args);let release,started;const pending=new Promise(resolve=>{started=resolve;});
+ const first=cache.get({...args,version:'v2',rebuild:true,buildReferences:async()=>{started();await new Promise(resolve=>{release=resolve;});return Engine.buildReferences([order({fob:20})]);}});
+ await pending;
+ const second=cache.get({...args,version:'v3',rebuild:true,buildReferences:async()=>Engine.buildReferences([order({fob:30})])});
+ release();await first;assert.equal((await second).references[0].average,30);
+ await assert.rejects(cache.get({...args,version:'v4',rebuild:true,assertCurrent:()=>{throw Object.assign(Error('revoked'),{code:'AREA_FORBIDDEN'});}}),{code:'AREA_FORBIDDEN'});
+ assert.equal((await createReferenceCache({directory}).read({identity:args.identity})).references[0].average,30);assert.equal(saved.references[0].average,10);
+});
+
 test('a failed durable write is reported and leaves the previous reference available',async t=>{
  const directory=temporary(t),cache=createReferenceCache({directory});
  const args={identity:'buyer',version:'v1',loadRows:()=>[order()]};
@@ -93,4 +117,24 @@ test('LFL upload saves source rows before publishing them and retains old rows o
  async function upload(){const res={code:200,status(code){this.code=code;return this;},json(data){this.data=data;}};await handler({body:{name:'new.xlsx',dataBase64:'AA=='},currentUser:{id:'buyer'}},res);return res;}
  fail=true;assert.equal((await upload()).code,500);assert.equal(runtime.lflRows[0].fob,10);
  fail=false;assert.equal((await upload()).code,200);assert.equal(saved.lflRows[0].fob,20);assert.equal(runtime.lflRows[0].fob,20);
+});
+
+test('summary cache misses use the computed provider and recheck both live areas after async reads',async()=>{
+ const routes=new Map(),user={id:'buyer',status:'ACTIVE',scopes:{mags:['CU4E']}},Engine=require('../public/collection-lfl-engine');
+ let current=user,revoked=null,saved=null,sources=0,built=0,readHook=()=>{},sourceHook=()=>{},version='v1';
+ const userAccess={requireArea:()=>()=>{},publicProfile:profile=>profile,sessionProfile:()=>current,hasArea:(_profile,area)=>area!==revoked};
+ require('../server/routes/lfl-routes')({get:(url,...handlers)=>routes.set(url,handlers),post(){}},{userAccess,sourceUserId:req=>req.currentUser.id,
+  sourceFilterReadiness:()=>({ready:true}),ensureDataLoaded:()=>{throw Error('main-thread hydration is forbidden');},cacheForUser:()=>{throw Error('main-thread raw cache is forbidden');},
+  computedCollectionReferenceSource:async()=>{sources++;sourceHook();return {id:'buyer',version,buildReferences:async()=>{built++;return Engine.buildReferences([order()]);},assertCurrent(){},assertResponse(){}};},
+  collectionLflCache:{read:async()=>{readHook();return saved;},get:async args=>({schema:5,version:args.version,references:await args.buildReferences()})},
+  sendDateSafeJson:(res,data)=>res.json(data),apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code})});
+ const handler=routes.get('/api/collection-lfl-reference').at(-1);
+ const request=async()=>{const res={code:200,set(){},status(code){this.code=code;return this;},json(data){this.data=data;return this;}};await handler({query:{},currentUser:user},res);return res;};
+ const result=await request();assert.equal(result.code,200);assert.equal(result.data.references[0].average,10);assert.equal(sources,1);assert.equal(built,1);saved=result.data;
+ assert.equal((await request()).code,200);assert.equal(sources,1,'durable saved summaries need no worker source');
+ for(const area of ['koleksiyon','lfl']){readHook=()=>{revoked=area;};assert.equal((await request()).code,403);revoked=null;}
+ readHook=()=>{current=null;};assert.equal((await request()).code,401);
+ current=user;readHook=()=>{current={...user,scopes:{mags:['OTHER']}};};assert.equal((await request()).code,409);
+ current=user;readHook=()=>{};saved={...saved,schema:4};version=null;sourceHook=()=>{current=null;};
+ assert.equal((await request()).code,401,'an unavailable source must not send a saved legacy fallback after session revocation');
 });

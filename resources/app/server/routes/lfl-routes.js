@@ -24,14 +24,20 @@ module.exports = function registerLflRoutes(app, deps) {
     userAccess,
     withFabricDimensions,
     collectionLflCache,
+    computedCollectionReferenceSource,
   } = deps;
 
-async function collectionReferenceSource(req,res,fallback=null){
+async function collectionReferenceSource(req,res,fallback=null,summaryOnly=false,assertResponse=()=>{}){
     res.set('Cache-Control','no-store');
     // A saved legacy summary is shown as-is while its source cannot upgrade it.
-    const unavailable=code=>{if(fallback)sendDateSafeJson(res,fallback);else res.status(409).json({code});return null;};
+    const unavailable=code=>{assertResponse();if(fallback)sendDateSafeJson(res,fallback);else res.status(409).json({code});return null;};
     const id=sourceUserId(req),readiness=sourceFilterReadiness(['lfl'],req);
     if(!readiness.ready)return unavailable('SOURCE_FILTER_REQUIRED');
+    if(summaryOnly&&computedCollectionReferenceSource){
+      const source=await computedCollectionReferenceSource(req);
+      if(!source.version)return unavailable('LFL_SOURCE_UNAVAILABLE');
+      return source;
+    }
     let runtime=cacheForUser(id);
     if(!runtime.lflLoadedAt){await ensureDataLoaded(id);runtime=cacheForUser(id);}
     if(!runtime.lflLoadedAt)return unavailable('LFL_SOURCE_UNAVAILABLE');
@@ -44,19 +50,33 @@ function collectionReferenceIdentity(req){
     return JSON.stringify([sourceUserId(req),profile.id,'scope-v1',profile.dataScope,profile.scopes,profile.delegatedUserIds]);
 }
 function collectionReferenceSnapshot(req,source,rebuild=false){
-    return collectionLflCache.get({identity:collectionReferenceIdentity(req),version:source.version,rebuild,loadRows:()=>userAccess.filterRowsByScope(req.currentUser,source.rows)});
+    return collectionLflCache.get({identity:collectionReferenceIdentity(req),version:source.version,rebuild,
+      buildReferences:source.buildReferences,assertCurrent:source.assertCurrent,loadRows:()=>userAccess.filterRowsByScope(req.currentUser,source.rows)});
+}
+function collectionReferenceResponseGuard(req){
+    const identity=collectionReferenceIdentity(req);
+    return ()=>{
+      const profile=userAccess.sessionProfile?userAccess.sessionProfile(req):req.currentUser;
+      if(!profile||profile.enabled===false||(userAccess.sessionProfile&&profile.status!=='ACTIVE'))throw Object.assign(Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'),{code:'SESSION_REQUIRED',statusCode:401});
+      if(userAccess.hasArea&&['koleksiyon','lfl'].some(area=>!userAccess.hasArea(profile,area)))throw Object.assign(Error('Bu alana erişim yetkiniz yok. / You do not have access to this area.'),{code:'AREA_FORBIDDEN',statusCode:403});
+      if(collectionReferenceIdentity({...req,currentUser:profile})!==identity)throw Object.assign(Error('Veri veya yetki sürümü değişti. / The data or permission generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+      req.currentUser=profile;
+    };
 }
 // Collection reads shared summaries; source order rows are requested only for a clicked detail report.
 app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
   try{
     res.set('Cache-Control','no-store');
+    const assertResponse=collectionReferenceResponseGuard(req);assertResponse();
     let saved=null;
     if(req.query.rebuild!=='1'){
       saved=await collectionLflCache.read({identity:collectionReferenceIdentity(req)});
+      assertResponse();
       if(saved&&saved.schema!==4)return sendDateSafeJson(res,saved);
     }
-    const source=await collectionReferenceSource(req,res,saved);if(!source)return;
+    const source=await collectionReferenceSource(req,res,saved,true,assertResponse);assertResponse();if(!source)return;
     const snapshot=await collectionReferenceSnapshot(req,source,req.query.rebuild==='1');
+    assertResponse();source.assertResponse?.();
     sendDateSafeJson(res,snapshot);
   }catch(err){apiError(res,err,'LFL reference could not be calculated.');}
 });

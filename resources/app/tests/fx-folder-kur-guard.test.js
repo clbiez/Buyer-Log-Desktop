@@ -21,6 +21,7 @@ function syncHarness(onRead){
  const context={require:require('node:module').createRequire(path.join(__dirname,'../server/server.js')),__dirname:path.join(__dirname,'../server'),path,sourceUserId:()=> 'moderator',sourceFolderForUser:()=>root,loadFx:db.loadFx,saveFx:db.saveFx,
   runExcelTask:async()=>onRead?onRead():({ ...fx.readFxWorkbook(path.join(root,'KUR.xlsx')),found:true,updated:true,file:'KUR.xlsx',modifiedAt:new Date(fs.statSync(path.join(root,'KUR.xlsx')).mtimeMs).toISOString(),fingerprint:fx.readFxWorkbook(path.join(root,'KUR.xlsx')).data.sourceFingerprint,reportMonth:'2026-10'}),
   publishSharedMasterChange(){},logRuntimeFailure(){},console,folderFxSyncStatus:null};
+ context.serverCompute=()=>({runExcelUtility:async(...args)=>({value:await context.runExcelTask(...args),release(){}})});
  vm.createContext(context);vm.runInContext(block,context);return context;
 }
 test('startup and force preserve a newer uploaded report and expose older-report',async()=>{

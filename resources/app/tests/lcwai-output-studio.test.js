@@ -72,7 +72,7 @@ test('studio: strict operations reject business mutations and invalid batches at
   assert.equal(L.applyOperations(raw, [{ op: 'setSizing', value: 'equal' }]).layout.studio.sizing, 'equal');
 });
 
-test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths preserve records', () => {
+test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths preserve records', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-'));
   try {
     const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
@@ -81,16 +81,16 @@ test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths p
     assert.equal(draft.source.count, 123);
     assert.equal(draft.data.slides.flatMap(s => s.items || []).length, 123, 'no 60-card truncation');
     assert.throws(() => service.getDraft('u2', draft.id));
-    const pptx = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' }).output;
+    const pptx = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' })).output;
     assert.ok(fs.readFileSync(pptx.path).subarray(0, 2).equals(Buffer.from('PK')));
-    const html = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
+    const html = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' })).output;
     const text = fs.readFileSync(html.path, 'utf8');
     assert.equal((text.match(/class="[^"]*\bbl-studio-card\b/g) || []).length, 123);
     assert.ok(text.includes('Model 122'));
-    const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
+    const pdf = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' })).output;
     assert.equal(pdf.pending, 'pdf');
     assert.equal((pdf.html.match(/class="bl-studio-card"/g) || []).length, 123);
-    const xlsx = service.renderDraft('u1', draft.id, { data: draft.data, format: 'xlsx' }).output;
+    const xlsx = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'xlsx' })).output;
     const wb = XLSX.read(fs.readFileSync(xlsx.path), { type: 'buffer' });
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames.at(-1)], { header: 1 });
     assert.equal(rows.length, 124);
@@ -118,7 +118,7 @@ test('studio: templates keep bindings and preferences but discard record-specifi
   assert.deepEqual(def.layout.cardFields, ['plmId']);
 });
 
-test('studio: reordering a scope larger than the image cap preserves the same resolved images', () => {
+test('studio: reordering a scope larger than the image cap preserves the same resolved images', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-images-'));
   try {
     const service = createOutputService({ storeOptions: { root } });
@@ -127,7 +127,7 @@ test('studio: reordering a scope larger than the image cap preserves the same re
     const draft = service.createStudio('u1', source);
     const items = draft.data.slides.find(slide => slide.items).items;
     items.push(items.shift());
-    const output = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
+    const output = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' })).output;
     const html = fs.readFileSync(output.path, 'utf8');
     // The deck embeds each image once as a CSS class; the moved ORD-1 card still uses it.
     const cls = /\.(im\d+)\{background-image:url\("data:image\/png;base64,/.exec(html);
@@ -188,7 +188,7 @@ test('studio: every non-canonical table header (Fabric, Target Price, custom) is
   assert.deepEqual(pages.flatMap(p => p.page.groups.map(g => [g.label, g.items.length])), [['Single Jersey', 2], ['Pique', 1]], 'whitespace/case variants share one group');
 });
 
-test('studio: table columns survive the server draft round-trip and reach Excel headers', () => {
+test('studio: table columns survive the server draft round-trip and reach Excel headers', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-cols-'));
   try {
     const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
@@ -200,7 +200,7 @@ test('studio: table columns survive the server draft round-trip and reach Excel 
     assert.equal(draft.records['KOL-1'].values['col.fabric'], 'Pique');
     assert.equal(draft.records['KOL-2'].labels['col.fabric'], 'Fabric', 'labels exist even where the value is empty');
     const data = { ...draft.data, layout: { ...draft.data.layout, cardFields: ['plmId', 'col.fabric'] } };
-    const xlsx = service.renderDraft('u1', draft.id, { data, format: 'xlsx' }).output;
+    const xlsx = (await service.renderDraft('u1', draft.id, { data, format: 'xlsx' })).output;
     const wb = XLSX.read(fs.readFileSync(xlsx.path), { type: 'buffer' });
     const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames.at(-1)], { header: 1 });
     assert.ok(sheet[0].includes('Fabric'));
@@ -217,14 +217,14 @@ test('studio: very large scopes drop whole heavy columns instead of exceeding th
   assert.ok(Object.values(built.records).every(r => r.values['col.small'] && r.values['col.big2'] && !('col.big' in r.values)));
 });
 
-test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-only decks do not claim LCW AI', () => {
+test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-only decks do not claim LCW AI', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-brand-'));
   try {
     const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
     const draft = service.createStudio('u1', S.build({ module: 'orders', rows: [{ _id: 'a', modelName: 'A' }, { _id: 'b', modelName: 'B' }] }));
-    const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
+    const pdf = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' })).output;
     assert.equal(pdf.footer, false, 'Electron footerTemplate would overlap the slide footer');
-    const pptx = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' }).output;
+    const pptx = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' })).output;
     const zip = XLSX.CFB.read(fs.readFileSync(pptx.path), { type: 'buffer' });
     const slides = zip.FullPaths.map((p, i) => [p, zip.FileIndex[i]]).filter(([p]) => /ppt\/slides\/slide\d+\.xml$/.test(p)).map(([, e]) => Buffer.from(e.content).toString());
     assert.ok(slides.length > 1);

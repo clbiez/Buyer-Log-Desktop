@@ -21,6 +21,10 @@ const METADATA_FILE = path.join(__dirname, '..', 'resources', 'oab_filter_metada
 let cached = null;
 let cachedMtimeMs = -1;
 
+// Kalıcı worker, mtime korunarak değiştirilen paket dosyasının yeni kimliğini
+// doğruladığında önceki indeksleri bırakır. Senkron okuyucuların yolu korunur.
+function clearCache() { cached = null; cachedMtimeMs = -1; }
+
 function cleanRef(value) {
   return String(value == null ? '' : value).trim();
 }
@@ -216,4 +220,5 @@ module.exports = {
   validateSelectedRefs,
   seasonRefs, magRefsForSeason, buyerGroupRefsFor, planningMetadata, labelsFor,
   _load: load,
+  clearCache,
 };

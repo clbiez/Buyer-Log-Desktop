@@ -44,14 +44,16 @@ test('Exfactory boundaries are inclusive, optional and shared by pivot and expor
   assert.equal(parse.buildBacklogGrouped(rows,{},ov,{exFactoryTo:'2026-10-01'}).totalOrders,1);
   assert.equal(parse.buildBacklogGrouped(rows,{},ov,{...opts,inStoreFrom:'2026-12-02'}).totalOrders,0);
 });
-test('Exfactory range is carried by query, export, detail and persisted settings',()=>{
+test('Exfactory range is carried by query, export, detail and persisted settings',async()=>{
   const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
   const server=fs.readFileSync(path.join(__dirname,'../server/server.js'),'utf8');
   assert.match(app,/exFactoryFrom: document\.getElementById\('backlogExFactoryFrom'\)/);
   assert.match(app,/setVal\('backlogExFactoryFrom',saved\.exFactoryFrom\)/);
   assert.match(server,/exFactoryFrom: body\.exFactoryFrom/);
-  assert.match(server,/filterOpts=\{[^}]*exFactoryFrom/);
-  assert.match(server,/exFactoryFrom:exFactoryFrom\|\|''/);
+  const capture=require('./helpers/computed-backlog-request'),from='2026-11-01',to='2026-11-30';
+  for(const [route,format,task]of [['/api/backlog','json','backlog-grouped'],['/api/backlog-export','json','backlog-export'],['/api/backlog-export','xlsx','backlog-workbook']]){
+    const result=await capture({format,exFactoryFrom:from,exFactoryTo:to},route);assert.equal(result.task,task);assert.equal(result.parts.options.exFactoryFrom,from);assert.equal(result.parts.options.exFactoryTo,to);
+  }
   const index=fs.readFileSync(path.join(__dirname,'../public/index.html'),'utf8');
   assert.ok(index.indexOf('src="backlog-date-range.js')<index.indexOf('src="app-main.js'),'date range API must load before app bootstrap mounts it');
 });

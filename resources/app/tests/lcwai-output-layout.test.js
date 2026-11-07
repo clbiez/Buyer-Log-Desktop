@@ -110,7 +110,7 @@ test('PDF: model galerisi sütun × satır sayfalarına bölünür; HTML dosyas�
   const first = await service.create('u1', { message: 'rapor', output: { format: 'pdf' } });
   const draft = service.getDraft('u1', first.output.draftId);
   assert.equal(draft.data.layout, null, 'şablonsuz: varsayılan yerleşim');
-  const pending = service.renderDraft('u1', draft.id, { data: { body: draft.data.body, styles: draft.data.styles, layout: { columns: 2, rows: 2, titleSize: 36 } } });
+  const pending = (await service.renderDraft('u1', draft.id, { data: { body: draft.data.body, styles: draft.data.styles, layout: { columns: 2, rows: 2, titleSize: 36 } } }));
   const html = pending.output.html || '';
   assert.equal((html.match(/class="bl-gallery bl-gallery-page[^"]*"/g) || []).length, 2, '5 model / 4 → 2 sayfa');
   assert.equal((html.match(/bl-gallery-first/g) || []).length, 2, 'ilk parça işaretli (CSS + HTML)');
@@ -123,7 +123,7 @@ test('PDF: model galerisi sütun × satır sayfalarına bölünür; HTML dosyas�
   const htmlService = createOutputService({ engine: fakeEngine(answer), storeOptions: { root: path.join(dir, 'out2') } });
   const created = await htmlService.create('u1', { message: 'rapor', output: { format: 'html' } });
   const htmlDraft = htmlService.getDraft('u1', created.output.draftId);
-  const saved = htmlService.renderDraft('u1', htmlDraft.id, { data: { body: htmlDraft.data.body, layout: { columns: 5, rows: 1 } } });
+  const saved = (await htmlService.renderDraft('u1', htmlDraft.id, { data: { body: htmlDraft.data.body, layout: { columns: 5, rows: 1 } } }));
   const file = fs.readFileSync(saved.output.path, 'utf8');
   assert.doesNotMatch(file, /class="bl-gallery bl-gallery-page/, 'HTML’de sayfa yok');
   assert.match(file, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
