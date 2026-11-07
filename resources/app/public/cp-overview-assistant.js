@@ -345,9 +345,13 @@
   }
 
   let decisionContextRevision = 0;
+  // Cevap dışındaki karar girdileri (kurallar, ayarlar, katalog…) için revizyon:
+  // kişisel katman deltası yalnız bu revizyon sabitken kullanılır.
+  let nonAnswerContextRevision = 0;
   let answerNotifyBatchDepth = 0, answerNotifyPending = false;
   function notifyDecisionContextChanged(reason) {
     decisionContextRevision += 1;
+    if (reason !== 'checklist-answer') nonAnswerContextRevision += 1;
     try {
       window.dispatchEvent(new CustomEvent('bl:cp-decision-context-changed', {
         detail: { reason: reason || 'preferences', revision: decisionContextRevision },
@@ -4513,18 +4517,79 @@
     return changed;
   }
 
+  /* KİŞİSEL KATMAN DELTASI (CPR-09). Tek bir kontrol listesi cevabı yalnız aynı
+     siparişin ve aynı ürün opsiyonunun kararlarını değiştirebilir: kurallar
+     checklist durumunu kendi siparişinden, opsiyon kapsamlı onayı opsiyon
+     anahtarından okur. Cevap dışındaki bütün girdiler aynıyken, değişen
+     cevapların siparişleri/opsiyonları yeniden değerlendirilir; diğerlerinin
+     önceki kopya + değerlendirmesi aynen kullanılır. Değişiklikler hesap
+     dönemiyle (epoch) izlenir: farklı satır listeleri (CP, Genel Bakış alt
+     kümesi) sırayla hesaplansa da bayat sonuç kullanılmaz. Anahtarı tanınmayan
+     bir cevap değişikliği veya cevap dışı girdi değişikliği tam hesaba döner. */
+  let personalDelta = null;
+  function personalDeltaSignature() {
+    const api = sampleRequests();
+    return JSON.stringify([
+      baseDecisionKey(), nonAnswerContextRevision,
+      Checklist.customStatuses().map(s => `${s.id}:${s.resolved ? 1 : 0}`).join(','),
+      api && api.updatedAt ? String(api.updatedAt) : '',
+      state.checklistSettings, state.priorityCatalog || [],
+    ]);
+  }
+  function resetPersonalDelta(signature) {
+    personalDelta = {
+      signature, rules: state.rules, epoch: 0, snapshot: null,
+      orderEpochs: new Map(), optionEpochs: new Map(), entries: new WeakMap(), contributions: new WeakMap(),
+    };
+  }
+  // Son hesaptan beri değişen cevap anahtarlarını sipariş/opsiyon dönemine işler.
+  // Kapsamı çözülemeyen bir anahtar false döner (tam hesap).
+  function recordAnswerChanges(delta) {
+    const answers = state.answers || {}, previous = delta.snapshot;
+    if (!previous) return false;
+    let known = true;
+    const mark = key => {
+      const cut = key.lastIndexOf('::');
+      if (cut <= 0) { known = false; return; }
+      const head = key.slice(0, cut);
+      if (head.startsWith('@option:')) delta.optionEpochs.set(head.slice(8), delta.epoch);
+      else delta.orderEpochs.set(head, delta.epoch);
+    };
+    for (const key of Object.keys(answers)) if (previous.get(key) !== answers[key]) mark(key);
+    for (const key of previous.keys()) if (!Object.prototype.hasOwnProperty.call(answers, key)) mark(key);
+    return known;
+  }
+  function reusablePersonalEntry(delta, base) {
+    const entry = delta.entries.get(base);
+    if (!entry || (delta.orderEpochs.get(base.orderKey) || 0) > entry.epoch) return null;
+    if (delta.optionEpochs.size) {
+      if (entry.optionId === undefined) entry.optionId = Checklist.optionIdentity(base) || '';
+      if (entry.optionId && (delta.optionEpochs.get(entry.optionId) || 0) > entry.epoch) return null;
+    }
+    return entry;
+  }
+
   function applyPersonalLayer(baseModel, rows, options) {
     const opts = options || {};
     if (OD && typeof OD.setPriorityCatalog === 'function') OD.setPriorityCatalog(state.priorityCatalog);
-    const orders = (baseModel && Array.isArray(baseModel.orders) ? baseModel.orders : []).map(cloneAnalysis);
-    if (promoteReusableChecklistAnswers(orders)) reusableAnswerPromotionPending = true;
+    const baseOrders = baseModel && Array.isArray(baseModel.orders) ? baseModel.orders : [];
+    const signature = personalDeltaSignature();
+    if (!personalDelta || personalDelta.signature !== signature || personalDelta.rules !== state.rules) resetPersonalDelta(signature);
+    const delta = personalDelta;
+    // Yükseltme yalnız sipariş/opsiyon kimlik alanlarını okur; temel analizle aynı sonucu verir.
+    if (promoteReusableChecklistAnswers(baseOrders)) reusableAnswerPromotionPending = true;
     if (opts.commit && reusableAnswerPromotionPending && saveAnswers({ silent: true })) reusableAnswerPromotionPending = false;
+    delta.epoch += 1;
+    const incremental = recordAnswerChanges(delta);
+    if (!incremental) { delta.entries = new WeakMap(); delta.contributions = new WeakMap(); delta.orderEpochs.clear(); delta.optionEpochs.clear(); }
+    delta.snapshot = new Map(Object.entries(state.answers || {}));
     const preparedRules = typeof Rules.prepareEvaluation === 'function' ? Rules.prepareEvaluation(state.rules) : null;
     const evaluations = new Map();
     const customItems = new Map();
     const autoUpdates = [];
-
-    for (const analysis of orders) {
+    const orders = new Array(baseOrders.length);
+    const evaluateFresh = base => {
+      const analysis = cloneAnalysis(base);
       const evaluated = Rules.evaluateOrder(analysis, {
         rules: state.rules,
         preparedRules,
@@ -4533,6 +4598,16 @@
         checklistEnabled: state.checklistSettings.enabled,
         priorityCatalog: state.priorityCatalog,
       });
+      const entry = { clone: analysis, evaluated, epoch: delta.epoch, optionId: undefined };
+      delta.entries.set(base, entry);
+      return entry;
+    };
+
+    for (let index = 0; index < baseOrders.length; index += 1) {
+      const base = baseOrders[index];
+      const entry = (incremental && reusablePersonalEntry(delta, base)) || evaluateFresh(base);
+      const analysis = entry.clone, evaluated = entry.evaluated;
+      orders[index] = analysis;
       evaluations.set(analysis, evaluated);
       customItems.set(analysis.orderKey, evaluated.customItems);
       if (opts.commit && Array.isArray(evaluated.autoDecisions) && evaluated.autoDecisions.length) {
@@ -4549,6 +4624,8 @@
         if (existing && existing.source !== 'auto_rule') continue;
         if (!existing || existing.state !== item.state) {
           state.answers[key] = Checklist.makeAnswer(item.state, item.analysis, { source: 'auto_rule', at: nowIso });
+          // Özet bu analizi güncel cevapla yeniden saymalı.
+          delta.contributions.delete(item.analysis);
           dirty = true;
         }
       }
@@ -4599,6 +4676,7 @@
       plmEvidence,
       managedItemIds: Rules.DEFAULT_CHECKLIST_RULE_IDS,
       customItemsFor: analysis => customItems.get(analysis.orderKey) || [],
+      contributionCache: delta.contributions,
     });
 
     if (opts.commit) {
@@ -4721,6 +4799,8 @@
     setChecklistComponents,
     persistChecklistAnswers: saveAnswers,
     batchChecklistAnswers,
+    // Test/kabul: bir sonraki kişisel katman hesabını tam hesaba zorlar.
+    _resetDecisionDelta: () => { personalDelta = null; },
     adoptSharedChecklistDefinitions,
     validateHologramOrders,
     markHologramOrdered,
