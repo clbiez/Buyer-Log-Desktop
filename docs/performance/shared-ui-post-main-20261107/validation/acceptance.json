@@ -1,0 +1,76 @@
+{
+  "revision": "7aeda80d1f3d1ec37e932f8669ac7154ff0919df",
+  "appTree": "de2bd601091a9f38663cd0ab49d6213e330470b2",
+  "startedAt": "2026-11-07T22:15:21.752140+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "table-header",
+        "table-group",
+        "freeze",
+        "workspace-blur",
+        "shared-ui",
+        "motion-plus",
+        "i18n",
+        "model-image-cache"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-related-integrated-fzmj4zxp",
+      "startedAt": "2026-11-07T22:15:21.752778+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:15:27.798189+00:00",
+      "logSha256": "ea8617bd51dd22d8c9122bd6fb181c1d9c6932a35843ea3c0bef5207e05b7b53",
+      "gzipSha256": "81bf0f04a42c64c782642f72026bd87ec84db74dddaaa7bc732ef0d9394f8a9d"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-full-integrated-5i5ke8m3",
+      "startedAt": "2026-11-07T22:15:27.800279+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:19:10.693327+00:00",
+      "logSha256": "25db9e06951798eb559023f7ad64b150baeca18ed5901bfee35332bd58f358a1",
+      "gzipSha256": "4103c8ce629ed30c57277368f0c584fbb1866acc0b82983120212b70438ea276"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-i18n-integrated-bto5cyzx",
+      "startedAt": "2026-11-07T22:19:10.774776+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:19:14.105501+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-release-integrated-e1nice0_",
+      "startedAt": "2026-11-07T22:19:14.109989+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:19:15.008163+00:00",
+      "logSha256": "e3ed0373394b2824b335c88d2b493d76e40f1e42e6f989937d3350a9c1ca1608",
+      "gzipSha256": "82db21dc51c64c4fcd087d18ffad005766dcb6e12ace1cdf76df0d692a7b5289"
+    }
+  ],
+  "finishedAt": "2026-11-07T22:19:15.009316+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "totals": {
+    "tests": 131,
+    "pass": 131,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "batches": [
+    [
+      "1",
+      "5.5"
+    ]
+  ],
+  "testedRevision": "7aeda80d1f3d1ec37e932f8669ac7154ff0919df",
+  "appTree": "de2bd601091a9f38663cd0ab49d6213e330470b2"
+}

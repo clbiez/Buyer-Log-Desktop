@@ -1,0 +1,18 @@
+{
+  "oneIndependentReview": "gpt-6-astra at7c842910; no reportableP1/P2",
+  "noNewGeneralRound": true,
+  "productionUnchanged": [
+    {
+      "path": "resources/app/public/table-header-tracking.js",
+      "reviewedBlob": "b955c8cc95989d481eadcef4fae830ec0fd84cd7",
+      "integratedBlob": "b955c8cc95989d481eadcef4fae830ec0fd84cd7"
+    },
+    {
+      "path": "resources/app/public/workspace-blur.js",
+      "reviewedBlob": "c860b2b02a00f66e2b5fa6ef3a740cd871586e7f",
+      "integratedBlob": "c860b2b02a00f66e2b5fa6ef3a740cd871586e7f"
+    }
+  ],
+  "reviewerLimit": "no tests/browser/benchmark; rawtraces/PNGs not independently verified",
+  "measurementLimits": "historical sampled inclusive functiontime; twochanges together, no independent ablation; ~50ms p95 isnotfluidityguarantee"
+}

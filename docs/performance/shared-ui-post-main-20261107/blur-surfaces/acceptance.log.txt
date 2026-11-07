@@ -1,0 +1,2 @@
+Artifacts: /tmp/buyerlog-blur-vc4lJz
+PASS 15 screens; 95 shadow rules; 209 rendered shadow audits; TR/EN x 2 themes x 4 sizes x GPU/software; hover/keyboard; real notes dialog; nested native dialog; pinned rail; reduced/off/normal motion; repeated close clears dim

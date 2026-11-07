@@ -1,0 +1,4375 @@
+{
+  "baseline": "63159fb3",
+  "startedAt": "2026-11-07T22:12:36.838Z",
+  "sourceHashes": {
+    "before": {
+      "i18n-runtime.js": "f7e3b19fc5debb64cb72ffbc4af4fbb17b7f0516c4868c5130f9f9ea2ad0a9c8",
+      "table-header-tracking.js": "2164f23b3748833b2bf51b4def20b0a050eca85079dc9f9ecbe43347fff49783",
+      "model-image-cache.js": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22",
+      "workspace-blur.js": "469e4218f0d4b52a0122d62c0968b45b9b4810857eae8f78a119f1ecf00e71d3"
+    },
+    "after": {
+      "i18n-runtime.js": "f7e3b19fc5debb64cb72ffbc4af4fbb17b7f0516c4868c5130f9f9ea2ad0a9c8",
+      "table-header-tracking.js": "40613368cc68037db0d1b0c639bfb0159d210bfe606499c7d4141a8132f86a35",
+      "model-image-cache.js": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22",
+      "workspace-blur.js": "b8db8cdcc9c35d194e1bf2638af6fddf1abb05e06383d6bf0d273c531620e07d"
+    }
+  },
+  "fixture": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6yk1bz-c7648b04985a",
+    "sourceRevision": "e06ec6904902bc1dd6b9f790e94a55d69eeee95fc77cc0a1ac0960f3f0909681",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "runs": [
+    {
+      "variant": "after",
+      "repetition": 1,
+      "rows": {
+        "cp": 24982,
+        "orders": 30000
+      },
+      "errors": [],
+      "phases": [],
+      "initialUI": {
+        "lang": "tr",
+        "scale": "standard",
+        "freeze": {
+          "cp": {
+            "left": 0,
+            "right": 0,
+            "pane": 0
+          },
+          "orders": {
+            "left": 0,
+            "right": 0,
+            "pane": 0
+          }
+        }
+      },
+      "acceptance": {
+        "geometry": [
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "compact",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": 111,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": 147,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 177,
+                  "maxWidth": 123
+                },
+                "visibility": "visible",
+                "maxWidth": 123,
+                "dx": 177
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -79,
+                  "maxWidth": 1240
+                },
+                "visibility": "visible",
+                "maxWidth": 1240,
+                "dx": -79
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "compact",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 111
+                },
+                "visibility": "visible",
+                "maxWidth": 111,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 120
+                },
+                "visibility": "visible",
+                "maxWidth": 120,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 156,
+                  "maxWidth": 1056
+                },
+                "visibility": "visible",
+                "maxWidth": 1056,
+                "dx": 156
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "compact",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 111
+                },
+                "visibility": "visible",
+                "maxWidth": 111,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 120
+                },
+                "visibility": "visible",
+                "maxWidth": 120,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 377
+                },
+                "visibility": "visible",
+                "maxWidth": 377,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -429,
+                  "maxWidth": 666
+                },
+                "visibility": "visible",
+                "maxWidth": 666,
+                "dx": -429
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "large",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 177,
+                  "maxWidth": 123
+                },
+                "visibility": "visible",
+                "maxWidth": 123,
+                "dx": 177
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -93,
+                  "maxWidth": 1212
+                },
+                "visibility": "visible",
+                "maxWidth": 1212,
+                "dx": -93
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "large",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 111
+                },
+                "visibility": "visible",
+                "maxWidth": 111,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 120
+                },
+                "visibility": "visible",
+                "maxWidth": 120,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 142,
+                  "maxWidth": 1028
+                },
+                "visibility": "visible",
+                "maxWidth": 1028,
+                "dx": 142
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "cp",
+            "scale": "large",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 111
+                },
+                "visibility": "visible",
+                "maxWidth": 111,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 120
+                },
+                "visibility": "visible",
+                "maxWidth": 120,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 377
+                },
+                "visibility": "visible",
+                "maxWidth": 377,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -443,
+                  "maxWidth": 638
+                },
+                "visibility": "visible",
+                "maxWidth": 638,
+                "dx": -443
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "compact",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": 476,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 74,
+                  "maxWidth": 1252
+                },
+                "visibility": "visible",
+                "maxWidth": 1252,
+                "dx": 74
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -781,
+                  "maxWidth": 111
+                },
+                "visibility": "visible",
+                "maxWidth": 111,
+                "dx": -781
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "compact",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -60,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -60
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 294,
+                  "maxWidth": 812
+                },
+                "visibility": "visible",
+                "maxWidth": 812,
+                "dx": 294
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -720,
+                  "maxWidth": 231
+                },
+                "visibility": "visible",
+                "maxWidth": 231,
+                "dx": -720
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "compact",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -116,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -116
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 130
+                },
+                "visibility": "visible",
+                "maxWidth": 130,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -379,
+                  "maxWidth": 913
+                },
+                "visibility": "visible",
+                "maxWidth": 913,
+                "dx": -379
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "large",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 74,
+                  "maxWidth": 1252
+                },
+                "visibility": "visible",
+                "maxWidth": 1252,
+                "dx": 74
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -795,
+                  "maxWidth": 83
+                },
+                "visibility": "visible",
+                "maxWidth": 83,
+                "dx": -795
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "large",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -60,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -60
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 294,
+                  "maxWidth": 812
+                },
+                "visibility": "visible",
+                "maxWidth": 812,
+                "dx": 294
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -734,
+                  "maxWidth": 203
+                },
+                "visibility": "visible",
+                "maxWidth": 203,
+                "dx": -734
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "tr",
+            "module": "orders",
+            "scale": "large",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -116,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -116
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 130
+                },
+                "visibility": "visible",
+                "maxWidth": 130,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -393,
+                  "maxWidth": 885
+                },
+                "visibility": "visible",
+                "maxWidth": 885,
+                "dx": -393
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "compact",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 177,
+                  "maxWidth": 130
+                },
+                "visibility": "visible",
+                "maxWidth": 130,
+                "dx": 177
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -127,
+                  "maxWidth": 1233
+                },
+                "visibility": "visible",
+                "maxWidth": 1233,
+                "dx": -127
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "compact",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 110
+                },
+                "visibility": "visible",
+                "maxWidth": 110,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 121
+                },
+                "visibility": "visible",
+                "maxWidth": 121,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 104,
+                  "maxWidth": 1056
+                },
+                "visibility": "visible",
+                "maxWidth": 1056,
+                "dx": 104
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "compact",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 110
+                },
+                "visibility": "visible",
+                "maxWidth": 110,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 121
+                },
+                "visibility": "visible",
+                "maxWidth": 121,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 408
+                },
+                "visibility": "visible",
+                "maxWidth": 408,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -477,
+                  "maxWidth": 635
+                },
+                "visibility": "visible",
+                "maxWidth": 635,
+                "dx": -477
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "large",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 177,
+                  "maxWidth": 130
+                },
+                "visibility": "visible",
+                "maxWidth": 130,
+                "dx": 177
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -141,
+                  "maxWidth": 1205
+                },
+                "visibility": "visible",
+                "maxWidth": 1205,
+                "dx": -141
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "large",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 110
+                },
+                "visibility": "visible",
+                "maxWidth": 110,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 121
+                },
+                "visibility": "visible",
+                "maxWidth": 121,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 90,
+                  "maxWidth": 1028
+                },
+                "visibility": "visible",
+                "maxWidth": 1028,
+                "dx": 90
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "cp",
+            "scale": "large",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 0,
+                  "maxWidth": 110
+                },
+                "visibility": "visible",
+                "maxWidth": 110,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -13,
+                  "maxWidth": 121
+                },
+                "visibility": "visible",
+                "maxWidth": 121,
+                "dx": -13
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 408
+                },
+                "visibility": "visible",
+                "maxWidth": 408,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -491,
+                  "maxWidth": 607
+                },
+                "visibility": "visible",
+                "maxWidth": 607,
+                "dx": -491
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "compact",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 70,
+                  "maxWidth": 1348
+                },
+                "visibility": "visible",
+                "maxWidth": 1348,
+                "dx": 70
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -864,
+                  "maxWidth": 15
+                },
+                "visibility": "visible",
+                "maxWidth": 15,
+                "dx": -864
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "compact",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -64,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -64
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 294,
+                  "maxWidth": 899
+                },
+                "visibility": "visible",
+                "maxWidth": 899,
+                "dx": 294
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -800,
+                  "maxWidth": 144
+                },
+                "visibility": "visible",
+                "maxWidth": 144,
+                "dx": -800
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "compact",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -120,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -120
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 157
+                },
+                "visibility": "visible",
+                "maxWidth": 157,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -429,
+                  "maxWidth": 886
+                },
+                "visibility": "visible",
+                "maxWidth": 886,
+                "dx": -429
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 26,
+            "columnTops": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "large",
+            "count": 0,
+            "groups": [
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 69,
+                  "maxWidth": 1348
+                },
+                "visibility": "visible",
+                "maxWidth": 1348,
+                "dx": 69
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "large",
+            "count": 3,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -64,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -64
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 294,
+                  "maxWidth": 899
+                },
+                "visibility": "visible",
+                "maxWidth": 899,
+                "dx": 294
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -814,
+                  "maxWidth": 116
+                },
+                "visibility": "visible",
+                "maxWidth": 116,
+                "dx": -814
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          },
+          {
+            "lang": "en",
+            "module": "orders",
+            "scale": "large",
+            "count": 9,
+            "groups": [
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -120,
+                  "maxWidth": 243
+                },
+                "visibility": "visible",
+                "maxWidth": 243,
+                "dx": -120
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": 350,
+                  "maxWidth": 157
+                },
+                "visibility": "visible",
+                "maxWidth": 157,
+                "dx": 350
+              },
+              {
+                "expected": {
+                  "visible": true,
+                  "dx": -443,
+                  "maxWidth": 858
+                },
+                "visibility": "visible",
+                "maxWidth": 858,
+                "dx": -443
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              },
+              {
+                "expected": {
+                  "visible": false,
+                  "dx": 0,
+                  "maxWidth": 0
+                },
+                "visibility": "hidden",
+                "maxWidth": null,
+                "dx": 0
+              }
+            ],
+            "frozenAlignment": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "groupHeight": 36,
+            "columnTops": [
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36,
+              36
+            ],
+            "sticky": true,
+            "bodyAnimations": 0
+          }
+        ],
+        "screenshots": [
+          "after-1-cp-tr.png",
+          "after-1-cp-tr-modal.png",
+          "after-1-orders-tr.png",
+          "after-1-orders-tr-modal.png",
+          "after-1-cp-en.png",
+          "after-1-cp-en-modal.png",
+          "after-1-orders-en.png",
+          "after-1-orders-en-modal.png"
+        ],
+        "baselineGeometryIssues": [],
+        "i18n": true,
+        "repeatedScrollMutations": 0,
+        "image": {
+          "tableOriginal": true,
+          "zoomOriginal": true,
+          "clipboardOriginal": true,
+          "width": 512
+        },
+        "motion": true
+      }
+    }
+  ],
+  "platform": "linux",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "viewport": {
+    "width": 1600,
+    "height": 1000
+  },
+  "samplingIntervalUs": 500,
+  "chromium": "154.0.8037.57",
+  "finishedAt": "2026-11-07T22:15:21.551Z"
+}

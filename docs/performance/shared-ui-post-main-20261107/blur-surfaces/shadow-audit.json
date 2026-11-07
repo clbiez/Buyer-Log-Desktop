@@ -1,0 +1,2988 @@
+{
+  "results": [
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "uiFeedback uiFeedback--info isIn",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "uiFeedback uiFeedback--info isIn",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "uiFeedback uiFeedback--info isIn",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "kolScopePanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaFilterConfigPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "lflCard lflFilterCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflTableCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflManufacturerVolumeCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflCustomCompareCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflInsights",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflSourceInfo",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "rail",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "railAppearanceMenu",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "railAppearanceMenu",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "corporateConnections",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail railKeyboardOpen",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "corporateConnections",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dialog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "modalCard noteEditorCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/overview",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/lcwai",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/cp",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/orders",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/backlog",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/shipping",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/koleksiyon",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "kolScopePanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/quotations",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/priceanalysis",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaFilterConfigPanel",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/manufacturers",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/licensecards",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/lfl",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "lflCard lflFilterCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflTableCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflManufacturerVolumeCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflCustomCompareCard",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflInsights",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflSourceInfo",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/opencosting",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/automations",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "light/source",
+      "expected": "color(srgb 0.0862745 0.129412 0.176471 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.0862745 0.129412 0.176471 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/overview",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/lcwai",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/cp",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/orders",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/backlog",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/shipping",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/koleksiyon",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "kolScopePanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/quotations",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/priceanalysis",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaMultiPanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "psaFilterConfigPanel",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/manufacturers",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/licensecards",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/lfl",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        },
+        {
+          "element": "lflCard lflFilterCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflKpi lflCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflTableCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflManufacturerVolumeCard lflAnalysisResizableCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflCustomCompareCard",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflInsights",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        },
+        {
+          "element": "lflCard lflSourceInfo",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 0px 16px 46px 0px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/opencosting",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/automations",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    },
+    {
+      "label": "dark/source",
+      "expected": "color(srgb 0.941177 0.952941 0.964706 / 0.18)",
+      "checked": [
+        {
+          "element": "rail",
+          "shadow": "color(srgb 0.941177 0.952941 0.964706 / 0.18) 8px 0px 22px -8px"
+        }
+      ],
+      "bad": []
+    }
+  ],
+  "shadowRules": {
+    "checked": [
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .globalFlowDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .gfMultiPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .gfEarthPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovLayoutEditPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovHomeDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovBdTip",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovClockPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .tableSearchHelpPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .profileSelectMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .delTypeMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .vfMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .pageTitleFilters .fltGroupMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .userMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .toolbarMoreMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .topRefreshMenu button",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .topRefreshDetail",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .imageDeleteConfirmPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .tableImageSizePopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .qtxContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .oabColumnContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .oabMultiPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .oabLocalFilterAddPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .intakeFilterPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .rowCtxMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovCollectionSummaryScopePopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovCollectionScopeDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .trxPickPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ovCollectionMonthTip",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .submfrDrop, html[data-ui-system=\"manifest\"] .vfMenu, html[data-ui-system=\"manifest\"] .profileSelectMenu, html[data-ui-system=\"manifest\"] .userMenu, html[data-ui-system=\"manifest\"] .dateCalendarPopup, html[data-ui-system=\"manifest\"] .delTypeMenu, html[data-ui-system=\"manifest\"] .cfpDrawer, html[data-ui-system=\"manifest\"] .themeDock, html[data-ui-system=\"manifest\"] .numericValueList",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kpiGroupMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kpiGroupMenu, html[data-ui-system=\"manifest\"] .fltGroupMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .toolbarMoreMenu, html[data-ui-system=\"manifest\"] .vfMenu, html[data-ui-system=\"manifest\"] .profileSelectMenu, html[data-ui-system=\"manifest\"] .userMenu, html[data-ui-system=\"manifest\"] .dateCalendarPopup, html[data-ui-system=\"manifest\"] .delTypeMenu, html[data-ui-system=\"manifest\"] .cfpDrawer, html[data-ui-system=\"manifest\"] .themeDock, html[data-ui-system=\"manifest\"] .numericValueList",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .cfpDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .toolbarMoreMenu .navActionBtn, html[data-ui-system=\"manifest\"] .toolbarMoreMenu button.tbtn, html[data-ui-system=\"manifest\"] .toolbarMoreMenu label.tbtn, html[data-ui-system=\"manifest\"] .toolbarMoreMenu .vfMenuTrigger",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blTip",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .autoColumnsDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .umDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .umDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .umDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lcwaiContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blGuideDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blRnDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .uiFeedback",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kolSpreadsheetContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kolScopePanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .pdScopePanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .pdBulkPanel, html[data-ui-system=\"manifest\"] .pdRoundPanel, html[data-ui-system=\"manifest\"] .pdImportPanel, html[data-ui-system=\"manifest\"] .pdMfrPanel, html[data-ui-system=\"manifest\"] .pdOptionsPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .psaFilterConfigPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .psaMultiPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lcEditor",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lmDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflDimPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflReadyPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflCustomComparePanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflBreakdownPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflPortfolioModalPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflScenarioEditorDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .pricingRuleSeasonPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kolChecklistMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .ocMetaSuggestDrop, html[data-ui-system=\"manifest\"] .pricingRuleSeasonPanel, html[data-ui-system=\"manifest\"] .quotationColFilterPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflCard, html[data-ui-system=\"manifest\"] .ocCard",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflPortfolioModalPanel, html[data-ui-system=\"manifest\"] .lflScenarioEditorDialog, html[data-ui-system=\"manifest\"] .lflTrialStudio, html[data-ui-system=\"manifest\"] .kolSpreadsheetPasteCard",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .kolPeriodDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflDimPanel, html[data-ui-system=\"manifest\"] .lflCustomComparePanel, html[data-ui-system=\"manifest\"] .lflBreakdownPanel, html[data-ui-system=\"manifest\"] .ocMetaSuggestDrop",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .lflPortfolioModalPanel, html[data-ui-system=\"manifest\"] .lflScenarioEditorDialog, html[data-ui-system=\"manifest\"] .lflTrialStudio",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blvExportMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blvFilterDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .bpaTip",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .bpaDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blpDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blDetailExportMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blDetailColumnPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blDetailDrawerPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .cpaValueMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .tableFieldsDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .backlogDimAddDialog",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .tableColumnContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .backlogChartPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .colPanel, html[data-ui-system=\"manifest\"] .colFilterPanel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .colPanel, html[data-ui-system=\"manifest\"] .colFilterPanel, html[data-ui-system=\"manifest\"] .kolSpreadsheetContextMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .modalCard, html[data-ui-system=\"manifest\"] .colPanel, html[data-ui-system=\"manifest\"] .tableFieldsMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .noteEditorCard",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .warnOverlay[data-ui-migrated] .modalCard, html[data-ui-system=\"manifest\"] .warnOverlay[data-ui-migrated] .cardBox, html[data-ui-system=\"manifest\"] .warnOverlay[data-ui-migrated] .panel",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] [data-ui-migrated=\"table-fields\"]",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] #view-koleksiyon.blPlmDragOver::after, html[data-ui-system=\"manifest\"] #view-koleksiyon.blPlmDragBusy::after",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blViewPickerMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"][data-rail=\"min\"] .rail:is(:hover, .railKeyboardOpen)",
+        "value": "var(--ui-shadow-rail)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .appTop #corporateConnections",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .railAppearanceMenu",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blSelectionBar",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .globalFlowTooltip",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .cpaTemplatesPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .blSelectionPopover",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .trHistoryDrawer",
+        "value": "var(--ui-shadow-overlay)"
+      },
+      {
+        "selector": "html[data-ui-system=\"manifest\"] .trModelPreview",
+        "value": "var(--ui-shadow-overlay)"
+      }
+    ],
+    "bad": []
+  }
+}

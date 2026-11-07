@@ -1,0 +1,6282 @@
+{
+  "schemaVersion": 3,
+  "synthetic": true,
+  "status": "passed",
+  "startedAt": "2026-11-07T22:10:29.244Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-shared908-main5b8-20261107",
+  "requestedRows": 30000,
+  "requestedModules": [
+    "cp"
+  ],
+  "rendererTimeoutMs": 900000,
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "sampling": {
+    "startMs": 0,
+    "endMs": 10000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [
+    {
+      "module": "cp",
+      "primaryScreenReadyMs": 29740.90000000596,
+      "startupReadyMs": 29762,
+      "startupCompleteMs": 47111.09999999404,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 17338.40000000596,
+      "systemStartupCompleteMs": 47111.09999999404,
+      "primaryToGateMs": 21.099999994039536,
+      "initialGeneration": null,
+      "rows": 24982,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 50,
+      "longTaskCount": 16,
+      "longTaskTotalMs": 3023,
+      "maxLongTaskMs": 883,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 705.3000000119209,
+          "decodedBytes": 14981,
+          "encodedBytes": 4719
+        },
+        {
+          "path": "/api/page-projection/cp",
+          "ms": 836.7000000178814,
+          "decodedBytes": 61859722,
+          "encodedBytes": 4644605
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 109.2999999821186,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 109.7999999821186,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 109.7999999821186,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 119.09999999403954,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 209.19999998807907,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 252.40000000596046,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 262,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 735.5999999940395,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 735.6999999880791,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 1014.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 1306.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 1330.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 1331,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 1331.199999988079,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 1404.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 1410.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 2120.2999999821186,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 2128.4000000059605,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 718.1999999880791
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 2128.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 2159.199999988079,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 2168.199999988079,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 2172.5,
+          "detail": {
+            "durationMs": 44.099999994039536
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 2172.5,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 2172.5999999940395,
+          "detail": {
+            "durationMs": 0.09999999403953552
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 2172.7999999821186,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 2172.7999999821186,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 2172.7999999821186,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 2172.7999999821186,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 2174,
+          "detail": {
+            "module": "cp",
+            "durationMs": 1.2000000178813934
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 2174,
+          "detail": {
+            "module": "cp",
+            "durationMs": 1.2000000178813934
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 2174,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 12985.59999999404,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 13069.40000000596,
+          "detail": {
+            "reason": "cp",
+            "rows": 24982,
+            "revision": 4
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 13069.5,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 13186.09999999404,
+          "detail": {
+            "reason": "decision-engine-ready",
+            "revision": 5
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 13187,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 27324.59999999404,
+          "detail": {
+            "rows": 24982,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 29002.40000000596,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 29462.19999998808,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 29580.59999999404,
+          "detail": {
+            "reason": "personal-decision-context",
+            "revision": 6
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 29580.79999998212,
+          "detail": null
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 36636.29999998212,
+          "detail": {
+            "reason": "personal-decision-context"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 36691.40000000596,
+          "detail": null
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 37045.29999998212,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 37400.40000000596,
+          "detail": {
+            "rows": 24982,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 44959.79999998212,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 47049.40000000596,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 47084.5,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 4
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 47085.19999998808,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 49201.09999999404,
+          "detail": {
+            "mode": "after-ui"
+          }
+        }
+      ],
+      "jsHeapUsedBytes": 248520796,
+      "dom": {
+        "documents": 3,
+        "nodes": 56160,
+        "jsEventListeners": 5612
+      },
+      "heapSampling": "uncollected",
+      "navigationStartedAtMs": 1794089491702,
+      "observedAtMs": 1794089541273,
+      "projectionGenerations": [
+        "mw6yk1bz-c7648b04985a"
+      ],
+      "elapsedMs": 47408.244333999995,
+      "rendererRssBytes": 891084800,
+      "errors": [],
+      "generation": "mw6yk1bz-c7648b04985a",
+      "sourceRevision": "e06ec6904902bc1dd6b9f790e94a55d69eeee95fc77cc0a1ac0960f3f0909681"
+    }
+  ],
+  "healthSamples": [
+    {
+      "ms": 24.977612000000136,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "initial-start",
+      "startedAt": "2026-11-07T22:10:31.208Z"
+    },
+    {
+      "ms": 66.61057999999957,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "initial-start",
+      "startedAt": "2026-11-07T22:10:31.208Z"
+    },
+    {
+      "ms": 11.470048000000133,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:31.801Z"
+    },
+    {
+      "ms": 4.152494999999817,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:31.801Z"
+    },
+    {
+      "ms": 5.941230999999789,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:32.317Z"
+    },
+    {
+      "ms": 4.085069000000203,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:32.317Z"
+    },
+    {
+      "ms": 10.600771999999779,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:32.833Z"
+    },
+    {
+      "ms": 4.585766000000149,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:32.833Z"
+    },
+    {
+      "ms": 4.028668999999354,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:33.348Z"
+    },
+    {
+      "ms": 3.3850439999996524,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:33.348Z"
+    },
+    {
+      "ms": 4.962538000000677,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:33.856Z"
+    },
+    {
+      "ms": 3.345968000000539,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:33.856Z"
+    },
+    {
+      "ms": 4.099905000000035,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:34.365Z"
+    },
+    {
+      "ms": 3.0861039999999775,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:34.365Z"
+    },
+    {
+      "ms": 13.34635100000014,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:34.873Z"
+    },
+    {
+      "ms": 4.5515929999992295,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:34.873Z"
+    },
+    {
+      "ms": 4.023787999999513,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:35.392Z"
+    },
+    {
+      "ms": 4.158596000000216,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:35.392Z"
+    },
+    {
+      "ms": 5.643412000000353,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:35.900Z"
+    },
+    {
+      "ms": 4.076449999999568,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:35.900Z"
+    },
+    {
+      "ms": 4.843031999999766,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:36.410Z"
+    },
+    {
+      "ms": 4.055762999999388,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:36.410Z"
+    },
+    {
+      "ms": 4.45472300000074,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:36.920Z"
+    },
+    {
+      "ms": 2.4747169999991456,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:36.920Z"
+    },
+    {
+      "ms": 17.762305999998716,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:37.428Z"
+    },
+    {
+      "ms": 11.997089000000415,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:37.428Z"
+    },
+    {
+      "ms": 8.776287000000593,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:37.959Z"
+    },
+    {
+      "ms": 6.265918999999485,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:37.959Z"
+    },
+    {
+      "ms": 38.709193999999115,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:38.482Z"
+    },
+    {
+      "ms": 31.428679000000557,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:38.482Z"
+    },
+    {
+      "ms": 5.817321999998967,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:39.053Z"
+    },
+    {
+      "ms": 3.773833999999624,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:39.053Z"
+    },
+    {
+      "ms": 6.3852179999994405,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:39.564Z"
+    },
+    {
+      "ms": 5.376734000001306,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:39.564Z"
+    },
+    {
+      "ms": 4.9091109999990294,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:40.076Z"
+    },
+    {
+      "ms": 3.155163999999786,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:40.076Z"
+    },
+    {
+      "ms": 6.456914999998844,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:40.584Z"
+    },
+    {
+      "ms": 4.657780999999886,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:40.584Z"
+    },
+    {
+      "ms": 6.6807950000002165,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:41.095Z"
+    },
+    {
+      "ms": 4.0187590000005,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:41.095Z"
+    },
+    {
+      "ms": 5.518348999999944,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:41.607Z"
+    },
+    {
+      "ms": 8.704529000000548,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:41.607Z"
+    },
+    {
+      "ms": 11.542539000000033,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:42.123Z"
+    },
+    {
+      "ms": 7.752776000001177,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:42.123Z"
+    },
+    {
+      "ms": 6.130053000000771,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:42.643Z"
+    },
+    {
+      "ms": 9.211104999998497,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:42.643Z"
+    },
+    {
+      "ms": 912.418248,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:43.160Z"
+    },
+    {
+      "ms": 12.426723000000493,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:43.160Z"
+    },
+    {
+      "ms": 11.962759000000005,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:44.586Z"
+    },
+    {
+      "ms": 2.9607519999990473,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:44.586Z"
+    },
+    {
+      "ms": 4.7810370000006515,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:45.100Z"
+    },
+    {
+      "ms": 7.045428000001266,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:45.100Z"
+    },
+    {
+      "ms": 1322.0614539999988,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:45.612Z"
+    },
+    {
+      "ms": 9.441672000000835,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:45.612Z"
+    },
+    {
+      "ms": 89.9422940000004,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:47.444Z"
+    },
+    {
+      "ms": 28.34154099999796,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:47.444Z"
+    },
+    {
+      "ms": 4457.362207000002,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:48.067Z"
+    },
+    {
+      "ms": 14.650249999998778,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:48.067Z"
+    },
+    {
+      "ms": 6.210394999998243,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:53.042Z"
+    },
+    {
+      "ms": 5.020043000000442,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:53.042Z"
+    },
+    {
+      "ms": 69.16210399999909,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:53.557Z"
+    },
+    {
+      "ms": 7.042610000000423,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:53.557Z"
+    },
+    {
+      "ms": 19.952605999998923,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:54.135Z"
+    },
+    {
+      "ms": 7.915934000000561,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:54.135Z"
+    },
+    {
+      "ms": 6.87199899999905,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:54.664Z"
+    },
+    {
+      "ms": 6.27727700000105,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:54.664Z"
+    },
+    {
+      "ms": 25.80551899999773,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:55.178Z"
+    },
+    {
+      "ms": 12.570447999998578,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:55.178Z"
+    },
+    {
+      "ms": 16.62724999999773,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:55.717Z"
+    },
+    {
+      "ms": 6.3720849999990605,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:55.717Z"
+    },
+    {
+      "ms": 324.4747500000012,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:56.241Z"
+    },
+    {
+      "ms": 6.829427000000578,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:56.241Z"
+    },
+    {
+      "ms": 5.900360999999975,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:57.074Z"
+    },
+    {
+      "ms": 2.7055399999990186,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:57.074Z"
+    },
+    {
+      "ms": 4.7255089999998745,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:57.583Z"
+    },
+    {
+      "ms": 3.726375000002008,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:57.583Z"
+    },
+    {
+      "ms": 9.698175000001356,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:58.095Z"
+    },
+    {
+      "ms": 8.185294999999314,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:58.095Z"
+    },
+    {
+      "ms": 16.69565800000055,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:58.615Z"
+    },
+    {
+      "ms": 18.614646000001812,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:58.615Z"
+    },
+    {
+      "ms": 3.865694000000076,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:59.153Z"
+    },
+    {
+      "ms": 4.531068000000232,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:59.153Z"
+    },
+    {
+      "ms": 5.466968000000634,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:59.662Z"
+    },
+    {
+      "ms": 7.609605999998166,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:10:59.662Z"
+    },
+    {
+      "ms": 27.695921999998973,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:00.179Z"
+    },
+    {
+      "ms": 6.665705999999773,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:00.179Z"
+    },
+    {
+      "ms": 5.674571000003198,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:00.715Z"
+    },
+    {
+      "ms": 3.1987950000002456,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:00.715Z"
+    },
+    {
+      "ms": 646.4822910000003,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:01.225Z"
+    },
+    {
+      "ms": 9.943148999998812,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:01.225Z"
+    },
+    {
+      "ms": 1890.7993229999993,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:02.383Z"
+    },
+    {
+      "ms": 42.00091600000451,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:02.383Z"
+    },
+    {
+      "ms": 3.805154000001494,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:04.817Z"
+    },
+    {
+      "ms": 2.5901169999997364,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:04.817Z"
+    },
+    {
+      "ms": 5.994260999999824,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:05.324Z"
+    },
+    {
+      "ms": 4.040075000004435,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:05.324Z"
+    },
+    {
+      "ms": 46.78447099999903,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:05.835Z"
+    },
+    {
+      "ms": 49.730272000000696,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:05.835Z"
+    },
+    {
+      "ms": 3.872933999999077,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:06.433Z"
+    },
+    {
+      "ms": 3.3612800000046263,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:06.433Z"
+    },
+    {
+      "ms": 9.618764999999257,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:06.944Z"
+    },
+    {
+      "ms": 43.79442099999869,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:06.944Z"
+    },
+    {
+      "ms": 17.84835700000258,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:07.499Z"
+    },
+    {
+      "ms": 12.954898000003595,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:07.499Z"
+    },
+    {
+      "ms": 38.5739539999995,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:08.060Z"
+    },
+    {
+      "ms": 3.926685999998881,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:08.060Z"
+    },
+    {
+      "ms": 10.711988000002748,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:08.605Z"
+    },
+    {
+      "ms": 4.176573999997345,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:08.605Z"
+    },
+    {
+      "ms": 17.67104699999618,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:09.121Z"
+    },
+    {
+      "ms": 11.63665499999479,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:09.121Z"
+    },
+    {
+      "ms": 10.760462999998708,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:09.652Z"
+    },
+    {
+      "ms": 3.944181999999273,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:09.652Z"
+    },
+    {
+      "ms": 8.342608999999356,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:10.168Z"
+    },
+    {
+      "ms": 9.475190999997722,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:10.168Z"
+    },
+    {
+      "ms": 9.763250999996671,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:10.686Z"
+    },
+    {
+      "ms": 5.908871999999974,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:10.686Z"
+    },
+    {
+      "ms": 5.983240000001388,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:11.203Z"
+    },
+    {
+      "ms": 8.976238999995985,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:11.203Z"
+    },
+    {
+      "ms": 25.796690000002855,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:11.756Z"
+    },
+    {
+      "ms": 185.3542729999972,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:11.756Z"
+    },
+    {
+      "ms": 3.7593419999975595,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:12.468Z"
+    },
+    {
+      "ms": 2.59986100000242,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:12.468Z"
+    },
+    {
+      "ms": 22.74632500000007,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:12.978Z"
+    },
+    {
+      "ms": 5.369082999997772,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:12.978Z"
+    },
+    {
+      "ms": 7.484201999999641,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:13.507Z"
+    },
+    {
+      "ms": 12.810731000005035,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:13.507Z"
+    },
+    {
+      "ms": 5.184563999995589,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:14.027Z"
+    },
+    {
+      "ms": 7.776035000002594,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:14.027Z"
+    },
+    {
+      "ms": 43.68664700000227,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:14.542Z"
+    },
+    {
+      "ms": 6.739837999994052,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:14.542Z"
+    },
+    {
+      "ms": 5.270179999999527,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:15.094Z"
+    },
+    {
+      "ms": 5.565827999998874,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:15.094Z"
+    },
+    {
+      "ms": 62.75377400000434,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:15.606Z"
+    },
+    {
+      "ms": 11.222315000006347,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:15.606Z"
+    },
+    {
+      "ms": 4.515661999997974,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:16.180Z"
+    },
+    {
+      "ms": 4.85935199999949,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:16.180Z"
+    },
+    {
+      "ms": 5.54995400000189,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:16.690Z"
+    },
+    {
+      "ms": 3.645892000000458,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:16.690Z"
+    },
+    {
+      "ms": 5.076361000006727,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:17.201Z"
+    },
+    {
+      "ms": 3.2292259999958333,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:17.201Z"
+    },
+    {
+      "ms": 31.005167000002984,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:17.710Z"
+    },
+    {
+      "ms": 8.550235999995493,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:17.710Z"
+    },
+    {
+      "ms": 32.52664199999708,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:18.254Z"
+    },
+    {
+      "ms": 8.065421999999671,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:18.254Z"
+    },
+    {
+      "ms": 79.66000000000349,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:18.799Z"
+    },
+    {
+      "ms": 19.405195000006643,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:18.799Z"
+    },
+    {
+      "ms": 7.6394320000035805,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:19.403Z"
+    },
+    {
+      "ms": 3.6715780000013183,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:19.403Z"
+    },
+    {
+      "ms": 12.478376999999455,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:19.915Z"
+    },
+    {
+      "ms": 2.957127000001492,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:19.915Z"
+    },
+    {
+      "ms": 40.09464399999706,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:20.431Z"
+    },
+    {
+      "ms": 11.649383999996644,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:20.431Z"
+    },
+    {
+      "ms": 16.95480099999986,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:20.985Z"
+    },
+    {
+      "ms": 11.205865000003541,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:20.985Z"
+    },
+    {
+      "ms": 44.48219699999754,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:21.530Z"
+    },
+    {
+      "ms": 13.231273999997939,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:21.530Z"
+    },
+    {
+      "ms": 4.986209999995481,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:22.088Z"
+    },
+    {
+      "ms": 4.1537070000049425,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:22.088Z"
+    },
+    {
+      "ms": 26.405690999999933,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:22.601Z"
+    },
+    {
+      "ms": 7.200976000000082,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:22.601Z"
+    },
+    {
+      "ms": 7.2538429999985965,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:23.145Z"
+    },
+    {
+      "ms": 5.662339999995311,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:23.145Z"
+    },
+    {
+      "ms": 9.647426000003179,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:23.658Z"
+    },
+    {
+      "ms": 6.592893000000913,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:23.658Z"
+    },
+    {
+      "ms": 287.2975490000026,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:24.176Z"
+    },
+    {
+      "ms": 3.423609999998007,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-07T22:11:24.176Z"
+    },
+    {
+      "ms": 28.39627399999881,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "validate",
+      "startedAt": "2026-11-07T22:11:25.000Z"
+    },
+    {
+      "ms": 2630.2856450000036,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "validate",
+      "startedAt": "2026-11-07T22:11:25.000Z"
+    },
+    {
+      "ms": 22.513889000001654,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:30.340Z"
+    },
+    {
+      "ms": 4.099370999996609,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:30.340Z"
+    },
+    {
+      "ms": 38.15908200000558,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:30.901Z"
+    },
+    {
+      "ms": 14.328196000002208,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:30.901Z"
+    },
+    {
+      "ms": 14.963824999998906,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:31.457Z"
+    },
+    {
+      "ms": 4.8807509999969625,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:31.457Z"
+    },
+    {
+      "ms": 27.868663000001106,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:31.977Z"
+    },
+    {
+      "ms": 14.975187999996706,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:31.977Z"
+    },
+    {
+      "ms": 11.060352000000421,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:32.520Z"
+    },
+    {
+      "ms": 7.703551000005973,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:32.520Z"
+    },
+    {
+      "ms": 11.998320999999123,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:33.039Z"
+    },
+    {
+      "ms": 3.60859000000346,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:33.039Z"
+    },
+    {
+      "ms": 20.28255999999965,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:33.555Z"
+    },
+    {
+      "ms": 8.09064099999523,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:33.555Z"
+    },
+    {
+      "ms": 32.87096500000189,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:34.084Z"
+    },
+    {
+      "ms": 3.8679320000010193,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:34.084Z"
+    },
+    {
+      "ms": 4.15637300000526,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:34.621Z"
+    },
+    {
+      "ms": 3.341762000010931,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:34.621Z"
+    },
+    {
+      "ms": 23.926879999999073,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:35.132Z"
+    },
+    {
+      "ms": 6.120364999995218,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:35.132Z"
+    },
+    {
+      "ms": 19.27208999999857,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:35.664Z"
+    },
+    {
+      "ms": 4.730314999993425,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:35.664Z"
+    },
+    {
+      "ms": 3.774224000007962,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:36.189Z"
+    },
+    {
+      "ms": 4.090643999996246,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:36.189Z"
+    },
+    {
+      "ms": 3.0589550000004238,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:36.700Z"
+    },
+    {
+      "ms": 3.8042049999930896,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:36.700Z"
+    },
+    {
+      "ms": 12.906027000004542,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:37.208Z"
+    },
+    {
+      "ms": 7.574514000007184,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:37.208Z"
+    },
+    {
+      "ms": 5.321542999998201,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:37.728Z"
+    },
+    {
+      "ms": 6.796794000008958,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:37.728Z"
+    },
+    {
+      "ms": 6.653600999998162,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:38.243Z"
+    },
+    {
+      "ms": 3.4993580000009388,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:38.243Z"
+    },
+    {
+      "ms": 15.652981000006548,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:38.754Z"
+    },
+    {
+      "ms": 5.394676000010804,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:38.754Z"
+    },
+    {
+      "ms": 19.244653000001563,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:39.279Z"
+    },
+    {
+      "ms": 8.40209999999206,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:39.279Z"
+    },
+    {
+      "ms": 37.048652000012225,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:39.808Z"
+    },
+    {
+      "ms": 7.617618999996921,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:39.808Z"
+    },
+    {
+      "ms": 6.506320000000414,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:40.353Z"
+    },
+    {
+      "ms": 3.204243000000133,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:40.353Z"
+    },
+    {
+      "ms": 12.95679100000416,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:40.864Z"
+    },
+    {
+      "ms": 6.759055999995326,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:40.864Z"
+    },
+    {
+      "ms": 9.909721000003628,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:41.385Z"
+    },
+    {
+      "ms": 3.9554559999960475,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:41.385Z"
+    },
+    {
+      "ms": 12.62462799999048,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:41.900Z"
+    },
+    {
+      "ms": 4.075664000003599,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:41.900Z"
+    },
+    {
+      "ms": 4.167159000004176,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:42.418Z"
+    },
+    {
+      "ms": 7.335464000003412,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:42.418Z"
+    },
+    {
+      "ms": 3.3704499999876134,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:42.930Z"
+    },
+    {
+      "ms": 3.3069740000064485,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:42.930Z"
+    },
+    {
+      "ms": 15.091855999999098,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:43.437Z"
+    },
+    {
+      "ms": 5.5449680000019725,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:43.437Z"
+    },
+    {
+      "ms": 9.686260999995284,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:43.958Z"
+    },
+    {
+      "ms": 5.98129899999185,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:43.958Z"
+    },
+    {
+      "ms": 9.5385510000051,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:44.474Z"
+    },
+    {
+      "ms": 11.69106899999315,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:44.474Z"
+    },
+    {
+      "ms": 5.726934000005713,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:44.996Z"
+    },
+    {
+      "ms": 4.9479019999998854,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:44.996Z"
+    },
+    {
+      "ms": 107.45292700000573,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:45.507Z"
+    },
+    {
+      "ms": 8.377403999998933,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:45.507Z"
+    },
+    {
+      "ms": 3.893062999995891,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:46.124Z"
+    },
+    {
+      "ms": 3.419664000000921,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:46.124Z"
+    },
+    {
+      "ms": 7.246704999997746,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:46.632Z"
+    },
+    {
+      "ms": 3.151805000001332,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:46.632Z"
+    },
+    {
+      "ms": 14.00745299999835,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:47.143Z"
+    },
+    {
+      "ms": 7.928574000005028,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:47.143Z"
+    },
+    {
+      "ms": 19.08329200001026,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:47.666Z"
+    },
+    {
+      "ms": 4.006103000006988,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:47.666Z"
+    },
+    {
+      "ms": 15.31490000001213,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:48.191Z"
+    },
+    {
+      "ms": 4.845384999993257,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:48.191Z"
+    },
+    {
+      "ms": 3.7599170000030426,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:48.711Z"
+    },
+    {
+      "ms": 3.0965889999934006,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:48.711Z"
+    },
+    {
+      "ms": 17.488146000003326,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:49.219Z"
+    },
+    {
+      "ms": 4.1739419999939855,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:49.219Z"
+    },
+    {
+      "ms": 11.186665000001085,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:49.742Z"
+    },
+    {
+      "ms": 4.828957000005175,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:49.742Z"
+    },
+    {
+      "ms": 6.021907000002102,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:50.258Z"
+    },
+    {
+      "ms": 4.6100079999887384,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:50.258Z"
+    },
+    {
+      "ms": 22.58816400000069,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:50.778Z"
+    },
+    {
+      "ms": 6.168812000003527,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:50.778Z"
+    },
+    {
+      "ms": 4.150035999991815,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:51.312Z"
+    },
+    {
+      "ms": 3.1053499999979977,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:51.312Z"
+    },
+    {
+      "ms": 14.440127000008943,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:51.819Z"
+    },
+    {
+      "ms": 4.516615000000456,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:51.819Z"
+    },
+    {
+      "ms": 4.349445999992895,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:52.340Z"
+    },
+    {
+      "ms": 3.8201010000047972,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:52.340Z"
+    },
+    {
+      "ms": 6.4032290000031935,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:52.848Z"
+    },
+    {
+      "ms": 12.388221000001067,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:52.848Z"
+    },
+    {
+      "ms": 6.973314999995637,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:53.367Z"
+    },
+    {
+      "ms": 4.068338999990374,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:53.367Z"
+    },
+    {
+      "ms": 13.634333000009065,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:53.880Z"
+    },
+    {
+      "ms": 5.378728000010597,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:53.880Z"
+    },
+    {
+      "ms": 6.08462999999756,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:54.401Z"
+    },
+    {
+      "ms": 4.76393200000166,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:54.401Z"
+    },
+    {
+      "ms": 13.698120000000927,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:54.913Z"
+    },
+    {
+      "ms": 3.5557620000035968,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:54.913Z"
+    },
+    {
+      "ms": 8.408932000005734,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:55.433Z"
+    },
+    {
+      "ms": 7.064297000004444,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:55.433Z"
+    },
+    {
+      "ms": 16.217207000008784,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:55.949Z"
+    },
+    {
+      "ms": 6.159646999993129,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:55.949Z"
+    },
+    {
+      "ms": 6.995284999997239,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:56.475Z"
+    },
+    {
+      "ms": 3.726660999993328,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:56.475Z"
+    },
+    {
+      "ms": 4.725057000003289,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:56.986Z"
+    },
+    {
+      "ms": 8.130523999992874,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:56.986Z"
+    },
+    {
+      "ms": 12.137988000002224,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:57.500Z"
+    },
+    {
+      "ms": 10.397233000010601,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:57.500Z"
+    },
+    {
+      "ms": 9.83363000000827,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:58.024Z"
+    },
+    {
+      "ms": 7.9330469999986235,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:58.024Z"
+    },
+    {
+      "ms": 12.019981000004918,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:58.614Z"
+    },
+    {
+      "ms": 2.8588109999982407,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:58.614Z"
+    },
+    {
+      "ms": 11.979957000003196,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:59.130Z"
+    },
+    {
+      "ms": 3.419148999993922,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:59.130Z"
+    },
+    {
+      "ms": 41.51355400000466,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:59.646Z"
+    },
+    {
+      "ms": 9.023432000001776,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:11:59.646Z"
+    },
+    {
+      "ms": 4.713648999997531,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:00.199Z"
+    },
+    {
+      "ms": 5.223981999995885,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:00.199Z"
+    },
+    {
+      "ms": 7.937067999999272,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:00.710Z"
+    },
+    {
+      "ms": 5.650437000003876,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:00.710Z"
+    },
+    {
+      "ms": 7.759218000006513,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:01.224Z"
+    },
+    {
+      "ms": 2.322857999999542,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:01.224Z"
+    },
+    {
+      "ms": 9.855515999995987,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:01.734Z"
+    },
+    {
+      "ms": 4.979704000012134,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:01.734Z"
+    },
+    {
+      "ms": 6.291320000003907,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:02.250Z"
+    },
+    {
+      "ms": 3.496363999991445,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:02.250Z"
+    },
+    {
+      "ms": 6.399548999994295,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:02.761Z"
+    },
+    {
+      "ms": 3.2606329999980517,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:02.761Z"
+    },
+    {
+      "ms": 16.014770000008866,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:03.271Z"
+    },
+    {
+      "ms": 5.35780500000692,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:03.271Z"
+    },
+    {
+      "ms": 3.9407309999951394,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:03.793Z"
+    },
+    {
+      "ms": 7.315137999990839,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:03.793Z"
+    },
+    {
+      "ms": 3.530629000000772,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:04.304Z"
+    },
+    {
+      "ms": 2.7828990000125486,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:04.304Z"
+    },
+    {
+      "ms": 3.698634000000311,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:04.810Z"
+    },
+    {
+      "ms": 3.1036979999917094,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:04.810Z"
+    },
+    {
+      "ms": 3.6481690000073286,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:05.318Z"
+    },
+    {
+      "ms": 3.125541000001249,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:05.318Z"
+    },
+    {
+      "ms": 4.523834999999963,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:05.824Z"
+    },
+    {
+      "ms": 2.9855200000019977,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:05.824Z"
+    },
+    {
+      "ms": 6.579005999999936,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:06.333Z"
+    },
+    {
+      "ms": 2.7873690000124043,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:06.333Z"
+    },
+    {
+      "ms": 4.166296999988845,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:06.843Z"
+    },
+    {
+      "ms": 3.8438480000040727,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:06.843Z"
+    },
+    {
+      "ms": 4.267728999999235,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:07.351Z"
+    },
+    {
+      "ms": 3.6443560000043362,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:07.351Z"
+    },
+    {
+      "ms": 14.778886000000057,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:07.860Z"
+    },
+    {
+      "ms": 3.0236579999909736,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:07.860Z"
+    },
+    {
+      "ms": 4.679808999993838,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:08.378Z"
+    },
+    {
+      "ms": 3.835795999999391,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:08.378Z"
+    },
+    {
+      "ms": 8.41157199999725,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:08.886Z"
+    },
+    {
+      "ms": 4.770552000001771,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:08.886Z"
+    },
+    {
+      "ms": 4.615304999999353,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:09.401Z"
+    },
+    {
+      "ms": 2.862217999994755,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:09.401Z"
+    },
+    {
+      "ms": 14.589938999997685,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:09.908Z"
+    },
+    {
+      "ms": 4.930942999999388,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:09.908Z"
+    },
+    {
+      "ms": 5.201459000003524,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:10.428Z"
+    },
+    {
+      "ms": 2.629893000004813,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:10.428Z"
+    },
+    {
+      "ms": 4.149781999993138,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:10.936Z"
+    },
+    {
+      "ms": 3.1809030000003986,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:10.936Z"
+    },
+    {
+      "ms": 4.086431999996421,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:11.443Z"
+    },
+    {
+      "ms": 3.639095999998972,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:11.443Z"
+    },
+    {
+      "ms": 15.748223999995389,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:11.952Z"
+    },
+    {
+      "ms": 4.952008000007481,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:11.952Z"
+    },
+    {
+      "ms": 4.797093999994104,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:12.474Z"
+    },
+    {
+      "ms": 6.066020000012941,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:12.474Z"
+    },
+    {
+      "ms": 4.910027000005357,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:12.986Z"
+    },
+    {
+      "ms": 4.8551080000033835,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:12.986Z"
+    },
+    {
+      "ms": 7.362398999990546,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:13.497Z"
+    },
+    {
+      "ms": 4.895088999997824,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:13.497Z"
+    },
+    {
+      "ms": 12.18112999999721,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:14.010Z"
+    },
+    {
+      "ms": 4.667521999988821,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:14.010Z"
+    },
+    {
+      "ms": 3.9402660000050673,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:14.528Z"
+    },
+    {
+      "ms": 3.4965090000041528,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:14.528Z"
+    },
+    {
+      "ms": 4.621107999992091,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:15.036Z"
+    },
+    {
+      "ms": 3.613115000000107,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:15.036Z"
+    },
+    {
+      "ms": 3.5918369999999413,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:15.545Z"
+    },
+    {
+      "ms": 4.4011869999958435,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:15.545Z"
+    },
+    {
+      "ms": 10.078123999992386,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:16.054Z"
+    },
+    {
+      "ms": 3.518920000002254,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:16.054Z"
+    },
+    {
+      "ms": 8.333752000005916,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:16.568Z"
+    },
+    {
+      "ms": 3.3350460000074236,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:16.568Z"
+    },
+    {
+      "ms": 3.6089219999994384,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:17.081Z"
+    },
+    {
+      "ms": 2.745859999995446,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:17.081Z"
+    },
+    {
+      "ms": 8.080891000005067,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:17.587Z"
+    },
+    {
+      "ms": 3.2978650000004563,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:17.587Z"
+    },
+    {
+      "ms": 7.199384999999893,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:18.100Z"
+    },
+    {
+      "ms": 2.9366679999948246,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:18.100Z"
+    },
+    {
+      "ms": 16.73623700000462,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:18.611Z"
+    },
+    {
+      "ms": 4.526849999994738,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:18.611Z"
+    },
+    {
+      "ms": 5.4038759999966715,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:19.133Z"
+    },
+    {
+      "ms": 3.5828360000014072,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:19.133Z"
+    },
+    {
+      "ms": 4.221723999988171,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:19.643Z"
+    },
+    {
+      "ms": 3.720776999994996,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:19.643Z"
+    },
+    {
+      "ms": 4.9826130000001285,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:20.151Z"
+    },
+    {
+      "ms": 2.2457460000005085,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:20.151Z"
+    },
+    {
+      "ms": 16.002401999998256,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:20.658Z"
+    },
+    {
+      "ms": 3.232826000006753,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:20.658Z"
+    },
+    {
+      "ms": 7.495928999996977,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:21.179Z"
+    },
+    {
+      "ms": 19.35490700000082,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:21.179Z"
+    },
+    {
+      "ms": 10.597892999998294,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:21.706Z"
+    },
+    {
+      "ms": 9.634694000007585,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:21.706Z"
+    },
+    {
+      "ms": 4.226632000005338,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:22.228Z"
+    },
+    {
+      "ms": 3.88551500000176,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:22.228Z"
+    },
+    {
+      "ms": 5.960814999998547,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:22.737Z"
+    },
+    {
+      "ms": 4.213650999998208,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:22.737Z"
+    },
+    {
+      "ms": 4.765290000010282,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:23.248Z"
+    },
+    {
+      "ms": 3.5545189999975264,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:23.248Z"
+    },
+    {
+      "ms": 4.514701000007335,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:23.756Z"
+    },
+    {
+      "ms": 4.833895999996457,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:23.756Z"
+    },
+    {
+      "ms": 5.370682000007946,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:24.266Z"
+    },
+    {
+      "ms": 7.780202000009012,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:24.266Z"
+    },
+    {
+      "ms": 3.525205999991158,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:24.779Z"
+    },
+    {
+      "ms": 2.891919000001508,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:24.779Z"
+    },
+    {
+      "ms": 4.325376000007964,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:25.286Z"
+    },
+    {
+      "ms": 2.9389589999918826,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-07T22:12:25.286Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "7aeda80d1f3d1ec37e932f8669ac7154ff0919df",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "1600000 400000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "fixtureConditions": {
+    "maintenanceState": "recent-weekly-check",
+    "stateFile": "/tmp/buyerlog-startup-shared908-main5b8-20261107/local/data-cleanup-state.json"
+  },
+  "refresh": {
+    "jobId": "mw6yiwuo-4lezgypg",
+    "serverInstanceId": "250d3dca3a6eb683",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-07T22:10:31.242Z",
+    "finishedAt": "2026-11-07T22:11:23.808Z",
+    "elapsedMs": 52560,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 30000,
+      "newlyAppeared": 30000,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 30000,
+      "antrepoChangedOrders": 12726,
+      "asasChangeCount": 30000,
+      "antrepoChangeCount": 12726,
+      "hasChanges": true,
+      "details": {
+        "count": 42726
+      },
+      "historyItemId": "refresh_mw6yk1e5_gsh4mx"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:31.286Z",
+        "timestampMs": 1794089431286,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:10:31.287Z",
+        "timestampMs": 1794089431287,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:31.288Z",
+        "timestampMs": 1794089431288,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:10:44.092Z",
+        "timestampMs": 1794089444092,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 12804,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:44.217Z",
+        "timestampMs": 1794089444217,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:10:44.218Z",
+        "timestampMs": 1794089444218,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:44.218Z",
+        "timestampMs": 1794089444218,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:10:45.437Z",
+        "timestampMs": 1794089445437,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 1219,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:46.684Z",
+        "timestampMs": 1794089446684,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:10:47.863Z",
+        "timestampMs": 1794089447863,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 1179,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:10:47.863Z",
+        "timestampMs": 1794089447863,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:11:01.606Z",
+        "timestampMs": 1794089461606,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 13743,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-07T22:11:01.608Z",
+        "timestampMs": 1794089461608,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-07T22:11:23.773Z",
+        "timestampMs": 1794089483773,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 22165,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 0.8955889999999727,
+        "durationMs": 12770.491103,
+        "executionMs": 10063.72475,
+        "overheadMs": 2706.766353000001,
+        "heapUsedBytes": 388678616,
+        "mainReceiveMs": 1106.7215660000002,
+        "workerPostMessageMs": 1498.7261099999996,
+        "resultTransport": "message-port"
+      },
+      "antrepo": {
+        "queueWaitMs": 0.06568100000004051,
+        "durationMs": 1214.5139690000015,
+        "executionMs": 1005.4790310000008,
+        "overheadMs": 209.0349380000007,
+        "heapUsedBytes": 72974864,
+        "mainReceiveMs": 89.27076399999896,
+        "workerPostMessageMs": 65.96445399999902,
+        "resultTransport": "message-port"
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-07T22:10:31.280Z",
+        "ms": 6,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-07T22:10:31.286Z",
+        "ms": 2,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-07T22:10:31.288Z",
+        "ms": 12895,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-07T22:10:44.183Z",
+        "ms": 34,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-07T22:10:44.217Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-07T22:10:44.218Z",
+        "ms": 2465,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-07T22:10:46.683Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-07T22:10:46.683Z",
+        "ms": 1180,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-07T22:10:47.863Z",
+        "ms": 13744,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-07T22:11:01.607Z",
+        "ms": 22166,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-07T22:11:23.773Z",
+        "ms": 35,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-07T22:10:44.216Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 7922,
+      "dashboard": null,
+      "totalMs": 52556
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 191,
+      "successful": 191,
+      "failed": 0,
+      "p50Ms": 8.333752000005916,
+      "p95Ms": 79.66000000000349,
+      "maxMs": 4457.362207000002
+    },
+    "refresh": {
+      "count": 82,
+      "successful": 82,
+      "failed": 0,
+      "p50Ms": 9.647426000003179,
+      "p95Ms": 646.4822910000003,
+      "maxMs": 4457.362207000002
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      200
+    ],
+    "endpointAvailable": true
+  },
+  "statusProbe": {
+    "endpoint": "/api/status",
+    "all": {
+      "count": 191,
+      "successful": 191,
+      "failed": 0,
+      "p50Ms": 4.770552000001771,
+      "p95Ms": 19.35490700000082,
+      "maxMs": 2630.2856450000036
+    },
+    "refresh": {
+      "count": 82,
+      "successful": 82,
+      "failed": 0,
+      "p50Ms": 6.265918999999485,
+      "p95Ms": 31.428679000000557,
+      "maxMs": 185.3542729999972
+    }
+  },
+  "stalls": [],
+  "serverLoopProbe": {
+    "enabled": true,
+    "observerSha256": "8449c87695aacf881ff4f01ccdb8ef32630b7aa6b6a99709e4f5df3f448672b0",
+    "recordedGaps": 110,
+    "maxGapMs": 4566.80632,
+    "maxDelayMs": 4556.80632,
+    "gapsOver200ms": 13,
+    "maxGapUpperBoundMs": 4566.80632,
+    "intervalMs": 10,
+    "reportFromMs": 20,
+    "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval",
+    "events": [
+      {
+        "pid": 371606,
+        "kind": "start",
+        "atMs": 1794089429804,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "clock": "monotonic elapsed mapped to epoch",
+        "transport": "shared-ring-worker",
+        "capacity": 8192,
+        "cpuScope": "thread",
+        "cpuMeasurement": "surrounding-sample-window",
+        "cpuSampleIntervalMs": 100,
+        "cpuClockResolutionMs": 10,
+        "gc": true
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089429874.6787,
+        "toMs": 1794089430874.032,
+        "gapMs": 999.353266,
+        "delayMs": 989.353266,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089429874.0837,
+        "cpuWindowToMs": 1794089430904.3682,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 740,
+        "systemCpuMs": 270
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089429909.655,
+        "toMs": 1794089429911.5322,
+        "durationMs": 1.8773030042648315,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089429946.9312,
+        "toMs": 1794089429948.4436,
+        "durationMs": 1.5125049948692322,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089429994.0173,
+        "toMs": 1794089429997.2183,
+        "durationMs": 3.2008379995822906,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430017.8027,
+        "toMs": 1794089430021.4758,
+        "durationMs": 3.6730780005455017,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430116.2065,
+        "toMs": 1794089430121.4016,
+        "durationMs": 5.195012986660004,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430126.0645,
+        "toMs": 1794089430127.1912,
+        "durationMs": 1.1267829835414886,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430131.6777,
+        "toMs": 1794089430131.9712,
+        "durationMs": 0.2935370206832886,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430141.0386,
+        "toMs": 1794089430141.4778,
+        "durationMs": 0.43927499651908875,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430201.0615,
+        "toMs": 1794089430204.042,
+        "durationMs": 2.9803859889507294,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430239.503,
+        "toMs": 1794089430243.023,
+        "durationMs": 3.5200510025024414,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430243.047,
+        "toMs": 1794089430244.9902,
+        "durationMs": 1.943013995885849,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430253.698,
+        "toMs": 1794089430261.8562,
+        "durationMs": 8.158167988061905,
+        "gcKind": 4,
+        "gcFlags": 64
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430499.5134,
+        "toMs": 1794089430508.124,
+        "durationMs": 8.610709011554718,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089430875.678,
+        "toMs": 1794089430886.4316,
+        "durationMs": 10.753657013177872,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089430874.032,
+        "toMs": 1794089430907.5466,
+        "gapMs": 33.51470999999992,
+        "delayMs": 23.514709999999923,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089430802.929,
+        "cpuWindowToMs": 1794089431005.8254,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 150,
+        "systemCpuMs": 50
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089430982.3628,
+        "toMs": 1794089431205.266,
+        "gapMs": 222.90335800000003,
+        "delayMs": 212.90335800000003,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089430904.259,
+        "cpuWindowToMs": 1794089431207.3247,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 210,
+        "systemCpuMs": 90
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089431228.9817,
+        "toMs": 1794089431252.8638,
+        "gapMs": 23.882029999999986,
+        "delayMs": 13.882029999999986,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089431207.1597,
+        "cpuWindowToMs": 1794089431311.8323,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 90,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089431270.5347,
+        "toMs": 1794089431298.7463,
+        "gapMs": 28.21164399999998,
+        "delayMs": 18.21164399999998,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089431207.1597,
+        "cpuWindowToMs": 1794089431311.8323,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 90,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089431334.0034,
+        "toMs": 1794089431357.863,
+        "durationMs": 23.859523981809616,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089431328.3523,
+        "toMs": 1794089431358.1963,
+        "gapMs": 29.843947999999955,
+        "delayMs": 19.843947999999955,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089431309.7073,
+        "cpuWindowToMs": 1794089431414.9062,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089431485.5557,
+        "toMs": 1794089431486.5242,
+        "durationMs": 0.9685100018978119,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089431501.7998,
+        "toMs": 1794089431511.912,
+        "durationMs": 10.112207978963852,
+        "gcKind": 4,
+        "gcFlags": 64
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089435058.7588,
+        "toMs": 1794089435126.747,
+        "gapMs": 67.9881890000006,
+        "delayMs": 57.9881890000006,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089435055.8684,
+        "cpuWindowToMs": 1794089435178.674,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089438522.969,
+        "toMs": 1794089438548.1443,
+        "gapMs": 25.17539300000135,
+        "delayMs": 15.17539300000135,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089438517.9316,
+        "cpuWindowToMs": 1794089438621.2222,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089441545.3813,
+        "toMs": 1794089441568.6611,
+        "gapMs": 23.279794000000038,
+        "delayMs": 13.279794000000038,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089441469.81,
+        "cpuWindowToMs": 1794089441576.4995,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089441585.4666,
+        "toMs": 1794089441609.0886,
+        "gapMs": 23.621993000000657,
+        "delayMs": 13.621993000000657,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089441576.1272,
+        "cpuWindowToMs": 1794089441698.8667,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443104.9731,
+        "toMs": 1794089443137.0876,
+        "durationMs": 32.11461600661278,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443214.4321,
+        "toMs": 1794089443272.3667,
+        "durationMs": 57.93445399403572,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443589.9734,
+        "toMs": 1794089443648.0603,
+        "durationMs": 58.086930990219116,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443702.1582,
+        "toMs": 1794089443769.6287,
+        "durationMs": 67.47054100036621,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443885.5151,
+        "toMs": 1794089443925.0957,
+        "durationMs": 39.580462008714676,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089443964.432,
+        "toMs": 1794089444044.2905,
+        "durationMs": 79.85861802101135,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089444060.4714,
+        "toMs": 1794089444061.3486,
+        "durationMs": 0.8770770132541656,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089442946.8982,
+        "toMs": 1794089444062.0952,
+        "gapMs": 1115.1971560000002,
+        "delayMs": 1105.1971560000002,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089442910.4592,
+        "cpuWindowToMs": 1794089444139.6138,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 640,
+        "systemCpuMs": 510
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089444139.8704,
+        "toMs": 1794089444150.5623,
+        "durationMs": 10.691879004240036,
+        "gcKind": 4,
+        "gcFlags": 64
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089444085.3218,
+        "toMs": 1794089444220.7012,
+        "gapMs": 135.37939799999913,
+        "delayMs": 125.37939799999913,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089444036.425,
+        "cpuWindowToMs": 1794089444241.2349,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 130,
+        "systemCpuMs": 30
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089445339.3997,
+        "toMs": 1794089445433.6853,
+        "gapMs": 94.28570500000023,
+        "delayMs": 84.28570500000023,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089445255.057,
+        "cpuWindowToMs": 1794089445463.447,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 100,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445585.2021,
+        "toMs": 1794089445595.3726,
+        "durationMs": 10.170500993728638,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445661.6443,
+        "toMs": 1794089445674.803,
+        "durationMs": 13.158771008253098,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445777.6196,
+        "toMs": 1794089445782.5183,
+        "durationMs": 4.898631989955902,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445845.0557,
+        "toMs": 1794089445847.2642,
+        "durationMs": 2.208497017621994,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445906.1375,
+        "toMs": 1794089445907.4995,
+        "durationMs": 1.3621329963207245,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089445995.1665,
+        "toMs": 1794089445997.009,
+        "durationMs": 1.8425439894199371,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446052.7947,
+        "toMs": 1794089446054.101,
+        "durationMs": 1.3062999844551086,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446107.6846,
+        "toMs": 1794089446108.8872,
+        "durationMs": 1.2027549743652344,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446163.1213,
+        "toMs": 1794089446164.1182,
+        "durationMs": 0.9969199895858765,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446221.2236,
+        "toMs": 1794089446222.22,
+        "durationMs": 0.9964229762554169,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446277.3892,
+        "toMs": 1794089446278.4404,
+        "durationMs": 1.0511960089206696,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446340.0261,
+        "toMs": 1794089446341.0554,
+        "durationMs": 1.0292840003967285,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446400.587,
+        "toMs": 1794089446401.598,
+        "durationMs": 1.0110329985618591,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446455.9958,
+        "toMs": 1794089446457.5046,
+        "durationMs": 1.508756011724472,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446522.0215,
+        "toMs": 1794089446524.2935,
+        "durationMs": 2.271946996450424,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446580.609,
+        "toMs": 1794089446581.4978,
+        "durationMs": 0.88885697722435,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446634.5667,
+        "toMs": 1794089446635.6848,
+        "durationMs": 1.1180729866027832,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089445433.6853,
+        "toMs": 1794089446884.0752,
+        "gapMs": 1450.3898980000013,
+        "delayMs": 1440.3898980000013,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089445359.3337,
+        "cpuWindowToMs": 1794089446886.1135,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 1470,
+        "systemCpuMs": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089446886.2153,
+        "toMs": 1794089446902.3447,
+        "durationMs": 16.129373997449875,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089446884.0752,
+        "toMs": 1794089446920.8772,
+        "gapMs": 36.80206299999918,
+        "delayMs": 26.80206299999918,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089446780.1238,
+        "cpuWindowToMs": 1794089446988.2046,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 190,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089446995.5098,
+        "toMs": 1794089447487.41,
+        "gapMs": 491.90019400000165,
+        "delayMs": 481.90019400000165,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089446987.9866,
+        "cpuWindowToMs": 1794089447492.491,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 480,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089447262.4028,
+        "toMs": 1794089447273.871,
+        "durationMs": 11.468186020851135,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089447370.1194,
+        "toMs": 1794089447380.249,
+        "durationMs": 10.129536986351013,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089447487.41,
+        "toMs": 1794089447528.932,
+        "gapMs": 41.52209999999832,
+        "delayMs": 31.522099999998318,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089447391.5076,
+        "cpuWindowToMs": 1794089447595.258,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 190,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089447585.414,
+        "toMs": 1794089447590.7388,
+        "durationMs": 5.3248209953308105,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089447864.4014,
+        "toMs": 1794089452431.2078,
+        "gapMs": 4566.80632,
+        "delayMs": 4556.80632,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089447796.9114,
+        "cpuWindowToMs": 1794089452447.584,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 2270,
+        "systemCpuMs": 2370
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089449987.7961,
+        "toMs": 1794089450011.3462,
+        "durationMs": 23.549946010112762,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089451982.2886,
+        "toMs": 1794089451985.9224,
+        "durationMs": 3.633684992790222,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089452405.9167,
+        "toMs": 1794089452430.5764,
+        "durationMs": 24.659667998552322,
+        "gcKind": 4,
+        "gcFlags": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089452431.2078,
+        "toMs": 1794089452522.8713,
+        "gapMs": 91.66360699999859,
+        "delayMs": 81.66360699999859,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089452342.3318,
+        "cpuWindowToMs": 1794089452552.6345,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 90,
+        "systemCpuMs": 110
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089453554.4617,
+        "toMs": 1794089453599.4956,
+        "gapMs": 45.0338069999998,
+        "delayMs": 35.0338069999998,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089453464.4622,
+        "cpuWindowToMs": 1794089453676.7048,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 70,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089454497.376,
+        "toMs": 1794089454500.777,
+        "durationMs": 3.4011619985103607,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089454531.4548,
+        "toMs": 1794089454605.2632,
+        "gapMs": 73.80820299999687,
+        "delayMs": 63.808202999996865,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089454483.8054,
+        "cpuWindowToMs": 1794089454607.0571,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089454684.3293,
+        "toMs": 1794089454695.1199,
+        "durationMs": 10.790574997663498,
+        "gcKind": 4,
+        "gcFlags": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089455165.0825,
+        "toMs": 1794089455168.1985,
+        "durationMs": 3.115887999534607,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089455270.4148,
+        "toMs": 1794089455275.8818,
+        "durationMs": 5.467048019170761,
+        "gcKind": 4,
+        "gcFlags": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089455341.9285,
+        "toMs": 1794089455342.6663,
+        "durationMs": 0.7376929819583893,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089455585.6113,
+        "toMs": 1794089455592.0825,
+        "durationMs": 6.471177011728287,
+        "gcKind": 4,
+        "gcFlags": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089455337.7134,
+        "toMs": 1794089455592.5251,
+        "gapMs": 254.8117319999983,
+        "delayMs": 244.8117319999983,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089455331.612,
+        "cpuWindowToMs": 1794089455653.1807,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 150,
+        "systemCpuMs": 150
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089455602.2983,
+        "toMs": 1794089455626.0413,
+        "gapMs": 23.742856000000756,
+        "delayMs": 13.742856000000756,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089455539.2478,
+        "cpuWindowToMs": 1794089455653.1807,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 90,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089455771.632,
+        "toMs": 1794089456548.8018,
+        "gapMs": 777.169593999999,
+        "delayMs": 767.169593999999,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089455755.358,
+        "cpuWindowToMs": 1794089456566.8098,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 570,
+        "systemCpuMs": 240
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089460174.9983,
+        "toMs": 1794089460199.8408,
+        "gapMs": 24.84255900000062,
+        "delayMs": 14.84255900000062,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089460124.2075,
+        "cpuWindowToMs": 1794089460228.814,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089461036.9058,
+        "toMs": 1794089461081.8337,
+        "gapMs": 44.92795599999954,
+        "delayMs": 34.92795599999954,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089460935.1592,
+        "cpuWindowToMs": 1794089461157.4104,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089461182.4045,
+        "toMs": 1794089461633.4377,
+        "gapMs": 451.0331320000005,
+        "delayMs": 441.0331320000005,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089461157.293,
+        "cpuWindowToMs": 1794089461670.39,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 330,
+        "systemCpuMs": 140
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089461633.4377,
+        "toMs": 1794089461858.397,
+        "gapMs": 224.95940300000075,
+        "delayMs": 214.95940300000075,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089461569.3066,
+        "cpuWindowToMs": 1794089461882.6208,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 200,
+        "systemCpuMs": 110
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089461915.3572,
+        "toMs": 1794089461958.2932,
+        "durationMs": 42.93607300519943,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089461908.5254,
+        "toMs": 1794089461959.5178,
+        "gapMs": 50.99239300000045,
+        "delayMs": 40.99239300000045,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089461882.5115,
+        "cpuWindowToMs": 1794089461983.7095,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 60,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gc",
+        "fromMs": 1794089462044.2837,
+        "toMs": 1794089462058.1997,
+        "durationMs": 13.915957003831863,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089462240.7996,
+        "toMs": 1794089464252.3823,
+        "gapMs": 2011.5828690000017,
+        "delayMs": 2001.5828690000017,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089462184.887,
+        "cpuWindowToMs": 1794089464337.0095,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 1050,
+        "systemCpuMs": 990
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089464277.3564,
+        "toMs": 1794089464298.9084,
+        "gapMs": 21.552002999997057,
+        "delayMs": 11.552002999997057,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089464228.2268,
+        "cpuWindowToMs": 1794089464337.0095,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089465839.9065,
+        "toMs": 1794089465873.4172,
+        "gapMs": 33.51061199999822,
+        "delayMs": 23.51061199999822,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089465765.5315,
+        "cpuWindowToMs": 1794089465970.0854,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089466950.199,
+        "toMs": 1794089466990.398,
+        "gapMs": 40.198880000003555,
+        "delayMs": 30.198880000003555,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089466888.4253,
+        "cpuWindowToMs": 1794089466999.4883,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089467451.6882,
+        "toMs": 1794089467472.653,
+        "gapMs": 20.965030999999726,
+        "delayMs": 10.965030999999726,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089467411.321,
+        "cpuWindowToMs": 1794089467512.085,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089467990.0742,
+        "toMs": 1794089468019.5444,
+        "gapMs": 29.470115000003716,
+        "delayMs": 19.470115000003716,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089467923.3313,
+        "cpuWindowToMs": 1794089468031.8208,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089468067.5378,
+        "toMs": 1794089468092.4458,
+        "gapMs": 24.908052000006137,
+        "delayMs": 14.908052000006137,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089468030.1052,
+        "cpuWindowToMs": 1794089468142.7861,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089470364.693,
+        "toMs": 1794089470386.908,
+        "gapMs": 22.21468399999867,
+        "delayMs": 12.21468399999867,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089470273.5178,
+        "cpuWindowToMs": 1794089470475.2197,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089471747.989,
+        "toMs": 1794089471774.069,
+        "gapMs": 26.080174000002444,
+        "delayMs": 16.080174000002444,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089471697.02,
+        "cpuWindowToMs": 1794089471814.112,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089471783.5256,
+        "toMs": 1794089471819.898,
+        "gapMs": 36.372252000001026,
+        "delayMs": 26.372252000001026,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089471697.02,
+        "cpuWindowToMs": 1794089471925.6877,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 110,
+        "systemCpuMs": 50
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089471819.898,
+        "toMs": 1794089471946.6316,
+        "gapMs": 126.73369300000195,
+        "delayMs": 116.73369300000195,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089471800.9993,
+        "cpuWindowToMs": 1794089472036.7358,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 90,
+        "systemCpuMs": 40
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089472224.2224,
+        "toMs": 1794089472381.7607,
+        "gapMs": 157.5382959999988,
+        "delayMs": 147.5382959999988,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089472137.3418,
+        "cpuWindowToMs": 1794089472482.716,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089472525.4143,
+        "toMs": 1794089472675.7188,
+        "gapMs": 150.30441599999904,
+        "delayMs": 140.30441599999904,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089472482.602,
+        "cpuWindowToMs": 1794089472797.7102,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089472675.7188,
+        "toMs": 1794089472696.5347,
+        "gapMs": 20.815812000000733,
+        "delayMs": 10.815812000000733,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089472482.602,
+        "cpuWindowToMs": 1794089472797.7102,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089473321.517,
+        "toMs": 1794089473344.4993,
+        "gapMs": 22.982190000002447,
+        "delayMs": 12.982190000002447,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089473309.0256,
+        "cpuWindowToMs": 1794089473410.0142,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089475475.6755,
+        "toMs": 1794089475497.6467,
+        "gapMs": 21.9711199999947,
+        "delayMs": 11.971119999994698,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089475446.0322,
+        "cpuWindowToMs": 1794089475552.1904,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089475605.4773,
+        "toMs": 1794089475658.2004,
+        "gapMs": 52.722992000002705,
+        "delayMs": 42.722992000002705,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089475550.4905,
+        "cpuWindowToMs": 1794089475758.7925,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089475730.9956,
+        "toMs": 1794089475757.553,
+        "gapMs": 26.557432000001427,
+        "delayMs": 16.557432000001427,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089475657.1868,
+        "cpuWindowToMs": 1794089475758.7925,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089476294.6284,
+        "toMs": 1794089476316.016,
+        "gapMs": 21.387739999998303,
+        "delayMs": 11.387739999998303,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089476263.2769,
+        "cpuWindowToMs": 1794089476364.0603,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089478251.7751,
+        "toMs": 1794089478274.6863,
+        "gapMs": 22.911082999999053,
+        "delayMs": 12.911082999999053,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089478207.0015,
+        "cpuWindowToMs": 1794089478308.5496,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089478576.7002,
+        "toMs": 1794089478693.3667,
+        "gapMs": 116.66636400000425,
+        "delayMs": 106.66636400000425,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089478515.3545,
+        "cpuWindowToMs": 1794089478805.979,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089478834.0447,
+        "toMs": 1794089478855.814,
+        "gapMs": 21.76914399999805,
+        "delayMs": 11.76914399999805,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089478805.8098,
+        "cpuWindowToMs": 1794089478912.454,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089478929.2913,
+        "toMs": 1794089479065.4663,
+        "gapMs": 136.17504899999767,
+        "delayMs": 126.17504899999767,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089478911.346,
+        "cpuWindowToMs": 1794089479065.6191,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089479552.1436,
+        "toMs": 1794089479669.5906,
+        "gapMs": 117.44702300000063,
+        "delayMs": 107.44702300000063,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089479472.435,
+        "cpuWindowToMs": 1794089479669.8186,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089479965.583,
+        "toMs": 1794089479986.6038,
+        "gapMs": 21.02070800000365,
+        "delayMs": 11.020708000003651,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089479871.0269,
+        "cpuWindowToMs": 1794089480088.9043,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089480441.6375,
+        "toMs": 1794089480462.6118,
+        "gapMs": 20.974326000003202,
+        "delayMs": 10.974326000003202,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089480393.4307,
+        "cpuWindowToMs": 1794089480498.0334,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089480570.2256,
+        "toMs": 1794089480593.5208,
+        "gapMs": 23.295122999996238,
+        "delayMs": 13.295122999996238,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089480497.9065,
+        "cpuWindowToMs": 1794089480621.1238,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089481529.8516,
+        "toMs": 1794089481567.9956,
+        "gapMs": 38.14408299999923,
+        "delayMs": 28.144082999999227,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089481442.6868,
+        "cpuWindowToMs": 1794089481653.2478,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089481731.3477,
+        "toMs": 1794089481852.0742,
+        "gapMs": 120.72674499999994,
+        "delayMs": 110.72674499999994,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089481653.1365,
+        "cpuWindowToMs": 1794089481853.356,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089482597.352,
+        "toMs": 1794089482620.3313,
+        "gapMs": 22.979166999997688,
+        "delayMs": 12.979166999997688,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089482566.1345,
+        "cpuWindowToMs": 1794089482669.4922,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089483060.4746,
+        "toMs": 1794089483125.1917,
+        "gapMs": 64.71717200000421,
+        "delayMs": 54.71717200000421,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089482972.1616,
+        "cpuWindowToMs": 1794089483245.928,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089483768.6094,
+        "toMs": 1794089483810.407,
+        "gapMs": 41.797622999998566,
+        "delayMs": 31.797622999998566,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089483752.97,
+        "cpuWindowToMs": 1794089483853.7944,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371606,
+        "kind": "gap",
+        "fromMs": 1794089484177.0696,
+        "toMs": 1794089484460.6433,
+        "gapMs": 283.57360499999777,
+        "delayMs": 273.57360499999777,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089484155.8816,
+        "cpuWindowToMs": 1794089484558.717,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 220,
+        "systemCpuMs": 70
+      },
+      {
+        "pid": 371606,
+        "kind": "stop",
+        "atMs": 1794089488163,
+        "recorded": 62,
+        "gcRecords": 57,
+        "maxGapMs": 4566.80632
+      },
+      {
+        "pid": 371705,
+        "kind": "start",
+        "atMs": 1794089488467,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "clock": "monotonic elapsed mapped to epoch",
+        "transport": "shared-ring-worker",
+        "capacity": 8192,
+        "cpuScope": "thread",
+        "cpuMeasurement": "surrounding-sample-window",
+        "cpuSampleIntervalMs": 100,
+        "cpuClockResolutionMs": 10,
+        "gc": true
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488664.9092,
+        "toMs": 1794089488674.1824,
+        "durationMs": 9.273140996694565,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488795.099,
+        "toMs": 1794089488798.0134,
+        "durationMs": 2.9143140017986298,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488822.8286,
+        "toMs": 1794089488824.309,
+        "durationMs": 1.4804439842700958,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488843.6365,
+        "toMs": 1794089488846.315,
+        "durationMs": 2.6785240173339844,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488909.2173,
+        "toMs": 1794089488910.5864,
+        "durationMs": 1.369057983160019,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488916.412,
+        "toMs": 1794089488917.3892,
+        "durationMs": 0.9771090149879456,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488922.7896,
+        "toMs": 1794089488923.196,
+        "durationMs": 0.40658900141716003,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089488931.8435,
+        "toMs": 1794089488932.4688,
+        "durationMs": 0.6252320110797882,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489004.055,
+        "toMs": 1794089489007.1328,
+        "durationMs": 3.0779620110988617,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489044.8218,
+        "toMs": 1794089489046.858,
+        "durationMs": 2.0361579954624176,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489046.8816,
+        "toMs": 1794089489047.464,
+        "durationMs": 0.5825309753417969,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489093.6675,
+        "toMs": 1794089489101.1833,
+        "durationMs": 7.515771001577377,
+        "gcKind": 4,
+        "gcFlags": 64
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489582.545,
+        "toMs": 1794089489600.1116,
+        "durationMs": 17.566727995872498,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089488589.0488,
+        "toMs": 1794089489889.043,
+        "gapMs": 1299.9941130000002,
+        "delayMs": 1289.9941130000002,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089488587.1775,
+        "cpuWindowToMs": 1794089489917.5493,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 880,
+        "systemCpuMs": 430
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089489909.4575,
+        "toMs": 1794089489924.6086,
+        "durationMs": 15.151042014360428,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089490111.801,
+        "toMs": 1794089490133.1223,
+        "gapMs": 21.32114300000012,
+        "delayMs": 11.32114300000012,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089490019.1255,
+        "cpuWindowToMs": 1794089490220.8645,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 110,
+        "systemCpuMs": 30
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089490142.3115,
+        "toMs": 1794089490338.356,
+        "gapMs": 196.04429500000015,
+        "delayMs": 186.04429500000015,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089490119.7903,
+        "cpuWindowToMs": 1794089490423.5994,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 170,
+        "systemCpuMs": 80
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089490885.6045,
+        "toMs": 1794089490909.0603,
+        "gapMs": 23.455754999999954,
+        "delayMs": 13.455754999999954,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089490839.5806,
+        "cpuWindowToMs": 1794089490963.8948,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089491665.4084,
+        "toMs": 1794089491688.8496,
+        "gapMs": 23.441299000000072,
+        "delayMs": 13.441299000000072,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089491575.8123,
+        "cpuWindowToMs": 1794089491791.6392,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089491714.1924,
+        "toMs": 1794089491740.8699,
+        "gapMs": 26.67765099999997,
+        "delayMs": 16.67765099999997,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089491686.602,
+        "cpuWindowToMs": 1794089491791.6392,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089491740.8699,
+        "toMs": 1794089491785.663,
+        "gapMs": 44.79316299999982,
+        "delayMs": 34.79316299999982,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089491686.602,
+        "cpuWindowToMs": 1794089491791.6392,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089492027.6719,
+        "toMs": 1794089492049.0364,
+        "durationMs": 21.364544987678528,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089492019.5308,
+        "toMs": 1794089492055.5005,
+        "gapMs": 35.96984799999973,
+        "delayMs": 25.96984799999973,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089492000.1064,
+        "cpuWindowToMs": 1794089492105.548,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089492070.8376,
+        "toMs": 1794089492097.6426,
+        "gapMs": 26.805042000000412,
+        "delayMs": 16.805042000000412,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089492000.1064,
+        "cpuWindowToMs": 1794089492105.548,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089492485.7756,
+        "toMs": 1794089492506.5928,
+        "gapMs": 20.817324000000553,
+        "delayMs": 10.817324000000553,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089492414.4353,
+        "cpuWindowToMs": 1794089492517.1018,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089492824.4446,
+        "toMs": 1794089492857.0195,
+        "gapMs": 32.5749450000003,
+        "delayMs": 22.574945000000298,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089492821.257,
+        "cpuWindowToMs": 1794089492926.9011,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089493413.3374,
+        "toMs": 1794089493434.1213,
+        "gapMs": 20.78406200000063,
+        "delayMs": 10.784062000000631,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089493342.6545,
+        "cpuWindowToMs": 1794089493445.6182,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089493467.077,
+        "toMs": 1794089493507.2659,
+        "durationMs": 40.18894398212433,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089493509.9858,
+        "toMs": 1794089493512.7646,
+        "durationMs": 2.7787080109119415,
+        "gcKind": 8,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089493464.3977,
+        "toMs": 1794089493509.902,
+        "gapMs": 45.504572000000735,
+        "delayMs": 35.504572000000735,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089493445.5254,
+        "cpuWindowToMs": 1794089493549.2256,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 40
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089493551.881,
+        "toMs": 1794089493563.315,
+        "durationMs": 11.433892011642456,
+        "gcKind": 4,
+        "gcFlags": 64
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089493530.204,
+        "toMs": 1794089493551.8357,
+        "gapMs": 21.63172299999951,
+        "delayMs": 11.63172299999951,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089493445.5254,
+        "cpuWindowToMs": 1794089493652.494,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 140,
+        "systemCpuMs": 50
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089494079.3545,
+        "toMs": 1794089494112.662,
+        "gapMs": 33.307833000000755,
+        "delayMs": 23.307833000000755,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089494064.3386,
+        "cpuWindowToMs": 1794089494167.199,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089494123.3367,
+        "toMs": 1794089494143.3652,
+        "gapMs": 20.028626999999688,
+        "delayMs": 10.028626999999688,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089494064.3386,
+        "cpuWindowToMs": 1794089494167.199,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gc",
+        "fromMs": 1794089494211.6333,
+        "toMs": 1794089494264.1736,
+        "durationMs": 52.54023098945618,
+        "gcKind": 1,
+        "gcFlags": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089494185.7524,
+        "toMs": 1794089494264.6597,
+        "gapMs": 78.90722600000026,
+        "delayMs": 68.90722600000026,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089494167.1035,
+        "cpuWindowToMs": 1794089494267.8833,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 70,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089494298.2043,
+        "toMs": 1794089494338.629,
+        "gapMs": 40.424371999999494,
+        "delayMs": 30.424371999999494,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089494267.7915,
+        "cpuWindowToMs": 1794089494371.1584,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 30
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089496029.329,
+        "toMs": 1794089496108.4333,
+        "gapMs": 79.10440600000038,
+        "delayMs": 69.10440600000038,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089495999.5513,
+        "cpuWindowToMs": 1794089496205.089,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089496381.0886,
+        "toMs": 1794089496402.0193,
+        "gapMs": 20.9307230000004,
+        "delayMs": 10.930723000000398,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089496305.811,
+        "cpuWindowToMs": 1794089496407.1162,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089496529.5173,
+        "toMs": 1794089496560.9065,
+        "gapMs": 31.389148999999634,
+        "delayMs": 21.389148999999634,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089496507.6104,
+        "cpuWindowToMs": 1794089496636.2861,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089496592.7593,
+        "toMs": 1794089496636.2236,
+        "gapMs": 43.46427700000095,
+        "delayMs": 33.46427700000095,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089496507.6104,
+        "cpuWindowToMs": 1794089496738.2317,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089496656.5217,
+        "toMs": 1794089496682.547,
+        "gapMs": 26.025416000000405,
+        "delayMs": 16.025416000000405,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089496636.1682,
+        "cpuWindowToMs": 1794089496738.2317,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089499201.2551,
+        "toMs": 1794089499222.4238,
+        "gapMs": 21.16870800000106,
+        "delayMs": 11.168708000001061,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089499189.1465,
+        "cpuWindowToMs": 1794089499303.7878,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089502026.4019,
+        "toMs": 1794089502066.8691,
+        "gapMs": 40.46730699999898,
+        "delayMs": 30.467306999998982,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089501991.7288,
+        "cpuWindowToMs": 1794089502115.6963,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089503077.746,
+        "toMs": 1794089503150.0952,
+        "gapMs": 72.34932800000024,
+        "delayMs": 62.34932800000024,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089503038.3838,
+        "cpuWindowToMs": 1794089503241.8943,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 40,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089503280.996,
+        "toMs": 1794089503313.571,
+        "gapMs": 32.57487299999957,
+        "delayMs": 22.57487299999957,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089503241.7732,
+        "cpuWindowToMs": 1794089503347.8586,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089504050.659,
+        "toMs": 1794089504080.307,
+        "gapMs": 29.647906000000148,
+        "delayMs": 19.647906000000148,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089503967.4268,
+        "cpuWindowToMs": 1794089504172.0103,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089504530.069,
+        "toMs": 1794089504611.701,
+        "gapMs": 81.63181099999929,
+        "delayMs": 71.63181099999929,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089504474.3787,
+        "cpuWindowToMs": 1794089504712.401,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089505523.12,
+        "toMs": 1794089505581.0269,
+        "gapMs": 57.90682200000083,
+        "delayMs": 47.90682200000083,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089505421.6448,
+        "cpuWindowToMs": 1794089505641.1648,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089505592.7998,
+        "toMs": 1794089505618.8816,
+        "gapMs": 26.081826000001456,
+        "delayMs": 16.081826000001456,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089505526.8462,
+        "cpuWindowToMs": 1794089505641.1648,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 50,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089507775.8108,
+        "toMs": 1794089507797.7405,
+        "gapMs": 21.9296179999983,
+        "delayMs": 11.9296179999983,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089507768.5056,
+        "cpuWindowToMs": 1794089507871.84,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089515026.7505,
+        "toMs": 1794089515067.9775,
+        "gapMs": 41.227011000002676,
+        "delayMs": 31.227011000002676,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089514935.1145,
+        "cpuWindowToMs": 1794089515142.221,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089517069.788,
+        "toMs": 1794089517092.746,
+        "gapMs": 22.95804700000008,
+        "delayMs": 12.958047000000079,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089516969.3467,
+        "cpuWindowToMs": 1794089517173.0474,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089518533.603,
+        "toMs": 1794089518612.0967,
+        "gapMs": 78.49366999999984,
+        "delayMs": 68.49366999999984,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089518492.7588,
+        "cpuWindowToMs": 1794089518701.1467,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089519527.544,
+        "toMs": 1794089519565.3594,
+        "gapMs": 37.815575000000536,
+        "delayMs": 27.815575000000536,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089519514.271,
+        "cpuWindowToMs": 1794089519628.3516,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089519584.6555,
+        "toMs": 1794089519616.0938,
+        "gapMs": 31.438249000002543,
+        "delayMs": 21.438249000002543,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089519514.271,
+        "cpuWindowToMs": 1794089519628.3516,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089520735.006,
+        "toMs": 1794089520759.9485,
+        "gapMs": 24.942235000002256,
+        "delayMs": 14.942235000002256,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089520637.0298,
+        "cpuWindowToMs": 1794089520839.3352,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089521435.372,
+        "toMs": 1794089521455.4038,
+        "gapMs": 20.03159799999412,
+        "delayMs": 10.03159799999412,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089521345.3103,
+        "cpuWindowToMs": 1794089521547.8218,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089525839.163,
+        "toMs": 1794089525867.4065,
+        "gapMs": 28.24321900000359,
+        "delayMs": 18.24321900000359,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089525806.983,
+        "cpuWindowToMs": 1794089525917.7036,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089526039.8635,
+        "toMs": 1794089526075.189,
+        "gapMs": 35.3254420000012,
+        "delayMs": 25.325442000001203,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089526021.5095,
+        "cpuWindowToMs": 1794089526125.5159,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089537525.3171,
+        "toMs": 1794089537555.6094,
+        "gapMs": 30.29220300000452,
+        "delayMs": 20.29220300000452,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089537452.2402,
+        "cpuWindowToMs": 1794089537655.3909,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089537555.6094,
+        "toMs": 1794089537577.6018,
+        "gapMs": 21.992396000001463,
+        "delayMs": 11.992396000001463,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089537553.798,
+        "cpuWindowToMs": 1794089537655.3909,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 30,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089541522.3833,
+        "toMs": 1794089541557.3582,
+        "gapMs": 34.9748299999992,
+        "delayMs": 24.9748299999992,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089541512.1729,
+        "cpuWindowToMs": 1794089541630.0183,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 0,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089541796.8923,
+        "toMs": 1794089541817.0203,
+        "gapMs": 20.127942999999505,
+        "delayMs": 10.127942999999505,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089541736.5554,
+        "cpuWindowToMs": 1794089541840.5813,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 0
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089541847.5005,
+        "toMs": 1794089541898.3057,
+        "gapMs": 50.80520500000421,
+        "delayMs": 40.80520500000421,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089541840.427,
+        "cpuWindowToMs": 1794089541942.0542,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 20
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089543554.7527,
+        "toMs": 1794089543590.4014,
+        "gapMs": 35.64874599999894,
+        "delayMs": 25.648745999998937,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089543454.5127,
+        "cpuWindowToMs": 1794089543661.1362,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 20,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "gap",
+        "fromMs": 1794089543590.4014,
+        "toMs": 1794089543614.4895,
+        "gapMs": 24.088041000002704,
+        "delayMs": 14.088041000002704,
+        "cpuApproximate": true,
+        "cpuAvailable": true,
+        "cpuWindowFromMs": 1794089543556.2917,
+        "cpuWindowToMs": 1794089543661.1362,
+        "cpuClockResolutionMs": 10,
+        "userCpuMs": 10,
+        "systemCpuMs": 10
+      },
+      {
+        "pid": 371705,
+        "kind": "stop",
+        "atMs": 1794089545955,
+        "recorded": 48,
+        "gcRecords": 19,
+        "maxGapMs": 1299.9941130000002
+      }
+    ],
+    "files": [
+      "event-loop-probe-371606.jsonl",
+      "event-loop-probe-371705.jsonl"
+    ],
+    "modules": [
+      {
+        "module": "cp",
+        "navigationStartedAtMs": 1794089491702,
+        "observedAtMs": 1794089541273,
+        "recordedGaps": 38,
+        "maxGapMs": 81.63181099999929,
+        "maxDelayMs": 71.63181099999929,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 81.63181099999929,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    ]
+  },
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-shared908-main5b8-20261107/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1",
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1"
+    ],
+    "stallProfiles": []
+  },
+  "refreshWallMs": 53788.559997000004,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6yk1bz-c7648b04985a",
+    "sourceRevision": "e06ec6904902bc1dd6b9f790e94a55d69eeee95fc77cc0a1ac0960f3f0909681",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 1751.3164840000027,
+  "chromium": "154.0.8037.57",
+  "lifecycleEvents": [
+    {
+      "module": "cp",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 29740.90000000596
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 29762
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 47111.09999999404
+    }
+  ],
+  "limitations": [
+    "Linux headless Chromium; Windows/Electron, antivirus and cold OS disk cache are not measured.",
+    "Collection workspace is empty synthetic data. RSS sums include shared renderer pages, not unique physical memory.",
+    "Health probes are serial every 500 ms after completion; timeouts/errors are retained in quantiles, not discarded.",
+    "Long tasks use a fixed navigation window; startup events outside it remain separate timings."
+  ],
+  "finishedAt": "2026-11-07T22:12:26.170Z"
+}

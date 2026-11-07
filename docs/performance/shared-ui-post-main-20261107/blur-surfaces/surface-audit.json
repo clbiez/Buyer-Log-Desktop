@@ -1,0 +1,137 @@
+[
+  {
+    "selector": ".layoutControlOverlay",
+    "colors": []
+  },
+  {
+    "selector": ".ovHomeDrawerOverlay",
+    "colors": []
+  },
+  {
+    "selector": ".updateTestOverlay",
+    "colors": []
+  },
+  {
+    "selector": ".umDialogOverlay",
+    "colors": []
+  },
+  {
+    "selector": ".ocCompareOverlay",
+    "colors": [
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)"
+    ]
+  },
+  {
+    "selector": ".bpaDrawerScrim",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .warnOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .globalSearchOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .appBlockingOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .accessAdminOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .iamWizardOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .awModalOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .egHeadingOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .ovCollectionScopeDrawerOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .endeksmatikImportOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .autoColumnsOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .blSyncGuideOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .sourceBackdrop",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .kolSpreadsheetPasteOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .lmScrim",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .lflPortfolioModalBackdrop",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .lflScenarioEditorBackdrop",
+    "colors": [
+      "rgba(0, 0, 0, 0)"
+    ]
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .kolPeriodDrawerBackdrop",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .blvFilterScrim",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .blpOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .blDetailDrawer.is-open .blDetailDrawerBackdrop",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .cpaModalOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .backlogDetailOverlay",
+    "colors": [
+      "rgba(0, 0, 0, 0)"
+    ]
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .backlogDimAddOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .autoModalOverlay",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] #_notesEditorModal[data-ui-migrated]",
+    "colors": []
+  },
+  {
+    "selector": "html[data-ui-system=\"manifest\"] .warnOverlay[data-ui-migrated]",
+    "colors": []
+  }
+]

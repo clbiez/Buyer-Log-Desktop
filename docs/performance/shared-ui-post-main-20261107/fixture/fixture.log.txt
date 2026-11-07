@@ -1,0 +1,4 @@
+cp BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":29740.90000000596}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":29762}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":47111.09999999404}
+Report: /tmp/buyerlog-startup-shared908-main5b8-20261107/measurement.json; retained diagnostics: /tmp/buyerlog-startup-shared908-main5b8-20261107
