@@ -6953,17 +6953,19 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
   const { decideFolderKurApply, mergeFolderKur } = require('./lib/fxWorkbook');
   const id = sourceUserId(value), appRoot = path.join(__dirname, '..');
   const sourceFolder = sourceFolderForUser(id);
-  let current = loadFx(), computeLease;
+  let current = loadFx();
   const remember = (candidate, reason) => {
     folderFxSyncStatus = { file: candidate.file || 'KUR.xlsx', modifiedAt: candidate.modifiedAt || null,
       reportMonth: candidate.reportMonth || null, fingerprint: candidate.fingerprint || null, reason };
   };
   try {
-    computeLease = await serverCompute().runExcelUtility('loadFxWorkbookFromDirectories', {
+    // FX ayrı Excel worker'da kalır: ortak compute havuzu 5 sn'den uzun
+    // projeksiyonlarla doluyken 5000 ms bütçe kuyrukta doluyor, geçerli KUR eski
+    // revizyonda kalıyordu (Faz 5 B1 FX tanısı, clbiez/Buyer-Log-Desktop#893).
+    const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { ownerId:id,priority:explicit?'interactive':'background',timeoutMs: 5000, serializationKey: 'shared-fx' });
-    const parsed=computeLease.value;
+    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
     if (explicit && (!parsed.found || !parsed.fingerprint || parsed.fingerprint !== explicit.fingerprint)) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
@@ -6989,7 +6991,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
     remember({}, 'parse-failed');
     logRuntimeFailure('fxWorkbookRead', err);
     return { found: false, updated: false, reason: 'parse-failed' };
-  }finally{computeLease?.release();}
+  }
 }
 
 // Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat
