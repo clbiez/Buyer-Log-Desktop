@@ -10,10 +10,6 @@
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
 <link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="release-notes.css?v=__BL_ASSET_VERSION__&rev=3">
-<script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="buyerlog-trivia-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="buyerlog-trivia.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <link rel="stylesheet" href="plm-sync-guide.css?v=__BL_ASSET_VERSION__&rev=2">
 <script src="plm-sync-guide.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script>
@@ -34,7 +30,17 @@
     var el=document.createElement('div');el.id='blBootGuard';el.dataset.uiMigrated='startup';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;
     el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';
     document.body.appendChild(el);
-    window.BLGuide?.mountStartup(el);
+    function mountGuide(){
+      if(guard()!==el)return;
+      window.BLGuide?.mountStartup(el);
+      mountLanguageChooser(el);
+      Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
+      var button=el.querySelector('[data-boot-continue]'),slot=el.querySelector('[data-boot-continue-slot]');
+      if(button&&slot)slot.appendChild(button);
+      window.BLGuide?.refreshStartup?.();renderDetail();
+    }
+    if(window.BLGuide)mountGuide();
+    else window.BLPerf?.ensureFeature?.('startupGuide').then(mountGuide).catch(function(error){console.warn('[startup-guide]',error);});
     mountLanguageChooser(el);
     Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
     renderDetail();
@@ -203,7 +209,7 @@
   });
   document.addEventListener('keydown',function(ev){
     var el=guard();if(!el||document.getElementById('buyerLogGuide')?.open)return;
-    if(ev.key==='F1'){ev.preventDefault();ev.stopImmediatePropagation();window.BLGuide?.open();return;}
+    if(ev.key==='F1'){ev.preventDefault();ev.stopImmediatePropagation();if(window.BLGuide)window.BLGuide.open();else window.BLPerf?.ensureFeature?.('startupGuide').then(function(){window.BLGuide?.open();}).catch(function(error){console.warn('[startup-guide]',error);});return;}
     if(ev.key!=='Tab'){ev.stopImmediatePropagation();return;}
     var buttons=Array.from(el.querySelectorAll('button:not(:disabled)')).filter(function(b){return b.getClientRects().length;});
     if(!buttons.length){ev.preventDefault();el.focus();return;}
@@ -327,38 +333,38 @@
 })();
 </script>
 <link rel="stylesheet" href="app.css?v=__BL_ASSET_VERSION__&rev=20261024-notebook-rich-editor">
-<link rel="stylesheet" href="automations-fields.css?v=__BL_ASSET_VERSION__&rev=1">
+<template data-bl-style="automations-fields.css" data-href="automations-fields.css?v=__BL_ASSET_VERSION__&rev=1"></template>
 <link rel="stylesheet" href="table-search-help.css?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1">
-<link rel="stylesheet" href="open-costing.css?v=__BL_ASSET_VERSION__">
-<link rel="stylesheet" href="lfl.css?v=__BL_ASSET_VERSION__">
-<link rel="stylesheet" href="collection-analytics.css?v=__BL_ASSET_VERSION__&rev=7144">
-<link rel="stylesheet" href="price-supplier-analysis.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="manufacturers.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="license-cards.css?v=__BL_ASSET_VERSION__&rev=5">
-<link rel="stylesheet" href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4">
-<link rel="stylesheet" href="pricing-desk.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=3">
-<link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=2">
+<template data-bl-style="open-costing.css" data-href="open-costing.css?v=__BL_ASSET_VERSION__"></template>
+<template data-bl-style="lfl.css" data-href="lfl.css?v=__BL_ASSET_VERSION__"></template>
+<template data-bl-style="collection-analytics.css" data-href="collection-analytics.css?v=__BL_ASSET_VERSION__&rev=7144"></template>
+<template data-bl-style="price-supplier-analysis.css" data-href="price-supplier-analysis.css?v=__BL_ASSET_VERSION__&rev=1"></template>
+<template data-bl-style="manufacturers.css" data-href="manufacturers.css?v=__BL_ASSET_VERSION__&rev=1"></template>
+<template data-bl-style="license-cards.css" data-href="license-cards.css?v=__BL_ASSET_VERSION__&rev=5"></template>
+<template data-bl-style="pricing-workspace.css" data-href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4"></template>
+<template data-bl-style="pricing-desk.css" data-href="pricing-desk.css?v=__BL_ASSET_VERSION__&rev=1"></template>
+<template data-bl-style="data-maintenance.css" data-href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=3"></template>
+<template data-bl-style="data-management.css" data-href="data-management.css?v=__BL_ASSET_VERSION__&rev=2"></template>
 <link rel="stylesheet" href="dual-week-datepicker.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1">
-<link rel="stylesheet" href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2">
+<template data-bl-style="backlog-delivery-analysis.css" data-href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1"></template>
+<template data-bl-style="backlog-plan-actual.css" data-href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2"></template>
 <link rel="stylesheet" href="backlog-date-range.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="backlog-overview.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=20261105-workspace">
 <link rel="stylesheet" href="lcwai-assistant.css?v=__BL_ASSET_VERSION__&rev=8">
 <link rel="stylesheet" href="design.css?v=__BL_ASSET_VERSION__&rev=7181">
-<link rel="stylesheet" href="collection-spreadsheet.css?v=__BL_ASSET_VERSION__&rev=8">
-<link rel="stylesheet" href="excel-import.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
+<template data-bl-style="collection-spreadsheet.css" data-href="collection-spreadsheet.css?v=__BL_ASSET_VERSION__&rev=8"></template>
+<template data-bl-style="excel-import.css" data-href="excel-import.css?v=__BL_ASSET_VERSION__&rev=1"></template>
+<template data-bl-style="user-management.css" data-href="user-management.css?v=__BL_ASSET_VERSION__"></template>
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="table-density.css?v=__BL_ASSET_VERSION__">
-<link rel="stylesheet" href="exception-inbox.css?v=__BL_ASSET_VERSION__">
+<template data-bl-style="exception-inbox.css" data-href="exception-inbox.css?v=__BL_ASSET_VERSION__"></template>
 <link rel="stylesheet" href="bulk-operations.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=20261021">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=6">
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2">
+<template data-bl-style="backlog-presentation.css" data-href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2"></template>
 <link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261107-xlsx-format">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__">
@@ -1667,30 +1673,20 @@
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-price-drawer.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="backlog-plan-actual.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="backlog-v3-report.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-overview.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="backlog-presentation-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="backlog-presentation.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V2"></script>
 <script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
-<script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=11"></script>
 <script src="workspace-blur.js?v=__BL_ASSET_VERSION__"></script>
 <script src="table-header-tracking.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <!-- Kullanıcı Excel'i içeri aktarma: deterministik motor + sihirbaz arayüzü.
      CP ve Koleksiyon AYNI motoru kullanır (bkz. BLExcelImportBridge). -->
-<script src="excel-import-workbook.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<!-- Mapping stays eager: the PLM list importer calls it directly. -->
 <script src="excel-import-mapping.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-match.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-plan.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-profiles.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-ai.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-wizard.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="startup-feature-entrypoints.js?v=__BL_ASSET_VERSION__"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_READY');</script>
 
 <script>

@@ -204,7 +204,8 @@ test('startup Continue button centers its label consistently',()=>{
 });
 
 test('trivia scripts load before the guide and motion respects reduced-motion',()=>{
-  const at=name=>INDEX.indexOf(name);
+  const feature=read('perf-runtime.js').match(/startupGuide:\[([^\]]+)\]/)[1];
+  const at=name=>feature.indexOf(name);
   assert.ok(at('buyerlog-trivia-data.js')>0&&at('buyerlog-trivia-data.js')<at('buyerlog-trivia.js')&&at('buyerlog-trivia.js')<at('buyerlog-guide.js?'));
   require('./helpers/manifest-css').assertStaticMotion();
   assert.doesNotMatch(TRIVIA,/fetch\(|XMLHttpRequest|https?:\/\//);

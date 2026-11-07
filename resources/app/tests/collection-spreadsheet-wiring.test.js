@@ -29,7 +29,8 @@ test('Collection keeps the compact selection helper but removes Formula/fx and V
   for(const id of ['kolSpreadsheetViewWrap','kolSpreadsheetViewBtn','kolSpreadsheetViewMenu','kolFormulaBar','kolFormulaName','kolFormulaValue','kolFormulaHint'])assert.doesNotMatch(html,new RegExp(`id=\"${id}\"`));
   assert.doesNotMatch(html,/>fx</);
   assert.doesNotMatch(sheet,/PREF_KEY|showFormula|showLetters|data-kol-density|data-kol-view-toggle|kolSpreadsheetViewBtn|kolFormulaValue/);
-  assert.match(html,/collection-spreadsheet\.css/);assert.match(html,/collection-spreadsheet-engine\.js/);assert.match(html,/collection-spreadsheet\.js/);
+  assert.match(html,/collection-spreadsheet\.css/);assert.match(read('public/perf-runtime.js'),/collectionTools:\['collection-spreadsheet-engine\.js[^']*','collection-spreadsheet\.js/);
+  assert.doesNotMatch(html,/<script src="collection-spreadsheet/);
 });
 
 test('active-cell navigation is independent from business checkbox selection and does not render on Arrow keys',()=>{

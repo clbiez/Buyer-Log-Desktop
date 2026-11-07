@@ -14,7 +14,8 @@ const INDEX = read('public/index.html');
 test('v10.33 Collection spreadsheet görünür belge dilini kullanır', () => {
   assert.match(GRID, /const lang=\(\)=>document\.documentElement\.lang==='en'\?'en':'tr'/);
   assert.doesNotMatch(GRID, /global\.appLang/);
-  assert.match(INDEX, /collection-spreadsheet\.js\?v=__BL_ASSET_VERSION__&rev=[A-Za-z0-9._-]+/);
+  assert.match(read('public/perf-runtime.js'), /collectionTools:\[[^\]]*collection-spreadsheet\.js\?rev=[A-Za-z0-9._-]+/);
+  assert.doesNotMatch(INDEX, /<script src="collection-spreadsheet\.js/);
 });
 
 test('v10.33 görünüm ve yetki panelinin tüm görünür metinleri ortak sözlükten gelir', () => {

@@ -5,6 +5,7 @@
   const uiEn=()=>typeof appLang!=='undefined'&&appLang==='en';
   const pending=new Map();
   const scriptStates=new Map();
+  const styleStates=new Map();
   const documentBootAt=Number(global.__BL_DOCUMENT_BOOT_AT);
   const runtimeOrigin=Number.isFinite(documentBootAt)?documentBootAt:((global.performance&&typeof global.performance.now==='function')?global.performance.now():Date.now());
   const runtimeMetrics=new Map();
@@ -123,6 +124,8 @@
   }
 
   const features={
+    startupGuide:['buyerlog-guide-data.js?rev=2','buyerlog-trivia-data.js?rev=2','buyerlog-trivia.js?rev=3','buyerlog-guide.js?rev=3'],
+    excelImport:['excel-import-workbook.js?rev=1','excel-import-match.js?rev=1','excel-import-plan.js?rev=1','excel-import-profiles.js?rev=1','excel-import-ai.js?rev=1','excel-import-wizard.js?rev=2'],
     versionHistory:['version-history.js'],
     // fx.js deferredUi'nin SONUNDA da listelidir; o zincir yavaşlar ya da bir
     // dosyası düşerse Ön Maliyet kur penceresi BLFX'siz kalmasın diye burada da var.
@@ -144,13 +147,13 @@
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
     manufacturers:['manufacturer-cards-engine.js?rev=1','email-groups.js?rev=2','manufacturers.js?rev=1'],
     licensecards:['license-cards-engine.js?rev=4','license-atlas-engine.js?rev=2','license-supplier-atlas.js?rev=3','license-map-editor.js?rev=1','license-cards.js?rev=7'],
-    collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=5','pricing-desk-engine.js?rev=1','pricing-desk.js?rev=1','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
+    collectionTools:['collection-spreadsheet-engine.js?rev=2','collection-spreadsheet.js?rev=11','pricing-workspace-engine.js?rev=2','quotations.js?rev=5','pricing-desk-engine.js?rev=1','pricing-desk.js?rev=1','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
     // görünüm katmanından ÖNCE yüklenir (görünüm ikisini de window'dan okur).
     // order-decision-engine.js index.html'de eager yüklenir; burada yeniden
     // listelemek geçmiş `load` event'ine takılabilen duplicate-script beklemesi
     // yaratıyordu. Lazy grup yalnız gerçekten lazy bağımlılıkları içerir.
-    backlogAnalysis:['backlog-delivery-engine.js','backlog-delivery-insights.js','backlog-delivery-analysis.js'],
+    backlogAnalysis:['backlog-delivery-engine.js','backlog-delivery-insights.js','backlog-delivery-analysis.js','backlog-plan-actual-report.js?rev=2','backlog-plan-actual.js?rev=3','backlog-presentation-report.js?rev=2','backlog-presentation.js?rev=2'],
     // Yol Süreleri › İthalat Yol Süresi Analizi: saf motor görünümden ÖNCE yüklenir.
     transitAnalysis:['transit-analysis.js','transit-analysis-ui.js'],
     /* v9.48 — CP üretim öncelikleri. Sıra önemli: iki saf motor görünümden
@@ -198,32 +201,76 @@
   // yapabilsin (ör. sekmeye her girişte tabloyu yeniden çizmemek için).
   const loadedFeatures=new Set();
   function isFeatureLoaded(name){return loadedFeatures.has(String(name));}
-  async function ensureFeature(name){
-    const files=features[name];if(!files)throw new Error((uiEn()?'Unknown feature module: ':'Bilinmeyen özellik modülü: ')+name);
-    if(name==='versionHistory'&&Array.isArray(global.BL_VERSION_HISTORY))return;
-    if(name==='openCosting'&&typeof global.initOpenCosting==='function'&&global.BLFX)return;
-    if(name==='fx'&&global.BLFX)return;
-    if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return;
-    if(name==='lfl'&&typeof global.initLFL==='function')return;
-    if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown)return;
-    if(name==='layoutControl'&&global.BLLayoutControl&&global.BLLayoutControlEngine)return;
-    if(name==='lcwaiOutputEditor'&&global.BLOutputEditor&&global.BLOutputLayout)return;
-    if(name==='manufacturers'&&typeof global.initManufacturersPage==='function'&&global.BLEmailGroups)return;
-    if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function')return;
-    if(name==='backlogAnalysis'&&global.BLBacklogAnalysis)return;
-    if(name==='transitAnalysis'&&global.BLTransitAnalysis&&global.BLTransitAnalysisUI)return;
+  // Inert anchors retain the original cascade position, including shared overrides.
+  const featureStyles={
+    openCosting:['open-costing.css'],automations:['automations-fields.css'],lfl:['lfl.css'],
+    manufacturers:['manufacturers.css'],licensecards:['license-cards.css'],
+    collectionTools:['collection-analytics.css','price-supplier-analysis.css','pricing-workspace.css','pricing-desk.css','collection-spreadsheet.css'],
+    backlogAnalysis:['backlog-delivery-analysis.css','backlog-plan-actual.css','backlog-presentation.css'],
+    excelImport:['excel-import.css'],dataManagement:['data-maintenance.css','data-management.css'],
+    userManagement:['user-management.css'],exceptionInbox:['exception-inbox.css'],
+  };
+  const featureViews={
+    openCosting:'#view-opencosting',automations:'#view-automations',lfl:'#view-lfl',
+    manufacturers:'#view-manufacturers',licensecards:'#view-licensecards',
+    collectionTools:'#view-koleksiyon,#view-quotations,#view-pricinghistory,#view-priceanalysis',
+    backlogAnalysis:'#view-backlog',dataManagement:'#view-source',
+  };
+  function loadStyle(file){
+    const anchor=document.querySelector('template[data-bl-style="'+file+'"]');
+    if(!anchor)return Promise.reject(new Error(file+(uiEn()?' style anchor is missing.':' stil konumu bulunamadı.')));
+    const src=anchor.dataset.href,key=scriptKey(src);
+    if(styleStates.has(key))return styleStates.get(key);
+    const el=document.createElement('link');el.rel='stylesheet';el.href=src;el.dataset.blLazyStyle=file;
+    const promise=new Promise((resolve,reject)=>{
+      let timer;
+      const finish=error=>{clearTimeout(timer);el.onload=el.onerror=null;if(error){el.remove();styleStates.delete(key);reject(error);}else resolve(el);};
+      const fail=()=>finish(new Error(file+(uiEn()?' could not be loaded.':' yüklenemedi.')));
+      el.onload=()=>finish();el.onerror=fail;timer=setTimeout(fail,30000);
+      anchor.before(el);
+    });
+    styleStates.set(key,promise);
+    return promise;
+  }
+  function featureCodeReady(name){
+    if(name==='versionHistory'&&Array.isArray(global.BL_VERSION_HISTORY))return true;
+    if(name==='openCosting'&&typeof global.initOpenCosting==='function'&&global.BLFX)return true;
+    if(name==='fx'&&global.BLFX)return true;
+    if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return true;
+    if(name==='lfl'&&typeof global.initLFL==='function')return true;
+    if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown)return true;
+    if(name==='layoutControl'&&global.BLLayoutControl&&global.BLLayoutControlEngine)return true;
+    if(name==='lcwaiOutputEditor'&&global.BLOutputEditor&&global.BLOutputLayout)return true;
+    if(name==='manufacturers'&&typeof global.initManufacturersPage==='function'&&global.BLEmailGroups)return true;
+    if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function'&&global.BLCollectionSpreadsheet)return true;
+    if(name==='backlogAnalysis'&&global.BLBacklogAnalysis&&global.BLBacklogPlanActual&&global.BLBacklogPresentation)return true;
+    if(name==='transitAnalysis'&&global.BLTransitAnalysis&&global.BLTransitAnalysisUI)return true;
     // Eski/yarım bir BLCpAssistant objesi cache'ten kalmış olabilir. Unified
     // Priority tablosu ancak computeDecisionsForRows API'si gerçekten varsa
     // hazır sayılır; yalnız objenin varlığı lazy yüklemeyi kısa devre etmemeli.
-    if(name==='cpAssistant'&&global.BLCpAssistant&&typeof global.BLCpAssistant.computeDecisionsForRows==='function')return;
+    if(name==='cpAssistant'&&global.BLCpAssistant&&typeof global.BLCpAssistant.computeDecisionsForRows==='function')return true;
+    return false;
+  }
+  async function ensureFeature(name){
+    const files=features[name];if(!files)throw new Error((uiEn()?'Unknown feature module: ':'Bilinmeyen özellik modülü: ')+name);
     const key='feature:'+name;
     if(loadedFeatures.has(name))return;
     if(!pending.has(key)){
       // Dosyalar paralel indirilir, yürütme sırası korunur (sıralı loadScript).
       // Eskiden her dosya bir öncekinin bitmesini bekleyip ancak sonra
       // indiriliyordu; 18 dosyalık grup açılış perdesini ~1 sn uzatıyordu.
-      preloadScripts(files);
-      pending.set(key,(async()=>{for(const file of files)await loadScriptWithRetry(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
+      const views=featureViews[name]?[...document.querySelectorAll(featureViews[name])]:[];
+      views.forEach(view=>view.setAttribute('data-bl-styles-loading',''));
+      const codeReady=featureCodeReady(name);
+      if(!codeReady)preloadScripts(files);
+      pending.set(key,(async()=>{
+        try{await Promise.all((featureStyles[name]||[]).map(loadStyle));}
+        finally{views.forEach(view=>view.removeAttribute('data-bl-styles-loading'));}
+        if(!codeReady){
+          for(const file of files)await loadScriptWithRetry(file);
+        }
+        loadedFeatures.add(name);
+      })().finally(()=>pending.delete(key)));
     }
     return pending.get(key);
   }

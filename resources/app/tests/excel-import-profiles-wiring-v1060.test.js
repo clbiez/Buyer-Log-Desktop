@@ -126,9 +126,12 @@ const SERVER = require('./helpers/server-source')();
 test('CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır', () => {
   assert.match(INDEX, /data-excel-import="cp"/);
   assert.match(INDEX, /data-excel-import="collection"/);
-  ['excel-import-workbook.js', 'excel-import-mapping.js', 'excel-import-match.js',
+  assert.match(INDEX, /<script src="excel-import-mapping\.js/);
+  const feature=read('public/perf-runtime.js').match(/excelImport:\[([^\]]+)\]/)[1];
+  ['excel-import-workbook.js', 'excel-import-match.js',
     'excel-import-plan.js', 'excel-import-profiles.js', 'excel-import-wizard.js'].forEach(file => {
-      assert.ok(INDEX.includes(file), `${file} index.html'e bağlanmalı`);
+      assert.ok(feature.includes(file), `${file} ortak lazy grubuna bağlanmalı`);
+      assert.ok(!INDEX.includes('<script src="'+file), `${file} açılışta yüklenmemeli`);
     });
   assert.match(INDEX, /excel-import\.css/);
   // Tek köprü, iki adaptör.

@@ -9,6 +9,7 @@ const vm = require('node:vm');
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const INDEX = read('public/index.html');
+const PERF = read('public/perf-runtime.js');
 const APP = read('public/app-main.js');
 const COLUMN = read('public/collection-artwork-detail.js');
 const SPREADSHEET = read('public/collection-spreadsheet.js');
@@ -45,9 +46,12 @@ function loadModule({ rows = [], entries = {}, lang = 'tr' } = {}) {
 test('Collection loads Artwork Detail projection after app-main and before spreadsheet wiring', () => {
   const app = INDEX.indexOf('app-main.js');
   const artwork = INDEX.indexOf('collection-artwork-detail.js');
-  const spreadsheet = INDEX.indexOf('collection-spreadsheet.js');
+  const spreadsheet = PERF.indexOf('collection-spreadsheet.js');
   assert.ok(app >= 0 && artwork > app, 'Artwork projection must load after Collection core');
-  assert.ok(spreadsheet > artwork, 'Artwork projection must exist before spreadsheet initializes');
+  assert.match(APP, /window\.addEventListener\('DOMContentLoaded', async/);
+  assert.ok(spreadsheet > PERF.indexOf('collection-spreadsheet-engine.js'), 'Spreadsheet engine loads before its UI');
+  assert.doesNotMatch(INDEX, /<script src="collection-spreadsheet\.js/);
+  assert.match(PERF, /collectionTools:\[[^\]]*collection-spreadsheet\.js/);
 });
 
 test('Artwork Detail is a real KOL_COLS column immediately before Fabric (filter, move, edit, AI share one path)', () => {
