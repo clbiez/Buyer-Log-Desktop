@@ -1,0 +1,26 @@
+{
+  "pr": 913,
+  "before": "31d7f96069e5105a3b27058c866263db6d116abd",
+  "main": "d77f83e55bf06bbf3776aaea5de79d9bdd58e2a8",
+  "merge": "ff047b73e4e47fa191af3bbf6d150a0d5dd70623",
+  "appTree": "01a6437e12dccd15bb0df365e9d7a279f8aa49a5",
+  "notes": 43,
+  "tree": "/tmp/buyerlog-phase7-stack",
+  "ownNoteIds": [],
+  "counts": {
+    "pass": 8896,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "files": 1295,
+  "related": 227,
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "newPerformanceClaim": false
+}

@@ -1,0 +1,2577 @@
+{
+  "baseline": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "combinedProductionHead": "ee18c4c5",
+  "observer": "10ms full untrimmed gap; 30ms pre/25ms post; no main-thread CPU/RSS polling",
+  "storage": "overlayfs via TMPDIR=/workspace/phase7-bench-tmp",
+  "order": "A1 B1 A2 B2 A3 B3; fresh process per invocation",
+  "summaries": {
+    "snapshot": {
+      "before": {
+        "medianMs": 374.91995199999997,
+        "medianMaxGapMs": 319.655346,
+        "maxGapsMs": [
+          326.86967,
+          303.08359199999995,
+          319.655346
+        ],
+        "medianPeakRssKiB": 280072
+      },
+      "after": {
+        "medianMs": 404.012386,
+        "medianMaxGapMs": 47.562456,
+        "maxGapsMs": [
+          58.49890799999997,
+          47.026144000000016,
+          47.562456
+        ],
+        "medianPeakRssKiB": 296136
+      }
+    },
+    "local-images": {
+      "before": {
+        "medianMs": 21.809116000000003,
+        "medianMaxGapMs": 12.726317000000009,
+        "maxGapsMs": [
+          13.281526999999997,
+          12.726317000000009,
+          12.702862999999994
+        ],
+        "medianPeakRssKiB": 52120
+      },
+      "after": {
+        "medianMs": 3.5482279999999946,
+        "medianMaxGapMs": 12.165699000000004,
+        "maxGapsMs": [
+          12.165699000000004,
+          10.216362999999987,
+          13.740414999999999
+        ],
+        "medianPeakRssKiB": 49860
+      }
+    },
+    "pack": {
+      "before": {
+        "medianMs": 2851.864837,
+        "medianMaxGapMs": 13.283891999999994,
+        "maxGapsMs": [
+          13.283891999999994,
+          11.477424999999997,
+          20.257657999999992
+        ],
+        "medianPeakRssKiB": 59268
+      },
+      "after": {
+        "medianMs": 257.208866,
+        "medianMaxGapMs": 11.177083000000003,
+        "maxGapsMs": [
+          11.177083000000003,
+          11.395061999999996,
+          11.167648
+        ],
+        "medianPeakRssKiB": 47080
+      }
+    },
+    "parser": {
+      "before": {
+        "medianMs": 681.64565,
+        "medianMaxGapMs": 18.885881999999995,
+        "maxGapsMs": [
+          18.885881999999995,
+          17.25721699999999,
+          24.949695
+        ],
+        "medianPeakRssKiB": 34428
+      },
+      "after": {
+        "medianMs": 273.170261,
+        "medianMaxGapMs": 18.077439,
+        "maxGapsMs": [
+          18.077439,
+          17.303435999999998,
+          21.337601999999997
+        ],
+        "medianPeakRssKiB": 33912
+      }
+    },
+    "parser-queue": {
+      "before": {
+        "medianMs": 675.155546,
+        "medianMaxGapMs": 13.056166000000005,
+        "maxGapsMs": [
+          13.056166000000005,
+          13.448523999999999,
+          13.039710999999997
+        ],
+        "medianPeakRssKiB": 33148,
+        "medianInteractiveWaitMs": 671.357808
+      },
+      "after": {
+        "medianMs": 663.2018929999999,
+        "medianMaxGapMs": 13.397099000000004,
+        "maxGapsMs": [
+          14.219492000000002,
+          10.50351700000001,
+          13.397099000000004
+        ],
+        "medianPeakRssKiB": 33272,
+        "medianInteractiveWaitMs": 152.86512900000002
+      }
+    },
+    "upload-1": {
+      "before": {
+        "medianMs": 44.57294300000001,
+        "medianMaxGapMs": 10.210164000000006,
+        "maxGapsMs": [
+          10.210164000000006,
+          10.206027999999996,
+          13.030507
+        ],
+        "medianPeakRssKiB": 32764
+      },
+      "after": {
+        "medianMs": 43.306994,
+        "medianMaxGapMs": 12.131108999999995,
+        "maxGapsMs": [
+          12.597828000000007,
+          12.131108999999995,
+          11.62766599999999
+        ],
+        "medianPeakRssKiB": 32636
+      }
+    },
+    "upload-5": {
+      "before": {
+        "medianMs": 204.993238,
+        "medianMaxGapMs": 12.10961100000003,
+        "maxGapsMs": [
+          10.889316,
+          12.556321000000025,
+          12.10961100000003
+        ],
+        "medianPeakRssKiB": 32760
+      },
+      "after": {
+        "medianMs": 204.51199300000002,
+        "medianMaxGapMs": 10.945850000000007,
+        "maxGapsMs": [
+          10.67892500000005,
+          11.106757000000016,
+          10.945850000000007
+        ],
+        "medianPeakRssKiB": 32760
+      }
+    },
+    "upload-error": {
+      "before": {
+        "medianMs": 121.321179,
+        "medianMaxGapMs": 10.834956000000005,
+        "maxGapsMs": [
+          10.834956000000005,
+          10.462176,
+          10.868604999999995
+        ],
+        "medianPeakRssKiB": 32504
+      },
+      "after": {
+        "medianMs": 121.105961,
+        "medianMaxGapMs": 10.809326999999996,
+        "maxGapsMs": [
+          10.487212999999997,
+          10.809326999999996,
+          10.970487000000006
+        ],
+        "medianPeakRssKiB": 32504
+      }
+    },
+    "backup-0": {
+      "before": {
+        "medianMs": 1036.409084,
+        "medianMaxGapMs": 13.219034000000022,
+        "maxGapsMs": [
+          13.187207999999984,
+          13.219034000000022,
+          20.900274999999965
+        ],
+        "medianPeakRssKiB": 112980
+      },
+      "after": {
+        "medianMs": 1023.737186,
+        "medianMaxGapMs": 13.13806599999998,
+        "maxGapsMs": [
+          13.13806599999998,
+          12.737983999999983,
+          13.565951999999925
+        ],
+        "medianPeakRssKiB": 112768
+      }
+    },
+    "backup-1": {
+      "before": {
+        "medianMs": 1068.531121,
+        "medianMaxGapMs": 13.50551900000005,
+        "maxGapsMs": [
+          12.770143000000019,
+          15.444841999999994,
+          13.50551900000005
+        ],
+        "medianPeakRssKiB": 112952
+      },
+      "after": {
+        "medianMs": 1028.826755,
+        "medianMaxGapMs": 13.311100999999994,
+        "maxGapsMs": [
+          13.377258999999995,
+          13.311100999999994,
+          12.125771999999998
+        ],
+        "medianPeakRssKiB": 114448
+      }
+    },
+    "backup-20": {
+      "before": {
+        "medianMs": 1076.640589,
+        "medianMaxGapMs": 15.896986999999967,
+        "maxGapsMs": [
+          15.896986999999967,
+          16.92189400000001,
+          14.180544999999995
+        ],
+        "medianPeakRssKiB": 154608
+      },
+      "after": {
+        "medianMs": 1055.388537,
+        "medianMaxGapMs": 14.141943000000012,
+        "maxGapsMs": [
+          14.804408000000024,
+          11.887000999999998,
+          14.141943000000012
+        ],
+        "medianPeakRssKiB": 152044
+      }
+    }
+  },
+  "runs": {
+    "snapshot": {
+      "before": [
+        {
+          "file": "snapshot-before-1.json",
+          "sha256": "7c80d3869e4f7e9ba39d2a96c1921928585a9284bd37e79e622dfcfa25252ed7",
+          "result": {
+            "scenario": "snapshot",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 389.299503,
+            "eventLoopGapMaxMs": 326.86967,
+            "eventLoopGapP95Ms": 326.86967,
+            "timerSamples": 9,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 279236
+          }
+        },
+        {
+          "file": "snapshot-before-2.json",
+          "sha256": "c682007dd24038b36857781ec7af8ecaba2fba3e4036005c011e8d4d5d3f33c9",
+          "result": {
+            "scenario": "snapshot",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 365.26790900000003,
+            "eventLoopGapMaxMs": 303.08359199999995,
+            "eventLoopGapP95Ms": 303.08359199999995,
+            "timerSamples": 10,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 280168
+          }
+        },
+        {
+          "file": "snapshot-before-3.json",
+          "sha256": "d70df7b899c8e84af855e2c3638f0417184008aeb8fc8b813c18eb92c0a0061d",
+          "result": {
+            "scenario": "snapshot",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 374.91995199999997,
+            "eventLoopGapMaxMs": 319.655346,
+            "eventLoopGapP95Ms": 319.655346,
+            "timerSamples": 9,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 280072
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "snapshot-after-1.json",
+          "sha256": "96f6a6c50096513e7452301db7ba8211b2c0dc681eb92403e64f96dfcde78d2e",
+          "result": {
+            "scenario": "snapshot",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 444.751578,
+            "eventLoopGapMaxMs": 58.49890799999997,
+            "eventLoopGapP95Ms": 11.956142999999997,
+            "timerSamples": 41,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 296136
+          }
+        },
+        {
+          "file": "snapshot-after-2.json",
+          "sha256": "ae8d162467b6060b7fc3b2670e32991002bdc1dc5f2ecce1cb1f420dd584717c",
+          "result": {
+            "scenario": "snapshot",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 393.04197,
+            "eventLoopGapMaxMs": 47.026144000000016,
+            "eventLoopGapP95Ms": 15.291668999999956,
+            "timerSamples": 37,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 304676
+          }
+        },
+        {
+          "file": "snapshot-after-3.json",
+          "sha256": "c78cd4a732f2ae5aa6370f69c76631e095348b24a724781af45e4e4cb8d5fa54",
+          "result": {
+            "scenario": "snapshot",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 404.012386,
+            "eventLoopGapMaxMs": 47.562456,
+            "eventLoopGapP95Ms": 10.810789,
+            "timerSamples": 39,
+            "bytes": 10253621,
+            "sha256": "f1501976d921231defcce266c1b0abbd09968aa16e5ec775efbf175dd8c8fed6",
+            "processPeakRssKiB": 294792
+          }
+        }
+      ]
+    },
+    "local-images": {
+      "before": [
+        {
+          "file": "local-images-before-1.json",
+          "sha256": "0b984bbc8f7f287967a233b565d8e66d04f796d111aa7eb915ff1ee14e40fe59",
+          "result": {
+            "scenario": "local-images",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 22.245621000000014,
+            "eventLoopGapMaxMs": 13.281526999999997,
+            "eventLoopGapP95Ms": 13.281526999999997,
+            "timerSamples": 5,
+            "available": 1,
+            "lookups": 1,
+            "heads": 1,
+            "reads": 20,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 52112
+          }
+        },
+        {
+          "file": "local-images-before-2.json",
+          "sha256": "6591f0597d1b9ee37720c614d137fb990c85e78f9a1081a50255948eb5b8d10a",
+          "result": {
+            "scenario": "local-images",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 19.105581,
+            "eventLoopGapMaxMs": 12.726317000000009,
+            "eventLoopGapP95Ms": 12.726317000000009,
+            "timerSamples": 4,
+            "available": 1,
+            "lookups": 1,
+            "heads": 1,
+            "reads": 20,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 52428
+          }
+        },
+        {
+          "file": "local-images-before-3.json",
+          "sha256": "12372a9b0c5f9b4106f2dec46faed364fdaea0ec75e76781ddf7f816183e7ddc",
+          "result": {
+            "scenario": "local-images",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 21.809116000000003,
+            "eventLoopGapMaxMs": 12.702862999999994,
+            "eventLoopGapP95Ms": 12.702862999999994,
+            "timerSamples": 5,
+            "available": 1,
+            "lookups": 1,
+            "heads": 1,
+            "reads": 20,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 52120
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "local-images-after-1.json",
+          "sha256": "789469b5d14d7c1e9d2f56fd9e204583e6f03c8a874b54dc69afa36e71d01c75",
+          "result": {
+            "scenario": "local-images",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 2.967201000000003,
+            "eventLoopGapMaxMs": 12.165699000000004,
+            "eventLoopGapP95Ms": 12.165699000000004,
+            "timerSamples": 3,
+            "available": 0,
+            "lookups": 0,
+            "heads": 0,
+            "reads": 0,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 49892
+          }
+        },
+        {
+          "file": "local-images-after-2.json",
+          "sha256": "73d73a4428db3d51ddbc8681c6886f38d0d823cc9fc6c27c994ca1ce066f4adb",
+          "result": {
+            "scenario": "local-images",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 3.748673999999994,
+            "eventLoopGapMaxMs": 10.216362999999987,
+            "eventLoopGapP95Ms": 10.216362999999987,
+            "timerSamples": 2,
+            "available": 0,
+            "lookups": 0,
+            "heads": 0,
+            "reads": 0,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 49688
+          }
+        },
+        {
+          "file": "local-images-after-3.json",
+          "sha256": "0272281d0cb35ab3967a7579228b1578a30353b3b0a78986c6b01763f3a789e3",
+          "result": {
+            "scenario": "local-images",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 3.5482279999999946,
+            "eventLoopGapMaxMs": 13.740414999999999,
+            "eventLoopGapP95Ms": 13.740414999999999,
+            "timerSamples": 3,
+            "available": 0,
+            "lookups": 0,
+            "heads": 0,
+            "reads": 0,
+            "counts": {
+              "identities": 300,
+              "localAvailable": 300,
+              "sharedPullable": 0,
+              "remoteRequired": 0,
+              "manualProtected": 0,
+              "staleProtectionCleared": 0,
+              "unavailable": 0
+            },
+            "processPeakRssKiB": 49860
+          }
+        }
+      ]
+    },
+    "pack": {
+      "before": [
+        {
+          "file": "pack-before-1.json",
+          "sha256": "e356076e66b03a0109028ef90a716754c7d56826930640d51851a35378d5559c",
+          "result": {
+            "scenario": "pack",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 2877.97829,
+            "eventLoopGapMaxMs": 13.283891999999994,
+            "eventLoopGapP95Ms": 10.518309999999929,
+            "timerSamples": 290,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 3417,
+            "syncs": 2613,
+            "reads": 2613,
+            "writes": 2613,
+            "verified": 200,
+            "processPeakRssKiB": 59268
+          }
+        },
+        {
+          "file": "pack-before-2.json",
+          "sha256": "f7a20a67db25432bece528747d756d8e4f122589589f084eb4d35ca18d348e6f",
+          "result": {
+            "scenario": "pack",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 2734.632083,
+            "eventLoopGapMaxMs": 11.477424999999997,
+            "eventLoopGapP95Ms": 10.57062599999972,
+            "timerSamples": 276,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 3417,
+            "syncs": 2613,
+            "reads": 2613,
+            "writes": 2613,
+            "verified": 200,
+            "processPeakRssKiB": 59172
+          }
+        },
+        {
+          "file": "pack-before-3.json",
+          "sha256": "0d70486c3c75d9a8dff74c4c6f52fc54203cf16349801c6b06942e30a7112ce0",
+          "result": {
+            "scenario": "pack",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 2851.864837,
+            "eventLoopGapMaxMs": 20.257657999999992,
+            "eventLoopGapP95Ms": 10.60736,
+            "timerSamples": 286,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 3417,
+            "syncs": 2613,
+            "reads": 2613,
+            "writes": 2613,
+            "verified": 200,
+            "processPeakRssKiB": 61160
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "pack-after-1.json",
+          "sha256": "e7ca4b4508740b4476b85c91eda4b03854a1763809ece687ca58003ebf983d3e",
+          "result": {
+            "scenario": "pack",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 256.926473,
+            "eventLoopGapMaxMs": 11.177083000000003,
+            "eventLoopGapP95Ms": 10.404730999999998,
+            "timerSamples": 29,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 289,
+            "syncs": 221,
+            "reads": 221,
+            "writes": 405,
+            "verified": 200,
+            "processPeakRssKiB": 46980
+          }
+        },
+        {
+          "file": "pack-after-2.json",
+          "sha256": "074174f104a4873559df6fc5499369f59c32c04421bdcee15cba4fefbbbe37e0",
+          "result": {
+            "scenario": "pack",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 272.539674,
+            "eventLoopGapMaxMs": 11.395061999999996,
+            "eventLoopGapP95Ms": 10.929575999999997,
+            "timerSamples": 30,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 289,
+            "syncs": 221,
+            "reads": 221,
+            "writes": 405,
+            "verified": 200,
+            "processPeakRssKiB": 48380
+          }
+        },
+        {
+          "file": "pack-after-3.json",
+          "sha256": "3d5e1f0c0c786c84c8ffc69dee69530148a1f5fb82c72e7e4102b0cbf169a91f",
+          "result": {
+            "scenario": "pack",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 257.208866,
+            "eventLoopGapMaxMs": 11.167648,
+            "eventLoopGapP95Ms": 10.935744999999997,
+            "timerSamples": 28,
+            "report": {
+              "published": 200,
+              "skipped": 0,
+              "reused": 0,
+              "available": true,
+              "revision": 1,
+              "deviceId": "fixture"
+            },
+            "opens": 289,
+            "syncs": 221,
+            "reads": 221,
+            "writes": 405,
+            "verified": 200,
+            "processPeakRssKiB": 47080
+          }
+        }
+      ]
+    },
+    "parser": {
+      "before": [
+        {
+          "file": "parser-before-1.json",
+          "sha256": "35ab76bdfeb8cac4c613770b6513761086da33bde19d9d813f5f5409d13231a1",
+          "result": {
+            "scenario": "parser",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 659.339214,
+            "eventLoopGapMaxMs": 18.885881999999995,
+            "eventLoopGapP95Ms": 11.391177000000027,
+            "timerSamples": 67,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 5,
+            "childPeakRssKiB": 57168,
+            "processPeakRssKiB": 34428
+          }
+        },
+        {
+          "file": "parser-before-2.json",
+          "sha256": "7d1f276908541de2ebc97fd2d7e354ea6189cafbf2b265b9e6d1ffd21a1b45b7",
+          "result": {
+            "scenario": "parser",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 700.976903,
+            "eventLoopGapMaxMs": 17.25721699999999,
+            "eventLoopGapP95Ms": 10.744703000000015,
+            "timerSamples": 71,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 5,
+            "childPeakRssKiB": 56656,
+            "processPeakRssKiB": 34552
+          }
+        },
+        {
+          "file": "parser-before-3.json",
+          "sha256": "99005c9256c4b1a39499a754ca1d0119377a3906056b20b0c05a618ab4459349",
+          "result": {
+            "scenario": "parser",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 681.64565,
+            "eventLoopGapMaxMs": 24.949695,
+            "eventLoopGapP95Ms": 11.061780999999996,
+            "timerSamples": 68,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 5,
+            "childPeakRssKiB": 56996,
+            "processPeakRssKiB": 34296
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "parser-after-1.json",
+          "sha256": "d22e258688b5f910fcbe80ab04abfb6130ec44c962f6248c94132c64437a8a0a",
+          "result": {
+            "scenario": "parser",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 271.89180400000004,
+            "eventLoopGapMaxMs": 18.077439,
+            "eventLoopGapP95Ms": 10.615933000000012,
+            "timerSamples": 29,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 2,
+            "childPeakRssKiB": 55888,
+            "processPeakRssKiB": 33916
+          }
+        },
+        {
+          "file": "parser-after-2.json",
+          "sha256": "ecccfcf9aee05819eb4a19839b6fb757dddae5ab596b7c44fc3681164e71ca0a",
+          "result": {
+            "scenario": "parser",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 273.170261,
+            "eventLoopGapMaxMs": 17.303435999999998,
+            "eventLoopGapP95Ms": 13.222561999999982,
+            "timerSamples": 29,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 2,
+            "childPeakRssKiB": 56868,
+            "processPeakRssKiB": 33784
+          }
+        },
+        {
+          "file": "parser-after-3.json",
+          "sha256": "89a40cb8a1f172fee0274bcb352e461c688c54aded3233371b7a245cc89fbd27",
+          "result": {
+            "scenario": "parser",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 319.158868,
+            "eventLoopGapMaxMs": 21.337601999999997,
+            "eventLoopGapP95Ms": 13.604354,
+            "timerSamples": 33,
+            "files": 5,
+            "staged": 10,
+            "spawnCount": 2,
+            "childPeakRssKiB": 56564,
+            "processPeakRssKiB": 33912
+          }
+        }
+      ]
+    },
+    "parser-queue": {
+      "before": [
+        {
+          "file": "parser-queue-before-1.json",
+          "sha256": "047f6c5933ba5be64d210c080ce58b15b210ea317905399e58d8493f4071d646",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 675.155546,
+            "eventLoopGapMaxMs": 13.056166000000005,
+            "eventLoopGapP95Ms": 10.334857999999997,
+            "timerSamples": 69,
+            "interactiveQueueAndExecutionMs": 671.357808,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30192,
+            "processPeakRssKiB": 33148
+          }
+        },
+        {
+          "file": "parser-queue-before-2.json",
+          "sha256": "d05c7eafa766d58ba9832d02042a9bdbe1a2d7504c5af0cfa0eb7938ac04a156",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 672.527381,
+            "eventLoopGapMaxMs": 13.448523999999999,
+            "eventLoopGapP95Ms": 10.601492000000007,
+            "timerSamples": 69,
+            "interactiveQueueAndExecutionMs": 669.298755,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30192,
+            "processPeakRssKiB": 33400
+          }
+        },
+        {
+          "file": "parser-queue-before-3.json",
+          "sha256": "678c6cebb6e61fea8c4908d13d50328e605b2280809125618acb00bcbab034b2",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 675.863526,
+            "eventLoopGapMaxMs": 13.039710999999997,
+            "eventLoopGapP95Ms": 10.361875999999995,
+            "timerSamples": 69,
+            "interactiveQueueAndExecutionMs": 673.0246850000001,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30188,
+            "processPeakRssKiB": 33144
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "parser-queue-after-1.json",
+          "sha256": "07c96c762199caf9d705358b45a1e7df38d760da7b2f1a2b0c35ac4fdd833212",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 663.2018929999999,
+            "eventLoopGapMaxMs": 14.219492000000002,
+            "eventLoopGapP95Ms": 10.53320100000002,
+            "timerSamples": 68,
+            "interactiveQueueAndExecutionMs": 152.86512900000002,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30312,
+            "processPeakRssKiB": 33408
+          }
+        },
+        {
+          "file": "parser-queue-after-2.json",
+          "sha256": "68898bbb55dade1607ef8c1f93ebd32a9c43dcf6ae4f4bf5ae48b86d00e55ed1",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 662.551564,
+            "eventLoopGapMaxMs": 10.50351700000001,
+            "eventLoopGapP95Ms": 10.194900999999987,
+            "timerSamples": 68,
+            "interactiveQueueAndExecutionMs": 156.458562,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30316,
+            "processPeakRssKiB": 33144
+          }
+        },
+        {
+          "file": "parser-queue-after-3.json",
+          "sha256": "aea3dab0884f1b677f19e47e06d2ac0bf91445392262905a4d36d980f299ac6d",
+          "result": {
+            "scenario": "parser-queue",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 666.6867689999999,
+            "eventLoopGapMaxMs": 13.397099000000004,
+            "eventLoopGapP95Ms": 10.220117999999957,
+            "timerSamples": 69,
+            "interactiveQueueAndExecutionMs": 149.20754699999998,
+            "spawnCount": 6,
+            "childPeakRssKiB": 30312,
+            "processPeakRssKiB": 33272
+          }
+        }
+      ]
+    },
+    "upload-1": {
+      "before": [
+        {
+          "file": "upload-1-before-1.json",
+          "sha256": "2e5bd06700091609ca416b9bfe4b6366fab37a010d0c61c3e0e84fb4a56d0960",
+          "result": {
+            "scenario": "upload-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 44.57294300000001,
+            "eventLoopGapMaxMs": 10.210164000000006,
+            "eventLoopGapP95Ms": 10.210164000000006,
+            "timerSamples": 7,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32632
+          }
+        },
+        {
+          "file": "upload-1-before-2.json",
+          "sha256": "3a862855a243e8fca134422de86495aba1b3914b197062b0772e04d641cf005c",
+          "result": {
+            "scenario": "upload-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 43.50404999999999,
+            "eventLoopGapMaxMs": 10.206027999999996,
+            "eventLoopGapP95Ms": 10.206027999999996,
+            "timerSamples": 6,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32888
+          }
+        },
+        {
+          "file": "upload-1-before-3.json",
+          "sha256": "80d9a917842368cfdb5a9691d9fd575c7430f942299160663e1ab85f7080a5fa",
+          "result": {
+            "scenario": "upload-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 44.58760500000001,
+            "eventLoopGapMaxMs": 13.030507,
+            "eventLoopGapP95Ms": 13.030507,
+            "timerSamples": 7,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32764
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "upload-1-after-1.json",
+          "sha256": "72ddd06aad5db74f9b9a15b5bce5b5349ed4f279c17f52731a9e313087d80b63",
+          "result": {
+            "scenario": "upload-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 44.290786,
+            "eventLoopGapMaxMs": 12.597828000000007,
+            "eventLoopGapP95Ms": 12.597828000000007,
+            "timerSamples": 7,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32632
+          }
+        },
+        {
+          "file": "upload-1-after-2.json",
+          "sha256": "cca092545db021b053228c4637f87554369d6bd1f5a3c58efd46676ca84ff21f",
+          "result": {
+            "scenario": "upload-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 43.306994,
+            "eventLoopGapMaxMs": 12.131108999999995,
+            "eventLoopGapP95Ms": 12.131108999999995,
+            "timerSamples": 7,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32760
+          }
+        },
+        {
+          "file": "upload-1-after-3.json",
+          "sha256": "2bc9ac1891d431d68fc1ead21d01e03dba2a849eb87705e382834a99b2667609",
+          "result": {
+            "scenario": "upload-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 42.642993999999995,
+            "eventLoopGapMaxMs": 11.62766599999999,
+            "eventLoopGapP95Ms": 11.62766599999999,
+            "timerSamples": 7,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32636
+          }
+        }
+      ]
+    },
+    "upload-5": {
+      "before": [
+        {
+          "file": "upload-5-before-1.json",
+          "sha256": "af99ead2a58fee0a8e213e8c81781c1a587877c5df8149c3c333c4d86eadec80",
+          "result": {
+            "scenario": "upload-5",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 203.31067,
+            "eventLoopGapMaxMs": 10.889316,
+            "eventLoopGapP95Ms": 10.424400000000006,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32764
+          }
+        },
+        {
+          "file": "upload-5-before-2.json",
+          "sha256": "0d546f8b026c109767cadef4a90e81a54cb141be48f2a18d24b6bf1baffd1612",
+          "result": {
+            "scenario": "upload-5",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 204.993238,
+            "eventLoopGapMaxMs": 12.556321000000025,
+            "eventLoopGapP95Ms": 10.826594,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32632
+          }
+        },
+        {
+          "file": "upload-5-before-3.json",
+          "sha256": "c21b3c3120d1c02fb81c0d6b270a108551d7f28679ba210c099e53b7e638f4a3",
+          "result": {
+            "scenario": "upload-5",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 206.683039,
+            "eventLoopGapMaxMs": 12.10961100000003,
+            "eventLoopGapP95Ms": 10.547932000000003,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32760
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "upload-5-after-1.json",
+          "sha256": "0fb7d5f30dfdc9d9bdf91084bd2a558f6dd394e974745b22d82bd334eef6e2d8",
+          "result": {
+            "scenario": "upload-5",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 204.86045800000002,
+            "eventLoopGapMaxMs": 10.67892500000005,
+            "eventLoopGapP95Ms": 10.369919999999993,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32632
+          }
+        },
+        {
+          "file": "upload-5-after-2.json",
+          "sha256": "f1d82abc9dfe8696f4a957594e28ea14f3d9e1a4866e0791befa080cd2695880",
+          "result": {
+            "scenario": "upload-5",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 204.51199300000002,
+            "eventLoopGapMaxMs": 11.106757000000016,
+            "eventLoopGapP95Ms": 11.098805999999996,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32760
+          }
+        },
+        {
+          "file": "upload-5-after-3.json",
+          "sha256": "2c300ba463724e052dae8d74eb6d2563d84ed287ff6c3aa27d74aa1ff7ac4ade",
+          "result": {
+            "scenario": "upload-5",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 202.654357,
+            "eventLoopGapMaxMs": 10.945850000000007,
+            "eventLoopGapP95Ms": 10.570074999999974,
+            "timerSamples": 23,
+            "peak": 1,
+            "sent": 1,
+            "failed": false,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32888
+          }
+        }
+      ]
+    },
+    "upload-error": {
+      "before": [
+        {
+          "file": "upload-error-before-1.json",
+          "sha256": "d64177d6761e06b3f1475e7911e465aa7a9214c59ddbe83888a87dc09d0258f9",
+          "result": {
+            "scenario": "upload-error",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 120.13764999999998,
+            "eventLoopGapMaxMs": 10.834956000000005,
+            "eventLoopGapP95Ms": 10.834956000000005,
+            "timerSamples": 15,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32504
+          }
+        },
+        {
+          "file": "upload-error-before-2.json",
+          "sha256": "adfaf9ac6f41c59dc3fd1b76d8361ff257c1b64f8e917e3aa042546506b5e791",
+          "result": {
+            "scenario": "upload-error",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 121.321179,
+            "eventLoopGapMaxMs": 10.462176,
+            "eventLoopGapP95Ms": 10.462176,
+            "timerSamples": 14,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32508
+          }
+        },
+        {
+          "file": "upload-error-before-3.json",
+          "sha256": "ada188edf1b69b614bb75d428a52a0bbf64b1bf39c9b6cd5c7756ff7d0acf68b",
+          "result": {
+            "scenario": "upload-error",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 121.840996,
+            "eventLoopGapMaxMs": 10.868604999999995,
+            "eventLoopGapP95Ms": 10.868604999999995,
+            "timerSamples": 15,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32504
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "upload-error-after-1.json",
+          "sha256": "b5f8de6b822ae8125ca53f7c0edde6932c8acb12b87cda16f2c2495108974cfd",
+          "result": {
+            "scenario": "upload-error",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 121.105961,
+            "eventLoopGapMaxMs": 10.487212999999997,
+            "eventLoopGapP95Ms": 10.487212999999997,
+            "timerSamples": 15,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32376
+          }
+        },
+        {
+          "file": "upload-error-after-2.json",
+          "sha256": "5c7ceb396f55855fab4ad3f4a1fd542710b21700b406bc668474ecc35a180a30",
+          "result": {
+            "scenario": "upload-error",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 120.271229,
+            "eventLoopGapMaxMs": 10.809326999999996,
+            "eventLoopGapP95Ms": 10.809326999999996,
+            "timerSamples": 15,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32504
+          }
+        },
+        {
+          "file": "upload-error-after-3.json",
+          "sha256": "756cf0a15969411fb6a0837dfd4cf51b490fa6652f3b51ed04a670b2b2036796",
+          "result": {
+            "scenario": "upload-error",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 121.17028499999999,
+            "eventLoopGapMaxMs": 10.970487000000006,
+            "eventLoopGapP95Ms": 10.970487000000006,
+            "timerSamples": 15,
+            "peak": 1,
+            "sent": 0,
+            "failed": true,
+            "simulatedNetwork": true,
+            "processPeakRssKiB": 32632
+          }
+        }
+      ]
+    },
+    "backup-0": {
+      "before": [
+        {
+          "file": "backup-0-before-1.json",
+          "sha256": "a2f7b18ac87d1c7b7cbe2cc01d346027470d8aad47cea28e649be5dbd013cc3e",
+          "result": {
+            "scenario": "backup-0",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1025.738465,
+            "eventLoopGapMaxMs": 13.187207999999984,
+            "eventLoopGapP95Ms": 12.702191999999968,
+            "timerSamples": 101,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 112876
+          }
+        },
+        {
+          "file": "backup-0-before-2.json",
+          "sha256": "0b633d11d2d019cfb0b80d1bf7ace7a0a011462bf261282cb03df81c4cb96318",
+          "result": {
+            "scenario": "backup-0",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1036.409084,
+            "eventLoopGapMaxMs": 13.219034000000022,
+            "eventLoopGapP95Ms": 12.637295999999992,
+            "timerSamples": 100,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 112980
+          }
+        },
+        {
+          "file": "backup-0-before-3.json",
+          "sha256": "9bae4c76016d6778ab6bce3249075bd7a6e5af7e883bee56603c9fd39ede5452",
+          "result": {
+            "scenario": "backup-0",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1066.6659060000002,
+            "eventLoopGapMaxMs": 20.900274999999965,
+            "eventLoopGapP95Ms": 12.694441000000012,
+            "timerSamples": 102,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 113468
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "backup-0-after-1.json",
+          "sha256": "c88fae8f3d80c26eb099e3db064832e66319afa988b0bfc0d48ce64ad306f7bd",
+          "result": {
+            "scenario": "backup-0",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1124.179204,
+            "eventLoopGapMaxMs": 13.13806599999998,
+            "eventLoopGapP95Ms": 12.77282599999998,
+            "timerSamples": 108,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 113796
+          }
+        },
+        {
+          "file": "backup-0-after-2.json",
+          "sha256": "7fc329423b0ab236e8316295ead1b74a649cec25ba6503e39dac3f9b192b0522",
+          "result": {
+            "scenario": "backup-0",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1023.737186,
+            "eventLoopGapMaxMs": 12.737983999999983,
+            "eventLoopGapP95Ms": 12.464572000000032,
+            "timerSamples": 102,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 111932
+          }
+        },
+        {
+          "file": "backup-0-after-3.json",
+          "sha256": "061937b8dca6b261fbfe80a6a33d460c4bdc42b0dc31de0a3a187bf33f428c81",
+          "result": {
+            "scenario": "backup-0",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1014.559326,
+            "eventLoopGapMaxMs": 13.565951999999925,
+            "eventLoopGapP95Ms": 12.309442999999987,
+            "timerSamples": 99,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 0,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 112768
+          }
+        }
+      ]
+    },
+    "backup-1": {
+      "before": [
+        {
+          "file": "backup-1-before-1.json",
+          "sha256": "e779486614731689683ec1f5400737d64e995579087f8df5e3dc06a7e7204395",
+          "result": {
+            "scenario": "backup-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1079.919383,
+            "eventLoopGapMaxMs": 12.770143000000019,
+            "eventLoopGapP95Ms": 12.22987599999999,
+            "timerSamples": 105,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 111728
+          }
+        },
+        {
+          "file": "backup-1-before-2.json",
+          "sha256": "11a660c55261c304bee28dee6a3d34a88c02a111ffb3d80bd73ec6711ac622eb",
+          "result": {
+            "scenario": "backup-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1068.531121,
+            "eventLoopGapMaxMs": 15.444841999999994,
+            "eventLoopGapP95Ms": 12.41168300000001,
+            "timerSamples": 104,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 112952
+          }
+        },
+        {
+          "file": "backup-1-before-3.json",
+          "sha256": "a8b2cb76c74fddf6388878d064cc9ed728f6ddb3e49a7d544f3e23b69da52605",
+          "result": {
+            "scenario": "backup-1",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1065.41595,
+            "eventLoopGapMaxMs": 13.50551900000005,
+            "eventLoopGapP95Ms": 12.719097999999974,
+            "timerSamples": 103,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 112984
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "backup-1-after-1.json",
+          "sha256": "77cc06d410eae580b0e96a23620809ab34f33d5cb578c1000dbc3668240406d3",
+          "result": {
+            "scenario": "backup-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1028.826755,
+            "eventLoopGapMaxMs": 13.377258999999995,
+            "eventLoopGapP95Ms": 12.574884999999995,
+            "timerSamples": 99,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 113536
+          }
+        },
+        {
+          "file": "backup-1-after-2.json",
+          "sha256": "38d18d33e2386f47adb2f6a2bc361b5a26a70a48a42acf4f0c24ba5e88653ee4",
+          "result": {
+            "scenario": "backup-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1032.76706,
+            "eventLoopGapMaxMs": 13.311100999999994,
+            "eventLoopGapP95Ms": 12.588174999999978,
+            "timerSamples": 102,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 114516
+          }
+        },
+        {
+          "file": "backup-1-after-3.json",
+          "sha256": "8a6a904cdaf9e5e90c6703928e7ea2e9129b58087bdd494069cf85c950e584b7",
+          "result": {
+            "scenario": "backup-1",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 715.717056,
+            "eventLoopGapMaxMs": 12.125771999999998,
+            "eventLoopGapP95Ms": 11.650724999999966,
+            "timerSamples": 72,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 1,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 114448
+          }
+        }
+      ]
+    },
+    "backup-20": {
+      "before": [
+        {
+          "file": "backup-20-before-1.json",
+          "sha256": "bc28ac7ebf1bf6d1e24e282cbbd63bc1cd886cea25854b31a4d9319591f71127",
+          "result": {
+            "scenario": "backup-20",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1170.678686,
+            "eventLoopGapMaxMs": 15.896986999999967,
+            "eventLoopGapP95Ms": 13.47219899999999,
+            "timerSamples": 111,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 144028
+          }
+        },
+        {
+          "file": "backup-20-before-2.json",
+          "sha256": "9a39845e5d7a47adac3e427ba82e3bce325ba5d363c243869acf6c1ea2a2c452",
+          "result": {
+            "scenario": "backup-20",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1043.8213469999998,
+            "eventLoopGapMaxMs": 16.92189400000001,
+            "eventLoopGapP95Ms": 12.602516000000037,
+            "timerSamples": 101,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 158988
+          }
+        },
+        {
+          "file": "backup-20-before-3.json",
+          "sha256": "b01c19d1560633fabbae69095ceb5b19989beb055f438e46ce3380320b253ab0",
+          "result": {
+            "scenario": "backup-20",
+            "base": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+            "sourceSha256": {
+              "server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+              "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+              "server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+              "server/lib/model-image-distribution.js": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+              "server/lib/shared-image-store.js": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+              "server/lib/parser-process-client.js": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df",
+              "server/workers/file-parser-process.js": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678",
+              "server/lib/test-reports/isolated-extract.js": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1076.640589,
+            "eventLoopGapMaxMs": 14.180544999999995,
+            "eventLoopGapP95Ms": 12.219820999999996,
+            "timerSamples": 106,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 154608
+          }
+        }
+      ],
+      "after": [
+        {
+          "file": "backup-20-after-1.json",
+          "sha256": "43f37d05b800ff534fe303dc5c065e0411e630cb8723f5d1bd012e594c7cb857",
+          "result": {
+            "scenario": "backup-20",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1093.164485,
+            "eventLoopGapMaxMs": 14.804408000000024,
+            "eventLoopGapP95Ms": 12.750234999999975,
+            "timerSamples": 106,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 152648
+          }
+        },
+        {
+          "file": "backup-20-after-2.json",
+          "sha256": "10fa513be24754892c2bdc3e61d432c544a4f957c7d28badd93bcdde3a2c8a4b",
+          "result": {
+            "scenario": "backup-20",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 754.497241,
+            "eventLoopGapMaxMs": 11.887000999999998,
+            "eventLoopGapP95Ms": 11.053189999999972,
+            "timerSamples": 77,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 114268
+          }
+        },
+        {
+          "file": "backup-20-after-3.json",
+          "sha256": "ca17bcf1a9b995ea0f66455255fee9941a771631ecdff0f3bd11c9ca18cffc33",
+          "result": {
+            "scenario": "backup-20",
+            "base": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+            "sourceSha256": {
+              "server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+              "server/lib/compute-service.js": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+              "server/workers/compute-worker.js": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+              "server/lib/model-image-distribution.js": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+              "server/lib/shared-image-store.js": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+              "server/lib/parser-process-client.js": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+              "server/workers/file-parser-process.js": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+              "server/lib/test-reports/isolated-extract.js": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+              "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+              "server/lib/lcwai/lcwai-engine.js": "27d3074c9aa552cfce335c20a8882180e1edc16a8d33b4efc44ea7f12ab9e5e9"
+            },
+            "node": "v24.19.0",
+            "platform": "linux",
+            "cpus": 4,
+            "ms": 1055.388537,
+            "eventLoopGapMaxMs": 14.141943000000012,
+            "eventLoopGapP95Ms": 12.607814000000019,
+            "timerSamples": 103,
+            "readBytes": 157395997,
+            "writtenBytes": 104901662,
+            "archiveBytes": 52455783,
+            "sourceBytes": 52428800,
+            "changedPercent": 20,
+            "verified": 100,
+            "tempPeakBytes": 104901662,
+            "processPeakRssKiB": 152044
+          }
+        }
+      ]
+    }
+  }
+}
