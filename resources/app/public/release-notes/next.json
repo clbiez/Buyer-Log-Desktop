@@ -1,11 +1,11 @@
 {
   "title": {
-    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı · Ajans lisanslarında royalty",
-    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses"
+    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı · Ajans lisanslarında royalty · Sade LCW AI Excel çıktısı",
+    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses · Clean LCW AI Excel output"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir. Küresel Akış kaynak ayrıntılarını çekmece açıldığında alır; Backlog panelleri ilk açılışta aynı satır isteğini paylaşır. Excel ve PowerPoint dosyaları arka planda hazırlanır. Koleksiyon fiyat referansları ortak worker havuzunda hazırlanır. OAB filtrelerinin ilk dosya okuması asenkron yapılır; seçenekler ve önbellek korunur.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds. Global Flow fetches source details when the drawer opens, and Backlog panels share the same initial row request. Excel and PowerPoint files are prepared in the background. Collection price references prepare in the common worker pool. The initial OAB filter file read is asynchronous; options and caching are preserved."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir. LCW AI Excel dosyaları artık varsayılan olarak sade: zebra satırlar ve her sayısal sütuna eklenen veri çubukları kaldırıldı; toplam satırı, vurgu kuralı, veri çubuğu, zebra ve sabit sütun yalnız istendiğinde Buyer Log renkleriyle eklenir. CP açılışında kontrol listesi başlıkları sipariş başına bir kez belirlenir ve değişmeyen ortak cevaplar kararları yeniden hesaplatmaz; demo veride tarayıcı işlem süresi yaklaşık dörtte bire, en uzun donma 79 sn'den 9 sn'ye indi. Küresel Akış kaynak ayrıntılarını çekmece açıldığında alır; Backlog panelleri ilk açılışta aynı satır isteğini paylaşır. Excel ve PowerPoint dosyaları arka planda hazırlanır. Koleksiyon fiyat referansları ortak worker havuzunda hazırlanır. OAB filtrelerinin ilk dosya okuması asenkron yapılır; seçenekler ve önbellek korunur.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds. LCW AI Excel files are now plain by default: striped rows and the data bars added to every numeric column are gone; a total row, highlight rules, data bars, stripes and frozen columns are added in Buyer Log colours only when requested. When CP opens, checklist headings are resolved once per order and unchanged shared answers no longer trigger a full recompute; on demo data browser processing time fell to about a quarter and the longest freeze from 79 s to 9 s. Global Flow fetches source details when the drawer opens, and Backlog panels share the same initial row request. Excel and PowerPoint files are prepared in the background. Collection price references prepare in the common worker pool. The initial OAB filter file read is asynchronous; options and caching are preserved."
   },
   "schemaVersion": 1,
   "publishedAt": "2026-11-05",
@@ -182,35 +182,6 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo verisi: yenileme sürerken sunucu süreci kapatılıp yeniden başlatıldı; kayıp iş birkaç saniyede bildirildi.",
           "en": "Actual Buyer Log with isolated demo data: the server process was stopped and restarted during a refresh; the lost job was reported within seconds."
-        }
-      }
-    },
-    {
-      "id": "lcwai-merch-calendar",
-      "type": "improvement",
-      "module": {
-        "tr": "LCW AI",
-        "en": "LCW AI"
-      },
-      "title": {
-        "tr": "LCW AI analizleri LCW Merch Calendar’a göre yapar",
-        "en": "LCW AI analyses follow the LCW Merch Calendar"
-      },
-      "body": {
-        "tr": "Veri sorularında ay, hafta, çeyrek ve yıl artık Veri Yönetimi’nden yüklenen LCW Merch Calendar’a göre hesaplanır; dönemler “Mart 2026”, “12. Hafta Mart 2026” gibi LCW adlarıyla gösterilir ve “Mart’tan sonra”, “2026 Ç3” gibi filtreler LCW aralıklarını kullanır. Yorum kutusu hangi takvimin kullanıldığını yazar; takvim aralığı dışında kalan tarihler ayrı satırda gösterilir, takvim yüklü değilse dönemlerin yaklaşık olduğu açıkça belirtilir. Miladi ay yalnız açıkça istendiğinde kullanılır. LCW AI da bugünkü LCW dönemini ve LCW ay aralıklarını gerçek takvimden öğrenir; “bu ay”, “geçen hafta” gibi ifadeleri LCW’ye göre yorumlar.",
-        "en": "In data questions, months, weeks, quarters and years are now calculated by the LCW Merch Calendar uploaded under Data Management; periods are shown with LCW names such as “March 2026” or “Week 12 March 2026”, and filters such as “after March” or “2026 Q3” use LCW ranges. The interpretation box states which calendar was used; dates outside the calendar range are shown in a separate row, and if no calendar is loaded the periods are clearly marked as approximate. Gregorian months are used only when explicitly requested. LCW AI also learns today’s LCW period and the LCW month ranges from the actual calendar, so it reads “this month” or “last week” in LCW terms."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "lcwai-merch-calendar.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log LCW AI ekranında LCW Merch Calendar’a göre Model Bütçe ayı tablosu ve kullanılan takvim satırı",
-          "en": "Model Budget month table by LCW Merch Calendar and the calendar line in the actual Buyer Log LCW AI screen"
-        },
-        "caption": {
-          "tr": "İzole demo veri ve örnek bir 4-4-5 Merch Calendar ile gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Ay toplamları sayfanın tarih boyutuyla bağımsız doğrulandı; 154 kaydın 25’i miladi takvimde başka aya düşerdi.",
-          "en": "Actual app with isolated demo data and a sample 4-4-5 Merch Calendar; the LCW AI plan was stubbed for acceptance testing. Month totals were checked independently with the page’s date dimension; 25 of 154 records would fall in another month on the Gregorian calendar."
         }
       }
     },
@@ -936,6 +907,93 @@
         "caption": {
           "tr": "20 sentetik siparişten altı demo Koleksiyon kaydı. Tam katalog ve model alan okumaları gerçek uygulamada doğrulandı.",
           "en": "Six demo Collection records from 20 synthetic orders. The complete catalog and model field reads were checked in the actual app."
+        }
+      }
+    },
+    {
+      "id": "lcwai-merch-calendar",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI analizleri LCW Merch Calendar’a göre yapar",
+        "en": "LCW AI analyses follow the LCW Merch Calendar"
+      },
+      "body": {
+        "tr": "Veri sorularında ay, hafta, çeyrek ve yıl artık Veri Yönetimi’nden yüklenen LCW Merch Calendar’a göre hesaplanır; dönemler “Mart 2026”, “12. Hafta Mart 2026” gibi LCW adlarıyla gösterilir ve “Mart’tan sonra”, “2026 Ç3” gibi filtreler LCW aralıklarını kullanır. Yorum kutusu hangi takvimin kullanıldığını yazar; takvim aralığı dışında kalan tarihler ayrı satırda gösterilir, takvim yüklü değilse dönemlerin yaklaşık olduğu açıkça belirtilir. Miladi ay yalnız açıkça istendiğinde kullanılır. LCW AI da bugünkü LCW dönemini ve LCW ay aralıklarını gerçek takvimden öğrenir; “bu ay”, “geçen hafta” gibi ifadeleri LCW’ye göre yorumlar.",
+        "en": "In data questions, months, weeks, quarters and years are now calculated by the LCW Merch Calendar uploaded under Data Management; periods are shown with LCW names such as “March 2026” or “Week 12 March 2026”, and filters such as “after March” or “2026 Q3” use LCW ranges. The interpretation box states which calendar was used; dates outside the calendar range are shown in a separate row, and if no calendar is loaded the periods are clearly marked as approximate. Gregorian months are used only when explicitly requested. LCW AI also learns today’s LCW period and the LCW month ranges from the actual calendar, so it reads “this month” or “last week” in LCW terms."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-merch-calendar.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında LCW Merch Calendar’a göre Model Bütçe ayı tablosu ve kullanılan takvim satırı",
+          "en": "Model Budget month table by LCW Merch Calendar and the calendar line in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veri ve örnek bir 4-4-5 Merch Calendar ile gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Ay toplamları sayfanın tarih boyutuyla bağımsız doğrulandı; 154 kaydın 25’i miladi takvimde başka aya düşerdi.",
+          "en": "Actual app with isolated demo data and a sample 4-4-5 Merch Calendar; the LCW AI plan was stubbed for acceptance testing. Month totals were checked independently with the page’s date dimension; 25 of 154 records would fall in another month on the Gregorian calendar."
+        }
+      }
+    },
+    {
+      "id": "lcwai-excel-plain-format",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Excel çıktısı",
+        "en": "LCW AI · Excel output"
+      },
+      "title": {
+        "tr": "LCW AI Excel dosyaları sade; biçim yalnız istenirse eklenir",
+        "en": "LCW AI Excel files are plain; formatting is added only on request"
+      },
+      "body": {
+        "tr": "LCW AI ile oluşturulan Excel dosyalarında her sayfaya kendiliğinden eklenen zebra satır kuralı ve her sayısal sütundaki veri çubukları kaldırıldı. Varsayılan tablo artık gri başlık, ince satır çizgisi, sağa yaslı sayılar ve gizli kılavuz çizgileriyle sade gelir; yalnız alt başlık varsa ayrı Özet sayfası açılmaz. İsterseniz sohbette (“toplam satırı ekle”, “%20 üstü gecikmeyi kırmızı yap”, “ilk sütunu sabitle”) ya da Excel düzenleyicisindeki yeni Excel biçimi bölümünde hizalama, toplam satırı (filtreye duyarlı SUBTOTAL), en fazla 2 veri çubuğu, sayfa başına en fazla 8 vurgu kuralı, zebra satır ve sabit sütun açabilirsiniz. Renkler yalnız Buyer Log durum tonlarıdır (risk, uyarı, olumlu, bilgi); önizleme dosyayla aynı kuralları gösterir ve kayıtlı Excel şablonları bu biçimi de saklar.",
+        "en": "Excel files created with LCW AI no longer get an automatic striped-row rule on every sheet or data bars on every numeric column. The default table is now plain: grey header, thin row lines, right-aligned numbers and hidden gridlines; a subtitle alone no longer creates a separate Summary sheet. When you want it, ask in the chat (“add a total row”, “make delays above 20% red”, “freeze the first column”) or use the new Excel formatting section of the Excel editor to set alignment, a total row (filter-aware SUBTOTAL), up to 2 data bars, up to 8 highlight rules per sheet, striped rows and frozen columns. Colours are only Buyer Log status tones (risk, warning, positive, info); the preview shows the same rules as the file and saved Excel templates keep this formatting too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-excel-plain-format.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Excel düzenleyicisi önizlemesinde vurgu kuralları, iki veri çubuğu ve toplam satırı olan demo gecikme tablosu",
+          "en": "Demo delay table with highlight rules, two data bars and a total row in the actual Buyer Log Excel editor preview"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, izole demo verisi: biçim Excel biçimi bölümünden açıldı; oran > %20 risk, %10–20 uyarı, “Gecikti” risk, 5 Kasım öncesi termin bilgi tonunda. Biçim istenmeyen sayfalar sade kalır.",
+          "en": "Actual app with isolated demo data: formatting was turned on in the Excel formatting section; rate > 20% is risk, 10–20% warning, “Gecikti” risk and due dates before 5 November info. Sheets without requested formatting stay plain."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-columns-faster",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP kontrol listesi sütunları çok daha hızlı hazırlanır, ekran daha az donar",
+        "en": "CP checklist columns are prepared much faster and the screen freezes far less"
+      },
+      "body": {
+        "tr": "CP açılırken her siparişin hangi kontrol listesi başlıklarına tabi olduğu artık sipariş başına bir kez belirlenir; önceden kurallar her başlık için baştan değerlendiriliyordu. Ortak checklist kaydı yerel cevaplarla aynıysa artık yeniden yazılmaz ve bütün CP kararları boşuna yeniden hesaplanmaz; set/parça bilgisi de bir kez okunur. 24.982 satırlık demo veride tekrar açılışta tarayıcının işlem süresi medyan 122,8 sn'den 31,9 sn'ye, en uzun kesintisiz bekleme 79,2 sn'den 8,8 sn'ye indi; ilk ekran 32,2 sn yerine 13,9 sn'de açıldı. Kontrol listesi hücrelerinin içeriği değişmedi: 174.874 hücre önce ve sonra birebir aynı. Tedarikçi soru seçimi ve checklist e-posta eki hazırlığı da aynı yöntemi kullanır.",
+        "en": "When CP opens, the checklist headings that apply to each order are now determined once per order; previously the rules were re-evaluated for every heading. When the shared checklist record matches the local answers it is no longer rewritten, so all CP decisions are not recomputed needlessly, and set/part information is read once. On 24,982 demo rows, browser processing on a repeat opening fell from a median of 122.8 s to 31.9 s and the longest uninterrupted block from 79.2 s to 8.8 s; the first screen opened in 13.9 s instead of 32.2 s. Checklist cell contents are unchanged: all 174,874 cells are identical before and after. Supplier question selection and checklist email attachment preparation use the same method."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-checklist-columns-faster.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında 24.982 demo siparişin Kontrol Listesi sütunları; her satırda yalnız o siparişe uygulanan başlıklar dolu",
+          "en": "Checklist columns for 24,982 demo orders in the actual Buyer Log CP Tracker; each row fills only the headings that apply to that order"
+        },
+        "caption": {
+          "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000. Süreler aynı makinede üç koşunun medyanıdır (iki ölçüm turu); Windows/Electron ölçümü değildir.",
+          "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000. Timings are medians of three runs on the same machine (two measurement rounds), not a Windows/Electron measurement."
         }
       }
     }

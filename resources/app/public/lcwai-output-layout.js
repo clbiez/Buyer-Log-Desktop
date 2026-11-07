@@ -1040,6 +1040,155 @@
     return { ...l, imageRow: l.imageSize + 6, imageBoxPx: Math.round(l.imageSize * 4 / 3), imageColChars: Math.max(8, Math.round(l.imageSize * 4 / 3 / 7) + 1) };
   }
 
+  /* Excel BİÇİMİ (isteğe bağlı, beyaz liste). Varsayılan çalışma kitabı sadedir:
+     zebra yok, veri çubuğu yok, koşullu biçim yok. Kullanıcı isterse LCW AI ya
+     da düzenleyici yalnız şu seçenekleri açabilir; renkler daima belge
+     paletinin durum tonlarıdır (ok / warn / risk / info), ham stil girmez.
+     Sunucu (output-contracts → output-xlsx) ve düzenleyici önizlemesi aynı
+     doğrulayıcıyı ve aynı kural eşleştiricisini kullanır. */
+  const XLSX_NUMERIC = Object.freeze(['integer', 'number', 'percent', 'currency']);
+  const XLSX_FORMAT = Object.freeze({
+    aligns: Object.freeze(['left', 'center', 'right']),
+    totals: Object.freeze(['sum', 'avg', 'count', 'min', 'max']),
+    ops: Object.freeze(['<', '<=', '>', '>=', '=', '!=', 'between', 'contains']),
+    tones: Object.freeze(['ok', 'warn', 'risk', 'info']),
+    limits: Object.freeze({ rulesPerColumn: 3, rulesPerSheet: 8, bars: 2, freezeColumns: 3, width: [6, 80], text: 120 }),
+  });
+  const OP_ALIAS = { lt: '<', lte: '<=', le: '<=', gt: '>', gte: '>=', ge: '>=', eq: '=', '==': '=', equals: '=', ne: '!=', neq: '!=', '<>': '!=', range: 'between' };
+  const TONE_ALIAS = { good: 'ok', success: 'ok', green: 'ok', warning: 'warn', orange: 'warn', bad: 'risk', danger: 'risk', red: 'risk', blue: 'info' };
+
+  function xlsxTotalsFor(type) {
+    if (XLSX_NUMERIC.includes(type)) return XLSX_FORMAT.totals;
+    if (type === 'date') return ['count', 'min', 'max'];
+    if (type === 'text') return ['count'];
+    return [];
+  }
+  function xlsxOpsFor(type) {
+    if (XLSX_NUMERIC.includes(type) || type === 'date') return ['<', '<=', '>', '>=', '=', '!=', 'between'];
+    if (type === 'text') return ['=', '!=', 'contains'];
+    return [];
+  }
+  function ruleValue(value, type) {
+    if (value == null || value === '') return null;
+    if (XLSX_NUMERIC.includes(type)) {
+      if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+      const text = String(value).trim().replace(/\s/g, '');
+      const percent = text.endsWith('%') || text.startsWith('%');
+      let normalized = text.replace(/%/g, '');
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(normalized)) normalized = normalized.replace(/\./g, '').replace(',', '.');
+      else normalized = normalized.replace(',', '.');
+      const number = Number(normalized);
+      if (!normalized || !Number.isFinite(number)) return null;
+      return percent && type === 'percent' ? number / 100 : number;
+    }
+    if (type === 'date') { const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value)); return match ? `${match[1]}-${match[2]}-${match[3]}` : null; }
+    const text = String(value).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, XLSX_FORMAT.limits.text);
+    return text || null;
+  }
+  function normalizeXlsxRule(raw, type) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    let op = String(raw.op || raw.when || raw.operator || '').trim().toLowerCase();
+    op = OP_ALIAS[op] || op;
+    if (!xlsxOpsFor(type).includes(op)) return null;
+    let tone = String(raw.tone || '').trim().toLowerCase();
+    tone = TONE_ALIAS[tone] || tone;
+    if (!XLSX_FORMAT.tones.includes(tone)) tone = 'risk';
+    const value = ruleValue(raw.value != null ? raw.value : raw.min, type);
+    if (value == null) return null;
+    if (op !== 'between') return { op, value, tone };
+    const value2 = ruleValue(raw.value2 != null ? raw.value2 : raw.max, type);
+    if (value2 == null) return null;
+    return value <= value2 ? { op, value, value2, tone } : { op, value: value2, value2: value, tone };
+  }
+  /* Tek sütunun biçimi: { width?, align?, total?, bar?, highlight? } (yalnız ayarlı alanlar). */
+  function normalizeXlsxColumnFormat(raw, type) {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || type === 'image') return out;
+    const [minW, maxW] = XLSX_FORMAT.limits.width;
+    const width = Number(raw.width);
+    if (Number.isFinite(width) && width > 0) out.width = Math.round(Math.max(minW, Math.min(maxW, width)));
+    const align = String(raw.align || '').toLowerCase();
+    if (XLSX_FORMAT.aligns.includes(align)) out.align = align;
+    const total = String(raw.total || '').toLowerCase().replace(/^average$/, 'avg');
+    if (xlsxTotalsFor(type).includes(total)) out.total = total;
+    if (raw.bar === true && XLSX_NUMERIC.includes(type)) out.bar = true;
+    const rules = (Array.isArray(raw.highlight) ? raw.highlight : raw.highlight ? [raw.highlight] : [])
+      .map(rule => normalizeXlsxRule(rule, type)).filter(Boolean).slice(0, XLSX_FORMAT.limits.rulesPerColumn);
+    if (rules.length) out.highlight = rules;
+    return out;
+  }
+  /* Sayfa düzeyi: { zebra, freezeColumns } + sayfa başına kural / çubuk sınırı.
+     columns normalize edilmiş sütunlardır; sınırı aşan biçim atılır ve uyarı döner. */
+  function normalizeXlsxSheetFormat(raw, columns, fallback) {
+    const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : fallback && typeof fallback === 'object' ? fallback : {};
+    const freeze = Math.floor(Number(source.freezeColumns) || 0);
+    const style = { zebra: source.zebra === true, freezeColumns: Math.max(0, Math.min(XLSX_FORMAT.limits.freezeColumns, Math.max(0, (columns || []).length - 1), freeze)) };
+    const warnings = [];
+    let bars = 0, rules = 0;
+    for (const column of columns || []) {
+      if (column.bar) { if (bars >= XLSX_FORMAT.limits.bars) { delete column.bar; warnings.push('format-bar-dropped'); } else bars++; }
+      if (column.highlight) {
+        const room = Math.max(0, XLSX_FORMAT.limits.rulesPerSheet - rules);
+        if (column.highlight.length > room) { column.highlight = column.highlight.slice(0, room); warnings.push('format-rule-dropped'); }
+        rules += column.highlight.length;
+        if (!column.highlight.length) delete column.highlight;
+      }
+    }
+    return { style, warnings };
+  }
+  /* Kural eşleşmesi (önizleme ve önbellek değeri için; Excel'deki koşulla aynı anlam):
+     boş hücre hiçbir kurala uymaz, metin karşılaştırması büyük/küçük harf duyarsızdır. */
+  function matchXlsxRule(rule, value, type) {
+    if (!rule || value == null || value === '' || (typeof value === 'object')) return false;
+    if (XLSX_NUMERIC.includes(type) || type === 'date') {
+      const v = type === 'date' ? ruleValue(value, 'date') : typeof value === 'number' ? value : null;
+      if (v == null) return false;
+      switch (rule.op) {
+        case '<': return v < rule.value;
+        case '<=': return v <= rule.value;
+        case '>': return v > rule.value;
+        case '>=': return v >= rule.value;
+        case '=': return v === rule.value;
+        case '!=': return v !== rule.value;
+        case 'between': return v >= rule.value && v <= rule.value2;
+        default: return false;
+      }
+    }
+    const text = String(value).toLocaleLowerCase('tr');
+    const target = String(rule.value).toLocaleLowerCase('tr');
+    if (rule.op === '=') return text === target;
+    if (rule.op === '!=') return text !== target;
+    if (rule.op === 'contains') return text.includes(target);
+    return false;
+  }
+  function xlsxToneOf(column, value) {
+    const rule = (column && column.highlight || []).find(item => matchXlsxRule(item, value, column.type));
+    return rule ? rule.tone : '';
+  }
+  /* Toplam satırı değeri (yalnız düz değerlerden; formül hücresi varsa null → Excel hesaplar). */
+  function xlsxTotalValue(kind, values, type) {
+    if (values.some(value => value && typeof value === 'object')) return null;
+    const present = values.filter(value => value != null && value !== '');
+    if (kind === 'count') return type === 'text' ? present.length : present.filter(value => (type === 'date' ? ruleValue(value, 'date') != null : typeof value === 'number')).length;
+    if (type === 'date') {
+      const dates = present.map(value => ruleValue(value, 'date')).filter(Boolean).sort();
+      if (!dates.length) return null;
+      return kind === 'min' ? dates[0] : kind === 'max' ? dates[dates.length - 1] : null;
+    }
+    const numbers = present.filter(value => typeof value === 'number');
+    if (!numbers.length) return kind === 'sum' ? 0 : null;
+    if (kind === 'sum') return numbers.reduce((sum, value) => sum + value, 0);
+    if (kind === 'avg') return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+    if (kind === 'min') return Math.min(...numbers);
+    if (kind === 'max') return Math.max(...numbers);
+    return null;
+  }
+  function xlsxAlign(column) {
+    if (column && column.align) return column.align;
+    if (column && column.type === 'image') return 'center';
+    return column && (XLSX_NUMERIC.includes(column.type) || column.type === 'date') ? 'right' : 'left';
+  }
+
   // Commands change presentation state only. Unknown or invalid commands reject the entire batch.
   function applyOperations(raw, actions, { fields = [], tokens = [] } = {}) {
     if (!Array.isArray(actions) || !actions.length || actions.length > 24) throw Error('Invalid layout operations.');
@@ -1117,6 +1266,7 @@
 
   return {
     SPEC, FLAGS, PRESETS, SLIDE, PAGE, PAPERS, pageSize, normalizeStudio, applyOperations, presentationReport, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics,
+    XLSX_FORMAT, xlsxTotalsFor, xlsxOpsFor, normalizeXlsxRule, normalizeXlsxColumnFormat, normalizeXlsxSheetFormat, matchXlsxRule, xlsxToneOf, xlsxTotalValue, xlsxAlign,
     fieldKey, normalizeCardFields, normalizeGroupBy, normalizeGroupBreak, pageDepth, normalizePageTitle, fieldValue, pageValue, customTitle, regroupItems, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, fitLabel, packGroups, galleryPages, expandGalleries,
     applyCardFields, decorateGroups, regroupReport, reportTitles, prepareReport,
   };
