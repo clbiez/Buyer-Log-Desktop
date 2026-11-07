@@ -98,12 +98,14 @@ test('v9.46 sunucu: MAG/MMYG ve priority analiz için taşınır, Excel şablonu
 test('v9.46 iş mantığı görünümde DEĞİL: eşik ve sınıflandırma motorda kalır', () => {
   // Görünüm kendi gecikme kuralını yazmamalı.
   assert.doesNotMatch(VIEW, /EXPECTED_LATE\s*=|deliveryOutcome\s*=\s*['"]/, 'sınıflandırma görünümde üretilmemeli');
-  assert.match(VIEW, /Engine\.analyze\(/);
+  assert.doesNotMatch(VIEW, /Engine\.analyze\(/, 'ağır hesap renderer üzerinde çalışmamalı');
+  assert.match(VIEW, /new Worker\(WORKER_URL\)/);
+  assert.match(read('public/backlog-delivery-worker.js'), /Engine\.analyze\(/);
   assert.match(VIEW, /Insights\.build\(/);
 });
 
 test('v9.46 AI iş mantığı yok: analiz zinciri tamamen deterministik', () => {
-  for (const file of ['public/backlog-delivery-engine.js', 'public/backlog-delivery-insights.js', 'public/backlog-delivery-analysis.js']) {
+  for (const file of ['public/backlog-delivery-engine.js', 'public/backlog-delivery-insights.js', 'public/backlog-delivery-analysis.js', 'public/backlog-delivery-worker.js']) {
     const source = read(file);
     assert.doesNotMatch(source, /\/api\/copilot|BLCopilot|octopus/i, `${file} AI çağrısı içermemeli`);
   }
