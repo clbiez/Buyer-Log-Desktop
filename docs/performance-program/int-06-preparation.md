@@ -1,11 +1,11 @@
 # INT-06 — checkpoint hazırlığı / checkpoint preparation (P1)
 
-TR: Güncel devir ve Faz 7 kapısı: [kaynak uyumu raporu](int-06-source-alignment.md).
+TR: Güncel devir ve Faz 7 kapısı: [#885 sonrası Main uyumluluğu](int-06-post-885-compatibility.md).
 #890 hazırlığı devralındı; yeniden üretilmedi. #885 sonrası Main gerekli olmakla
 birlikte tek başına uygulama izni değildir: üretim uygulaması **programın Faz 7
 sırasını** bekler. Aşağıdaki ilk provanın tarihsel kanıtları aynen korunur.
 
-EN: Current handoff and Phase 7 gate: [source alignment report](int-06-source-alignment.md).
+EN: Current handoff and Phase 7 gate: [post-#885 Main compatibility](int-06-post-885-compatibility.md).
 The existing #890 preparation was inherited, not regenerated. Post-#885 Main is
 necessary but does not itself authorize implementation: production work waits
 for **the program's Phase 7 sequence**. Historical rehearsal evidence below is retained.

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "stage": "post-885-main-compatibility",
+  "inheritedHead": "be2f0636d340fffb7c11d6573694b4c354a33d6b",
+  "mergedMain": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "validatedMergeCommit": "d58d85f2048462484455ae2cc9f5cd7c21f55709",
+  "measuredPathUnchanged": true,
+  "newBenchmarkCampaign": false,
+  "productionOptimizationImplemented": false,
+  "historicalReportsRelabelled": false,
+  "validation": {
+    "targeted": {
+      "files": 4,
+      "tests": 100,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "i18n": {
+      "new": 0,
+      "baseline": 0
+    },
+    "releaseNotes": {
+      "passed": 38
+    },
+    "fullRegression": {
+      "status": "not-run",
+      "required": "Phase 6 / final program PR; unfiltered npm test on pinned base + implementation SHAs"
+    }
+  },
+  "openAcceptanceGates": [
+    "incremental counters, batch journal and periodic atomic snapshot",
+    "partial tails, duplicate replay, snapshot write/rename and compaction interruptions",
+    "old checkpoint read and safe rollback from the new format",
+    "complete final manifest/orderStates equivalence",
+    "real fresh 3+3 before/after for 30k/100k steady and split/retry with identical current #892 code"
+  ],
+  "independentReview": {
+    "newRoundPerformed": false,
+    "uncoveredCodeDelta": "3766f49e59180b1a4443bd40a7e3998d3d2e562a..aef416e5db3560990116da9661d7ef8b7eeb9a33",
+    "compatibilityDelta": "be2f0636d340fffb7c11d6573694b4c354a33d6b..d58d85f2048462484455ae2cc9f5cd7c21f55709 plus documentation and validation evidence"
+  },
+  "files": {
+    "i18n.log": {
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+      "bytes": 333
+    },
+    "release-notes.log": {
+      "sha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd",
+      "bytes": 334
+    },
+    "source-audit.json": {
+      "sha256": "4a400b9b4f4687a19031d6af3630be80d2f5701debb13984d4b35d84b6d49fb7",
+      "bytes": 16935
+    },
+    "targeted.log": {
+      "sha256": "87606cfdc5997d373762bb79f47c1c5d832c136262eb0eadde09e3781f0eee82",
+      "bytes": 9650
+    }
+  }
+}

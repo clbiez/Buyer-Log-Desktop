@@ -1,5 +1,13 @@
 # INT-06 — kaynak uyumu devri / source alignment handoff
 
+TR: Bu belge #892 sonrası tarihsel hazırlık devridir. Güncel kaynak uyumu ve
+açık kabul kapıları: [#885 sonrası Main uyumluluğu](int-06-post-885-compatibility.md).
+Aşağıdaki ölçümler kendi kaynak SHA'larına aittir; güncel Main'e yeniden etiketlenmez.
+
+EN: This document records the historical post-#892 preparation handoff. See
+[post-#885 Main compatibility](int-06-post-885-compatibility.md) for current source
+alignment and open gates. Measurements below retain their original source SHAs.
+
 TR: **Yalnız hazırlık.** #890 head `e31e4bb2699d4d89cf54a1f50ccb6ed6422f9e06`
 devralındı; mevcut fixture, oracle, test ve kanıtlar korundu. Main
 `5a1656e98deeb573f6245f4b24a8135cc77a0d7b` (#892) normal merge ile alındı.
