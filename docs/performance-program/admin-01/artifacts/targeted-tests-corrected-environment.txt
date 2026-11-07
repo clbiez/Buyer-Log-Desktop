@@ -1,0 +1,99 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js backup full-system-restore user-restore
+
+[Buyer Log tests] 12 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (12 dosya)
+✔ ADMIN-01 harness: nearest-rank p95, medians and all failed HTTP attempts remain visible (3.220104ms)
+✔ ADMIN-01 fixture: deterministic bytes, known CRC/SHA vectors and restored multi-chunk/empty entries (213.838869ms)
+✔ ADMIN-01 snapshot: source mutation between entries is rejected (59.089174ms)
+✔ ADMIN-01 snapshot: a source changed during its stream is rejected (14.871657ms)
+✔ ADMIN-01 snapshot: mutations after snapshot boundary cannot change archived bytes (104.20782ms)
+✔ ADMIN-01 integrity: valid CRC with wrong manifest SHA is still rejected (127.711413ms)
+✔ ADMIN-01 interruption: rejected progress cannot return success; partial ZIP is rejected (107.64199ms)
+✔ ADMIN-01 interruption: process death before ZIP publication leaves no completed archive (100.329359ms)
+✔ ADMIN-01 restore cancellation: incomplete entry is not committed and temporary bytes are removed (66.76026ms)
+✔ legacy backup restore ayrı worker içinde çalışır ve ana olay döngüsünü serbest bırakır (255.956374ms)
+✔ legacy restore route worker kullanır ve transaction boyunca diğer yazmaları kilitler (7.679319ms)
+✔ v7.57 · user backup yalnız oturum sahibinin veri ve tarayıcı tercihlerini seçer (2.438841ms)
+✔ v7.57 · moderator full backup rol/yetki ilişkilerini içerir, hassas alanları çıkarır (1.458844ms)
+✔ v7.57 · backup kaynak veriyi değiştirmez, manifest ve checksum doğrulanır (19.341176ms)
+✔ v7.57 · bozuk veya yarım backup başarı sayılmaz (16.638401ms)
+✔ v7.57 · sıfır baytlık dosya backup preflight ve extract sırasında geçerli kayıttır (11.270441ms)
+✔ v7.57 · büyük veri stream edilir ve UI polling ile kilitlenmez (132.468ms)
+✔ v7.82 · backup config Central IAM açıkken runtime henüz kapalı olsa da kullanıcılar restart-safe recovery seed olur (130.70297ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.81 · Central IAM offline yeni PC restore kullanıcıları recovery seed olarak görünür tutar (124.672885ms)
+✔ v7.83 · 441 kullanıcı restore seed legacy 47-kullanıcı auth deposu tarafından küçültülmez (352.574437ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.84 · Central IAM .bak içindeki 47 kullanıcı restore edilen 441-kullanıcı seedini ezmez (516.331432ms)
+✔ v7.80 · Full System Restore ZIP preflight manifest, checksum ve türü gerçekten doğrular (93.379102ms)
+✔ v7.80 · preflight kullanıcı/rol ve ASAS-IAS-INTAKE bağlantı sözleşmesini canlı veriye dokunmadan raporlar (37.655698ms)
+✔ v7.80 · preflight disk hesabı optional safety backup kapalıyken gereksiz ikinci sistem kopyasını istemez (53.024579ms)
+✔ v7.80 · modelConnections ASAS-IAS-INTAKE ve Horizon alanları byte-kopyaya güvenmeden deep-compare edilir (77.453017ms)
+✔ v7.80 · post-restore bağlantı health hatası rollback yapmaz, yapılandırma ile erişilebilirliği ayırır (68.918602ms)
+✔ v7.80 · temiz/yeni PC benzetiminde full restore data + DB + config + security + sync taşır, machine-specific local path taşınmaz (112.920905ms)
+✔ v7.80 · full restore boş canonical Master yerine legacy royalty, yol süresi ve e-posta kayıtlarını yükseltir (90.692927ms)
+✔ business restore preserves installed updater trust and accepted sequence even in an old archive (71.820656ms)
+✔ startup recovery from an old business restore cannot lower the installed patch watermark (3.145304ms)
+✔ v7.80 · restore öncesi indirilebilir Tam Sistem güvenlik yedeği kullanıcı tercihiyle atlanabilir (44.825063ms)
+✔ v7.80 · güvenlik yedeği kapalı olsa da commit hatasında geçici rollback snapshot sistemi geri getirir (51.894711ms)
+✔ v7.80 · commit ortasında hata olursa mevcut sistem dosya + config + auth + sync olarak rollback edilir (68.183282ms)
+✔ v7.80 · yeni uygulamadan alınmış backup eski Buyer Log üzerine restore edilmez (14.294415ms)
+✔ v7.80 · açılış recovery journal committing durumunu görürse önceki sistemi otomatik geri koyar (2.403669ms)
+✔ v7.80 · config restore hassas değerleri ve bu bilgisayarın yerel pathlerini korur (0.210641ms)
+✔ v7.80 · checksum bozulmuş Full System Backup canlı sisteme dokunmadan reddedilir (11.912529ms)
+✔ v7.80 · commit öncesi iptal canlı veriyi değiştirmez ve write-lock almaz (26.848967ms)
+✔ v7.80 · server ve Backup UI gerçek inspect/start/status/cancel/restart akışını bağlıyor (4.263845ms)
+✔ v7.80 · staging progress arşiv boyutundan bağımsız gerçek byte ve dosya sayaçları üretir (42.326254ms)
+✔ v7.80 · ZIP traversal, absolute, UNC, symlink ve Windows reparse kayıtlarını preflight reddeder (3.593205ms)
+✔ v7.80 · farklı ZIP adları aynı normalize hedefe çözülüyorsa duplicate target reddedilir (1.464001ms)
+✔ v7.80 · wrapper klasörü + directory entry + deflate/data-descriptor içeren Full Backup güvenle normalize edilir (23.689157ms)
+✔ v7.80 · wrapper klasörlü standart ZIP gerçek Full Restore akışında da çalışır (44.016033ms)
+✔ v7.80 · backup verisi içindeki ek manifest.json dosyaları ana manifest ile karıştırılmaz (16.005251ms)
+✔ v7.80 · wrapper altında nested manifest.json dosyaları varken köke en yakın manifest ana backup manifesti seçilir (14.127779ms)
+✔ v7.80 · çok dosyalı multi-GB backup için manifest limiti dosya sayısıyla ölçeklenir ve 64 MB güvenlik tavanında kalır (0.354303ms)
+✔ v7.80 · 2 MB eski sınırını aşan geçerli Full Backup manifesti restore preflight tarafından kabul edilir (82.512483ms)
+✔ v7.80 · Full Restore manifestinde tanımsız içerik sessizce atlanmaz (18.787139ms)
+✔ v7.80 · canlı sunucu Full Restore servisine taşınabilir config hedefini verir (2.308298ms)
+✔ backup sensitivity predicate covers auth, audit, key and credential material (1.844514ms)
+✔ legacy v2 export carries business data but no secret/auth/AI key material; config is sanitized (16.76965ms)
+✔ legacy restore brings business data back and never overwrites or deletes current secrets (12.907286ms)
+✔ crafted legacy v1 backup cannot inject accounts, keys or config secrets (7.05761ms)
+✔ legacy v1 export is sanitized the same way (3.812649ms)
+✔ legacy full-system backup routes are moderator-only (3.324008ms)
+✔ selective backup defaults preserve the previous personal-backup scope (1.741461ms)
+✔ restore preflight reads explicit component manifest and supports legacy inference (0.276759ms)
+✔ backup service writes selected scope to manifest and CP dates are moderator-only (0.292442ms)
+✔ CP Ex-Factory restore is field-scoped and preserves retail/in-store date data (0.375414ms)
+✔ personal restore applies only selected components and rolls back the same scope (0.427682ms)
+✔ backup modal exposes separate backup and restore scope selectors (0.159456ms)
+✔ personal data is kept out of ordinary shared business delta sync (1.67305ms)
+✔ shared personal backup writes a restorable user ZIP and deduplicates unchanged snapshots (47.59285ms)
+✔ changed personal data creates a new version and old versions are bounded (109.899665ms)
+✔ no Shared Hub means local operation continues without a network backup (1.080836ms)
+✔ personal backup UI exposes Restore My Data for every signed-in user (1.155756ms)
+✔ personal restore is scoped to the current user and validates user backup type (0.204011ms)
+✔ shared FX is not part of new personal backups or personal restore (0.187537ms)
+✔ server exposes streamed personal restore inspect, start and status routes (0.46725ms)
+✔ personal preference and profile stores have explicit restore entry points (0.52112ms)
+✔ personal Collection restore remains in the signed-in owner workspace (0.380552ms)
+✔ personal restore explains which royalty and email data can and cannot return from a user backup (0.176501ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1655.867029
+[Buyer Log tests] Batch 1/1 süresi: 1.7s.
+
+[Buyer Log tests] PASS — 12 test dosyası (1.7s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

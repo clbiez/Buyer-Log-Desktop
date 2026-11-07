@@ -1,0 +1,167 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js backup full-system-restore user-restore
+
+[Buyer Log tests] 12 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (12 dosya)
+✔ ADMIN-01 harness: nearest-rank p95, medians and all failed HTTP attempts remain visible (3.08223ms)
+✔ ADMIN-01 fixture: deterministic bytes, known CRC/SHA vectors and restored multi-chunk/empty entries (239.491079ms)
+✔ ADMIN-01 snapshot: source mutation between entries is rejected (41.035879ms)
+✔ ADMIN-01 snapshot: a source changed during its stream is rejected (17.3539ms)
+✔ ADMIN-01 snapshot: mutations after snapshot boundary cannot change archived bytes (125.951699ms)
+✔ ADMIN-01 integrity: valid CRC with wrong manifest SHA is still rejected (178.708455ms)
+✔ ADMIN-01 interruption: rejected progress cannot return success; partial ZIP is rejected (107.421676ms)
+✔ ADMIN-01 interruption: process death before ZIP publication leaves no completed archive (92.543484ms)
+✔ ADMIN-01 restore cancellation: incomplete entry is not committed and temporary bytes are removed (97.615427ms)
+✔ legacy backup restore ayrı worker içinde çalışır ve ana olay döngüsünü serbest bırakır (248.517659ms)
+✔ legacy restore route worker kullanır ve transaction boyunca diğer yazmaları kilitler (7.882778ms)
+✔ v7.57 · user backup yalnız oturum sahibinin veri ve tarayıcı tercihlerini seçer (2.549684ms)
+✔ v7.57 · moderator full backup rol/yetki ilişkilerini içerir, hassas alanları çıkarır (1.331746ms)
+✔ v7.57 · backup kaynak veriyi değiştirmez, manifest ve checksum doğrulanır (25.718837ms)
+✔ v7.57 · bozuk veya yarım backup başarı sayılmaz (19.431736ms)
+✔ v7.57 · sıfır baytlık dosya backup preflight ve extract sırasında geçerli kayıttır (20.344003ms)
+✔ v7.57 · büyük veri stream edilir ve UI polling ile kilitlenmez (354.413189ms)
+✖ v7.82 · backup config Central IAM açıkken runtime henüz kapalı olsa da kullanıcılar restart-safe recovery seed olur (134.540963ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✖ v7.81 · Central IAM offline yeni PC restore kullanıcıları recovery seed olarak görünür tutar (129.012266ms)
+✖ v7.83 · 441 kullanıcı restore seed legacy 47-kullanıcı auth deposu tarafından küçültülmez (231.840102ms)
+✖ v7.84 · Central IAM .bak içindeki 47 kullanıcı restore edilen 441-kullanıcı seedini ezmez (261.879304ms)
+✔ v7.80 · Full System Restore ZIP preflight manifest, checksum ve türü gerçekten doğrular (73.191311ms)
+✔ v7.80 · preflight kullanıcı/rol ve ASAS-IAS-INTAKE bağlantı sözleşmesini canlı veriye dokunmadan raporlar (60.147422ms)
+✔ v7.80 · preflight disk hesabı optional safety backup kapalıyken gereksiz ikinci sistem kopyasını istemez (74.562861ms)
+✔ v7.80 · modelConnections ASAS-IAS-INTAKE ve Horizon alanları byte-kopyaya güvenmeden deep-compare edilir (97.553987ms)
+✔ v7.80 · post-restore bağlantı health hatası rollback yapmaz, yapılandırma ile erişilebilirliği ayırır (64.562341ms)
+✔ v7.80 · temiz/yeni PC benzetiminde full restore data + DB + config + security + sync taşır, machine-specific local path taşınmaz (67.005873ms)
+✔ v7.80 · full restore boş canonical Master yerine legacy royalty, yol süresi ve e-posta kayıtlarını yükseltir (65.191544ms)
+✔ business restore preserves installed updater trust and accepted sequence even in an old archive (51.491792ms)
+✔ startup recovery from an old business restore cannot lower the installed patch watermark (8.064557ms)
+✔ v7.80 · restore öncesi indirilebilir Tam Sistem güvenlik yedeği kullanıcı tercihiyle atlanabilir (47.64657ms)
+✔ v7.80 · güvenlik yedeği kapalı olsa da commit hatasında geçici rollback snapshot sistemi geri getirir (53.621461ms)
+✔ v7.80 · commit ortasında hata olursa mevcut sistem dosya + config + auth + sync olarak rollback edilir (54.388192ms)
+✔ v7.80 · yeni uygulamadan alınmış backup eski Buyer Log üzerine restore edilmez (14.220276ms)
+✔ v7.80 · açılış recovery journal committing durumunu görürse önceki sistemi otomatik geri koyar (2.113761ms)
+✔ v7.80 · config restore hassas değerleri ve bu bilgisayarın yerel pathlerini korur (0.290589ms)
+✔ v7.80 · checksum bozulmuş Full System Backup canlı sisteme dokunmadan reddedilir (10.72898ms)
+✔ v7.80 · commit öncesi iptal canlı veriyi değiştirmez ve write-lock almaz (25.623013ms)
+✔ v7.80 · server ve Backup UI gerçek inspect/start/status/cancel/restart akışını bağlıyor (4.574444ms)
+✔ v7.80 · staging progress arşiv boyutundan bağımsız gerçek byte ve dosya sayaçları üretir (47.249153ms)
+✔ v7.80 · ZIP traversal, absolute, UNC, symlink ve Windows reparse kayıtlarını preflight reddeder (3.138934ms)
+✔ v7.80 · farklı ZIP adları aynı normalize hedefe çözülüyorsa duplicate target reddedilir (1.606743ms)
+✔ v7.80 · wrapper klasörü + directory entry + deflate/data-descriptor içeren Full Backup güvenle normalize edilir (28.565466ms)
+✔ v7.80 · wrapper klasörlü standart ZIP gerçek Full Restore akışında da çalışır (47.309151ms)
+✔ v7.80 · backup verisi içindeki ek manifest.json dosyaları ana manifest ile karıştırılmaz (18.972312ms)
+✔ v7.80 · wrapper altında nested manifest.json dosyaları varken köke en yakın manifest ana backup manifesti seçilir (18.254623ms)
+✔ v7.80 · çok dosyalı multi-GB backup için manifest limiti dosya sayısıyla ölçeklenir ve 64 MB güvenlik tavanında kalır (0.378859ms)
+✔ v7.80 · 2 MB eski sınırını aşan geçerli Full Backup manifesti restore preflight tarafından kabul edilir (89.966259ms)
+✔ v7.80 · Full Restore manifestinde tanımsız içerik sessizce atlanmaz (22.000998ms)
+✔ v7.80 · canlı sunucu Full Restore servisine taşınabilir config hedefini verir (2.669271ms)
+✔ backup sensitivity predicate covers auth, audit, key and credential material (1.873536ms)
+✔ legacy v2 export carries business data but no secret/auth/AI key material; config is sanitized (16.767006ms)
+✔ legacy restore brings business data back and never overwrites or deletes current secrets (15.886897ms)
+✖ crafted legacy v1 backup cannot inject accounts, keys or config secrets (6.53545ms)
+✔ legacy v1 export is sanitized the same way (2.12676ms)
+✔ legacy full-system backup routes are moderator-only (4.421849ms)
+✔ selective backup defaults preserve the previous personal-backup scope (3.256398ms)
+✔ restore preflight reads explicit component manifest and supports legacy inference (0.429895ms)
+✔ backup service writes selected scope to manifest and CP dates are moderator-only (0.504945ms)
+✔ CP Ex-Factory restore is field-scoped and preserves retail/in-store date data (0.499067ms)
+✔ personal restore applies only selected components and rolls back the same scope (0.437015ms)
+✔ backup modal exposes separate backup and restore scope selectors (0.222519ms)
+✔ personal data is kept out of ordinary shared business delta sync (1.235605ms)
+✔ shared personal backup writes a restorable user ZIP and deduplicates unchanged snapshots (65.39841ms)
+✔ changed personal data creates a new version and old versions are bounded (153.405361ms)
+✔ no Shared Hub means local operation continues without a network backup (1.323143ms)
+✔ personal backup UI exposes Restore My Data for every signed-in user (1.309503ms)
+✔ personal restore is scoped to the current user and validates user backup type (0.209429ms)
+✔ shared FX is not part of new personal backups or personal restore (0.19628ms)
+✔ server exposes streamed personal restore inspect, start and status routes (0.90071ms)
+✔ personal preference and profile stores have explicit restore entry points (0.623341ms)
+✔ personal Collection restore remains in the signed-in owner workspace (0.370587ms)
+✔ personal restore explains which royalty and email data can and cannot return from a user backup (0.248117ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 68
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1829.58914
+
+✖ failing tests:
+
+test at tests/full-system-restore-users-config-v782.test.js:9:1
+✖ v7.82 · backup config Central IAM açıkken runtime henüz kapalı olsa da kullanıcılar restart-safe recovery seed olur (134.540963ms)
+  Error: Kalıcı yazma hedefi izin verilen veri alanlarının dışında: /tmp/buyerlog-restore-users-config-gJ6dvO/auth/user-access.json
+      at durableWriterFor (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:101:68)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:174:3)
+      at atomicWriteJson (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:176:41)
+      at Object.restoreBackupSnapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/user-access.js:2475:5)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-config-v782.test.js:39:35)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'DATA_INTEGRITY_ERROR'
+  }
+
+test at tests/full-system-restore-users-v781.test.js:9:1
+✖ v7.81 · Central IAM offline yeni PC restore kullanıcıları recovery seed olarak görünür tutar (129.012266ms)
+  Error: Kalıcı yazma hedefi izin verilen veri alanlarının dışında: /tmp/buyerlog-restore-users-6sRgXg/auth/user-access.json
+      at durableWriterFor (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:101:68)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:174:3)
+      at atomicWriteJson (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:176:41)
+      at Object.restoreBackupSnapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/user-access.js:2475:5)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v781.test.js:39:35)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'DATA_INTEGRITY_ERROR'
+  }
+
+test at tests/full-system-restore-users-v783.test.js:31:1
+✖ v7.83 · 441 kullanıcı restore seed legacy 47-kullanıcı auth deposu tarafından küçültülmez (231.840102ms)
+  Error: Kalıcı yazma hedefi izin verilen veri alanlarının dışında: /tmp/buyerlog-restore-441-47-ao6HGd/auth/user-access.json
+      at durableWriterFor (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:101:68)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:174:3)
+      at atomicWriteJson (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:176:41)
+      at Object.restoreBackupSnapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/user-access.js:2475:5)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v783.test.js:69:35)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'DATA_INTEGRITY_ERROR'
+  }
+
+test at tests/full-system-restore-users-v784.test.js:25:1
+✖ v7.84 · Central IAM .bak içindeki 47 kullanıcı restore edilen 441-kullanıcı seedini ezmez (261.879304ms)
+  Error: Kalıcı yazma hedefi izin verilen veri alanlarının dışında: /tmp/buyerlog-restore-central-bak-BIil0I/auth/user-access.json
+      at durableWriterFor (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:101:68)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:174:3)
+      at atomicWriteJson (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:176:41)
+      at Object.restoreBackupSnapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/user-access.js:2475:5)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v784.test.js:52:35)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'DATA_INTEGRITY_ERROR'
+  }
+
+test at tests/security-legacy-backup-v20261003.test.js:116:1
+✖ crafted legacy v1 backup cannot inject accounts, keys or config secrets (6.53545ms)
+  Error: Kalıcı yazma hedefi izin verilen veri alanlarının dışında: /tmp/buyerlog-legacy-backup-sec-jxH91c/config.json
+      at durableWriterFor (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:101:68)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:174:3)
+      at Object.restoreBackup (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:444:33)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/security-legacy-backup-v20261003.test.js:133:27)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    code: 'DATA_INTEGRITY_ERROR'
+  }
+[Buyer Log tests] Batch 1/1 süresi: 1.9s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
