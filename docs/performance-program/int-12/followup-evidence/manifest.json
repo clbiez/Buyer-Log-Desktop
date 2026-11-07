@@ -74,7 +74,7 @@
   ],
   "lockOverlap": [],
   "files": {
-    "docs/performance-program/int-12/FOLLOWUP.md": "6f377238c4534e0ebfbceaeb5536f955f6a4a4ec749e45877b2cce9ac64991ed",
+    "docs/performance-program/int-12/FOLLOWUP.md": "f99ae384463d57c7de00d1e2a7c4aa441787bb7afe120c71e75a339f0ed9fe13",
     "docs/performance-program/int-12/README.md": "32598770d6e2bb4ea44f2b3dc5308943f587d363800c314880813d3700ee46cd",
     "docs/performance-program/int-12/followup-evidence/ab-3pairs/manifest.json": "e2f3d11bc83fc54843c9f1f552071b21306629710fd87bab9c19d76a164a38c4",
     "docs/performance-program/int-12/followup-evidence/ab-3pairs/pair-1-auth-fatal-width-1.json": "f8b9a175e2a12518127107f45aba7a50d21b689b7da7c44e7de5422e38be7c07",
@@ -169,7 +169,7 @@
     "docs/performance-program/int-12/followup-evidence/ab-3pairs/pair-3-throttle-width-2.json": "6e5d7c6dd6d04ba933251d020fd6b542a7fd05c065c957223e064f4167ac63a9",
     "docs/performance-program/int-12/followup-evidence/ab-3pairs/preflight.json": "522d605213bd0e5ea8e3e8ffae08cd231660c3d4509e3355c1c3c564797a6c9e",
     "docs/performance-program/int-12/followup-evidence/ab-3pairs/summary.json": "bad9e4ce45524ca71fe5e7eb6ed323d0f0c3a66de097fec4588c047cc6bebaec",
-    "docs/performance-program/int-12/followup-evidence/ab-3pairs.log": "4430698037e5b2c2259e5563908704dd3fb39b378f1f5796f00dc340801c4df9",
+    "docs/performance-program/int-12/followup-evidence/ab-3pairs.txt": "4430698037e5b2c2259e5563908704dd3fb39b378f1f5796f00dc340801c4df9",
     "docs/performance-program/int-12/followup-evidence/diagnosis-comparison.json": "fe32e19251e5eb6a5f029614d56dc9c5ad3036f270643598b5a9c7fc540e6b2a",
     "docs/performance-program/int-12/followup-evidence/green-gate.json": "d54bdcabaf9c1cfcbc4a65f8f5c061e0b79122e625796f638e8439d72085d5df",
     "docs/performance-program/int-12/followup-evidence/i18n.txt": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",

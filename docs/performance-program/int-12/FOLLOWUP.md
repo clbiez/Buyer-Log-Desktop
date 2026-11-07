@@ -99,7 +99,7 @@ TR: **Ödünleşim gizlenmedi:** cancel/revoke-response/revoke-recovery'de aday 
 
 EN: **The tradeoff is explicit:** cancel/revoke-response/revoke-recovery start a second speculative report before the event, versus one serial report. That extra response is not accepted into cache/snapshot, and native result/receipt equivalence passes. Existing batching/cache already avoid substantial work; all-fresh execution shows small paired overhead. Shared real login state, adversarial response/commit interleavings and enterprise load remain unverified production gates.
 
-Ham örnekler / raw samples: [ab-3pairs](followup-evidence/ab-3pairs), [özet / summary](followup-evidence/ab-3pairs/summary.json), [manifest](followup-evidence/ab-3pairs/manifest.json), [koşu günlüğü / log](followup-evidence/ab-3pairs.log). Manifest her ham JSON'un SHA-256'sını içerir / contains every raw JSON hash.
+Ham örnekler / raw samples: [ab-3pairs](followup-evidence/ab-3pairs), [özet / summary](followup-evidence/ab-3pairs/summary.json), [manifest](followup-evidence/ab-3pairs/manifest.json), [koşu günlüğü / log](followup-evidence/ab-3pairs.txt). Manifest her ham JSON'un SHA-256'sını içerir / contains every raw JSON hash.
 
 ## 4. Doğrulama, inceleme ve kalan sınırlar / Validation and remaining gates
 
