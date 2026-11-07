@@ -65,14 +65,17 @@
   }
   function absorb(data) {
     if (!data) return;
-    if (Array.isArray(data.countries)) S.data.countries = data.countries;
-    if (Array.isArray(data.types)) S.data.types = data.types;
-    if (Array.isArray(data.records)) S.data.records = data.records;
-    if (data.revision != null) S.data.revision = data.revision;
-    if (data.lockTtlMs) S.data.lockTtlMs = data.lockTtlMs;
-    if (data.currentUserId) S.currentUserId = data.currentUserId;
-    const signature=JSON.stringify({data:S.data,currentUserId:S.currentUserId});
+    const next = { ...S.data };
+    if (Array.isArray(data.countries)) next.countries = data.countries;
+    if (Array.isArray(data.types)) next.types = data.types;
+    if (Array.isArray(data.records)) next.records = data.records;
+    if (data.revision != null) next.revision = data.revision;
+    if (data.lockTtlMs) next.lockTtlMs = data.lockTtlMs;
+    const currentUserId = data.currentUserId || S.currentUserId;
+    const signature=JSON.stringify({data:next,currentUserId});
     if(signature===snapshotSignature){directoryLoadedAt=Date.now();return false;}
+    Object.assign(S.data, next);
+    S.currentUserId = currentUserId;
     snapshotSignature=signature;
     rebuildDirectory();
     const classification=JSON.stringify(S.data.records.filter(record=>record.dtrStatus==='NON-DTR').map(record=>[record.manufacturer,...(record.aliases||[])]).sort());

@@ -1299,8 +1299,8 @@
         "en": "Directory selection and editing avoid rebuilding the list"
       },
       "body": {
-        "tr": "Rehberde kayıt seçimi yalnız ayrıntıyı günceller. Liste konumu ve aktif düzenleme alanındaki taslak korunur. Yeni rehber veya kilit bilgisi geldiğinde görünüm yenilenir; kayıt ve kilit denetimleri aynı kalır.",
-        "en": "Selecting a directory record updates only its detail. List position and the draft in the active edit field are preserved. New directory or lock information refreshes the view; save and lock checks stay the same."
+        "tr": "Rehberde kayıt seçimi yalnız ayrıntıyı günceller. Liste konumu ve aktif düzenleme alanındaki taslak korunur. Yeni rehber veya kilit bilgisi geldiğinde görünüm yenilenir; kayıt ve kilit denetimleri aynı kalır. İçeriği değişmeyen rehber okumaları da listeyi geçersiz kılmaz.",
+        "en": "Selecting a directory record updates only its detail. List position and the draft in the active edit field are preserved. New directory or lock information refreshes the view; save and lock checks stay the same. Directory reads with unchanged content also retain the existing list."
       },
       "visual": {
         "kind": "screenshot",
