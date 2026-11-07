@@ -16,6 +16,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
   const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
+  const lflDescriptors=new WeakSet(),lflAdmissions=new Map();
   const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
   async function discard(record){
     if(record.removing||record.pins||!record.retired)return;
@@ -142,6 +143,38 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     const paramsBytes=serializeForTransfer({descriptor,maxOutputLength:rawBytes}),inputBytes=paramsBytes.byteLength+1024;
     return pool.run('endeksmatik-legacy-status',{paramsBytes},{ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+rawBytes*8,inputBytes,transferList:[paramsBytes]});
   }
+  async function collectionLflSource(ownerId){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const descriptor=await require('./compute-snapshot-descriptor').collectionLflDescriptor(ownerId);lflDescriptors.add(descriptor);return descriptor;
+  }
+  async function runCollectionLfl(task,descriptor,params={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    if(!['collection-lfl-source-info','collection-lfl-references'].includes(task))throw failure('COMPUTE_JOB_INVALID');
+    if(!lflDescriptors.has(descriptor)||String(params.access?.userId)!==descriptor.ownerId)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
+    const ownerKey='collection-lfl:'+descriptor.ownerId,generation=descriptor.generation;
+    // Serialize only the check/admission. An old request cannot roll the pool
+    // generation back while a newer snapshot is being admitted.
+    const prior=lflAdmissions.get(ownerKey)||Promise.resolve();
+    const admission=prior.catch(()=>{}).then(async()=>{
+      await require('./compute-snapshot-descriptor').assertCollectionLflDescriptor(descriptor);
+      if(closed)throw failure('COMPUTE_POOL_CLOSED');
+      const started=performance.now(),paramsBytes=serializeForTransfer({...params,access:accessForTask(params.access,task)});
+      const paramsSerializeMs=performance.now()-started,inputBytes=paramsBytes.byteLength+1024;
+      pool.setGeneration(ownerKey,generation);
+      const promise=pool.run(task,{ownerId:descriptor.ownerId,source:descriptor,paramsBytes},
+        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptor.bytes*3+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+      // Attach a rejection handler during admission without holding the lane
+      // until execution finishes.
+      promise.catch(()=>{});return {promise,paramsSerializeMs,inputBytes};
+    });
+    lflAdmissions.set(ownerKey,admission);
+    let admitted;
+    try{admitted=await admission;}finally{if(lflAdmissions.get(ownerKey)===admission)lflAdmissions.delete(ownerKey);}
+    const lease=await admitted.promise;
+    try{await require('./compute-snapshot-descriptor').assertCollectionLflDescriptor(descriptor);}
+    catch(error){lease.release();throw error;}
+    return {...lease,metrics:{...lease.metrics,paramsSerializeMs:admitted.paramsSerializeMs,paramsBytes:admitted.inputBytes-1024}};
+  }
   async function hashAccessAuthority(authority,{onMetrics}={}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const generation=String(++authorityGeneration);
@@ -158,6 +191,6 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runEndeksmatikStatus,hashAccessAuthority,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};

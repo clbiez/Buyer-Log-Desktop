@@ -7,7 +7,7 @@ const source={asasOrders:raw,antrepoMap:{}};
 test('task access sends authority only to computations that use code editing or shared ownership',()=>{
  for(const moderator of [false,true]){
   const context=policy.createAccessContext({userId:'a',systemRole:moderator?'moderator':'buyer',manageAll:moderator,viewScope:{mode:'CUSTOM',buyers:['Demo']},editScopes:{buyers:['Demo']},authority:{101:[raw[0]],102:[raw[1]]},profiles:[{id:'a',username:'Demo'},{id:'b',username:'Other'}]});
-  for(const task of ['backlog-export','backlog-map-details','projection-plan','source-info','cp-image-registry']){
+  for(const task of ['backlog-export','backlog-map-details','projection-plan','source-info','cp-image-registry','collection-lfl-source-info','collection-lfl-references']){
    const compact=accessForTask(context,task,{});assert.deepEqual(compact.authority,{});assert.deepEqual(compact.ownershipProfiles,[]);assert.equal(compact.viewScope,context.viewScope);assert.equal(compact.accessHash,context.accessHash);
   }
   const params={access:context,headers:[],overrides:{},horizons:{},options:{},sourceColumns:[],includeSourceDetails:true};

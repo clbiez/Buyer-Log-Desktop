@@ -71,6 +71,19 @@ async function execute(task,data,transfer){
   // Tarih motoru modül genelinde state tutar. Kalıcı worker her işin güncel
   // takvimini kurar; önceki kullanıcının/takvimin ayarını devralmaz.
   if(data.params?.calendar?.configured)dates.setMerchCalendar(data.params.calendar.calendar);else dates.clearMerchCalendar();
+  if(task==='collection-lfl-source-info'||task==='collection-lfl-references'){
+    const {assertCollectionLflDescriptor}=require('../lib/compute-snapshot-descriptor');
+    if(String(data.params.access?.userId)!==String(data.ownerId))throw Object.assign(Error('Source owner mismatch'),{code:'COMPUTE_SOURCE_OWNER_MISMATCH'});
+    await assertCollectionLflDescriptor(data.source);
+    const lease=await sourceCache.acquire(data.source,data.ownerId);
+    try{
+      await assertCollectionLflDescriptor(data.source);
+      const source=lease.snapshot,version=source&&(source.lflLoadedAt||source.loadedAt||source.savedAt)||null;
+      if(task==='collection-lfl-source-info')return {available:Boolean(version),version};
+      const references=require('../../public/collection-lfl-engine').buildReferences(access.filterRows(data.params.access,source?.lflRows||[]));
+      const result=await compress({references},'api',transfer);await assertCollectionLflDescriptor(data.source);return result;
+    }finally{lease.release();}
+  }
   const lease=await sourceCache.acquire(data.source,data.ownerId);
   try{
     const source=lease.snapshot||{asasOrders:[],antrepoMap:{}},params=data.params||{};

@@ -93,3 +93,34 @@ failed RED; byte admission, detachment through real transfer, intact caller
 input and equivalent output are covered. This is another primary-agent fix
 after the independent review, not a claim to explain every delay or to have
 passed the normal three-run acceptance criterion.
+
+TR: Daha sonra aynı-sekme geçişlerini izleyen Faz 0 ölçümleri, önceki üçlü
+interaktif açılış kabulünün kapsamadığı bir gecikmeyi ortaya çıkardı. Native
+profil, Koleksiyon LFL referansının ilk okumasında tüm model snapshot'ının
+MAIN'de açıldığını ve referans motorunun MAIN'de çalıştığını doğruladı.
+Salt okunur özet isteği aynı ortak havuza taşındı. ASAS yayınına karışmayan
+ayrı kaynak sürümü, gzip ve metadata/yedek dosyalarının kimliğini izler;
+eski istek yeni havuz sürümünü geriye alamaz. Aynı scope filtresi ve referans
+motoru worker'da çalışır; MAIN yalnız sınırlı özeti açar. Kalıcı schema 5/4
+kuralları, manuel yenileme, eski başarılı özetin korunması ve detay isteği
+korunur. İki alanın canlı yetkisi, oturum, scope kimliği ve disk sürümü
+hesaplama/yayın/yanıt sınırlarında denetlenir. Yeni regresyonlar önce RED
+oldu; native worker, metadata-only yenileme ve bozuk ana dosyada yedek okuma
+ayrıca sınanır. Bu ilave ana-agent düzeltmesi yeniden ikinci modele verilmedi;
+nihai performans kabulü yeni kodda ölçülmelidir.
+
+EN: Subsequent F0 measurements after same-tab navigation exposed a delay not
+covered by the earlier three-run interactive opening acceptance. A native
+profile verified full model-snapshot decoding and LFL reference calculation
+on MAIN during the first Collection reference read. This readonly summary now
+runs in the same common pool. A separate source generation follows gzip,
+metadata and backup identities without advancing published ASAS state; an old
+request cannot roll the pool generation back. The same scope filter and
+reference engine run in the worker; MAIN decodes only a bounded summary.
+Durable schema 5/4 rules, explicit refresh, preservation of successful saved
+summaries and detail requests remain intact. Live access to both areas,
+session, scope identity and disk generation are checked around computation,
+publication and response. New regressions first failed RED; native workers,
+metadata-only refresh and corrupt-primary backup recovery also have coverage.
+This additional primary-agent fix was not sent for another independent pass;
+final performance acceptance requires measurements at the new code revision.

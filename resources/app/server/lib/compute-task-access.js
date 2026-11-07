@@ -4,7 +4,7 @@
 function accessForTask(context,task,parts={}){
   if(!context)return context;
   let authority=true;
-  if(task.startsWith('backlog-')||['source-info','projection-plan','cp-image-registry'].includes(task))authority=false;
+  if(task.startsWith('backlog-')||['source-info','projection-plan','cp-image-registry','collection-lfl-source-info','collection-lfl-references'].includes(task))authority=false;
   else if(task==='projection-envelope')authority=parts.legacyModule==='cp'&&context.systemRole!=='moderator';
   else if(task==='cp-shared-edit-codes')authority=context.systemRole!=='moderator';
   else if(task==='projections'){

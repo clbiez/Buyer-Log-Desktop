@@ -17,6 +17,37 @@ function setup(t,options={}){
   const service=createComputeService({pool,root,diskBudgetBytes:32*MiB,...options});
   t.after(async()=>{await service.close();fs.rmSync(root,{recursive:true,force:true});});return {pool,service,root,workers};
 }
+test('native LFL summary reads and scopes the snapshot entirely in the common worker',async t=>{
+ const {service,pool}=setup(t),snapshot=require('../server/lib/model-snapshot'),Engine=require('../public/collection-lfl-engine'),policy=require('../server/lib/compute-access');
+ const rows=[{orderCode:'DEMO-LFL',buyer:'Synthetic Buyer',season:'S6',mag:'CU4E',classification:'K',inStoreMonth:'2026-02',fob:10,quantity:100,country:'CHINA'},
+  {orderCode:'FOREIGN',buyer:'Other Buyer',season:'S6',mag:'CU4E',classification:'K',inStoreMonth:'2026-02',fob:999,quantity:999,country:'CHINA'}];
+ const raw={...source(),lflRows:rows,lflLoadedAt:'lfl-v1'};await snapshot.saveModelSnapshotAsync('a',raw);
+ const context=policy.createAccessContext({userId:'a',systemRole:'buyer',viewScope:{buyers:['Synthetic Buyer']},authority:{},profiles:[]});
+ const expected=Engine.buildReferences(policy.filterRows(context,rows)),load=snapshot.loadModelSnapshotAsync,build=Engine.buildReferences;
+  assert.ok(expected.length>0);assert.equal(expected[0].average,10);assert.ok(!JSON.stringify(expected).includes('FOREIGN'));
+ snapshot.loadModelSnapshotAsync=()=>{throw Error('snapshot hydration must remain off the main thread');};Engine.buildReferences=()=>{throw Error('LFL reference calculation must remain off the main thread');};
+ let descriptor;
+ try{
+  descriptor=await service.collectionLflSource('a');
+  const info=await service.runCollectionLfl('collection-lfl-source-info',descriptor,{access:context,calendar:{configured:false}});
+  try{assert.deepEqual(info.value,{available:true,version:'lfl-v1'});assert.ok(info.metrics.threadId>0);}finally{info.release();}
+  const lease=await service.runCollectionLfl('collection-lfl-references',descriptor,{access:context,calendar:{configured:false}});
+  try{assert.deepEqual(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))),{references:expected});assert.ok(pool.stats().leasedOutputBytes>0);}finally{lease.release();}
+  assert.equal(pool.stats().leasedOutputBytes,0);
+  await assert.rejects(service.runCollectionLfl('collection-lfl-references',descriptor,{access:{...context,userId:'b'}}),{code:'COMPUTE_SOURCE_OWNER_MISMATCH'});
+ }finally{snapshot.loadModelSnapshotAsync=load;Engine.buildReferences=build;}
+ const gzipBefore=fs.readFileSync(snapshot.snapshotPath('a'));await snapshot.saveModelSnapshotAsync('a',{...raw,lflLoadedAt:'lfl-v2'});
+ assert.deepEqual(fs.readFileSync(snapshot.snapshotPath('a')),gzipBefore,'metadata-only updates must also invalidate the LFL worker source');
+ const latest=await service.collectionLflSource('a');assert.notEqual(latest.generation,descriptor.generation);
+ const current=service.runCollectionLfl('collection-lfl-source-info',latest,{access:context});
+ await assert.rejects(service.runCollectionLfl('collection-lfl-source-info',descriptor,{access:context}),{code:'COMPUTE_STALE_GENERATION'});
+ const lease=await current;try{assert.equal(lease.value.version,'lfl-v2');}finally{lease.release();}
+ // A new process/worker may need the last good backup if the primary is corrupt.
+ await snapshot.saveModelSnapshotAsync('a',{...raw,lflRows:[{...rows[0],fob:12}],lflLoadedAt:'lfl-v3'});
+ fs.writeFileSync(snapshot.snapshotPath('a'),'Corrupt synthetic primary');
+ const fallback=await service.collectionLflSource('a'),backup=await service.runCollectionLfl('collection-lfl-source-info',fallback,{access:context});
+ try{assert.equal(backup.value.available,true);assert.equal(backup.value.version,'lfl-v2');}finally{backup.release();}
+});
 test('real persistent worker seeds an exact replica and sends ready gzip without returning raw records',async t=>{
   const {pool,service}=setup(t),raw=source();
   const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:raw,uncompressedBytes:MiB});

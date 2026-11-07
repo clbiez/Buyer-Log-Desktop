@@ -12069,6 +12069,8 @@ require('./routes/model-connection-routes')(app, {
 // ---- LFL verisi route'ları → server/routes/lfl-routes.js ----
 require('./routes/lfl-routes')(app, {
   collectionLflCache: require('./lib/collection-lfl-reference').createReferenceCache({directory:path.join(LOCAL_DATA_ROOT,'collection-lfl-reference')}),
+  computedCollectionReferenceSource:require('./lib/compute-collection-lfl-reference').createComputedCollectionReferenceSource({
+    compute:serverCompute,guard:computeReadGuard,userAccess,calendar:()=>require('./lib/merch-calendar-store').publicProjection()}),
   apiError,
   attachModelImageIdentities,
   cacheForUser,
