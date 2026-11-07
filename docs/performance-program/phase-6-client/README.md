@@ -1,5 +1,61 @@
 # Faz 6 istemci hazırlığı — ana sohbet teslimi
 
+## Güncel test deltası — üretim düzeltmesi bekleniyor
+
+Kullanıcının son yönlendirmesiyle üretim kodu değiştirilmedi. `9d53bb9b`
+hazırlığı ve `69950f28` inceleme SHA'sı yeniden yazılmadı; yeni test deltası
+ayrı daldadır. Güncel test tabanı `e8c8c7090449e894ada25c8143203118614b3235`:
+hazırlık dalına Main `2083ffd7` (#894 test düzeltmesi) merge edildi; rebase veya
+force-push yapılmadı. `app-main.js` hâlâ #892 Main kaynağıyla birebirdir.
+
+Test [normal regression paketine](../../../resources/app/tests/cp-orders-hydration-revision.test.js)
+ve [fixture mevcut test fixture dizinine](../../../resources/app/tests/fixtures/cp-orders-revision.cjs)
+taşındı. İlk beş testin bütün assertion'ları korunur; CP selection/dirty state,
+gerçek CP hydration, CP+Orders birlikte hydration ve tam `loadFromServer` GET
+akışını çalıştıran ek kontroller eklendi. Runner ve mevcut testler gevşetilmedi.
+
+Tam fonksiyon incelemesi: Orders dalları yalnız `state.orders`, Orders expanded
+state ve deferred durumda `state.orderSummary` değiştirir. Çevrede ise ortak
+kullanıcı/override bağlamı, transit kuralları, lisans/fiyat türetimleri, dinamik
+CP sütunları ve ayrı CP hydration/deferred dalları vardır. Sonrasında
+`applyPricingRulesToLoadedRows` CP/Orders/summary üzerinde çalışır. Bu nedenle
+bütün `loadFromServer` çağrısını Orders-only kabul etmek doğru değildir.
+`server-transit-rules-hydrated` mevcut kodda koşulsuz CP invalidation'ı yapar;
+iki Orders çağrısını kapsamlandırmak bu bağımsız invalidation'ı kaldırmaz.
+
+Yeni tam akış testlerinde gerçek `loadFromServer` ve invalidator çalışır; ağ
+sentetik tek GET'tir, UI ve fiyat motoru bağımlılıkları test adapter'larıdır.
+Fiyat motorunun kendi hesap eşdeğerliği bu testin iddiası değildir. Kontroller:
+
+- İzole Orders hydrated/deferred dallarında CP sayaç/cache/local state korunmalı;
+  Orders tablo revizyonu, cache temizliği ve Global Flow bildirimi devam etmeli.
+- Gerçek CP satırı yüklemesinde CP sayacı ilerlemeli; CP+Orders birlikte yükleme
+  aynı CP invalidation'ını korumalı, Orders ayrıca CP sayacını ilerletmemeli.
+- Tam akışta ortak transit kuralları CP sayacı/cache'ini geçersiz kılmaya devam
+  etmeli. Orders hydrated/deferred yalnız kendi ek invalidation'ını yapmalı;
+  dirty CP state, seçim ve undo/redo referansları korunmalı.
+- Kişisel bağlam listener'ının orijinal bütün assertion'ları geçerli kalmalı.
+
+Normal paket komutu `resources/app` içinden:
+
+```sh
+node --test --test-reporter=tap tests/cp-orders-hydration-revision.test.js
+```
+
+Sonuç: **5 PASS / 6 RED / 0 skip / 0 cancel**;
+[yeni RED metni](evidence/revision-full-context.red.tap) ve
+[özgün stdout/stderr gzip'i](evidence/revision-full-context.red.tap.gz).
+Üç orijinal pozitif kontrol, gerçek CP-only hydration ve tam akış CP-only testi
+geçer. Kalan altı hata Orders dalının ek CP revizyon artışıdır; harness
+ReferenceError veya atlanan zorunlu kontrol yoktur. İlk **3 PASS / 2 RED**
+kanıtları aşağıda ve önceki commit'te aynen korunur.
+
+Düzeltme SHA'sı ve sabitlenmiş katalog entegrasyon kaynağı gelmeden üretim
+değişikliği, GREEN veya entegre tam `npm test` sonucu iddia edilmez. Bu test
+hazırlığı 6a/6c uygulamasını başlatmaz. Merge, TEST ve STABLE yoktur.
+
+## İlk teslim — 9d53bb9b tarihsel kanıtı
+
 **Durum: BLOCKED / RED.** Üretim uygulaması başlamadı. Kaynak Main
 `5a1656e98deeb573f6245f4b24a8135cc77a0d7b`; #892 bu SHA ile merge edildi.
 #885 gözlenen head `69950f289a012f0bb7c61290bec9890f340f6c64` ile hâlâ açık.
@@ -26,10 +82,10 @@ Global Flow olayı iki tabloyu içerir. Yalnız Orders işlemi için istenen say
 ayrımı bu iki dalda korunmuyor. Aynı Main'deki `ensureOrdersLoaded` ise
 `['orders']` kapsamını zaten veriyor.
 
-[Yeni regresyon](revision-contract.test.cjs), üretim dosyasındaki gerçek
+[İlk regresyon](https://github.com/clbiez/Buyer-Log-Desktop/blob/9d53bb9bb0917b7fb583511741b40dfd53aa8a73/docs/performance-program/phase-6-client/revision-contract.test.cjs), üretim dosyasındaki gerçek
 invalidator, kişisel bağlam listener'ı, on-demand Orders loader'ı ve ortak
 yükleyicinin Orders dallarını VM'de çalıştırır; kaynak metnini dönüştürmez.
-[Fixture](revision-fixtures.cjs) sentetiktir. Ağ, çalışan sunucu, kullanıcı
+[İlk fixture](https://github.com/clbiez/Buyer-Log-Desktop/blob/9d53bb9bb0917b7fb583511741b40dfd53aa8a73/docs/performance-program/phase-6-client/revision-fixtures.cjs) sentetiktir. Ağ, çalışan sunucu, kullanıcı
 verisi veya credential kullanılmaz. Ortak yükleyicinin iki dalı izole edilir;
 bütün `loadFromServer` akışının veya tarayıcı performansının çalıştırıldığı
 iddia edilmez.
@@ -44,10 +100,9 @@ iddia edilmez.
 - Ortak yükleyici Orders deferred dalı: CP nesnesi aynı, sayaç beklenen `1`,
   gerçek `2` — **RED**.
 
-Bu açık RED hazırlık testi normal app test koleksiyonuna henüz eklenmedi;
-mevcut hiçbir test, runner veya validator değiştirilmedi. Entegratör düzeltme
-yaparken testi kalıcı regresyon paketine dahil etmeli. RED gizlenmez veya
-beklenen hata sayılarak yeşile çevrilmez.
+İlk teslimde bu açık RED hazırlık testi normal app test koleksiyonunun
+dışındaydı; güncel delta onu normal pakete taşır. RED gizlenmez veya beklenen
+hata sayılarak yeşile çevrilmez.
 
 **Ana sohbet için en küçük düzeltme adayı:** yalnız bu iki çağrının Orders
 kapsamını açık vermesi. Bu bir öneridir, uygulanmış düzeltme değildir.
