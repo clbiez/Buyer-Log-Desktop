@@ -52,7 +52,7 @@ test('native observations retain thread CPU and GC without classifying GC record
     const code=`const p=require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setTimeout(()=>{const until=performance.now()+80;while(performance.now()<until){}global.gc();setTimeout(()=>p.stop(),60);},35);`;
     const run=spawnSync(process.execPath,['--expose-gc','-e',code,root],{encoding:'utf8',timeout:10000});assert.equal(run.status,0,run.stderr);
     const events=probe.readProbeEvents(root,{requireStopped:true}),gap=events.filter(e=>e.kind==='gap').sort((a,b)=>b.gapMs-a.gapMs)[0];
-    assert.equal(events[0].cpuScope,typeof process.threadCpuUsage==='function'?'thread':'unavailable');
+    assert.equal(events[0].cpuScope,process.platform==='linux'?'thread':'unavailable');
     assert.ok(Number.isFinite(gap.userCpuMs)&&gap.userCpuMs>=0);assert.ok(Number.isFinite(gap.systemCpuMs)&&gap.systemCpuMs>=0);
     const gc=events.filter(e=>e.kind==='gc');assert.ok(gc.length>0,'a real explicit GC must be retained');
     assert.ok(gc.every(e=>Number.isFinite(e.durationMs)&&e.durationMs>=0&&e.toMs>=e.fromMs));
@@ -68,6 +68,29 @@ test('numeric CPU and GC observations preserve strict record validation and avoi
       fs.writeFileSync(path.join(root,'event-loop-probe-1.jsonl'),JSON.stringify(event)+'\n');assert.throws(()=>probe.readProbeEvents(root),/record/i);
     }
     assert.doesNotMatch(fs.readFileSync(probeFile,'utf8'),/process\.memoryUsage|Error\(\)\.stack/);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('CPU observation never calls either CPU counter on the measured thread',()=>{
+  const root=fixture();
+  try{
+    const code=`process.threadCpuUsage=process.cpuUsage=()=>{throw Error('CPU observation must run outside MAIN');};const p=require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setTimeout(()=>{const until=performance.now()+80;while(performance.now()<until){}setTimeout(()=>p.stop(),130);},35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:10000});assert.equal(run.status,0,run.stderr);
+    const events=probe.readProbeEvents(root,{requireStopped:true});
+    const gap=events.filter(e=>e.kind==='gap').sort((a,b)=>b.gapMs-a.gapMs)[0];assert.ok(gap.gapMs>=70);
+    assert.equal(gap.cpuApproximate,true);assert.equal(events[0].cpuMeasurement,'surrounding-sample-window');
+    if(events[0].cpuScope==='thread'){
+      assert.ok(gap.cpuWindowFromMs<=gap.fromMs);assert.ok(gap.cpuWindowToMs>=gap.toMs);assert.ok(gap.cpuClockResolutionMs>0);
+    }
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('approximate CPU records must identify a valid surrounding sample window',()=>{
+  const root=fixture();
+  try{
+    const valid={kind:'gap',pid:1,fromMs:100,toMs:200,gapMs:100,delayMs:90,userCpuMs:10,systemCpuMs:0,cpuApproximate:true,cpuAvailable:true,cpuWindowFromMs:90,cpuWindowToMs:210,cpuClockResolutionMs:10};
+    for(const patch of [{cpuWindowFromMs:101},{cpuWindowToMs:199},{cpuClockResolutionMs:0},{cpuAvailable:'yes'}]){
+      fs.writeFileSync(path.join(root,'event-loop-probe-1.jsonl'),JSON.stringify({...valid,...patch})+'\n');assert.throws(()=>probe.readProbeEvents(root),/record/i);
+    }
+    fs.writeFileSync(path.join(root,'event-loop-probe-1.jsonl'),JSON.stringify(valid)+'\n');assert.deepEqual(probe.readProbeEvents(root),[valid]);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 test('F0 observer is opt-in and server child alone loads the preload',()=>{

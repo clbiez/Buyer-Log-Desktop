@@ -70,32 +70,70 @@ ranges. This supports an environment/scheduling component, but does not prove
 the exact cause of the original normal 293.5 ms sample. Diagnostic helpers are
 not acceptance measurements.
 
-TR: Normal benchmark gözlemcisi artık aynı 10 ms zamanlayıcıda per-thread
-kullanıcı/çekirdek CPU farkını ve GC zaman aralıklarını da sayısal halkaya
-yazar. MAIN'de RSS örneklemesi, stack üretimi, JSON/UTF-8 kodlama veya dosya
-yazımı yoktur. GC için ayrı kayıt tipi kullanılır; GC kayıtları timer stall
-sayısına eklenmez. Bozuk CPU/GC kaydı reddedilir. 200 ms eşiği ve sınırla
-örtüşen boşluğu tam tutma kuralı aynıdır. Önceki gözlemci dosyaları korunur;
-yeni composite hash ile önce/sonra yeniden ölçülür.
+TR: İlk genişletilmiş normal gözlemci CPU sayacını MAIN'de her 10 ms'de
+okuyordu. Küçük yük kalibrasyonu bunu aklamadı: dokuz taze süreçte dört demo
+hesap worker'ı altında thread sayacının en büyük çağrısı 3,419 ms olsa da
+sonraki tam 30k native izinde aynı gözlemci çağrısı 212,223 ms sürdü.
+Bu tanısal örnek sayacın ölçülen thread'de duraklama ekleyebileceğini gösterir;
+önceki tüm aşımların nedeninin sayaç olduğunu kanıtlamaz. O sürümle alınmış
+normal/tanısal sonuçlar ham hâliyle korunur, yeni gözlemciyle karıştırılmaz.
 
-EN: The normal benchmark observer now records per-thread user/system CPU
-deltas on the same 10 ms timer and numeric GC ranges in its shared ring.
-MAIN performs no RSS sampling, stack construction, JSON/UTF-8 encoding or
-observer disk writes. GC uses a separate record type and is not counted as a
-timer stall. Malformed CPU/GC records reject. The 200 ms threshold and full-gap
-boundary rule are unchanged. Historical observer bytes remain available;
-before/after comparisons must use the new matching composite hash.
+EN: The first extended observer queried CPU on MAIN every 10 ms. A small load
+calibration did not establish its safety: across nine fresh processes with
+four generated-data compute workers, the largest thread-counter call was
+3.419 ms, but a later complete 30k native trace recorded a 212.223 ms call
+from that same observer. This diagnostic sample shows that querying CPU on
+the measured thread can add a pause; it does not prove that it caused every
+earlier exceedance. Those normal and diagnostic results remain retained and
+are not pooled with the corrected observer.
 
-TR: Gözlemci mikro ölçümü altı taze süreçte, dönüşümlü üç önce/sonra koşusu ve
+TR: Güncel gözlemcinin MAIN yolu yalnız aynı 10 ms zamanlayıcıdaki saat
+farkını ve GC aralıklarını sayısal halkaya yazar. CPU, RSS, stack, JSON/UTF-8
+ve dosya işlemi MAIN'de yapılmaz. Gözlemci worker'ı Linux'ta
+`/proc/PID/task/PID/stat` üzerinden ana thread CPU'sunu yaklaşık 100 ms
+aralıkla okur. `getconf CLK_TCK` yalnız worker başlangıcında kullanılır.
+Her boşluğun CPU değerine onu çevreleyen örnekleme penceresi, saat çözünürlüğü
+ve `cpuApproximate` işareti eklenir; bu değer boşluğun tam CPU süresi gibi
+sunulmaz. Desteklenmeyen platformda CPU açıkça unavailable'dır. GC ayrı kayıt
+tipidir ve timer stall sayısına eklenmez. Bozuk CPU/GC/pencere kaydı reddedilir.
+200 ms eşiği ve tam sınır boşluğu kuralı değişmez. İki CPU API'si MAIN'de
+hata verecek şekilde kapatılmış gerçek süreçte gözlemci çalışmaya devam eder;
+yeni test önce RED olmuştur.
+
+EN: The corrected observer's MAIN path writes only clock differences from
+the same 10 ms timer and numeric GC ranges to its ring. MAIN performs no CPU,
+RSS, stack, JSON/UTF-8 or observer file operations. On Linux the observer
+worker samples MAIN CPU through `/proc/PID/task/PID/stat` approximately every
+100 ms; `getconf CLK_TCK` runs only during worker startup. Each gap's CPU
+estimate includes its surrounding sample window, clock resolution and
+`cpuApproximate` label. It is not presented as exact CPU during the gap.
+Unsupported platforms explicitly mark CPU unavailable. GC remains separate
+from timer stalls; malformed CPU, GC and sample-window records reject.
+The 200 ms threshold and full-gap boundary rule remain unchanged. A real
+process continues recording when both CPU APIs are replaced with throwing
+functions on MAIN; that new regression first failed RED.
+
+TR: İlk genişletilmiş gözlemcinin mikro ölçümü altı taze süreçte, dönüşümlü üç önce/sonra koşusu ve
 açılış sonrası iki saniyelik pencerelerle yapıldı. Ana thread CPU medyanı
 9,295 → 10,273 ms/s oldu (ek yaklaşık 0,979 ms/s). Bu bir uygulama hızlanması
 değildir; gözlemci maliyetidir. Ham dosyalar ve özet kanıtla birlikte tutulur.
 
-EN: An observer-only micro used six fresh processes, three alternating
+EN: The first extended observer's micro used six fresh processes, three alternating
 before/after runs and two-second windows after startup. Median MAIN CPU was
 9.295 → 10.273 ms/s, an additional approximately 0.979 ms/s. This measures
 observer overhead, not an application speedup. Raw files and the summary are
 retained with the evidence.
+
+TR: CPU okuması worker'a taşınan sürüm için aynı iki saniyelik idle mikro
+ölçümü, üç dönüşümlü taze süreç çiftiyle tekrarlandı. MAIN CPU medyanı
+10,174 → 7,823 ms/s oldu. Bu yalnız küçük idle penceresinin gözlemci
+maliyetidir; 30k uygulama kazancı veya yük altındaki kuyruk gecikmesinin
+çözüldüğü sonucu çıkarılmaz.
+
+EN: The worker-sampled version repeated the same two-second idle micro with
+three alternating fresh-process pairs. Median MAIN CPU was
+10.174 → 7.823 ms/s. This measures observer cost in a small idle window;
+it is not a 30k application speedup or proof that loaded tail latency is fixed.
 
 TR: `/tmp` bir tmpfs'tir; geçmiş kanıtları korurken neredeyse doldu. Yeni
 koşular yalnız komutun `TMPDIR` değeriyle özel overlayfs dizinini kullanır.
