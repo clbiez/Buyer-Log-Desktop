@@ -83,6 +83,9 @@ test('the CP client applies the list by the same order-code key as lineKeyOfRow'
   assert.match(app, /if\(!rows\.length\|\|rows\.some\(row=>row&&row\._canEditShared!==undefined\)\)return false;/);
   const server = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
   assert.match(server, /app\.post\('\/api\/cp-shared-edit', userAccess\.requireArea\('cp'\), express\.json\(\{ limit: '8mb' \}\)/);
-  assert.match(server, /userAccess\.sharedEditDeniedOrderCodes\(profile && profile\.id, codes\)/);
+  assert.match(server, /computeReads\.run\(req,'cp','cp-shared-edit-codes',\{codes\},\{cache:false\}\)/);
+  const worker=fs.readFileSync(path.join(__dirname,'../server/workers/compute-worker.js'),'utf8');
+  assert.match(worker,/denied:access\.sharedEditDeniedCodes\(data\.params\.access,data\.params\.codes\)/);
+  assert.match(fs.readFileSync(path.join(__dirname,'../server/lib/compute-access.js'),'utf8'),/ownership\.deniedOrderCodes/);
   assert.match(app, /const codes=\[\.\.\.new Set\(rows\.map\(row=>row\?lineKeyOfRow\(row\)\.split\('\|'\)\[0\]:''\)\.filter\(Boolean\)\)\];/);
 });

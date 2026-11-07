@@ -1,0 +1,23 @@
+{
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "pid": 228677,
+  "captures": [
+    {
+      "id": 1,
+      "scenario": "overview-global-flow.png",
+      "requestedAtMs": 1794067558434,
+      "clockOffsetMs": 1793914867391.1287,
+      "observerMaximumMs": 204.28123699999924,
+      "completedAtMs": 1794067558742
+    },
+    {
+      "id": 2,
+      "scenario": "backlog.png",
+      "requestedAtMs": 1794067591763,
+      "clockOffsetMs": 1793914867390.5078,
+      "observerMaximumMs": 76.45004599999811,
+      "completedAtMs": 1794067592142
+    }
+  ]
+}

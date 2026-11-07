@@ -1,0 +1,34 @@
+{
+  "synthetic": true,
+  "sourceFixture": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-after-3",
+  "orders": 30000,
+  "historyDetails": 1000,
+  "detailsTotal": 42726,
+  "revision": 7,
+  "apiReads": 3,
+  "historyBytesPreserved": true,
+  "historyMtimePreserved": true,
+  "captures": [
+    {
+      "file": "/workspace/buyerlog-phase5/resources/app/public/release-notes/next-assets/phase5-history-read-tr-light.png",
+      "lang": "tr",
+      "theme": "light",
+      "active": {
+        "lang": "tr",
+        "theme": "light",
+        "title": "ASAS & ANTREPO Geçmişi"
+      }
+    },
+    {
+      "file": "/workspace/buyerlog-phase5/resources/app/public/release-notes/next-assets/phase5-history-read-en-dark.png",
+      "lang": "en",
+      "theme": "dark",
+      "active": {
+        "lang": "en",
+        "theme": "dark",
+        "title": "ASAS & ANTREPO History"
+      }
+    }
+  ],
+  "note": "Real post-change UI. File/revision assertions establish absence of no-op writes; PNGs show retained history, not inferred latency."
+}

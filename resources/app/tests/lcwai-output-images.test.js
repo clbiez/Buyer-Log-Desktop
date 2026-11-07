@@ -105,14 +105,14 @@ test('servis: anahtar kullanan çıktı önce görsel ister; görsellerle dosya 
   assert.deepEqual(first.output.tokens, ['KOL-1', 'KOL-2']);
   assert.throws(() => service.completeImages('u2', first.output.pendingId, {}), error => error.code === 'LCWAI_OUTPUT_NOT_FOUND', 'başka kullanıcı tamamlayamaz');
   assert.throws(() => service.completePdf('u1', first.output.pendingId, Buffer.from('%PDF-1.7'.padEnd(100))), error => error.code === 'LCWAI_OUTPUT_NOT_FOUND', 'görsel bekleyen PDF sayılmaz');
-  const done = service.completeImages('u1', first.output.pendingId, { 'KOL-1': pngUrl });
+  const done = (await service.completeImages('u1', first.output.pendingId, { 'KOL-1': pngUrl }));
   assert.equal(done.format, 'html');
   assert.equal(done.imagesUsed, 1);
   const file = fs.readFileSync(done.path, 'utf8');
   assert.match(file, /src="data:image\/png;base64,/);
   assert.match(file, /class="bl-noimg" data-bl-image="KOL-2"/);
   const pdf = await service.create('u1', { message: 'kartlar', output: { format: 'pdf' } });
-  const printed = service.completeImages('u1', pdf.output.pendingId, { 'KOL-1': pngUrl, 'KOL-2': jpegUrl });
+  const printed = (await service.completeImages('u1', pdf.output.pendingId, { 'KOL-1': pngUrl, 'KOL-2': jpegUrl }));
   assert.equal(printed.pending, 'pdf');
   assert.equal((printed.html.match(/src="data:image\//g) || []).length, 2);
   const noImages = await service.create('u1', { message: 'kartlar', output: { format: 'html', images: false } });
