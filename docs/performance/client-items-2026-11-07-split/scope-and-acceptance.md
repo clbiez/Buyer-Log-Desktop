@@ -123,3 +123,28 @@ modules are unchanged. Prior valid operation benchmarks retain their original
 source provenance; no new performance gain is claimed for this boundary fix.
 All five original PNGs are additionally archived byte-exact. Final-head GitHub
 checks remain a separate gate. **No merge, TEST or STABLE.**
+
+
+## #915 sonrası son kabul / Final acceptance after #915
+
+8 Kasım 2026: Main `d77f83e5` (#915, kullanıcı onayıyla merge edildi)
+normal merge `bd82ec0c` ile alındı. Test edilen uygulama ağacı
+`8ea2b6e51a065afcfa4f82a630d0e131bbe5821c`. Standart `npm test`, tek çağrıda bütün
+10 batch, varsayılan concurrency=4, izole TMPDIR ve NODE_OPTIONS/preload
+olmadan: **1299 dosya / 8920 PASS / 0 FAIL / 65 mevcut SKIP /
+0 CANCEL**. İlgili paket **582 PASS**, i18n **0/0**, sürüm notları
+**46 PASS**. Tarihsel sonuçlar korunur; bu kayıt yeni performans
+kazancı iddiası değildir. Son commit'in gerçek GitHub kontrolleri ayrı kapıdır.
+
+Main `d77f83e5` was imported by normal merge without rewriting the frozen review
+history. The unchanged standard runner passed all ten batches in one invocation:
+**1299 files / 8920 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**,
+default concurrency4, private TMPDIR, no NODE_OPTIONS/preload. Related package
+582 PASS; i18n0/0; 46 visual notes valid. Own production changes
+and their reviewed behavior were preserved; the new runtime delta imports the
+separately reviewed and merged current-authority fix. Evidence-only additions
+after these checks do not change source, tests, validators or CI. Historical
+benchmark limitations remain. Actual final-head CI and merge approval are still
+separate. **No TEST/STABLE publication.**
+
+Gerçek Buyer Log UI aynı liste/satır/kayıt/veri kimliği, kaydetme ve draft kontrollerini yeniden geçti. Lisans optimizasyonu paketin dışında ve arşiv dalında korunur. / The actual UI again passed the same identity, save and draft checks; rejected license optimization remains parked.
