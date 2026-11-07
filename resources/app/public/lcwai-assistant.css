@@ -253,6 +253,18 @@
 .lcwaiLaySheet th{padding:0 8px;text-align:left;white-space:nowrap;}
 .lcwaiLaySheet td{padding:2px 8px;vertical-align:top;max-width:320px;}
 .lcwaiLaySheet td.is-img{text-align:center;}
+.lcwaiLaySheet td.is-bar{position:relative;}
+.lcwaiLaySheet td.is-bar>span{position:relative;}
+.lcwaiLaySheet td.is-bar>.lcwaiLayBar{position:absolute;left:0;top:2px;bottom:2px;}
+.lcwaiEdXFormat>summary{cursor:pointer;padding:6px 0;}
+.lcwaiEdXBody{display:grid;gap:8px;}
+.lcwaiEdXFormat .lcwaiEdRow{align-items:end;}
+.lcwaiEdXFormat .lcwaiEdCheck{align-items:center;}
+.lcwaiEdXTable{border-collapse:collapse;min-width:100%;}
+.lcwaiEdXTable th,.lcwaiEdXTable td{padding:4px 6px;text-align:left;vertical-align:top;white-space:nowrap;}
+.lcwaiEdXRules{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+.lcwaiEdXRule{display:flex;gap:4px;align-items:center;}
+.lcwaiEdXRule input{width:92px;}
 @media (max-width:1100px){.lcwaiLay{grid-template-columns:1fr;}.lcwaiLayControls{position:static;}}
 .lcwaiLayStage .lcwaiEdFrame{flex:none;height:calc(94vh - 190px);min-height:420px;max-width:none;}
 /* Sadeleştirme: 3 adımlı üst çubuk, hazır yerleşim kartları, katlanır ince ayar */

@@ -1,0 +1,52 @@
+[
+  {
+    "file": "acceptance.json",
+    "bytes": 4297,
+    "sha256": "c0eab0954d432652f1ae0b269e58323bbb126f0f5003999cd1bac44da4d2e711"
+  },
+  {
+    "file": "env-helper-syntax.log.gz",
+    "bytes": 20,
+    "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "file": "full-integrated-summary.json",
+    "bytes": 613,
+    "sha256": "340bc5d8319e132f3622f46297296b567254675b051db0a9018ca3eda8da14b5"
+  },
+  {
+    "file": "full-integrated.log.gz",
+    "bytes": 324119,
+    "sha256": "276e2fc512c8a544ff7498c4666157687545285438380b8ec4a67755638407fb"
+  },
+  {
+    "file": "i18n-integrated.log.gz",
+    "bytes": 130,
+    "sha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+  },
+  {
+    "file": "parser-probe-syntax.log.gz",
+    "bytes": 20,
+    "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "file": "related-integrated-summary.json",
+    "bytes": 280,
+    "sha256": "d02f2eee1f62197a071e29376d5ac1e3cce7c751b3fcc7fef66f912de4a7ba7d"
+  },
+  {
+    "file": "related-integrated.log.gz",
+    "bytes": 9288,
+    "sha256": "49a3434447ad96ba21a07bca5ba3a6dd68634c36b8b0dd15d75a274653ba14df"
+  },
+  {
+    "file": "release-integrated.log.gz",
+    "bytes": 123,
+    "sha256": "4bfacd89e0241c5b76070b5c80e84a9744ac08f071506e259d89df537dd79945"
+  },
+  {
+    "file": "server-benchmark-syntax.log.gz",
+    "bytes": 20,
+    "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  }
+]

@@ -1,0 +1,199 @@
+# ADMIN-03 prerequisite: current authority at a resumed request gate
+
+**Güncel Main doğrulaması / Current Main verification:** #912/#901/#914 içeren
+Main `5b8c1e6f`, normal merge `8fc82086` ile alındı. Son standart tam koşu
+**1.295 dosya, tek çağrıdaki bütün 10 batch, 8.896 PASS / 0 FAIL / 65 mevcut
+SKIP / 0 CANCEL**. İlgili paket **158 PASS**; i18n **0/0**, release notes **43
+PASS**. Main'in 42 not nesnesi ve kendi tek kaydı korunur. İncelenen üretim
+modülü ve 16 native test değişmedi; önceki RED sonuçları tarihsel kalır.
+Kaynak/test/CI ağacı `2ef7c8e0203e576869809d3c3b7831af775df3a7` olarak
+donduruldu. [Son kaynak, komut ve on batch sonucu](admin-03-authority-artifacts/integrated-main-test-summary.json).
+30k regresyon karşılaştırması tamamlandı; aşağıdaki yeni bölüm kapsamı ve
+olumsuz hareketi birlikte bildirir. `df8ca377` için iki gerçek GitHub workflow'u
+SUCCESS (42414788119, 42414788256); bu kanıt commit'inden sonraki final-head CI
+ayrıca doğrulanacaktır.
+
+## TR
+
+Risk **P1**. Bu düzeltme ADMIN-03 performans optimizasyonundan ayrıdır. Kaynak
+tabanı Main `63159fb32ff3d5bdc5f142b4a8f16ca6a3983240`; hazırlık #897,
+`40706d9b` içindeki sentetik fixture yeniden kullanıldı. Gerçek kullanıcı,
+iş verisi, servis veya credential kullanılmadı.
+
+**[Doğrulandı]** `requireSelection` sonrasında bekleyen bir isteğin
+`req.currentUser` kopyası, yerel veya merkezi IAM'de `USER.GRANT` kaldırıldığında
+eski yetkiyi taşıyabiliyordu. Yeni istek reddedilirken bekleyen istek kapıyı
+geçiyordu. Bu middleware sıralaması gerçek modülle doğrulanmıştır; dağıtılmış
+bir endpoint'in istismarı kanıtlanmış değildir. Geçmiş hazırlık kanıtları #897'de
+korunur.
+
+Altı yetki kapısı artık mevcut imzalı oturumu ve güncel dizindeki profili yeniden
+doğrular. Yetki hesabı ve profil aynı store nesnesini kullanır. Profil isteğe
+özel kopya olarak kalır. Doğrudan yetki veya rol değişikliği tek başına geçerli
+oturumu düşürmez; silinmiş/pasif hesap ve değişmiş parola kuşağı reddedilir.
+İzin kodu, hata kodu ve cevap metinleri değişmedi. Revision tabanlı uzun ömürlü
+effective-permission cache eklenmedi. `server.js`, compute, istemci üretim kodu
+ve ADMIN-03 performans yolları değiştirilmedi.
+
+### Gerçek RED → GREEN
+
+Değişmemiş standart `node --test --test-reporter=tap` ile aynı son 16 test:
+
+- Main üretim modülü: **2 PASS / 14 FAIL / 0 SKIP**.
+- Düzeltilmiş üretim modülü: **16 PASS / 0 FAIL / 0 SKIP**.
+- `red-final-isolated-native.*` ve `green-final-isolated-native.*` aynı test
+  SHA-256'sını, ayrı kaynak SHA-256'larını, komutu ve izole TMPDIR'ı kaydeder.
+- Yerel/merkezi revoke, merkezi parola değişimi, rol düşürme, altı kapıda eski
+  parola/çerezsiz profil, pasif/silinmiş hesap, değişmeyen oturum, özel kopya ve
+  aynı store revizyonunda grant başlangıç/bitiş sınırları kapsanır.
+
+İlk hazırlıktaki doğrudan `credentialRevision` artırımı gerçek parola değişimi
+değildi: durable writer, kuşağı hash değişiminden türetir. Test gerçek sentetik
+parola hash'ini değiştirir ve kaydedilmiş kuşağın ilerlediğini ayrıca doğrular.
+Ardışık sentetik merkezi hub'lar için önceki fixture'ın `.bak`/`.meta.json`
+kurtarma kopyaları temizlenir; üretim kurtarma/izin kontrolü kapatılmaz.
+Önceki başarısız loglar silinmedi veya yeni GREEN diye etiketlenmedi.
+
+Bu ortamın filesystem sandbox'ı Node alt süreçlerinin stdio aktarımını EPERM
+ile bozuyordu; en küçük bağımsız Node örneğiyle ayrıştırıldı. Standart runner
+değiştirilmeden, aynı sentetik köklerde sandbox dışında çalıştırıldı.
+`--test-isolation=none` denemeleri yalnız teşhis olarak saklanır, kabul değildir.
+
+İlgili ilk paket (önceki 13 test dahil): **19 dosya / 117 PASS**; son 16 testle
+aynı filtre **120 PASS**. Standart tam koşu `e49df459` üzerinde batch 5'te bir
+kaynak-ankor hatasında durdu: eski test `sessionProfile(req)` imzasını arayıp
+boş kesit denetliyordu. Aynı credential/access/status assertion'ları korunarak
+gerçek fonksiyon sınırı seçildi; eksik hedefli kapsam `user-management` ile
+tamamlandı. Eski başarısız tam sonuç değişmedi; batch 6–10 o koşuda çalışmadı.
+
+Genişletilmiş filtre ayrıca başka sentetik test kurulumunun daha zengin IAM
+kopyasını bulan fixture yarışını açığa çıkardı. Bu üretim yetki kontrolü
+regresyonu değildir: kurtarma yolu Buyer Log adlı kardeş kurulumları kasıtlı
+arar. Özel kardeş fixture ile **7 PASS / 1 FAIL** deterministik RED alındı.
+Fixture'ın portable kurulumu `root/install/data` içine alınarak kardeş arama
+sınırı kendi özel kapsayıcısına bağlandı. Üretim recovery kapatılmadı; özgün
+yedi test/assertion korundu, sekizinci test dış fixture yerine kendi korumalı
+yedeğinin seçildiğini ve dış fixture'daki iki kullanıcının korunduğunu sınar.
+Dosyanın byte düzeyinde değişmediği iddia edilmez.
+
+Son genişletilmiş ilgili paket **21 dosya / 158 PASS / 0 FAIL / 0 SKIP**.
+Güncel entegrasyonun tam standart sonucu yukarıda kayıtlıdır: 8.896 PASS, sıfır
+hata; i18n 0/0 ve 43 not geçerli. Eski tam RED tarihsel olarak korunur.
+Raw loglar kayıpsız `.log.gz` olarak ve ham/gzip SHA-256 manifestiyle korunur.
+
+### Görsel ve entegrasyon sınırı
+
+TR/EN gerçek Buyer Log ekranları headless Chromium'da, 1560×1000 ve
+reduced-motion ile alınıp agent tarafından incelendi. Sürüm notu yalnız bu
+düzeltmeye ait kaydı ekler; Main'in 38 kayıt nesnesi korunur. Ekran güncel
+profilin yetki listesini gösterir; bekleyen isteğin reddini resim değil native
+testler kanıtlar. `ui-verification.json` ve PNG SHA'ları kanıt dizinindedir.
+
+Bu değişiklik, bir kapıyı geçtikten sonra bekleyen her route'a yeni commit
+guard eklediği iddiasını taşımaz. Mevcut merkezi transaction/compute/import
+kontrolleri korunur. #897'deki hiyerarşi/publicProfile performans işi açık
+kalır. Ölçülmüş hızlanma veya genel performans kabulü iddia edilmez.
+
+Tek bağımsız ikinci model (`gpt-6-astra`) incelemesi `e49df459` kaynakları için
+tamamlandı: raporlanabilir P1/P2 yok. Son iki dar test/fixture kapanışı aynı tur
+içinde ayrıca doğrulandı; yeni genel tur yapılmadı. Reviewer test çalıştırmadı.
+16 yeni testte ayrı inherited-grant iptal örneği yok; değişmeyen hiyerarşi yolu
+kaynak üzerinden incelendi. Güncel entegrasyonda tam regresyon ve son SHA'nın
+gerçek CI sonucu merge öncesinde tamamlanmalıdır. **Merge yok; TEST yok;
+STABLE yok.**
+
+## EN
+
+**P1 security prerequisite, separate from ADMIN-03 performance optimization.**
+The baseline is Main `63159fb3`; the synthetic fixture from preparation #897 is
+reused. Native code confirms that a request suspended after selection could
+retain revoked authority in its copied profile even while fresh requests were
+denied. This demonstrates a middleware ordering flaw, not a proven deployed
+endpoint exploit.
+
+All six authorization gates now revalidate the signed session against the
+current directory. Permission evaluation uses the same directory object, and
+the request still receives a private profile copy. Access/role changes retain
+otherwise valid sessions; changed credentials and disabled/deleted accounts
+fail closed. Permission codes, error responses, central transactions and
+compute/import guards remain unchanged. No long-lived permission cache, server
+route, client production, or performance optimization was added.
+
+The identical final 16 tests produce **2 PASS / 14 FAIL** against Main and
+**16 PASS / 0 FAIL** against the fix with the unchanged standard native runner.
+The evidence records source/test SHA-256, command and isolated temporary roots.
+Coverage includes local/central revocation, central credential replacement, role
+downgrade, every gate's credential/cookie rejection, active sessions, private
+copies, and grant time boundaries without revision changes. Invalid early
+fixture attempts and sandbox-only runner failures remain explicitly historical.
+Credential tests change actual synthetic hashes and verify the writer-derived
+generation, rather than manually bumping a field the writer owns.
+
+The related package progressed from **117** to **120** tests. The first standard
+full run stopped at batch 5 on a literal source-signature lookup, not on the
+preserved credential/access assertions. Updating the function boundary and
+including user-management in the related gate exposed a separate synthetic
+sibling-install recovery fixture race. A deterministic regression was **7/1
+RED**; nesting the fixture installation inside its private container preserves
+production recovery and all seven original tests, then adds the isolation
+regression. The expanded package is **21 files / 158 PASS / 0 FAIL / 0 SKIP**.
+The old full failure remains unchanged; final integrated full suite passed with 8,896 tests, zero failures and 65
+existing skips; i18n 0/0 and 43 notes passed. Actual final-head CI remains a
+separate gate. Inspected TR/EN screenshots come
+from the actual isolated demo application; pending-request rejection is proven
+by tests, not the screenshot. Main's existing 38 note objects are preserved.
+
+No real data, credentials, services, migration, deployment, or performance gain
+claim. ADMIN-03 performance work remains open. The one independent second-model
+review at `e49df459` found no reportable P1/P2; subsequent narrow test/fixture
+closures were verified within that round, without rerunning tests. Final
+integrated regression and final-head CI are still required before merge.
+**No merge, TEST or STABLE.**
+
+
+## 30k Phase 0 — güncel Main regresyon karşılaştırması / current Main regression
+
+[Doğrulandı] **A:** Main `5b8c1e6f`; **B:** `df8ca377` (incelenen üretim
+ve son native testler değişmedi). Aynı seed-7 kaynak arşivi, taze source/data/cache/
+server/Chromium ile **A/B–B/A–A/B**, altı koşu PASS. Mevcut Faz 0 betiği
+**değiştirilmedi**: `--rows 30000 --module overview --skip-same-tab
+--server-loop-probe`. Her koşuda satır sayısı, kaynak generation/revizyonu ve
+cache checksum'ları doğrulandı; CP 24.982 / Orders 30.000 / Overview 30.000
+sıralı satır hash'leri üç çiftte de birebir aynı. Refresh POST retry yapılmadı.
+Yerel başka benchmark veya test paketiyle çakışmadı; kurulum/kaynak incelemesi
+çalışmaları sürdü. Ortam Linux, Node 24.19.0, Chromium 154, 4 vCPU quota,
+16 GiB limit; Windows/Electron değildir.
+
+| Medyan / median | Main → fix |
+| --- | --- |
+| Refresh | 50,704 → 49,404 s |
+| Overview primary ready | 3,522 → 2,792 s |
+| Gate ready | 3,534 → 2,805 s |
+| System complete | 3,637 → 2,922 s |
+| Refresh `/api/health` p50 | 7,15 → 5,82 ms |
+| Refresh `/api/health` p95 | 542,41 → 372,14 ms |
+| Overview server maximum timer gap | **126,12 → 185,93 ms** |
+| Whole-run maximum timer gap (refresh included) | 4.925,96 → 4.698,35 ms |
+
+**Olumsuz hareket korunur / adverse movement retained:** Overview maksimumu
+üç çiftte de arttı: **+%72,97 / +%52,53 / +%28,96**. Tüm altı Overview
+penceresinde 200 ms üzeri boşluk sayısı sıfır; bu dar gözlem hard-bound veya
+Global Flow/Backlog kabulü değildir. Artışın yetki yeniden doğrulamasından
+kaynaklandığı kanıtlanmadı. Primary/gate ve health p95 çiftleri karışık; p95
+çiftlerinden biri +%187,03. Medyan azalması bir optimizasyon kazanımı sayılmaz.
+Refresh'teki 4–5 sn boşluklar hâlâ vardır; eski Faz 5 kabul açığını kapatmaz.
+
+The six runs passed with identical ordered projection rows in all three pairs.
+This is an **Overview-only security regression check**, not CP/Orders first-open,
+Global Flow or Backlog performance acceptance. Overview maximum server timer gap
+increased in all pairs (median **126.12→185.93 ms**), while all six windows had
+zero gaps over 200 ms. Its cause is unproven; no speedup or hard-bound claim is
+made. Whole-run refresh stalls remain. Primary/gate and health p95 comparisons
+are mixed; one health pair worsened 187.03%. Health is harness-observed roundtrip,
+not an independent server-only bound. Timer gaps include the normal 10 ms interval.
+
+Lossless run logs, partial/final JSON, event-loop records, real screenshots,
+server stall profiles, input/source hashes and reproduction tools are retained
+under [phase0](admin-03-authority-artifacts/phase0/summary.json). Existing source
+fixtures and historical failures remain at their original locations.
+**Merge approval pending; no TEST or STABLE.**

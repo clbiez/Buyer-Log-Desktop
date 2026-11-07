@@ -1,0 +1,92 @@
+[
+  {
+    "run": 1,
+    "mode": "baseline",
+    "times": [
+      1618.1000000000931,
+      1545.5,
+      1554.1999999999534
+    ],
+    "totalMs": 4717.800000000047,
+    "detailMutations": 6,
+    "editorRetained": false,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  },
+  {
+    "run": 1,
+    "mode": "after",
+    "times": [
+      111.80000000004657,
+      105.09999999997672,
+      116.59999999997672
+    ],
+    "totalMs": 333.5,
+    "detailMutations": 0,
+    "editorRetained": true,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  },
+  {
+    "run": 2,
+    "mode": "after",
+    "times": [
+      103.90000000002328,
+      132.69999999995343,
+      119.10000000009313
+    ],
+    "totalMs": 355.70000000006985,
+    "detailMutations": 0,
+    "editorRetained": true,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  },
+  {
+    "run": 2,
+    "mode": "baseline",
+    "times": [
+      1410.6999999999534,
+      1527.9000000000233,
+      1486
+    ],
+    "totalMs": 4424.599999999977,
+    "detailMutations": 6,
+    "editorRetained": false,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  },
+  {
+    "run": 3,
+    "mode": "baseline",
+    "times": [
+      1505.7999999999302,
+      1507.1999999999534,
+      1458.9000000000233
+    ],
+    "totalMs": 4471.899999999907,
+    "detailMutations": 6,
+    "editorRetained": false,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  },
+  {
+    "run": 3,
+    "mode": "after",
+    "times": [
+      136.30000000004657,
+      110.30000000004657,
+      120
+    ],
+    "totalMs": 366.60000000009313,
+    "detailMutations": 0,
+    "editorRetained": true,
+    "editorValue": true,
+    "sha": "184400fd7e3815c6d45b2a5afa15d9ccf4ecf261f432028444c16a2f5feb21c5",
+    "errors": []
+  }
+]

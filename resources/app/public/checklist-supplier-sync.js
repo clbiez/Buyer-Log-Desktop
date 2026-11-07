@@ -245,8 +245,14 @@
     const engine = typeof module === 'object' && module.exports ? require('./checklist-answer-merge-engine') : root.BLChecklistAnswerMergeEngine;
     state.applyingRemote = true;
     try {
-      s.answers = engine.merge(s.answers, payload, state.pendingAnswers);
-      if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
+      const merged = engine.merge(s.answers, payload, state.pendingAnswers);
+      // Ortak kayıt yerel cevaplarla aynıysa kararlar değişmez: yeniden yazmak
+      // CP kararlarının tamamını geçersiz kılıp yeniden hesaplatıyordu (25 bin
+      // satırda ~6 sn). Okunamayan yerel kayıt kurtarılırken yazım korunur.
+      if (s.answerStoreError || !sameJson(merged, s.answers)) {
+        s.answers = merged;
+        if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
+      }
     } finally {
       state.applyingRemote = false;
     }
@@ -514,7 +520,10 @@
   }
 
   // rowParts: aynı satırın bütün kalemleri için bir kez hesaplanmış parça listesi.
-  function itemApplies(item, analysis, rowParts) {
+  // appliesCache: tek bir senkron geçişte (kural/cevap/ayar sabitken) satırın
+  // geçerli checklist kimlikleri. evaluateOrder sonucu kaleme bağlı değildir;
+  // kalem başına yeniden değerlendirmek 25 bin satırlık CP'de ~80 sn CPU idi.
+  function itemApplies(item, analysis, rowParts, appliesCache) {
     if (!analysis) return true;
     const part = Components.parseItem(item.id);
     if (part) {
@@ -524,17 +533,21 @@
     }
     // Set satırında temel kalem arayüzde geçerli kalır; çalışma kitabı çağıranları
     // onu aşağıda parçaya özel sütunlara açıkça genişletir.
-    // Karar katmanı her sipariş için geçerli checklist başlıklarını zaten
-    // hesapladı; aynı sonucu yeniden değerlendirmeyiz.
+    // Analiz geçerli başlık listesini taşıyorsa doğrudan kullanılır. Bugünkü
+    // karar katmanı bu alanı üretmez; liste aşağıda satır başına bir kez
+    // değerlendirilir ve appliesCache ile aynı geçişte paylaşılır.
     if (Array.isArray(analysis.checklistItemIds)) return analysis.checklistItemIds.indexOf(item.id) >= 0;
     const s = assistantState(), Rules = root.BLCpRulesEngine;
     if (!s || !Rules) return true;
-    const evaluated = typeof Rules.evaluateOrder === 'function'
-      ? Rules.evaluateOrder(analysis, { rules: s.rules, answers: s.answers, checklistEnabled: !s.checklistSettings || s.checklistSettings.enabled !== false })
-      : { customItems: Rules.customChecklistItems(analysis, s.rules, {}) };
-    return evaluated.customItems.some(function (candidate) {
-      return candidate.id === item.id;
-    });
+    let ids = appliesCache && appliesCache.get(analysis);
+    if (!ids) {
+      const evaluated = typeof Rules.evaluateOrder === 'function'
+        ? Rules.evaluateOrder(analysis, { rules: s.rules, answers: s.answers, checklistEnabled: !s.checklistSettings || s.checklistSettings.enabled !== false })
+        : { customItems: Rules.customChecklistItems(analysis, s.rules, {}) };
+      ids = new Set(evaluated.customItems.map(function (candidate) { return candidate.id; }));
+      if (appliesCache) appliesCache.set(analysis, ids);
+    }
+    return ids.has(item.id);
   }
 
   function answerFor(item, analysis, rowParts) {
@@ -559,6 +572,23 @@
       } catch (_) {}
     }
     return null;
+  }
+
+  // Son sütun geçişinden beri değişen cevapların sipariş/opsiyon kapsamı.
+  // Kapsamı çözülemeyen bir anahtar null döner (tam geçiş).
+  function answerChangeScope(previous, answers) {
+    if (!(previous instanceof Map)) return null;
+    const orderKeys = new Set(), optionIds = new Set();
+    let known = true;
+    const mark = function (key) {
+      const cut = key.lastIndexOf('::');
+      if (cut <= 0) { known = false; return; }
+      const head = key.slice(0, cut);
+      if (head.indexOf('@option:') === 0) optionIds.add(head.slice(8)); else orderKeys.add(head);
+    };
+    Object.keys(answers).forEach(function (key) { if (previous.get(key) !== answers[key]) mark(key); });
+    previous.forEach(function (_, key) { if (!Object.prototype.hasOwnProperty.call(answers, key)) mark(key); });
+    return known ? { orderKeys: orderKeys, optionIds: optionIds } : null;
   }
 
   function refreshColumns(options) {
@@ -605,9 +635,29 @@
     state.appliedColumns = null;
 
     if (rows.length && items.length) {
-      const decision = opts.decision || analysesForRows(rows);
+      const decision = opts.decision || analysesForRows(rows), appliesCache = new WeakMap();
+      /* SATIR DELTASI (CPR-09). Hücreler satırın analizi, o siparişin/opsiyonun
+         cevapları ve genel girdilerden (başlıklar+dil, ayarlar, kurallar, durum
+         etiketleri, PLM, test görevleri) üretilir. Genel girdiler ve satır listesi
+         aynıyken, analiz nesnesi aynı kalan ve cevabı değişmeyen satırların
+         hücreleri zaten günceldir; yalnız diğerleri yeniden yazılır. */
+      const sNow = assistantState(), answersNow = (sNow && sNow.answers) || {};
+      const ChecklistEngine = root.BLCpChecklistEngine;
+      const deltaSignature = JSON.stringify([
+        itemsSignature, sNow && sNow.checklistSettings,
+        ChecklistEngine && typeof ChecklistEngine.customStatuses === 'function' ? ChecklistEngine.customStatuses() : null,
+        root.BLPlmSampleRequests && root.BLPlmSampleRequests.updatedAt || '',
+      ]);
+      const previousDelta = state.columnDelta;
+      const scope = previousDelta && previousDelta.rows === rows && previousDelta.signature === deltaSignature
+        && previousDelta.tasks === state.testTasks && previousDelta.rules === (sNow && sNow.rules)
+        ? answerChangeScope(previousDelta.snapshot, answersNow) : null;
+      const appliedAnalyses = scope ? previousDelta.analyses : new WeakMap();
+      const optionIdOf = analysis => (ChecklistEngine && typeof ChecklistEngine.optionIdentity === 'function' ? ChecklistEngine.optionIdentity(analysis) : '') || '';
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        if (scope && analysis && appliedAnalyses.get(row) === analysis && !scope.orderKeys.has(analysis.orderKey)
+          && !(scope.optionIds.size && scope.optionIds.has(optionIdOf(analysis)))) return;
         const statuses = {}, partCells = {}, elementCells = {};
         /* Parça listesi ve set bilgisi satıra bağlıdır, kaleme değil. Hücre başına
            4-6 kez yeniden hesaplanıyordu; 25 bin satırlık CP'nin ilk çiziminin
@@ -619,7 +669,7 @@
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
           // kullanıcıya düşen bekleyen bir iş varsa hücre görünür kalır.
           const pendingTasks = analysis && state.testTasks.get(answerKey(analysis.orderKey, item.id));
-          if (!itemApplies(item, analysis, parts) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
+          if (!itemApplies(item, analysis, parts, appliesCache) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
           // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
           // Set satırının durumu aşağıda parçalardan toplanır; bütün kalem cevabı okunmaz.
@@ -650,12 +700,15 @@
           if (list && list.length) tasks[item.id] = list;
         });
         Object.defineProperty(row, '_checklistTasks', { value: tasks, enumerable: false, configurable: true, writable: true });
+        appliedAnalyses.set(row, analysis);
       });
       // Bileşenli sütun, adlar okunabilsin diye genişler (kullanıcı genişliği korunur).
       const withElements = new Set();
       rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
       dynamic.forEach(function (col) { col.weight = withElements.has(col.checklistItemId) ? 26 : 12; });
       state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
+      state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
+        snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
     return true;
@@ -682,7 +735,10 @@
         if(!decision || generation!==assistantRefreshGeneration || currentRows()!==rows)return;
         // Aynı karar zaten hücrelere işlendiyse CP'yi ikinci kez çizmeye gerek yok.
         const already=state.appliedColumns&&state.appliedColumns.rows===rows&&state.appliedColumns.decision===decision&&state.appliedColumns.tasks===state.testTasks;
-        refreshColumns({render:false,decision});
+        // Karar nesnesi kural, cevap, PLM ve bağlam revizyonuyla anahtarlıdır; aynı
+        // karar, satır, görev, başlık ve dil zaten işlendiyse ikinci tam geçiş
+        // (25 bin satırda ~3 sn) yapılmaz. Biri farklıysa reuse tam geçişe düşer.
+        refreshColumns({render:false,decision,reuse:true});
         if(!already&&root.document?.body?.dataset.activeTab==='cp'&&typeof root.renderCP==='function')root.renderCP();
       }).catch(error=>toast(error.message));
     } else refreshColumns({render:false});
@@ -888,10 +944,10 @@
   async function chooseSupplierQuestionIds(groups, catalog) {
     if (!root.document) return null;
     const prepared = groups.map(group => {
-      const decision = analysesForRows(group.rows);
+      const decision = analysesForRows(group.rows), appliesCache = new WeakMap();
       const available = catalog.filter(item => group.rows.some(row => {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-        return itemApplies(item, analysis);
+        return itemApplies(item, analysis, null, appliesCache);
       }));
       return { ...group, available, selected: new Set(supplierQuestionIdsFor(group.supplier)) };
     });
@@ -2149,12 +2205,12 @@
         directAttachment: true,
       });
 
-      const decision = analysesForRows(supplierRows), attachmentMap = new Map();
+      const decision = analysesForRows(supplierRows), attachmentMap = new Map(), appliesCache = new WeakMap();
       supplierRows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         if (!analysis) return;
         expandedItems(selectedCatalog, [analysis]).forEach(function (item) {
-          if (!itemApplies(item, analysis)) return;
+          if (!itemApplies(item, analysis, null, appliesCache)) return;
           const answer = answerFor(item, analysis);
           (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
             if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
@@ -3015,6 +3071,7 @@
     openEvidenceForRow: openEvidenceForRow,
     componentCellHtml, openComponentCountDialog, expandedItems,
     diffAnswers: diffAnswers,
+    refreshAssistantView: refreshAssistantView,
     syncAnswerChanges: syncAnswerChanges,
     latestAnswerAt: latestAnswerAt,
     columnKey: columnKey,

@@ -24,8 +24,6 @@ const { chooseTemplate, templateLabel } = require('./output-templates');
 const { buildDocument } = require('./output-html');
 const { buildDeck } = require('./output-deck');
 const { reportCss } = require('./output-theme');
-const { renderWorkbook } = require('./output-xlsx');
-const { renderPresentation } = require('./output-pptx');
 const { createOutputStore } = require('./output-store');
 const { collectTokens, normalizeImages, normalizeRecords, fillHtmlImages } = require('./output-images');
 const { createDraftStore } = require('./output-drafts');
@@ -63,6 +61,7 @@ function createOutputService(options = {}) {
   const store = options.store || createOutputStore(options.storeOptions || {});
   const drafts = options.drafts || createDraftStore(options.draftOptions || (options.storeOptions && options.storeOptions.root ? { root: `${options.storeOptions.root}-drafts` } : {}));
   const now = typeof options.now === 'function' ? options.now : () => new Date();
+  const compute=typeof options.compute==='function'?options.compute:()=>options.compute||require('../compute-runtime').getComputeService();
   const emit = (onProgress, event) => { if (typeof onProgress === 'function') { try { onProgress(event); } catch (_) {} } };
 
   async function create(ownerId, input = {}) {
@@ -118,16 +117,17 @@ function createOutputService(options = {}) {
       return { ...base, output: { pending: 'images', pendingId, tokens, format: spec.format, title, templateLabel: job.templateLabel, attempts, draftId: job.draftId } };
     }
     emit(input.onProgress, { phase: 'output', step: 'rendering', format: spec.format });
-    return { ...base, output: render(ownerId, job, {}) };
+    return { ...base, output: await render(ownerId, job, {},input.assertCurrent) };
   }
 
   /* İş + (varsa) görseller → dosya. PDF son adımı masaüstü kabuğunda. */
-  function render(ownerId, job, images) {
+  function render(ownerId, job, images,assertCurrent) {
     const { format, data, title, lang, orientation, day } = job;
     const records = job.records || {};
     const date = new Date(job.date);
     const saveMeta = { title, format, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) };
     try {
+      assertCurrent?.();
       if (format === 'pdf' || format === 'html') {
         // Model kartı/galeri varsa: kart bilgileri (kaynak satırdan), gruplar
         // yan yana, PDF'te sütun × satır sayfaları. Yerleşim yoksa varsayılan.
@@ -142,8 +142,16 @@ function createOutputService(options = {}) {
         const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
       }
-      const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images, records });
-      return store.save(ownerId, { buffer, ...saveMeta });
+      return compute().runOffice(ownerId,{format,data,options:{lang,date,images,records}}).catch(error=>{
+        if(isLcwAiError(error))throw error;
+        throw lcwAiError('OUTPUT_RENDER_FAILED',{detail:String(error?.code||'render').slice(0,60)});
+      }).then(async lease=>{
+        try{
+          assertCurrent?.();const input={buffer:Buffer.from(lease.value.buffer),...saveMeta};
+          const saved=store.saveAsync?await store.saveAsync(ownerId,input,{assertCurrent}):store.save(ownerId,input);
+          assertCurrent?.();return saved;
+        }finally{lease.release();}
+      });
     } catch (error) {
       if (isLcwAiError(error)) throw error;
       throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: String(error && error.code || 'render').slice(0, 60) });
@@ -152,7 +160,7 @@ function createOutputService(options = {}) {
 
   /* Renderer'ın çözdüğü görseller ({ anahtar: dataURL }) → dosya. Eksik
      görsel dosyayı durdurmaz; yerine "görsel yok" kutusu konur. */
-  function completeImages(ownerId, pendingId, rawImages, rawRecords) {
+  function completeImages(ownerId, pendingId, rawImages, rawRecords,{assertCurrent}={}) {
     const entry = store.takePending(ownerId, pendingId);
     if (!entry || entry.stage !== 'images') throw lcwAiError('OUTPUT_NOT_FOUND');
     const images = normalizeImages(rawImages, entry.tokens);
@@ -162,8 +170,9 @@ function createOutputService(options = {}) {
     if (entry.job.draftId) {
       try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])), records }); } catch (_) {}
     }
-    const output = render(ownerId, { ...entry.job, records }, images);
-    return { ...output, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length };
+    const output = render(ownerId, { ...entry.job, records }, images,assertCurrent);
+    const finish=value=>({ ...value, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length });
+    return output?.then?output.then(finish):finish(output);
   }
 
   /* Masaüstü kabuğunun bastığı PDF baytları → AI Outputs. */
@@ -248,9 +257,10 @@ function createOutputService(options = {}) {
     if (parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx') {
       const target = input.format || 'pptx';
       if (!['pptx', 'pdf', 'html', 'xlsx'].includes(target)) throw lcwAiError('BAD_REQUEST');
-      output = renderStudio(ownerId, job, images, target);
-    } else output = render(ownerId, job, images);
-    return { output, warnings: parsed.warnings || [], revision: updated ? updated.revision : draft.revision };
+      output = renderStudio(ownerId, job, images, target,input.assertCurrent);
+    } else output = render(ownerId, job, images,input.assertCurrent);
+    const finish=value=>({output:value,warnings:parsed.warnings||[],revision:updated?updated.revision:draft.revision});
+    return output?.then?output.then(finish):finish(output);
   }
 
   /* Buyer Log'un kendi hesapladığı tablo (doğal dil veri sorgusu) → Excel.
@@ -269,7 +279,7 @@ function createOutputService(options = {}) {
     try {
       job.draftId = drafts.create(ownerId, { format: 'xlsx', data: job.data, title: job.title, template: job.template, templateLabel: label, lang, orientation: 'portrait', detail: 'standard', day, images: {} });
     } catch (_) { job.draftId = null; }
-    return render(ownerId, job, {});
+    return render(ownerId, job, {},input.assertCurrent);
   }
 
   function createStudio(ownerId, input = {}) {
@@ -296,8 +306,8 @@ function createOutputService(options = {}) {
     return getDraft(ownerId, id);
   }
 
-  function renderStudio(ownerId, job, images, target) {
-    if (target === 'pptx') return render(ownerId, job, images);
+  function renderStudio(ownerId, job, images, target,assertCurrent) {
+    if (target === 'pptx') return render(ownerId, job, images,assertCurrent);
     if (target === 'xlsx') {
       const items = job.data.slides.flatMap(s => s.layout === 'gallery' ? s.items : []);
       const fields = job.data.layout.cardFields || [];
@@ -314,7 +324,7 @@ function createOutputService(options = {}) {
       }
       const parsed = contracts.normalizeWorkbook({ title: job.title, sheets }, { lang: job.lang });
       if (!parsed.ok || parsed.warnings.length) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [...parsed.errors, ...parsed.warnings] });
-      return render(ownerId, { ...job, format: target, data: parsed.data }, {});
+      return render(ownerId, { ...job, format: target, data: parsed.data }, {},assertCurrent);
     }
     if (target === 'html') {
       // HTML: etkileşimli, animasyonlu sunum (yalnız CSS; katı CSP korunur). PDF aşağıdaki baskı yolunda kalır.
@@ -329,7 +339,7 @@ function createOutputService(options = {}) {
     const report = BLOutputLayout.presentationReport(job.data, job.records, job.lang === 'en');
     const c = require('./output-theme').theme().colors;
     const css = `@page{size:${report.width}pt ${report.height}pt;margin:0}html,body,.bl-page,.bl-report{margin:0!important;padding:0!important;max-width:none!important;width:auto!important}.bl-header,.bl-footer{display:none!important}.bl-studio-page{background:${c.paper};margin:0!important;overflow:hidden}.bl-studio-page:last-child{break-after:auto}.bl-studio-title{color:${c.ink}}.bl-studio-title small{display:block;font-size:12pt}.bl-studio-card{background:${c.paper};border:0.5pt solid ${c.line}}.bl-studio-card img{max-width:none!important;margin:0!important}.bl-studio-content table{width:100%}`;
-    return render(ownerId, { ...job, format: target, pageFooter: false, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images);
+    return render(ownerId, { ...job, format: target, pageFooter: false, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images,assertCurrent);
   }
 
   /* Şablon olarak kaydetme: taslaktaki (ya da düzenleyicideki) yapının
@@ -355,7 +365,7 @@ function createOutputService(options = {}) {
       if(!['html','xlsx','pdf'].includes(format))throw lcwAiError('BAD_REQUEST');
       const parsed=format==='xlsx'?contracts.normalizeWorkbook(input.data,{lang}):contracts.normalizeHtmlDraft(input.data,{lang});
       if(!parsed.ok||parsed.warnings?.length)throw lcwAiError('OUTPUT_INVALID',{detail:'structured-report'});
-      return render(ownerId,{format,data:parsed.data,title:String(input.title||'Report').slice(0,140),lang,orientation:'landscape',day:date.toISOString().slice(0,10),date:date.toISOString(),requestId:input.requestId,attempts:0,template:'deterministic-report',templateLabel:lang==='en'?'Buyer Log report':'Buyer Log raporu',durablePending:true},{});
+      return render(ownerId,{format,data:parsed.data,title:String(input.title||'Report').slice(0,140),lang,orientation:'landscape',day:date.toISOString().slice(0,10),date:date.toISOString(),requestId:input.requestId,attempts:0,template:'deterministic-report',templateLabel:lang==='en'?'Buyer Log report':'Buyer Log raporu',durablePending:true},{},input.assertCurrent);
     },
     get: (ownerId, id) => store.get(ownerId, id),
     list: (ownerId, limit) => store.list(ownerId, limit),

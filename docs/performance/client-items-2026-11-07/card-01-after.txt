@@ -1,0 +1,183 @@
+{
+  "chromium": "154.0.8037.57",
+  "results": [
+    {
+      "module": "license-cards",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 126.10000000009313,
+        "p95Ms": 140.9000000001397
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 196.5,
+        "p95Ms": 262.69999999995343
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 343.20000000018626,
+        "p95Ms": 382.20000000018626
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 1.9000000001396984,
+        "p95Ms": 3
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 34.5,
+        "p95Ms": 43.89999999990687
+      },
+      "save": null,
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 1.3999999999068677,
+        "p95Ms": 3.6000000000931323
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 21.5,
+        "p95Ms": 26.300000000046566
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 29.800000000046566,
+        "p95Ms": 36.39999999990687
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    },
+    {
+      "module": "license-cards",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 1215.3000000000466,
+        "p95Ms": 1414.9000000001397
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 1828,
+        "p95Ms": 2507.5999999998603
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 3952.7000000001863,
+        "p95Ms": 4137.90000000014
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 1.9000000001396984,
+        "p95Ms": 7.199999999953434
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 323.30000000004657,
+        "p95Ms": 354.69999999995343
+      },
+      "save": null,
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 1.3000000000465661,
+        "p95Ms": 2.9000000001396984
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 174.9000000001397,
+        "p95Ms": 261
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 239.5,
+        "p95Ms": 261.30000000004657
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    }
+  ]
+}

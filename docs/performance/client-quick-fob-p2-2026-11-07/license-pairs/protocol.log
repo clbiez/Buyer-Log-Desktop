@@ -1,0 +1,13 @@
+2026-11-07T18:59:50.065Z START pair-1-A-card
+2026-11-07T19:01:54.315Z DONE pair-1-A-card pid=80596
+2026-11-07T19:01:54.316Z START pair-1-B-card
+2026-11-07T19:02:58.288Z DONE pair-1-B-card pid=81014
+2026-11-07T19:02:58.288Z START pair-2-B-card
+2026-11-07T19:04:01.030Z DONE pair-2-B-card pid=81203
+2026-11-07T19:04:01.030Z START pair-2-A-card
+2026-11-07T19:06:01.360Z DONE pair-2-A-card pid=81393
+2026-11-07T19:06:01.361Z START pair-3-A-card
+2026-11-07T19:07:54.360Z DONE pair-3-A-card pid=81574
+2026-11-07T19:07:54.360Z START pair-3-B-card
+2026-11-07T19:08:57.211Z DONE pair-3-B-card pid=81765
+{"output":"/workspace/Buyer-Log-Desktop/docs/performance/client-quick-fob-p2-2026-11-07/license-pairs","independentRuns":6,"pairsPerTarget":3}

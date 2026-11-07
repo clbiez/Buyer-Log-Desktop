@@ -1,0 +1,20 @@
+{
+  "temporaryParent": "/tmp",
+  "productionSourceSha256": "6280f282b696ce26abdabd7061b2e5c74bd1d9ba27b4298e12ba16293b72bf55",
+  "protectedCandidateCount": 2,
+  "ownCaptureIsRecoveryCandidate": true,
+  "firstCandidates": [
+    {
+      "file": "/tmp/buyerlog-perf-ui-CzOcfG/data/user-access.json",
+      "credentialCount": 1,
+      "userCount": 1,
+      "revision": 2
+    },
+    {
+      "file": "/tmp/buyerlog-perf-ui-CzOcfG/data/user-access.json.bak",
+      "credentialCount": 1,
+      "userCount": 1,
+      "revision": 1
+    }
+  ]
+}

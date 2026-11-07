@@ -11,12 +11,15 @@
   function description(row,moduleId){
     return ['category','productDescription','productMainDefinition'].map(id=>String(Fields.value(row||{},moduleId||'cp',id)||'')).join(' ');
   }
-  function isSet(row,moduleId){return /tak[ıi]m|\bsets?\b/i.test(description(row,moduleId));}
+  const SET_PATTERN=/tak[ıi]m|\bsets?\b/i;
+  function isSet(row,moduleId){return SET_PATTERN.test(description(row,moduleId));}
   function count(row,moduleId){
     const explicit=validCount(Fields.value(row||{},moduleId||'cp','setPieceCount'));
     if(explicit)return explicit>1?explicit:0;
+    // Açıklama bir kez okunur; isSet aynı metni yeniden türetirdi (CP'de satır ×
+    // kalem başına üç ek alan araması).
     const raw=description(row,moduleId);
-    if(!isSet(row,moduleId))return 0;
+    if(!SET_PATTERN.test(raw))return 0;
     const match=raw.match(/(\d+)\s*[-'’]?\s*(?:l[ıiuü]|pieces?|pcs|par[çc]a)/i)||raw.match(/(?:sets?|tak[ıi]m)\s*(?:of\s*)?(\d+)/i);
     const n=validCount(match&&match[1]);return n>1?n:0;
   }

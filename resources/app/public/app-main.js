@@ -1054,9 +1054,13 @@ const _unifiedPriorityCache={cp:null,orders:null};
 // Tablo başına revizyon: bir tablonun verisi yüklenince diğerinin kararları
 // geçersiz sayılmaz (Siparişler yüklenince CP ≈1 sn boşuna yeniden hesaplanıyordu).
 const _unifiedPriorityTableRevision={cp:1,orders:1};
-window.BL_CP_DECISION_DATA_REVISION=()=>_unifiedPriorityTableRevision.cp;
+// Karar motoru girdisi olan CP SATIR verisinin revizyonu. Kişisel karar bağlamı
+// (checklist cevabı, kural) satır verisi değildir; tablo revizyonu artsa da bu artmaz.
+let _cpDecisionInputRevision=1;
+window.BL_CP_DECISION_DATA_REVISION=()=>_cpDecisionInputRevision;
 function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
+  if(reason!=='personal-decision-context'&&(!Array.isArray(tables)||!tables.length||tables.includes('cp')))_cpDecisionInputRevision+=1;
   for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
   window.BLPerf?.mark?.('UNIFIED_PRIORITY_INVALIDATED',{reason:reason||'data',revision:_unifiedPriorityDataRevision});
   // Global Flow Map CP/Orders verisini ızgara DOM'undan değil bu revizyondan izler.
@@ -15077,10 +15081,10 @@ async function waitForRefreshJob(expectedJob=null){
     if(Array.isArray(data.orders)){
       state.orders = { fname: `Sunucu: ${sourceName}`, rows: data.orders.map(row=>({...row,_canEdit:false})) };
       state.ordersLogisticExpanded.clear();
-      invalidateUnifiedPriorityDecisions('server-orders-hydrated');
+      invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){
       if(!keepOrdersForPartialRefresh)state.orders=null;state.orderSummary=null;
-      invalidateUnifiedPriorityDecisions('server-orders-deferred');
+      invalidateUnifiedPriorityDecisions('server-orders-deferred',['orders']);
     }
     if(Array.isArray(data.orderSummary)){
       state.orderSummary = { fname: `Sunucu: ${sourceName}`, rows: data.orderSummary };
@@ -19559,7 +19563,8 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
   return book.xlsx.writeBuffer();
 }
 window.BLBacklogChartContext={
-  prepareQuery:()=>fetchBacklogSourceColumns(),
+  prepareQuery:()=>prepareBacklogChartQuery(),
+  whenRowsReady:()=>waitForBacklogRowsReady(),
   queryParams:(allColumns=false)=>{
     const params=backlogExportQueryParams();
     // Ayar penceresinde ASAS/Antrepo dahil tüm mevcut başlıklar seçilebilir olmalı.
@@ -19729,7 +19734,28 @@ function applyBacklogData(data){
   updateBacklogBuyerGrupBtnLabel();
 }
 let backlogFetchGeneration=0;
+let backlogFetchPending=null;
+async function prepareBacklogChartQuery(){
+  await fetchBacklogSourceColumns();
+  await waitForBacklogRowsReady();
+}
+async function waitForBacklogRowsReady(){
+  // İlk pivot kaynak revizyonunu ortak satır önbelleğine bildirir. Grafik onu
+  // beklemezse henüz başlayan ortak isteği bu bildirim silip tekrar başlatır.
+  while(backlogFetchPending)await backlogFetchPending.ready;
+}
 async function fetchBacklog(params){
+  const previous=backlogFetchPending,entry={ready:null,finish:null};
+  entry.ready=new Promise(resolve=>{entry.finish=resolve;});backlogFetchPending=entry;
+  // Daha yeni filtre eski isteğin tamamlanmasını beklemez; hazırlanan grafik
+  // her uyanışında yalnız son pivotu izler.
+  previous?.finish();
+  return fetchBacklogData(params).finally(()=>{
+    if(backlogFetchPending===entry)backlogFetchPending=null;
+    entry.finish();
+  });
+}
+async function fetchBacklogData(params){
   backlogPrefetch=null;
   showBacklogLoadingState();
   const generation=++backlogFetchGeneration;

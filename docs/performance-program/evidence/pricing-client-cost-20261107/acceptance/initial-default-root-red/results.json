@@ -1,0 +1,78 @@
+{
+  "testedCommit": "30f5315474fc898bec99e2630a0cd4c378b39eb0",
+  "appTree": "a173a6d79bf9ed798586fc1657d9c077d4075b72",
+  "node": "v24.19.0",
+  "concurrency": "runner default 4",
+  "environmentOverrides": "TMPDIR only; no BUYER_LOG_* or NODE_OPTIONS overrides",
+  "runs": [
+    {
+      "name": "iam",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "tests/local-iam-migration-authority.test.js"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-iam-vl166pgk"
+      },
+      "startedAt": "2026-11-07T19:14:52.076639+00:00",
+      "endedAt": "2026-11-07T19:14:53.048077+00:00",
+      "seconds": 0.971,
+      "exitCode": 0,
+      "stdoutBytes": 1933,
+      "stderrBytes": 0,
+      "stdoutSha256": "7e056ba3173d4ff0e4884e626abff36ccbcff4d56a2bdfdbcf65491e683415ed",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "batches": [],
+      "tapSummary": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "name": "related",
+      "argv": [
+        "npm",
+        "test",
+        "--",
+        "pricing",
+        "quotation",
+        "open-costing",
+        "local-iam-migration-authority",
+        "v714"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-related-iae5qrv9"
+      },
+      "startedAt": "2026-11-07T19:14:53.050411+00:00",
+      "endedAt": "2026-11-07T19:14:56.181109+00:00",
+      "seconds": 3.131,
+      "exitCode": 1,
+      "stdoutBytes": 32273,
+      "stderrBytes": 386,
+      "stdoutSha256": "6750b96f0f0f4fcef775c9abd4fab576150cf42fd76c8fdbf67692d47fd94f02",
+      "stderrSha256": "47b46503291c0d958773fd67645166358e2460ee23f7943a91b1791b4cf05146",
+      "batches": [
+        {
+          "number": 1,
+          "total": 1,
+          "files": 50,
+          "tests": 301,
+          "pass": 298,
+          "fail": 3,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        }
+      ]
+    }
+  ],
+  "explanation": "Initial private-TMPDIR run had 3 file-level failures: default /home/agent/.buyer-log/write-recovery unavailable in read-only sandbox. No test/production edit. A newly created empty default directory and unsandboxed execution restore the actual default path, without global app/local/server/auth overrides."
+}

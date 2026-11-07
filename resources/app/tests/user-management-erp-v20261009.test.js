@@ -207,7 +207,10 @@ test('Excel dışa aktarma dört sayfa yazar, parola yazmaz; içe aktarma önizl
 
 test('yetki değişimi oturumu düşürmez; parola değişimi hâlâ düşürür; istemci menüyü yeniler', () => {
   const access = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'user-access.js'), 'utf8');
-  const session = access.slice(access.indexOf('function sessionProfile(req)'), access.indexOf('function setCookie('));
+  const start = access.indexOf('function sessionProfile(');
+  const end = access.indexOf('\n  function ', start + 1);
+  assert.ok(start >= 0 && end > start, 'inspect the actual sessionProfile function independently of its optional parameters');
+  const session = access.slice(start, end);
   assert.match(session, /payload\.credentialRevision \|\| 1\) !== \(profile\.credentialRevision/);
   assert.doesNotMatch(session, /payload\.accessRevision/);
   assert.match(session, /profile\.status !== 'ACTIVE'\) return null/);

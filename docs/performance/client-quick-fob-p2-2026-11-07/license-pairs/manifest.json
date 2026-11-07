@@ -1,0 +1,118 @@
+{
+  "protocol": "Three independent pairs: A/B, B/A, A/B. Each arm launches a fresh Chromium process. Click/frame observations are nested samples, not independent runs.",
+  "startedAt": "2026-11-07T18:59:50.057Z",
+  "driverPid": 80588,
+  "head": "f732c866405e62384c3c023d4a1abbec24c9b9c4",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "logicalCpus": 5,
+  "totalMemory": 18882662400,
+  "fixture": {
+    "cards": [
+      500,
+      5000
+    ],
+    "selectionObservations": 10,
+    "searchObservations": 10,
+    "saveObservations": 5,
+    "aiHistoryMessages": 100,
+    "aiPaintObservations": 40
+  },
+  "variants": {
+    "A": {
+      "dir": "/tmp/client-followup-sources/A",
+      "sourceHashes": {
+        "license-cards.js": "22334c26a19575d6f264589741e3e10abaf9e3f4609d78f824a0f9b8ababd451",
+        "manufacturers.js": "57a7d803fb6b1a585e8f5109b2558baed05a2f9ad41cc4128eed7cdb5f35f360",
+        "email-groups.js": "9fa5039a87501eba69a08ee55db43167d528e494d2fc9d5be5b9140086752452",
+        "lcwai-chat.js": "d9b79fa315930f9b6901f30d37bbfc76dee1f3650c4c2cfc1429f55a8d3c65b6"
+      }
+    },
+    "B": {
+      "dir": "/tmp/client-quick-fob-final-source",
+      "sourceHashes": {
+        "license-cards.js": "4ad526bb3c0ee053aff9651a81e38c92449624254eddbf81cadd0ab89353f56b",
+        "manufacturers.js": "c869821baadbf4af7102687f6771fbc1a9834e69ef6fe7a8f4b3bf2f86d7c170",
+        "email-groups.js": "560939255dae4396933444ce1168713b20c753b47ab07a9294e57d3a92a547f4",
+        "lcwai-chat.js": "fd0634d0bb2211f6376ee4bb4b48828b52a34955fb02a8224585868481f2a427"
+      }
+    }
+  },
+  "sharedHashes": {
+    "license-cards-engine.js": "284f9e06f56ffd5a8a572e1e62805a3f205546306e73abfb7546bc2b218ab429",
+    "manufacturer-cards-engine.js": "fe945db5c0db48166177f7fddcbde03e727cc25ed612d94be72893257145b0e9",
+    "business-rules.js": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+    "lcwai-markdown.js": "e22f4b68699088f31f3a4d428cae648cc348cf066ed396a73b285653ccadf23f"
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "A",
+      "target": "card",
+      "processId": 80596,
+      "startedAt": "2026-11-07T18:59:50.065Z",
+      "finishedAt": "2026-11-07T19:01:54.315Z",
+      "file": "pair-1-A-card.json",
+      "sha256": "d1bd6a0caaeaf7ebd1085c6d5f080484428ce90757e900f74d0ce8f96cf5e093"
+    },
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "B",
+      "target": "card",
+      "processId": 81014,
+      "startedAt": "2026-11-07T19:01:54.316Z",
+      "finishedAt": "2026-11-07T19:02:58.288Z",
+      "file": "pair-1-B-card.json",
+      "sha256": "3e9e4e737305670289da21e0c073cceab478337a804c5dc7780126bfdd0ad77b"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "B",
+      "target": "card",
+      "processId": 81203,
+      "startedAt": "2026-11-07T19:02:58.288Z",
+      "finishedAt": "2026-11-07T19:04:01.029Z",
+      "file": "pair-2-B-card.json",
+      "sha256": "1e65bed9f2799b2f317a23c0efc7b541029ee3a5aa5a31c93a81dfcee34da38a"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "A",
+      "target": "card",
+      "processId": 81393,
+      "startedAt": "2026-11-07T19:04:01.030Z",
+      "finishedAt": "2026-11-07T19:06:01.360Z",
+      "file": "pair-2-A-card.json",
+      "sha256": "86e7c7140fa232fec31fb2cc1a0db6f299580f7063fcb168a09c4c01c386c097"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "A",
+      "target": "card",
+      "processId": 81574,
+      "startedAt": "2026-11-07T19:06:01.361Z",
+      "finishedAt": "2026-11-07T19:07:54.360Z",
+      "file": "pair-3-A-card.json",
+      "sha256": "aaf0e561238bbf0a149f51dca3e2e6574aa643fbac02bfcb85fc0195bb2be863"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "B",
+      "target": "card",
+      "processId": 81765,
+      "startedAt": "2026-11-07T19:07:54.360Z",
+      "finishedAt": "2026-11-07T19:08:57.211Z",
+      "file": "pair-3-B-card.json",
+      "sha256": "2604579d8d49f82fa4b2aa5e0444e8c2c65aafb337a46afcce7d167132fe7544"
+    }
+  ],
+  "finishedAt": "2026-11-07T19:08:57.212Z"
+}

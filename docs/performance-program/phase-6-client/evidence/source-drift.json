@@ -1,0 +1,61 @@
+{
+  "kind": "source-drift-only-not-a-new-field-inventory",
+  "inventory": {
+    "pullRequest": 891,
+    "sha": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+    "baseline": {
+      "mainSha": "270228a4d9f195e613ae670db8c30583d9c183fc",
+      "branch": "docs/phase-6a-field-inventory",
+      "phase885": {
+        "number": 885,
+        "state": "open-draft",
+        "observedHeadSha": "1ff5038e2aab145c363fdcb07282afa5c33dce0d",
+        "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/885",
+        "scope": "remote metadata only; no compute implementation changes or final measurement"
+      },
+      "revalidationGate": "#885 sonrası Main SHA üzerinde yeniden envanter + shadow matrisi; ince projection ve nihai ölçüm ertelendi"
+    }
+  },
+  "sourceSha": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "checkedFiles": 72,
+  "changedFiles": [
+    {
+      "file": "resources/app/public/app-main.js",
+      "inventorySha256": "649844d1fe8f656f05302be875bf75f573f65ba90e17921fc7e77242670fa47d",
+      "currentSha256": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570"
+    },
+    {
+      "file": "resources/app/public/checklist-components-engine.js",
+      "inventorySha256": "185d2f75ed85648b4c43402ad213ac4a70c76767765b106c192c13dcec7feb55",
+      "currentSha256": "06572bb1a76ff8f8f840e3cd0b86b355607c75f6ee2599b82c02e0a016bf9bbb"
+    },
+    {
+      "file": "resources/app/public/checklist-supplier-sync.js",
+      "inventorySha256": "8dade1b2272a92cf3c84586609c5cc5805aab1d68a172a02ce0cfe5245236038",
+      "currentSha256": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e"
+    },
+    {
+      "file": "resources/app/public/cp-checklist-engine.js",
+      "inventorySha256": "8b1e883a11178f170256ef6169b9469831472d481949cd5df2a935e1b186c810",
+      "currentSha256": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119"
+    },
+    {
+      "file": "resources/app/public/cp-overview-assistant.js",
+      "inventorySha256": "799752253f1ff09aa9e200a47f182cc424b10e4a697a16a4a4b15707432eb04f",
+      "currentSha256": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21"
+    },
+    {
+      "file": "resources/app/public/lcwai-output-editor.js",
+      "inventorySha256": "d34dd821fffef3e158f3c33ab3232c139cd199029e54289bd8ffb377ba7b89a6",
+      "currentSha256": "22275e0dab6c7b2e386ececef602f840b3513ab0a30c70fe8b15a8349f78544a"
+    },
+    {
+      "file": "resources/app/public/test-report-import.js",
+      "inventorySha256": "79618e7d8144cd9100c4849c9bc3b37c736a8f8748c9b2c486240b661c34b4e1",
+      "currentSha256": "5c5365fee4235c764fcf7b0edd7018e2fb32a83ca4439db79aa44a517dad06e1"
+    }
+  ],
+  "projectionImplemented": false,
+  "shadowCasesExecuted": false,
+  "performanceMeasured": false
+}

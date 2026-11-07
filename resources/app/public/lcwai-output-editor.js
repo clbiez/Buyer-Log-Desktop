@@ -701,7 +701,46 @@
   function sheetForm(sheet, index) {
     if (!sheet) return summaryForm();
     return `<div class="lcwaiEdCard"><div class="lcwaiEdSlideBand">${field(L('Sayfa adı', 'Sheet name'), input(`sheets.${index}.name`, sheet.name), L('En fazla 31 karakter', 'Up to 31 characters'))}</div>
-      <div class="lcwaiEdSlideBody">${gridEditor({ base: `sheets.${index}`, columns: sheet.columns, rows: sheet.rows, typed: true, maxCols: LIMITS.sheetCols, maxRows: LIMITS.sheetRows, page: ed.pages[index] || 0 })}</div></div>`;
+      <div class="lcwaiEdSlideBody">${gridEditor({ base: `sheets.${index}`, columns: sheet.columns, rows: sheet.rows, typed: true, maxCols: LIMITS.sheetCols, maxRows: LIMITS.sheetRows, page: ed.pages[index] || 0 })}
+      ${sheetFormatForm(sheet, index)}</div></div>`;
+  }
+
+  /* Excel biçimi (isteğe bağlı): varsayılan sade tablo; burada açılan her seçenek
+     BLOutputLayout'taki beyaz liste ve sınırlarla sunucuda yeniden doğrulanır. */
+  const XLSX_NUMERIC = ['integer', 'number', 'percent', 'currency'];
+  function sheetFormatForm(sheet, index) {
+    const F = LAY().XLSX_FORMAT;
+    const base = `sheets.${index}`;
+    const style = sheet.style || {};
+    const aligns = [{ key: '', label: L('Otomatik', 'Auto') }, { key: 'left', label: L('Sol', 'Left') }, { key: 'center', label: L('Orta', 'Center') }, { key: 'right', label: L('Sağ', 'Right') }];
+    const totalLabel = { sum: L('Toplam', 'Sum'), avg: L('Ortalama', 'Average'), count: L('Sayı', 'Count'), min: L('En küçük', 'Minimum'), max: L('En büyük', 'Maximum') };
+    const opLabel = { '<': '<', '<=': '≤', '>': '>', '>=': '≥', '=': '=', '!=': '≠', between: L('arasında', 'between'), contains: L('içerir', 'contains') };
+    const tones = [{ key: 'risk', label: L('Risk (kırmızı)', 'Risk (red)') }, { key: 'warn', label: L('Uyarı (turuncu)', 'Warning (orange)') }, { key: 'ok', label: L('Olumlu (yeşil)', 'Positive (green)') }, { key: 'info', label: L('Bilgi (mavi)', 'Info (blue)') }];
+    const xselect = (path, list, current) => `<select data-path="${esc(path)}" data-ed-xfmt>${options(list, current)}</select>`;
+    const sheetRules = sheet.columns.reduce((n, column) => n + ((column.highlight || []).length), 0);
+    const freezeMax = Math.min(F.limits.freezeColumns, Math.max(0, sheet.columns.length - 1));
+    const freezeList = Array.from({ length: freezeMax + 1 }, (_, n) => ({ key: String(n), label: n ? L(`İlk ${n} sütun`, `First ${n} column(s)`) : L('Yok', 'None') }));
+    const rows = sheet.columns.map((column, c) => {
+      if (column.type === 'image') return '';
+      const path = `${base}.columns.${c}`;
+      const totals = LAY().xlsxTotalsFor(column.type);
+      const ops = LAY().xlsxOpsFor(column.type).map(key => ({ key, label: opLabel[key] }));
+      const rules = (column.highlight || []).map((rule, r) => `<span class="lcwaiEdXRule">${xselect(`${path}.highlight.${r}.op`, ops, rule.op)}${input(`${path}.highlight.${r}.value`, rule.value, { placeholder: L('Değer', 'Value') })}${rule.op === 'between' ? input(`${path}.highlight.${r}.value2`, rule.value2, { placeholder: L('Üst değer', 'Upper value') }) : ''}${xselect(`${path}.highlight.${r}.tone`, tones, rule.tone || 'risk')}<button type="button" class="lcwaiEdIconBtn" data-ed-xrule-del="${c},${r}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}" title="${esc(L('Kuralı sil', 'Delete rule'))}">×</button></span>`).join('');
+      const canAdd = ops.length && (column.highlight || []).length < F.limits.rulesPerColumn && sheetRules < F.limits.rulesPerSheet;
+      return `<tr><th>${esc(column.header)}</th>
+        <td>${xselect(`${path}.align`, aligns, column.align || '')}</td>
+        <td>${totals.length ? xselect(`${path}.total`, [{ key: '', label: L('Yok', 'None') }, ...totals.map(key => ({ key, label: totalLabel[key] }))], column.total || '') : '—'}</td>
+        <td>${XLSX_NUMERIC.includes(column.type) ? `<input type="checkbox" data-ed-xbar="${c}"${column.bar ? ' checked' : ''} aria-label="${esc(L('Veri çubuğu', 'Data bar'))}">` : '—'}</td>
+        <td><div class="lcwaiEdXRules">${rules}${ops.length ? `<button type="button" class="lcwaiBtn" data-ed-xrule-add="${c}"${canAdd ? '' : ' disabled'}>＋ ${esc(L('Kural', 'Rule'))}</button>` : '—'}</div></td></tr>`;
+    }).join('');
+    return `<details class="lcwaiEdBlock lcwaiEdXFormat"${style.zebra || style.freezeColumns || sheet.columns.some(column => column.align || column.total || column.bar || column.highlight) ? ' open' : ''}>
+      <summary>${esc(L('Excel biçimi', 'Excel formatting'))}</summary><div class="lcwaiEdXBody">
+      <p class="lcwaiNote">${esc(L(`Varsayılan sade tablodur: gri başlık, ince satır çizgisi, zebra ya da renk ölçeği yok. Yalnız ihtiyaç duyduğunuz biçimi açın; renkler Buyer Log durum tonlarıdır. Sayfa başına en fazla ${F.limits.bars} veri çubuğu ve ${F.limits.rulesPerSheet} vurgu kuralı.`, `The default is a plain table: grey header, thin row lines, no stripes or colour scales. Turn on only the formatting you need; colours are Buyer Log status tones. Up to ${F.limits.bars} data bars and ${F.limits.rulesPerSheet} highlight rules per sheet.`))}</p>
+      <div class="lcwaiEdRow"><label class="lcwaiEdCheck"><input type="checkbox" data-ed-xzebra="${index}"${style.zebra ? ' checked' : ''}> ${esc(L('Zebra satırlar', 'Striped rows'))}</label>
+        ${field(L('Sabit sütunlar', 'Frozen columns'), `<select data-ed-xfreeze="${index}">${options(freezeList, String(style.freezeColumns || 0))}</select>`)}</div>
+      <div class="lcwaiEdGridWrap"><table class="lcwaiEdXTable"><thead><tr><th>${esc(L('Sütun', 'Column'))}</th><th>${esc(L('Hizalama', 'Alignment'))}</th><th>${esc(L('Toplam satırı', 'Total row'))}</th><th>${esc(L('Veri çubuğu', 'Data bar'))}</th><th>${esc(L('Vurgu kuralları', 'Highlight rules'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <small class="lcwaiNote">${esc(L('Yüzde değerini %20 ya da 0,2; tarihi YYYY-AA-GG olarak yazın. Boş hücre hiçbir kurala uymaz.', 'Write a percentage as 20% or 0.2 and a date as YYYY-MM-DD. Empty cells match no rule.'))}</small></div>
+    </details>`;
   }
 
   function summaryForm() {
@@ -709,7 +748,7 @@
     return `<div class="lcwaiEdCard"><div class="lcwaiEdSlideBand"><div class="lcwaiEdRow">${field(L('Alt başlık', 'Subtitle'), input('subtitle', ed.data.subtitle))}${field(L('Para birimi', 'Currency'), select('currency', currencies, ed.data.currency || ''))}</div></div>
       <div class="lcwaiEdSlideBody">${kpiEditor('kpis', ed.data.kpis || [], LIMITS.sheetKpis, false)}
       ${field(L('Notlar', 'Notes'), area('notes', (ed.data.notes || []).join('\n'), { kind: 'lines', placeholder: L('Her satır bir not', 'One note per line') }))}
-      <p class="lcwaiNote">${esc(L('KPI ve notlar çalışma kitabının ilk “Özet” sayfasına yazılır; boş bırakılırsa Özet sayfası yalnız başlığı taşır.', 'KPIs and notes go to the workbook’s first “Summary” sheet; if empty it only carries the title.'))}</p></div></div>`;
+      <p class="lcwaiNote">${esc(L('KPI ve notlar çalışma kitabının ilk “Özet” sayfasına yazılır; ikisi de boşsa Özet sayfası oluşturulmaz.', 'KPIs and notes go to the workbook’s first “Summary” sheet; if both are empty no Summary sheet is created.'))}</p></div></div>`;
   }
 
   /* ================= Rapor (PDF/HTML) düzenleyici =================
@@ -1202,19 +1241,57 @@
       <div class="lcwaiLaySlide" style="width:${px(g.size.width)};height:${px(g.size.height)}">${body}</div>`;
   }
 
+  /* Önizleme hücre metni: Excel sayı biçimleriyle aynı görünüm (binlik ayırıcı, %, tarih). */
+  function previewValue(value, type) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      const date = type === 'date' && /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+      return date ? `${date[3]}.${date[2]}.${date[1]}` : cellText(value);
+    }
+    const locale = isEn() ? 'en-US' : 'tr-TR';
+    if (type === 'percent') return `${(value * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+    if (type === 'integer') return Math.round(value).toLocaleString(locale);
+    if (type === 'number' || type === 'currency') return value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return String(value);
+  }
+
   /* --- Excel önizlemesi: ilk sayfanın ilk satırları --- */
   function xlsxPreview() {
     const sheet = (ed.data.sheets || [])[ed.selected === 'summary' ? 0 : Number(ed.selected) || 0];
     const m = LAY().xlsxMetrics(ed.data.layout);
     const ptPx = 4 / 3;
     if (!sheet) return `<p class="lcwaiNote">${esc(L('Önizlenecek sayfa yok.', 'No sheet to preview.'))}</p>`;
-    const rows = sheet.rows.slice(0, 14).map(row => `<tr>${sheet.columns.map((column, c) => {
+    // Biçim, sunucuyla aynı doğrulayıcıdan geçer: önizleme dosyada olacak olanı gösterir.
+    const columns = sheet.columns.map(column => ({ header: column.header, type: column.type, ...LAY().normalizeXlsxColumnFormat(column, column.type) }));
+    const style = LAY().normalizeXlsxSheetFormat(sheet.style, columns).style;
+    const bars = columns.map((column, c) => {
+      if (!column.bar) return null;
+      const values = sheet.rows.map(row => row[c]).filter(value => typeof value === 'number');
+      return values.length > 1 ? { min: Math.min(...values), max: Math.max(...values) } : null;
+    });
+    const cellStyle = (column, c, value) => {
+      const parts = [`text-align:${LAY().xlsxAlign(column)}`];
+      const bar = bars[c];
+      if (bar && typeof value === 'number') parts.push(`--bl-bar:${(bar.max === bar.min ? 100 : Math.max(4, (value - bar.min) / (bar.max - bar.min) * 100)).toFixed(0)}%`);
+      return parts.join(';');
+    };
+    const rows = sheet.rows.slice(0, 14).map((row, r) => `<tr${style.zebra && r % 2 === 1 ? ' class="is-zebra"' : ''}>${columns.map((column, c) => {
       if (column.type === 'image') { const src = imageOf(row[c]); return `<td class="is-img" style="height:${(m.imageRow * ptPx).toFixed(0)}px">${src ? `<img src="${esc(src)}" alt="" style="max-height:${m.imageBoxPx}px;max-width:${m.imageBoxPx}px">` : ''}</td>`; }
-      return `<td>${esc(cellText(row[c]))}</td>`;
+      const tone = LAY().xlsxToneOf(column, row[c]);
+      const classes = [tone ? `is-tone-${tone}` : '', bars[c] && typeof row[c] === 'number' ? 'is-bar' : ''].filter(Boolean).join(' ');
+      const text = esc(previewValue(row[c], column.type));
+      return `<td${classes ? ` class="${classes}"` : ''} style="${cellStyle(column, c, row[c])}">${classes.includes('is-bar') ? `<i class="lcwaiLayBar" style="width:var(--bl-bar)"></i><span>${text}</span>` : text}</td>`;
     }).join('')}</tr>`).join('');
+    const firstTotal = columns.findIndex(column => column.total);
+    const labelAt = columns.findIndex(column => !column.total && column.type !== 'image');
+    const foot = firstTotal >= 0 && sheet.rows.length ? `<tfoot><tr>${columns.map((column, c) => {
+      if (!column.total) return `<td style="text-align:${LAY().xlsxAlign(column)}">${c === labelAt && labelAt < firstTotal ? esc(L('Toplam', 'Total')) : ''}</td>`;
+      const value = LAY().xlsxTotalValue(column.total, sheet.rows.map(row => row[c]), column.type);
+      const type = column.total === 'count' ? 'integer' : column.total === 'avg' && column.type === 'integer' ? 'number' : column.type;
+      return `<td style="text-align:${LAY().xlsxAlign(column)}">${value == null ? '=' : esc(previewValue(value, type))}</td>`;
+    }).join('')}</tr></tfoot>` : '';
     return `<div class="lcwaiLayStageHead"><b>${esc(ed.title)}</b><small>${esc(L(`“${sheet.name}” sayfası · ilk ${Math.min(14, sheet.rows.length)} satır`, `“${sheet.name}” sheet · first ${Math.min(14, sheet.rows.length)} rows`))}</small></div>
       <div class="lcwaiLaySheet" style="font-size:${(m.bodySize * ptPx).toFixed(1)}px"><div class="lcwaiLaySheetTitle" style="font-size:${(m.titleSize * ptPx).toFixed(1)}px">${esc(ed.title)}</div>
-      <table><thead><tr style="height:${(m.headerHeight * ptPx).toFixed(0)}px">${sheet.columns.map(column => `<th style="${column.type === 'image' ? `width:${m.imageColChars * 7 + 5}px` : ''}">${esc(column.header)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      <table><thead><tr style="height:${(m.headerHeight * ptPx).toFixed(0)}px">${columns.map(column => `<th style="text-align:${LAY().xlsxAlign(column)};${column.type === 'image' ? `width:${m.imageColChars * 7 + 5}px` : column.width ? `min-width:${column.width * 7}px` : ''}">${esc(column.header)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody>${foot}</table></div>`;
   }
 
   /* --- PDF/HTML önizlemesi: gerçek rapor + yerleşim CSS'i, galeri sayfalara bölünmüş --- */
@@ -1362,6 +1439,9 @@
 
   function onClick(event) {
     if (!ed) return;
+    const disclosure = event.target.closest('.lcwaiEdXFormat > summary');
+    // Excel biçimi bölümü açılırken ortak Motion+ dal girişi (tek sefer, yeniden çizimde değil).
+    if (disclosure) requestAnimationFrame(() => { const box = disclosure.parentElement; if (box.open && window.BLMotionPlus) window.BLMotionPlus.play('branch', box.querySelector('.lcwaiEdXBody')); });
     const target = event.target.closest('button');
     if (!target) { const card = event.target.closest('[data-studio-card]'); if (card && isStudio()) { ed.studioCard = card.dataset.studioCard; if (ed.mode === 'layout' && !ed.advanced) renderMain(); } return; }
     if (studioClick(target)) return;
@@ -1438,6 +1518,25 @@
       renderMain(); markDirty();
       return;
     }
+    if (target.matches('[data-ed-xrule-add], [data-ed-xrule-del]') && ed.format === 'xlsx') {
+      const sheet = ed.data.sheets[Number(ed.selected) || 0];
+      if (!sheet) return;
+      pushHistory();
+      if (target.matches('[data-ed-xrule-add]')) {
+        const column = sheet.columns[Number(target.dataset.edXruleAdd)];
+        const op = column && LAY().xlsxOpsFor(column.type)[column.type === 'text' ? 2 : 0];
+        if (!op) { ed.history.pop(); return; }
+        column.highlight = [...(column.highlight || []), { op, value: column.type === 'text' ? '' : 0, tone: 'risk' }];
+      } else {
+        const [c, r] = target.dataset.edXruleDel.split(',').map(Number);
+        const column = sheet.columns[c];
+        if (!column || !column.highlight) { ed.history.pop(); return; }
+        column.highlight.splice(r, 1);
+        if (!column.highlight.length) delete column.highlight;
+      }
+      renderMain(); markDirty();
+      return;
+    }
     if (target.matches('[data-chart-addcat], [data-chart-addseries], [data-chart-delcat], [data-chart-delseries]')) {
       const chart = ed.data.slides[ed.selected].chart;
       pushHistory();
@@ -1509,6 +1608,7 @@
     const el = event.target;
     if (studioChange(el)) return;
     if (el.matches('[data-lay-flag]')) { setLayout({ ...ed.data.layout, [el.dataset.layFlag]: el.checked }, { history: true }); return; }
+    if (xlsxFormatChange(el)) return;
     if (el.matches('[data-lay-group]')) {
       const key = LAY().fieldKey;
       const index = Number(el.dataset.layGroup);
@@ -1576,6 +1676,46 @@
       markDirty();
       if (/\.type$/.test(el.dataset.path)) renderRail();
     }
+  }
+
+  /* Excel biçimi denetimleri: boş seçim alanı siler; sınırlar arayüzde de korunur. */
+  function xlsxFormatChange(el) {
+    if (!ed || ed.format !== 'xlsx') return false;
+    const sheet = ed.data.sheets[Number(ed.selected) || 0];
+    if (!sheet) return false;
+    if (el.matches('[data-ed-xzebra], [data-ed-xfreeze]')) {
+      pushHistory();
+      sheet.style = { zebra: false, freezeColumns: 0, ...(sheet.style || {}) };
+      if (el.matches('[data-ed-xzebra]')) sheet.style.zebra = el.checked;
+      else sheet.style.freezeColumns = Math.max(0, Number(el.value) || 0);
+      markDirty();
+      return true;
+    }
+    if (el.matches('[data-ed-xbar]')) {
+      const column = sheet.columns[Number(el.dataset.edXbar)];
+      if (!column) return true;
+      if (el.checked && sheet.columns.filter(item => item.bar).length >= LAY().XLSX_FORMAT.limits.bars) {
+        el.checked = false;
+        toast(L(`Sayfa başına en fazla ${LAY().XLSX_FORMAT.limits.bars} veri çubuğu.`, `Up to ${LAY().XLSX_FORMAT.limits.bars} data bars per sheet.`), 'warn');
+        return true;
+      }
+      pushHistory();
+      if (el.checked) column.bar = true; else delete column.bar;
+      markDirty();
+      return true;
+    }
+    if (el.matches('select[data-ed-xfmt]') && el.dataset.path) {
+      pushHistory();
+      const keys = el.dataset.path.split('.');
+      const owner = getPath(ed.data, keys.slice(0, -1).join('.'));
+      if (!owner) return true;
+      if (el.value) owner[keys[keys.length - 1]] = el.value; else delete owner[keys[keys.length - 1]];
+      markDirty();
+      // "arasında" seçilince üst değer alanı açılır / kapanır.
+      if (/\.op$/.test(el.dataset.path)) renderMain();
+      return true;
+    }
+    return false;
   }
 
   /* Excel'den çok hücreli yapıştırma: ızgarayı seçili hücreden itibaren doldurur. */

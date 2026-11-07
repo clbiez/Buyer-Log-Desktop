@@ -1,0 +1,101 @@
+[
+  {
+    "scenario": "rate-close",
+    "source": "supp",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "supp",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": false,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": false,
+      "meaningfulCalculationChange": true
+    }
+  },
+  {
+    "scenario": "rate-close",
+    "source": "yd",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "yd",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": false,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": false,
+      "meaningfulCalculationChange": true
+    }
+  },
+  {
+    "scenario": "rate-close",
+    "source": "tr",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "tr",
+    "checks": {
+      "quickEquivalent": false,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": false,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": false,
+      "meaningfulCalculationChange": true
+    }
+  }
+]
+AssertionError [ERR_ASSERTION]: Quick FOB partial close differs from full render; see /workspace/Buyer-Log-Desktop/docs/performance/client-quick-fob-p2-2026-11-07/red
+    at /workspace/Buyer-Log-Desktop/resources/app/scripts/license-quick-fob-acceptance.js:95:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

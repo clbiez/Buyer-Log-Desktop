@@ -40,9 +40,14 @@ test('CP registry applies after projection fetch but before render, without quer
   assert.doesNotMatch(section, /import-plm|shared\/hydrate/);
   const route = SERVER.slice(SERVER.indexOf("app.get('/api/model-images/registry/cp'"),SERVER.indexOf("app.get('/api/data/collection-catalog'"));
   assert.match(route, /userAccess\.requireArea\('cp'\)/);
-  assert.match(route, /pageProjectionCache\.readProjection\(ctx\.id, 'cp', ctx\.contextHash\)/);
-  assert.match(route, /pageProjectionMatchesRuntime/);
-  assert.match(route, /scopedCpImageRegistry\(cached\.data\.rows/);
+  const compressedHelper=SERVER.slice(SERVER.indexOf('async function ensureComputedProjection('),SERVER.indexOf('function sendCompressedPageProjection('));
+  assert.match(route, /ensureComputedProjection\(req,'cp'\)/);
+  assert.match(compressedHelper, /pageProjectionCache\.readProjectionCompressed/);
+  assert.match(compressedHelper, /pageProjectionMatchesRuntime/);
+  assert.match(route, /computeReads\.run\(req,'cp','cp-image-registry'/);
+  const worker=fs.readFileSync(path.join(ROOT,'server','workers','compute-worker.js'),'utf8');
+  assert.match(worker, /scopedCpImageRegistry\(cached\.rows/);
+  assert.doesNotMatch(route, /JSON\.parse|readProjection\(/);
   assert.doesNotMatch(route, /agentBrowserConnector|import-plm|syncAuthorized/);
 });
 

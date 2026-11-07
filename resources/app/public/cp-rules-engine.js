@@ -695,6 +695,7 @@
         Object.defineProperty(base, '_formulaError', { value: error.message || String(error), enumerable: false, configurable: true });
         Object.defineProperty(base, '_compiledFormulaSource', { value: base.formula, enumerable: false, configurable: true });
       }
+      Object.defineProperty(base, '_compiledFormulaVersion', { value: EXPRESSION_VERSION, enumerable: false, configurable: true });
     }
     return base;
   }
@@ -971,15 +972,18 @@
     if (!rule.enabled) return false;
     if (rule.mode === 'formula') {
       let compiled = rule._compiledFormula;
-      if (!compiled || rule._compiledFormulaSource !== rule.formula) {
+      if (rule._compiledFormulaSource !== rule.formula || rule._compiledFormulaVersion !== EXPRESSION_VERSION
+        || (!compiled && !rule._formulaError)) {
         try {
           compiled = compileExpression(rule.formula);
           Object.defineProperty(rule, '_compiledFormula', { value: compiled, enumerable: false, configurable: true });
           Object.defineProperty(rule, '_compiledFormulaSource', { value: rule.formula, enumerable: false, configurable: true });
+          Object.defineProperty(rule, '_compiledFormulaVersion', { value: EXPRESSION_VERSION, enumerable: false, configurable: true });
           if (Object.prototype.hasOwnProperty.call(rule, '_formulaError')) delete rule._formulaError;
         } catch (error) {
           Object.defineProperty(rule, '_formulaError', { value: error.message || String(error), enumerable: false, configurable: true });
           Object.defineProperty(rule, '_compiledFormulaSource', { value: rule.formula, enumerable: false, configurable: true });
+          Object.defineProperty(rule, '_compiledFormulaVersion', { value: EXPRESSION_VERSION, enumerable: false, configurable: true });
           return false;
         }
       }

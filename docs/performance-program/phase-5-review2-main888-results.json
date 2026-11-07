@@ -1,0 +1,3477 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "createdAt": "2026-11-07T16:03:50.850958+00:00",
+  "cohort": {
+    "measuredRevision": "b2c9bdacd5d1d15cc3587d8c9e2e1f868a8413e9",
+    "baselineRevision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+    "normalAcceptanceEligible": true,
+    "status": "failed-responsiveness",
+    "fixtureHashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    },
+    "observerSha256": "8449c87695aacf881ff4f01ccdb8ef32630b7aa6b6a99709e4f5df3f448672b0",
+    "cpuQuota": "1600000 400000",
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "plan": {
+      "file": "/tmp/phase-5-review2-main888-cohort-plan.json",
+      "sha256": "35163da94c6b62aec816e5bba848e145ee0335ed808ad6636d810ecb1936d6f5"
+    },
+    "arms": {
+      "before": {
+        "runs": [
+          {
+            "rep": 1,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-before-1.json",
+              "sha256": "336e3f640cb774bede4d8281e1b1c292efe0e07d71ef41ac33f817ad35544765"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6k7b7j-7640b1c2efa5",
+              "sourceRevision": "474d9709504b7789d9c8095739c68d351cfb1e86a90bf34a6c908a2594e9fa2f",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 84897,
+              "refreshWallMs": 87082.426818,
+              "snapshotWriteMs": 16198,
+              "snapshotOperationMs": 17042,
+              "asasParseMs": 15999,
+              "pageCacheWriteMs": 47255,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 844,
+              "sameTab.cp.ms": 32355.100000023842,
+              "sameTab.orders.ms": 58788.20000001788,
+              "sameTab.koleksiyon.ms": 605.4000000059605,
+              "module.overview.primaryScreenReadyMs": 7223.299999982119,
+              "module.overview.startupReadyMs": 7306.799999982119,
+              "module.overview.systemStartupCompleteMs": 7593.5999999940395,
+              "module.overview.elapsedMs": 8339.53240700002,
+              "module.overview.jsHeapUsedBytes": 37568464,
+              "module.overview.rendererRssBytes": 980832256,
+              "module.koleksiyon.primaryScreenReadyMs": 16775.09999999404,
+              "module.koleksiyon.startupReadyMs": 16790.19999998808,
+              "module.koleksiyon.systemStartupCompleteMs": 16926.40000000596,
+              "module.koleksiyon.elapsedMs": 17037.355616999965,
+              "module.koleksiyon.jsHeapUsedBytes": 11683792,
+              "module.koleksiyon.rendererRssBytes": 932642816,
+              "module.cp.primaryScreenReadyMs": 52593.90000000596,
+              "module.cp.startupReadyMs": 52607.70000001788,
+              "module.cp.systemStartupCompleteMs": 74403.09999999404,
+              "module.cp.elapsedMs": 74890.20348099997,
+              "module.cp.jsHeapUsedBytes": 197161704,
+              "module.cp.rendererRssBytes": 1414287360,
+              "module.orders.primaryScreenReadyMs": 6715.699999988079,
+              "module.orders.startupReadyMs": 6738.699999988079,
+              "module.orders.systemStartupCompleteMs": 6849.899999976158,
+              "module.orders.elapsedMs": 7611.875525999989,
+              "module.orders.jsHeapUsedBytes": 188165952,
+              "module.orders.rendererRssBytes": 1353715712,
+              "allAttemptRefreshHealthP50Ms": 19.583222000001115,
+              "allAttemptRefreshHealthP95Ms": 1057.8881099999999,
+              "refreshHealthFailures": 113
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 7223.299999982119,
+                "startupReadyMs": 7306.799999982119,
+                "startupCompleteMs": 7593.5999999940395,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 260.59999999403954,
+                "systemStartupCompleteMs": 7593.5999999940395,
+                "primaryToGateMs": 83.5,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 26,
+                "longTaskTotalMs": 4473,
+                "maxLongTaskMs": 531,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 138.69999998807907,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 799,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 37568464,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8013,
+                  "jsEventListeners": 1634
+                },
+                "navigationStartedAtMs": 1794065620773,
+                "observedAtMs": 1794065630967,
+                "elapsedMs": 8339.53240700002,
+                "rendererRssBytes": 980832256,
+                "errors": [],
+                "generation": "mw6k7b7j-7640b1c2efa5",
+                "sourceRevision": "474d9709504b7789d9c8095739c68d351cfb1e86a90bf34a6c908a2594e9fa2f"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 16775.09999999404,
+                "startupReadyMs": 16790.19999998808,
+                "startupCompleteMs": 16926.40000000596,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 120.30000001192093,
+                "systemStartupCompleteMs": 16926.40000000596,
+                "primaryToGateMs": 15.099999994039536,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 93.59999999403954,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 17.100000023841858,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 11683792,
+                "dom": {
+                  "documents": 5,
+                  "nodes": 11567,
+                  "jsEventListeners": 1586
+                },
+                "navigationStartedAtMs": 1794065631519,
+                "observedAtMs": 1794065648649,
+                "elapsedMs": 17037.355616999965,
+                "rendererRssBytes": 932642816,
+                "errors": [],
+                "generation": "mw6k7b7j-7640b1c2efa5",
+                "sourceRevision": "474d9709504b7789d9c8095739c68d351cfb1e86a90bf34a6c908a2594e9fa2f"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 52593.90000000596,
+                "startupReadyMs": 52607.70000001788,
+                "startupCompleteMs": 74403.09999999404,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 21787.09999999404,
+                "systemStartupCompleteMs": 74403.09999999404,
+                "primaryToGateMs": 13.800000011920929,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 19,
+                "longTaskTotalMs": 6637.799999982119,
+                "maxLongTaskMs": 1829.7999999821186,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 94,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1231.199999988079,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 197161704,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 54721,
+                  "jsEventListeners": 5853
+                },
+                "navigationStartedAtMs": 1794065649381,
+                "observedAtMs": 1794065726084,
+                "elapsedMs": 74890.20348099997,
+                "rendererRssBytes": 1414287360,
+                "errors": [],
+                "generation": "mw6k7b7j-7640b1c2efa5",
+                "sourceRevision": "474d9709504b7789d9c8095739c68d351cfb1e86a90bf34a6c908a2594e9fa2f"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 6715.699999988079,
+                "startupReadyMs": 6738.699999988079,
+                "startupCompleteMs": 6849.899999976158,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 106.80000001192093,
+                "systemStartupCompleteMs": 6849.899999976158,
+                "primaryToGateMs": 23,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 23,
+                "longTaskTotalMs": 8012.700000017881,
+                "maxLongTaskMs": 1272,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 409.5,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1044.800000011921,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 188165952,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26248,
+                  "jsEventListeners": 3175
+                },
+                "navigationStartedAtMs": 1794065727030,
+                "observedAtMs": 1794065739132,
+                "elapsedMs": 7611.875525999989,
+                "rendererRssBytes": 1353715712,
+                "errors": [],
+                "generation": "mw6k7b7j-7640b1c2efa5",
+                "sourceRevision": "474d9709504b7789d9c8095739c68d351cfb1e86a90bf34a6c908a2594e9fa2f"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 32355.100000023842,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 58788.20000001788,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 605.4000000059605,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 417,
+                "successful": 0,
+                "failed": 417,
+                "p50Ms": 12.182613999997557,
+                "p95Ms": 1140.6296920000023,
+                "maxMs": 60007.017791000006
+              },
+              "refresh": {
+                "count": 113,
+                "successful": 0,
+                "failed": 113,
+                "p50Ms": 19.583222000001115,
+                "p95Ms": 1057.8881099999999,
+                "maxMs": 6863.449940000002
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:11.773Z",
+                  "timestampMs": 1794065291773,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:27.773Z",
+                  "timestampMs": 1794065307773,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 15999,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:27.955Z",
+                  "timestampMs": 1794065307955,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:29.572Z",
+                  "timestampMs": 1794065309572,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1617,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:32.136Z",
+                  "timestampMs": 1794065312136,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1280,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:28:49.179Z",
+                  "timestampMs": 1794065329179,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 17042,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:29:36.439Z",
+                  "timestampMs": 1794065376439,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 47255,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 16198,
+                "dashboard": null,
+                "totalMs": 84888
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 1.2580740000000787,
+                  "durationMs": 15947.660640999999,
+                  "executionMs": 12433.998101,
+                  "overheadMs": 3513.6625399999994,
+                  "heapUsedBytes": 406316616
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.07785700000022189,
+                  "durationMs": 1608.6868820000018,
+                  "executionMs": 1387.7683859999997,
+                  "overheadMs": 220.91849600000205,
+                  "heapUsedBytes": 70986520
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=3074 cpuMs=9019 heapUsedMb=240 heapLimitMb=4288 rssMb=1044",
+                "blockedMs": 3074,
+                "cpuMs": 9019,
+                "heapUsedMb": 240,
+                "heapLimitMb": 4288,
+                "rssMb": 1044
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=4728 cpuMs=15106 heapUsedMb=273 heapLimitMb=4288 rssMb=1097",
+                "blockedMs": 4728,
+                "cpuMs": 15106,
+                "heapUsedMb": 273,
+                "heapLimitMb": 4288,
+                "rssMb": 1097
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=74744 cpuMs=90455 heapUsedMb=573 heapLimitMb=4288 rssMb=1562",
+                "blockedMs": 74744,
+                "cpuMs": 90455,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1562
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=3893 cpuMs=6081 heapUsedMb=590 heapLimitMb=4288 rssMb=1416",
+                "blockedMs": 3893,
+                "cpuMs": 6081,
+                "heapUsedMb": 590,
+                "heapLimitMb": 4288,
+                "rssMb": 1416
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=13606 cpuMs=29494 heapUsedMb=343 heapLimitMb=4288 rssMb=702",
+                "blockedMs": 13606,
+                "cpuMs": 29494,
+                "heapUsedMb": 343,
+                "heapLimitMb": 4288,
+                "rssMb": 702
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=10793 cpuMs=18652 heapUsedMb=946 heapLimitMb=4288 rssMb=1529",
+                "blockedMs": 10793,
+                "cpuMs": 18652,
+                "heapUsedMb": 946,
+                "heapLimitMb": 4288,
+                "rssMb": 1529
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=3086 cpuMs=5691 heapUsedMb=441 heapLimitMb=4288 rssMb=1297",
+                "blockedMs": 3086,
+                "cpuMs": 5691,
+                "heapUsedMb": 441,
+                "heapLimitMb": 4288,
+                "rssMb": 1297
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794065620773,
+                "observedAtMs": 1794065630967,
+                "recordedGaps": 30,
+                "maxGapMs": 14962.980003000004,
+                "maxDelayMs": 14952.980003000004,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 14962.980003000004,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794065631519,
+                "observedAtMs": 1794065648649,
+                "recordedGaps": 9,
+                "maxGapMs": 14962.980003000004,
+                "maxDelayMs": 14952.980003000004,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 14962.980003000004,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794065649381,
+                "observedAtMs": 1794065726084,
+                "recordedGaps": 124,
+                "maxGapMs": 3249.144499999995,
+                "maxDelayMs": 3239.144499999995,
+                "gapsOver200ms": 25,
+                "maxGapUpperBoundMs": 3249.144499999995,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794065727030,
+                "observedAtMs": 1794065739132,
+                "recordedGaps": 17,
+                "maxGapMs": 386.54151299997466,
+                "maxDelayMs": 376.54151299997466,
+                "gapsOver200ms": 3,
+                "maxGapUpperBoundMs": 386.54151299997466,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 2,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-before-2.json",
+              "sha256": "fd17c64a3af0e40ef44e7f909cb2096b6376900255bd66690b57ee3fb4c9a1b6"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6kvs2v-57ce7340d38b",
+              "sourceRevision": "a8cd00da40c4d5237c3e5fa143677a2f3dabfdfb92c7381b67e2aff64ad7bd1e",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 52760,
+              "refreshWallMs": 53782.320364,
+              "snapshotWriteMs": 9075,
+              "snapshotOperationMs": 9388,
+              "asasParseMs": 19867,
+              "pageCacheWriteMs": 16649,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 313,
+              "sameTab.cp.ms": 10749.300000011921,
+              "sameTab.orders.ms": 3247.699999988079,
+              "sameTab.koleksiyon.ms": 158.10000002384186,
+              "module.overview.primaryScreenReadyMs": 5481.800000011921,
+              "module.overview.startupReadyMs": 6078.300000011921,
+              "module.overview.systemStartupCompleteMs": 6271.5999999940395,
+              "module.overview.elapsedMs": 6453.404888999998,
+              "module.overview.jsHeapUsedBytes": 32880244,
+              "module.overview.rendererRssBytes": 1120243712,
+              "module.koleksiyon.primaryScreenReadyMs": 19153.80000001192,
+              "module.koleksiyon.startupReadyMs": 19176.80000001192,
+              "module.koleksiyon.systemStartupCompleteMs": 19218.40000000596,
+              "module.koleksiyon.elapsedMs": 19306.660891999985,
+              "module.koleksiyon.jsHeapUsedBytes": 14939396,
+              "module.koleksiyon.rendererRssBytes": 524566528,
+              "module.cp.primaryScreenReadyMs": 30543.5,
+              "module.cp.startupReadyMs": 30579.79999998212,
+              "module.cp.systemStartupCompleteMs": 43652.40000000596,
+              "module.cp.elapsedMs": 44082.30466699999,
+              "module.cp.jsHeapUsedBytes": 194939956,
+              "module.cp.rendererRssBytes": 1023434752,
+              "module.orders.primaryScreenReadyMs": 7853,
+              "module.orders.startupReadyMs": 7956.5,
+              "module.orders.systemStartupCompleteMs": 8227.5,
+              "module.orders.elapsedMs": 8679.644262000016,
+              "module.orders.jsHeapUsedBytes": 121846144,
+              "module.orders.rendererRssBytes": 751140864,
+              "allAttemptRefreshHealthP50Ms": 12.165149000000383,
+              "allAttemptRefreshHealthP95Ms": 1155.081941999997,
+              "refreshHealthFailures": 73
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 5481.800000011921,
+                "startupReadyMs": 6078.300000011921,
+                "startupCompleteMs": 6271.5999999940395,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 179.5,
+                "systemStartupCompleteMs": 6271.5999999940395,
+                "primaryToGateMs": 596.5,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 22,
+                "longTaskTotalMs": 3923,
+                "maxLongTaskMs": 693,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 283.09999999403954,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 950.6999999880791,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 32880244,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8077,
+                  "jsEventListeners": 1635
+                },
+                "navigationStartedAtMs": 1794066622702,
+                "observedAtMs": 1794066632838,
+                "elapsedMs": 6453.404888999998,
+                "rendererRssBytes": 1120243712,
+                "errors": [],
+                "generation": "mw6kvs2v-57ce7340d38b",
+                "sourceRevision": "a8cd00da40c4d5237c3e5fa143677a2f3dabfdfb92c7381b67e2aff64ad7bd1e"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 19153.80000001192,
+                "startupReadyMs": 19176.80000001192,
+                "startupCompleteMs": 19218.40000000596,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 35.79999998211861,
+                "systemStartupCompleteMs": 19218.40000000596,
+                "primaryToGateMs": 23,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 3553.5999999940395,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4744
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 17.69999998807907,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 14939396,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 9920,
+                  "jsEventListeners": 2778
+                },
+                "navigationStartedAtMs": 1794066633411,
+                "observedAtMs": 1794066652824,
+                "elapsedMs": 19306.660891999985,
+                "rendererRssBytes": 524566528,
+                "errors": [],
+                "generation": "mw6kvs2v-57ce7340d38b",
+                "sourceRevision": "a8cd00da40c4d5237c3e5fa143677a2f3dabfdfb92c7381b67e2aff64ad7bd1e"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 30543.5,
+                "startupReadyMs": 30579.79999998212,
+                "startupCompleteMs": 43652.40000000596,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 13066.5,
+                "systemStartupCompleteMs": 43652.40000000596,
+                "primaryToGateMs": 36.29999998211861,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 23,
+                "longTaskTotalMs": 6683.5,
+                "maxLongTaskMs": 1435,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 102.80000001192093,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1512.3999999761581,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 194939956,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 54582,
+                  "jsEventListeners": 5851
+                },
+                "navigationStartedAtMs": 1794066653424,
+                "observedAtMs": 1794066699560,
+                "elapsedMs": 44082.30466699999,
+                "rendererRssBytes": 1023434752,
+                "errors": [],
+                "generation": "mw6kvs2v-57ce7340d38b",
+                "sourceRevision": "a8cd00da40c4d5237c3e5fa143677a2f3dabfdfb92c7381b67e2aff64ad7bd1e"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 7853,
+                "startupReadyMs": 7956.5,
+                "startupCompleteMs": 8227.5,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 262.7999999821186,
+                "systemStartupCompleteMs": 8227.5,
+                "primaryToGateMs": 103.5,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 16,
+                "longTaskTotalMs": 6736,
+                "maxLongTaskMs": 2581,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 136.09999999403954,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1943.699999988079,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 121846144,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 16995,
+                  "jsEventListeners": 2248
+                },
+                "navigationStartedAtMs": 1794066700266,
+                "observedAtMs": 1794066710317,
+                "elapsedMs": 8679.644262000016,
+                "rendererRssBytes": 751140864,
+                "errors": [],
+                "generation": "mw6kvs2v-57ce7340d38b",
+                "sourceRevision": "a8cd00da40c4d5237c3e5fa143677a2f3dabfdfb92c7381b67e2aff64ad7bd1e"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 10749.300000011921,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3247.699999988079,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 158.10000002384186,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 334,
+                "successful": 0,
+                "failed": 334,
+                "p50Ms": 9.324111000008998,
+                "p95Ms": 181.80802100000437,
+                "maxMs": 22844.818085000006
+              },
+              "refresh": {
+                "count": 73,
+                "successful": 0,
+                "failed": 73,
+                "p50Ms": 12.165149000000383,
+                "p95Ms": 1155.081941999997,
+                "maxMs": 5561.242602999999
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:47:44.373Z",
+                  "timestampMs": 1794066464373,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:04.240Z",
+                  "timestampMs": 1794066484240,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 19867,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:04.570Z",
+                  "timestampMs": 1794066484570,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:07.883Z",
+                  "timestampMs": 1794066487883,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 3313,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:11.028Z",
+                  "timestampMs": 1794066491028,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1285,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:20.416Z",
+                  "timestampMs": 1794066500416,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 9388,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:48:37.066Z",
+                  "timestampMs": 1794066517066,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 16649,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9075,
+                "dashboard": null,
+                "totalMs": 52753
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.4343269999999393,
+                  "durationMs": 19831.034877,
+                  "executionMs": 16506.173277,
+                  "overheadMs": 3324.8615999999965,
+                  "heapUsedBytes": 424582864
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.11683699999775854,
+                  "durationMs": 3297.642605000001,
+                  "executionMs": 2969.510968999999,
+                  "overheadMs": 328.1316360000019,
+                  "heapUsedBytes": 77542632
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=18870 cpuMs=29947 heapUsedMb=573 heapLimitMb=4288 rssMb=1548",
+                "blockedMs": 18870,
+                "cpuMs": 29947,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1548
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=13903 cpuMs=20716 heapUsedMb=573 heapLimitMb=4288 rssMb=1520",
+                "blockedMs": 13903,
+                "cpuMs": 20716,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1520
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794066622702,
+                "observedAtMs": 1794066632838,
+                "recordedGaps": 13,
+                "maxGapMs": 16384.694656000007,
+                "maxDelayMs": 16374.694656000007,
+                "gapsOver200ms": 4,
+                "maxGapUpperBoundMs": 16384.694656000007,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794066633411,
+                "observedAtMs": 1794066652824,
+                "recordedGaps": 12,
+                "maxGapMs": 16384.694656000007,
+                "maxDelayMs": 16374.694656000007,
+                "gapsOver200ms": 3,
+                "maxGapUpperBoundMs": 16384.694656000007,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794066653424,
+                "observedAtMs": 1794066699560,
+                "recordedGaps": 54,
+                "maxGapMs": 950.8645520000136,
+                "maxDelayMs": 940.8645520000136,
+                "gapsOver200ms": 3,
+                "maxGapUpperBoundMs": 950.8645520000136,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794066700266,
+                "observedAtMs": 1794066710317,
+                "recordedGaps": 32,
+                "maxGapMs": 4037.638362000027,
+                "maxDelayMs": 4027.638362000027,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 4037.638362000027,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 3,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-before-3.json",
+              "sha256": "36ff3792cc1f8dd2faa1f103f52f0f15fb80eb9628ae38518b699e1cba0f3a45"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6l1cwn-764a55f4a5cc",
+              "sourceRevision": "56917d8b4d6919d64967fab1962b8bfec3b61547465119499a73b18e8217dbe3",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 48886,
+              "refreshWallMs": 49615.363563000006,
+              "snapshotWriteMs": 11683,
+              "snapshotOperationMs": 12082,
+              "asasParseMs": 14825,
+              "pageCacheWriteMs": 16933,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 399,
+              "sameTab.cp.ms": 14334.699999988079,
+              "sameTab.orders.ms": 3767.9000000059605,
+              "sameTab.koleksiyon.ms": 197.19999998807907,
+              "module.overview.primaryScreenReadyMs": 6973.700000017881,
+              "module.overview.startupReadyMs": 6990.700000017881,
+              "module.overview.systemStartupCompleteMs": 7069.800000011921,
+              "module.overview.elapsedMs": 7283.490802999993,
+              "module.overview.jsHeapUsedBytes": 32838408,
+              "module.overview.rendererRssBytes": 978669568,
+              "module.koleksiyon.primaryScreenReadyMs": 19476.80000001192,
+              "module.koleksiyon.startupReadyMs": 19493.40000000596,
+              "module.koleksiyon.systemStartupCompleteMs": 19607.5,
+              "module.koleksiyon.elapsedMs": 19673.651375999994,
+              "module.koleksiyon.jsHeapUsedBytes": 12111140,
+              "module.koleksiyon.rendererRssBytes": 544231424,
+              "module.cp.primaryScreenReadyMs": 29950.600000023842,
+              "module.cp.startupReadyMs": 29971.20000001788,
+              "module.cp.systemStartupCompleteMs": 30128.20000001788,
+              "module.cp.elapsedMs": 47396.227883000014,
+              "module.cp.jsHeapUsedBytes": 194094844,
+              "module.cp.rendererRssBytes": 985522176,
+              "module.orders.primaryScreenReadyMs": 10827.5,
+              "module.orders.startupReadyMs": 10846.90000000596,
+              "module.orders.systemStartupCompleteMs": 10981.299999982119,
+              "module.orders.elapsedMs": 11978.493975999998,
+              "module.orders.jsHeapUsedBytes": 103886376,
+              "module.orders.rendererRssBytes": 742187008,
+              "allAttemptRefreshHealthP50Ms": 7.695381999999881,
+              "allAttemptRefreshHealthP95Ms": 818.4972330000019,
+              "refreshHealthFailures": 68
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 6973.700000017881,
+                "startupReadyMs": 6990.700000017881,
+                "startupCompleteMs": 7069.800000011921,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 72.59999999403954,
+                "systemStartupCompleteMs": 7069.800000011921,
+                "primaryToGateMs": 17,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 16,
+                "longTaskTotalMs": 1974,
+                "maxLongTaskMs": 466,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 145.80000001192093,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 488.7999999821186,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 32838408,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8048,
+                  "jsEventListeners": 1633
+                },
+                "navigationStartedAtMs": 1794066894073,
+                "observedAtMs": 1794066904173,
+                "elapsedMs": 7283.490802999993,
+                "rendererRssBytes": 978669568,
+                "errors": [],
+                "generation": "mw6l1cwn-764a55f4a5cc",
+                "sourceRevision": "56917d8b4d6919d64967fab1962b8bfec3b61547465119499a73b18e8217dbe3"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 19476.80000001192,
+                "startupReadyMs": 19493.40000000596,
+                "startupCompleteMs": 19607.5,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 107.09999999403954,
+                "systemStartupCompleteMs": 19607.5,
+                "primaryToGateMs": 16.599999994039536,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 157.59999999403954,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 44.400000005960464,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 12111140,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7685,
+                  "jsEventListeners": 1597
+                },
+                "navigationStartedAtMs": 1794066904827,
+                "observedAtMs": 1794066924575,
+                "elapsedMs": 19673.651375999994,
+                "rendererRssBytes": 544231424,
+                "errors": [],
+                "generation": "mw6l1cwn-764a55f4a5cc",
+                "sourceRevision": "56917d8b4d6919d64967fab1962b8bfec3b61547465119499a73b18e8217dbe3"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 29950.600000023842,
+                "startupReadyMs": 29971.20000001788,
+                "startupCompleteMs": 30128.20000001788,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 147.40000000596046,
+                "systemStartupCompleteMs": 30128.20000001788,
+                "primaryToGateMs": 20.599999994039536,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 24,
+                "longTaskTotalMs": 5913.899999976158,
+                "maxLongTaskMs": 1486,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 103.59999999403954,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4744
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 912.5999999940395,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 194094844,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 54615,
+                  "jsEventListeners": 5849
+                },
+                "navigationStartedAtMs": 1794066925090,
+                "observedAtMs": 1794066974527,
+                "elapsedMs": 47396.227883000014,
+                "rendererRssBytes": 985522176,
+                "errors": [],
+                "generation": "mw6l1cwn-764a55f4a5cc",
+                "sourceRevision": "56917d8b4d6919d64967fab1962b8bfec3b61547465119499a73b18e8217dbe3"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 10827.5,
+                "startupReadyMs": 10846.90000000596,
+                "startupCompleteMs": 10981.299999982119,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 119.09999999403954,
+                "systemStartupCompleteMs": 10981.299999982119,
+                "primaryToGateMs": 19.400000005960464,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 16,
+                "longTaskTotalMs": 7643.800000011921,
+                "maxLongTaskMs": 4704.800000011921,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 246.5,
+                    "decodedBytes": 15020,
+                    "encodedBytes": 4744
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1649.0999999940395,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 103886376,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 16936,
+                  "jsEventListeners": 2213
+                },
+                "navigationStartedAtMs": 1794066975242,
+                "observedAtMs": 1794066987291,
+                "elapsedMs": 11978.493975999998,
+                "rendererRssBytes": 742187008,
+                "errors": [],
+                "generation": "mw6l1cwn-764a55f4a5cc",
+                "sourceRevision": "56917d8b4d6919d64967fab1962b8bfec3b61547465119499a73b18e8217dbe3"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 14334.699999988079,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3767.9000000059605,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 197.19999998807907,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 366,
+                "successful": 0,
+                "failed": 366,
+                "p50Ms": 8.720390000002226,
+                "p95Ms": 116.56274400000257,
+                "maxMs": 25193.86008700001
+              },
+              "refresh": {
+                "count": 68,
+                "successful": 0,
+                "failed": 68,
+                "p50Ms": 7.695381999999881,
+                "p95Ms": 818.4972330000019,
+                "maxMs": 7453.6961200000005
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:08.511Z",
+                  "timestampMs": 1794066728511,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:23.337Z",
+                  "timestampMs": 1794066743337,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 14825,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:23.518Z",
+                  "timestampMs": 1794066743518,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:25.425Z",
+                  "timestampMs": 1794066745425,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1907,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:28.330Z",
+                  "timestampMs": 1794066748330,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1517,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:40.413Z",
+                  "timestampMs": 1794066760413,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 12082,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:52:57.346Z",
+                  "timestampMs": 1794066777346,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 16933,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 11683,
+                "dashboard": null,
+                "totalMs": 48881
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.6892680000000837,
+                  "durationMs": 14807.516444,
+                  "executionMs": 10934.680566,
+                  "overheadMs": 3872.835878,
+                  "heapUsedBytes": 424265208
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.9523210000006657,
+                  "durationMs": 1899.9692419999992,
+                  "executionMs": 1636.9982039999995,
+                  "overheadMs": 262.9710379999997,
+                  "heapUsedBytes": 54212664
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=24186 cpuMs=35786 heapUsedMb=573 heapLimitMb=4288 rssMb=1507",
+                "blockedMs": 24186,
+                "cpuMs": 35786,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1507
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=16517 cpuMs=22256 heapUsedMb=573 heapLimitMb=4288 rssMb=1529",
+                "blockedMs": 16517,
+                "cpuMs": 22256,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1529
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794066894073,
+                "observedAtMs": 1794066904173,
+                "recordedGaps": 10,
+                "maxGapMs": 17936.195701999997,
+                "maxDelayMs": 17926.195701999997,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 17936.195701999997,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794066904827,
+                "observedAtMs": 1794066924575,
+                "recordedGaps": 13,
+                "maxGapMs": 17936.195701999997,
+                "maxDelayMs": 17926.195701999997,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 17936.195701999997,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794066925090,
+                "observedAtMs": 1794066974527,
+                "recordedGaps": 45,
+                "maxGapMs": 1129.1532599999919,
+                "maxDelayMs": 1119.1532599999919,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 1129.1532599999919,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794066975242,
+                "observedAtMs": 1794066987291,
+                "recordedGaps": 26,
+                "maxGapMs": 1508.337507999997,
+                "maxDelayMs": 1498.337507999997,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 1508.337507999997,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          }
+        ],
+        "medians": {
+          "refreshMs": 52760,
+          "refreshWallMs": 53782.320364,
+          "snapshotWriteMs": 11683,
+          "snapshotOperationMs": 12082,
+          "asasParseMs": 15999,
+          "pageCacheWriteMs": 16933,
+          "successfulRefreshHealthP50Ms": null,
+          "successfulRefreshHealthP95Ms": null,
+          "sourcePreparationOutsideSnapshotMetricMs": 399,
+          "sameTab.cp.ms": 14334.699999988079,
+          "sameTab.orders.ms": 3767.9000000059605,
+          "sameTab.koleksiyon.ms": 197.19999998807907,
+          "module.overview.primaryScreenReadyMs": 6973.700000017881,
+          "module.overview.startupReadyMs": 6990.700000017881,
+          "module.overview.systemStartupCompleteMs": 7069.800000011921,
+          "module.overview.elapsedMs": 7283.490802999993,
+          "module.overview.jsHeapUsedBytes": 32880244,
+          "module.overview.rendererRssBytes": 980832256,
+          "module.koleksiyon.primaryScreenReadyMs": 19153.80000001192,
+          "module.koleksiyon.startupReadyMs": 19176.80000001192,
+          "module.koleksiyon.systemStartupCompleteMs": 19218.40000000596,
+          "module.koleksiyon.elapsedMs": 19306.660891999985,
+          "module.koleksiyon.jsHeapUsedBytes": 12111140,
+          "module.koleksiyon.rendererRssBytes": 544231424,
+          "module.cp.primaryScreenReadyMs": 30543.5,
+          "module.cp.startupReadyMs": 30579.79999998212,
+          "module.cp.systemStartupCompleteMs": 43652.40000000596,
+          "module.cp.elapsedMs": 47396.227883000014,
+          "module.cp.jsHeapUsedBytes": 194939956,
+          "module.cp.rendererRssBytes": 1023434752,
+          "module.orders.primaryScreenReadyMs": 7853,
+          "module.orders.startupReadyMs": 7956.5,
+          "module.orders.systemStartupCompleteMs": 8227.5,
+          "module.orders.elapsedMs": 8679.644262000016,
+          "module.orders.jsHeapUsedBytes": 121846144,
+          "module.orders.rendererRssBytes": 751140864,
+          "allAttemptRefreshHealthP50Ms": 12.165149000000383,
+          "allAttemptRefreshHealthP95Ms": 1057.8881099999999,
+          "refreshHealthFailures": 73
+        }
+      },
+      "after": {
+        "runs": [
+          {
+            "rep": 1,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-after-1.json",
+              "sha256": "01d0212de615125f249983fd5fc011eaa5736f3cf679de7ffe9faf5d0ab92392"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6kgsut-8e49086ae95a",
+              "sourceRevision": "726229bcfbbb87363fe7b66052b3fc3fd1e120cbd5ae98493194da119d2d475f",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 63524,
+              "refreshWallMs": 64739.086652,
+              "snapshotWriteMs": 9092,
+              "snapshotOperationMs": 16081,
+              "asasParseMs": 18412,
+              "pageCacheWriteMs": 24122,
+              "successfulRefreshHealthP50Ms": 7.48804999999993,
+              "successfulRefreshHealthP95Ms": 749.3135679999978,
+              "sourcePreparationOutsideSnapshotMetricMs": 6989,
+              "sameTab.cp.ms": 10941.399999976158,
+              "sameTab.orders.ms": 2107.2000000178814,
+              "sameTab.koleksiyon.ms": 221.90000000596046,
+              "module.overview.primaryScreenReadyMs": 4161.300000011921,
+              "module.overview.startupReadyMs": 4181.5,
+              "module.overview.systemStartupCompleteMs": 4269.800000011921,
+              "module.overview.elapsedMs": 4537.582907999982,
+              "module.overview.jsHeapUsedBytes": 216631348,
+              "module.overview.rendererRssBytes": 1188511744,
+              "module.koleksiyon.primaryScreenReadyMs": 2988.899999976158,
+              "module.koleksiyon.startupReadyMs": 3015.199999988079,
+              "module.koleksiyon.systemStartupCompleteMs": 3207.199999988079,
+              "module.koleksiyon.elapsedMs": 3282.474189999979,
+              "module.koleksiyon.jsHeapUsedBytes": 91518584,
+              "module.koleksiyon.rendererRssBytes": 672739328,
+              "module.cp.primaryScreenReadyMs": 21512.90000000596,
+              "module.cp.startupReadyMs": 21528.90000000596,
+              "module.cp.systemStartupCompleteMs": 36420.80000001192,
+              "module.cp.elapsedMs": 36771.5619,
+              "module.cp.jsHeapUsedBytes": 119418192,
+              "module.cp.rendererRssBytes": 1037774848,
+              "module.orders.primaryScreenReadyMs": 5780,
+              "module.orders.startupReadyMs": 5798.0999999940395,
+              "module.orders.systemStartupCompleteMs": 5887,
+              "module.orders.elapsedMs": 6146.802778000012,
+              "module.orders.jsHeapUsedBytes": 185746772,
+              "module.orders.rendererRssBytes": 1002250240,
+              "allAttemptRefreshHealthP50Ms": 7.48804999999993,
+              "allAttemptRefreshHealthP95Ms": 749.3135679999978,
+              "refreshHealthFailures": 0
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 4161.300000011921,
+                "startupReadyMs": 4181.5,
+                "startupCompleteMs": 4269.800000011921,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 82.69999998807907,
+                "systemStartupCompleteMs": 4269.800000011921,
+                "primaryToGateMs": 20.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 29,
+                "longTaskTotalMs": 7025.300000011921,
+                "maxLongTaskMs": 799,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 362.7999999821186,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 484.5,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 216631348,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8287,
+                  "jsEventListeners": 1681
+                },
+                "navigationStartedAtMs": 1794065897656,
+                "observedAtMs": 1794065911734,
+                "elapsedMs": 4537.582907999982,
+                "rendererRssBytes": 1188511744,
+                "errors": [],
+                "generation": "mw6kgsut-8e49086ae95a",
+                "sourceRevision": "726229bcfbbb87363fe7b66052b3fc3fd1e120cbd5ae98493194da119d2d475f"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 2988.899999976158,
+                "startupReadyMs": 3015.199999988079,
+                "startupCompleteMs": 3207.199999988079,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 184,
+                "systemStartupCompleteMs": 3207.199999988079,
+                "primaryToGateMs": 26.30000001192093,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 5871,
+                "maxLongTaskMs": 2384,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 66.80000001192093,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4741
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 113.30000001192093,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 91518584,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7731,
+                  "jsEventListeners": 1568
+                },
+                "navigationStartedAtMs": 1794065913117,
+                "observedAtMs": 1794065923496,
+                "elapsedMs": 3282.474189999979,
+                "rendererRssBytes": 672739328,
+                "errors": [],
+                "generation": "mw6kgsut-8e49086ae95a",
+                "sourceRevision": "726229bcfbbb87363fe7b66052b3fc3fd1e120cbd5ae98493194da119d2d475f"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 21512.90000000596,
+                "startupReadyMs": 21528.90000000596,
+                "startupCompleteMs": 36420.80000001192,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 14886.700000017881,
+                "systemStartupCompleteMs": 36420.80000001192,
+                "primaryToGateMs": 16,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 12,
+                "longTaskTotalMs": 8204.399999976158,
+                "maxLongTaskMs": 5289.399999976158,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 58.400000005960464,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 787.5,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 119418192,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 53696,
+                  "jsEventListeners": 5172
+                },
+                "navigationStartedAtMs": 1794065924000,
+                "observedAtMs": 1794065962302,
+                "elapsedMs": 36771.5619,
+                "rendererRssBytes": 1037774848,
+                "errors": [],
+                "generation": "mw6kgsut-8e49086ae95a",
+                "sourceRevision": "726229bcfbbb87363fe7b66052b3fc3fd1e120cbd5ae98493194da119d2d475f"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 5780,
+                "startupReadyMs": 5798.0999999940395,
+                "startupCompleteMs": 5887,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 84.10000002384186,
+                "systemStartupCompleteMs": 5887,
+                "primaryToGateMs": 18.099999994039536,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 7874.9000000059605,
+                "maxLongTaskMs": 2195,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 68.19999998807907,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1155.4000000059605,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 185746772,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26368,
+                  "jsEventListeners": 3179
+                },
+                "navigationStartedAtMs": 1794065963137,
+                "observedAtMs": 1794065973264,
+                "elapsedMs": 6146.802778000012,
+                "rendererRssBytes": 1002250240,
+                "errors": [],
+                "generation": "mw6kgsut-8e49086ae95a",
+                "sourceRevision": "726229bcfbbb87363fe7b66052b3fc3fd1e120cbd5ae98493194da119d2d475f"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 10941.399999976158,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 2107.2000000178814,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 221.90000000596046,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 382,
+                "successful": 382,
+                "failed": 0,
+                "p50Ms": 7.588497000018833,
+                "p95Ms": 62.21917699999176,
+                "maxMs": 5159.859068000002
+              },
+              "refresh": {
+                "count": 99,
+                "successful": 99,
+                "failed": 0,
+                "p50Ms": 7.48804999999993,
+                "p95Ms": 749.3135679999978,
+                "maxMs": 5159.859068000002
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:35:55.026Z",
+                  "timestampMs": 1794065755026,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:13.439Z",
+                  "timestampMs": 1794065773439,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 18412,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:13.630Z",
+                  "timestampMs": 1794065773630,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:15.558Z",
+                  "timestampMs": 1794065775558,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1928,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:18.211Z",
+                  "timestampMs": 1794065778211,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1252,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:34.294Z",
+                  "timestampMs": 1794065794294,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 16081,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:36:58.417Z",
+                  "timestampMs": 1794065818417,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 24122,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9092,
+                "dashboard": null,
+                "totalMs": 63518
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.7706329999998616,
+                  "durationMs": 18393.439812,
+                  "executionMs": 12750.921217,
+                  "overheadMs": 5642.518595000001,
+                  "heapUsedBytes": 425691192,
+                  "mainReceiveMs": 981.2241119999999,
+                  "workerPostMessageMs": 4446.338400000001,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.25129699999888544,
+                  "durationMs": 1896.052423000001,
+                  "executionMs": 1610.0219739999993,
+                  "overheadMs": 286.0304490000017,
+                  "heapUsedBytes": 70232480,
+                  "mainReceiveMs": 77.9492969999992,
+                  "workerPostMessageMs": 53.72426099999939,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794065897656,
+                "observedAtMs": 1794065911734,
+                "recordedGaps": 60,
+                "maxGapMs": 325.2013159999915,
+                "maxDelayMs": 315.2013159999915,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 325.2013159999915,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794065913117,
+                "observedAtMs": 1794065923496,
+                "recordedGaps": 33,
+                "maxGapMs": 73.59638099999574,
+                "maxDelayMs": 63.596380999995745,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 73.59638099999574,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794065924000,
+                "observedAtMs": 1794065962302,
+                "recordedGaps": 36,
+                "maxGapMs": 89.30222199999844,
+                "maxDelayMs": 79.30222199999844,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 89.30222199999844,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794065963137,
+                "observedAtMs": 1794065973264,
+                "recordedGaps": 12,
+                "maxGapMs": 93.5311309999961,
+                "maxDelayMs": 83.5311309999961,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 93.5311309999961,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 2,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-after-2.json",
+              "sha256": "bc98c13ad84cf0ae7a205b1e863cd12aa7f52a62aecbef21c92d637c2320bc23"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6knv2h-4793b612be48",
+              "sourceRevision": "61c219772082e82f16bba61ecdd15b7b88b6756672a6aab115661aa5fead8c03",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 59802,
+              "refreshWallMs": 62228.28933500001,
+              "snapshotWriteMs": 9515,
+              "snapshotOperationMs": 16585,
+              "asasParseMs": 16581,
+              "pageCacheWriteMs": 21847,
+              "successfulRefreshHealthP50Ms": 9.752494000000297,
+              "successfulRefreshHealthP95Ms": 435.47748000000047,
+              "sourcePreparationOutsideSnapshotMetricMs": 7070,
+              "sameTab.cp.ms": 11297.09999999404,
+              "sameTab.orders.ms": 3721.0999999940395,
+              "sameTab.koleksiyon.ms": 163.19999998807907,
+              "module.overview.primaryScreenReadyMs": 4341.399999976158,
+              "module.overview.startupReadyMs": 4380.399999976158,
+              "module.overview.systemStartupCompleteMs": 4524.899999976158,
+              "module.overview.elapsedMs": 4788.875511999999,
+              "module.overview.jsHeapUsedBytes": 143899492,
+              "module.overview.rendererRssBytes": 1375760384,
+              "module.koleksiyon.primaryScreenReadyMs": 6029.199999988079,
+              "module.koleksiyon.startupReadyMs": 6128.299999982119,
+              "module.koleksiyon.systemStartupCompleteMs": 6236.699999988079,
+              "module.koleksiyon.elapsedMs": 6388.988939000003,
+              "module.koleksiyon.jsHeapUsedBytes": 13034024,
+              "module.koleksiyon.rendererRssBytes": 616673280,
+              "module.cp.primaryScreenReadyMs": 25716.09999999404,
+              "module.cp.startupReadyMs": 25727,
+              "module.cp.systemStartupCompleteMs": 39331.5,
+              "module.cp.elapsedMs": 39807.459644999995,
+              "module.cp.jsHeapUsedBytes": 195632740,
+              "module.cp.rendererRssBytes": 988643328,
+              "module.orders.primaryScreenReadyMs": 9752.300000011921,
+              "module.orders.startupReadyMs": 9776.5,
+              "module.orders.systemStartupCompleteMs": 9879.800000011921,
+              "module.orders.elapsedMs": 11399.009132000007,
+              "module.orders.jsHeapUsedBytes": 116768528,
+              "module.orders.rendererRssBytes": 743997440,
+              "allAttemptRefreshHealthP50Ms": 9.752494000000297,
+              "allAttemptRefreshHealthP95Ms": 778.6431930000035,
+              "refreshHealthFailures": 1
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 4341.399999976158,
+                "startupReadyMs": 4380.399999976158,
+                "startupCompleteMs": 4524.899999976158,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 136.60000002384186,
+                "systemStartupCompleteMs": 4524.899999976158,
+                "primaryToGateMs": 39,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 40,
+                "longTaskTotalMs": 7276.9000000059605,
+                "maxLongTaskMs": 905,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 107.69999998807907,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 510.2999999821186,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 143899492,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8388,
+                  "jsEventListeners": 1708
+                },
+                "navigationStartedAtMs": 1794066240245,
+                "observedAtMs": 1794066251948,
+                "elapsedMs": 4788.875511999999,
+                "rendererRssBytes": 1375760384,
+                "errors": [],
+                "generation": "mw6knv2h-4793b612be48",
+                "sourceRevision": "61c219772082e82f16bba61ecdd15b7b88b6756672a6aab115661aa5fead8c03"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 6029.199999988079,
+                "startupReadyMs": 6128.299999982119,
+                "startupCompleteMs": 6236.699999988079,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 94.5,
+                "systemStartupCompleteMs": 6236.699999988079,
+                "primaryToGateMs": 99.09999999403954,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 33,
+                "longTaskTotalMs": 6322,
+                "maxLongTaskMs": 1233,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 71,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 138.2000000178814,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 13034024,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8165,
+                  "jsEventListeners": 1949
+                },
+                "navigationStartedAtMs": 1794066252781,
+                "observedAtMs": 1794066263768,
+                "elapsedMs": 6388.988939000003,
+                "rendererRssBytes": 616673280,
+                "errors": [],
+                "generation": "mw6knv2h-4793b612be48",
+                "sourceRevision": "61c219772082e82f16bba61ecdd15b7b88b6756672a6aab115661aa5fead8c03"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 25716.09999999404,
+                "startupReadyMs": 25727,
+                "startupCompleteMs": 39331.5,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 13599.09999999404,
+                "systemStartupCompleteMs": 39331.5,
+                "primaryToGateMs": 10.900000005960464,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 17,
+                "longTaskTotalMs": 7819.199999988079,
+                "maxLongTaskMs": 3220.199999988079,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 91.5,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4744
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 900.2999999821186,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 195632740,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 54660,
+                  "jsEventListeners": 5853
+                },
+                "navigationStartedAtMs": 1794066267772,
+                "observedAtMs": 1794066309294,
+                "elapsedMs": 39807.459644999995,
+                "rendererRssBytes": 988643328,
+                "errors": [],
+                "generation": "mw6knv2h-4793b612be48",
+                "sourceRevision": "61c219772082e82f16bba61ecdd15b7b88b6756672a6aab115661aa5fead8c03"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 9752.300000011921,
+                "startupReadyMs": 9776.5,
+                "startupCompleteMs": 9879.800000011921,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 94.30000001192093,
+                "systemStartupCompleteMs": 9879.800000011921,
+                "primaryToGateMs": 24.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 26,
+                "longTaskTotalMs": 7788.5,
+                "maxLongTaskMs": 3856,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 139.59999999403954,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4744
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 2630.699999988079,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 116768528,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 16897,
+                  "jsEventListeners": 2215
+                },
+                "navigationStartedAtMs": 1794066310012,
+                "observedAtMs": 1794066321479,
+                "elapsedMs": 11399.009132000007,
+                "rendererRssBytes": 743997440,
+                "errors": [],
+                "generation": "mw6knv2h-4793b612be48",
+                "sourceRevision": "61c219772082e82f16bba61ecdd15b7b88b6756672a6aab115661aa5fead8c03"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 11297.09999999404,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3721.0999999940395,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 163.19999998807907,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 415,
+                "successful": 414,
+                "failed": 1,
+                "p50Ms": 8.613045000005513,
+                "p95Ms": 103.9180720000004,
+                "maxMs": 6030.0872119999985
+              },
+              "refresh": {
+                "count": 92,
+                "successful": 91,
+                "failed": 1,
+                "p50Ms": 9.752494000000297,
+                "p95Ms": 778.6431930000035,
+                "maxMs": 6030.0872119999985
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200,
+                null
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:41:28.266Z",
+                  "timestampMs": 1794066088266,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:41:44.849Z",
+                  "timestampMs": 1794066104849,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 16581,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:41:44.978Z",
+                  "timestampMs": 1794066104978,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:41:46.230Z",
+                  "timestampMs": 1794066106230,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1252,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:41:49.427Z",
+                  "timestampMs": 1794066109427,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1582,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:42:06.013Z",
+                  "timestampMs": 1794066126013,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 16585,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:42:27.860Z",
+                  "timestampMs": 1794066147860,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 21847,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9515,
+                "dashboard": null,
+                "totalMs": 59787
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 1.090903000000253,
+                  "durationMs": 16557.369733,
+                  "executionMs": 13490.694304,
+                  "overheadMs": 3066.675428999999,
+                  "heapUsedBytes": 420481656,
+                  "mainReceiveMs": 1536.7670309999994,
+                  "workerPostMessageMs": 1406.391959999999,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.11037399999986519,
+                  "durationMs": 1245.8031389999996,
+                  "executionMs": 908.1543129999991,
+                  "overheadMs": 337.64882600000055,
+                  "heapUsedBytes": 52663064,
+                  "mainReceiveMs": 227.2327269999987,
+                  "workerPostMessageMs": 44.23953099999926,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794066240245,
+                "observedAtMs": 1794066251948,
+                "recordedGaps": 29,
+                "maxGapMs": 104.80011899999226,
+                "maxDelayMs": 94.80011899999226,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 104.80011899999226,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794066252781,
+                "observedAtMs": 1794066263768,
+                "recordedGaps": 60,
+                "maxGapMs": 168.4881949999981,
+                "maxDelayMs": 158.4881949999981,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 168.4881949999981,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794066267772,
+                "observedAtMs": 1794066309294,
+                "recordedGaps": 63,
+                "maxGapMs": 161.00591199999326,
+                "maxDelayMs": 151.00591199999326,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 161.00591199999326,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794066310012,
+                "observedAtMs": 1794066321479,
+                "recordedGaps": 18,
+                "maxGapMs": 181.04361199997948,
+                "maxDelayMs": 171.04361199997948,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 181.04361199997948,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 3,
+            "raw": {
+              "file": "/tmp/phase-5-review2-main888-v3-after-3.json",
+              "sha256": "df2e53e0a4bd93c2bcef3c3e5a4905808862d416816fd698cd0787deb57213f2"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6l7oql-13470fbc9785",
+              "sourceRevision": "c7368aa9fd548f1b36c43e14f8d01cd7680a8ec0944138cd0268138f8f39860b",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 64469,
+              "refreshWallMs": 66624.397753,
+              "snapshotWriteMs": 10015,
+              "snapshotOperationMs": 17263,
+              "asasParseMs": 14859,
+              "pageCacheWriteMs": 26936,
+              "successfulRefreshHealthP50Ms": 11.11140499999965,
+              "successfulRefreshHealthP95Ms": 436.4954970000035,
+              "sourcePreparationOutsideSnapshotMetricMs": 7248,
+              "sameTab.cp.ms": 11163.399999976158,
+              "sameTab.orders.ms": 3537.7000000178814,
+              "sameTab.koleksiyon.ms": 168.19999998807907,
+              "module.overview.primaryScreenReadyMs": 4384.4000000059605,
+              "module.overview.startupReadyMs": 4421.699999988079,
+              "module.overview.systemStartupCompleteMs": 4598.0999999940395,
+              "module.overview.elapsedMs": 4826.068360999983,
+              "module.overview.jsHeapUsedBytes": 174454852,
+              "module.overview.rendererRssBytes": 970997760,
+              "module.koleksiyon.primaryScreenReadyMs": 3133.5,
+              "module.koleksiyon.startupReadyMs": 3243.0999999940395,
+              "module.koleksiyon.systemStartupCompleteMs": 3315.4000000059605,
+              "module.koleksiyon.elapsedMs": 3493.6115229999996,
+              "module.koleksiyon.jsHeapUsedBytes": 137830168,
+              "module.koleksiyon.rendererRssBytes": 858157056,
+              "module.cp.primaryScreenReadyMs": 31513.40000000596,
+              "module.cp.startupReadyMs": 31534.59999999404,
+              "module.cp.systemStartupCompleteMs": 31855.09999999404,
+              "module.cp.elapsedMs": 51987.121203999995,
+              "module.cp.jsHeapUsedBytes": 156897636,
+              "module.cp.rendererRssBytes": 1006690304,
+              "module.orders.primaryScreenReadyMs": 8766.40000000596,
+              "module.orders.startupReadyMs": 8783.90000000596,
+              "module.orders.systemStartupCompleteMs": 9357.299999982119,
+              "module.orders.elapsedMs": 9708.043413999985,
+              "module.orders.jsHeapUsedBytes": 95435524,
+              "module.orders.rendererRssBytes": 961433600,
+              "allAttemptRefreshHealthP50Ms": 11.127688999999009,
+              "allAttemptRefreshHealthP95Ms": 521.8115009999965,
+              "refreshHealthFailures": 1
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 4384.4000000059605,
+                "startupReadyMs": 4421.699999988079,
+                "startupCompleteMs": 4598.0999999940395,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 160.90000000596046,
+                "systemStartupCompleteMs": 4598.0999999940395,
+                "primaryToGateMs": 37.29999998211861,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 30,
+                "longTaskTotalMs": 6988,
+                "maxLongTaskMs": 951,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 87.60000002384186,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 664,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 174454852,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8046,
+                  "jsEventListeners": 1673
+                },
+                "navigationStartedAtMs": 1794067161073,
+                "observedAtMs": 1794067172243,
+                "elapsedMs": 4826.068360999983,
+                "rendererRssBytes": 970997760,
+                "errors": [],
+                "generation": "mw6l7oql-13470fbc9785",
+                "sourceRevision": "c7368aa9fd548f1b36c43e14f8d01cd7680a8ec0944138cd0268138f8f39860b"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 3133.5,
+                "startupReadyMs": 3243.0999999940395,
+                "startupCompleteMs": 3315.4000000059605,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 62,
+                "systemStartupCompleteMs": 3315.4000000059605,
+                "primaryToGateMs": 109.59999999403954,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 23,
+                "longTaskTotalMs": 5319.200000017881,
+                "maxLongTaskMs": 1409,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 37.80000001192093,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 78.59999999403954,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 137830168,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7732,
+                  "jsEventListeners": 1568
+                },
+                "navigationStartedAtMs": 1794067175354,
+                "observedAtMs": 1794067187849,
+                "elapsedMs": 3493.6115229999996,
+                "rendererRssBytes": 858157056,
+                "errors": [],
+                "generation": "mw6l7oql-13470fbc9785",
+                "sourceRevision": "c7368aa9fd548f1b36c43e14f8d01cd7680a8ec0944138cd0268138f8f39860b"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 31513.40000000596,
+                "startupReadyMs": 31534.59999999404,
+                "startupCompleteMs": 31855.09999999404,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 308.59999999403954,
+                "systemStartupCompleteMs": 31855.09999999404,
+                "primaryToGateMs": 21.19999998807907,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 20,
+                "longTaskTotalMs": 7525.300000011921,
+                "maxLongTaskMs": 1793.300000011921,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 92.5,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1333.8999999761581,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 156897636,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 53684,
+                  "jsEventListeners": 5170
+                },
+                "navigationStartedAtMs": 1794067189315,
+                "observedAtMs": 1794067244535,
+                "elapsedMs": 51987.121203999995,
+                "rendererRssBytes": 1006690304,
+                "errors": [],
+                "generation": "mw6l7oql-13470fbc9785",
+                "sourceRevision": "c7368aa9fd548f1b36c43e14f8d01cd7680a8ec0944138cd0268138f8f39860b"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 8766.40000000596,
+                "startupReadyMs": 8783.90000000596,
+                "startupCompleteMs": 9357.299999982119,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 565.7999999821186,
+                "systemStartupCompleteMs": 9357.299999982119,
+                "primaryToGateMs": 17.5,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 20,
+                "longTaskTotalMs": 7779.4000000059605,
+                "maxLongTaskMs": 1514,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 87.09999999403954,
+                    "decodedBytes": 15019,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1138.699999988079,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 95435524,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26154,
+                  "jsEventListeners": 3178
+                },
+                "navigationStartedAtMs": 1794067245889,
+                "observedAtMs": 1794067259265,
+                "elapsedMs": 9708.043413999985,
+                "rendererRssBytes": 961433600,
+                "errors": [],
+                "generation": "mw6l7oql-13470fbc9785",
+                "sourceRevision": "c7368aa9fd548f1b36c43e14f8d01cd7680a8ec0944138cd0268138f8f39860b"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 11163.399999976158,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3537.7000000178814,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 168.19999998807907,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 441,
+                "successful": 440,
+                "failed": 1,
+                "p50Ms": 8.196400000000722,
+                "p95Ms": 98.9851750000089,
+                "maxMs": 6416.787744000001
+              },
+              "refresh": {
+                "count": 99,
+                "successful": 98,
+                "failed": 1,
+                "p50Ms": 11.127688999999009,
+                "p95Ms": 521.8115009999965,
+                "maxMs": 6416.787744000001
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200,
+                null
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:56:48.353Z",
+                  "timestampMs": 1794067008353,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:03.212Z",
+                  "timestampMs": 1794067023212,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 14859,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:03.389Z",
+                  "timestampMs": 1794067023389,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:04.988Z",
+                  "timestampMs": 1794067024988,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1598,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:08.563Z",
+                  "timestampMs": 1794067028563,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1612,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:25.827Z",
+                  "timestampMs": 1794067045827,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 17263,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T15:57:52.763Z",
+                  "timestampMs": 1794067072763,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 26936,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 10015,
+                "dashboard": null,
+                "totalMs": 64464
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.5020030000000588,
+                  "durationMs": 14835.920394,
+                  "executionMs": 12157.666476999999,
+                  "overheadMs": 2678.253917000002,
+                  "heapUsedBytes": 425809016,
+                  "mainReceiveMs": 888.3593070000006,
+                  "workerPostMessageMs": 1662.0498640000005,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.19574400000055903,
+                  "durationMs": 1589.6460979999974,
+                  "executionMs": 1250.227841,
+                  "overheadMs": 339.41825699999754,
+                  "heapUsedBytes": 53138408,
+                  "mainReceiveMs": 96.17166599999837,
+                  "workerPostMessageMs": 71.12818200000038,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794067161073,
+                "observedAtMs": 1794067172243,
+                "recordedGaps": 32,
+                "maxGapMs": 90.90107400000852,
+                "maxDelayMs": 80.90107400000852,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 90.90107400000852,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794067175354,
+                "observedAtMs": 1794067187849,
+                "recordedGaps": 23,
+                "maxGapMs": 82.66605500000878,
+                "maxDelayMs": 72.66605500000878,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 82.66605500000878,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794067189315,
+                "observedAtMs": 1794067244535,
+                "recordedGaps": 56,
+                "maxGapMs": 329.9370909999998,
+                "maxDelayMs": 319.9370909999998,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 329.9370909999998,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794067245889,
+                "observedAtMs": 1794067259265,
+                "recordedGaps": 18,
+                "maxGapMs": 229.8828949999879,
+                "maxDelayMs": 219.8828949999879,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 229.8828949999879,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          }
+        ],
+        "medians": {
+          "refreshMs": 63524,
+          "refreshWallMs": 64739.086652,
+          "snapshotWriteMs": 9515,
+          "snapshotOperationMs": 16585,
+          "asasParseMs": 16581,
+          "pageCacheWriteMs": 24122,
+          "successfulRefreshHealthP50Ms": 9.752494000000297,
+          "successfulRefreshHealthP95Ms": 436.4954970000035,
+          "sourcePreparationOutsideSnapshotMetricMs": 7070,
+          "sameTab.cp.ms": 11163.399999976158,
+          "sameTab.orders.ms": 3537.7000000178814,
+          "sameTab.koleksiyon.ms": 168.19999998807907,
+          "module.overview.primaryScreenReadyMs": 4341.399999976158,
+          "module.overview.startupReadyMs": 4380.399999976158,
+          "module.overview.systemStartupCompleteMs": 4524.899999976158,
+          "module.overview.elapsedMs": 4788.875511999999,
+          "module.overview.jsHeapUsedBytes": 174454852,
+          "module.overview.rendererRssBytes": 1188511744,
+          "module.koleksiyon.primaryScreenReadyMs": 3133.5,
+          "module.koleksiyon.startupReadyMs": 3243.0999999940395,
+          "module.koleksiyon.systemStartupCompleteMs": 3315.4000000059605,
+          "module.koleksiyon.elapsedMs": 3493.6115229999996,
+          "module.koleksiyon.jsHeapUsedBytes": 91518584,
+          "module.koleksiyon.rendererRssBytes": 672739328,
+          "module.cp.primaryScreenReadyMs": 25716.09999999404,
+          "module.cp.startupReadyMs": 25727,
+          "module.cp.systemStartupCompleteMs": 36420.80000001192,
+          "module.cp.elapsedMs": 39807.459644999995,
+          "module.cp.jsHeapUsedBytes": 156897636,
+          "module.cp.rendererRssBytes": 1006690304,
+          "module.orders.primaryScreenReadyMs": 8766.40000000596,
+          "module.orders.startupReadyMs": 8783.90000000596,
+          "module.orders.systemStartupCompleteMs": 9357.299999982119,
+          "module.orders.elapsedMs": 9708.043413999985,
+          "module.orders.jsHeapUsedBytes": 116768528,
+          "module.orders.rendererRssBytes": 961433600,
+          "allAttemptRefreshHealthP50Ms": 9.752494000000297,
+          "allAttemptRefreshHealthP95Ms": 749.3135679999978,
+          "refreshHealthFailures": 1
+        }
+      }
+    },
+    "openings": [
+      {
+        "rep": 1,
+        "raw": {
+          "file": "/tmp/phase-5-review2-main888-openings-after-1.json",
+          "sha256": "59dbf5ca1c8dc22a005b21245401992bbc700e23fb4164dd12a03f84a4540869"
+        },
+        "correctness": "passed",
+        "status": "passed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794065990404,
+            "readyAtMs": 1794066035005,
+            "readyMs": 44601
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794066045271,
+            "readyAtMs": 1794066061859,
+            "readyMs": 16588
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 55,
+            "maxGapMs": 169.18586700000014,
+            "maxDelayMs": 159.18586700000014,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 169.18586700000014,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 21,
+            "maxGapMs": 87.22248099999706,
+            "maxDelayMs": 77.22248099999706,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 87.22248099999706,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 2,
+        "raw": {
+          "file": "/tmp/phase-5-review2-main888-openings-after-2.json",
+          "sha256": "0a9a2a90db73e162b2fb290169f5f813dfdbc9df2cc92709da31168c2ce81d76"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794066344893,
+            "readyAtMs": 1794066399784,
+            "readyMs": 54891
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794066410081,
+            "readyAtMs": 1794066434312,
+            "readyMs": 24231
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 82,
+            "maxGapMs": 197.25515600000654,
+            "maxDelayMs": 187.25515600000654,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 197.25515600000654,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 36,
+            "maxGapMs": 475.60990900000616,
+            "maxDelayMs": 465.60990900000616,
+            "gapsOver200ms": 2,
+            "maxGapUpperBoundMs": 475.60990900000616,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 3,
+        "raw": {
+          "file": "/tmp/phase-5-review2-main888-openings-after-3.json",
+          "sha256": "16c932077a873f4cde653dc99158ac62ce07fc77d4f0d008793f73243040971d"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794067280081,
+            "readyAtMs": 1794067332921,
+            "readyMs": 52840
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794067343127,
+            "readyAtMs": 1794067367073,
+            "readyMs": 23946
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 60,
+            "maxGapMs": 104.19118500000059,
+            "maxDelayMs": 94.19118500000059,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 104.19118500000059,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 34,
+            "maxGapMs": 558.8477990000101,
+            "maxDelayMs": 548.8477990000101,
+            "gapsOver200ms": 3,
+            "maxGapUpperBoundMs": 558.8477990000101,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      }
+    ],
+    "projectionEquality": {
+      "passed": true,
+      "pairs": 15,
+      "raw": {
+        "file": "/tmp/phase-5-review2-main888-projection-equality.json",
+        "sha256": "712698ddc35c416dd2d71a2175ed2a60d38fdbb2277488b95bf0b8eeb84b6afa"
+      },
+      "modules": [
+        {
+          "module": "cp",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            }
+          ]
+        },
+        {
+          "module": "orders",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            }
+          ]
+        },
+        {
+          "module": "overview",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            }
+          ]
+        },
+        {
+          "module": "order-summary",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            }
+          ]
+        },
+        {
+          "module": "collection-catalog",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sourceBaseline": "User chose Main #888 as a frozen baseline. Both arms include Main #886, #887 and #888. Their checklist and Office gains are not credited to Phase 5.",
+  "previousEvidence": [
+    {
+      "report": "phase-5-review2-main-current-report.md",
+      "data": "phase-5-review2-main-current-results.json",
+      "baseline": "c93e2544",
+      "candidate": "0ad9f159"
+    },
+    {
+      "report": "phase-5-review2-report.md",
+      "data": "phase-5-review2-results.json",
+      "baseline": "270228a4",
+      "candidate": "fa580f89"
+    }
+  ],
+  "mergeIntegration": {
+    "parent": "ed8b1486",
+    "main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+    "merge": "b2c9bdacd5d1d15cc3587d8c9e2e1f868a8413e9",
+    "mainNotesPreserved": 30,
+    "ownNotes": 5,
+    "totalNotes": 35,
+    "lockedFiles": "Verbatim Main. All new Main checklist/import code and assertions retained. No rebase/force-push.",
+    "testSourceChangesSinceCurrentMainIntegration": false
+  },
+  "validation": {
+    "files": 204,
+    "counts": {
+      "tests": 1497,
+      "pass": 1497,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "regressionLog": {
+      "file": "/tmp/phase-5-review2-main888-regression.txt",
+      "sha256": "98fde2e7634cb0e579686e8b3264bf9598774220572dbc221893940df5e89320"
+    },
+    "initialSandboxAttempt": {
+      "status": "failed-environment",
+      "reason": "Localhost listen EPERM; tests unchanged, rerun outside the network sandbox.",
+      "raw": {
+        "file": "/tmp/phase-5-review2-main888-targeted.txt",
+        "sha256": "e0b8dc9b0884e325ace7355fdce5090819303c62160aac33a12555f8dedf7795"
+      }
+    },
+    "i18n": {
+      "new": 0,
+      "baseline": 0,
+      "raw": {
+        "file": "/tmp/phase-5-review2-main888-i18n.txt",
+        "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+      }
+    },
+    "releaseNotes": {
+      "changes": 35,
+      "status": "passed",
+      "raw": {
+        "file": "/tmp/phase-5-review2-main888-notes.txt",
+        "sha256": "583dd923d0f6bc3b666082574be69d6141ecbc6af884005c273703666d089346"
+      }
+    }
+  },
+  "normalGapGcOverlap": {
+    "analysisOnly": true,
+    "afterRunsCompleted": true,
+    "gaps": [
+      {
+        "kind": "v3",
+        "rep": 1,
+        "scenario": "overview",
+        "gap": {
+          "pid": 223282,
+          "kind": "gap",
+          "fromMs": 1794065900266.4597,
+          "toMs": 1794065900591.6611,
+          "gapMs": 325.2013159999915,
+          "delayMs": 315.2013159999915,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794065900178.6443,
+          "cpuWindowToMs": 1794065900629.741,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 200,
+          "systemCpuMs": 50
+        },
+        "overlappingGc": [
+          {
+            "pid": 223282,
+            "kind": "gc",
+            "fromMs": 1794065900582.9744,
+            "toMs": 1794065900591.3767,
+            "durationMs": 8.402407020330429,
+            "gcKind": 1,
+            "gcFlags": 0
+          }
+        ]
+      },
+      {
+        "kind": "v3",
+        "rep": 1,
+        "scenario": "overview",
+        "gap": {
+          "pid": 223282,
+          "kind": "gap",
+          "fromMs": 1794065904678.9883,
+          "toMs": 1794065904927.7334,
+          "gapMs": 248.74495100000058,
+          "delayMs": 238.74495100000058,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794065904675.325,
+          "cpuWindowToMs": 1794065905000.3953,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 80,
+          "systemCpuMs": 0
+        },
+        "overlappingGc": [
+          {
+            "pid": 223282,
+            "kind": "gc",
+            "fromMs": 1794065904802.8071,
+            "toMs": 1794065904907.7993,
+            "durationMs": 104.99222800135612,
+            "gcKind": 4,
+            "gcFlags": 64
+          }
+        ]
+      },
+      {
+        "kind": "openings",
+        "rep": 2,
+        "scenario": "backlog",
+        "gap": {
+          "pid": 225299,
+          "kind": "gap",
+          "fromMs": 1794066417249.479,
+          "toMs": 1794066417477.0164,
+          "gapMs": 227.53735500000766,
+          "delayMs": 217.53735500000766,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794066417178.543,
+          "cpuWindowToMs": 1794066417553.3066,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 190,
+          "systemCpuMs": 30
+        },
+        "overlappingGc": []
+      },
+      {
+        "kind": "openings",
+        "rep": 2,
+        "scenario": "backlog",
+        "gap": {
+          "pid": 225299,
+          "kind": "gap",
+          "fromMs": 1794066430895.2283,
+          "toMs": 1794066431370.8381,
+          "gapMs": 475.60990900000616,
+          "delayMs": 465.60990900000616,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794066430786.6707,
+          "cpuWindowToMs": 1794066431447.6067,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 450,
+          "systemCpuMs": 100
+        },
+        "overlappingGc": []
+      },
+      {
+        "kind": "openings",
+        "rep": 3,
+        "scenario": "backlog",
+        "gap": {
+          "pid": 228330,
+          "kind": "gap",
+          "fromMs": 1794067349867.9558,
+          "toMs": 1794067350382.3997,
+          "gapMs": 514.443849999996,
+          "delayMs": 504.443849999996,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794067349801.2756,
+          "cpuWindowToMs": 1794067350598.081,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 410,
+          "systemCpuMs": 130
+        },
+        "overlappingGc": []
+      },
+      {
+        "kind": "openings",
+        "rep": 3,
+        "scenario": "backlog",
+        "gap": {
+          "pid": 228330,
+          "kind": "gap",
+          "fromMs": 1794067350382.3997,
+          "toMs": 1794067350724.1453,
+          "gapMs": 341.74560900000506,
+          "delayMs": 331.74560900000506,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794067349801.2756,
+          "cpuWindowToMs": 1794067350811.1694,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 480,
+          "systemCpuMs": 140
+        },
+        "overlappingGc": []
+      },
+      {
+        "kind": "openings",
+        "rep": 3,
+        "scenario": "backlog",
+        "gap": {
+          "pid": 228330,
+          "kind": "gap",
+          "fromMs": 1794067358778.346,
+          "toMs": 1794067359337.1938,
+          "gapMs": 558.8477990000101,
+          "delayMs": 548.8477990000101,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794067358736.2683,
+          "cpuWindowToMs": 1794067359402.3665,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 280,
+          "systemCpuMs": 80
+        },
+        "overlappingGc": []
+      }
+    ],
+    "limitation": "Overlapping GC and surrounding approximate thread CPU do not prove the full gap cause. No new diagnostic was run during this normal cohort."
+  },
+  "decision": {
+    "B1": "OPEN",
+    "B2": "fixed",
+    "B3": "fixed",
+    "refreshTradeoff": "Not accepted by user; latest median regression must be disclosed as a product decision, not waived.",
+    "remainingGapRootCause": "unknown",
+    "merge": "STOP",
+    "nextPhases": "not started in this chat",
+    "newChatAssignment": "INT-06 Power BI incremental checkpoint; user assigned separate chat. Preparation now; implementation and final baseline after #885 merge; no server.js/app-main.js overlap."
+  },
+  "release": {
+    "TEST": "not published",
+    "STABLE": "not published"
+  },
+  "independentDeltaReview": "Post-639 fix range and post-1ff Main/test/docs delta require Claude review via user; no new reviewer round claimed.",
+  "candidateState": "Before the later history-idempotence fix; retained complete fixed 3+3+3 evidence. Do not use as final-code acceptance."
+}

@@ -1,0 +1,14 @@
+{
+  "label": "green-final-native",
+  "sourceBase": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "sourceSha256": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+  "testSha256": "f101f4f694e6c4a985ac723a491196d6154467974f840798a12be8b5dac175fc",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "/workspace/buyerlog-authority-fix/resources/app/tests/user-access-resumed-authority.test.js"
+  ],
+  "TMPDIR": "/tmp/buyerlog-authority-green-final-native-gnlfn4gj",
+  "returncode": 1
+}

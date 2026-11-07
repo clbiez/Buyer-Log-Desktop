@@ -1,0 +1,183 @@
+{
+  "chromium": "154.0.8037.57",
+  "results": [
+    {
+      "module": "license-cards",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 371.9000000001397,
+        "p95Ms": 461.89999999990687
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 186.30000000004657,
+        "p95Ms": 253.80000000004657
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 672.8999999999069,
+        "p95Ms": 712.5999999998603
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 38.60000000009313,
+        "p95Ms": 43.199999999953434
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 33.9000000001397,
+        "p95Ms": 35.200000000186265
+      },
+      "save": null,
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 23.5999999998603,
+        "p95Ms": 42.5999999998603
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 18.800000000046566,
+        "p95Ms": 22.699999999953434
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 36.300000000046566,
+        "p95Ms": 39
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 0,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": false,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    },
+    {
+      "module": "license-cards",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 3571.4000000001397,
+        "p95Ms": 4686.199999999953
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 1874.1000000000931,
+        "p95Ms": 1911
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 6617,
+        "p95Ms": 7181.40000000014
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 361.4000000001397,
+        "p95Ms": 431.5
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 279.5999999998603,
+        "p95Ms": 447.80000000004657
+      },
+      "save": null,
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 214.80000000004657,
+        "p95Ms": 235.19999999995343
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 172.39999999990687,
+        "p95Ms": 222.69999999995343
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 316,
+        "p95Ms": 363.39999999990687
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 0,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": false,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    }
+  ]
+}

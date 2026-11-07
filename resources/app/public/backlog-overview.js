@@ -180,7 +180,12 @@ function loadData(params){
   }).catch(err=>{if(rowsCache.get(sig)===entry)rowsCache.delete(sig);throw err;});
   return entry.promise;
 }
-function loadRows(params){return loadData(params).then(body=>body.rows);}
+async function loadRows(params){
+  // Teslimat paneli lazy init sırasında pivot yanıtından önce çalışabilir.
+  // Bütün tam satır tüketicileri aynı revizyon kapısından geçip tek isteği paylaşır.
+  if(window.BLBacklogChartContext?.whenRowsReady)await window.BLBacklogChartContext.whenRowsReady();
+  return loadData(params).then(body=>body.rows);
+}
 window.BLBacklogRows={load:loadRows,loadData,invalidate:()=>rowsCache.clear()};
 
 function queryParams(){try{return typeof backlogExportQueryParams==='function'?backlogExportQueryParams():null;}catch(_){return null;}}
