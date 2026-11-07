@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-11-07T19:47:03.488022+00:00",
+  "synthetic": true,
+  "browser": "Linux headless Chromium /usr/bin/chromium",
+  "viewport": {
+    "width": 1560,
+    "height": 1000
+  },
+  "reducedMotion": "reduce",
+  "data": "3 synthetic users and moderator; no order/business/service/credential data",
+  "scope": "Current profile UI; pending-request denial is separately proven by native tests",
+  "images": {
+    "tr": {
+      "path": "resources/app/public/release-notes/next-assets/resumed-authority-current-profile.png",
+      "sha256": "8f962d113602e82efca8d0febf1751dba56e785678d8ba6d0ffa6a820cdef990"
+    },
+    "en": {
+      "path": "docs/performance-program/admin-03-authority-artifacts/authority-en.png",
+      "sha256": "2a2e25ba59996f1e669a93571a9c8a749897a6fb7f98e4f8082156f16e379a4e"
+    }
+  },
+  "agentInspected": true,
+  "consolePageErrors": []
+}

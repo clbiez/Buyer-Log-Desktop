@@ -1112,6 +1112,35 @@
           "en": "Actual post-change app in Turkish and light theme. History content is preserved; file and revision checks verify the absence of writes."
         }
       }
+    },
+    {
+      "id": "resumed-authority-current-profile",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı ve Yetki Yönetimi",
+        "en": "User and Authorization Management"
+      },
+      "title": {
+        "tr": "Bekleyen istekler güncel kullanıcı yetkisiyle kontrol edilir",
+        "en": "Pending requests use current user authority"
+      },
+      "body": {
+        "tr": "Bir istek yetki kontrolüne ulaşmadan önce rolünüz veya kişisel yetkiniz değişirse işlem güncel kullanıcı profilinizle değerlendirilir. Kaldırılan yetki eski istek profilinden kullanılamaz. Yetki değişikliği tek başına geçerli oturumunuzu kapatmaz; parola değişikliği ve pasif hesap kontrolleri korunur.",
+        "en": "If your role or personal permissions change before a request reaches its authorization check, the operation uses your current user profile. Revoked permissions cannot survive in an earlier request profile. An access change alone does not end a valid session; password changes and inactive accounts still invalidate access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "resumed-authority-current-profile.png",
+        "alt": {
+          "tr": "İzole demo Buyer Log Kullanıcı Yönetimi ekranında kişisel yönetim yetkisi kaldırılmış aktif kullanıcı",
+          "en": "Active demo user with personal administration access removed in the actual Buyer Log User Management screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole sentetik kullanıcılar. Yetki listesi güncel profili gösterir; bekleyen isteğin reddi ayrıca yerel ve merkezi IAM regresyonlarıyla doğrulandı.",
+          "en": "Actual Buyer Log with isolated synthetic users. The permission list shows the current profile; local and central IAM regressions separately verify denial of pending requests."
+        }
+      }
     }
   ]
 }

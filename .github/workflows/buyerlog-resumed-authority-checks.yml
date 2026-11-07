@@ -1,0 +1,40 @@
+name: Buyer Log resumed authority checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/buyerlog-resumed-authority-checks.yml'
+      - 'resources/app/server/lib/user-access.js'
+      - 'resources/app/server/lib/iam-core.js'
+      - 'resources/app/server/lib/central-iam.js'
+      - 'resources/app/tests/user-access*.test.js'
+      - 'resources/app/tests/*iam*.test.js'
+      - 'resources/app/tests/fixtures/admin-03-resumed-authority.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authorization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: resources/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Install existing runtime dependencies
+        run: npm ci --ignore-scripts --omit=dev
+      - name: Isolate synthetic recovery fixtures
+        run: |
+          auth_test_tmp_root=$(mktemp -d "$RUNNER_TEMP/buyerlog-authority.XXXXXX")
+          echo "TMPDIR=$auth_test_tmp_root" >> "$GITHUB_ENV"
+      - name: Native resumed authority and IAM regressions
+        run: npm test -- user-access iam credential access-area security-hardening

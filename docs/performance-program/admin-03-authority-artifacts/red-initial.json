@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "tests/user-access-resumed-authority.test.js"
+  ],
+  "source": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "exitCode": 1,
+  "TMPDIR": "/tmp/buyerlog-authority-red-kincxtre",
+  "testSha256": "437663360cd9254a90a51e053668efc67214d511dc12bb87115f4e29dee5462e"
+}
