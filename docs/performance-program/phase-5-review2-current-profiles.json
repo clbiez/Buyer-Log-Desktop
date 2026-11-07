@@ -1,0 +1,1755 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "createdAt": "2026-11-07T15:13:08.553591+00:00",
+  "limitations": [
+    "These profiles are diagnostic workloads, never replacements for the fixed normal 3+3+3 cohort.",
+    "Weighted sample intervals are wall-time observations, not exact CPU attribution. Large unsampled intervals can be attributed to the last frame by V8.",
+    "Chrome Profiler.start/stop encloses protocol/render work outside the measured transition function; envelope duration and transition.ms are different metrics.",
+    "One Chrome pair establishes sampled costs, not repeatability or a complete cause for the three-run Orders regression.",
+    "The server CPU diagnostic did not reproduce a >200 ms gap. It cannot explain or dismiss the normal 1,248 ms failure. No speculative production optimization or acceptance-threshold change follows."
+  ],
+  "server": {
+    "revision": "0ad9f159dea2f3cda2f8e9727e325c288a6a968b",
+    "raw": {
+      "file": "/tmp/phase-5-review2-current-cpu-1.json",
+      "sha256": "05f1f8d5af21395133b7e200c44b542ba1b2d7e5d6666c892b861d833d4c1643"
+    },
+    "correctness": "passed",
+    "serverExit": {
+      "code": 0,
+      "signal": null,
+      "forced": false
+    },
+    "loopGaps": [
+      {
+        "scenario": "overview-global-flow",
+        "recordedGaps": 47,
+        "maxGapMs": 89.98899899999742,
+        "maxDelayMs": 79.98899899999742,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 89.98899899999742,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      },
+      {
+        "scenario": "backlog",
+        "recordedGaps": 19,
+        "maxGapMs": 123.33097999999882,
+        "maxDelayMs": 113.33097999999882,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 123.33097999999882,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    ],
+    "manualCapture": {
+      "diagnosticOnly": true,
+      "acceptanceEligible": false,
+      "pid": 217680,
+      "captures": [
+        {
+          "id": 1,
+          "scenario": "overview-global-flow.png",
+          "requestedAtMs": 1794063497730,
+          "clockOffsetMs": 1793914867390.9004,
+          "observerMaximumMs": 89.98899899999742,
+          "completedAtMs": 1794063497922
+        },
+        {
+          "id": 2,
+          "scenario": "backlog.png",
+          "requestedAtMs": 1794063526407,
+          "clockOffsetMs": 1793914867390.8008,
+          "observerMaximumMs": 123.33097999999882,
+          "completedAtMs": 1794063526647
+        }
+      ]
+    },
+    "profiles": [
+      {
+        "raw": {
+          "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-current-cpu-1/diagnostic-profiles/stall-2026-11-07T14-58-17-769Z-1.cpuprofile",
+          "sha256": "72955fab0040e425bf0a6f2423006103b4fe9c099ae9759a5f86f7ef03104766"
+        },
+        "envelopeMs": 54919.513,
+        "samples": 10178,
+        "idleWeightedMs": 50724.91300000005,
+        "gcWeightedMs": 214.01100000000002,
+        "topFunctions": [
+          {
+            "function": "(idle)",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 50724.91300000005
+          },
+          {
+            "function": "(program)",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 460.3250000000001
+          },
+          {
+            "function": "(garbage collector)",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 214.01100000000002
+          },
+          {
+            "function": "sessionProfile",
+            "url": "server/lib/user-access.js",
+            "line": 1309,
+            "weightedSampleMs": 153.38299999999998
+          },
+          {
+            "function": "",
+            "url": "server/lib/compute-access.js",
+            "line": 29,
+            "weightedSampleMs": 135.39499999999998
+          },
+          {
+            "function": "run",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 122.687
+          },
+          {
+            "function": "resolveStore",
+            "url": "server/lib/user-access.js",
+            "line": 653,
+            "weightedSampleMs": 121.32900000000001
+          },
+          {
+            "function": "writev",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 109.755
+          },
+          {
+            "function": "write",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 82.14500000000001
+          },
+          {
+            "function": "next",
+            "url": "node_modules/express/lib/router/index.js",
+            "line": 177,
+            "weightedSampleMs": 70.97500000000001
+          },
+          {
+            "function": "match",
+            "url": "node_modules/express/lib/router/layer.js",
+            "line": 110,
+            "weightedSampleMs": 70.94399999999997
+          },
+          {
+            "function": "",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 66.688
+          },
+          {
+            "function": "flush",
+            "url": "server/lib/compute-authority-codec.js",
+            "line": 10,
+            "weightedSampleMs": 63.529
+          },
+          {
+            "function": "readFileSync",
+            "url": "fs",
+            "line": 474,
+            "weightedSampleMs": 62.169999999999995
+          },
+          {
+            "function": "scopeCopy",
+            "url": "server/lib/compute-access.js",
+            "line": 18,
+            "weightedSampleMs": 59.239000000000004
+          }
+        ],
+        "layoutCallers": []
+      },
+      {
+        "raw": {
+          "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-current-cpu-1/diagnostic-profiles/stall-2026-11-07T14-58-46-424Z-2.cpuprofile",
+          "sha256": "f0bf2ac988b00433935d353efdb87a5e4da65cf060aa22232a753a53cbdebb4e"
+        },
+        "envelopeMs": 28631.674,
+        "samples": 5309,
+        "idleWeightedMs": 27499.22600000009,
+        "gcWeightedMs": 0,
+        "topFunctions": [
+          {
+            "function": "(idle)",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 27499.22600000009
+          },
+          {
+            "function": "(program)",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 350.412
+          },
+          {
+            "function": "processTimers",
+            "url": "internal/timers",
+            "line": 556,
+            "weightedSampleMs": 156.967
+          },
+          {
+            "function": "writev",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 44.081
+          },
+          {
+            "function": "",
+            "url": "scripts/lib/server-loop-probe.js",
+            "line": 39,
+            "weightedSampleMs": 35.343999999999994
+          },
+          {
+            "function": "match",
+            "url": "node_modules/express/lib/router/layer.js",
+            "line": 110,
+            "weightedSampleMs": 32.36
+          },
+          {
+            "function": "trim_prefix",
+            "url": "node_modules/express/lib/router/index.js",
+            "line": 293,
+            "weightedSampleMs": 29.32
+          },
+          {
+            "function": "IncomingMessage",
+            "url": "_http_incoming",
+            "line": 53,
+            "weightedSampleMs": 23.905
+          },
+          {
+            "function": "listOnTimeout",
+            "url": "internal/timers",
+            "line": 576,
+            "weightedSampleMs": 21.567
+          },
+          {
+            "function": "_addHeaderLine",
+            "url": "_http_incoming",
+            "line": 405,
+            "weightedSampleMs": 17.227
+          },
+          {
+            "function": "stat",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 15.036999999999999
+          },
+          {
+            "function": "getLibuvNow",
+            "url": "",
+            "line": 0,
+            "weightedSampleMs": 14.572000000000001
+          },
+          {
+            "function": "sendFile",
+            "url": "node_modules/send/index.js",
+            "line": 711,
+            "weightedSampleMs": 12.906
+          },
+          {
+            "function": "effectivePermissionSet",
+            "url": "server/lib/iam-core.js",
+            "line": 401,
+            "weightedSampleMs": 12.173
+          },
+          {
+            "function": "",
+            "url": "server/server.js",
+            "line": 482,
+            "weightedSampleMs": 11.389
+          }
+        ],
+        "layoutCallers": []
+      }
+    ]
+  },
+  "renderer": [
+    {
+      "arm": "before",
+      "revision": "c93e254454e22ee9d6f7f288f4217ef6991f790f",
+      "raw": {
+        "file": "/tmp/phase-5-review2-current-same-tab-cpu-before.json",
+        "sha256": "56141fea1a59e359086c3e60a06e7b269d163beaf31c5b0697ed89382bba06af"
+      },
+      "expectedDiagnosticAbort": true,
+      "sameTabTransitions": [
+        {
+          "module": "cp",
+          "ms": 13113.300000011921,
+          "rows": 24982
+        },
+        {
+          "module": "orders",
+          "ms": 1858.699999988079,
+          "rows": 30000
+        },
+        {
+          "module": "koleksiyon",
+          "ms": 83.69999998807907,
+          "rows": 0
+        }
+      ],
+      "profiles": [
+        {
+          "module": "cp",
+          "raw": {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-current-same-tab-cpu-before/same-tab-cp.cpuprofile",
+            "sha256": "983dc0049616607e1622ae8eb4c1d1d7dd390f4155be20cdb4db37ef3e35219c"
+          },
+          "envelopeMs": 15341.779,
+          "samples": 2344,
+          "idleWeightedMs": 46.227000000000004,
+          "gcWeightedMs": 502.06999999999994,
+          "topFunctions": [
+            {
+              "function": "(program)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 2526.4219999999996
+            },
+            {
+              "function": "value",
+              "url": "/canonical-fields.js",
+              "line": 211,
+              "weightedSampleMs": 1788.7740000000003
+            },
+            {
+              "function": "count",
+              "url": "/checklist-components-engine.js",
+              "line": 16,
+              "weightedSampleMs": 1002.2649999999995
+            },
+            {
+              "function": "renderFullTable",
+              "url": "/app-main.js",
+              "line": 7681,
+              "weightedSampleMs": 545.888
+            },
+            {
+              "function": "(garbage collector)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 502.06999999999994
+            },
+            {
+              "function": "keyText",
+              "url": "/model-option-stats.js",
+              "line": 17,
+              "weightedSampleMs": 485.62300000000005
+            },
+            {
+              "function": "",
+              "url": "/checklist-supplier-sync.js",
+              "line": 630,
+              "weightedSampleMs": 459.85199999999975
+            },
+            {
+              "function": "",
+              "url": "/app-main.js",
+              "line": 7740,
+              "weightedSampleMs": 418.96000000000004
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 61,
+              "weightedSampleMs": 411.691
+            },
+            {
+              "function": "selectionHasId",
+              "url": "/app-main.js",
+              "line": 359,
+              "weightedSampleMs": 396.30199999999996
+            },
+            {
+              "function": "valuesOf",
+              "url": "/column-schema.js",
+              "line": 59,
+              "weightedSampleMs": 374.1989999999999
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 138,
+              "weightedSampleMs": 362.1740000000001
+            },
+            {
+              "function": "guarded",
+              "url": "/cp-rules-engine.js",
+              "line": 1202,
+              "weightedSampleMs": 335.7559999999999
+            },
+            {
+              "function": "partsFor",
+              "url": "/checklist-components-engine.js",
+              "line": 33,
+              "weightedSampleMs": 332.4589999999999
+            },
+            {
+              "function": "normalizeState",
+              "url": "/checklist-supplier-sync.js",
+              "line": 99,
+              "weightedSampleMs": 301.564
+            }
+          ],
+          "layoutCallers": [
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 23
+                },
+                {
+                  "function": "update",
+                  "url": "/table-header-tracking.js",
+                  "line": 13
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 45
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 102.785
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "sync",
+                  "url": "/workspace-blur.js",
+                  "line": 7
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 30.813999999999997
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "run",
+                  "url": "/kpi-motion.js",
+                  "line": 50
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 249
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 66
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 13.008
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 249
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 66
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 11.102
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "visible",
+                  "url": "/motion-plus.js",
+                  "line": 34
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 249
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 66
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 10.572
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "visible",
+                  "url": "/motion-plus.js",
+                  "line": 34
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "activate",
+                  "url": "/motion-plus.js",
+                  "line": 235
+                },
+                {
+                  "function": "root.MutationObserver.observe.attributes",
+                  "url": "/motion-plus.js",
+                  "line": 514
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 10.168
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "afterRender",
+                  "url": "/grid-clipboard.js",
+                  "line": 409
+                },
+                {
+                  "function": "renderFullTable",
+                  "url": "/app-main.js",
+                  "line": 7681
+                },
+                {
+                  "function": "renderCPNow",
+                  "url": "/app-main.js",
+                  "line": 9358
+                },
+                {
+                  "function": "root.<computed>",
+                  "url": "/checklist-supplier-sync.js",
+                  "line": 2772
+                },
+                {
+                  "function": "runDeferredRender",
+                  "url": "/app-main.js",
+                  "line": 1627
+                },
+                {
+                  "function": "deferRenderForTab",
+                  "url": "/app-main.js",
+                  "line": 1634
+                }
+              ],
+              "weightedSampleMs": 6.306
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "applyTableImageSizeDom",
+                  "url": "/app-main.js",
+                  "line": 3067
+                },
+                {
+                  "function": "renderFullTable",
+                  "url": "/app-main.js",
+                  "line": 7681
+                },
+                {
+                  "function": "renderCPNow",
+                  "url": "/app-main.js",
+                  "line": 9358
+                },
+                {
+                  "function": "root.<computed>",
+                  "url": "/checklist-supplier-sync.js",
+                  "line": 2772
+                },
+                {
+                  "function": "runDeferredRender",
+                  "url": "/app-main.js",
+                  "line": 1627
+                },
+                {
+                  "function": "deferRenderForTab",
+                  "url": "/app-main.js",
+                  "line": 1634
+                }
+              ],
+              "weightedSampleMs": 5.649
+            }
+          ]
+        },
+        {
+          "module": "orders",
+          "raw": {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-current-same-tab-cpu-before/same-tab-orders.cpuprofile",
+            "sha256": "2f36aae8c01c8fd1cb820d37a87c2cbdbc0ecd81884d43d3877578dabcba9260"
+          },
+          "envelopeMs": 3107.651,
+          "samples": 383,
+          "idleWeightedMs": 30.986,
+          "gcWeightedMs": 20.381999999999998,
+          "topFunctions": [
+            {
+              "function": "(program)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 1363.267
+            },
+            {
+              "function": "get offsetHeight",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 296.74499999999995
+            },
+            {
+              "function": "valuesOf",
+              "url": "/column-schema.js",
+              "line": 59,
+              "weightedSampleMs": 164.226
+            },
+            {
+              "function": "getBoundingClientRect",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 154.036
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 138,
+              "weightedSampleMs": 138.55599999999998
+            },
+            {
+              "function": "keyText",
+              "url": "/model-option-stats.js",
+              "line": 17,
+              "weightedSampleMs": 128.86
+            },
+            {
+              "function": "querySelectorAll",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 66.33
+            },
+            {
+              "function": "operationalStageForSegment",
+              "url": "/business-rules.js",
+              "line": 151,
+              "weightedSampleMs": 50.29700000000001
+            },
+            {
+              "function": "",
+              "url": "/model-option-stats.js",
+              "line": 70,
+              "weightedSampleMs": 41.091
+            },
+            {
+              "function": "buildRow",
+              "url": "/app-main.js",
+              "line": 7805,
+              "weightedSampleMs": 39.601
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 146,
+              "weightedSampleMs": 35.698
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 61,
+              "weightedSampleMs": 35.585
+            },
+            {
+              "function": "(idle)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 30.986
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 136,
+              "weightedSampleMs": 30.556
+            },
+            {
+              "function": "inferType",
+              "url": "/column-schema.js",
+              "line": 132,
+              "weightedSampleMs": 26.544
+            }
+          ],
+          "layoutCallers": [
+            {
+              "chain": [
+                {
+                  "function": "get offsetHeight",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/app-main.js",
+                  "line": 7740
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 276.3299999999999
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 23
+                },
+                {
+                  "function": "update",
+                  "url": "/table-header-tracking.js",
+                  "line": 13
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 45
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 81.64099999999999
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "visible",
+                  "url": "/motion-plus.js",
+                  "line": 34
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "activate",
+                  "url": "/motion-plus.js",
+                  "line": 235
+                },
+                {
+                  "function": "root.MutationObserver.observe.attributes",
+                  "url": "/motion-plus.js",
+                  "line": 514
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 57.02100000000001
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "sync",
+                  "url": "/workspace-blur.js",
+                  "line": 7
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 30.391000000000002
+            },
+            {
+              "chain": [
+                {
+                  "function": "get offsetHeight",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "renderFullTable",
+                  "url": "/app-main.js",
+                  "line": 7681
+                },
+                {
+                  "function": "renderOrdersNow",
+                  "url": "/app-main.js",
+                  "line": 9670
+                },
+                {
+                  "function": "runDeferredRender",
+                  "url": "/app-main.js",
+                  "line": 1627
+                },
+                {
+                  "function": "deferRenderForTab",
+                  "url": "/app-main.js",
+                  "line": 1634
+                },
+                {
+                  "function": "renderOrders",
+                  "url": "/app-main.js",
+                  "line": 1642
+                },
+                {
+                  "function": "",
+                  "url": "/app-main.js",
+                  "line": 2327
+                }
+              ],
+              "weightedSampleMs": 20.415
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "apply",
+                  "url": "/canonical-column-labels.js",
+                  "line": 92
+                },
+                {
+                  "function": "run",
+                  "url": "/canonical-column-labels.js",
+                  "line": 104
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 15.465
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "run",
+                  "url": "/kpi-motion.js",
+                  "line": 50
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 249
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 66
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 10.237
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "run",
+                  "url": "/kpi-motion.js",
+                  "line": 50
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "activate",
+                  "url": "/motion-plus.js",
+                  "line": 235
+                },
+                {
+                  "function": "root.MutationObserver.observe.attributes",
+                  "url": "/motion-plus.js",
+                  "line": 514
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 5.209
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "after",
+      "revision": "0ad9f159dea2f3cda2f8e9727e325c288a6a968b",
+      "raw": {
+        "file": "/tmp/phase-5-review2-current-same-tab-cpu-after.json",
+        "sha256": "1d8f8f4bacecc897d06cd44a89c597dd2b96d37bbb2e278ad654fce4846b869a"
+      },
+      "expectedDiagnosticAbort": true,
+      "sameTabTransitions": [
+        {
+          "module": "cp",
+          "ms": 9688.199999988079,
+          "rows": 24982
+        },
+        {
+          "module": "orders",
+          "ms": 2223,
+          "rows": 30000
+        },
+        {
+          "module": "koleksiyon",
+          "ms": 172.5,
+          "rows": 0
+        }
+      ],
+      "profiles": [
+        {
+          "module": "cp",
+          "raw": {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-current-same-tab-cpu-after/same-tab-cp.cpuprofile",
+            "sha256": "9c00275f6545e2093256f436dfd644aed441ef3c48bd50fd45ccf5f0f784da7a"
+          },
+          "envelopeMs": 10900.046,
+          "samples": 1886,
+          "idleWeightedMs": 21.786,
+          "gcWeightedMs": 309.76900000000006,
+          "topFunctions": [
+            {
+              "function": "(program)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 1569.2509999999997
+            },
+            {
+              "function": "value",
+              "url": "/canonical-fields.js",
+              "line": 211,
+              "weightedSampleMs": 1545.1299999999994
+            },
+            {
+              "function": "count",
+              "url": "/checklist-components-engine.js",
+              "line": 16,
+              "weightedSampleMs": 858.8950000000001
+            },
+            {
+              "function": "",
+              "url": "/app-main.js",
+              "line": 7740,
+              "weightedSampleMs": 808.9530000000001
+            },
+            {
+              "function": "",
+              "url": "/checklist-supplier-sync.js",
+              "line": 630,
+              "weightedSampleMs": 433.21000000000004
+            },
+            {
+              "function": "guarded",
+              "url": "/cp-rules-engine.js",
+              "line": 1202,
+              "weightedSampleMs": 347.5919999999999
+            },
+            {
+              "function": "(garbage collector)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 309.76900000000006
+            },
+            {
+              "function": "getBoundingClientRect",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 290.525
+            },
+            {
+              "function": "keyText",
+              "url": "/model-option-stats.js",
+              "line": 17,
+              "weightedSampleMs": 257.70099999999996
+            },
+            {
+              "function": "normalizeState",
+              "url": "/checklist-supplier-sync.js",
+              "line": 99,
+              "weightedSampleMs": 229.48800000000003
+            },
+            {
+              "function": "statusOf",
+              "url": "/cp-checklist-engine.js",
+              "line": 444,
+              "weightedSampleMs": 208.83700000000002
+            },
+            {
+              "function": "compareValues",
+              "url": "/cp-rules-engine.js",
+              "line": 358,
+              "weightedSampleMs": 203.57600000000005
+            },
+            {
+              "function": "dateOrdinalOf",
+              "url": "/cp-rules-engine.js",
+              "line": 323,
+              "weightedSampleMs": 200.66000000000003
+            },
+            {
+              "function": "partsFor",
+              "url": "/checklist-components-engine.js",
+              "line": 33,
+              "weightedSampleMs": 163.887
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 61,
+              "weightedSampleMs": 160.571
+            }
+          ],
+          "layoutCallers": [
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 23
+                },
+                {
+                  "function": "update",
+                  "url": "/table-header-tracking.js",
+                  "line": 13
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 45
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 192.024
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "measure",
+                  "url": "/toolbar-responsive.js",
+                  "line": 354
+                },
+                {
+                  "function": "layout",
+                  "url": "/toolbar-responsive.js",
+                  "line": 415
+                },
+                {
+                  "function": "run",
+                  "url": "/toolbar-responsive.js",
+                  "line": 443
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 57.99200000000001
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "sync",
+                  "url": "/workspace-blur.js",
+                  "line": 7
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 45.075
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 249
+                },
+                {
+                  "function": "",
+                  "url": "/motion-plus.js",
+                  "line": 66
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 29.359
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "eligible",
+                  "url": "/buyerlog-trivia.js",
+                  "line": 239
+                },
+                {
+                  "function": "check",
+                  "url": "/buyerlog-trivia.js",
+                  "line": 252
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 17.608
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "visible",
+                  "url": "/motion-plus.js",
+                  "line": 34
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "activate",
+                  "url": "/motion-plus.js",
+                  "line": 235
+                },
+                {
+                  "function": "root.MutationObserver.observe.attributes",
+                  "url": "/motion-plus.js",
+                  "line": 514
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 15.824000000000002
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "createButton",
+                  "url": "/table-search-help.js",
+                  "line": 176
+                },
+                {
+                  "function": "",
+                  "url": "/table-search-help.js",
+                  "line": 221
+                },
+                {
+                  "function": "ensureButtons",
+                  "url": "/table-search-help.js",
+                  "line": 218
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 12.314
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "apply",
+                  "url": "/canonical-column-labels.js",
+                  "line": 92
+                },
+                {
+                  "function": "run",
+                  "url": "/canonical-column-labels.js",
+                  "line": 104
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 11.852
+            }
+          ]
+        },
+        {
+          "module": "orders",
+          "raw": {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-current-same-tab-cpu-after/same-tab-orders.cpuprofile",
+            "sha256": "f1bac2c555eeedae736e374914e174b23e220fd5ebd0e33e8691f9460d703574"
+          },
+          "envelopeMs": 3437.187,
+          "samples": 439,
+          "idleWeightedMs": 222.69200000000006,
+          "gcWeightedMs": 50.425,
+          "topFunctions": [
+            {
+              "function": "(program)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 1344.5780000000002
+            },
+            {
+              "function": "get offsetHeight",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 296.70200000000006
+            },
+            {
+              "function": "(idle)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 222.69200000000006
+            },
+            {
+              "function": "getBoundingClientRect",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 145.017
+            },
+            {
+              "function": "keyText",
+              "url": "/model-option-stats.js",
+              "line": 17,
+              "weightedSampleMs": 139.79100000000003
+            },
+            {
+              "function": "valuesOf",
+              "url": "/column-schema.js",
+              "line": 59,
+              "weightedSampleMs": 138.28699999999998
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 138,
+              "weightedSampleMs": 100.914
+            },
+            {
+              "function": "querySelectorAll",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 89.74799999999999
+            },
+            {
+              "function": "buildRow",
+              "url": "/app-main.js",
+              "line": 7805,
+              "weightedSampleMs": 53.802
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 61,
+              "weightedSampleMs": 51.785999999999994
+            },
+            {
+              "function": "(garbage collector)",
+              "url": "",
+              "line": 0,
+              "weightedSampleMs": 50.425
+            },
+            {
+              "function": "",
+              "url": "/column-schema.js",
+              "line": 146,
+              "weightedSampleMs": 47.18300000000001
+            },
+            {
+              "function": "nonEmpty",
+              "url": "/column-schema.js",
+              "line": 58,
+              "weightedSampleMs": 46.946999999999996
+            },
+            {
+              "function": "",
+              "url": "/model-option-stats.js",
+              "line": 70,
+              "weightedSampleMs": 44.529999999999994
+            },
+            {
+              "function": "modelKey",
+              "url": "/model-option-stats.js",
+              "line": 34,
+              "weightedSampleMs": 42.445
+            }
+          ],
+          "layoutCallers": [
+            {
+              "chain": [
+                {
+                  "function": "get offsetHeight",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/app-main.js",
+                  "line": 7740
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 271.116
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "visible",
+                  "url": "/motion-plus.js",
+                  "line": 34
+                },
+                {
+                  "function": "pageBlocks",
+                  "url": "/motion-plus.js",
+                  "line": 188
+                },
+                {
+                  "function": "enterPage",
+                  "url": "/motion-plus.js",
+                  "line": 219
+                },
+                {
+                  "function": "activate",
+                  "url": "/motion-plus.js",
+                  "line": 235
+                },
+                {
+                  "function": "root.MutationObserver.observe.attributes",
+                  "url": "/motion-plus.js",
+                  "line": 514
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 68.615
+            },
+            {
+              "chain": [
+                {
+                  "function": "getBoundingClientRect",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 23
+                },
+                {
+                  "function": "update",
+                  "url": "/table-header-tracking.js",
+                  "line": 13
+                },
+                {
+                  "function": "",
+                  "url": "/table-header-tracking.js",
+                  "line": 45
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 61.31200000000001
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "sync",
+                  "url": "/workspace-blur.js",
+                  "line": 7
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 40.937
+            },
+            {
+              "chain": [
+                {
+                  "function": "get offsetHeight",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "renderFullTable",
+                  "url": "/app-main.js",
+                  "line": 7681
+                },
+                {
+                  "function": "renderOrdersNow",
+                  "url": "/app-main.js",
+                  "line": 9670
+                },
+                {
+                  "function": "runDeferredRender",
+                  "url": "/app-main.js",
+                  "line": 1627
+                },
+                {
+                  "function": "deferRenderForTab",
+                  "url": "/app-main.js",
+                  "line": 1634
+                },
+                {
+                  "function": "renderOrders",
+                  "url": "/app-main.js",
+                  "line": 1642
+                },
+                {
+                  "function": "",
+                  "url": "/app-main.js",
+                  "line": 2327
+                }
+              ],
+              "weightedSampleMs": 25.586
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "apply",
+                  "url": "/canonical-column-labels.js",
+                  "line": 92
+                },
+                {
+                  "function": "run",
+                  "url": "/canonical-column-labels.js",
+                  "line": 104
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 15.296999999999999
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "createButton",
+                  "url": "/table-search-help.js",
+                  "line": 176
+                },
+                {
+                  "function": "",
+                  "url": "/table-search-help.js",
+                  "line": 221
+                },
+                {
+                  "function": "ensureButtons",
+                  "url": "/table-search-help.js",
+                  "line": 218
+                },
+                {
+                  "function": "(root)",
+                  "url": "",
+                  "line": 0
+                }
+              ],
+              "weightedSampleMs": 10.271
+            },
+            {
+              "chain": [
+                {
+                  "function": "querySelectorAll",
+                  "url": "",
+                  "line": 0
+                },
+                {
+                  "function": "collectViewContext",
+                  "url": "/app-main.js",
+                  "line": 17052
+                },
+                {
+                  "function": "collectViewState",
+                  "url": "/app-main.js",
+                  "line": 17059
+                },
+                {
+                  "function": "saveWorkspaceResume",
+                  "url": "/app-main.js",
+                  "line": 17088
+                },
+                {
+                  "function": "switchTab",
+                  "url": "/app-main.js",
+                  "line": 2274
+                },
+                {
+                  "function": "",
+                  "url": "",
+                  "line": 1
+                },
+                {
+                  "function": "",
+                  "url": "",
+                  "line": 1
+                }
+              ],
+              "weightedSampleMs": 7.214
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -11,6 +11,7 @@ const arg=(name,fallback)=>{const index=process.argv.indexOf(name);return index<
 const APP=path.resolve(arg('--app-root',path.resolve(__dirname,'..')));
 const count=Number(arg('--rows',30000)),sampleWindowMs=Number(arg('--sample-ms',10000));
 const rendererTimeoutMs=Number(arg('--renderer-timeout-ms',900000));
+const serverLoopProbe=process.argv.includes('--server-loop-probe');
 if(!Number.isSafeInteger(count)||count<1||!Number.isSafeInteger(sampleWindowMs)||sampleWindowMs<1000)throw Error('Invalid rows or sample window');
 if(!Number.isSafeInteger(rendererTimeoutMs)||rendererTimeoutMs<60000)throw Error('Invalid renderer timeout');
 const requestedModules=arg('--module','')?[arg('--module','')]:['overview','koleksiyon','cp','orders'];
@@ -26,6 +27,7 @@ const env={...process.env,BUYER_LOG_CENTRAL_IAM_ENABLED:'0',BUYER_LOG_SERVER_DAT
   BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_LOCAL_DATA_ROOT:path.join(root,'local'),BUYER_LOG_LOCAL_DB:path.join(root,'local','BuyerLogLocal.db'),
   BUYER_LOG_CONFIG_PATH:path.join(root,'config.json'),BUYER_LOG_TEMP_ROOT:path.join(root,'tmp')};
 const report={schemaVersion:3,synthetic:true,status:'running',startedAt:new Date().toISOString(),fixtureRoot:root,requestedRows:count,requestedModules,rendererTimeoutMs,
+  harnessSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
   sampling:{startMs:0,endMs:sampleWindowMs,clock:'navigation performance.now; tasks clipped at window end'},measurements:[],healthSamples:[]};
 function persist(){
   report.health={all:summarizeHealth(report.healthSamples,null,'/api/health'),refresh:summarizeHealth(report.healthSamples,'refresh','/api/health')};
@@ -35,6 +37,13 @@ function persist(){
   report.health.endpointAvailable=report.healthSamples.some(sample=>sample.endpoint==='/api/health'&&sample.status===200);
   const log=fs.existsSync(logFile)?fs.readFileSync(logFile,'utf8'):'';
   report.stalls=parseStalls(log);
+  if(serverLoopProbe){
+    const probe=require('./lib/server-loop-probe'),events=probe.readProbeEvents(root,{requireStopped:Boolean(server&&(server.exitCode!==null||server.signalCode))});
+    report.serverLoopProbe={enabled:true,observerSha256:probe.observerSha256(),...probe.summarizeGaps(events),events,
+      files:fs.readdirSync(root).filter(file=>/^event-loop-probe-\d+\.jsonl$/.test(file)),
+      modules:report.measurements.map(m=>({module:m.module,navigationStartedAtMs:m.navigationStartedAtMs,observedAtMs:m.observedAtMs,
+        ...probe.summarizeGaps(events,{startMs:m.navigationStartedAtMs,endMs:m.observedAtMs})}))};
+  }
   const profiles=path.join(root,'local','logs','stall-profiles');
   report.diagnostics={serverLog:logFile,stallProfileLines:log.split(/\r?\n/).filter(line=>line.includes('[RUNTIME] stall-profile')),
     stallProfiles:fs.existsSync(profiles)?fs.readdirSync(profiles).filter(file=>file.endsWith('.cpuprofile')).map(file=>path.join(profiles,file)):[]};
@@ -47,7 +56,9 @@ async function health(){
 }
 async function start(){
   const started=performance.now(),log=fs.openSync(logFile,'a');
-  server=spawn(process.execPath,[path.join(APP,'server/server.js')],{cwd:APP,env,stdio:['ignore',log,log]});fs.closeSync(log);
+  const serverArgs=[path.join(APP,'server/server.js')];
+  if(serverLoopProbe){serverArgs.unshift('--require',path.join(__dirname,'lib/server-loop-probe.js'));env.BUYER_LOG_BENCHMARK_LOOP_ROOT=root;}
+  server=spawn(process.execPath,serverArgs,{cwd:APP,env,stdio:['ignore',log,log]});fs.closeSync(log);
   let spawnError;server.on('error',error=>{spawnError=error;});
   for(let i=0;i<80;i++){
     if(spawnError)throw spawnError;if(server.exitCode!==null)throw Error('Server exited: '+server.exitCode);
@@ -103,7 +114,7 @@ async function open(context,page,module){
       return value;
     };
   });
-  const started=performance.now();
+  const started=performance.now(),navigationStartedAtMs=Date.now();
   await page.goto(base+'/?module='+module,{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.primaryScreenReadyMs)&&Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:rendererTimeoutMs,polling:100});
   await page.evaluate(()=>{window.__startupProbe.continueIntentAtMs=window.__startupProbe.startupReadyMs;window.__startupProbe.continueAtMs=performance.now();window.BLBootGuard?.continue({intentAtMs:window.__startupProbe.continueIntentAtMs});});
@@ -125,7 +136,7 @@ async function open(context,page,module){
       timeline:window.BLPerf?.timeline?.()};
   },module);
   Object.assign(data,await readRendererMetrics(context,page,rendererTimeoutMs));
-  const measurement={...data,projectionGenerations:[data.initialGeneration,...projectionGenerations].filter(Boolean),elapsedMs,rendererRssBytes:await rendererRss(),errors};
+  const measurement={...data,navigationStartedAtMs,observedAtMs:Date.now(),projectionGenerations:[data.initialGeneration,...projectionGenerations].filter(Boolean),elapsedMs,rendererRssBytes:await rendererRss(),errors};
   // Save the failed observation before validation throws.
   report.measurements.push(measurement);persist();Object.assign(measurement,identity());persist();validateMeasurement(expected,measurement);
   await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close()));
