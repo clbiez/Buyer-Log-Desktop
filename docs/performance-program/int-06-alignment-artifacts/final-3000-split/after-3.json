@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "preparation-rehearsal",
+  "measuredAt": "2026-11-07T17:36:50.222Z",
+  "target": {
+    "appRoot": "/workspace/Buyer-Log-Desktop/resources/app",
+    "revision": "aef416e5db3560990116da9661d7ef8b7eeb9a33",
+    "contains892": true,
+    "moduleSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+    "integrationSha256": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+    "canonicalFiles": {
+      "server/lib/canonical-fields.js": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+      "public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53"
+    },
+    "protectedFiles": {
+      "public/app-main.js": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+      "public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e",
+      "public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+      "public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21"
+    }
+  },
+  "harnessSha256": "ede593d1ea89843b09b177a381923fb284d51340fd4157a08ee22b2000713a43",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "peakRssMethod": "process.resourceUsage().maxRSS KiB × 1024; process lifetime before oracle/load"
+  },
+  "fixture": {
+    "orders": 3000,
+    "batchSize": 250,
+    "scenario": "split-retry",
+    "version": 1
+  },
+  "fixtureSha256": "1ec3ea8507594f07fa62c72ee58e79d062c405b8fe726e185031f8057d4f7937",
+  "outputSha256": "8684f6a7d518567489f9f63d348e53887a7bb2904dab0d63a1f4b6410ebfccb5",
+  "parity": true,
+  "checkpoints": 1194,
+  "progressEvents": 1194,
+  "transport": {
+    "queries": 4061,
+    "splitRejections": 24,
+    "transientFailures": 231,
+    "terminalFailures": 2884
+  },
+  "coverage": {
+    "totalOrders": 3000,
+    "processedOrders": 3000,
+    "successfulOrders": 2182,
+    "notFoundOrders": 546,
+    "failedOrders": 272
+  },
+  "metrics": {
+    "checkpointBytes": 487837612,
+    "checkpointWrites": 1194,
+    "finalCheckpointBytes": 690873,
+    "writeAmplification": 706.1176395661721,
+    "wallMs": 29183.456699000002,
+    "cpuUserMs": 26971.983,
+    "cpuSystemMs": 709.481,
+    "peakRssBytes": 98275328,
+    "storeSaveWallMs": 3707.9899819999646,
+    "storeSaveCpuUserMs": 3320.2229999999972,
+    "storeSaveCpuSystemMs": 411.9839999999999
+  },
+  "budget": null,
+  "limitations": [
+    "Synthetic zero-latency transport; no Power BI service, Electron, Windows or SMB claim.",
+    "Logical successful sync writeFileSync/appendFileSync payload bytes; no physical I/O or power-loss durability claim.",
+    "CPU/wall cover refresh with real disk checkpoints and progress; RSS is process lifetime high water.",
+    "Preparation only. Re-run paired before/after on post-885 Main; no forced GC or cold-cache claim."
+  ]
+}

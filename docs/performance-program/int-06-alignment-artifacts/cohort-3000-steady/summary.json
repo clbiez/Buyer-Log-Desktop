@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "stage": "preparation-source-control",
+  "optimizationAccepted": false,
+  "fixture": {
+    "orders": 3000,
+    "batchSize": 250,
+    "scenario": "steady",
+    "version": 1
+  },
+  "fixtureSha256": "53373551f7a03f5cbf4afbc03c71655aa538c421bf45022f9b69c511a5348129",
+  "outputSha256": "ac29b643c91b6fcdd9ca271a47716de0b26a94835f596831e93170182bac2934",
+  "harnessSha256": "ede593d1ea89843b09b177a381923fb284d51340fd4157a08ee22b2000713a43",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "peakRssMethod": "process.resourceUsage().maxRSS KiB × 1024; process lifetime before oracle/load"
+  },
+  "arms": {
+    "before": {
+      "samples": 3,
+      "target": {
+        "appRoot": "/workspace/int06-main892/resources/app",
+        "revision": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+        "contains892": true,
+        "moduleSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+        "integrationSha256": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+        "canonicalFiles": {
+          "server/lib/canonical-fields.js": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+          "public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53"
+        },
+        "protectedFiles": {
+          "public/app-main.js": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+          "public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e",
+          "public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+          "public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21"
+        }
+      },
+      "median": {
+        "checkpointBytes": 6485162,
+        "wallMs": 14415.373739,
+        "cpuMs": 14519.125,
+        "peakRssBytes": 71450624,
+        "storeSaveWallMs": 43.0613850000002,
+        "storeSaveCpuMs": 43.529
+      },
+      "range": {
+        "checkpointBytes": [
+          6485162,
+          6485162
+        ],
+        "wallMs": [
+          14064.592728,
+          14651.51592
+        ],
+        "cpuMs": [
+          14156.849999999999,
+          14756.651
+        ],
+        "peakRssBytes": [
+          71200768,
+          71770112
+        ],
+        "storeSaveWallMs": [
+          40.758977000000186,
+          45.21628899999996
+        ],
+        "storeSaveCpuMs": [
+          41.134,
+          45.875
+        ]
+      }
+    },
+    "after": {
+      "samples": 3,
+      "target": {
+        "appRoot": "/workspace/Buyer-Log-Desktop/resources/app",
+        "revision": "4577eb3ce05edce5a28d7d52de67dd6d9b604335",
+        "contains892": true,
+        "moduleSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+        "integrationSha256": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+        "canonicalFiles": {
+          "server/lib/canonical-fields.js": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+          "public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53"
+        },
+        "protectedFiles": {
+          "public/app-main.js": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+          "public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e",
+          "public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+          "public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21"
+        }
+      },
+      "median": {
+        "checkpointBytes": 6485162,
+        "wallMs": 14092.266694,
+        "cpuMs": 14172.169,
+        "peakRssBytes": 70955008,
+        "storeSaveWallMs": 39.85805900000014,
+        "storeSaveCpuMs": 40.20100000000001
+      },
+      "range": {
+        "checkpointBytes": [
+          6485162,
+          6485162
+        ],
+        "wallMs": [
+          13746.819918,
+          14376.643664
+        ],
+        "cpuMs": [
+          13854.229,
+          14471.026
+        ],
+        "peakRssBytes": [
+          70746112,
+          71401472
+        ],
+        "storeSaveWallMs": [
+          39.69733499999916,
+          40.690329999999676
+        ],
+        "storeSaveCpuMs": [
+          40.122,
+          41.11299999999999
+        ]
+      }
+    }
+  },
+  "runnerSha256": "f4cd6713b9b58f02ab3b24a3872caf8369156f54beecef0d2395f3f7cd1390bc",
+  "order": [
+    "before",
+    "after",
+    "after",
+    "before",
+    "before",
+    "after"
+  ],
+  "measuredAt": "2026-11-07T17:31:20.165Z"
+}

@@ -1,0 +1,66 @@
+{
+  "method": "CPU-profile self sample counts, not inclusive durations or an unprofiled benchmark",
+  "samples": 14566,
+  "topSelfSamples": [
+    {
+      "function": "key",
+      "samples": 12782,
+      "share": 0.8775229987642456
+    },
+    {
+      "function": "columnNameForms",
+      "samples": 399,
+      "share": 0.02739255801180832
+    },
+    {
+      "function": "",
+      "samples": 384,
+      "share": 0.026362762597830564
+    },
+    {
+      "function": "RegExp: \\s+",
+      "samples": 285,
+      "share": 0.01956611286557737
+    },
+    {
+      "function": "sourceValue",
+      "samples": 184,
+      "share": 0.012632157078127145
+    },
+    {
+      "function": "(garbage collector)",
+      "samples": 136,
+      "share": 0.009336811753398325
+    },
+    {
+      "function": "clean",
+      "samples": 93,
+      "share": 0.00638473156666209
+    },
+    {
+      "function": "RegExp: ^[A-Za-z][A-Za-z0-9_]*\\((.+)\\)$",
+      "samples": 67,
+      "share": 0.004599752849100645
+    },
+    {
+      "function": "unwrapAggregatedName",
+      "samples": 40,
+      "share": 0.002746121103940684
+    },
+    {
+      "function": "save",
+      "samples": 29,
+      "share": 0.001990937800356996
+    },
+    {
+      "function": "orderIdentity",
+      "samples": 21,
+      "share": 0.001441713579568859
+    },
+    {
+      "function": "uniqueOrderCodes",
+      "samples": 19,
+      "share": 0.0013044075243718249
+    }
+  ]
+}
