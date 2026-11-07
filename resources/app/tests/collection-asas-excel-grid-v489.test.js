@@ -49,9 +49,12 @@ test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders
   // Katalog artık Refresh sonunda page projection cache'e bir kez yazılıyor.
   // Schema version eski/partial collection-catalog cache'lerinin güvenle
   // yalnız bu projection için rebuild edilmesini sağlar.
-  assert.match(SERVER, /let catalogRows=ordersRows/);
-  assert.match(SERVER, /catalogRows=\(await pageProjectionCache\.decodeProjection\(reused\.projections\.orders\.buffer\)\)\.rows\|\|\[\]/);
-  assert.match(SERVER, /'collection-catalog': \{[\s\S]{0,240}?catalogs: cpDataAllowed \? buildCollectionCatalogs\(catalogRows\.length \? catalogRows : overviewRows\) : \{\},[\s\S]{0,120}?catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION/);
+  // Faz 5 (#885): projeksiyon/Backlog satırları ortak compute worker'ında
+  // (server/lib/compute-tasks.js) üretilir; aynı kural orada doğrulanır.
+  const TASKS = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'compute-tasks.js'), 'utf8'), WORKER = fs.readFileSync(path.join(__dirname, '..', 'server', 'workers', 'compute-worker.js'), 'utf8');
+  assert.match(TASKS, /const rows=catalogFromCp\?overview:data\.catalogRows\|\|pair\.orders;/);
+  assert.match(WORKER, /if\(params\.catalogOrdersBuffer\)\{[\s\S]{0,160}params\.catalogRows=JSON\.parse\(raw\.toString\('utf8'\)\)\.rows\|\|\[\];\}/);
+  assert.match(TASKS, /out\['collection-catalog'\]=\{catalogs:allowed\?buildCollectionCatalogs\(rows\.length\?rows:overview\):\{\},catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION\}/);
 });
 
 test('v4.89 Collection cells use ASAS suggestions without an LFL dependency or strict selection', () => {

@@ -171,12 +171,19 @@ test('v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır', () 
   const start = source.indexOf("app.get('/api/backlog-export'");
   const end = source.indexOf("app.post('/api/backlog-detail'", start);
   const route = source.slice(start, end);
-  assert.match(route, /const prepared=backlogQueryForRequest\(req,filterOpts\)/);
-  const helper=source.slice(source.indexOf('function backlogQueryForRequest('),start);
-  assert.match(helper, /userAccess\.filterRowsByScope\(req.currentUser,filterRowsByEffectiveHorizon\(req.currentUser,'backlog',ordersForTarget\(active,'backlog',overrides\)\)\)/);
-  assert.match(helper, /antrepoForTarget\(active,'backlog'\)/);
-  assert.match(route, /buildBacklogTemplateRows\(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,/);
-  assert.doesNotMatch(route, /buildBacklogTemplateRows\(active\.asasOrders/);
+  // Faz 5 (#885): rapor satırları ortak compute worker'ında aynı kapsamla üretilir:
+  // Backlog hedefi + tarih override'ı → etkin horizon → kullanıcı kapsamı.
+  assert.match(route, /await prepareComputeBacklog\(req\)/);
+  assert.match(route, /computeReads\.run\(req,'backlog',task,\{options,sourceColumns:/);
+  const tasks = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'compute-tasks.js'), 'utf8');
+  const build = tasks.slice(tasks.indexOf('function buildBacklog('), tasks.indexOf('module.exports'));
+  assert.match(tasks, /function scopedOrders\(source,target,data\)\{\s*let rows=parse\.applyDateOverrides\(rawOrders\(source,target\),data\.overrides\);[\s\S]{0,260}if\(selected\)rows=horizon\.filterRows\(rows,selected\);\s*return data\.access\?access\.filterRows\(data\.access,rows\):rows;/);
+  assert.match(build, /target=data\.target\|\|'backlog'/);
+  assert.match(build, /scopedOrders\(source,target,data\)/);
+  assert.match(build, /const antrepo=antrepoFor\(source,target\)/);
+  assert.match(build, /parse\.buildBacklogTemplateRows\(orders,antrepo,overrides,options,columns,/);
+  assert.doesNotMatch(build, /buildBacklogTemplateRows\(source\.asasOrders/);
+  assert.match(source, /horizons:Object\.fromEntries\(\['cp','orders','backlog'\]\.map\(target=>\[target,effectiveHorizonForTarget\(profile,target\)\]\)\)/);
 });
 
 test('v4.39 eşleştirme ekranı koşul ekleme, arama, öneri ve kesin eşleşme bilgisini içerir', () => {

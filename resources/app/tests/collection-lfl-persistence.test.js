@@ -110,6 +110,7 @@ test('LFL upload saves source rows before publishing them and retains old rows o
   sourceUserId:()=> 'buyer',cacheForUser:()=>runtime,initialDataLoadPromises:new Map(),ensureDataLoaded:async()=>{},
   runExcelTask:async()=>({rows:[order({fob:20})],meta:{}}),withFabricDimensions:meta=>meta,
   saveRuntimeModelSnapshot:async(id,next)=>{assert.equal(id,'buyer');assert.equal(runtime.lflRows[0].fob,10);if(fail)throw Error('disk full');saved=next;},
+  adoptSavedRuntime:async(_id,target,next)=>Object.assign(target,next),
   userAccess:{requireArea:()=>()=>{},appendAudit(){},filterRowsByScope:(_user,rows)=>rows},
   attachModelImageIdentities:rows=>rows,modelImageIdentityOrders:()=>[],sendDateSafeJson:(res,data)=>res.json(data),apiError:(res,error)=>res.status(500).json({error:error.message}),
  });

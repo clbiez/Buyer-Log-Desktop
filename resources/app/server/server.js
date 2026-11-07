@@ -6953,17 +6953,19 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
   const { decideFolderKurApply, mergeFolderKur } = require('./lib/fxWorkbook');
   const id = sourceUserId(value), appRoot = path.join(__dirname, '..');
   const sourceFolder = sourceFolderForUser(id);
-  let current = loadFx(), computeLease;
+  let current = loadFx();
   const remember = (candidate, reason) => {
     folderFxSyncStatus = { file: candidate.file || 'KUR.xlsx', modifiedAt: candidate.modifiedAt || null,
       reportMonth: candidate.reportMonth || null, fingerprint: candidate.fingerprint || null, reason };
   };
   try {
-    computeLease = await serverCompute().runExcelUtility('loadFxWorkbookFromDirectories', {
+    // FX ayrı Excel worker'da kalır: ortak compute havuzu 5 sn'den uzun
+    // projeksiyonlarla doluyken 5000 ms bütçe kuyrukta doluyor, geçerli KUR eski
+    // revizyonda kalıyordu (Faz 5 B1 FX tanısı, clbiez/Buyer-Log-Desktop#893).
+    const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { ownerId:id,priority:explicit?'interactive':'background',timeoutMs: 5000, serializationKey: 'shared-fx' });
-    const parsed=computeLease.value;
+    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
     if (explicit && (!parsed.found || !parsed.fingerprint || parsed.fingerprint !== explicit.fingerprint)) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
@@ -6989,7 +6991,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
     remember({}, 'parse-failed');
     logRuntimeFailure('fxWorkbookRead', err);
     return { found: false, updated: false, reason: 'parse-failed' };
-  }finally{computeLease?.release();}
+  }
 }
 
 // Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat
@@ -7497,6 +7499,21 @@ function throwIfRefreshSignalAborted(signal) {
   const error = new Error('Yenileme kullanıcı tarafından durduruldu.');
   error.code = 'REFRESH_CANCELLED'; error.statusCode = 409;
   throw error;
+}
+
+// Kaydedilmiş bir runtime kopyasını aktif runtime'a uygular. saveRuntimeModelSnapshot
+// compute kaynağını yalnız aktif runtime için yayımlar; kopyanın hazırladığı
+// (sayılamaz) descriptor burada aktif runtime'a bağlanıp yayımlanır. Aksi halde
+// replika bütçede kalır ve worker eski kaynak neslini okur.
+async function adoptSavedRuntime(id, runtime, next) {
+  Object.assign(runtime, next);
+  const descriptor = next && next._computeSourceDescriptor;
+  if (descriptor && cacheForUser(id) === runtime) {
+    Object.defineProperty(runtime, '_computeSourceDescriptor', { value:descriptor, enumerable:false, configurable:true });
+    await serverCompute().publishSource(descriptor);
+    rememberComputeSource(id, runtime, descriptor);
+  }
+  return runtime;
 }
 
 async function publishRefreshedRuntime(id, next) {
@@ -8087,107 +8104,6 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
   const source=Array.isArray(rows)?rows:[],horizon=effectiveHorizonForTarget(currentUser,target);
   return horizon?horizonFields.filterRows(source,horizon):source;
 }
-function computeSourceBase(id){
-  const active=cacheForUser(id),manifest=active.loadedAt?null:pageProjectionCache.loadManifest(id);
-  return {active,manifest,key:manifest?.sourceRevisionKey||projectionSourceRevision(active.loadedAt?active:manifest?.runtimeMeta||active)};
-}
-function computeSourceToken(id){
-  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
-  const sameCold=known&&!known.descriptor.replicaFile&&!base.active?.loadedAt
-    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
-  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile?known.descriptor.capability:known.guardToken||'disk:'+base.key;
-  return 'disk:'+base.key;
-}
-function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
-function acceptComputedMetadata(profile,metadata,projectionKeys){
-  if(!metadata?.loadedAt)return;
-  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
-  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt,projectionKeys),active=cacheForUser(id);
-  if(!active.loadedAt)Object.assign(active,metadata);
-  Object.defineProperty(active,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
-  publishedComputeSources.set(id,{...known,key:projectionSourceRevision(metadata),descriptor});
-}
-async function computeSnapshotByteEstimate(id,metrics=null){
-  if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
-  const file=require('./lib/model-snapshot').snapshotPath(id);
-  for(const candidate of [file,file+'.bak']){
-    let handle;
-    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
-      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
-    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
-  }
-  return 1024*1024;
-}
-async function computeSourceFor(profile){
-  const id=sourceUserId(profile),initial=cacheForUser(id);
-  if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
-  if(coldComputeSourcesInFlight.has(id))return coldComputeSourcesInFlight.get(id);
-  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
-  const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
-    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
-  if(known&&(known.key===base.key||sameCold))return known.descriptor;
-  const expected=computeSourceToken(id);
-  const stale=()=>Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
-  const operation=(async()=>{
-    const bytes=await computeSnapshotByteEstimate(id);if(computeSourceToken(id)!==expected)throw stale();
-    // A projection manifest is not proof of the disk snapshot's identity after
-    // a crash between snapshot save and projection publication. The worker
-    // verifies the actual snapshot before its first descriptor is exposed.
-    const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||null,uncompressedBytes:bytes,replace:true});
-    if(computeSourceToken(id)!==expected)throw stale();
-    publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});let lease;
-    try{
-      lease=await serverCompute().run('source-info',descriptor,{});
-      if(computeSourceToken(id)!==expected||cacheForUser(id)!==base.active)throw stale();
-      const info=lease.value;acceptComputedMetadata(profile,info.runtimeMeta,info.sourceProjectionKeys);
-      const verified=publishedComputeSources.get(id);if(verified?.descriptor.capability!==descriptor.capability)throw stale();
-      // Already captured callers reject once on a recovered identity. Later
-      // reads use its bound loadedAt and retain all normal generation checks.
-      if(info.loadedAt&&base.manifest?.sourceLoadedAt&&String(info.loadedAt)!==String(base.manifest.sourceLoadedAt))verified.guardToken='disk:'+verified.key;
-      return verified.descriptor;
-    }catch(error){if(publishedComputeSources.get(id)?.descriptor.capability===descriptor.capability)publishedComputeSources.delete(id);throw error;}
-    finally{lease?.release();}
-  })();
-  coldComputeSourcesInFlight.set(id,operation);
-  try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
-}
-function computeReadContext(profile){
-  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
-  return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
-}
-const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
-  hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
-function computeParamsFor(profile,descriptor,task,parts={}){
-  if(task==='source-info')return {};
-  if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
-  if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
-  const shared=loadOverrides();
-  const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
-    mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
-    cpAllowed:!profile||['overview','cp','orders','koleksiyon','shipping','source'].some(area=>userAccess.hasArea(profile,area)),summaryAllowed:!profile||['overview','backlog','source'].some(area=>userAccess.hasArea(profile,area)),
-    cpModelColumns:loadModelConnections().items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
-    calendar:require('./lib/merch-calendar-store').publicProjection()};
-  if(task.startsWith('backlog-')){
-    data.headers=BACKLOG_TEMPLATE_HEADERS;
-    data.sourceRevision=stableHashValue([descriptor.generation,computeReadContext(profile).contextHash]);
-    data.rowsRevision=stableHashValue([data.sourceRevision,parts]);
-  }
-  return data;
-}
-const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
-async function prepareComputeBacklog(req){
-  const lease=await computeReads.run(req,'backlog','source-info',{});let info;
-  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
-  const shared=loadOverrides();
-  if(!info.loadedAt){
-    const id=sourceUserId(req),runtime=await ensureBacklogRuntime(id);
-    if(runtime?.loadedAt)await saveRuntimeModelSnapshot(id,runtime);
-  }
-  if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
-    ||(!['database','dashboard'].includes(shared.antrepoSourceMode)&&!info.antrepoSourceFields)){
-    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureDataLoaded(id);await ensureBacklogSourceFields(id);
-  }
-}
 function pageCacheRuntimeMeta(runtime) { return projectionRuntimeMeta(runtime); }
 
 function cachedRuntimeFromManifest(manifest) {
@@ -8475,6 +8391,110 @@ async function buildResponse(currentUser = null, options = {}) {
     overviewDeferred: startup && !cached.hit && !sourceFilterRequired,
     pageCache: { hit: pageCacheHit, readMs: pageCacheReadMs, generation: pageCacheGeneration },
   };
+}
+
+// Ortak compute okuma bağlantısı (Faz 5). Koleksiyon kataloğu ve sayfa
+// projeksiyonu bölümlerinin dışında tutulur; yalnız istek anında kullanılır.
+function computeSourceBase(id){
+  const active=cacheForUser(id),manifest=active.loadedAt?null:pageProjectionCache.loadManifest(id);
+  return {active,manifest,key:manifest?.sourceRevisionKey||projectionSourceRevision(active.loadedAt?active:manifest?.runtimeMeta||active)};
+}
+function computeSourceToken(id){
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active?.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile?known.descriptor.capability:known.guardToken||'disk:'+base.key;
+  return 'disk:'+base.key;
+}
+function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
+function acceptComputedMetadata(profile,metadata,projectionKeys){
+  if(!metadata?.loadedAt)return;
+  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
+  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt,projectionKeys),active=cacheForUser(id);
+  if(!active.loadedAt)Object.assign(active,metadata);
+  Object.defineProperty(active,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
+  publishedComputeSources.set(id,{...known,key:projectionSourceRevision(metadata),descriptor});
+}
+async function computeSnapshotByteEstimate(id,metrics=null){
+  if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
+  const file=require('./lib/model-snapshot').snapshotPath(id);
+  for(const candidate of [file,file+'.bak']){
+    let handle;
+    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
+      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
+    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
+  }
+  return 1024*1024;
+}
+async function computeSourceFor(profile){
+  const id=sourceUserId(profile),initial=cacheForUser(id);
+  if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
+  if(coldComputeSourcesInFlight.has(id))return coldComputeSourcesInFlight.get(id);
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor;
+  const expected=computeSourceToken(id);
+  const stale=()=>Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+  const operation=(async()=>{
+    const bytes=await computeSnapshotByteEstimate(id);if(computeSourceToken(id)!==expected)throw stale();
+    // A projection manifest is not proof of the disk snapshot's identity after
+    // a crash between snapshot save and projection publication. The worker
+    // verifies the actual snapshot before its first descriptor is exposed.
+    const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||null,uncompressedBytes:bytes,replace:true});
+    if(computeSourceToken(id)!==expected)throw stale();
+    publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});let lease;
+    try{
+      lease=await serverCompute().run('source-info',descriptor,{});
+      if(computeSourceToken(id)!==expected||cacheForUser(id)!==base.active)throw stale();
+      const info=lease.value;acceptComputedMetadata(profile,info.runtimeMeta,info.sourceProjectionKeys);
+      const verified=publishedComputeSources.get(id);if(verified?.descriptor.capability!==descriptor.capability)throw stale();
+      // Already captured callers reject once on a recovered identity. Later
+      // reads use its bound loadedAt and retain all normal generation checks.
+      if(info.loadedAt&&base.manifest?.sourceLoadedAt&&String(info.loadedAt)!==String(base.manifest.sourceLoadedAt))verified.guardToken='disk:'+verified.key;
+      return verified.descriptor;
+    }catch(error){if(publishedComputeSources.get(id)?.descriptor.capability===descriptor.capability)publishedComputeSources.delete(id);throw error;}
+    finally{lease?.release();}
+  })();
+  coldComputeSourcesInFlight.set(id,operation);
+  try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
+}
+function computeReadContext(profile){
+  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
+  return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
+}
+const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
+  hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
+function computeParamsFor(profile,descriptor,task,parts={}){
+  if(task==='source-info')return {};
+  if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
+  if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
+  const shared=loadOverrides();
+  const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
+    mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
+    cpAllowed:!profile||['overview','cp','orders','koleksiyon','shipping','source'].some(area=>userAccess.hasArea(profile,area)),summaryAllowed:!profile||['overview','backlog','source'].some(area=>userAccess.hasArea(profile,area)),
+    cpModelColumns:loadModelConnections().items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
+    calendar:require('./lib/merch-calendar-store').publicProjection()};
+  if(task.startsWith('backlog-')){
+    data.headers=BACKLOG_TEMPLATE_HEADERS;
+    data.sourceRevision=stableHashValue([descriptor.generation,computeReadContext(profile).contextHash]);
+    data.rowsRevision=stableHashValue([data.sourceRevision,parts]);
+  }
+  return data;
+}
+const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
+async function prepareComputeBacklog(req){
+  const lease=await computeReads.run(req,'backlog','source-info',{});let info;
+  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
+  const shared=loadOverrides();
+  if(!info.loadedAt){
+    const id=sourceUserId(req),runtime=await ensureBacklogRuntime(id);
+    if(runtime?.loadedAt)await saveRuntimeModelSnapshot(id,runtime);
+  }
+  if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
+    ||(!['database','dashboard'].includes(shared.antrepoSourceMode)&&!info.antrepoSourceFields)){
+    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureDataLoaded(id);await ensureBacklogSourceFields(id);
+  }
 }
 
 // Mevcut (bellekteki) veriyi döner; hiç yüklenmemişse diskten okur (Excel'i YENİLEMEDEN,
@@ -12093,6 +12113,7 @@ require('./routes/model-connection-routes')(app, {
 });
 // ---- LFL verisi route'ları → server/routes/lfl-routes.js ----
 require('./routes/lfl-routes')(app, {
+  adoptSavedRuntime,
   collectionLflCache: require('./lib/collection-lfl-reference').createReferenceCache({directory:path.join(LOCAL_DATA_ROOT,'collection-lfl-reference')}),
   computedCollectionReferenceSource:require('./lib/compute-collection-lfl-reference').createComputedCollectionReferenceSource({
     compute:serverCompute,guard:computeReadGuard,userAccess,calendar:()=>require('./lib/merch-calendar-store').publicProjection()}),

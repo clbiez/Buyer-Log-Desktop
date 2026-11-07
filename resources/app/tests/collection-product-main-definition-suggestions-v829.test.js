@@ -126,7 +126,9 @@ test('server eski/partial collection-catalog projection cache şemasını redded
   assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:2, catalogs:full }), false, 'pre-manufacturer v2 cache must rebuild');
   assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:3, catalogs:full }), true);
 
-  assert.match(SERVER, /collectionCatalogProjectionComplete\(cached\.data\)/);
+  assert.match(SERVER, /collectionCatalogProjectionComplete\(cachedCatalogData\)/);
+  // Faz 5 (#885): worker eski/partial catalog cache'ini aynı kontrolle yeniden kurar.
+  assert.match(fs.readFileSync(path.join(ROOT, 'server', 'workers', 'compute-worker.js'), 'utf8'), /if\(!catalog\.collectionCatalogProjectionComplete\(values\['collection-catalog'\]\)\)/);
   assert.match(SERVER, /catalogSchemaVersion:\s*COLLECTION_CATALOG_SCHEMA_VERSION/);
 });
 
