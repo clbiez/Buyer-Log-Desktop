@@ -110,7 +110,8 @@ async function fixture(t,{canonicalDefinition=false,ordinaryGet=false,ordinaryWo
         nativeLease={value:{buffer:cached.buffer,uncompressedBytes:cached.meta.uncompressedBytes},manifest:cached.manifest,
           cacheState:cached.fallback?'fallback':'hit',assertResponse:acquired.assertResponse,release(){}};
       }
-      lease={...nativeLease,release(){f.ordinaryReleases=(f.ordinaryReleases||0)+1;nativeLease.release();}};
+      const ordinaryReleased=deferred();f.ordinaryReleased=ordinaryReleased.promise;
+      lease={...nativeLease,release(){f.ordinaryReleases=(f.ordinaryReleases||0)+1;try{nativeLease.release();}finally{ordinaryReleased.resolve();}}};
       f.lastOrdinaryLease=lease;f.beforeOrdinaryBind?.(lease);
       if(typeof router.bindOrdinaryFullResponse!=='function')throw TypeError('Actual ordinary binding hook is not installed');
       handed=true;const bound=router.bindOrdinaryFullResponse(req,lease);f.lastOrdinaryBound=bound;
@@ -538,13 +539,17 @@ test('first ordinary Orders GET binds its exact native full bytes without schema
   assert.equal(f.fullReads,1);assert.equal(f.viewReads,0);assert.equal(f.schemaReads||0,0);assert.equal(f.jobs.length,0);assert.equal(f.ordinaryReleases,1);
   assert.deepEqual((await f.get()).body,{mode:'full'},'full receipt identity does not grant missing schema authority');
 });
-test('ordinary first-build worker lease retains its native output, identity streaming and one release',async t=>{
+test('ordinary first-build worker lease retains its native output, identity streaming and one release',{timeout:5000},async t=>{
   const f=await fixture(t,{ordinaryGet:true,ordinaryWorkerLease:true}),got=await f.request('GET','orders',undefined,'first','identity');
   assert.equal(got.status,200);assert.equal(got.headers.get('content-encoding'),null);assert.equal(got.headers.get('x-page-cache'),'miss');
   assert.equal(got.headers.get('x-orders-full-gzip-sha256'),f.primary().modules.orders.checksum);
   assert.equal(got.headers.get('content-length'),String(Buffer.byteLength(got.text)));
   assert.equal(f.lastOrdinaryBound.lease.value,f.lastOrdinaryLease.value);assert.ok(f.lastOrdinaryLease.value.buffer instanceof ArrayBuffer);
-  await new Promise(setImmediate);assert.equal(f.ordinaryWorkerCalls,1);assert.equal(f.ordinaryReleases,1);assert.equal(f.pool.stats().leasedOutputBytes,0);
+  // Client body EOF and one local immediate do not prove that the server's
+  // native finish/close callback has released its lease. Observe that actual
+  // release; the bounded test still fails if the event or release never occurs.
+  assert.ok(f.ordinaryReleased instanceof Promise);await f.ordinaryReleased;
+  assert.equal(f.ordinaryWorkerCalls,1);assert.equal(f.ordinaryReleases,1);assert.equal(f.pool.stats().leasedOutputBytes,0);
   assert.equal(f.fullReads,0);assert.equal(f.viewReads,0);assert.equal(f.schemaReads||0,0);assert.equal(f.jobs.length,0);
 });
 test('ordinary legacy source metadata or explicit native backup fallback returns full without certification',async t=>{

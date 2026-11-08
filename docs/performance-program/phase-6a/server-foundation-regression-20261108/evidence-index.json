@@ -70,5 +70,17 @@
     "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/ready-schema-pin-green/native.log.gz",
     "rawBytes": 7016,
     "rawSha256": "42e85774a1c5c489726bbb849de9d5f7acd41ea34200b1586d212a26402636da"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-server-foundation-full-5e9661b7/full.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/full-red-5e9661b7/full.log.gz",
+    "rawBytes": 625595,
+    "rawSha256": "f1a4474c066b0dee0f8095b8b9bea478c403ba7c76f3a6adfa39de75f1dc195d"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-native-response-release-green/native.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/native-response-release-green/native.log.gz",
+    "rawBytes": 5291,
+    "rawSha256": "c110163a2f870080236b6dc53968171fda01b924a2fe34d140af8b14c5160083"
   }
 ]

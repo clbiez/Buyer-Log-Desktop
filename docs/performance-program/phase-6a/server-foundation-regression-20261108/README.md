@@ -76,3 +76,23 @@ A separate invocation passed the literal `HEAD` to a checkpoint script that
 requires a SHA prefix. It failed its preflight before any test started. This
 caller mistake is retained in `head-preflight-failure.json`, separately from
 actual regression failures.
+
+## Native response completion / Native yanıtın tamamlanması
+
+The next default run at `5e9661b7` stopped in batch 3 with
+**6367 PASS / 1 FAIL / 63 SKIP**. The new ordinary identity-streaming test
+observed client body EOF, waited one immediate, then assumed the server's
+`finish`/`close` release had already run. That ordering is not guaranteed across
+native gunzip, socket delivery and the server event loop. The count was still
+undefined at that point; no production release defect was established.
+
+The fixture now exposes a promise completed by the real native lease release.
+The test awaits it, retaining the exact one-release and zero-leased-bytes
+assertions. A new finite 5-second test deadline replaces the formerly unbounded
+test; no existing deadline is increased. Native HTTP/response tests:
+**43 PASS / 0 FAIL / 0 SKIP / 0 CANCEL**. Production code is unchanged.
+
+**[Doğrulandı]** Test artık istemci yanıtı ile sunucunun kaynak bırakma anını
+aynı olay saymıyor. Tam koşunun başarısız kaydı korunuyor. İstemci entegrasyonu
+devam ettiği için nihai standart tam paket, son kod sabitlendiğinde yeniden
+çalıştırılacak; hedefli başarı tam kabul sayılmıyor.

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-ready-http",
+    "compute-response"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 43,
+    "pass": 43,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "c110163a2f870080236b6dc53968171fda01b924a2fe34d140af8b14c5160083"
+}
