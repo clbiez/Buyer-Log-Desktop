@@ -110,8 +110,8 @@
         "en": "Refresh and page loading remain available for large datasets"
       },
       "body": {
-        "tr": "Hesaplama havuzunun bellek sınırına takılan kaynak kopyası hazırlığı artık yenilemeyi durdurmaz. CP, Siparişler ve Backlog aynı doğrulanmış veriyi, kullanıcı kapsamını ve hesaplama kurallarını koruyarak sırayla hazırlanır. Büyük veri yüklenirken ekran kısa süre bekleyebilir; son veriler boş veya eski veriyle değiştirilmez.",
-        "en": "Source-copy preparation that exceeds the compute pool memory limit no longer stops refresh. CP, Orders and Backlog are prepared sequentially from the same verified data, preserving user scope and calculation rules. The interface may briefly wait while a large dataset is processed; current data is not replaced with empty or stale data."
+        "tr": "Büyük kaynak verisi kaydedilirken tüm JSON tek metne çevrilmez; parçalarla yazma ve okuma sunucunun bellek taşmasıyla kapanmasını önler. Hesaplama havuzunun bellek sınırına takılan kaynak kopyası hazırlığı yenilemeyi durdurmaz. CP, Siparişler ve Backlog aynı doğrulanmış veriyi, kullanıcı kapsamını ve hesaplama kurallarını koruyarak sırayla hazırlanır. Büyük veri işlenirken ekran kısa süre bekleyebilir.",
+        "en": "Large source snapshots are written and read in chunks instead of converting the entire JSON to one string, avoiding the out-of-memory server crash. Source-copy preparation that exceeds the compute pool memory limit no longer stops refresh. CP, Orders and Backlog are prepared sequentially from the same verified data, preserving user scope and calculation rules. The interface may briefly wait while a large dataset is processed."
       },
       "visual": {
         "kind": "screenshot",

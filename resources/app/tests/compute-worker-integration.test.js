@@ -1,6 +1,9 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),zlib=require('node:zlib');
 const serverData=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-compute-native-data-'));process.env.BUYER_LOG_SERVER_DATA_ROOT=serverData;
+// Native worker startup runs write recovery too. Keep this file's deliberate
+// corruption/backup checks away from other parallel files' live write intents.
+process.env.BUYER_LOG_LOCAL_DATA_ROOT=path.join(serverData,'local');
 test.after(()=>fs.rmSync(serverData,{recursive:true,force:true}));
 const {createComputePool}=require('../server/lib/compute-pool'),codec=require('../server/lib/compute-source-codec'),tasks=require('../server/lib/compute-tasks');
 const {createComputeService}=require('../server/lib/compute-service');
