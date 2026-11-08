@@ -122,20 +122,37 @@ test('a completed run cannot accept a writer that never published its stop recor
     assert.throws(()=>probe.readProbeEvents(root,{requireStopped:true}),/incomplete|stop/i);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
-test('SIGTERM flushes every observation even when the measured application has no shutdown handler',()=>{
+// Windows process.kill(SIGTERM) is a forced exit, not POSIX signal delivery.
+// Exercise the Node handler contract there; retain native SIGTERM on POSIX.
+const deliverSigterm=process.platform==='win32'?"process.emit('SIGTERM')":"process.kill(process.pid,'SIGTERM')";
+test('the SIGTERM handler flushes every observation even when the measured application has no shutdown handler',()=>{
   const root=fixture();
   try{
-    // A real HTTP server keeps the loop alive until its signal is delivered.
-    const code=`require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);setTimeout(()=>{const until=performance.now()+260;while(performance.now()<until){}setTimeout(()=>process.kill(process.pid,'SIGTERM'),35);},35);`;
-    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);assert.equal(run.signal,'SIGTERM',run.stderr);
+    // Keep the process alive until the shutdown handler is invoked.
+    const code=`require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);setTimeout(()=>{const until=performance.now()+260;while(performance.now()<until){}setTimeout(()=>${deliverSigterm},35);},35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);
+    if(process.platform==='win32'){assert.equal(run.signal,null,run.stderr);assert.equal(run.status,1,run.stderr);}
+    else assert.equal(run.signal,'SIGTERM',run.stderr);
     const events=probe.readProbeEvents(root,{requireStopped:true});assert.equal(events.at(-1).kind,'stop');assert.ok(probe.summarizeGaps(events).maxGapMs>=250);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 test('the observer preserves an application-owned asynchronous shutdown handler',()=>{
   const root=fixture();
   try{
-    const marker=path.join(root,'application-closed'),code=`const fs=require('fs');require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);process.once('SIGTERM',()=>setTimeout(()=>{fs.writeFileSync(${JSON.stringify(marker)},'closed');process.exit(0);},35));setTimeout(()=>process.kill(process.pid,'SIGTERM'),35);`;
+    const marker=path.join(root,'application-closed'),code=`const fs=require('fs');require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);process.once('SIGTERM',()=>setTimeout(()=>{fs.writeFileSync(${JSON.stringify(marker)},'closed');process.exit(0);},35));setTimeout(()=>${deliverSigterm},35);`;
     const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);assert.equal(run.status,0,run.stderr);
     assert.equal(fs.readFileSync(marker,'utf8'),'closed');assert.equal(probe.readProbeEvents(root,{requireStopped:true}).at(-1).kind,'stop');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('native forced termination cannot be accepted as a completed observation',()=>{
+  const root=fixture();
+  try{
+    const signal=process.platform==='win32'?'SIGTERM':'SIGKILL';
+    const code=`require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);setTimeout(()=>process.kill(process.pid,${JSON.stringify(signal)}),35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);
+    if(process.platform==='win32'){assert.equal(run.signal,null,run.stderr);assert.equal(run.status,1,run.stderr);}
+    else assert.equal(run.signal,'SIGKILL',run.stderr);
+    const events=probe.readProbeEvents(root);assert.equal(events[0].kind,'start');assert.equal(events.filter(event=>event.kind==='stop').length,0);
+    assert.throws(()=>probe.readProbeEvents(root,{requireStopped:true}),/incomplete|stop/i);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
