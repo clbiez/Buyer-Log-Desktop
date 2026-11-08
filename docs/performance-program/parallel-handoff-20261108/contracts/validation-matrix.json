@@ -1,0 +1,53 @@
+{
+  "status": "corrected-primary-Collection-all-planned-none-run",
+  "baselineMain": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "auxiliaryPreserved": "prior-cp-auxiliary-20261107/validation-matrix.json retains original CP authority/durability/source cases unchanged",
+  "collectionMutationAndJournal": [
+    {"id":"LC01","case":"single ordinary Collection cell","assert":"only touched row/semantic values copied; unknown persisted fields preserved; final canonical result equals current path; count serialized bytes/clones later"},
+    {"id":"LC02","case":"parent shared cell and explicit false/zero/blank variant override","assert":"shared map plus linked materialized peers update as one unit; overridden variants unchanged; no whole-array normalization on proved hot unit","existing":"collection-model-groups.test.js"},
+    {"id":"LC03","case":"notes, pricing/confirmation, period and dependent dates","assert":"text/HTML and same-PLM peer semantics, rule/financial projection, explicit Retail precedence and quote/image follow-up statuses preserved","existing":"collection-paste-mutation-pipeline-v70106.test.js"},
+    {"id":"LC04","case":"storage quota/error or crash before secured-local feedback","assert":"no success if journal cannot recover intent; last operation retained/reported; compatibility checkpoint failure cannot erase journal"},
+    {"id":"LC05","case":"restart/reload from pending schema1/schema2/new journal","assert":"original base row/structure/existence expectations preserved; remote-only additions survive; deleted rows not resurrected","existing":"collection-pending-draft-recovery.test.js"},
+    {"id":"LC06","case":"edit B during A acknowledgement; late ACK after owner switch","assert":"ACK A cannot clear B or mutate another owner; only applied operation IDs/bases retire; conflicts remain recoverable"},
+    {"id":"LC07","case":"two rows, same row, partial conflicts and atomic group/paste","assert":"row _rev CAS and partial HTTP200 receipts retained; atomic:true validation conflict writes none","existing":"collection-row-writes-v722.test.js"},
+    {"id":"LC08","case":"create ID collision, edit deleted row, legacy rev0 delete","assert":"new/existing expectations and explicit delete CAS preserved; no accidental upsert resurrection"},
+    {"id":"LC09","case":"group merge/split/detach/import/schema/order changes","assert":"proved full affected closure or explicit checkpoint; no partial patch fallback after side effects; row order/nextId and unrelated rows survive"},
+    {"id":"LC10","case":"read-only/Multi-Buyer view and mutable nested reference sharing","assert":"cannot persist projection or write through another owner/raw source; transient image URLs never owner data"}
+  ],
+  "inverseUndo": [
+    {"id":"U01","case":"50 single-cell edits and inverse/redo","assert":"same final canonical values as current history, byte-bounded patch retention instead of historyCount times full rows; actual heap/GC remains future measurement"},
+    {"id":"U02","case":"same/falsy/missing override presence and parent/variant edits","assert":"inverse restores exact persisted presence and membership effects, not only displayed scalar"},
+    {"id":"U03","case":"remote unrelated/same-field edit before undo","assert":"unrelated fields retained; newer same-field intent conflicts/rebases explicitly rather than blind old snapshot replacement"},
+    {"id":"U04","case":"bulk history 409/network failure/owner switch","assert":"no success stack advancement until primary ACK; original guard and pending intent retained"},
+    {"id":"U05","case":"undo create/delete/group/schema plus quotation/image projection","assert":"typed inverse and structural bases preserved; dependent side effects have explicit separate receipts/status"}
+  ],
+  "ownerSharing": [
+    {"id":"O01","case":"own workspace, explicit VIEW/EDIT grants, revoke/read-only","assert":"owner authority retained at actual write/read boundary; hierarchy/CP owner hints do not grant Collection access","existing":"collection-private-replication-v978.test.js"},
+    {"id":"O02","case":"two offline devices edit same/different field or delete versus edit","assert":"lineage-aware deterministic three-way merge; displaced local intent/conflicts retained","existing":"collection-shared-conflict-recovery.test.js"},
+    {"id":"O03","case":"equal revision different content and numerically newer unproven ancestry","assert":"neither revision alone is proof of descendant; observed parent-head CAS retained","existing":"collection-private-replication-v978.test.js"},
+    {"id":"O04","case":"partial owner delta/checkpoint publish, lost ACK and replay","assert":"head references complete verified records only; stable IDs idempotent; retry recovers and local success stays distinct from remote published status","existing":"collection-replication-publish-recovery.test.js"},
+    {"id":"O05","case":"owner new-row ID collision and compacted/deleted row","assert":"no overwrite/resurrection; explicit resolution and tombstone/checkpoint coverage"},
+    {"id":"O06","case":"legacy full-envelope peer and retired shared pool","assert":"explicit capability/fallback migration; owner deltas never enter generic shared Collection transport","existing":"collection-private-replication-v978.test.js"},
+    {"id":"O07","case":"merge committed locally but publication fails","assert":"recoverable pending publication; base/remote lineage and conflict receipt not falsely advanced","existing":"collection-replication-merge-publish-failure.test.js"},
+    {"id":"O08","case":"one-cell owner publication bytes","assert":"measure actual delta/head/checkpoint bytes versus frozen full-envelope baseline later; no inferred gain from local PATCH alone"}
+  ],
+  "walBatch": [
+    {"id":"W01","case":"bulk patch/delete one invalid operation or stale CAS","assert":"all required validation precedes effects; preserve op order and semantic tombstones; no Promise.all of single transactions"},
+    {"id":"W02","case":"fsync/lease failure, process crash and torn WAL tail","assert":"no successful caller before its durable fsync; explicitly prove desired multi-event recovery atomicity/prefix semantics","existing":["local-db-wal-v807.test.js","local-db-wal-tail-recovery.test.js","local-db-crash-recovery.test.js"]},
+    {"id":"W03","case":"same-record sequential patches and concurrent batch CAS","assert":"existing clocks/writer/seen and authority/source fences preserved under held lease"},
+    {"id":"W04","case":"1/10/100/1000 records with native batch","assert":"future measured throughput/fsync and acknowledgement latency; historical 200-record result is not current production latency"}
+  ],
+  "checklistBatch": [
+    {"id":"K01","case":"100/1000 targets including options/scoped set/components","assert":"one durable local batch/journal commit and one event/delta sync/render, same final answers/timestamps/evidence","existing":"checklist-answer-batch-notify.test.js"},
+    {"id":"K02","case":"mid-batch invalid target/storage failure","assert":"new transaction semantics explicit before mutation; preserve compatibility of old callback batch until converted, never silently lose already valid intent"},
+    {"id":"K03","case":"rapid evidence input+change, blur/close/account switch and process restart","assert":"small dirty intent durable immediately; debounced expensive work flushed; final text and uploaded attachment receipts survive","existing":"checklist-durability.test.js"},
+    {"id":"K04","case":"ACK race, offline/401/403/conflict/reject and server clock skew","assert":"accepted-key drain retains newer/denied pending entries; at monotonic across local/remote and option keys","existing":["checklist-durability.test.js","checklist-forbidden-retry-v20261027.test.js"]},
+    {"id":"K05","case":"omitted evidence, open tombstone, supplier import and status transition","assert":"attachments/elements/note/report/date and option behavior preserved; no truncation"},
+    {"id":"K06","case":"#892 personal-context and Orders-only invalidation","assert":"CP input counter unchanged for personal/checklist or Orders-only changes; table invalidation/cache clear/Global Flow remain","existing":"cp-decision-input-revision.test.js"}
+  ],
+  "rawSourceAndBoundaries": [
+    {"id":"R01","case":"6a decoded rows plus Collection changed-value ownership","assert":"wire key/presence/canonical contract retained; immutable raw worker/source snapshots never normalized or undone in place"},
+    {"id":"R02","case":"Collection native/local JSON, owner publish, checklist JSON and CP override mirror fail independently","assert":"no cross-store atomic success or inverse claim; clean only each boundary's confirmed journal/receipts"},
+    {"id":"R03","case":"source/owner generation changes and common compute leases","assert":"new deltas invalidate proper derived inputs under existing pool/source-owner contract; #909 guards preserved; no new worker"}
+  ]
+}

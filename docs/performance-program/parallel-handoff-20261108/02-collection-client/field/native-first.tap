@@ -1,0 +1,27 @@
+✔ own-property slots distinguish absence, explicit null, zero, false and blank (16.431839ms)
+✔ deleting an explicit null restores null presence on inverse, not inherited absence (0.844088ms)
+✔ forward/inverse copy touched row only; untouched rows and nested fields retain identity (0.698535ms)
+✔ changed mutable values are owned; command capture and applying do not alias caller values (0.820981ms)
+✔ stale owner/generation, read-only and Multi-Buyer bindings reject before effects (0.611659ms)
+✔ row CAS rejects unrelated remote row edits; workspace revision is not a row base (1.03259ms)
+✔ same-field local conflict and missing row do not overwrite or resurrect intent (0.629816ms)
+✔ inverse checks current after-state and preserves unrelated accepted remote fields (2.90246ms)
+✔ coupled groups, semantic editors, server fields, unknown writes and structure fail closed (1.679431ms)
+✔ group membership/metadata and custom schema changes invalidate prepared commands (1.139515ms)
+✔ legacy adapter sends touched rows with explicit existence and legacy zero CAS, no structure fence (2.103598ms)
+✔ adapter preserves unknown persisted keys and strips both actual transient image projections (1.483215ms)
+✔ one legacy row can compose ordered commands; omitted prerequisites reject (1.901839ms)
+✔ operation replay is idempotent before/after ACK; ID collision and cross-owner replay reject (2.137378ms)
+✔ captured old request/ACK does not send or clear newer local same-field intent (0.659233ms)
+✔ adapter excludes an unrelated unsubmitted local field even on the same touched row (0.472091ms)
+✔ partial HTTP 200 acknowledges only applied row operations and leaves conflicts pending (1.003654ms)
+✔ late/invalid ACK and replication-only success cannot advance operation status or row bases (0.482797ms)
+✔ invalid/nonpersistable slots, duplicate row identity and no-op commands reject (0.753582ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 149.995095

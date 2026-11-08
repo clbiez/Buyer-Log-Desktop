@@ -1,0 +1,67 @@
+{
+  "status": "primary-proposal-not-implemented",
+  "contract": "buyerlog.collection-owned-command",
+  "version": 1,
+  "scope": ["CPR-02", "CPR-03", "DS-09", "DS-07 companion", "CPR-10 companion", "raw-source ownership"],
+  "firstTarget": "KOLEKSIYON single-cell and affected-group mutation/persistence, not withCpBulkDraft",
+  "identity": {
+    "actor": "server/current-session verified actor; client hint never grants access",
+    "workspaceOwnerId": "captured Collection owner; never infer from CP buyer or array ordinal",
+    "view": "editable single-owner context; read-only/Multi-Buyer projections cannot persist",
+    "clientGeneration": "reject stale owner/source/workspace binding after switch/reload",
+    "operationId": "stable across retry for acknowledgement/replay idempotency",
+    "rows": "owner-scoped persisted row IDs with expected-existing/new distinction",
+    "rowBases": "existing row _rev CAS retained initially, including legacy zero",
+    "structureBase": "separate workspace revision only when schema/order/manufacturers/status structure changes",
+    "ownerReplicaBase": "opaque verified observed parent-head/lineage for future owner transport, not workspace revision alone"
+  },
+  "operations": {
+    "slot": {"path": "allowlisted semantic persisted field or approved nested unit", "before": {"present": "boolean", "value": "persistable JSON value when present"}, "after": {"present": "boolean", "value": "persistable JSON value when present"}},
+    "rowCreateDelete": "explicit typed row existence operation, original order/ID and nextId semantics; no deletion inferred from unrelated missing rows",
+    "group": "one transaction includes shared parent state, linked materialized values, variant override presence and membership guard",
+    "structure": "typed schema/order/group structural command; sparse checkpoint allowed until affected closure is proved",
+    "coupledValues": ["note plus rich HTML and same-PLM non-overridden peers", "pricing plus confirmation/current rule-derived fields through current semantic editor", "period plus dependent dates preserving explicit Retail", "group modelSharedValues/variantOverrides plus materialized row cells"],
+    "notGenericClientWritable": ["server _rev and owner metadata", "transient shared/server image projection URLs", "unvalidated financial derived fields", "native authority clocks/receipts"]
+  },
+  "copyAndNormalization": {
+    "prepare": "validate complete semantic unit before effects, copy changed mutable values/affected rows or group only",
+    "untouched": "preserve unknown persisted keys and read-only source references; no write through shared nested data",
+    "normalize": "load/migration and proved affected-group closure; unsupported structural units use explicit bounded checkpoint path",
+    "source": "existing immutable raw/worker source descriptor and owner/generation remain authoritative; no in-place mutation"
+  },
+  "localDurability": {
+    "format": "future versioned owner-bound command journal plus sparse checkpoint; final backend/schema undecided",
+    "success": "secured-local feedback only after recoverable journal commit; not equivalent to native fsync/server or remote publication",
+    "migration": "read existing pending schemas 1/2; preserve captured old bases/existence intent rather than rebasing by adoption",
+    "coalescing": "earliest before/latest after per unit with stable IDs; never discard newer in-flight local intent",
+    "compaction": "only after acknowledged operations/checkpoint durable boundary; limits and byte budget require explicit choice/evidence"
+  },
+  "undo": {
+    "record": "forward and inverse typed command per edit/group/paste with owner/base/dependency metadata and byte accounting",
+    "apply": "validate applicability/current after-state; retain remote unrelated fields; explicit conflict for same-field or membership change",
+    "bulk": "atomic primary Collection ACK before stack advancement; do not fabricate image/quotation atomic receipts",
+    "fallback": "sparse checkpoint for unproven structural commands, not 50 implicit full snapshots for ordinary cells"
+  },
+  "serverCompatibility": {
+    "current": "whole-row upserts/deletes over existing Collection PATCH with row _rev and structure CAS",
+    "initial": "materialize only touched rows into legacy request contract; no new field-level concurrency policy",
+    "later": "explicitly versioned field-patch adapter at current Collection route/save-worker; complete validation and live authority at commit",
+    "ack": "per-operation applied/conflict/revision outcomes; partial HTTP200 respected; atomic:true remains all-or-none on validation conflict",
+    "legacy": "full PUT and row PATCH remain supported during additive rollout"
+  },
+  "ownerTransport": {
+    "namespace": "permission-aware per-owner transport, never generic shared-collection delta pool",
+    "future": "small verified head + idempotent row/field deltas + ancestry-linked periodic checkpoints",
+    "preserve": ["owner view/edit/revoke", "equal-revision divergence", "three-way field conflicts with displaced intent retained", "delete-versus-edit and ID collision", "interrupted local save/remote publish recovery", "old-peer full-envelope compatibility"],
+    "status": "local primary ACK and remote publication tracked separately"
+  },
+  "walAndChecklist": {
+    "wal": "reuse queuePatches/appendOperations; native batch tombstones need a real operation interface; success after common fsync",
+    "crashAtomicity": "multi-line WAL crash replay requires proof/framing; one append does not prove atomic replay",
+    "checklist": "new durable answers/pending-journal batch commit with one event/delta sync/render; preserve existing single-answer and legacy notification wrapper until converted",
+    "text": "small durable dirty intent on input, 250-400ms expensive-work coalescing, blur/close/account flush",
+    "separateStores": "no claimed atomic Collection/checklist/CP override commit; checklist server leased JSON is not local-db WAL"
+  },
+  "productionDefaultEnabled": false,
+  "newWorkerMechanism": false
+}

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "/tmp/buyerlog-phase6a-orders-client-native-v1/tests/orders-projection-client.test.cjs"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 31,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "4f044a3560e2fbb8e0bfdfbf9527009abe23abb74e5e241a530888c960eec351"
+}

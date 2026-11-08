@@ -1,0 +1,120 @@
+/* REVIEW FRAGMENT ONLY — not an apply-ready app patch.
+ * All names beginning _ordersFinite below are proposed private declarations,
+ * not existing product functions. No index/perf-runtime method is chosen.
+ */
+
+// 1. Keep fetchOrdersProjection's ordinary branch byte-for-byte until root
+// installs lazy assets + all mutation initiators + full identity initialization.
+// Missing runtime, metadata mode:'full', failed complete capture or changed
+// token/schema/settings => existing ordinary GET. A first source/session can
+// use only the explicit cold form-free proof below; it never inherits an old
+// receipt just because its actor ID is unchanged.
+// Never pass caller-authored GUARDS as authorization, sample rows, synthesize a
+// producer universe or infer shared CP topology from names/horizon badges.
+
+// 2. First FULL initialization (candidate.initializeFull's settleOnFull):
+// - await the ACTUAL authHydrationPromise; a rejection is a loader error.
+// - fullWire is the ONLY JSON.parse result of bounded owned decoded bytes;
+//   preserve raw SHA/length before reviveServerDates; do not JSON.stringify rows.
+// - use the current ensureOrdersLoaded legacy body: reviveServerDates(rows),
+//   rows.map(row=>({...row,_canEdit:false})), source name, logistic clear,
+//   invalidateUnifiedPriorityDecisions, pricing, catalogs, buildOrdersFilters,
+//   applyCoreAutoFilterState. Do not parse/build CP rows.
+// - only while this is an established FULL module call actual
+//   syncCpModelColumns(verifiedOwnOrdersSchema.modelColumns), then actual
+//   BLFormulaColumns.syncColumns('orders') and migrateLegacyOrdersQuickFilters().
+//   The actual sync already invokes syncOrdersColumnsFromCp and migration;
+//   root should eliminate a redundant explicit sync if that exact path ran.
+// - captureOrdersFiniteInputs reads the actual settled registry and raw storage.
+//   Callback failure propagates; it cannot be reported as successful full init.
+// - compile(fullWire, context) validates the COMPLETE raw key union/count and
+//   actual live formulas/registry. Only then retain the private baseline.
+// - metadata GET before and after must be exact equal, and actual full identity
+//   headers must match. Ordinary X-Page-Cache-Generation alone does NOT suffice.
+//   Current ordinary full GET lacks these identity headers => leave baseline
+//   absent and keep full. No invalid omitted key / bogus plan request bootstrap.
+
+// 2b. Useful metadata-first exception, without any full Orders download:
+// Configure captureCold:captureOrdersColdEligibility and
+// waitCold:waitOrdersColdEligibility. Actual local effective/native/legacy/role
+// formula storage is explicitly null/[], actual definitions empty, DOM init
+// complete, no CP load/formula/model edit, exact bootstrap registered raw defs
+// match server own schema. The existing empty-definition migrateReferences
+// implementation has no row-dependent work, so no full-label barrier is added.
+// Concrete invocation is first Orders intent AFTER an already completed CP
+// metadata load/warmup; direct Orders-first with null bootstrap defs stays full.
+// This does not trigger CP load or rebuild its rows.
+// First accepted ready's ACTUAL worker raw full SHA/bytes and ACTUAL response
+// gzip/source/context headers become the private promotion parent. Use returned
+// accepted.parent; never construct raw checksum by echoing an expected object.
+
+// 3. Subsequent metadata request:
+// const negotiated = await _ordersFiniteClient.prepare(metadata, nonce);
+// if(negotiated.mode!=='ready') use the exact legacy ordinary full request.
+// Otherwise POST /api/page-projection/orders/ready with negotiated.body ONLY.
+// Parse the one existing gzip JSON format using bounded decoded bytes; neither
+// response.json()/text() nor unbounded arrayBuffer() is an admitted ready path.
+// Generation/actor/session invalidation is checked after EVERY await, including
+// metadata fetch, body read, digest and parsing, BEFORE state.orders publication.
+// const accepted = await _ordersFiniteClient.accept(negotiated, response);
+// accepted.mode==='full' => existing full hydration, never mark projection thin.
+// accepted.mode==='ready' => keep actual full module top-level metadata, revive
+// retained rows and apply the SAME read-only _canEdit:false row adaptation.
+// Do not call syncCpModelColumns or migrateReferences on a thin source.
+// Set projectionProfile:'thin'; install the existing WeakMap controller and
+// _ordersCurrentFiniteReceipt before any private renderer can use those rows.
+// _ordersCurrentFiniteReceipt wraps both accepted.assertCurrent and live source,
+// pointer/session/mutation/selection state. This is a new proposed local record.
+
+// 4. Existing promotion helper, not a second promotion implementation:
+// const controller = BLOrdersFullPromotion.create({snapshot,fetchFull,normalize,
+//   publish,isCurrent});
+// fetchFull = BLOrdersProjectionClient.createFetchFull({promotionApi:
+//   BLOrdersFullPromotion,fetch,sha256Bytes,live:()=>_ordersFiniteCurrentParent});
+// live() reads the actually accepted private ready record and current local
+// session epoch/plan reference; it MUST NOT reconstruct an expected response.
+// parent raw SHA comes from accepted ready.projection.viewInfo.fullJsonSha256;
+// gzip SHA from the ACTUAL X-Orders-Full-Gzip-Sha256 response header. They differ.
+// pageContextSha256 and broadContextSha256 are separate actual header values.
+// snapshot.requiredKeys = [] unless each key is independently proved present
+// on EVERY source row. Never use plan.fields or a sampled intersection here.
+// snapshot.ordinals uses current source row positions; duplicate _id/business
+// codes stay separate. Selected rows must come from actual selected row refs;
+// do not equate selected business IDs with unique ordinals.
+// normalize operates on full parsed rows only. Existing helper checks every
+// original per-row full shape, caps bytes and verifies the owned raw digest.
+// publish is synchronous compare-and-swap of module pointer + selected refs,
+// with actual assertCurrent inside the callback; no await/render/save there.
+// A full-parent 409 aborts this action. It is not retried via ready or a newer
+// ordinary source. The user can initiate a separate fresh full load.
+
+// 5. All dangerous mutators, including CP-origin shared column mutations:
+function withOrdersFullBeforeChange(reason, stillCurrent, change){
+  // Proposed private helper. Preserve the established synchronous full path.
+  if(!ordersProjectionIsThin())return change();
+  const original=state.orders;
+  return ensureOrdersFullForAction(reason).then(()=>{
+    if(ordersProjectionIsThin()||state.orders===original||stillCurrent()!==true)
+      throw ordersFullActionError('ORDERS_FULL_STALE');
+    return change();
+  });
+}
+// Each ASYNC initiator must capture its actual target before awaiting and use
+// stillCurrent to recheck node connectivity, selected key/menu/table/workspace
+// reference as appropriate; never capture its old row after the full await.
+// The guarded synchronous sinks in guard-recipe.cjs additionally reject a thin
+// race BEFORE their legacy bodies. Throwing from an unadapted UI listener is a
+// fail-closed implementation boundary, not a completed user flow.
+
+// 6. Global source/config/session changes:
+// At the FIRST entry to loadFromServer, shared master refresh, SSE/source and
+// access/session replacement, cancel/retire in-flight finite requests before
+// their first asynchronous work. Increment projectionRequestGeneration.orders.
+// External source change may make the old full parent unavailable: retire and
+// unpublish the old thin module BEFORE applying new global configuration;
+// continue with an explicit new ordinary full load. Do not promote another
+// owner's/current source into the old pending action.
+// User-initiated settings/model edits must FULL-before-change, then invalidate
+// the baseline before the first edit. Preserve current error/UI handling.
+// No full request/promotion can be reused across logout/login even for same ID:
+// use a local session epoch that changes on every session replacement.

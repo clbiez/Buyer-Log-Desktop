@@ -1,0 +1,26 @@
+{
+  "status": "preparation-only-unrun",
+  "readRepository": "/workspace/buyerlog-authority-fix",
+  "capturedRef": "origin/main",
+  "commit": "9cac38237205e83b2806e492d580bfa601220690",
+  "designPacket": "/tmp/buyerlog-phase6c-contract-design",
+  "designPacketBaseline": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "designFilesRead": ["README.md", "collection-patch-contract.json", "call-chains.md"],
+  "sourceBlobs": {
+    "CLAUDE.md": "0e5d7ac16b188a00719f65abee824cb744ba2e32",
+    "AGENTS.md": "8df7bb6c044a670859ddffc899be20d7db54196f",
+    "resources/app/public/app-main.js": "1311e659e818e8227840a6258498f98283897e91",
+    "resources/app/public/collection-model-groups.js": "f5da3a90ea4af8a7216c1b270299621acad97167",
+    "resources/app/server/lib/collection-workspaces.js": "d95e384de2c378c0b199b8730ba962b0d8babe35",
+    "resources/app/server/routes/oab-batch-routes.js": "fed76acfe4d5208b0c493efe2b79a2bbd0d55e0f",
+    "resources/app/server/collection-save-worker.js": "6daeca545f5d5f1aef6d1711e40fb155b5376e5d"
+  },
+  "runtimeCommandsRun": [],
+  "testCommandsRun": [],
+  "benchmarkCommandsRun": [],
+  "productionDefaultEnabled": false,
+  "productWiringAllowedBefore6a": false,
+  "unrunCommands": [
+    "node --test /tmp/buyerlog-phase6c-field-command-preparation/collection-field-command.test.cjs"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "status": "targeted-read-only-feasibility-no-implementation",
+  "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "repository": "/workspace/buyerlog-post-main-acceptance",
+  "readMethod": "git show 1796193f:<path>; local 6a/f076 working sources not read",
+  "executed": { "tests": false, "syntax": false, "modules": false, "benchmarks": false, "workers": false },
+  "blobs": {
+    "resources/app/server/server.js": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+    "resources/app/server/collection-save-worker.js": "6daeca545f5d5f1aef6d1711e40fb155b5376e5d",
+    "resources/app/server/lib/collection-save-worker-client.js": "8ef5988a9dc1ce71caa03ed4014c2a9a13734711",
+    "resources/app/server/lib/collection-workspaces.js": "d95e384de2c378c0b199b8730ba962b0d8babe35",
+    "resources/app/server/lib/delta-store.js": "56b1169e551c5df4a1281e2576cb7f726f8fb9a9",
+    "resources/app/server/lib/local-db.js": "32350fc8097aa5faea478b280bee748367d2cb2a",
+    "resources/app/server/lib/collection-replication.js": "a5aca11605ac72bc6fda4f6abadc9e644034bb54"
+  },
+  "priorEvidenceReadOnly": "/tmp/buyerlog-phase6c-delta-commit-preparation/root-native-first/receipt.json"
+}

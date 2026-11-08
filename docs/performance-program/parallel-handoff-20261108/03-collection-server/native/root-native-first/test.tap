@@ -1,0 +1,35 @@
+✔ one native private frame contains touched rows plus receipt; legacy mirror and journal survive (69.392363ms)
+✔ actual existing peer and checkpoint policy excludes the new private owner records (53.970613ms)
+✔ absence, explicit null, zero and false remain distinct through real disk replay (76.335041ms)
+✔ batch changes row revision once; legacy missing _rev starts at zero (28.385254ms)
+✔ row-CAS adaptation rejects stale disjoint field; explicit field merge can accept it (33.712756ms)
+✔ three-way conflict keeps current and all intent evidence; atomic peer fields do not leak (27.914134ms)
+✔ converged incoming and no incoming delta preserve current row revision (35.657343ms)
+✔ inverse preserves a newer unrelated field (43.741897ms)
+✔ inverse rejects a same-field ABA even when after value matches again (42.214354ms)
+✔ stale owner, source generation and structure fail before a service append (33.765904ms)
+✔ fresh asynchronous pre-append authority denial leaves no transaction or row effects (31.397751ms)
+✔ revocation after durable append withholds projection; it does not claim rollback (26.819293ms)
+✔ concurrent duplicate replay appends once and returns the original durable receipt (38.014864ms)
+✔ same transaction ID with different intent is rejected without rewriting history (32.378034ms)
+✔ lost acknowledgment after actual native fsync retries the same transaction exactly once (31.316639ms)
+✔ service promise does not report durable success before actual WAL fsync settles (34.497536ms)
+✔ native WAL write failure invalidates mutated cache and leaves no partial row/receipt (27.265419ms)
+✔ real replay exposes neither half of a torn private frame and accepts complete frame without newline (65.701091ms)
+✔ checksum corruption blocks append without replacing historical WAL bytes (28.297363ms)
+✔ legacy full-state adapter keeps unknown structure, captures row-CAS and blocks structural edits (20.608864ms)
+✔ old full-state expected workspace CAS is not weakened to disjoint-row acceptance (32.475503ms)
+✔ group and coupled fields fail closed; no scalar substitution into shared/override state (32.38395ms)
+✔ missing adopted source is explicit; existing generic full-state mirror is not silently imported (20.370065ms)
+✔ existing snapshot/WAL rotation preserves transaction receipt and inverse field clock on cold replay (71.85244ms)
+✔ source handoff membership stamp mismatch fails before scalar field mutation (22.876128ms)
+✔ unsupported checklist/coupled companion payload is rejected rather than silently acknowledged (23.967908ms)
+✔ Collection batch does not clear separately owned checklist JSON/evidence or pending journal (24.930048ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1143.356196

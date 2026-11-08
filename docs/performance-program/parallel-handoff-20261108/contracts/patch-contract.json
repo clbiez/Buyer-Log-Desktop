@@ -1,0 +1,71 @@
+{
+  "status": "auxiliary-CP-only-not-primary-6c-scope",
+  "scopeCorrection": "Original CP Tracker proposal preserved as auxiliary; primary user target is Collection and collection-patch-contract.json",
+  "contract": "buyerlog.cp-owned-field-delta",
+  "version": 1,
+  "initialLocation": "client-memory-only; legacy request bodies and durable formats unchanged",
+  "wireDefault": "not-enabled",
+  "context": {
+    "sessionOwnerId": "captured current user ID; not business owner authority",
+    "module": "cp",
+    "sourceRevision": "opaque existing source/read stamp; never descriptor capability",
+    "viewRevision": "current row-array/derived input revision",
+    "ordersRevision": "existing server orders CAS",
+    "suppFobRevision": "existing extra CAS for price-related units",
+    "noteColumnDefsRevision": "required when custom note values are involved"
+  },
+  "target": {
+    "businessLineKey": "existing lineKeyOfRow/overrideWriteKey semantics",
+    "selector": {"orderCode": "123", "model": "MODEL", "ccode": "BLUE"},
+    "rowReference": "module+source/view generation+ordinal for display binding only",
+    "duplicatePolicy": "existing business-key peer fanout; no invented unique owner/source row"
+  },
+  "slotEncoding": {
+    "missing": {"present": false},
+    "ownUndefinedLocalOnly": {"present": true, "kind": "undefined"},
+    "null": {"present": true, "kind": "json", "value": null},
+    "false": {"present": true, "kind": "json", "value": false},
+    "zero": {"present": true, "kind": "json", "value": 0},
+    "dateLocalOnly": {"present": true, "kind": "date-only", "value": "2026-11-07"},
+    "rule": "never null-pad missing keys or compare them only with JSON.stringify; unsupported values/accessors/prototypes return unsupported before effects"
+  },
+  "forwardExample": {
+    "unit": "notes-primary",
+    "slots": [
+      {"domain": "display", "fieldKey": "Notes", "before": {"present": true, "kind": "json", "value": "old"}, "after": {"present": true, "kind": "json", "value": "new"}},
+      {"domain": "display", "fieldKey": "NotesHtml", "before": {"present": true, "kind": "json", "value": ""}, "after": {"present": true, "kind": "json", "value": "<b>new</b>"}}
+    ],
+    "legacyIntent": {"model": "MODEL", "ccode": "BLUE", "notes": {"Notes": "new", "NotesHtml": "<b>new</b>"}},
+    "serverMetadata": "saved author/time comes from server response/saved source, never client ownership claims"
+  },
+  "inverseExample": {
+    "unit": "notes-primary",
+    "expected": "the acknowledged normalized after slots and applicable current revision/context",
+    "restore": "the captured before slots/presence and original override intent",
+    "serverRestriction": "ordinary legacy note writes restamp authors and may create a tombstone; exact native absence/authorship undo needs a trusted receipt adapter, so unsupported network inverses stay on existing history path"
+  },
+  "applicationRules": [
+    "Validate the complete unit/batch, owner context and all before slots before effects; no partial helper application.",
+    "Preparation clones only touched row/map records and mutable changed values; borrow untouched values read-only.",
+    "Authoritative raw snapshots and common compute replicas remain immutable to client helpers.",
+    "ACK applies a unit only when every current slot matches captured-before, including presence and type; later local edits remain pending.",
+    "Destination rows retain their object identity; update peer indexes/derived input revisions through existing root-owned hooks.",
+    "Forward coalescing keeps earliest before and latest after; inverse reverses unit order and swaps slots only after semantic adapter eligibility.",
+    "Undo on changed owner/source/revision/field value does not overwrite current data or advance stacks as if successful.",
+    "Unrecognized field families use the old complete path for the entire batch; do not partially apply supported rows and discard the rest."
+  ],
+  "semanticUnits": [
+    {"name": "notes-primary/extra", "coupled": ["text", "rich HTML", "saved author/time response"], "ownerGate": "existing edit scope; preserve note writer policy", "inverseGate": "presence/fallback/server-authorship receipt semantics"},
+    {"name": "custom-note", "coupled": ["definition ID", "value", "definition revision"], "ownerGate": "existing edit scope", "inverseGate": "definition still exists and revision matches"},
+    {"name": "delivery-type", "canonicalId": "deliveryType", "coupled": ["production segment", "arrival", "derived formulas"], "ownerGate": "existing edit scope", "inverseGate": "absent delivery override is not expressible as delType:null; retain old path unless exact native adapter exists"},
+    {"name": "date-revision", "canonicalIds": ["exFactory", "retailDate", "inStore"], "coupled": ["override presence", "baseline/revision metadata", "automatic-date guard", "date subfield"], "ownerGate": "existing shared owner plus edit scope", "inverseGate": "existing date/null removal and receipt semantics"},
+    {"name": "supplier-price", "canonicalId": "supplierFob", "coupled": ["manual/imported/rule intent", "metadata", "licensor-dependent recalculation", "SuppFOB revision"], "ownerGate": "existing shared owner plus edit scope", "inverseGate": "existing pricingRestore and current-rule recalculation; not display scalar rollback"}
+  ],
+  "excludedInitialFamilies": ["identity edits", "source rows/raw bags", "images", "shipping", "Collection", "formula outputs", "unknown custom/model columns", "checklist storage migration", "generic JSON Patch endpoint"],
+  "futureAdditiveReceiptBoundary": {
+    "optionalResponseOnly": "versioned appliedChanges/receiptRef only for opted-in supported units; legacy response fields remain",
+    "requiredGuards": ["server-captured before/after", "actor/session binding", "record and allowed-field binding", "global CAS retained", "fresh owner check at actual commit", "expiry/bounded storage", "idempotent replay outcome"],
+    "prohibited": "accepting arbitrary browser-supplied native receipt maps or claiming a detached CP mirror is already WAL durable",
+    "state": "separate bounded follow-up, blocked until persistence/absence semantics are closed"
+  }
+}

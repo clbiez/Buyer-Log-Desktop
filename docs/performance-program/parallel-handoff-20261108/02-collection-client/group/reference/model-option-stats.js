@@ -1,0 +1,80 @@
+(function(root,factory){
+  const api=factory();
+  if(typeof module==='object'&&module.exports)module.exports=api;
+  else root.BLModelOptionStats=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
+  'use strict';
+
+  const MODEL_FIELDS=['modelKod','Model Name','modelName','model','styleName','modelCode'];
+  const PLM_FIELDS=['plmId','PLM ID','plm','plmID'];
+  const STYLE_FIELDS=['styleId','Style ID','styleCode','Style Code'];
+  const COLOUR_CODE_FIELDS=['colourCode','colorCode','C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu'];
+  const ORDER_FIELDS=['Order Code','orderCode','ORDER CODE','OrderCode','Sipariş Kod','Sipariş Kodu','ocode'];
+  const text=value=>String(value==null?'':value).trim().replace(/\s+/g,' ');
+  // Aynı model/renk metni binlerce satırda tekrarlanır; tr-TR büyük harf
+  // dönüşümü sınırlı önbellekle bir kez yapılır.
+  const KEY_TEXT_CACHE_MAX=20000,keyTextCache=new Map();
+  const keyText=value=>{
+    const raw=value==null?'':value;
+    if(typeof raw!=='string'&&typeof raw!=='number')return text(raw).toLocaleUpperCase('tr-TR');
+    // Numeric identities have no case. Keeping 33k unique order codes in the
+    // text cache evicted the repeatedly used model/colour labels every pass.
+    const numericText=String(raw).trim();
+    if(/^\d+$/.test(numericText))return numericText;
+    let key=keyTextCache.get(raw);
+    if(key===undefined){
+      if(keyTextCache.size>=KEY_TEXT_CACHE_MAX)keyTextCache.clear();
+      key=text(raw).toLocaleUpperCase('tr-TR');keyTextCache.set(raw,key);
+    }
+    return key;
+  };
+  const first=(row,fields)=>{for(const field of fields){const value=text(row?.[field]);if(value)return value;}return '';};
+  const stableId=(row)=>first(row,['id','_id','rowId']);
+
+  function modelKey(row,index=0){
+    const plm=keyText(first(row,PLM_FIELDS)),model=keyText(first(row,MODEL_FIELDS)),style=keyText(first(row,STYLE_FIELDS));
+    if(plm&&model)return `plm:${plm}|model:${model}`;
+    if(plm)return `plm:${plm}`;
+    if(style&&model)return `style:${style}|model:${model}`;
+    if(style)return `style:${style}`;
+    if(model)return `model:${model}`;
+    const id=keyText(stableId(row));
+    return id?`row:${id}`:`unknown-row:${index}`;
+  }
+
+  // knownModel: aynı satır için zaten hesaplanmış modelKey (dizi geri çağrısının 3. argümanı sayılmaz).
+  function optionKey(row,index=0,knownModel){
+    const colourCode=keyText(first(row,COLOUR_CODE_FIELDS));
+    const model=typeof knownModel==='string'?knownModel:modelKey(row,index);
+    return colourCode?`${model}|colour:${colourCode}`:`row:${keyText(stableId(row))||index}`;
+  }
+
+  function orderKey(row){
+    const order=keyText(first(row,ORDER_FIELDS));
+    return order?`order:${order}`:'';
+  }
+
+  function getOrderCount(rows){
+    const list=Array.isArray(rows)?rows:[],orders=new Set();
+    list.forEach(row=>{const order=orderKey(row);if(order)orders.add(order);});
+    return orders.size;
+  }
+
+  function getModelOptionStats(rows,options={}){
+    const list=Array.isArray(rows)?rows:[];
+    const modelFor=typeof options.modelKey==='function'?options.modelKey:modelKey;
+    const optionFor=typeof options.optionKey==='function'?options.optionKey:optionKey;
+    const models=new Set(),optionsSeen=new Set();
+    // Varsayılan anahtarlarda opsiyon, aynı satırın model anahtarını yeniden hesaplamaz.
+    const defaultKeys=modelFor===modelKey&&optionFor===optionKey;
+    list.forEach((row,index)=>{
+      const rawModel=modelFor(row,index),model=keyText(rawModel);if(model)models.add(model);
+      if(options.optionMode==='unique'){
+        const option=keyText(defaultKeys?optionKey(row,index,rawModel):optionFor(row,index));if(option)optionsSeen.add(option);
+      }
+    });
+    return {rowCount:list.length,modelCount:models.size,optionCount:options.optionMode==='unique'?optionsSeen.size:list.length};
+  }
+
+  return {modelKey,optionKey,orderKey,getOrderCount,getModelOptionStats,normalize:text};
+});

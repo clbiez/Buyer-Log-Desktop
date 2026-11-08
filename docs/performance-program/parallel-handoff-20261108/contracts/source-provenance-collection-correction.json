@@ -1,0 +1,47 @@
+{
+  "status": "read-only-scope-correction-no-implementation",
+  "baselineRoot": "/tmp/buyerlog-post901-baseline",
+  "baselineMain": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "authoritativeFinding": {
+    "repository": "clbiez/Buyer-Log-Desktop",
+    "ref": "claude/wonderful-archimedes-a7dzwr",
+    "path": "docs/performance/2026-11-05-codex-review-findings.md",
+    "gitBlob": "95b0fed2b815f56a3345f325de062449ea784e01",
+    "selectedSectionsOnly": { "CPR-02": 190, "CPR-03": 200, "DS-09": 500, "DS-07": 480, "CPR-10": 270 }
+  },
+  "targetedFilesClean": true,
+  "gitBlobs": {
+    "resources/app/public/app-main.js": "1311e659e818e8227840a6258498f98283897e91",
+    "resources/app/public/collection-model-groups.js": "f5da3a90ea4af8a7216c1b270299621acad97167",
+    "resources/app/server/lib/collection-workspaces.js": "d95e384de2c378c0b199b8730ba962b0d8babe35",
+    "resources/app/server/lib/collection-replication.js": "a5aca11605ac72bc6fda4f6abadc9e644034bb54",
+    "resources/app/server/routes/oab-batch-routes.js": "fed76acfe4d5208b0c493efe2b79a2bbd0d55e0f",
+    "resources/app/server/collection-save-worker.js": "6daeca545f5d5f1aef6d1711e40fb155b5376e5d",
+    "resources/app/server/lib/collection-save-worker-client.js": "8ef5988a9dc1ce71caa03ed4014c2a9a13734711",
+    "resources/app/public/cp-overview-assistant.js": "68ba15cf6e60ed5fd984c4024e852a8c44e64a0d",
+    "resources/app/public/checklist-supplier-sync.js": "c9af2ae76cec1a4a5a78438c8bcb103cc83ed2e1",
+    "resources/app/server/lib/local-db.js": "32350fc8097aa5faea478b280bee748367d2cb2a",
+    "resources/app/server/lib/delta-store.js": "56b1169e551c5df4a1281e2576cb7f726f8fb9a9",
+    "resources/app/server/lib/cp-shared-store.js": "f775bf46b12a50d87705401375f33a3fa66a8c56",
+    "resources/app/server/routes/checklist-supplier-routes.js": "c20a23a9165e449f5001c6996836f04580485faf",
+    "resources/app/server/lib/checklist-supplier-store.js": "dbe99d7c6775064911e47dc228ab11167a606d11"
+  },
+  "correction": {
+    "primary": "Collection single-cell/group persistence, command/inverse undo, owner-sharing deltas",
+    "companions": ["DS07 native WAL batches", "CPR10 durable checklist batches/text flush", "raw source ownership"],
+    "auxiliary": "CP Tracker override/bulk/owner notes archived intact; not a replacement for Collection requirements",
+    "archive": "prior-cp-auxiliary-20261107",
+    "originalSha256": {
+      "README.md": "df99a2705d10e65f80fd9cefa0716a3ecc9e6400ce92081a917b1617e6223a3d",
+      "call-chains.md": "2a20a8aee2f3d94dffa0315411c5a89b49d8bb62caf784568e7dfff6a47a9378",
+      "file-sequence.json": "383c9e288b680ba1f3c7f21021622249154fd0aac1b90631fc83cc2600117b8a",
+      "validation-matrix.json": "b1207df716c243c173d82f76a83e7c29eacb5170bae384199833ca5ad090a37c"
+    }
+  },
+  "authorityScope": "Existing Main5b8 Collection/checklist call-chain context only; no independent current #908 security review or fix",
+  "testsBenchmarksTracesRun": false,
+  "repositoryEdits": false,
+  "newInventory": false,
+  "newWorkerMechanism": false,
+  "phase6cStarted": false
+}

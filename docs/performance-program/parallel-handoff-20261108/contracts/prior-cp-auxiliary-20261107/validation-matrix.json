@@ -1,0 +1,57 @@
+{
+  "status": "planned-none-run",
+  "baselineMain": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "requiredBeforeWiring": [
+    {"id":"C01","case":"missing / own undefined / null / false / zero / empty string / Date-only slots","assert":"forward+inverse preserve presence and types; no JSON.stringify-only equality or null padding"},
+    {"id":"C02","case":"unknown custom keys, symbols/descriptors/accessors, nested metadata","assert":"unknown untouched; unsupported shapes reject before effects; source remains frozen/unchanged"},
+    {"id":"C03","case":"two display owners sharing a nested price/note object","assert":"mutation and inverse in one destination cannot write through another owner or raw/worker snapshot"},
+    {"id":"C04","case":"unit with one stale current slot among several coupled slots","assert":"whole unit remains unapplied/conflicted; no mixed text/HTML/price metadata state"},
+    {"id":"C05","case":"coalesced same-field edits and multi-unit inverse","assert":"earliest before/latest after retained; inverse order reversed; old unrelated fields unchanged"},
+    {"id":"C06","case":"confirmed bulk path versus current full-clone path","assert":"same legacy intents, supported row values/metadata, derived decisions and ACK revisions"},
+    {"id":"C07","case":"local edit B occurs while edit A waits for ACK","assert":"ACK A cannot overwrite B in row or corresponding override-map slot; B remains pending"},
+    {"id":"C08","case":"single undo/redo and bulk undo transport failure/409","assert":"no success-like stack advancement or loss of pending intent; bulk guards retained; no automatic blind retry"},
+    {"id":"C09","case":"session owner switch/source refresh/module row-array replacement while draft is pending","assert":"old operation cannot bind reused ordinal/new owner; retain or reject explicitly; re-resolve current canonical identity"},
+    {"id":"C10","case":"same order/model/colour on multiple display rows, missing model or colour","assert":"existing business-key fanout/order fallback preserved; no invented source owner; ambiguity stays explicit"}
+  ],
+  "ownershipAuthority": [
+    {"id":"A01","case":"verified owner / same-MAG manager / moderator","assert":"existing decisions retained: owner permitted, unrelated manager cannot replace owner, trusted moderator rule unchanged","existing":"cp-field-ownership-v20261009.test.js"},
+    {"id":"A02","case":"unknown order/owner, mixed known owners, renamed stable ID, duplicate identity","assert":"preserve known:false legacy paths and ambiguity; no field-delta shortcut manufactures authority","existing":"cp-field-ownership-v20261009.test.js"},
+    {"id":"A03","case":"forged client owner hint or _canEditShared plus nested protected field","assert":"server/native resolver and original protected semantic fields remain authoritative; no arbitrary field-path bypass"},
+    {"id":"A04","case":"authority changes while new optional journal/receipt adapter waits for lease","assert":"trusted current callback under actual commit rejects before WAL effects; early captured UI/worker decision is insufficient","existing":"localDb.queuePatches assertCurrent and deltaStore.mirror assertAuthority"},
+    {"id":"A05","case":"foreign owner's incoming shared-field delta, duplicate delivery","assert":"receipt-only/no business mutation where currently prescribed; receipts/idempotency remain; no suppression of unrelated valid sync progress","existing":"local-db-business-integrity.test.js"},
+    {"id":"A06","case":"reusing an inverse receipt under another actor, record, unit or revision","assert":"new network receipt boundary rejects before mutation; native trusted maps never accepted as generic browser input"}
+  ],
+  "semanticAndDurableBoundaries": [
+    {"id":"D01","case":"manual/rule/imported SuppFOB, zero price, changed royalty","assert":"preserve pricing intent, imported source, metadata presence and current-rule recalculation; both orders+SuppFOB fences","existing":"cp-pricing-history.test.js"},
+    {"id":"D02","case":"date removal versus automatic Ex-factory plus two peers editing separate dates","assert":"null removes override rather than freezing source; automatic dates stay read-only; existing subfield convergence preserved"},
+    {"id":"D03","case":"note deletion over an old order-level note; note author/time; rich HTML","assert":"no legacy-note resurrection or forged author; text/HTML pair exact; absence inverse uses a proved native semantic path","existing":"delta-store-overrides-v806.test.js"},
+    {"id":"D04","case":"custom-note column deleted/redefined while editing/undoing","assert":"definition fence rejects; no silent skipped field or resurrection; original baseline receipts still supported"},
+    {"id":"D05","case":"local WAL fsync/append/checksum/torn tail failure, then restart","assert":"no uncommitted cached effect; same event ID/clock replay; original byte/durability assertions retained","existing":["local-db-wal-v807.test.js","local-db-wal-tail-recovery.test.js","local-db-crash-recovery.test.js"]},
+    {"id":"D06","case":"HTTP override save succeeds but detached mirror later fails","assert":"do not label HTTP result WAL-confirmed; any new durable pending journal remains until its defined durable boundary is observed"},
+    {"id":"D07","case":"checklist edit during in-flight ACK, 401/403, stale supplier import, open tombstone, omitted attachments/elements","assert":"accepted-key drain retains newer/denied changes and evidence; separate store/current authority maintained","existing":["checklist-durability.test.js","checklist-forbidden-retry-v20261027.test.js","checklist-remote-merge-noop.test.js"]},
+    {"id":"D08","case":"CP edit plus checklist edit fail at different durable boundaries","assert":"no atomic combined success/undo claim; no cleanup of one pending owner based on the other owner's ACK"},
+    {"id":"D09","case":"partial unsafe live row patch / currently edited row / projection rewrite failure","assert":"whole notification falls back to reload where required; active editor deferred; source remains saved and stale projection is not reused"},
+    {"id":"D10","case":"6a wire source sharing, phase6c touched-value clones and module revisit","assert":"wire missing/key order contract retained; no mutating borrowed source values; correct peer index/derived revision invalidation"}
+  ],
+  "existingRegressionFilesToPreserve": [
+    "resources/app/tests/cp-peer-identity-history.test.js",
+    "resources/app/tests/cp-pricing-history.test.js",
+    "resources/app/tests/cp-orders-hydration-revision.test.js",
+    "resources/app/tests/cp-field-ownership-v20261009.test.js",
+    "resources/app/tests/user-access-shared-owner-v20261009.test.js",
+    "resources/app/tests/delta-store-overrides-v806.test.js",
+    "resources/app/tests/delta-store-hydrate-inflight-v20260926.test.js",
+    "resources/app/tests/local-db-business-integrity.test.js",
+    "resources/app/tests/local-db-wal-v807.test.js",
+    "resources/app/tests/local-db-wal-tail-recovery.test.js",
+    "resources/app/tests/local-db-wal-metadata.test.js",
+    "resources/app/tests/local-db-crash-recovery.test.js",
+    "resources/app/tests/checklist-durability.test.js",
+    "resources/app/tests/checklist-forbidden-retry-v20261027.test.js",
+    "resources/app/tests/checklist-answer-batch-notify.test.js",
+    "resources/app/tests/checklist-remote-merge-noop.test.js"
+  ],
+  "closingGate": "After implementation: targeted meaningful tests then required current-tree/full Phase6 regression and applicable frozen-diff independent risk review. No assertion/threshold weakening, no skipped mandatory cases counted green.",
+  "testsExecutedForThisPacket": false,
+  "benchmarkExecutedForThisPacket": false
+}

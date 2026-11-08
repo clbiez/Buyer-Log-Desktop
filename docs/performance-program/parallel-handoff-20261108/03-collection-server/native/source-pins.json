@@ -1,0 +1,29 @@
+{
+  "status": "inactive-preparation-unrun",
+  "repository": "/workspace/buyerlog-post-main-acceptance",
+  "readMethod": "git show 1796193f:<path>; no working-tree f076/6a sources read",
+  "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "historicalFieldAndGroupCommit": "9cac38237205e83b2806e492d580bfa601220690",
+  "originalContract": "/tmp/buyerlog-phase6c-contract-design/collection-patch-contract.json",
+  "execution": { "tests": false, "syntax": false, "moduleLoad": false, "benchmark": false, "workers": false },
+  "copiedReferenceBlobs": {
+    "resources/app/server/lib/local-db.js": "32350fc8097aa5faea478b280bee748367d2cb2a",
+    "resources/app/server/lib/shared-file-transaction.js": "af8979342626fb9008748d7c70132e7e93382eef",
+    "resources/app/server/lib/local-path-policy.js": "f69cbe7ddfbdf20dfca9be99f79364f5e832fcc1",
+    "resources/app/server/lib/durable-file-recovery.js": "3441406f2ee382dac62e466cd212f6b8aaa58e92",
+    "resources/app/server/lib/large-json.js": "a169005c00be1f98f3ed5e7bb73df2dbe76141e2",
+    "resources/app/server/lib/hlc.js": "a8027fe680005da99383335954f99d8b85fa8a79",
+    "resources/app/server/lib/hlc-email-list.js": "23ce9d5da8ebaca073163a4db2dc0719bfcfa823",
+    "resources/app/server/lib/quotation-ledger.js": "66ba9456deac177547424c09992a36f5331d3e89",
+    "resources/app/server/lib/lease-worker-registry.js": "377b3984ddf0172090807092a48e2336905867af",
+    "resources/app/server/lib/shared-sync-policy.js": "9ab31f1f302a2e93ef58cc5dfa0c0b45304dd8b6"
+  },
+  "readOnlyCallChainBlobs": {
+    "resources/app/server/lib/delta-store.js": "56b1169e551c5df4a1281e2576cb7f726f8fb9a9",
+    "resources/app/server/lib/collection-replication.js": "a5aca11605ac72bc6fda4f6abadc9e644034bb54",
+    "resources/app/server/lib/checklist-supplier-store.js": "dbe99d7c6775064911e47dc228ab11167a606d11",
+    "resources/app/public/checklist-supplier-sync.js": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+    "resources/app/public/cp-overview-assistant.js": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+    "resources/app/server/lib/collection-workspaces.js": "d95e384de2c378c0b199b8730ba962b0d8babe35"
+  }
+}

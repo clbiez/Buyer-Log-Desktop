@@ -1,0 +1,332 @@
+[
+  {
+    "file": "01-orders-client/README.md",
+    "sha256": "1470dce63acc48cba29160bf21568b4747bd39663340d70e8d3a251c8631726c",
+    "bytes": 8704
+  },
+  {
+    "file": "01-orders-client/call-chain.md",
+    "sha256": "05f6850b14f71491f38abe4c237bccee935c311cad67ed841363580258f55e86",
+    "bytes": 7445
+  },
+  {
+    "file": "01-orders-client/candidate/orders-projection-client.js",
+    "sha256": "baf27ade326568270b6d3b1cd60ad5061838eebdbbf456366688d86e3b51eaf2",
+    "bytes": 18659
+  },
+  {
+    "file": "01-orders-client/helper-adoption.patch",
+    "sha256": "7f5880bfd83ef4ef01abfe526748431e27d7e0e822ae0b30458eb6689a58b7d5",
+    "bytes": 19128
+  },
+  {
+    "file": "01-orders-client/helper-adoption.raw.patch",
+    "sha256": "47065b935a2de6a616cafbfa89b4f1f542c8337967961efa9a1880e691144a73",
+    "bytes": 19236
+  },
+  {
+    "file": "01-orders-client/packet.sha256",
+    "sha256": "dfdc65585d9f6da1f2bd9c46c6e86a8bbdbdd9e544d1ec854332731b1d1c52e8",
+    "bytes": 820
+  },
+  {
+    "file": "01-orders-client/snippets/app-seams.js",
+    "sha256": "27586659f024e9bd5bca2bc262f3717a702b4d12be206d8154cc35222750cde8",
+    "bytes": 8561
+  },
+  {
+    "file": "01-orders-client/snippets/fetch-ensure.fragment.js.txt",
+    "sha256": "4fcff396538508736ce6fb44b991f1b074e7c333f77712385f52323fdda11a29",
+    "bytes": 8140
+  },
+  {
+    "file": "01-orders-client/snippets/guard-recipe.cjs",
+    "sha256": "343b0925dee72e48a88c88a71728d7a11e4079179d0cd1202e70fdb506f0fe92",
+    "bytes": 1685
+  },
+  {
+    "file": "01-orders-client/source-pins.txt",
+    "sha256": "a45fe446bad2a9426b81219bb1cbf6f9683d8b44d8ecab6d1eecbc46d961ee4e",
+    "bytes": 1887
+  },
+  {
+    "file": "01-orders-client/tests/orders-projection-client.test.cjs",
+    "sha256": "37b29a35e9ae21cbcca17b9ee8a1d3b85899e730fc6825549c9943571197fcb9",
+    "bytes": 24709
+  },
+  {
+    "file": "02-collection-client/field/README.md",
+    "sha256": "3c52c08ef5289d1de3953f6d833ee4abc7fe47dc071ba321ac07d8d95f15cfb9",
+    "bytes": 10013
+  },
+  {
+    "file": "02-collection-client/field/collection-field-command.cjs",
+    "sha256": "ab1f052d4ccfa333b98b942f8b484a8e63ac6d0a2a579f113c5499c95cf89311",
+    "bytes": 14572
+  },
+  {
+    "file": "02-collection-client/field/collection-field-command.test.cjs",
+    "sha256": "8f7f247044a16126a1ddccddfd844969ca832d1d21308b4a82c08bc86281dbbf",
+    "bytes": 19000
+  },
+  {
+    "file": "02-collection-client/field/native-first.tap",
+    "sha256": "8358a099b6d7e6312d42e5a3a79a392e025096fcbe5fbfce00550b1d3839b643",
+    "bytes": 2045
+  },
+  {
+    "file": "02-collection-client/field/source-pins.json",
+    "sha256": "9d0cb40b801b9ee30273988f1e52fe22714a5ba5cc93eb6c9ba56fc8c6f26977",
+    "bytes": 1316
+  },
+  {
+    "file": "02-collection-client/group/README.md",
+    "sha256": "39e0a4bfbec4563d8704f5b0b809019cbe6c7fa82d87144b31639de877f5625f",
+    "bytes": 11990
+  },
+  {
+    "file": "02-collection-client/group/collection-group-command.cjs",
+    "sha256": "734fe6d0b0439089a7f357f49c307688cc0a093bb57a61c7b8ac3a906cc504f2",
+    "bytes": 14889
+  },
+  {
+    "file": "02-collection-client/group/collection-group-command.test.cjs",
+    "sha256": "98f6e78107253e68b190b8295acf6f2f75799e27dc2f8d3cb85ba0c1765760ac",
+    "bytes": 19619
+  },
+  {
+    "file": "02-collection-client/group/native-first.tap",
+    "sha256": "a9a65b24ae3f47731073736a02b2f9c6f948b13eda5bb7047e9443cba0202f98",
+    "bytes": 2501
+  },
+  {
+    "file": "02-collection-client/group/reference/app-main.js",
+    "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+    "bytes": 3079292
+  },
+  {
+    "file": "02-collection-client/group/reference/business-rules.js",
+    "sha256": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+    "bytes": 51395
+  },
+  {
+    "file": "02-collection-client/group/reference/chronological-values.js",
+    "sha256": "7ff17b9410c8d779c2d634ccb8563e16c28b3f40f8415279dfa6b0f64e439194",
+    "bytes": 4411
+  },
+  {
+    "file": "02-collection-client/group/reference/collection-model-groups.js",
+    "sha256": "817c0a44a03de12b475119e5f88bcd72b0798e79e301704767a9768b1dc2d464",
+    "bytes": 30993
+  },
+  {
+    "file": "02-collection-client/group/reference/model-option-stats.js",
+    "sha256": "21f3166a51f3225c6629010d3339d53d0159b4e7eb5ff623522e5fc56e479856",
+    "bytes": 3972
+  },
+  {
+    "file": "02-collection-client/group/reference/overview-collection-summary.js",
+    "sha256": "e24c407280c25b12782277a5010c0c3eee952f76e51f84a22c5a6f679bc8a8a9",
+    "bytes": 13917
+  },
+  {
+    "file": "02-collection-client/group/reference-harness.cjs",
+    "sha256": "72217952373fd9ae42896937d327bca3ac207bfe917838157820bbc6d3e6bed3",
+    "bytes": 5445
+  },
+  {
+    "file": "02-collection-client/group/source-pins.json",
+    "sha256": "1638d0c1bdcaffbd58b6bc9d00566c1db08add3de8af79d27d62dafdf3be231d",
+    "bytes": 1459
+  },
+  {
+    "file": "03-collection-server/native/README.md",
+    "sha256": "f05f39589fb0aafa08e626ccc69609fe7126b13573e8869882179f4d914f58be",
+    "bytes": 14295
+  },
+  {
+    "file": "03-collection-server/native/collection-delta-service.cjs",
+    "sha256": "e27d69c6686f3f8fcdd121749b0bff969a9af2e1cd1bc9ba75800ce5687979e1",
+    "bytes": 15485
+  },
+  {
+    "file": "03-collection-server/native/collection-delta-service.test.cjs",
+    "sha256": "f281babf50d4edf7856a1556524fb4e4a573897ffa9304ba719b8b7ec26d8d05",
+    "bytes": 25609
+  },
+  {
+    "file": "03-collection-server/native/reference/durable-file-recovery.js",
+    "sha256": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62",
+    "bytes": 17948
+  },
+  {
+    "file": "03-collection-server/native/reference/hlc-email-list.js",
+    "sha256": "9cbd32efd6dba545dc2182188be7a4b781203c1af845e58c3b59e7f9654ce134",
+    "bytes": 5473
+  },
+  {
+    "file": "03-collection-server/native/reference/hlc.js",
+    "sha256": "6916172daca8a0775e6c475ace3e75f2994bc67612e759d43bb11924f9f4cd52",
+    "bytes": 4212
+  },
+  {
+    "file": "03-collection-server/native/reference/large-json.js",
+    "sha256": "f4400d0ba64cb120525d967b2cc7f2f47a79bdb0c35b10812d0013e82fa4125c",
+    "bytes": 8362
+  },
+  {
+    "file": "03-collection-server/native/reference/lease-worker-registry.js",
+    "sha256": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+    "bytes": 6031
+  },
+  {
+    "file": "03-collection-server/native/reference/local-db.js",
+    "sha256": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+    "bytes": 100394
+  },
+  {
+    "file": "03-collection-server/native/reference/local-path-policy.js",
+    "sha256": "04cf88d1307fa1954f3a3abd072c7371d6156f8b2537eb49e70a5856d948ba52",
+    "bytes": 640
+  },
+  {
+    "file": "03-collection-server/native/reference/quotation-ledger.js",
+    "sha256": "dbc526e1aaab252892b7f7fce4a9ef45cc267a37ae8c28846a81501bb1d701d6",
+    "bytes": 11253
+  },
+  {
+    "file": "03-collection-server/native/reference/shared-file-transaction.js",
+    "sha256": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+    "bytes": 32298
+  },
+  {
+    "file": "03-collection-server/native/reference/shared-sync-policy.js",
+    "sha256": "8beea9573beacc106b4a8533bf5ee41732323ed1d768e54cdc75b6d93f97974b",
+    "bytes": 15244
+  },
+  {
+    "file": "03-collection-server/native/root-native-first/receipt.json",
+    "sha256": "fed9506a7e306beeb812764dd3e26fae94934f125d243fe9e3adf7dd65e954de",
+    "bytes": 701
+  },
+  {
+    "file": "03-collection-server/native/root-native-first/test.tap",
+    "sha256": "945e17b82f82ec544976ad77b430dafbb6df0d21533c0d98b66ef18d1f297e3e",
+    "bytes": 2832
+  },
+  {
+    "file": "03-collection-server/native/source-pins.json",
+    "sha256": "2b03218e55b0cbeb26e4668052f86ed8cf6d0c49add3cdb5238351dd84c19dde",
+    "bytes": 2138
+  },
+  {
+    "file": "03-collection-server/source-adoption/README.md",
+    "sha256": "41a9675b07ec3c34c244cd53f8b4a78d2c891f927cebf8faac8da5502e1f7db6",
+    "bytes": 12879
+  },
+  {
+    "file": "03-collection-server/source-adoption/source-pins.json",
+    "sha256": "fb19d4567da45b52e1da628570ade46a2a06baa60aeaf70ace9595a1c61d468b",
+    "bytes": 1171
+  },
+  {
+    "file": "README.md",
+    "sha256": "07148cfa16688c3880c95c3cc52326c967cbe23ad92154678ea331853cf3d5d8",
+    "bytes": 5829
+  },
+  {
+    "file": "contracts/README.md",
+    "sha256": "de9b66be8fd9257b081e0f3a88e839741bb899eafb800009ebc3174a24c0ce26",
+    "bytes": 10066
+  },
+  {
+    "file": "contracts/authoritative-collection-scope.md",
+    "sha256": "8a32fef7b01720d59541271e827fb60706710188cb33b6437f9710d0399470eb",
+    "bytes": 6494
+  },
+  {
+    "file": "contracts/call-chains.md",
+    "sha256": "6fe6ae4e3cc0a659964ded26f56e4329b10fb00a6a77fbc9221fd91a6c3046e9",
+    "bytes": 9988
+  },
+  {
+    "file": "contracts/collection-patch-contract.json",
+    "sha256": "86bbb157676892a8836ee15a5347a0e8c76e9321a9ff6b21f22d6b15ea7a4158",
+    "bytes": 6113
+  },
+  {
+    "file": "contracts/file-sequence.json",
+    "sha256": "834b9d9c0e0bfa568955afabf82e6e74c844e0625f5c95b17bfd873dcea7ce14",
+    "bytes": 5292
+  },
+  {
+    "file": "contracts/patch-contract.json",
+    "sha256": "f37fdc524b602d9fc324be3044758d290766034c9b06528aca27f0fffec19368",
+    "bytes": 6203
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/README.md",
+    "sha256": "df99a2705d10e65f80fd9cefa0716a3ecc9e6400ce92081a917b1617e6223a3d",
+    "bytes": 7587
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/call-chains.md",
+    "sha256": "2a20a8aee2f3d94dffa0315411c5a89b49d8bb62caf784568e7dfff6a47a9378",
+    "bytes": 7394
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/file-sequence.json",
+    "sha256": "383c9e288b680ba1f3c7f21021622249154fd0aac1b90631fc83cc2600117b8a",
+    "bytes": 3962
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/patch-contract.json",
+    "sha256": "a0e3fcf7212ae8014e26bb1d1b3f3a65029bef14d52ff7be793f280f1dad65a7",
+    "bytes": 6043
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/source-provenance.json",
+    "sha256": "4934cce84e88332a00dfb738b21b49b06c26867de20d6966dcd3ddfb30aecd6f",
+    "bytes": 5379
+  },
+  {
+    "file": "contracts/prior-cp-auxiliary-20261107/validation-matrix.json",
+    "sha256": "b1207df716c243c173d82f76a83e7c29eacb5170bae384199833ca5ad090a37c",
+    "bytes": 7724
+  },
+  {
+    "file": "contracts/source-provenance-collection-correction.json",
+    "sha256": "a0aecb08e7ea402a8094d8ecc1bc3f8ecc5bab68b345df8944f1d5ea74590835",
+    "bytes": 3058
+  },
+  {
+    "file": "contracts/source-provenance.json",
+    "sha256": "4934cce84e88332a00dfb738b21b49b06c26867de20d6966dcd3ddfb30aecd6f",
+    "bytes": 5379
+  },
+  {
+    "file": "contracts/validation-matrix.json",
+    "sha256": "800aa001b0ee146d03024bc608c54b278396fac76c74e92db997525707f22114",
+    "bytes": 8924
+  },
+  {
+    "file": "root-native-evidence/buyerlog-phase6a-orders-client-native-first/native.tap",
+    "sha256": "6357c1f7c627c2bfcdfa373ec4fb9d0888babac60e7ea7c07c30cb9e47700c17",
+    "bytes": 10668
+  },
+  {
+    "file": "root-native-evidence/buyerlog-phase6a-orders-client-native-first/receipt.json",
+    "sha256": "2255650433d6f1072a7f3f2a2b40633c0408c21d82d688a07f6cba6ff067c7a6",
+    "bytes": 382
+  },
+  {
+    "file": "root-native-evidence/buyerlog-phase6a-orders-client-native-green/native.tap",
+    "sha256": "4f044a3560e2fbb8e0bfdfbf9527009abe23abb74e5e241a530888c960eec351",
+    "bytes": 9966
+  },
+  {
+    "file": "root-native-evidence/buyerlog-phase6a-orders-client-native-green/receipt.json",
+    "sha256": "7564c76fbf59b39aaf53be6fc01ca676d59e998f8dc09aad12e4e5b72d8e0b18",
+    "bytes": 380
+  }
+]

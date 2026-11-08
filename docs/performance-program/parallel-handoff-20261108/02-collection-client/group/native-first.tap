@@ -1,0 +1,30 @@
+✔ stable source certificate matches actual normalizer data; legacy repairs require explicit fallback (6.249546ms)
+✔ actual app single-cell shared edit matches group unit and keeps explicit false override/raw stale value (6.395266ms)
+✔ affected closure rejects pending normalization on unrelated rows too (0.778629ms)
+✔ direct actual shared export parity preserves null/zero/false/blank and owns mutable field values (7.333657ms)
+✔ actual app override edit updates override plus materialized row only (2.343778ms)
+✔ actual setVariantOverride parity preserves explicit falsy values and materialized cells (2.134331ms)
+✔ actual context-menu make-colour-specific creates exact inherited override presence (3.004528ms)
+✔ actual context-menu clear override parity restores model value; inverse restores false plus original stale raw (6.859471ms)
+✔ clear override matches actual explicit null/zero/false/blank shared fallback (8.170052ms)
+✔ clear override preserves actual missing-raw/undefined fallback and original raw when parent raw is blank (3.9062ms)
+✔ same-model peers inside group follow inheritance; separately persisted/detached same-PLM groups stay unchanged (0.630984ms)
+✔ actual whole-row clones and normalizer copies are replaced only by scoped COW, with value parity (0.688719ms)
+✔ shared edit plus inverse restores exact raw/shared presence without replacing unknown nested fields (2.044609ms)
+✔ stale group add/remove/reorder/role changes reject the entire prepared unit (0.779481ms)
+✔ owner/generation/schema/row revision and same-field conflict reject before effects (0.853187ms)
+✔ legacy absent/explicit-zero row bases stay zero without changing server-owned revision fields (4.21432ms)
+✔ inverse uses explicit fresh row bases and preserves unrelated accepted remote fields/map keys (2.833814ms)
+✔ actual linked-variant editor guard and no-op string comparison remain explicit (4.311963ms)
+✔ parent with explicit override follows actual app override route instead of overwriting shared model state (2.15479ms)
+✔ rich note/pricing/period/checklist/structure/identity operations have no generic scalar fallback (0.824817ms)
+✔ captured units own changed JSON, preserve unknown keys and never mutate borrowed rows (0.585026ms)
+✔ malformed duplicate patch rows and unsupported slot shapes reject without partial changes (0.565481ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 283.61408

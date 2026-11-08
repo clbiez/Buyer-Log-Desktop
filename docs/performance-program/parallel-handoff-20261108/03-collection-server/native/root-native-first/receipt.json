@@ -1,0 +1,17 @@
+{
+  "scope": "inactive 6c native existing-DB prototype only; not production or phase completion",
+  "startedAt": "2026-11-08T03:23:50.689682+00:00",
+  "pins": {
+    "collection-delta-service.cjs": "e27d69c6686f3f8fcdd121749b0bff969a9af2e1cd1bc9ba75800ce5687979e1",
+    "collection-delta-service.test.cjs": "f281babf50d4edf7856a1556524fb4e4a573897ffa9304ba719b8b7ec26d8d05",
+    "source-pins.json": "2b03218e55b0cbeb26e4668052f86ed8cf6d0c49add3cdb5238351dd84c19dde"
+  },
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "/tmp/buyerlog-phase6c-delta-commit-preparation/collection-delta-service.test.cjs"
+  ],
+  "exitCode": 0,
+  "finishedAt": "2026-11-08T03:23:51.917738+00:00"
+}

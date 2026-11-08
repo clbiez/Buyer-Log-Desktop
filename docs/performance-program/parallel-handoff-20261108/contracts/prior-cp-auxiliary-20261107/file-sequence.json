@@ -1,0 +1,25 @@
+{
+  "status": "proposed-sequence-no-files-implemented",
+  "prOrder": [
+    {"stage": "6a-before-6c", "required": "integrate chosen lossless wire profile and consumer contract; preserve inventory/Layout addendum, exact presence/key-order and normalization limits"},
+    {"stage": "6c-1-helper-contract", "newHelpers": ["resources/app/public/row-field-delta.js", "resources/app/public/cp-edit-units.js"], "newTests": ["resources/app/tests/row-field-delta.test.js", "resources/app/tests/cp-edit-unit-contract.test.js"], "productionWiring": false, "goal": "pure own-slot/COW/forward+inverse behavior with explicit unsupported path"},
+    {"stage": "6c-2-bulk-client-integration", "rootOwned": ["resources/app/public/app-main.js", "resources/app/public/override-sync.js", "existing feature/dependency bootstrap for helper loading"], "helperTouch": ["resources/app/public/order-line-peer-index.js"], "goal": "opt-in touched-field staging/ACK merge for proven bulk edit units, unchanged legacy request/response contract, explicit full-draft fallback", "tests": ["cp-peer-identity-history.test.js", "cp-pricing-history.test.js", "cp-orders-hydration-revision.test.js", "new bulk ACK/owner/slot equivalence tests"]},
+    {"stage": "6c-3-inverse-client-integration", "rootOwned": ["resources/app/public/app-main.js", "resources/app/public/override-sync.js"], "goal": "history stack changes follow acknowledged guarded units; unsupported semantic inverses keep existing path", "gate": "manual/imported/rule, absent override and note provenance proofs; no generic scalar-only rollback"},
+    {"stage": "optional-later-server-receipt-boundary", "rootOwned": ["resources/app/server/server.js"], "helpers": ["resources/app/server/db.js", "resources/app/server/lib/cp-shared-store.js", "future bounded native receipt adapter"], "goal": "only if network patch/inverse receipts are necessary; maintain legacy callers and CAS, never trust browser receipt maps", "blockedBy": ["explicit durability/ACK definition", "missing-versus-tombstone inverse", "live authority callback at true commit", "909 source lock"]},
+    {"stage": "separate-checklist-followup", "helpers": ["resources/app/public/checklist-supplier-sync.js", "resources/app/public/checklist-answer-merge-engine.js", "resources/app/server/routes/checklist-supplier-routes.js", "resources/app/server/lib/checklist-supplier-store.js"], "goal": "reuse accepted-key pending journal and existing receipts; no co-migration into CP WAL or cross-store atomic-undo promise in minimal6c"}
+  ],
+  "rootLocks": {
+    "app-main.js": "root integrates helper loading, mutation, ACK, peer invalidation and undo; no parallel edits with client integration PRs",
+    "server.js": "root only; overlaps open909 and any later6a/receipt route integration",
+    "commonCompute": ["resources/app/server/lib/compute-service.js", "resources/app/server/workers/compute-worker.js", "resources/app/server/lib/compute-source-cache.js", "resources/app/server/lib/compute-source-codec.js", "resources/app/server/lib/compute-read-service.js", "resources/app/server/lib/compute-read-guard.js"],
+    "local-db.js": "existing lease/WAL/CAS/clock owner; open909 owns snapshot encoding changes here"
+  },
+  "open909": {
+    "knownFrozenHead": "634ac27dcdeb0a5655e37c1c5b08f9aba5fa6ef0",
+    "sourceFiles": ["resources/app/server/lib/compute-service.js", "resources/app/server/lib/local-db.js", "resources/app/server/server.js", "resources/app/server/workers/compute-worker.js"],
+    "integrationPolicy": "recheck latest head/status, integrate or explicitly hand off locks before editing these files; retain DS08 fallback/lease/WAL/capacity contract and documented total+7.76% tradeoff",
+    "initial6cAvoidsAllFour": true
+  },
+  "noNewWorkerMechanism": true,
+  "futureComputePolicy": "existing source descriptor owner/generation and common pool only; stage validated deltas as new override/read inputs, never mutate an old immutable worker source in place"
+}

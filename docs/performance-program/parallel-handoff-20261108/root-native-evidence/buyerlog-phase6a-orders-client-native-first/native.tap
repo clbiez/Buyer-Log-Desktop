@@ -1,0 +1,207 @@
+TAP version 13
+# Subtest: uninitialized and caller-authored guard strings cannot select a finite request
+ok 1 - uninitialized and caller-authored guard strings cannot select a finite request
+  ---
+  duration_ms: 97.181689
+  type: 'test'
+  ...
+# Subtest: actual complete full initializes actual migration once, then metadata-only compile needs no row provider
+ok 2 - actual complete full initializes actual migration once, then metadata-only compile needs no row provider
+  ---
+  duration_ms: 147.428091
+  type: 'test'
+  ...
+# Subtest: actual native ready body preserves sparse own 0 false null, row order, duplicate IDs and unknown keys
+ok 3 - actual native ready body preserves sparse own 0 false null, row order, duplicate IDs and unknown keys
+  ---
+  duration_ms: 88.291326
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.colFilters.orders.__CPX_ZERO={values:new Set(['0'])};}
+ok 4 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.colFilters.orders.__CPX_ZERO={values:new Set(['0'])};}
+  ---
+  duration_ms: 73.852958
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersSort.key='__CPX_FALSE';}
+ok 5 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersSort.key='__CPX_FALSE';}
+  ---
+  duration_ms: 121.124872
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersQuickActive.add('Active');}
+ok 6 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersQuickActive.add('Active');}
+  ---
+  duration_ms: 67.576247
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.controls.get('ordersSearch').value='changed';}
+ok 7 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.controls.get('ordersSearch').value='changed';}
+  ---
+  duration_ms: 73.053597
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.globals.colmgr.orders.hidden.delete('__CPX_UNUSED');}
+ok 8 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.globals.colmgr.orders.hidden.delete('__CPX_UNUSED');}
+  ---
+  duration_ms: 58.368479
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.f.formula.save('orders',[{id:'new',label:'New',formula:'[__CPX_UNUSED]'}]);}
+ok 9 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.f.formula.save('orders',[{id:'new',label:'New',formula:'[__CPX_UNUSED]'}]);}
+  ---
+  duration_ms: 73.989659
+  type: 'test'
+  ...
+# Subtest: real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.overrides.pricingRules.push({value:0});}
+ok 10 - real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.overrides.pricingRules.push({value:0});}
+  ---
+  duration_ms: 102.139588
+  type: 'test'
+  ...
+# Subtest: malformed formula storage never masquerades as empty definitions
+ok 11 - malformed formula storage never masquerades as empty definitions
+  ---
+  duration_ms: 47.252557
+  type: 'test'
+  ...
+# Subtest: unknown schema, changed source/full SHA, page generation and ordinary missing identity stay full
+not ok 12 - unknown schema, changed source/full SHA, page generation and ordinary missing identity stay full
+  ---
+  duration_ms: 155.526707
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-orders-client-preparation/tests/orders-projection-client.test.cjs:96:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot delete property 'X-Orders-Owner-B64' of #<Object>"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    /tmp/buyerlog-phase6a-orders-client-preparation/tests/orders-projection-client.test.cjs:97:112
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-orders-client-preparation/tests/orders-projection-client.test.cjs:98:27)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: headers nonce owner broad context and late raw keys are independently checked
+ok 13 - headers nonce owner broad context and late raw keys are independently checked
+  ---
+  duration_ms: 362.505753
+  type: 'test'
+  ...
+# Subtest: capture reads no row graph and records actual revision/0/false/null filter metadata
+ok 14 - capture reads no row graph and records actual revision/0/false/null filter metadata
+  ---
+  duration_ms: 47.137142
+  type: 'test'
+  ...
+# Subtest: capture getter, storage read failure, unknown source and unknown access default full before planning
+ok 15 - capture getter, storage read failure, unknown source and unknown access default full before planning
+  ---
+  duration_ms: 200.188784
+  type: 'test'
+  ...
+# Subtest: retirement cancels captured requests even if the same actor/source values later reappear
+ok 16 - retirement cancels captured requests even if the same actor/source values later reappear
+  ---
+  duration_ms: 73.851717
+  type: 'test'
+  ...
+# Subtest: actual unchanged mutator bodies are fenced before source/preference mutation; invalid non-Orders target retains its fast path
+ok 17 - actual unchanged mutator bodies are fenced before source/preference mutation; invalid non-Orders target retains its fast path
+  ---
+  duration_ms: 342.881876
+  type: 'test'
+  ...
+# Subtest: existing legacy quick-filter migration executes on full; thin only checks its accepted capture without writes
+ok 18 - existing legacy quick-filter migration executes on full; thin only checks its accepted capture without writes
+  ---
+  duration_ms: 192.274805
+  type: 'test'
+  ...
+# Subtest: actual full promotion helper accepts sparse full rows with empty proven requiredKeys and preserves per-row shapes
+ok 19 - actual full promotion helper accepts sparse full rows with empty proven requiredKeys and preserves per-row shapes
+  ---
+  duration_ms: 6.718986
+  type: 'test'
+  ...
+# Subtest: full-parent adapter uses actual additional header producer, exact DTO and owned decoded-byte hash; identity is never echoed
+ok 20 - full-parent adapter uses actual additional header producer, exact DTO and owned decoded-byte hash; identity is never echoed
+  ---
+  duration_ms: 68.203603
+  type: 'test'
+  ...
+# Subtest: full-parent header mismatch or session replacement cancels before body reading and is never retried through ready
+ok 21 - full-parent header mismatch or session replacement cancels before body reading and is never retried through ready
+  ---
+  duration_ms: 46.304843
+  type: 'test'
+  ...
+# Subtest: cold empty-formula current+legacy audit uses actual user-storage migration and plans first Orders network without full rows
+ok 22 - cold empty-formula current+legacy audit uses actual user-storage migration and plans first Orders network without full rows
+  ---
+  duration_ms: 55.105065
+  type: 'test'
+  ...
+# Subtest: cold form-free plan accepts actual native producer raw SHA as first parent and keeps gzip SHA distinct
+ok 23 - cold form-free plan accepts actual native producer raw SHA as first parent and keeps gzip SHA distinct
+  ---
+  duration_ms: 67.702669
+  type: 'test'
+  ...
+# Subtest: cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v1":"[{\\"id\\":\\"x\\",\\"label\\":\\"X\\",\\"formula\\":\\"[Probe]\\"}]"}
+ok 24 - cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v1":"[{\\"id\\":\\"x\\",\\"label\\":\\"X\\",\\"formula\\":\\"[Probe]\\"}]"}
+  ---
+  duration_ms: 41.781559
+  type: 'test'
+  ...
+# Subtest: cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.formulaColumns.orders.v0":"[{\\"id\\":\\"legacy\\",\\"label\\":\\"Legacy\\"}]"}
+ok 25 - cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.formulaColumns.orders.v0":"[{\\"id\\":\\"legacy\\",\\"label\\":\\"Legacy\\"}]"}
+  ---
+  duration_ms: 47.238215
+  type: 'test'
+  ...
+# Subtest: cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v0":"{broken"}
+ok 26 - cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v0":"{broken"}
+  ---
+  duration_ms: 44.519319
+  type: 'test'
+  ...
+# Subtest: cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{broken"}
+ok 27 - cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{broken"}
+  ---
+  duration_ms: 93.881
+  type: 'test'
+  ...
+# Subtest: cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{\\"bl.formulaColumns.orders.v1\\":{\\"value\\":\\"[{\\\\\\"id\\\\\\":\\\\\\"r\\\\\\",\\\\\\"label\\\\\\":\\\\\\"R\\\\\\"}]\\"}}"}
+ok 28 - cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{\\"bl.formulaColumns.orders.v1\\":{\\"value\\":\\"[{\\\\\\"id\\\\\\":\\\\\\"r\\\\\\",\\\\\\"label\\\\\\":\\\\\\"R\\\\\\"}]\\"}}"}
+  ---
+  duration_ms: 93.4109
+  type: 'test'
+  ...
+# Subtest: cold eligibility checks actual Moderator legacy aliases even if scoped current storage is already empty
+ok 29 - cold eligibility checks actual Moderator legacy aliases even if scoped current storage is already empty
+  ---
+  duration_ms: 39.927928
+  type: 'test'
+  ...
+# Subtest: cold missing bootstrap registration or late actual formula creation stays full without full receipt fabrication
+ok 30 - cold missing bootstrap registration or late actual formula creation stays full without full receipt fabrication
+  ---
+  duration_ms: 82.169177
+  type: 'test'
+  ...
+# Subtest: actual cold wait observes pending hydration and rejects absent/failed hydration or concurrent CP model loading
+ok 31 - actual cold wait observes pending hydration and rejects absent/failed hydration or concurrent CP model loading
+  ---
+  duration_ms: 1.228186
+  type: 'test'
+  ...
+1..31
+# tests 31
+# suites 0
+# pass 30
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3285.019235
