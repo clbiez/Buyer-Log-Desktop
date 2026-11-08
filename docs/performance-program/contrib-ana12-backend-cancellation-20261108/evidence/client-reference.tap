@@ -1,0 +1,209 @@
+{"pin":"6060c6b0e66a65ef0b8f5c2c4ee4e44f193f8f7b","destination":"/tmp/ana12-client-reference-2ngj2p","assertionsChanged":false,"sha256":{"resources/app/public/backlog-request-lifecycle.js":"46defadfc0c315950b53ea2a8ef3a20183c763b502a703a40e0e2bef5ceca091","resources/app/tests/ana12-request-lifecycle-loopback.test.js":"f3c9b7e43102a15ab62cf49443c9f5ee99cd0af4b9e9992616fe024b9b649525","resources/app/tests/ana12-request-lifecycle-preparation.test.js":"98df4dfb9abea16b84ed7d8b1442e55d82f2e605f5d46eeffc453c06c9c27b4e","resources/app/tests/ana12-request-lifecycle-races.test.js":"392a474cd3dee5fabf940910fcbcaee38aff333c83a7eb4e720abad66157c7b9","resources/app/tests/ana12-request-lifecycle-sharing.test.js":"ad7aff131054863acac178570f9cc62e5d322e6edfa68ebbe0f0a8fda70ebc33","resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs":"49bd4cbc4469ff4c2a07493bad68fb2908ee3defd435d2257bf0f0c86b892848","resources/app/tests/fixtures/ana12-request-lifecycle/preparation/contracts.cjs":"30758d4f6f7d2ec0803df4c298c92715e231dc32ddcb90c888f950b4b32164b2","resources/app/tests/fixtures/ana12-request-lifecycle/preparation/diagnose.cjs":"8a86292a4a2f35eb0b55e03bdbd79170a367cd7c554d9bcd06a1f61500053a16","resources/app/tests/fixtures/ana12-request-lifecycle/preparation/diagnose.test.cjs":"e784663f4f89ee70612082ee79470c9ef1290ea00fa41d61d111bea08d7cac67","resources/app/tests/fixtures/ana12-request-lifecycle/preparation/fixture.json":"7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3","resources/app/tests/fixtures/ana12-request-lifecycle/preparation/provenance.json":"6d8e653678e853aaea14730d0f4f123a2eff7e8fd30d6616b35148ed82cf2a87"}}
+TAP version 13
+# Subtest: last release aborts a real fetch during body read and closes incomplete loopback HTTP
+ok 1 - last release aborts a real fetch during body read and closes incomplete loopback HTTP
+  ---
+  duration_ms: 73.351672
+  type: 'test'
+  ...
+# Subtest: normal loopback completion matches an independent uncancelled full-response oracle
+ok 2 - normal loopback completion matches an independent uncancelled full-response oracle
+  ---
+  duration_ms: 12.471765
+  type: 'test'
+  ...
+# Subtest: source extraction fails closed on missing or ambiguous anchors
+ok 3 - source extraction fails closed on missing or ambiguous anchors
+  ---
+  duration_ms: 1.815409
+  type: 'test'
+  ...
+# Subtest: shared rows preserve scope, generation and source detail variants; only grouping shares
+ok 4 - shared rows preserve scope, generation and source detail variants; only grouping shares
+  ---
+  duration_ms: 3.900662
+  type: 'test'
+  ...
+# Subtest: baseline deduplicates pending consumers and invalidation leaves their transport alive
+ok 5 - baseline deduplicates pending consumers and invalidation leaves their transport alive
+  ---
+  duration_ms: 2.434927
+  type: 'test'
+  ...
+# Subtest: plan generation keeps final query while still parsing the older response
+ok 6 - plan generation keeps final query while still parsing the older response
+  ---
+  duration_ms: 2.284669
+  type: 'test'
+  ...
+# Subtest: closing overview leaves a shared chart consumer alive on the exact current source
+ok 7 - closing overview leaves a shared chart consumer alive on the exact current source
+  ---
+  duration_ms: 3.822496
+  type: 'test'
+  ...
+# Subtest: three per arm, same fixture/source, no overlap and exact final results are mandatory
+ok 8 - three per arm, same fixture/source, no overlap and exact final results are mandatory
+  ---
+  duration_ms: 1.932846
+  type: 'test'
+  ...
+# Subtest: future cancellation contract rejects the actual uncancellable baseline
+ok 9 - future cancellation contract rejects the actual uncancellable baseline
+  ---
+  duration_ms: 7.454154
+  type: 'test'
+  ...
+# Subtest: current Main readiness gate precedes all shared fetches and preserves serial sharing
+ok 10 - current Main readiness gate precedes all shared fetches and preserves serial sharing
+  ---
+  duration_ms: 8.494303
+  type: 'test'
+  ...
+# Subtest: shared load propagates readiness rejection before starting a transport
+ok 11 - shared load propagates readiness rejection before starting a transport
+  ---
+  duration_ms: 2.760037
+  type: 'test'
+  ...
+# Subtest: inherited assertions and fixture remain byte-identical to pinned \#895 inputs
+ok 12 - inherited assertions and fixture remain byte-identical to pinned \#895 inputs
+  ---
+  duration_ms: 1.021563
+  type: 'test'
+  ...
+# Subtest: a cancelled flight cannot accept a new subscriber; late completion cannot delete its replacement
+ok 13 - a cancelled flight cannot accept a new subscriber; late completion cannot delete its replacement
+  ---
+  duration_ms: 7.221934
+  type: 'test'
+  ...
+# Subtest: abort after body read began blocks JSON parsing even if body transport ignores abort
+ok 14 - abort after body read began blocks JSON parsing even if body transport ignores abort
+  ---
+  duration_ms: 3.623021
+  type: 'test'
+  ...
+# Subtest: body completion queued immediately before release cannot publish or parse
+ok 15 - body completion queued immediately before release cannot publish or parse
+  ---
+  duration_ms: 1.696438
+  type: 'test'
+  ...
+# Subtest: late failure from a cancelled flight cannot delete a new same-key flight
+ok 16 - late failure from a cancelled flight cannot delete a new same-key flight
+  ---
+  duration_ms: 0.941746
+  type: 'test'
+  ...
+# Subtest: an abort listener can resubscribe to the same key before old cleanup finishes
+ok 17 - an abort listener can resubscribe to the same key before old cleanup finishes
+  ---
+  duration_ms: 1.149774
+  type: 'test'
+  ...
+# Subtest: live generation and session gates stop stale publication without cancelling another identity
+ok 18 - live generation and session gates stop stale publication without cancelling another identity
+  ---
+  duration_ms: 0.984394
+  type: 'test'
+  ...
+# Subtest: post-parse calendar readiness is shared and cancellation still guards publication
+ok 19 - post-parse calendar readiness is shared and cancellation still guards publication
+  ---
+  duration_ms: 0.975042
+  type: 'test'
+  ...
+# Subtest: stale identity before start prevents fetch and a stale admission never joins a current flight
+ok 20 - stale identity before start prevents fetch and a stale admission never joins a current flight
+  ---
+  duration_ms: 1.13511
+  type: 'test'
+  ...
+# Subtest: transport, HTTP, JSON and publication failures release flight state and allow retry
+ok 21 - transport, HTTP, JSON and publication failures release flight state and allow retry
+  ---
+  duration_ms: 2.806946
+  type: 'test'
+  ...
+# Subtest: even a transport rejection without an Error stays rejected and cannot publish
+ok 22 - even a transport rejection without an Error stays rejected and cannot publish
+  ---
+  duration_ms: 0.967258
+  type: 'test'
+  ...
+# Subtest: dispose aborts each pending flight once, rejects all subscribers and prevents further subscriptions
+ok 23 - dispose aborts each pending flight once, rejects all subscribers and prevents further subscriptions
+  ---
+  duration_ms: 1.002531
+  type: 'test'
+  ...
+# Subtest: all five unchanged \#895 client contracts pass through the standalone adapter
+ok 24 - all five unchanged \#895 client contracts pass through the standalone adapter
+  ---
+  duration_ms: 28.311983
+  type: 'test'
+  ...
+# Subtest: grouping consumers share one body read, complete object graph and one publication
+ok 25 - grouping consumers share one body read, complete object graph and one publication
+  ---
+  duration_ms: 1.70268
+  type: 'test'
+  ...
+# Subtest: closing one panel rejects only its subscription while the remaining panel completes
+ok 26 - closing one panel rejects only its subscription while the remaining panel completes
+  ---
+  duration_ms: 0.622536
+  type: 'test'
+  ...
+# Subtest: ten rapid panel queries release only that panel; another consumer retains the first flight
+ok 27 - ten rapid panel queries release only that panel; another consumer retains the first flight
+  ---
+  duration_ms: 1.555319
+  type: 'test'
+  ...
+# Subtest: scope, user, session, generation, revision and source details never share
+ok 28 - scope, user, session, generation, revision and source details never share
+  ---
+  duration_ms: 1.669439
+  type: 'test'
+  ...
+# Subtest: source details remain distinct even when an adapter key omits them
+ok 29 - source details remain distinct even when an adapter key omits them
+  ---
+  duration_ms: 0.500944
+  type: 'test'
+  ...
+# Subtest: invalid or incomplete local identities fail before transport; identity types stay distinct
+ok 30 - invalid or incomplete local identities fail before transport; identity types stay distinct
+  ---
+  duration_ms: 0.820609
+  type: 'test'
+  ...
+# Subtest: last subscriber leaving during preparation prevents transport; preparation rejection is shared
+ok 31 - last subscriber leaving during preparation prevents transport; preparation rejection is shared
+  ---
+  duration_ms: 0.652924
+  type: 'test'
+  ...
+# Subtest: one panel leaving shared preparation preserves the remaining subscriber and its transport
+ok 32 - one panel leaving shared preparation preserves the remaining subscriber and its transport
+  ---
+  duration_ms: 0.605919
+  type: 'test'
+  ...
+# Subtest: current rowsQueryKey retains its exact exclusions, order and detail variants
+ok 33 - current rowsQueryKey retains its exact exclusions, order and detail variants
+  ---
+  duration_ms: 0.474057
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 482.742463

@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+ok 1 - two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+  ---
+  duration_ms: 193.644612
+  type: 'test'
+  ...
+# Subtest: last queued subscriber leaves: no dispatch and no leaked queued input bytes
+not ok 2 - last queued subscriber leaves: no dispatch and no leaked queued input bytes
+  ---
+  duration_ms: 10234.474887
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:18:1'
+  failureType: 'testCodeFailure'
+  error: 'Native observation deadline exceeded'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/backlog-compute-lifecycle/harness.cjs:11:128)
+    async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:28:2)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: last running subscriber terminates the native worker inside the real Backlog builder
+not ok 3 - last running subscriber terminates the native worker inside the real Backlog builder
+  ---
+  duration_ms: 10221.283206
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:33:1'
+  failureType: 'testCodeFailure'
+  error: 'Native observation deadline exceeded'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/backlog-compute-lifecycle/harness.cjs:11:128)
+    async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:40:2)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: abort at native postMessage dispatch race retains exit accounting and same-key replacement
+not ok 4 - abort at native postMessage dispatch race retains exit accounting and same-key replacement
+  ---
+  duration_ms: 10108.940106
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:45:1'
+  failureType: 'testCodeFailure'
+  error: 'Native observation deadline exceeded'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/backlog-compute-lifecycle/harness.cjs:11:128)
+    async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:50:49)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: includeSourceDetails and projection/query identity stay separate with native outputs
+ok 5 - includeSourceDetails and projection/query identity stay separate with native outputs
+  ---
+  duration_ms: 107.088549
+  type: 'test'
+  ...
+# Subtest: live authority and source revalidation retire native work without cancelling unrelated generation
+not ok 6 - live authority and source revalidation retire native work without cancelling unrelated generation
+  ---
+  duration_ms: 13282.498654
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:59:1'
+  failureType: 'testCodeFailure'
+  error: 'Native observation deadline exceeded'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/backlog-compute-lifecycle/harness.cjs:11:128)
+    async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/backlog-compute-lifecycle-native.test.js:71:50)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 2
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44262.848925

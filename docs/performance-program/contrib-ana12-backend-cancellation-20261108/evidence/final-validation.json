@@ -1,0 +1,16 @@
+{
+  "readOnlyPinnedSourcesUnchanged": 8,
+  "routePatchMatchesGenerator": true,
+  "routePatchApplyCheck": true,
+  "relatedTests": 160,
+  "relatedFiles": 22,
+  "unchangedClientTests": 33,
+  "pinnedClientNativeLoopbackTests": 1,
+  "i18nGuardTests": 5,
+  "i18nBaselineEntries": 0,
+  "negativeControlExpectedFailures": 4,
+  "pairedFinalHashesMatch": true,
+  "nativeExitAndCapacityChecked": true,
+  "productionRouteIntegrated": false,
+  "independentReview": "not requested; reserved for parent integration"
+}

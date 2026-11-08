@@ -1,0 +1,196 @@
+{
+  "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "branch": "contrib/ana12-backend-cancellation-20261108",
+  "clientReference": "6060c6b0e66a65ef0b8f5c2c4ee4e44f193f8f7b",
+  "clientAssertionsChanged": false,
+  "existingProductionFilesModified": false,
+  "productionRouteIntegrated": false,
+  "ana12Closed": false,
+  "self": "manifest.json is included in the file list; its self hash is omitted",
+  "files": [
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/README.md",
+      "bytes": 6414,
+      "sha256": "0fb3a09f01902906c4d3ba140e324acbeff1f0c295664aec1154989bb368ec15"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/adapter-contract.md",
+      "bytes": 5451,
+      "sha256": "bb4f85876d77363bed72baff37e9b9274ab26cae51555e1c4abf17ad0a0fdbb5"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/client-native-chain.tap",
+      "bytes": 402,
+      "sha256": "3672c4ef69b1a96a81718fffbeff8f14e94ed66422ea75c4542c03a3af4cc937"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/client-reference.tap",
+      "bytes": 9518,
+      "sha256": "9e04d768f2adaa9fd8b011cd33f8ff05bbd34bb3c1008fb8ca65e80eed75cd88"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/final-validation.json",
+      "bytes": 503,
+      "sha256": "c2b55d3aa9514fe9dcd9c0cec9bff29c5390da52594509cb0e19c09e64e4aa64"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/green-initial.tap",
+      "bytes": 2347,
+      "sha256": "d6a8d14a8cf5ab80461ca468407aae423c589ea6ae55313aaa227f35a26e0ae6"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/i18n-guard.tap",
+      "bytes": 1268,
+      "sha256": "dbb22c65e098ba31a4e6fed3e63ae86c8fb3f0df4ed7fd13fbee70a54c61f650"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/i18n.txt",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/native-http-green.tap",
+      "bytes": 2926,
+      "sha256": "fb314c4e859b83b8239c8f999d081e525e739571743bc5931c0117624d720949"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/native-recipe-green.tap",
+      "bytes": 5173,
+      "sha256": "e55bd3653eb1f95a947e57b92a2b9721ff7adf471b6d94567c2ec4ff77c812e8"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/native-stop.json",
+      "bytes": 2108,
+      "sha256": "918985f7a56e46ee9972ef67a722eefa2853c69d0f856574b4bfc1e5bb9048da"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/native-stop.log",
+      "bytes": 1710,
+      "sha256": "0f24922cf0fdd5737f30859ce3261798bb2715c8e35b224c54160803156fb2d3"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/paired-native.json",
+      "bytes": 83389,
+      "sha256": "17ed50cc62462736728f27b2209bf98f6c9761d05e80e03335c0758469b9a681"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/paired-native.log",
+      "bytes": 811,
+      "sha256": "ef9928dfce184d36f900c055fb122a96b3cd6a84f2e99f82b55da6b7fae259ae"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/red-missing-adapter.tap",
+      "bytes": 3341,
+      "sha256": "0e68453b544b10545e5525f3b895d0d4cb012e12ec95199f169c512e5c4d7557"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/red-without-pool-signal.tap",
+      "bytes": 4075,
+      "sha256": "ba035525d9f84d8620bf1e6bfc8f05461b036c0fd3ac5ce830c97be6143e45b9"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/related-green.txt",
+      "bytes": 16598,
+      "sha256": "437a661fd69a8ff2f0c4542391f7c79e8909a5382bea5bd13ab493e1b78660bb"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/evidence/related-initial-environment-failure.txt",
+      "bytes": 20544,
+      "sha256": "405fb8df55dcdfe8c3e070a4788d001c6af96ecde6827e8b14581baa6be87729"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/measurements.md",
+      "bytes": 4779,
+      "sha256": "0b0bf26df9592a0a2a1081209e28dddd0fe8ddf3add847458eab7c5df7f420bf"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/route-recipe.md",
+      "bytes": 4679,
+      "sha256": "44c9554c74735526799ef305d950eae07983654a8eb10b56e19701beafeb465d"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/route.patch",
+      "bytes": 5259,
+      "sha256": "cf783b76a63ce2b64806c839adb6b820d00077027484e73c8295f63448cf58b3"
+    },
+    {
+      "path": "resources/app/server/lib/backlog-compute-lifecycle.js",
+      "bytes": 6073,
+      "sha256": "cf11ae8552460a5a37d3c56c85ae1f6e771cf69cf2a9f9b31419a89be6f93db0"
+    },
+    {
+      "path": "resources/app/tests/backlog-compute-lifecycle-boundaries.test.js",
+      "bytes": 5581,
+      "sha256": "f30f6da48f19323b71998f82a21c0ad7b43b278bd4e24d25c13a7e120f8f8737"
+    },
+    {
+      "path": "resources/app/tests/backlog-compute-lifecycle-http.test.js",
+      "bytes": 2597,
+      "sha256": "7c60fe919176f278ab28da01c6745532bb83a6bcafa79410222cd268b7fbe534"
+    },
+    {
+      "path": "resources/app/tests/backlog-compute-lifecycle-native.test.js",
+      "bytes": 6531,
+      "sha256": "205510b94d4d8d65bc57a9b563876a854118164944907a4bccffd4ad8f108fa2"
+    },
+    {
+      "path": "resources/app/tests/backlog-compute-lifecycle-recipe.test.js",
+      "bytes": 3527,
+      "sha256": "58779eacbdfa5e7fc14b662a9e77b639140dbf857624b6628b2b454de4d54a62"
+    },
+    {
+      "path": "resources/app/tests/fixtures/backlog-compute-lifecycle/harness.cjs",
+      "bytes": 5505,
+      "sha256": "02ce10884de16afcf5e62a676bf1af8a588b0816d681a67d06cedeeede77cf44"
+    },
+    {
+      "path": "resources/app/tests/fixtures/backlog-compute-lifecycle/native-worker.cjs",
+      "bytes": 728,
+      "sha256": "37e5cbaf2c9b7d74dd60b479047f0ae7ac1c034fb2f4f3c071769cf17f985d8d"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/client-native-chain.cjs",
+      "bytes": 2782,
+      "sha256": "51e5d8c4b6363cbac1cade24083119969dd61fb91dd9b3b648348a266bfa1368"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/client-reference.cjs",
+      "bytes": 1792,
+      "sha256": "404fc1636072984fc9c5e9aeb069c9b93ccb52fcc987e22b5d56f9169d1fa3bb"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/measure.cjs",
+      "bytes": 5950,
+      "sha256": "68433d98cc29bda475761dd4b6584fa4bf218a619d1f4ac3ef7332521ba3b7b3"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/native-stop.cjs",
+      "bytes": 2663,
+      "sha256": "cabc462f201dc5d49242f1c3aeb0171e309ebe9738a2372c11674ea12290cc30"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/red-without-signal.cjs",
+      "bytes": 846,
+      "sha256": "be7a85d0ae982afd27ce72483de7df060bce867502491a3b446a9e3cc34cd2ad"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/render-recipe.py",
+      "bytes": 652,
+      "sha256": "9c27ba117810e418194429752bda6e4f381a1603d120f7e288093cb2d5155aaf"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/route-recipe.cjs",
+      "bytes": 6021,
+      "sha256": "90636ff5c05eb4f222bcf6c230ee0eb58e0987c8bc9abd878bc0c06cf39956b8"
+    },
+    {
+      "path": "scripts/prototypes/ana12-backend-cancellation-20261108/source-pins.json",
+      "bytes": 1208,
+      "sha256": "95075354c0152d261213232242ab3b04ebcfbe5b9abc9b4a7fa35172e17a6344"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-backend-cancellation-20261108/manifest.json",
+      "sha256": null
+    }
+  ]
+}

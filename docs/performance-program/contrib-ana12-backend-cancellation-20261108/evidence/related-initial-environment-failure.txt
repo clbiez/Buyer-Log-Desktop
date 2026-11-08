@@ -1,0 +1,266 @@
+[Buyer Log tests] 22 test dosyası, 1 batch, concurrency=1.
+
+[Buyer Log tests] Batch 1/1 (22 dosya)
+✔ narrow analysis skips operational preparation for rejected orders and does not project risk for a season pivot (7.158201ms)
+✔ raw ASAS predicates run before segmentation; IAS predicates retain complete partials when calculating remainder (5.83033ms)
+✔ lazy dimension values preserve alternatives and active values for the requested field (0.944309ms)
+✔ column facets return values outside the analysis selection without serializing detail rows (16.949588ms)
+✔ date facets, notes, blank selections, unknown fields and revised dates preserve report semantics (3.11476ms)
+✔ Chart and Overview share one full-row request when the first pivot response establishes its source revision (19.97613ms)
+✔ Chart follows the newest pivot preparation without waiting for an obsolete request to finish (11.82589ms)
+✔ lazy Delivery initialization shares the post-pivot request with Chart and Overview (12.483711ms)
+✔ late native completion after abort cannot publish, leak or remove a replacement flight (130.498056ms)
+✔ authority/generation revalidation cancels only stale subscriptions; first expired session preserves peer (108.846335ms)
+✔ shared pending preparation survives one cancelled query; abandoned query never submits (101.555006ms)
+✔ pre-aborted HTTP and response errors release once; normal request close never aborts (103.946908ms)
+✔ loopback HTTP close cancels the last real native Backlog job; complete req.close and response finish preserve sharing (1680.720942ms)
+✔ two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output (178.294177ms)
+✔ last queued subscriber leaves: no dispatch and no leaked queued input bytes (236.13086ms)
+✔ last running subscriber terminates the native worker inside the real Backlog builder (961.29186ms)
+✔ abort at native postMessage dispatch race retains exit accounting and same-key replacement (171.606552ms)
+✔ includeSourceDetails and projection/query identity stay separate with native outputs (106.985674ms)
+✔ live authority and source revalidation retire native work without cancelling unrelated generation (5126.426273ms)
+✔ exact recipe uses existing byte cache, releases rejected publication and keeps HTTP subscribers separate (152.495128ms)
+✔ exact route edits pass response context on each Backlog computed route and leave shared preparation in place (15.294785ms)
+✔ one in-flight build serves independent consumers and holds bytes until their last release (2.089996ms)
+✔ expiring the first consumer session does not cancel or disclose the second consumer response (1.056211ms)
+✔ source or authority change during worker execution rejects and releases the unpublished result (1.153919ms)
+✔ bounded gzip cache separates query variants and expires by bytes and time (1.462172ms)
+✔ response authority is checked again after caller-side async work (0.947268ms)
+✔ verified cached buffers are passed separately from the small revision/query key (0.823695ms)
+✔ worker dispatch yields to the event loop and rechecks authority before admitting prepared input (1.035633ms)
+✔ Backlog chart uses the shared Collection month/week date dimension (5.087422ms)
+✔ Backlog chart filters series inside the chart before applying the series limit (0.953031ms)
+✔ Backlog grafik seri araması gizlenen sonuçları CSS ile tekrar görünür yapmaz (1.00928ms)
+✔ Backlog chart TradingView-style ranges open at a readable window and support presets (4.267976ms)
+✔ Backlog chart zoom range helpers clamp, zoom and pan without losing the data window (0.856784ms)
+✔ Backlog chart renders a current-date marker when today falls inside the visible range (26.357416ms)
+✔ Backlog chart supports a second time field as an overlaid dashed series (0.688412ms)
+✔ Backlog chart uses whole-number nice ticks and compact time labels (0.338636ms)
+✔ Backlog chart average line is calculated from visible plotted data points (1.049003ms)
+✔ Backlog chart average follows the visible window and subtotal is a toggleable dashed line (1.327108ms)
+✔ Backlog chart supports count, distinct count, sum and average aggregations (1.248442ms)
+✔ Chart builder detects date columns and can infer Buyer / quantity defaults (1.022025ms)
+✔ Standalone Backlog chart UI is removed while the chart engine remains for Excel export (2.905369ms)
+✔ Backlog timeline bar layout can switch between side-by-side and stacked and persists the selection (4.046306ms)
+✔ Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view (0.977377ms)
+✔ Backlog overview timeline always shows bucket totals and mirrors the interactive chart hover/today language (0.303624ms)
+✔ Backlog render refreshes chart and Excel export appends chart sheets (9.516191ms)
+✔ Excel chart export keeps the selected visible time range and whole-number axis (0.757249ms)
+✔ Excel chart data stays live against the exported BACKLOG sheet (0.822238ms)
+✔ Excel live chart uses the second time-field bucket for overlay series (0.932104ms)
+✔ Excel export creates Grafik and Grafik Verisi sheets with native chart formulas (0.495199ms)
+✔ native Excel chart package contains drawing relationships and reopens as XLSX (80.653502ms)
+✔ Backlog chart uses compact k axis labels in app and Excel when the scale is thousands (0.390111ms)
+✔ plan actual API is Backlog-authorized and snapshots the Backlog target (1.711ms)
+✔ every successful refresh records a boundary marker without making analysis failure fatal (0.856456ms)
+✔ Backlog mounts a movable collapsible panel and loads its isolated assets (0.531235ms)
+✔ only changed rows are rendered and intermediate revision traffic remains separate (0.198136ms)
+✔ panel preferences are user scoped and synced like existing Backlog analysis (0.249064ms)
+✔ plan actual module uses shared theme tokens without light-theme fallbacks (2.086547ms)
+✔ plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export (1.334969ms)
+✔ Plan and Actual keeps its linear measure and percentage label (0.927608ms)
+✔ Overview circular loaded share clamps invalid values and preserves the visible percentage (1.276517ms)
+✔ query cache separates revisions and evicts by row budget, LRU and TTL (1.065527ms)
+✔ panels share in-flight rows across grouping changes and invalidate on source refresh (3.526606ms)
+✔ returning to a cached filter prevents an older delivery request from replacing the current result (1.402342ms)
+✔ explicit reload reuses row identity only when the server confirms the same query revision (3.774851ms)
+✔ persisted pivot variants expire on a new calendar day even when source data is unchanged (9.697863ms)
+✔ export projects the same override snapshot used to select and cache its query (46.520542ms)
+✔ analysis filters constrain pivot, detail and Excel rows and combine with existing dimensions (18.738719ms)
+✔ raw IAS filter selects one partial without bringing back its siblings or production balance (8.423523ms)
+✔ date bounds are inclusive, blanks remain selectable and invalid fields fail closed (5.88993ms)
+✔ all shared client queries serialize saved analysis criteria (17.646378ms)
+✔ historical comparison and activity use the selected Backlog order lines before computing totals (7.838918ms)
+✔ delivery analysis refresh is independent of pivot grouping (18.226389ms)
+✔ shared filter drawer loads column values without fetching overview rows while collapsed (1.735443ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/compute-access-equivalence.test.js (78.529917ms)
+✔ snapshot-free Excel fallback is published even when parsers already supplied all source fields (3.85135ms)
+✔ /api/backlog delegates its heavy computation and ready response to the common pool (3.111273ms)
+✔ /api/backlog-source-columns delegates its heavy computation and ready response to the common pool (1.085933ms)
+✔ /api/backlog-export delegates its heavy computation and ready response to the common pool (1.229981ms)
+✔ /api/backlog-filter-values delegates its heavy computation and ready response to the common pool (1.362109ms)
+✔ async response rechecks the real session and changed credential/status/area (1.717546ms)
+✔ changes to context, resolved authority or published source reject the old result (0.669772ms)
+✔ shared builds are independent of the first consumer session but every consumer is checked (0.301968ms)
+✔ a different user or missing initial session cannot use a captured result (0.279216ms)
+✔ one in-flight build serves independent consumers and holds bytes until their last release (8.476851ms)
+✔ expiring the first consumer session does not cancel or disclose the second consumer response (2.264795ms)
+✔ source or authority change during worker execution rejects and releases the unpublished result (1.661292ms)
+✔ bounded gzip cache separates query variants and expires by bytes and time (2.252074ms)
+✔ response authority is checked again after caller-side async work (0.951522ms)
+✔ verified cached buffers are passed separately from the small revision/query key (0.738445ms)
+✔ worker dispatch yields to the event loop and rechecks authority before admitting prepared input (0.908372ms)
+✔ ready gzip and identity clients receive equal JSON; leases end with the real HTTP response (26.685628ms)
+✔ a final authorization failure releases bytes and sends none of the completed result (5.702342ms)
+✔ ready Office bytes retain their MIME type and are not treated as gzip JSON (4.516274ms)
+✔ a client disconnected before worker completion releases ready bytes without writing response headers (7.462972ms)
+✔ same owner/generation shares one load, Dates and identity aliases remain intact (8.017462ms)
+✔ owner mismatch is refused before I/O and equal generations never share across owners (1.561453ms)
+✔ byte admission and pinning protect live snapshots, unused snapshots are evicted (0.375927ms)
+✔ a source too large for the cache is rejected even when it is idle (0.238836ms)
+✔ loadedAt mismatch never publishes a cache entry and cache hits are checked too (0.45162ms)
+✔ invalidation keeps pins/loading bytes charged until their actual release (3.112231ms)
+✔ a missing personal snapshot never falls back to a different owner (0.555522ms)
+✔ loader receives the validated immutable generation descriptor (0.202232ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/compute-source-codec.test.js (98.324271ms)
+✔ registering a cold read keeps the source guard stable; publishing a live exact replica changes it (2.560587ms)
+✔ learning cold source metadata keeps the guard stable but a different source manifest invalidates it (2.185439ms)
+✔ task access sends authority only to computations that use code editing or shared ownership (32.296791ms)
+✖ native LFL summary reads and scopes the snapshot entirely in the common worker (25.367908ms)
+✔ real persistent worker seeds an exact replica and sends ready gzip without returning raw records (126.575005ms)
+✔ generation changes refuse old jobs and owner mismatch is rejected before source access (163.961559ms)
+✔ disk admission refuses oversized source before creating files and close removes only its own replicas (1.694299ms)
+✔ native Backlog gzip equals the existing builder and refuses corrupted replicas (170.204469ms)
+✔ preparing a replacement keeps the published generation available until explicit publication (241.523891ms)
+✔ queued request input is admitted by actual encoded bytes, including large parameter values (130.271546ms)
+✔ legacy CP response and cached-envelope response preserve shared flags without loading raw source again (168.744783ms)
+✖ cold source identity is bound to verified metadata before any replacement thread can reload it (5.491591ms)
+✔ cold projection planning computes existing reuse keys in the worker and returns only runtime metadata (77.498803ms)
+✔ source fingerprints distinguish real CP updates and Backlog enrichment while ignoring LFL-only changes (296.841379ms)
+✔ generated demo ASAS/Antrepo/CP-update/LFL records keep real projection and Backlog bytes through the native pool (404.255236ms)
+✔ image registry decodes only authorized compressed CP rows in the common worker (85.004039ms)
+✔ native map and selected lazy details share source generation and keep Backlog target isolation (108.688504ms)
+✔ prepared authority hash runs in the same common worker and releases its lease (86.07426ms)
+✔ native CP code hints equal the canonical resolver without hydrating raw source records (86.590824ms)
+✔ native IPC transfers its owned encoded buffer without copying or detaching the caller input (85.115303ms)
+✔ authority IPC encoding yields before admission and keeps exact hashes across split rows and special keys (74.128116ms)
+✔ an obsolete authority encoding stops before admission while the latest directory remains usable (81.275854ms)
+[DATA_INTEGRITY] Unfinished write recovery needs attention: {
+  recovered: 0,
+  committed: 0,
+  conflicts: 2,
+  errors: [
+    {
+      file: '704c45f808294927006f558337b3929aeb21d909357986b097a329cb4a0240a8.intent.json',
+      error: "ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/model-snapshots'"
+    },
+    {
+      file: 'a7208b291ef14c8f7e1f9f69d29f936f6f082d8edae68e34df72f3ed0e638c90.intent.json',
+      error: "ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/model-snapshots'"
+    }
+  ]
+}
+✔ legacy metadata is decoded in the common worker without a raw order source and rejects replaced files (94.158455ms)
+✔ real pooled worker is retained and executes async jobs one at a time (87.734059ms)
+✔ a read-only file capability and ready output bytes use real native transfers (34.953427ms)
+✔ interactive queued work goes before older background work (1.773187ms)
+✔ oversized or invalid estimates are rejected before constructing a worker (1.421167ms)
+✔ pending input has a byte cap independently of job count (1.947441ms)
+✔ leased output and retained worker bytes stay charged until release (1.18794ms)
+✔ an active abort rejects promptly but its memory and slot wait for actual exit (1.348797ms)
+✔ old generations are cancelled per owner and cannot become current again (1.765871ms)
+✔ queued abort releases its input immediately without cancelling another job (1.024254ms)
+✔ returned memory above the estimate is rejected and its worker is retired (1.222181ms)
+✔ timeouts retire the worker and close waits for its real exit (19.999801ms)
+✔ a crashed worker rejects its job and a replacement can complete new work (1.120077ms)
+✔ public pool stats never contain owners, paths, payloads or result values (1.031924ms)
+✔ invalid signal/options cannot leave retained input in the queue (0.406705ms)
+✔ a close requested during worker construction settles after its exit (0.55316ms)
+✔ a job that fits alone can reclaim more than one idle worker cache (2.901151ms)
+✔ queue wait and main-thread submission are measured separately from worker execution (26.26355ms)
+✔ known source failures retain their safe status without accepting arbitrary worker messages (1.148918ms)
+✔ a serialization key holds only its own queue while independent interactive work can use another worker (1.279518ms)
+✔ invalid serialization keys are refused before starting any worker (0.60578ms)
+✔ queue admission reserves room for every accepted job to grow beyond its retained input (0.884665ms)
+✔ a queued deadline expires without retiring its active neighbour or waiting for a retained lease (60.242979ms)
+✔ admission still permits a smaller fitting job to drain input before an older large job (0.867428ms)
+ℹ tests 149
+ℹ suites 0
+ℹ pass 145
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14277.28107
+
+✖ failing tests:
+
+test at tests/compute-access-equivalence.test.js:1:1
+✖ tests/compute-access-equivalence.test.js (78.529917ms)
+  'test failed'
+
+test at tests/compute-source-codec.test.js:1:1
+✖ tests/compute-source-codec.test.js (98.324271ms)
+  'test failed'
+
+test at tests/compute-worker-integration.test.js:20:1
+✖ native LFL summary reads and scopes the snapshot entirely in the common worker (25.367908ms)
+  Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log'
+      at async Object.mkdir (node:internal/fs/promises:916:10)
+      at async replaceTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:180:3)
+      at async commitPrepared (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:300:5)
+      at async atomicWriteBufferAsync (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:207:3)
+      at async writeModelSnapshotAsync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/model-snapshot.js:262:3)
+      at async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/compute-worker-integration.test.js:24:60)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'mkdir',
+    path: '/home/agent/.buyer-log'
+  }
+
+test at tests/compute-worker-integration.test.js:120:1
+✖ cold source identity is bound to verified metadata before any replacement thread can reload it (5.491591ms)
+  Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log'
+      at async Object.mkdir (node:internal/fs/promises:916:10)
+      at async replaceTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:180:3)
+      at async commitPrepared (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:300:5)
+      at async atomicWriteBufferAsync (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:207:3)
+      at async writeModelSnapshotAsync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/model-snapshot.js:262:3)
+      at async TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/compute-worker-integration.test.js:122:44)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'mkdir',
+    path: '/home/agent/.buyer-log'
+  }
+[Buyer Log tests] Batch 1/1 süresi: 14.3s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.

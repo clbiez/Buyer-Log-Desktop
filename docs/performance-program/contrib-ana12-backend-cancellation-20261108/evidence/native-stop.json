@@ -1,0 +1,73 @@
+{
+  "complete": true,
+  "rows": 10000,
+  "cpuContribution": "unknown: no internal progress checkpoint within the real builder",
+  "cpuClockHz": 100,
+  "rejection": "COMPUTE_ABORTED",
+  "jobId": "98288431-5c4f-4b42-90c5-ba7968d8f169",
+  "requestId": "15f7375e-fb1c-47c0-a19f-22683b3e3b39",
+  "buildStartAt": 316.563952,
+  "abortAt": 316.621532,
+  "nativeExitAt": 320.204739,
+  "abortToNativeExitMs": 3.583207000000016,
+  "abortToExitWholeProcessCpuMs": 1.959,
+  "postAbortThreadCpuLowerBoundMs": 0,
+  "lastNativeCpuSampleAt": 319.31253,
+  "threadAbsentAfterExit": true,
+  "nativeThreadId": 1313,
+  "exitCode": 1,
+  "poolAfter": {
+    "queued": 2,
+    "completed": 1,
+    "failed": 1,
+    "rejected": 0,
+    "peakActiveWorkers": 1,
+    "peakReservedBytes": 356747729,
+    "totalQueueWaitMs": 0.32964599999998256,
+    "totalDurationMs": 227.52686700000004,
+    "totalPostMessageMs": 12.122852999999992,
+    "lastQueueWaitMs": 0.09384799999997995,
+    "lastDurationMs": 30.79137800000001,
+    "maxQueueWaitMs": 0.23579800000000262,
+    "maxWorkers": 1,
+    "workerCount": 0,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 1610612736,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 0,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 0,
+    "maxPendingBytes": 134217728
+  },
+  "events": [
+    {
+      "type": "request-join",
+      "jobId": "98288431-5c4f-4b42-90c5-ba7968d8f169",
+      "requestId": "15f7375e-fb1c-47c0-a19f-22683b3e3b39",
+      "atMs": 285.668271
+    },
+    {
+      "type": "job-build",
+      "jobId": "98288431-5c4f-4b42-90c5-ba7968d8f169",
+      "atMs": 286.078304
+    },
+    {
+      "type": "request-release",
+      "jobId": "98288431-5c4f-4b42-90c5-ba7968d8f169",
+      "requestId": "15f7375e-fb1c-47c0-a19f-22683b3e3b39",
+      "atMs": 316.893245
+    },
+    {
+      "type": "job-abort",
+      "jobId": "98288431-5c4f-4b42-90c5-ba7968d8f169",
+      "atMs": 316.96392
+    }
+  ],
+  "afterExitWholeProcessCpuWindow": {
+    "wallMs": 25,
+    "cpuMs": 0.115,
+    "attribution": "entire idle harness process; worker no longer exists"
+  }
+}

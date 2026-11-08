@@ -1,0 +1,2446 @@
+{
+  "schema": 1,
+  "rows": 10000,
+  "filters": 10,
+  "intervalMs": 12,
+  "clockTicksPerSecond": 100,
+  "cpuAttribution": "unknown: builder start/end only, no intermediate progress checkpoint; process CPU includes harness, compression and other threads",
+  "interpretation": "Adapter + real pool + instrumented real Backlog worker. Production routes are not integrated. Baseline keeps obsolete subscriptions alive.",
+  "pairs": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "abort"
+      ],
+      "baseline": {
+        "mode": "keep-obsolete",
+        "wallMs": 9409.307547999999,
+        "processCpuMs": 11230.893,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 10,
+        "started": 10,
+        "completed": 10,
+        "queuedCancelled": 0,
+        "runningStopped": 0,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 11,
+          "failed": 0,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 404777742,
+          "totalQueueWaitMs": 42721.258797,
+          "totalDurationMs": 9559.925675,
+          "totalPostMessageMs": 16.979943000002265,
+          "lastQueueWaitMs": 8319.216664,
+          "lastDurationMs": 917.154958000001,
+          "maxQueueWaitMs": 8319.216664,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 26.876244000000952,
+          "cpuMs": 53.312,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "4379be7a-ea4b-418a-aa7f-e6646e7fecb1",
+            "poolId": 2,
+            "sentAt": 1385.200465,
+            "dispatchedAt": 1385.47081,
+            "build-start": 1417.418286,
+            "build-end": 2271.82543,
+            "completedAt": 2555.634397,
+            "tid": 1194
+          },
+          {
+            "jobId": "7bc80abc-f07f-416c-8477-028ab4b27369",
+            "poolId": 3,
+            "sentAt": 1397.723376,
+            "dispatchedAt": 2555.559584,
+            "build-start": 2556.056216,
+            "build-end": 3216.920085,
+            "completedAt": 3471.365914,
+            "tid": 1194
+          },
+          {
+            "jobId": "b175b98a-900b-4dde-8d18-38b964df1a9e",
+            "poolId": 4,
+            "sentAt": 1409.768774,
+            "dispatchedAt": 3471.283724,
+            "build-start": 3471.671468,
+            "build-end": 4093.319175,
+            "completedAt": 4338.378866,
+            "tid": 1194
+          },
+          {
+            "jobId": "64932afa-2b0a-4603-bba1-3f8459bdbdd4",
+            "poolId": 5,
+            "sentAt": 1422.088423,
+            "dispatchedAt": 4338.327457,
+            "build-start": 4338.856989,
+            "build-end": 4989.001608,
+            "completedAt": 5264.748592,
+            "tid": 1194
+          },
+          {
+            "jobId": "b5d1e280-4be4-4819-9ec7-7b24b8ed8a69",
+            "poolId": 6,
+            "sentAt": 1435.483693,
+            "dispatchedAt": 5264.699945,
+            "build-start": 5264.989054,
+            "build-end": 5979.582678,
+            "completedAt": 6239.344871,
+            "tid": 1194
+          },
+          {
+            "jobId": "f6de1368-962c-403c-8409-c830751a1188",
+            "poolId": 7,
+            "sentAt": 1447.681275,
+            "dispatchedAt": 6239.241904,
+            "build-start": 6239.636433,
+            "build-end": 6882.700683,
+            "completedAt": 7136.655713,
+            "tid": 1194
+          },
+          {
+            "jobId": "3f5cf659-dcef-4fe5-a38c-e15d655ff0e7",
+            "poolId": 8,
+            "sentAt": 1460.378902,
+            "dispatchedAt": 7136.576072,
+            "build-start": 7136.91648,
+            "build-end": 7772.159258,
+            "completedAt": 8015.310984,
+            "tid": 1194
+          },
+          {
+            "jobId": "f0b02cbc-c640-4384-919f-801fbc43de62",
+            "poolId": 9,
+            "sentAt": 1471.63564,
+            "dispatchedAt": 8015.236866,
+            "build-start": 8015.574712,
+            "build-end": 8645.064895,
+            "completedAt": 8911.07881,
+            "tid": 1194
+          },
+          {
+            "jobId": "d0b30d3f-315e-413a-bf2f-50a0e1ffb0d8",
+            "poolId": 10,
+            "sentAt": 1484.645924,
+            "dispatchedAt": 8910.929073,
+            "build-start": 8911.64353,
+            "build-end": 9549.300097,
+            "completedAt": 9816.164537,
+            "tid": 1194
+          },
+          {
+            "jobId": "4e43fbe3-2dcb-4040-a335-90093db25c59",
+            "poolId": 11,
+            "sentAt": 1496.804538,
+            "dispatchedAt": 9816.109128,
+            "build-start": 9816.46965,
+            "build-end": 10466.037167,
+            "completedAt": 10733.23446,
+            "tid": 1194
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "4379be7a-ea4b-418a-aa7f-e6646e7fecb1",
+            "requestId": "7cf9dcec-e34b-408c-b5fe-452c2d2b2168",
+            "atMs": 1384.535681
+          },
+          {
+            "type": "job-build",
+            "jobId": "4379be7a-ea4b-418a-aa7f-e6646e7fecb1",
+            "atMs": 1384.943803
+          },
+          {
+            "type": "request-join",
+            "jobId": "7bc80abc-f07f-416c-8477-028ab4b27369",
+            "requestId": "58263377-c8d0-4cdf-a666-f01e4d8c46e8",
+            "atMs": 1397.587941
+          },
+          {
+            "type": "job-build",
+            "jobId": "7bc80abc-f07f-416c-8477-028ab4b27369",
+            "atMs": 1397.663463
+          },
+          {
+            "type": "request-join",
+            "jobId": "b175b98a-900b-4dde-8d18-38b964df1a9e",
+            "requestId": "23ba6dac-997a-4523-b1f7-01407dec53d8",
+            "atMs": 1409.653662
+          },
+          {
+            "type": "job-build",
+            "jobId": "b175b98a-900b-4dde-8d18-38b964df1a9e",
+            "atMs": 1409.704045
+          },
+          {
+            "type": "request-join",
+            "jobId": "64932afa-2b0a-4603-bba1-3f8459bdbdd4",
+            "requestId": "aadc87e5-3383-4d70-8a7a-47ef949372c9",
+            "atMs": 1421.90063
+          },
+          {
+            "type": "job-build",
+            "jobId": "64932afa-2b0a-4603-bba1-3f8459bdbdd4",
+            "atMs": 1422.027964
+          },
+          {
+            "type": "request-join",
+            "jobId": "b5d1e280-4be4-4819-9ec7-7b24b8ed8a69",
+            "requestId": "8652e0bb-83b0-4366-8b45-1de8949f1cc1",
+            "atMs": 1435.337729
+          },
+          {
+            "type": "job-build",
+            "jobId": "b5d1e280-4be4-4819-9ec7-7b24b8ed8a69",
+            "atMs": 1435.389676
+          },
+          {
+            "type": "request-join",
+            "jobId": "f6de1368-962c-403c-8409-c830751a1188",
+            "requestId": "20086111-ea26-4520-b8af-7d7861fe86cd",
+            "atMs": 1447.568284
+          },
+          {
+            "type": "job-build",
+            "jobId": "f6de1368-962c-403c-8409-c830751a1188",
+            "atMs": 1447.620008
+          },
+          {
+            "type": "request-join",
+            "jobId": "3f5cf659-dcef-4fe5-a38c-e15d655ff0e7",
+            "requestId": "3fada098-03ee-41a0-817a-479d764cc8cf",
+            "atMs": 1460.220142
+          },
+          {
+            "type": "job-build",
+            "jobId": "3f5cf659-dcef-4fe5-a38c-e15d655ff0e7",
+            "atMs": 1460.26408
+          },
+          {
+            "type": "request-join",
+            "jobId": "f0b02cbc-c640-4384-919f-801fbc43de62",
+            "requestId": "a6cfeb14-04fd-4f21-96ce-c75a7d0a7739",
+            "atMs": 1471.535784
+          },
+          {
+            "type": "job-build",
+            "jobId": "f0b02cbc-c640-4384-919f-801fbc43de62",
+            "atMs": 1471.579904
+          },
+          {
+            "type": "request-join",
+            "jobId": "d0b30d3f-315e-413a-bf2f-50a0e1ffb0d8",
+            "requestId": "117dc43b-5fea-43db-a559-1f77b131843f",
+            "atMs": 1484.469035
+          },
+          {
+            "type": "job-build",
+            "jobId": "d0b30d3f-315e-413a-bf2f-50a0e1ffb0d8",
+            "atMs": 1484.543989
+          },
+          {
+            "type": "request-join",
+            "jobId": "4e43fbe3-2dcb-4040-a335-90093db25c59",
+            "requestId": "f1030224-6955-496c-8efc-d0d4ff29a362",
+            "atMs": 1496.649886
+          },
+          {
+            "type": "job-build",
+            "jobId": "4e43fbe3-2dcb-4040-a335-90093db25c59",
+            "atMs": 1496.732703
+          },
+          {
+            "type": "job-complete",
+            "jobId": "4379be7a-ea4b-418a-aa7f-e6646e7fecb1",
+            "atMs": 2555.751954
+          },
+          {
+            "type": "job-complete",
+            "jobId": "7bc80abc-f07f-416c-8477-028ab4b27369",
+            "atMs": 3471.406645
+          },
+          {
+            "type": "job-complete",
+            "jobId": "b175b98a-900b-4dde-8d18-38b964df1a9e",
+            "atMs": 4338.415272
+          },
+          {
+            "type": "job-complete",
+            "jobId": "64932afa-2b0a-4603-bba1-3f8459bdbdd4",
+            "atMs": 5264.782313
+          },
+          {
+            "type": "job-complete",
+            "jobId": "b5d1e280-4be4-4819-9ec7-7b24b8ed8a69",
+            "atMs": 6239.49879
+          },
+          {
+            "type": "job-complete",
+            "jobId": "f6de1368-962c-403c-8409-c830751a1188",
+            "atMs": 7136.735296
+          },
+          {
+            "type": "job-complete",
+            "jobId": "3f5cf659-dcef-4fe5-a38c-e15d655ff0e7",
+            "atMs": 8015.34948
+          },
+          {
+            "type": "job-complete",
+            "jobId": "f0b02cbc-c640-4384-919f-801fbc43de62",
+            "atMs": 8911.171349
+          },
+          {
+            "type": "job-complete",
+            "jobId": "d0b30d3f-315e-413a-bf2f-50a0e1ffb0d8",
+            "atMs": 9816.245243
+          },
+          {
+            "type": "job-complete",
+            "jobId": "4e43fbe3-2dcb-4040-a335-90093db25c59",
+            "atMs": 10733.280185
+          },
+          {
+            "type": "request-release",
+            "jobId": "4379be7a-ea4b-418a-aa7f-e6646e7fecb1",
+            "requestId": "7cf9dcec-e34b-408c-b5fe-452c2d2b2168",
+            "atMs": 10792.45073
+          },
+          {
+            "type": "request-release",
+            "jobId": "7bc80abc-f07f-416c-8477-028ab4b27369",
+            "requestId": "58263377-c8d0-4cdf-a666-f01e4d8c46e8",
+            "atMs": 10792.544047
+          },
+          {
+            "type": "request-release",
+            "jobId": "b175b98a-900b-4dde-8d18-38b964df1a9e",
+            "requestId": "23ba6dac-997a-4523-b1f7-01407dec53d8",
+            "atMs": 10792.571441
+          },
+          {
+            "type": "request-release",
+            "jobId": "64932afa-2b0a-4603-bba1-3f8459bdbdd4",
+            "requestId": "aadc87e5-3383-4d70-8a7a-47ef949372c9",
+            "atMs": 10792.594324
+          },
+          {
+            "type": "request-release",
+            "jobId": "b5d1e280-4be4-4819-9ec7-7b24b8ed8a69",
+            "requestId": "8652e0bb-83b0-4366-8b45-1de8949f1cc1",
+            "atMs": 10792.629532
+          },
+          {
+            "type": "request-release",
+            "jobId": "f6de1368-962c-403c-8409-c830751a1188",
+            "requestId": "20086111-ea26-4520-b8af-7d7861fe86cd",
+            "atMs": 10792.639624
+          },
+          {
+            "type": "request-release",
+            "jobId": "3f5cf659-dcef-4fe5-a38c-e15d655ff0e7",
+            "requestId": "3fada098-03ee-41a0-817a-479d764cc8cf",
+            "atMs": 10792.648253
+          },
+          {
+            "type": "request-release",
+            "jobId": "f0b02cbc-c640-4384-919f-801fbc43de62",
+            "requestId": "a6cfeb14-04fd-4f21-96ce-c75a7d0a7739",
+            "atMs": 10792.673524
+          },
+          {
+            "type": "request-release",
+            "jobId": "d0b30d3f-315e-413a-bf2f-50a0e1ffb0d8",
+            "requestId": "117dc43b-5fea-43db-a559-1f77b131843f",
+            "atMs": 10792.683779
+          },
+          {
+            "type": "request-release",
+            "jobId": "4e43fbe3-2dcb-4040-a335-90093db25c59",
+            "requestId": "f1030224-6955-496c-8efc-d0d4ff29a362",
+            "atMs": 10792.72238
+          }
+        ]
+      },
+      "abort": {
+        "mode": "last-subscriber-abort",
+        "wallMs": 1306.2632200000007,
+        "processCpuMs": 1864.109,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 7,
+        "started": 1,
+        "completed": 1,
+        "queuedCancelled": 3,
+        "runningStopped": 6,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [
+          {
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "abortAt": 11968.468021,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 1.9424679999992804,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 1.388,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "abortAt": 11981.498284,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 15.729607000001124,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 18.259,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "abortAt": 11993.387712,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "abortAt": 12006.362966,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 16.296463999999105,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 19.207,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "abortAt": 12018.675867,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "abortAt": 12031.282668,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 18.47206300000107,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 23.17,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "abortAt": 12044.278458,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "abortAt": 12056.563691,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 0.7190730000002077,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 0.48,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "abortAt": 12069.168164,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 11.486089999998512,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 13.415,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          }
+        ],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 2,
+          "failed": 9,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 356770475,
+          "totalQueueWaitMs": 64.03080200000113,
+          "totalDurationMs": 1368.8066909999998,
+          "totalPostMessageMs": 16.769703000001755,
+          "lastQueueWaitMs": 11.629801999999472,
+          "lastDurationMs": 1143.2072879999996,
+          "maxQueueWaitMs": 12.801573000000644,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 19.68777399999999,
+          "cpuMs": 43.919,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "poolId": 2,
+            "sentAt": 11955.636189,
+            "dispatchedAt": 11955.717558,
+            "rejectedAt": 11969.146677,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 11968.989213,
+            "exitAt": 11970.410489,
+            "exitCode": 1
+          },
+          {
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "poolId": 3,
+            "sentAt": 11969.242334,
+            "dispatchedAt": 11971.580644,
+            "rejectedAt": 11981.717058,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 11981.637278,
+            "exitAt": 11997.227891,
+            "exitCode": 0
+          },
+          {
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "sentAt": 11981.764485,
+            "rejectedAt": 11993.583422,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "poolId": 5,
+            "sentAt": 11993.632021,
+            "dispatchedAt": 11998.481924,
+            "rejectedAt": 12006.647828,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 12006.526074,
+            "exitAt": 12022.65943,
+            "exitCode": 0
+          },
+          {
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "sentAt": 12006.707176,
+            "rejectedAt": 12018.876258,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "poolId": 7,
+            "sentAt": 12018.932293,
+            "dispatchedAt": 12023.678433,
+            "rejectedAt": 12031.549384,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 12031.424653,
+            "exitAt": 12049.754731,
+            "exitCode": 0
+          },
+          {
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "sentAt": 12031.598244,
+            "rejectedAt": 12044.606693,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "poolId": 9,
+            "sentAt": 12044.653497,
+            "dispatchedAt": 12050.863834,
+            "rejectedAt": 12056.779526,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 12056.68666,
+            "exitAt": 12057.282764,
+            "exitCode": 0
+          },
+          {
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "poolId": 10,
+            "sentAt": 12056.836353,
+            "dispatchedAt": 12058.416563,
+            "rejectedAt": 12069.35096,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 12069.278985,
+            "exitAt": 12080.654254,
+            "exitCode": 0
+          },
+          {
+            "jobId": "60dc5700-8105-4ed8-b982-91d4ff294dca",
+            "poolId": 11,
+            "sentAt": 12069.396264,
+            "dispatchedAt": 12081.75587,
+            "build-start": 12173.945053,
+            "build-end": 12950.400185,
+            "completedAt": 13224.318026,
+            "tid": 1230
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "requestId": "8f50f61b-a17d-4928-9da6-2ef31d41ab53",
+            "atMs": 11955.466268
+          },
+          {
+            "type": "job-build",
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "atMs": 11955.545151
+          },
+          {
+            "type": "request-release",
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "requestId": "8f50f61b-a17d-4928-9da6-2ef31d41ab53",
+            "atMs": 11968.564582
+          },
+          {
+            "type": "job-abort",
+            "jobId": "65a84225-8f3f-4523-9859-9ac15b3ac242",
+            "atMs": 11968.574263
+          },
+          {
+            "type": "request-join",
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "requestId": "5ab7e50b-73ac-44ce-8c3d-6e6ea5beee93",
+            "atMs": 11969.076667
+          },
+          {
+            "type": "job-build",
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "atMs": 11969.162422
+          },
+          {
+            "type": "request-release",
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "requestId": "5ab7e50b-73ac-44ce-8c3d-6e6ea5beee93",
+            "atMs": 11981.548209
+          },
+          {
+            "type": "job-abort",
+            "jobId": "228cf3b6-019f-4bd4-ab7e-1cb7d27e324d",
+            "atMs": 11981.554245
+          },
+          {
+            "type": "request-join",
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "requestId": "593ab966-3f7f-402d-91ee-49aa28a29f6c",
+            "atMs": 11981.698397
+          },
+          {
+            "type": "job-build",
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "atMs": 11981.728165
+          },
+          {
+            "type": "request-release",
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "requestId": "593ab966-3f7f-402d-91ee-49aa28a29f6c",
+            "atMs": 11993.423385
+          },
+          {
+            "type": "job-abort",
+            "jobId": "d30947db-f029-4449-a76f-ea20202a1744",
+            "atMs": 11993.450603
+          },
+          {
+            "type": "request-join",
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "requestId": "40ac0cc6-1ea3-484a-8bd2-694531adb082",
+            "atMs": 11993.563773
+          },
+          {
+            "type": "job-build",
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "atMs": 11993.596271
+          },
+          {
+            "type": "request-release",
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "requestId": "40ac0cc6-1ea3-484a-8bd2-694531adb082",
+            "atMs": 12006.412505
+          },
+          {
+            "type": "job-abort",
+            "jobId": "679db42b-4220-4981-b6a7-6288a1fb81a5",
+            "atMs": 12006.419331
+          },
+          {
+            "type": "request-join",
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "requestId": "78c652bd-2415-46e6-8af7-e4287183dcaf",
+            "atMs": 12006.600276
+          },
+          {
+            "type": "job-build",
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "atMs": 12006.661347
+          },
+          {
+            "type": "request-release",
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "requestId": "78c652bd-2415-46e6-8af7-e4287183dcaf",
+            "atMs": 12018.714137
+          },
+          {
+            "type": "job-abort",
+            "jobId": "ceb687b0-31bf-44cd-ae3c-e2911563d823",
+            "atMs": 12018.721123
+          },
+          {
+            "type": "request-join",
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "requestId": "dc0af462-30eb-4090-b28e-423131aca77a",
+            "atMs": 12018.854488
+          },
+          {
+            "type": "job-build",
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "atMs": 12018.888985
+          },
+          {
+            "type": "request-release",
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "requestId": "dc0af462-30eb-4090-b28e-423131aca77a",
+            "atMs": 12031.349422
+          },
+          {
+            "type": "job-abort",
+            "jobId": "282f756f-a45d-41d2-8711-843a39070a2f",
+            "atMs": 12031.360013
+          },
+          {
+            "type": "request-join",
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "requestId": "f869e75e-e26b-4625-b42b-1ef2e7c7f495",
+            "atMs": 12031.511578
+          },
+          {
+            "type": "job-build",
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "atMs": 12031.559851
+          },
+          {
+            "type": "request-release",
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "requestId": "f869e75e-e26b-4625-b42b-1ef2e7c7f495",
+            "atMs": 12044.34706
+          },
+          {
+            "type": "job-abort",
+            "jobId": "e45dbffe-6656-4272-819c-d6e036531369",
+            "atMs": 12044.351898
+          },
+          {
+            "type": "request-join",
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "requestId": "4f14c7b7-83f5-4ba2-851a-772f1260111a",
+            "atMs": 12044.585114
+          },
+          {
+            "type": "job-build",
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "atMs": 12044.617744
+          },
+          {
+            "type": "request-release",
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "requestId": "4f14c7b7-83f5-4ba2-851a-772f1260111a",
+            "atMs": 12056.607344
+          },
+          {
+            "type": "job-abort",
+            "jobId": "47f8a9fa-cf6b-49bc-9e6c-7411db20857f",
+            "atMs": 12056.613205
+          },
+          {
+            "type": "request-join",
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "requestId": "bbdb0a65-f700-4e99-84e6-7f8ba953703a",
+            "atMs": 12056.757134
+          },
+          {
+            "type": "job-build",
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "atMs": 12056.791882
+          },
+          {
+            "type": "request-release",
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "requestId": "bbdb0a65-f700-4e99-84e6-7f8ba953703a",
+            "atMs": 12069.204818
+          },
+          {
+            "type": "job-abort",
+            "jobId": "7352a57a-8f60-4f6b-aea2-7793479a1b8c",
+            "atMs": 12069.209625
+          },
+          {
+            "type": "request-join",
+            "jobId": "60dc5700-8105-4ed8-b982-91d4ff294dca",
+            "requestId": "f103afd9-9e0e-4672-9068-1c3df989fa21",
+            "atMs": 12069.334175
+          },
+          {
+            "type": "job-build",
+            "jobId": "60dc5700-8105-4ed8-b982-91d4ff294dca",
+            "atMs": 12069.360761
+          },
+          {
+            "type": "job-complete",
+            "jobId": "60dc5700-8105-4ed8-b982-91d4ff294dca",
+            "atMs": 13224.578486
+          },
+          {
+            "type": "request-release",
+            "jobId": "60dc5700-8105-4ed8-b982-91d4ff294dca",
+            "requestId": "f103afd9-9e0e-4672-9068-1c3df989fa21",
+            "atMs": 13261.149414
+          }
+        ]
+      }
+    },
+    {
+      "pair": 2,
+      "order": [
+        "abort",
+        "baseline"
+      ],
+      "abort": {
+        "mode": "last-subscriber-abort",
+        "wallMs": 1267.0424289999992,
+        "processCpuMs": 1794.739,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 6,
+        "started": 1,
+        "completed": 1,
+        "queuedCancelled": 4,
+        "runningStopped": 5,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [
+          {
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "abortAt": 14285.337405,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 1.6150379999999132,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 1.052,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "abortAt": 14298.260281,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 14.443695999998454,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 16.877,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "abortAt": 14310.542127,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "abortAt": 14323.245901,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 14.65179999999964,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 18.436,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "abortAt": 14336.333576,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "abortAt": 14348.861194,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 13.321408000001611,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 14.495,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "abortAt": 14360.426308,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "abortAt": 14372.848602,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 13.632653000000573,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 13.747,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "abortAt": 14384.733152,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          }
+        ],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 2,
+          "failed": 9,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 356767163,
+          "totalQueueWaitMs": 57.16808499999934,
+          "totalDurationMs": 1339.2055490000002,
+          "totalPostMessageMs": 9.578578999997262,
+          "lastQueueWaitMs": 1.8015209999994113,
+          "lastDurationMs": 1121.38386,
+          "maxQueueWaitMs": 12.984204000000318,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 20.04841999999917,
+          "cpuMs": 0.378,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "poolId": 2,
+            "sentAt": 14273.194848,
+            "dispatchedAt": 14273.267868,
+            "rejectedAt": 14285.790732,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 14285.607293,
+            "exitAt": 14286.952443,
+            "exitCode": 1
+          },
+          {
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "poolId": 3,
+            "sentAt": 14285.886514,
+            "dispatchedAt": 14288.211116,
+            "rejectedAt": 14298.531639,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 14298.395773,
+            "exitAt": 14312.703977,
+            "exitCode": 0
+          },
+          {
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "sentAt": 14298.59563,
+            "rejectedAt": 14310.762923,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "poolId": 5,
+            "sentAt": 14310.820354,
+            "dispatchedAt": 14313.678543,
+            "rejectedAt": 14323.392185,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 14323.327126,
+            "exitAt": 14337.897701,
+            "exitCode": 0
+          },
+          {
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "sentAt": 14323.463785,
+            "rejectedAt": 14336.52501,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "poolId": 7,
+            "sentAt": 14336.57,
+            "dispatchedAt": 14338.954613,
+            "rejectedAt": 14349.057054,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 14348.971211,
+            "exitAt": 14362.182602,
+            "exitCode": 0
+          },
+          {
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "sentAt": 14349.111823,
+            "rejectedAt": 14360.639468,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "poolId": 9,
+            "sentAt": 14360.695763,
+            "dispatchedAt": 14363.051148,
+            "rejectedAt": 14373.005653,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 14372.936101,
+            "exitAt": 14386.481255,
+            "exitCode": 0
+          },
+          {
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "sentAt": 14373.051752,
+            "rejectedAt": 14384.874901,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "b7fb73bf-c216-493d-bf68-c234dbe36fec",
+            "poolId": 11,
+            "sentAt": 14384.916599,
+            "dispatchedAt": 14387.364313,
+            "build-start": 14482.807777,
+            "build-end": 15252.969475,
+            "completedAt": 15508.131861,
+            "tid": 1236
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "requestId": "af6698f5-ef83-4455-aa2a-a56bee4bcf9c",
+            "atMs": 14273.085349
+          },
+          {
+            "type": "job-build",
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "atMs": 14273.126952
+          },
+          {
+            "type": "request-release",
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "requestId": "af6698f5-ef83-4455-aa2a-a56bee4bcf9c",
+            "atMs": 14285.415692
+          },
+          {
+            "type": "job-abort",
+            "jobId": "b5fe4bc3-60db-4b2e-9148-9bc0d6123f41",
+            "atMs": 14285.421985
+          },
+          {
+            "type": "request-join",
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "requestId": "9d4f14dd-cac6-47cc-92c5-d2b1ace177d3",
+            "atMs": 14285.758878
+          },
+          {
+            "type": "job-build",
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "atMs": 14285.809082
+          },
+          {
+            "type": "request-release",
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "requestId": "9d4f14dd-cac6-47cc-92c5-d2b1ace177d3",
+            "atMs": 14298.306062
+          },
+          {
+            "type": "job-abort",
+            "jobId": "ea7380ef-3fa1-45be-90df-a82dfcfb8229",
+            "atMs": 14298.312655
+          },
+          {
+            "type": "request-join",
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "requestId": "4f0da8be-6eb1-48b9-98dd-89b9b913ce51",
+            "atMs": 14298.504408
+          },
+          {
+            "type": "job-build",
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "atMs": 14298.548118
+          },
+          {
+            "type": "request-release",
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "requestId": "4f0da8be-6eb1-48b9-98dd-89b9b913ce51",
+            "atMs": 14310.591514
+          },
+          {
+            "type": "job-abort",
+            "jobId": "b6ca3984-766d-4b59-ab3e-837f38695ebc",
+            "atMs": 14310.598754
+          },
+          {
+            "type": "request-join",
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "requestId": "0651d303-a5e3-4346-a580-8c3d869f5c9f",
+            "atMs": 14310.738129
+          },
+          {
+            "type": "job-build",
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "atMs": 14310.777525
+          },
+          {
+            "type": "request-release",
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "requestId": "0651d303-a5e3-4346-a580-8c3d869f5c9f",
+            "atMs": 14323.274515
+          },
+          {
+            "type": "job-abort",
+            "jobId": "5c31ab63-c583-4037-9b40-ddf072b9b0fd",
+            "atMs": 14323.279572
+          },
+          {
+            "type": "request-join",
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "requestId": "30fd502a-92da-4096-abcd-76cff644f244",
+            "atMs": 14323.376344
+          },
+          {
+            "type": "job-build",
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "atMs": 14323.40247
+          },
+          {
+            "type": "request-release",
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "requestId": "30fd502a-92da-4096-abcd-76cff644f244",
+            "atMs": 14336.375886
+          },
+          {
+            "type": "job-abort",
+            "jobId": "a4ac8c83-0b18-4641-9f11-209a4d2b94d0",
+            "atMs": 14336.381102
+          },
+          {
+            "type": "request-join",
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "requestId": "2ba42313-f45c-472d-9c76-bcec3cbfab6a",
+            "atMs": 14336.507875
+          },
+          {
+            "type": "job-build",
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "atMs": 14336.535062
+          },
+          {
+            "type": "request-release",
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "requestId": "2ba42313-f45c-472d-9c76-bcec3cbfab6a",
+            "atMs": 14348.899756
+          },
+          {
+            "type": "job-abort",
+            "jobId": "2d8083b5-ca21-4b84-a5d3-df5e57f98539",
+            "atMs": 14348.90686
+          },
+          {
+            "type": "request-join",
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "requestId": "f2b1114e-7282-4b11-bc03-1906b2b5b6e1",
+            "atMs": 14349.035584
+          },
+          {
+            "type": "job-build",
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "atMs": 14349.069822
+          },
+          {
+            "type": "request-release",
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "requestId": "f2b1114e-7282-4b11-bc03-1906b2b5b6e1",
+            "atMs": 14360.491376
+          },
+          {
+            "type": "job-abort",
+            "jobId": "17598a75-fbc5-4515-9c5e-775ec8cdb414",
+            "atMs": 14360.498627
+          },
+          {
+            "type": "request-join",
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "requestId": "71463636-80a4-4823-a2e6-dd80c422ba80",
+            "atMs": 14360.618801
+          },
+          {
+            "type": "job-build",
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "atMs": 14360.652389
+          },
+          {
+            "type": "request-release",
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "requestId": "71463636-80a4-4823-a2e6-dd80c422ba80",
+            "atMs": 14372.881593
+          },
+          {
+            "type": "job-abort",
+            "jobId": "d520506f-a02d-4e79-be94-48088e503450",
+            "atMs": 14372.886701
+          },
+          {
+            "type": "request-join",
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "requestId": "54ff3a8c-4888-4f85-8e52-612edef0444e",
+            "atMs": 14372.988597
+          },
+          {
+            "type": "job-build",
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "atMs": 14373.016079
+          },
+          {
+            "type": "request-release",
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "requestId": "54ff3a8c-4888-4f85-8e52-612edef0444e",
+            "atMs": 14384.765543
+          },
+          {
+            "type": "job-abort",
+            "jobId": "eb1bdfb7-b9a2-4738-a55b-078d524364f6",
+            "atMs": 14384.769212
+          },
+          {
+            "type": "request-join",
+            "jobId": "b7fb73bf-c216-493d-bf68-c234dbe36fec",
+            "requestId": "5a2b38f0-8498-45ca-8ac9-237872da208a",
+            "atMs": 14384.858784
+          },
+          {
+            "type": "job-build",
+            "jobId": "b7fb73bf-c216-493d-bf68-c234dbe36fec",
+            "atMs": 14384.883596
+          },
+          {
+            "type": "job-complete",
+            "jobId": "b7fb73bf-c216-493d-bf68-c234dbe36fec",
+            "atMs": 15508.279003
+          },
+          {
+            "type": "request-release",
+            "jobId": "b7fb73bf-c216-493d-bf68-c234dbe36fec",
+            "requestId": "5a2b38f0-8498-45ca-8ac9-237872da208a",
+            "atMs": 15539.878951
+          }
+        ]
+      },
+      "baseline": {
+        "mode": "keep-obsolete",
+        "wallMs": 9139.860205,
+        "processCpuMs": 10910.621,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 10,
+        "started": 10,
+        "completed": 10,
+        "queuedCancelled": 0,
+        "runningStopped": 0,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 11,
+          "failed": 0,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 404777742,
+          "totalQueueWaitMs": 41320.523088999995,
+          "totalDurationMs": 9251.144353,
+          "totalPostMessageMs": 19.29429099999834,
+          "lastQueueWaitMs": 8094.291251999999,
+          "lastDurationMs": 904.2266810000001,
+          "maxQueueWaitMs": 8094.291251999999,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 19.83739499999865,
+          "cpuMs": 33.79,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "0980bc0f-2040-495c-ba15-248c180c9fbb",
+            "poolId": 2,
+            "sentAt": 16547.485158,
+            "dispatchedAt": 16547.549246,
+            "build-start": 16572.074401,
+            "build-end": 17362.386624,
+            "completedAt": 17639.164857,
+            "tid": 1237
+          },
+          {
+            "jobId": "fcb117b2-2653-4efb-bb8c-cef7e08e1374",
+            "poolId": 3,
+            "sentAt": 16560.467798,
+            "dispatchedAt": 17639.116553,
+            "build-start": 17639.447591,
+            "build-end": 18307.216037,
+            "completedAt": 18561.094491,
+            "tid": 1237
+          },
+          {
+            "jobId": "638bbfb7-2850-4ad9-9f27-f6eae51d2724",
+            "poolId": 4,
+            "sentAt": 16573.473847,
+            "dispatchedAt": 18561.046212,
+            "build-start": 18561.369961,
+            "build-end": 19206.220334,
+            "completedAt": 19448.062542,
+            "tid": 1237
+          },
+          {
+            "jobId": "d2894ba0-6cab-485a-9d15-7262a91dc5ad",
+            "poolId": 5,
+            "sentAt": 16586.28185,
+            "dispatchedAt": 19447.992636,
+            "build-start": 19448.376344,
+            "build-end": 20075.874269,
+            "completedAt": 20320.049611,
+            "tid": 1237
+          },
+          {
+            "jobId": "55b95599-312a-4a66-91d8-d238e3dbae09",
+            "poolId": 6,
+            "sentAt": 16598.154865,
+            "dispatchedAt": 20320.002989,
+            "build-start": 20320.277233,
+            "build-end": 20942.865132,
+            "completedAt": 21180.071751,
+            "tid": 1237
+          },
+          {
+            "jobId": "1a737884-2aa0-4703-9b93-83a5a5ea61fa",
+            "poolId": 7,
+            "sentAt": 16610.094192,
+            "dispatchedAt": 21180.019305,
+            "build-start": 21180.373449,
+            "build-end": 21822.264661,
+            "completedAt": 22076.395278,
+            "tid": 1237
+          },
+          {
+            "jobId": "508f3e7b-bde6-4bbc-a9fc-d4ff3213a175",
+            "poolId": 8,
+            "sentAt": 16621.999506,
+            "dispatchedAt": 22076.34367,
+            "build-start": 22076.792144,
+            "build-end": 22719.889398,
+            "completedAt": 22976.393926,
+            "tid": 1237
+          },
+          {
+            "jobId": "1f42a825-abdb-4d7f-8f5e-338306340bf5",
+            "poolId": 9,
+            "sentAt": 16634.105691,
+            "dispatchedAt": 22971.615288,
+            "build-start": 22976.518605,
+            "build-end": 23611.862249,
+            "completedAt": 23861.019443,
+            "tid": 1237
+          },
+          {
+            "jobId": "fb69c945-7b48-4e1e-87bf-9ccd2f9a834d",
+            "poolId": 10,
+            "sentAt": 16646.022039,
+            "dispatchedAt": 23860.973732,
+            "build-start": 23861.31905,
+            "build-end": 24503.346095,
+            "completedAt": 24752.529888,
+            "tid": 1237
+          },
+          {
+            "jobId": "3af2fc4e-b721-4a23-93ce-a85764d76e5c",
+            "poolId": 11,
+            "sentAt": 16658.161158,
+            "dispatchedAt": 24752.490058,
+            "build-start": 24752.858649,
+            "build-end": 25397.113611,
+            "completedAt": 25656.714608,
+            "tid": 1237
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "0980bc0f-2040-495c-ba15-248c180c9fbb",
+            "requestId": "82c63be7-8e3c-4420-b464-d1971ca172fe",
+            "atMs": 16547.370432
+          },
+          {
+            "type": "job-build",
+            "jobId": "0980bc0f-2040-495c-ba15-248c180c9fbb",
+            "atMs": 16547.409144
+          },
+          {
+            "type": "request-join",
+            "jobId": "fcb117b2-2653-4efb-bb8c-cef7e08e1374",
+            "requestId": "5e1fad3e-9801-4bfb-b1f5-723d1c8e7134",
+            "atMs": 16560.371396
+          },
+          {
+            "type": "job-build",
+            "jobId": "fcb117b2-2653-4efb-bb8c-cef7e08e1374",
+            "atMs": 16560.404309
+          },
+          {
+            "type": "request-join",
+            "jobId": "638bbfb7-2850-4ad9-9f27-f6eae51d2724",
+            "requestId": "27f20111-f2a0-4f81-a74b-c7b328fbcb1f",
+            "atMs": 16573.37157
+          },
+          {
+            "type": "job-build",
+            "jobId": "638bbfb7-2850-4ad9-9f27-f6eae51d2724",
+            "atMs": 16573.401428
+          },
+          {
+            "type": "request-join",
+            "jobId": "d2894ba0-6cab-485a-9d15-7262a91dc5ad",
+            "requestId": "ed2654b4-a297-45d7-98b9-bcfa3aba9d1e",
+            "atMs": 16586.215844
+          },
+          {
+            "type": "job-build",
+            "jobId": "d2894ba0-6cab-485a-9d15-7262a91dc5ad",
+            "atMs": 16586.248179
+          },
+          {
+            "type": "request-join",
+            "jobId": "55b95599-312a-4a66-91d8-d238e3dbae09",
+            "requestId": "73a6f1b4-7c89-4538-85b0-417f56a9176c",
+            "atMs": 16598.094126
+          },
+          {
+            "type": "job-build",
+            "jobId": "55b95599-312a-4a66-91d8-d238e3dbae09",
+            "atMs": 16598.122786
+          },
+          {
+            "type": "request-join",
+            "jobId": "1a737884-2aa0-4703-9b93-83a5a5ea61fa",
+            "requestId": "6842c56e-232f-45fb-b34a-3c528d8caccd",
+            "atMs": 16609.935812
+          },
+          {
+            "type": "job-build",
+            "jobId": "1a737884-2aa0-4703-9b93-83a5a5ea61fa",
+            "atMs": 16610.059849
+          },
+          {
+            "type": "request-join",
+            "jobId": "508f3e7b-bde6-4bbc-a9fc-d4ff3213a175",
+            "requestId": "7c065cb5-dffe-418b-b81f-31d956b1d854",
+            "atMs": 16621.926967
+          },
+          {
+            "type": "job-build",
+            "jobId": "508f3e7b-bde6-4bbc-a9fc-d4ff3213a175",
+            "atMs": 16621.96219
+          },
+          {
+            "type": "request-join",
+            "jobId": "1f42a825-abdb-4d7f-8f5e-338306340bf5",
+            "requestId": "d8242563-5af7-4327-8156-619613a078fa",
+            "atMs": 16634.030364
+          },
+          {
+            "type": "job-build",
+            "jobId": "1f42a825-abdb-4d7f-8f5e-338306340bf5",
+            "atMs": 16634.066649
+          },
+          {
+            "type": "request-join",
+            "jobId": "fb69c945-7b48-4e1e-87bf-9ccd2f9a834d",
+            "requestId": "2002da48-c018-427b-abfd-1f4f07d7ddca",
+            "atMs": 16645.962029
+          },
+          {
+            "type": "job-build",
+            "jobId": "fb69c945-7b48-4e1e-87bf-9ccd2f9a834d",
+            "atMs": 16645.990506
+          },
+          {
+            "type": "request-join",
+            "jobId": "3af2fc4e-b721-4a23-93ce-a85764d76e5c",
+            "requestId": "a21dd150-e118-4ce6-9604-5ed2b54e3c86",
+            "atMs": 16658.093355
+          },
+          {
+            "type": "job-build",
+            "jobId": "3af2fc4e-b721-4a23-93ce-a85764d76e5c",
+            "atMs": 16658.12374
+          },
+          {
+            "type": "job-complete",
+            "jobId": "0980bc0f-2040-495c-ba15-248c180c9fbb",
+            "atMs": 17639.195433
+          },
+          {
+            "type": "job-complete",
+            "jobId": "fcb117b2-2653-4efb-bb8c-cef7e08e1374",
+            "atMs": 18561.121389
+          },
+          {
+            "type": "job-complete",
+            "jobId": "638bbfb7-2850-4ad9-9f27-f6eae51d2724",
+            "atMs": 19448.085129
+          },
+          {
+            "type": "job-complete",
+            "jobId": "d2894ba0-6cab-485a-9d15-7262a91dc5ad",
+            "atMs": 20320.075893
+          },
+          {
+            "type": "job-complete",
+            "jobId": "55b95599-312a-4a66-91d8-d238e3dbae09",
+            "atMs": 21180.098265
+          },
+          {
+            "type": "job-complete",
+            "jobId": "1a737884-2aa0-4703-9b93-83a5a5ea61fa",
+            "atMs": 22076.42369
+          },
+          {
+            "type": "job-complete",
+            "jobId": "508f3e7b-bde6-4bbc-a9fc-d4ff3213a175",
+            "atMs": 22976.470755
+          },
+          {
+            "type": "job-complete",
+            "jobId": "1f42a825-abdb-4d7f-8f5e-338306340bf5",
+            "atMs": 23861.045438
+          },
+          {
+            "type": "job-complete",
+            "jobId": "fb69c945-7b48-4e1e-87bf-9ccd2f9a834d",
+            "atMs": 24752.559109
+          },
+          {
+            "type": "job-complete",
+            "jobId": "3af2fc4e-b721-4a23-93ce-a85764d76e5c",
+            "atMs": 25656.743132
+          },
+          {
+            "type": "request-release",
+            "jobId": "0980bc0f-2040-495c-ba15-248c180c9fbb",
+            "requestId": "82c63be7-8e3c-4420-b464-d1971ca172fe",
+            "atMs": 25686.816152
+          },
+          {
+            "type": "request-release",
+            "jobId": "fcb117b2-2653-4efb-bb8c-cef7e08e1374",
+            "requestId": "5e1fad3e-9801-4bfb-b1f5-723d1c8e7134",
+            "atMs": 25686.835821
+          },
+          {
+            "type": "request-release",
+            "jobId": "638bbfb7-2850-4ad9-9f27-f6eae51d2724",
+            "requestId": "27f20111-f2a0-4f81-a74b-c7b328fbcb1f",
+            "atMs": 25686.845876
+          },
+          {
+            "type": "request-release",
+            "jobId": "d2894ba0-6cab-485a-9d15-7262a91dc5ad",
+            "requestId": "ed2654b4-a297-45d7-98b9-bcfa3aba9d1e",
+            "atMs": 25686.854663
+          },
+          {
+            "type": "request-release",
+            "jobId": "55b95599-312a-4a66-91d8-d238e3dbae09",
+            "requestId": "73a6f1b4-7c89-4538-85b0-417f56a9176c",
+            "atMs": 25686.863795
+          },
+          {
+            "type": "request-release",
+            "jobId": "1a737884-2aa0-4703-9b93-83a5a5ea61fa",
+            "requestId": "6842c56e-232f-45fb-b34a-3c528d8caccd",
+            "atMs": 25686.871811
+          },
+          {
+            "type": "request-release",
+            "jobId": "508f3e7b-bde6-4bbc-a9fc-d4ff3213a175",
+            "requestId": "7c065cb5-dffe-418b-b81f-31d956b1d854",
+            "atMs": 25686.908918
+          },
+          {
+            "type": "request-release",
+            "jobId": "1f42a825-abdb-4d7f-8f5e-338306340bf5",
+            "requestId": "d8242563-5af7-4327-8156-619613a078fa",
+            "atMs": 25686.922674
+          },
+          {
+            "type": "request-release",
+            "jobId": "fb69c945-7b48-4e1e-87bf-9ccd2f9a834d",
+            "requestId": "2002da48-c018-427b-abfd-1f4f07d7ddca",
+            "atMs": 25686.93137
+          },
+          {
+            "type": "request-release",
+            "jobId": "3af2fc4e-b721-4a23-93ce-a85764d76e5c",
+            "requestId": "a21dd150-e118-4ce6-9604-5ed2b54e3c86",
+            "atMs": 25686.940894
+          }
+        ]
+      }
+    },
+    {
+      "pair": 3,
+      "order": [
+        "baseline",
+        "abort"
+      ],
+      "baseline": {
+        "mode": "keep-obsolete",
+        "wallMs": 9548.430583000001,
+        "processCpuMs": 11425.597,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 10,
+        "started": 10,
+        "completed": 10,
+        "queuedCancelled": 0,
+        "runningStopped": 0,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 11,
+          "failed": 0,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 404777742,
+          "totalQueueWaitMs": 43279.33673399999,
+          "totalDurationMs": 9682.785786,
+          "totalPostMessageMs": 15.555888999992021,
+          "lastQueueWaitMs": 8481.376958,
+          "lastDurationMs": 923.215793000003,
+          "maxQueueWaitMs": 8481.376958,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 20.325471999996807,
+          "cpuMs": 32.406,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "759ce5f3-0517-46f4-b58a-1d61c108b932",
+            "poolId": 2,
+            "sentAt": 26719.41286,
+            "dispatchedAt": 26719.54952,
+            "build-start": 26746.646963,
+            "build-end": 27584.223987,
+            "completedAt": 27851.358459,
+            "tid": 1238
+          },
+          {
+            "jobId": "4dcc3dbc-e62f-42e2-b3cf-e9217b4e0600",
+            "poolId": 3,
+            "sentAt": 26732.280451,
+            "dispatchedAt": 27851.27071,
+            "build-start": 27851.647786,
+            "build-end": 28549.938243,
+            "completedAt": 28808.370088,
+            "tid": 1238
+          },
+          {
+            "jobId": "417f96c5-d641-436f-b26b-fe187868cd18",
+            "poolId": 4,
+            "sentAt": 26743.960071,
+            "dispatchedAt": 28806.736425,
+            "build-start": 28808.48108,
+            "build-end": 29487.52994,
+            "completedAt": 29748.232228,
+            "tid": 1238
+          },
+          {
+            "jobId": "c762a49a-212b-4faa-a05d-7ce64ac3dc45",
+            "poolId": 5,
+            "sentAt": 26756.239956,
+            "dispatchedAt": 29748.184492,
+            "build-start": 29748.577383,
+            "build-end": 30407.08339,
+            "completedAt": 30666.924254,
+            "tid": 1238
+          },
+          {
+            "jobId": "c5679937-fdb1-44fa-9204-78160c6bec2c",
+            "poolId": 6,
+            "sentAt": 26768.020445,
+            "dispatchedAt": 30666.871273,
+            "build-start": 30667.314639,
+            "build-end": 31317.055568,
+            "completedAt": 31571.239026,
+            "tid": 1238
+          },
+          {
+            "jobId": "47886962-21ce-40da-87bb-52206b55cae1",
+            "poolId": 7,
+            "sentAt": 26779.755888,
+            "dispatchedAt": 31571.191075,
+            "build-start": 31571.498524,
+            "build-end": 32248.203638,
+            "completedAt": 32512.365681,
+            "tid": 1238
+          },
+          {
+            "jobId": "8699abe3-6dab-4629-80fd-73ec8b02a522",
+            "poolId": 8,
+            "sentAt": 26792.414965,
+            "dispatchedAt": 32508.489947,
+            "build-start": 32512.471268,
+            "build-end": 33188.193741,
+            "completedAt": 33454.3335,
+            "tid": 1238
+          },
+          {
+            "jobId": "3bf3fdfb-c53f-492e-82e7-3854506402b5",
+            "poolId": 9,
+            "sentAt": 26805.105725,
+            "dispatchedAt": 33454.289898,
+            "build-start": 33454.634209,
+            "build-end": 34126.029667,
+            "completedAt": 34386.337608,
+            "tid": 1238
+          },
+          {
+            "jobId": "f565ff45-c1fe-49a9-9dec-75877922db52",
+            "poolId": 10,
+            "sentAt": 26817.39725,
+            "dispatchedAt": 34386.295878,
+            "build-start": 34386.653501,
+            "build-end": 35050.061347,
+            "completedAt": 35311.210001,
+            "tid": 1238
+          },
+          {
+            "jobId": "9c33dd5b-e42a-48b0-8f87-ebb1017ba210",
+            "poolId": 11,
+            "sentAt": 26829.758792,
+            "dispatchedAt": 35311.165575,
+            "build-start": 35311.485587,
+            "build-end": 35981.81863,
+            "completedAt": 36234.377155,
+            "tid": 1238
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "759ce5f3-0517-46f4-b58a-1d61c108b932",
+            "requestId": "d8331635-cde7-4531-9cc3-063238a3548c",
+            "atMs": 26719.281967
+          },
+          {
+            "type": "job-build",
+            "jobId": "759ce5f3-0517-46f4-b58a-1d61c108b932",
+            "atMs": 26719.348001
+          },
+          {
+            "type": "request-join",
+            "jobId": "4dcc3dbc-e62f-42e2-b3cf-e9217b4e0600",
+            "requestId": "bd83a5fe-c68d-4fb0-ace4-c4614af6de4a",
+            "atMs": 26732.204675
+          },
+          {
+            "type": "job-build",
+            "jobId": "4dcc3dbc-e62f-42e2-b3cf-e9217b4e0600",
+            "atMs": 26732.24064
+          },
+          {
+            "type": "request-join",
+            "jobId": "417f96c5-d641-436f-b26b-fe187868cd18",
+            "requestId": "06630d68-1c67-46ea-b58c-e954b1d20470",
+            "atMs": 26743.910693
+          },
+          {
+            "type": "job-build",
+            "jobId": "417f96c5-d641-436f-b26b-fe187868cd18",
+            "atMs": 26743.931486
+          },
+          {
+            "type": "request-join",
+            "jobId": "c762a49a-212b-4faa-a05d-7ce64ac3dc45",
+            "requestId": "bb9aec46-cec2-44e1-a842-5c4c9bda1ffd",
+            "atMs": 26756.194575
+          },
+          {
+            "type": "job-build",
+            "jobId": "c762a49a-212b-4faa-a05d-7ce64ac3dc45",
+            "atMs": 26756.212993
+          },
+          {
+            "type": "request-join",
+            "jobId": "c5679937-fdb1-44fa-9204-78160c6bec2c",
+            "requestId": "b69e9060-d2fa-45f3-a378-71f403d449c3",
+            "atMs": 26767.961371
+          },
+          {
+            "type": "job-build",
+            "jobId": "c5679937-fdb1-44fa-9204-78160c6bec2c",
+            "atMs": 26767.9894
+          },
+          {
+            "type": "request-join",
+            "jobId": "47886962-21ce-40da-87bb-52206b55cae1",
+            "requestId": "b3bb8377-1183-43ae-ab08-649764d493c4",
+            "atMs": 26779.706047
+          },
+          {
+            "type": "job-build",
+            "jobId": "47886962-21ce-40da-87bb-52206b55cae1",
+            "atMs": 26779.728144
+          },
+          {
+            "type": "request-join",
+            "jobId": "8699abe3-6dab-4629-80fd-73ec8b02a522",
+            "requestId": "92640b55-830f-4483-9011-9b6c7c23e05b",
+            "atMs": 26792.371288
+          },
+          {
+            "type": "job-build",
+            "jobId": "8699abe3-6dab-4629-80fd-73ec8b02a522",
+            "atMs": 26792.390403
+          },
+          {
+            "type": "request-join",
+            "jobId": "3bf3fdfb-c53f-492e-82e7-3854506402b5",
+            "requestId": "8ea7a705-62d1-400c-aeab-a27078469504",
+            "atMs": 26805.060603
+          },
+          {
+            "type": "job-build",
+            "jobId": "3bf3fdfb-c53f-492e-82e7-3854506402b5",
+            "atMs": 26805.080767
+          },
+          {
+            "type": "request-join",
+            "jobId": "f565ff45-c1fe-49a9-9dec-75877922db52",
+            "requestId": "f72656a6-d833-4c3b-a8b5-d3bec332429d",
+            "atMs": 26817.324112
+          },
+          {
+            "type": "job-build",
+            "jobId": "f565ff45-c1fe-49a9-9dec-75877922db52",
+            "atMs": 26817.348528
+          },
+          {
+            "type": "request-join",
+            "jobId": "9c33dd5b-e42a-48b0-8f87-ebb1017ba210",
+            "requestId": "ba878509-d38c-4cdf-a7ce-4dadcfd9e4c6",
+            "atMs": 26829.705349
+          },
+          {
+            "type": "job-build",
+            "jobId": "9c33dd5b-e42a-48b0-8f87-ebb1017ba210",
+            "atMs": 26829.729968
+          },
+          {
+            "type": "job-complete",
+            "jobId": "759ce5f3-0517-46f4-b58a-1d61c108b932",
+            "atMs": 27851.400654
+          },
+          {
+            "type": "job-complete",
+            "jobId": "4dcc3dbc-e62f-42e2-b3cf-e9217b4e0600",
+            "atMs": 28808.415782
+          },
+          {
+            "type": "job-complete",
+            "jobId": "417f96c5-d641-436f-b26b-fe187868cd18",
+            "atMs": 29748.260271
+          },
+          {
+            "type": "job-complete",
+            "jobId": "c762a49a-212b-4faa-a05d-7ce64ac3dc45",
+            "atMs": 30666.952696
+          },
+          {
+            "type": "job-complete",
+            "jobId": "c5679937-fdb1-44fa-9204-78160c6bec2c",
+            "atMs": 31571.266412
+          },
+          {
+            "type": "job-complete",
+            "jobId": "47886962-21ce-40da-87bb-52206b55cae1",
+            "atMs": 32512.399871
+          },
+          {
+            "type": "job-complete",
+            "jobId": "8699abe3-6dab-4629-80fd-73ec8b02a522",
+            "atMs": 33454.361931
+          },
+          {
+            "type": "job-complete",
+            "jobId": "3bf3fdfb-c53f-492e-82e7-3854506402b5",
+            "atMs": 34386.369625
+          },
+          {
+            "type": "job-complete",
+            "jobId": "f565ff45-c1fe-49a9-9dec-75877922db52",
+            "atMs": 35311.377952
+          },
+          {
+            "type": "job-complete",
+            "jobId": "9c33dd5b-e42a-48b0-8f87-ebb1017ba210",
+            "atMs": 36234.406864
+          },
+          {
+            "type": "request-release",
+            "jobId": "759ce5f3-0517-46f4-b58a-1d61c108b932",
+            "requestId": "d8331635-cde7-4531-9cc3-063238a3548c",
+            "atMs": 36267.197303
+          },
+          {
+            "type": "request-release",
+            "jobId": "4dcc3dbc-e62f-42e2-b3cf-e9217b4e0600",
+            "requestId": "bd83a5fe-c68d-4fb0-ace4-c4614af6de4a",
+            "atMs": 36267.216737
+          },
+          {
+            "type": "request-release",
+            "jobId": "417f96c5-d641-436f-b26b-fe187868cd18",
+            "requestId": "06630d68-1c67-46ea-b58c-e954b1d20470",
+            "atMs": 36267.22623
+          },
+          {
+            "type": "request-release",
+            "jobId": "c762a49a-212b-4faa-a05d-7ce64ac3dc45",
+            "requestId": "bb9aec46-cec2-44e1-a842-5c4c9bda1ffd",
+            "atMs": 36267.23547
+          },
+          {
+            "type": "request-release",
+            "jobId": "c5679937-fdb1-44fa-9204-78160c6bec2c",
+            "requestId": "b69e9060-d2fa-45f3-a378-71f403d449c3",
+            "atMs": 36267.243655
+          },
+          {
+            "type": "request-release",
+            "jobId": "47886962-21ce-40da-87bb-52206b55cae1",
+            "requestId": "b3bb8377-1183-43ae-ab08-649764d493c4",
+            "atMs": 36267.251906
+          },
+          {
+            "type": "request-release",
+            "jobId": "8699abe3-6dab-4629-80fd-73ec8b02a522",
+            "requestId": "92640b55-830f-4483-9011-9b6c7c23e05b",
+            "atMs": 36267.260447
+          },
+          {
+            "type": "request-release",
+            "jobId": "3bf3fdfb-c53f-492e-82e7-3854506402b5",
+            "requestId": "8ea7a705-62d1-400c-aeab-a27078469504",
+            "atMs": 36267.268861
+          },
+          {
+            "type": "request-release",
+            "jobId": "f565ff45-c1fe-49a9-9dec-75877922db52",
+            "requestId": "f72656a6-d833-4c3b-a8b5-d3bec332429d",
+            "atMs": 36267.277821
+          },
+          {
+            "type": "request-release",
+            "jobId": "9c33dd5b-e42a-48b0-8f87-ebb1017ba210",
+            "requestId": "ba878509-d38c-4cdf-a7ce-4dadcfd9e4c6",
+            "atMs": 36267.285076
+          }
+        ]
+      },
+      "abort": {
+        "mode": "last-subscriber-abort",
+        "wallMs": 1295.131981999999,
+        "processCpuMs": 1785.48,
+        "finalHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "oracleHash": "c0e31a712318d7cb3ac7dd2ba62017f5e8e8b4fa9e9e9d6d1785080c6a0b9865",
+        "submitted": 10,
+        "admitted": 10,
+        "dispatched": 7,
+        "started": 1,
+        "completed": 1,
+        "queuedCancelled": 3,
+        "runningStopped": 6,
+        "stoppedInsideBuilder": 0,
+        "cancellations": [
+          {
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "abortAt": 37301.316169,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 2.2200149999989662,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 4.596,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "abortAt": 37313.558684,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 17.791225999993912,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 17.15,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "abortAt": 37325.779985,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "abortAt": 37338.078209,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 0.9765079999997397,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 0.317,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "abortAt": 37349.732472,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 12.927632999999332,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 13.846,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "abortAt": 37361.578119,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "abortAt": 37374.28417,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 12.424188999997568,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 13.815,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "abortAt": 37386.307363,
+            "ticksAtAbort": null,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          },
+          {
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "abortAt": 37399.335347,
+            "ticksAtAbort": null,
+            "abortToNativeExitMs": 12.785754999997152,
+            "nativeThreadAbsentAtExit": null,
+            "abortToExitWholeProcessCpuMs": 12.706,
+            "observedThreadPostAbortCpuLowerBoundMs": null
+          }
+        ],
+        "poolAfter": {
+          "queued": 11,
+          "completed": 2,
+          "failed": 9,
+          "rejected": 0,
+          "peakActiveWorkers": 1,
+          "peakReservedBytes": 356720931,
+          "totalQueueWaitMs": 58.97085199999856,
+          "totalDurationMs": 1373.6673450000017,
+          "totalPostMessageMs": 10.412896999980148,
+          "lastQueueWaitMs": 12.868016000000353,
+          "lastDurationMs": 1144.5824130000037,
+          "maxQueueWaitMs": 12.868016000000353,
+          "maxWorkers": 1,
+          "workerCount": 1,
+          "activeWorkers": 0,
+          "pending": 0,
+          "memoryBudgetBytes": 1610612736,
+          "estimatedActiveBytes": 0,
+          "retainedWorkerBytes": 67108864,
+          "queuedInputBytes": 0,
+          "leasedOutputBytes": 0,
+          "reservedBytes": 100663296,
+          "maxPendingBytes": 134217728
+        },
+        "afterWorkDrainedProcessWindow": {
+          "wallMs": 20.04281600000104,
+          "cpuMs": 0.372,
+          "attribution": "whole process with idle worker; not job CPU"
+        },
+        "records": [
+          {
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "poolId": 2,
+            "sentAt": 37289.57102,
+            "dispatchedAt": 37289.65216,
+            "rejectedAt": 37301.82838,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37301.703663,
+            "exitAt": 37303.536184,
+            "exitCode": 1
+          },
+          {
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "poolId": 3,
+            "sentAt": 37301.905238,
+            "dispatchedAt": 37304.957141,
+            "rejectedAt": 37313.734729,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37313.653302,
+            "exitAt": 37331.34991,
+            "exitCode": 0
+          },
+          {
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "sentAt": 37313.791882,
+            "rejectedAt": 37325.974275,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "poolId": 5,
+            "sentAt": 37326.022499,
+            "dispatchedAt": 37332.627522,
+            "rejectedAt": 37338.243499,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37338.171538,
+            "exitAt": 37339.054717,
+            "exitCode": 0
+          },
+          {
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "poolId": 6,
+            "sentAt": 37338.290697,
+            "dispatchedAt": 37340.127461,
+            "rejectedAt": 37349.919659,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37349.826897,
+            "exitAt": 37362.660105,
+            "exitCode": 0
+          },
+          {
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "sentAt": 37349.96468,
+            "rejectedAt": 37361.725353,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "poolId": 8,
+            "sentAt": 37361.769134,
+            "dispatchedAt": 37363.540887,
+            "rejectedAt": 37374.488423,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37374.376572,
+            "exitAt": 37386.708359,
+            "exitCode": 0
+          },
+          {
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "sentAt": 37374.535703,
+            "rejectedAt": 37386.533126,
+            "error": "COMPUTE_ABORTED"
+          },
+          {
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "poolId": 10,
+            "sentAt": 37386.577623,
+            "dispatchedAt": 37387.605757,
+            "rejectedAt": 37399.524268,
+            "error": "COMPUTE_ABORTED",
+            "terminateAt": 37399.453455,
+            "exitAt": 37412.121102,
+            "exitCode": 0
+          },
+          {
+            "jobId": "0282eeb0-9b9f-42eb-9dca-dbc57028fa73",
+            "poolId": 11,
+            "sentAt": 37399.571455,
+            "dispatchedAt": 37413.060693,
+            "build-start": 37502.653967,
+            "build-end": 38292.514017,
+            "completedAt": 38557.06918,
+            "tid": 1259
+          }
+        ],
+        "events": [
+          {
+            "type": "request-join",
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "requestId": "c336447a-cca4-47c9-9d36-09a32647f9e0",
+            "atMs": 37289.358964
+          },
+          {
+            "type": "job-build",
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "atMs": 37289.501943
+          },
+          {
+            "type": "request-release",
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "requestId": "c336447a-cca4-47c9-9d36-09a32647f9e0",
+            "atMs": 37301.498623
+          },
+          {
+            "type": "job-abort",
+            "jobId": "e28de462-f1c3-4a1d-a867-1c521fa77d7a",
+            "atMs": 37301.505635
+          },
+          {
+            "type": "request-join",
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "requestId": "bc55e811-249f-4239-b02f-250d49fa2841",
+            "atMs": 37301.796941
+          },
+          {
+            "type": "job-build",
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "atMs": 37301.843337
+          },
+          {
+            "type": "request-release",
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "requestId": "bc55e811-249f-4239-b02f-250d49fa2841",
+            "atMs": 37313.595178
+          },
+          {
+            "type": "job-abort",
+            "jobId": "7ed48d43-8291-4bb0-b1bf-5c2ba066e502",
+            "atMs": 37313.600477
+          },
+          {
+            "type": "request-join",
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "requestId": "3243b3db-0754-4ab4-a461-7f1f69393461",
+            "atMs": 37313.714085
+          },
+          {
+            "type": "job-build",
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "atMs": 37313.746409
+          },
+          {
+            "type": "request-release",
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "requestId": "3243b3db-0754-4ab4-a461-7f1f69393461",
+            "atMs": 37325.829281
+          },
+          {
+            "type": "job-abort",
+            "jobId": "ca8fdfea-7e53-4326-a8ca-b3700983e872",
+            "atMs": 37325.834999
+          },
+          {
+            "type": "request-join",
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "requestId": "e7e86e67-4ecc-4648-bbaf-6131827072fd",
+            "atMs": 37325.951906
+          },
+          {
+            "type": "job-build",
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "atMs": 37325.987083
+          },
+          {
+            "type": "request-release",
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "requestId": "e7e86e67-4ecc-4648-bbaf-6131827072fd",
+            "atMs": 37338.113164
+          },
+          {
+            "type": "job-abort",
+            "jobId": "78759b1c-b05e-442b-9c48-2ad7cd50a2f1",
+            "atMs": 37338.118899
+          },
+          {
+            "type": "request-join",
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "requestId": "31232661-e40d-4277-9af7-afd0f83c522e",
+            "atMs": 37338.225752
+          },
+          {
+            "type": "job-build",
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "atMs": 37338.254412
+          },
+          {
+            "type": "request-release",
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "requestId": "31232661-e40d-4277-9af7-afd0f83c522e",
+            "atMs": 37349.770319
+          },
+          {
+            "type": "job-abort",
+            "jobId": "30f9d933-ca6a-4c1d-bc76-6e01f3392fe1",
+            "atMs": 37349.775432
+          },
+          {
+            "type": "request-join",
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "requestId": "f52a7869-8944-4cef-b845-ae96cbaf8ae1",
+            "atMs": 37349.901536
+          },
+          {
+            "type": "job-build",
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "atMs": 37349.930038
+          },
+          {
+            "type": "request-release",
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "requestId": "f52a7869-8944-4cef-b845-ae96cbaf8ae1",
+            "atMs": 37361.611036
+          },
+          {
+            "type": "job-abort",
+            "jobId": "377c6ac9-58be-4619-8071-5fef33bd5dab",
+            "atMs": 37361.616421
+          },
+          {
+            "type": "request-join",
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "requestId": "e5cf3d69-78c9-4199-a6df-ae035943cae8",
+            "atMs": 37361.708752
+          },
+          {
+            "type": "job-build",
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "atMs": 37361.735284
+          },
+          {
+            "type": "request-release",
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "requestId": "e5cf3d69-78c9-4199-a6df-ae035943cae8",
+            "atMs": 37374.319289
+          },
+          {
+            "type": "job-abort",
+            "jobId": "17515ef1-aae7-47a5-ab61-ddc62d9f1457",
+            "atMs": 37374.324849
+          },
+          {
+            "type": "request-join",
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "requestId": "c0a7f944-dedf-4e29-910c-95fd88ad580b",
+            "atMs": 37374.466964
+          },
+          {
+            "type": "job-build",
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "atMs": 37374.499237
+          },
+          {
+            "type": "request-release",
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "requestId": "c0a7f944-dedf-4e29-910c-95fd88ad580b",
+            "atMs": 37386.364792
+          },
+          {
+            "type": "job-abort",
+            "jobId": "5f71d0aa-e564-4ce9-b929-89f6e645407f",
+            "atMs": 37386.369788
+          },
+          {
+            "type": "request-join",
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "requestId": "450f10d6-cf3a-4a96-92ed-914e8a2a7860",
+            "atMs": 37386.514792
+          },
+          {
+            "type": "job-build",
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "atMs": 37386.543388
+          },
+          {
+            "type": "request-release",
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "requestId": "450f10d6-cf3a-4a96-92ed-914e8a2a7860",
+            "atMs": 37399.37445
+          },
+          {
+            "type": "job-abort",
+            "jobId": "f7ce4337-a0ea-4260-ab3f-87a30f07a797",
+            "atMs": 37399.380179
+          },
+          {
+            "type": "request-join",
+            "jobId": "0282eeb0-9b9f-42eb-9dca-dbc57028fa73",
+            "requestId": "579be3bc-3565-4cb1-a468-24acd0d248ef",
+            "atMs": 37399.507385
+          },
+          {
+            "type": "job-build",
+            "jobId": "0282eeb0-9b9f-42eb-9dca-dbc57028fa73",
+            "atMs": 37399.534767
+          },
+          {
+            "type": "job-complete",
+            "jobId": "0282eeb0-9b9f-42eb-9dca-dbc57028fa73",
+            "atMs": 38557.115893
+          },
+          {
+            "type": "request-release",
+            "jobId": "0282eeb0-9b9f-42eb-9dca-dbc57028fa73",
+            "requestId": "579be3bc-3565-4cb1-a468-24acd0d248ef",
+            "atMs": 38584.216399
+          }
+        ]
+      }
+    }
+  ],
+  "complete": true
+}

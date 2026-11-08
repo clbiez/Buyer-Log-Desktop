@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: pinned unchanged client last release -> native fetch abort -> loopback close -> real Backlog worker exit
+ok 1 - pinned unchanged client last release -> native fetch abort -> loopback close -> real Backlog worker exit
+  ---
+  duration_ms: 3749.847756
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3915.120086

@@ -1,0 +1,71 @@
+--- a/resources/app/server/lib/compute-read-service.js
++++ b/resources/app/server/lib/compute-read-service.js
+@@ -1,0 +2 @@
++const {createBacklogComputeLifecycle}=require('./backlog-compute-lifecycle');
+@@ -4 +5 @@
+-function createComputeReadService({compute,guard,sourceFor,paramsFor,maxBytes=48*1024*1024,maxEntries=12,ttlMs=60000,now=Date.now}){
++function createComputeReadService({compute,guard,sourceFor,paramsFor,maxBytes=48*1024*1024,maxEntries=12,ttlMs=60000,now=Date.now,onLifecycleEvent}){
+@@ -5,0 +7,26 @@
++  const backlogLifecycle=createBacklogComputeLifecycle({onEvent:onLifecycleEvent});
++  function runBacklog(req,area,task,keyParts,options){
++    const captured=guard.capture(req,area),key=JSON.stringify([captured.key,task,keyParts]),cacheEpoch=epoch;
++    let cacheHit=false;
++    return backlogLifecycle.subscribe({req,res:options.response,captured,task,parts:keyParts,
++      build:async context=>{
++        context.assertCurrent();prune();
++        const entry=cache.get(key);
++        if(entry){
++          cacheHit=true;cache.delete(key);cache.set(key,entry);entry.refs++;
++          let released=false;
++          return {value:entry.lease.value,metrics:entry.lease.metrics,release(){if(released)return;released=true;entry.refs--;releaseEntry(entry);}};
++        }
++        const source=await sourceFor(captured.profile);context.assertCurrent();
++        const params=await paramsFor(captured.profile,source,task,{...context.parts,...options.payload});context.assertCurrent();
++        await new Promise(setImmediate);context.assertCurrent();
++        // The flight owns this signal; an individual HTTP request never owns it.
++        return compute.run(task,source,params,{...options.computeOptions,signal:context.signal});
++      },
++      publish:lease=>{
++        if(cacheHit||options.cache===false||cacheEpoch!==epoch){lease.release();return;}
++        const entry={refs:0,bytes:lease.metrics.outputBytes||0,released:false,epoch:cacheEpoch,lease};
++        cacheEntry(key,entry);releaseEntry(entry);
++      }
++    }).promise;
++  }
+@@ -14,0 +42 @@
++    if(area==='backlog'&&options.response)return runBacklog(req,area,task,keyParts,options);
+@@ -43,2 +71,2 @@
+-  function stats(){return {entries:cache.size,bytes:cachedBytes,inFlight:flights.size,maxBytes,maxEntries};}
+-  return {run,clear,stats};
++  function stats(){return {entries:cache.size,bytes:cachedBytes,inFlight:flights.size+backlogLifecycle.inFlight,maxBytes,maxEntries};}
++  return {run,clear,stats,revalidateBacklog:backlogLifecycle.revalidate,disposeBacklog:backlogLifecycle.dispose};
+--- a/resources/app/server/server.js
++++ b/resources/app/server/server.js
+@@ -708,0 +709 @@
++let revalidateBacklogCompute=()=>{};
+@@ -767 +768 @@
+-  onIamApplied: () => liveEvents.notifyChange('iam', null),
++  onIamApplied: () => { revalidateBacklogCompute(); liveEvents.notifyChange('iam', null); },
+@@ -8409 +8410 @@
+-function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
++function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});revalidateBacklogCompute();}
+@@ -8485,0 +8487 @@
++revalidateBacklogCompute=computeReads.revalidateBacklog;
+@@ -8753 +8755 @@
+-    const lease=await computeReads.run(req,'backlog','backlog-grouped',{options,pageCache:{hit:false}});
++    const lease=await computeReads.run(req,'backlog','backlog-grouped',{options,pageCache:{hit:false}},{response:res});
+@@ -8773 +8775 @@
+-    const lease=await computeReads.run(req,'backlog','backlog-source-columns',{});
++    const lease=await computeReads.run(req,'backlog','backlog-source-columns',{},{response:res});
+@@ -8840 +8842 @@
+-    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json});
++    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json,response:res});
+@@ -8852 +8854 @@
+-    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')});
++    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')},{response:res});
+@@ -8868 +8870 @@
+-    const lease=await computeReads.run(req,'backlog','backlog-map-details',{target:'backlog',selector:{identities},expectedSourceRevision:body.sourceRevision,includeSourceDetails:true});
++    const lease=await computeReads.run(req,'backlog','backlog-map-details',{target:'backlog',selector:{identities},expectedSourceRevision:body.sourceRevision,includeSourceDetails:true},{response:res});
+@@ -12938 +12940 @@
+-  httpServer.close();computeReads.clear();
++  httpServer.close();computeReads.disposeBacklog();computeReads.clear();

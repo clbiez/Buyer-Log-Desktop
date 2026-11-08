@@ -1,0 +1,16 @@
+{
+  "main": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "clientRef": "contrib/ana12-request-lifecycle-20261108",
+  "clientSha": "6060c6b0e66a65ef0b8f5c2c4ee4e44f193f8f7b",
+  "clientLifecycleBlob": "9b605535568c89981e9ac2b41a175d2371e5bb0a",
+  "sha256": {
+    "resources/app/server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+    "resources/app/server/lib/compute-pool.js": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+    "resources/app/server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+    "resources/app/server/lib/compute-read-service.js": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+    "resources/app/server/lib/compute-read-guard.js": "aea78f24f7b3608816b8bd131070d58442685a6bf04c0ea5c341a7edbd57fae5",
+    "resources/app/server/lib/compute-response.js": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+    "resources/app/server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+    "resources/app/server/lib/compute-tasks.js": "1a9b0b2b934e15aa6d837f03944f54d6ea11919986f5a9a7d5130e6873893609"
+  }
+}

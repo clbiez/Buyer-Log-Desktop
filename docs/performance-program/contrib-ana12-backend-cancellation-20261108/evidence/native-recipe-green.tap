@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: late native completion after abort cannot publish, leak or remove a replacement flight
+ok 1 - late native completion after abort cannot publish, leak or remove a replacement flight
+  ---
+  duration_ms: 133.289151
+  type: 'test'
+  ...
+# Subtest: authority/generation revalidation cancels only stale subscriptions; first expired session preserves peer
+ok 2 - authority/generation revalidation cancels only stale subscriptions; first expired session preserves peer
+  ---
+  duration_ms: 107.977107
+  type: 'test'
+  ...
+# Subtest: shared pending preparation survives one cancelled query; abandoned query never submits
+ok 3 - shared pending preparation survives one cancelled query; abandoned query never submits
+  ---
+  duration_ms: 94.668669
+  type: 'test'
+  ...
+# Subtest: pre-aborted HTTP and response errors release once; normal request close never aborts
+ok 4 - pre-aborted HTTP and response errors release once; normal request close never aborts
+  ---
+  duration_ms: 99.813869
+  type: 'test'
+  ...
+# Subtest: loopback HTTP close cancels the last real native Backlog job; complete req.close and response finish preserve sharing
+ok 5 - loopback HTTP close cancels the last real native Backlog job; complete req.close and response finish preserve sharing
+  ---
+  duration_ms: 1660.854344
+  type: 'test'
+  ...
+# Subtest: two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+ok 6 - two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+  ---
+  duration_ms: 172.538828
+  type: 'test'
+  ...
+# Subtest: last queued subscriber leaves: no dispatch and no leaked queued input bytes
+ok 7 - last queued subscriber leaves: no dispatch and no leaked queued input bytes
+  ---
+  duration_ms: 235.980118
+  type: 'test'
+  ...
+# Subtest: last running subscriber terminates the native worker inside the real Backlog builder
+ok 8 - last running subscriber terminates the native worker inside the real Backlog builder
+  ---
+  duration_ms: 980.962241
+  type: 'test'
+  ...
+# Subtest: abort at native postMessage dispatch race retains exit accounting and same-key replacement
+ok 9 - abort at native postMessage dispatch race retains exit accounting and same-key replacement
+  ---
+  duration_ms: 168.191298
+  type: 'test'
+  ...
+# Subtest: includeSourceDetails and projection/query identity stay separate with native outputs
+ok 10 - includeSourceDetails and projection/query identity stay separate with native outputs
+  ---
+  duration_ms: 103.198579
+  type: 'test'
+  ...
+# Subtest: live authority and source revalidation retire native work without cancelling unrelated generation
+ok 11 - live authority and source revalidation retire native work without cancelling unrelated generation
+  ---
+  duration_ms: 5155.88971
+  type: 'test'
+  ...
+# Subtest: exact recipe uses existing byte cache, releases rejected publication and keeps HTTP subscribers separate
+ok 12 - exact recipe uses existing byte cache, releases rejected publication and keeps HTTP subscribers separate
+  ---
+  duration_ms: 138.916588
+  type: 'test'
+  ...
+# Subtest: exact route edits pass response context on each Backlog computed route and leave shared preparation in place
+ok 13 - exact route edits pass response context on each Backlog computed route and leave shared preparation in place
+  ---
+  duration_ms: 15.258221
+  type: 'test'
+  ...
+# Subtest: one in-flight build serves independent consumers and holds bytes until their last release
+ok 14 - one in-flight build serves independent consumers and holds bytes until their last release
+  ---
+  duration_ms: 2.133627
+  type: 'test'
+  ...
+# Subtest: expiring the first consumer session does not cancel or disclose the second consumer response
+ok 15 - expiring the first consumer session does not cancel or disclose the second consumer response
+  ---
+  duration_ms: 0.819854
+  type: 'test'
+  ...
+# Subtest: source or authority change during worker execution rejects and releases the unpublished result
+ok 16 - source or authority change during worker execution rejects and releases the unpublished result
+  ---
+  duration_ms: 1.43442
+  type: 'test'
+  ...
+# Subtest: bounded gzip cache separates query variants and expires by bytes and time
+ok 17 - bounded gzip cache separates query variants and expires by bytes and time
+  ---
+  duration_ms: 1.325716
+  type: 'test'
+  ...
+# Subtest: response authority is checked again after caller-side async work
+ok 18 - response authority is checked again after caller-side async work
+  ---
+  duration_ms: 1.149114
+  type: 'test'
+  ...
+# Subtest: verified cached buffers are passed separately from the small revision/query key
+ok 19 - verified cached buffers are passed separately from the small revision/query key
+  ---
+  duration_ms: 0.743288
+  type: 'test'
+  ...
+# Subtest: worker dispatch yields to the event loop and rechecks authority before admitting prepared input
+ok 20 - worker dispatch yields to the event loop and rechecks authority before admitting prepared input
+  ---
+  duration_ms: 0.928957
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9490.519549

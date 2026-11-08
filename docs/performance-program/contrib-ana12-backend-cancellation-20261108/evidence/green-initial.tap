@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: late native completion after abort cannot publish, leak or remove a replacement flight
+ok 1 - late native completion after abort cannot publish, leak or remove a replacement flight
+  ---
+  duration_ms: 228.065537
+  type: 'test'
+  ...
+# Subtest: authority/generation revalidation cancels only stale subscriptions; first expired session preserves peer
+ok 2 - authority/generation revalidation cancels only stale subscriptions; first expired session preserves peer
+  ---
+  duration_ms: 129.809605
+  type: 'test'
+  ...
+# Subtest: shared pending preparation survives one cancelled query; abandoned query never submits
+ok 3 - shared pending preparation survives one cancelled query; abandoned query never submits
+  ---
+  duration_ms: 99.398707
+  type: 'test'
+  ...
+# Subtest: pre-aborted HTTP and response errors release once; normal request close never aborts
+ok 4 - pre-aborted HTTP and response errors release once; normal request close never aborts
+  ---
+  duration_ms: 109.426315
+  type: 'test'
+  ...
+# Subtest: two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+ok 5 - two HTTP subscribers: first disconnect preserves the real shared Backlog job and exact output
+  ---
+  duration_ms: 201.406315
+  type: 'test'
+  ...
+# Subtest: last queued subscriber leaves: no dispatch and no leaked queued input bytes
+ok 6 - last queued subscriber leaves: no dispatch and no leaked queued input bytes
+  ---
+  duration_ms: 286.137056
+  type: 'test'
+  ...
+# Subtest: last running subscriber terminates the native worker inside the real Backlog builder
+ok 7 - last running subscriber terminates the native worker inside the real Backlog builder
+  ---
+  duration_ms: 1047.40884
+  type: 'test'
+  ...
+# Subtest: abort at native postMessage dispatch race retains exit accounting and same-key replacement
+ok 8 - abort at native postMessage dispatch race retains exit accounting and same-key replacement
+  ---
+  duration_ms: 174.268335
+  type: 'test'
+  ...
+# Subtest: includeSourceDetails and projection/query identity stay separate with native outputs
+ok 9 - includeSourceDetails and projection/query identity stay separate with native outputs
+  ---
+  duration_ms: 107.415966
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2589.25951
