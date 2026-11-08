@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "refreshId": "int06-frozen-v1",
+  "source": "dashboard",
+  "startedAt": "2026-11-07T00:00:00.000Z",
+  "updatedAt": "2026-11-07T00:00:00.000Z",
+  "totalOrders": 12,
+  "processedOrders": 11,
+  "successfulOrders": 8,
+  "notFoundOrders": 2,
+  "failedOrders": 1,
+  "allOrderCodes": [
+    "SYN-0000001",
+    "SYN-0000002",
+    "SYN-0000003",
+    "SYN-0000004",
+    "SYN-0000005",
+    "SYN-0000006",
+    "SYN-0000007",
+    "SYN-0000008",
+    "SYN-0000009",
+    "SYN-0000010",
+    "SYN-0000011",
+    "SYN-0000012"
+  ],
+  "_allOrderCodes": [
+    "SYN-0000001",
+    "SYN-0000002",
+    "SYN-0000003",
+    "SYN-0000004",
+    "SYN-0000005",
+    "SYN-0000006",
+    "SYN-0000007",
+    "SYN-0000008",
+    "SYN-0000009",
+    "SYN-0000010",
+    "SYN-0000011",
+    "SYN-0000012"
+  ],
+  "retryPending": 0,
+  "remainingOrders": [
+    "SYN-0000012"
+  ],
+  "failedOrderCodes": [
+    "SYN-0000011"
+  ],
+  "orderStates": {
+    "SYN-0000001": "SUCCESS",
+    "SYN-0000002": "SUCCESS",
+    "SYN-0000003": "SUCCESS",
+    "SYN-0000004": "SUCCESS",
+    "SYN-0000005": "NOT_FOUND",
+    "SYN-0000006": "SUCCESS",
+    "SYN-0000007": "SUCCESS",
+    "SYN-0000008": "SUCCESS",
+    "SYN-0000009": "SUCCESS",
+    "SYN-0000010": "NOT_FOUND",
+    "SYN-0000011": "FAILED"
+  },
+  "lastBatch": {
+    "orderCodes": [
+      "SYN-0000011"
+    ],
+    "error": "synthetic terminal failure"
+  },
+  "rows": [
+    {
+      "Sipariş Kod": "SYN-0000001",
+      "Model Adı": "DEMO-0",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 0,
+      "İthalat Dosya No": "DEMO-SYN-0000001-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000001",
+      "Model Adı": "DEMO-0",
+      "Renk Tanım": "İnci",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 1,
+      "İthalat Dosya No": "DEMO-SYN-0000001-1"
+    },
+    {
+      "Sipariş Kod": "SYN-0000002",
+      "Model Adı": "DEMO-1",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 1,
+      "İthalat Dosya No": "DEMO-SYN-0000002-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000003",
+      "Model Adı": "DEMO-2",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 2,
+      "İthalat Dosya No": "DEMO-SYN-0000003-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000004",
+      "Model Adı": "DEMO-3",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 3,
+      "İthalat Dosya No": "DEMO-SYN-0000004-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000006",
+      "Model Adı": "DEMO-5",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 5,
+      "İthalat Dosya No": "DEMO-SYN-0000006-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000007",
+      "Model Adı": "DEMO-6",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 6,
+      "İthalat Dosya No": "DEMO-SYN-0000007-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000008",
+      "Model Adı": "DEMO-7",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 7,
+      "İthalat Dosya No": "DEMO-SYN-0000008-0"
+    },
+    {
+      "Sipariş Kod": "SYN-0000008",
+      "Model Adı": "DEMO-7",
+      "Renk Tanım": "İnci",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 8,
+      "İthalat Dosya No": "DEMO-SYN-0000008-1"
+    },
+    {
+      "Sipariş Kod": "SYN-0000009",
+      "Model Adı": "DEMO-8",
+      "Renk Tanım": "Mavi",
+      "Supplier Portal Statü": "DEMO",
+      "Tahmini Antrepo Giriş Tarihi": null,
+      "Yükleme Toplam Adet": 8,
+      "İthalat Dosya No": "DEMO-SYN-0000009-0"
+    }
+  ]
+}

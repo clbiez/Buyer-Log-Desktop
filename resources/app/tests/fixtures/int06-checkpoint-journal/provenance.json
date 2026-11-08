@@ -1,0 +1,51 @@
+{
+  "pr": 890,
+  "revision": "65074a21d7ae8fcadd6dc1628550b3ae4ed8eacf",
+  "files": [
+    {
+      "path": "resources/app/scripts/benchmark-powerbi-checkpoint-cohort.js",
+      "sha256": "e295aee98e9fedb6f671595944386f0c1ddd14d06c87761fd420138ac7038e54",
+      "storedPath": "inherited/resources/app/scripts/benchmark-powerbi-checkpoint-cohort.js.source"
+    },
+    {
+      "path": "resources/app/scripts/benchmark-powerbi-checkpoint.js",
+      "sha256": "a87da8cf38c426dd382ebaa9c83dda972b7824e9f0b5fa5596f2272afbce28b6",
+      "storedPath": "inherited/resources/app/scripts/benchmark-powerbi-checkpoint.js.source"
+    },
+    {
+      "path": "resources/app/scripts/lib/powerbi-checkpoint-fixture.js",
+      "sha256": "1397ee3ad40330b0fbe70293e64d416d89cb153d42f22a108829afeb40acea44",
+      "storedPath": "inherited/resources/app/scripts/lib/powerbi-checkpoint-fixture.js.source"
+    },
+    {
+      "path": "resources/app/scripts/lib/powerbi-checkpoint-metrics.js",
+      "sha256": "e465b6ad96ad483f544cb6d4089265a72f5e738889a0413040df4b5954c4e5e9",
+      "storedPath": "inherited/resources/app/scripts/lib/powerbi-checkpoint-metrics.js.source"
+    },
+    {
+      "path": "resources/app/scripts/lib/powerbi-checkpoint-provenance.js",
+      "sha256": "aba406684fcc6aad051ca91c6b8e99becf786c298c4529dc489f5a1af02d142e",
+      "storedPath": "inherited/resources/app/scripts/lib/powerbi-checkpoint-provenance.js.source"
+    },
+    {
+      "path": "resources/app/tests/fixtures/powerbi-checkpoint-v1.json",
+      "sha256": "8cb6fc65977e761d6ba75c3f7958dfa22d59ef8bab2fe16690e5c1b58a2c4840",
+      "storedPath": "inherited/resources/app/tests/fixtures/powerbi-checkpoint-v1.json.source"
+    },
+    {
+      "path": "resources/app/tests/helpers/powerbi-checkpoint-process.cjs",
+      "sha256": "465657ab47df941229422aad87aef81864124a548bff3d3a885eac7222bac90d",
+      "storedPath": "inherited/resources/app/tests/helpers/powerbi-checkpoint-process.cjs.source"
+    },
+    {
+      "path": "resources/app/tests/powerbi-checkpoint-preparation.test.js",
+      "sha256": "2fc6d0b3b07f28029cdb3a5be779071ed231a04cb28b3d72c93d4cd9f9795528",
+      "storedPath": "inherited/resources/app/tests/powerbi-checkpoint-preparation.test.js.source"
+    },
+    {
+      "path": "resources/app/tests/powerbi-checkpoint-resume.test.js",
+      "sha256": "17fb45ab1d58c214ba9e1408b90d49939e36d4ba067d5bbb572a10d898f8a412",
+      "storedPath": "inherited/resources/app/tests/powerbi-checkpoint-resume.test.js.source"
+    }
+  ]
+}
