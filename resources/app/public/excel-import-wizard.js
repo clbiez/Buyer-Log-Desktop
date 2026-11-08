@@ -834,6 +834,7 @@
     function current() {
       var now = global.BL_USER_CONTEXT || null;
       return state === ownedState && host === ownedHost && ownedHost && ownedHost.isConnected !== false
+        && ownedState.plan === plan
         && syncImportActor() === actorEpoch && (now && now.id != null ? String(now.id) : '') === actorId;
     }
     function assertCurrent(completion) {
@@ -864,7 +865,7 @@
       assertPlan();
       var fieldIdMap = new Map();
       if (plan.newColumns.length) {
-        columnResult = await adapter.createCustomColumns(plan.newColumns);
+        columnResult = await adapter.createCustomColumns(plan.newColumns, current);
         assertCurrent();
         (columnResult.created || []).forEach(function (item) { fieldIdMap.set(item.planFieldId, item.id); });
       }
@@ -875,7 +876,7 @@
       var outcome = await adapter.execute(plan, fieldIdMap, function (progress) {
         try { assertCurrent(); } catch (_) { return; }
         state.progress = progress; render();
-      });
+      }, current);
       created = outcome.created || 0; updated = outcome.updated || 0;
       acknowledgedFailed = outcome.failed || 0; rowWriteAcknowledged = true;
       assertCurrent();
@@ -898,7 +899,7 @@
       // unused. Retain them; deleting a whole old schema is not safe recovery.
       // A late job must never publish feedback into another wizard/account.
       if (!current()) {
-        if (state === ownedState && host === ownedHost) close();
+        if (state === ownedState && host === ownedHost && ownedState.plan === plan) close();
         return;
       }
       var retained = columnResult ? (columnResult.created || []).length : 0;
@@ -1152,6 +1153,12 @@
   }
 
   function open(moduleId) {
+    var bridge = global.BLExcelImportBridge;
+    if (bridge && typeof bridge.prepareOpen === 'function') return bridge.prepareOpen(moduleId, function () { return openPrepared(moduleId); });
+    return openPrepared(moduleId);
+  }
+
+  function openPrepared(moduleId) {
     if (!modules()) { toast(T('İçe aktarma motoru yüklenemedi.', 'The import engine could not be loaded.')); return; }
     var bridge = global.BLExcelImportBridge;
     var adapter = bridge && bridge.get ? bridge.get(moduleId) : null;
@@ -1175,6 +1182,10 @@
       if (element && (element.dataset.xim === 'new-label')) onChange(event);
     });
     document.body.appendChild(host);
+    if (typeof adapter.bindOwner === 'function') {
+      var ownedState = state, ownedHost = host;
+      adapter.bindOwner(function () { return state === ownedState && host === ownedHost && ownedHost.isConnected !== false; });
+    }
     document.addEventListener('keydown', onKey);
     render();
     releaseKeyboard=global.BLUI?.bindDialogKeyboard(host);

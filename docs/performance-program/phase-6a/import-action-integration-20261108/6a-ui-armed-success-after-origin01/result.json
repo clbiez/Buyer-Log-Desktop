@@ -1,0 +1,108 @@
+{
+  "status": "passed",
+  "classification": "actual demo app/engines/HTTP, programmatic workbook setup through existing _state API; actual success or fault-injected post-ACK GET only, mode in field; no timing acceptance",
+  "mode": "success",
+  "armedFull": true,
+  "thinActivation": false,
+  "dismissedDialogs": 1,
+  "setup": {
+    "rows": 1,
+    "headers": [
+      "Order Code",
+      "Model Name",
+      "C.Code",
+      "Import Safety Synthetic"
+    ],
+    "cpRows": 27,
+    "revision": 0,
+    "lifecycle": {
+      "epoch": 3,
+      "session": 0,
+      "actor": "[[\"moderator\",\"moderator\",{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]}],[\"moderator\",\"moderator\",{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]}]]"
+    }
+  },
+  "plan": {
+    "executable": true,
+    "summary": {
+      "sourceRows": 1,
+      "excludedRows": 0,
+      "validRows": 1,
+      "exactMatches": 1,
+      "newRows": 0,
+      "ambiguousRows": 0,
+      "invalidRows": 0,
+      "incomingDuplicates": 0,
+      "reverseDuplicates": 0,
+      "skippedRows": 0,
+      "creates": 0,
+      "updates": 1,
+      "changedCells": 1,
+      "warnings": 0,
+      "blockingConflicts": 0,
+      "newColumns": 1
+    },
+    "blocking": [],
+    "newColumns": [
+      {
+        "id": "new:col:3",
+        "columnId": "col:3",
+        "label": "Import Safety Synthetic",
+        "dataType": "text",
+        "isNew": true
+      }
+    ]
+  },
+  "result": {
+    "status": "success",
+    "created": 0,
+    "updated": 1,
+    "skipped": 0,
+    "failed": 0,
+    "warnings": 0,
+    "conflictsResolved": 0,
+    "customFieldsCreated": 1,
+    "serverWrite": "acknowledged",
+    "message": "Aktarım tamamlandı."
+  },
+  "lifecycle": {
+    "epoch": 5,
+    "session": 0,
+    "depth": 0,
+    "actor": "[[\"moderator\",\"moderator\",{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]}],[\"moderator\",\"moderator\",{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]}]]",
+    "active": "cp",
+    "trace": [
+      {
+        "event": "reload",
+        "force": false,
+        "arguments": 3,
+        "epoch": 3,
+        "depth": 0,
+        "stack": "Error\n    at loadFromServer (eval at evaluate (:290:30), <anonymous>:4:209)\n    at Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31021:19)\n    at Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31238:42)\n    at runImport (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:884:21)\n    at async goNext (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:815:36)"
+      },
+      {
+        "event": "retire",
+        "reason": "orders.source.reload",
+        "epoch": 3,
+        "depth": 0,
+        "stack": "Error\n    at retireOrdersProjectionSource (eval at evaluate (:290:30), <anonymous>:3:207)\n    at beginOrdersGlobalUpdate (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:2033:15)\n    at loadFromServer (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:15888:29)\n    at loadFromServer (eval at evaluate (:290:30), <anonymous>:4:243)\n    at Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31021:19)\n    at Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31238:42)\n    at runImport (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:884:21)\n    at async goNext (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:815:36)"
+      },
+      {
+        "event": "retire",
+        "reason": "orders.source.before-globals",
+        "epoch": 4,
+        "depth": 1,
+        "stack": "Error\n    at retireOrdersProjectionSource (eval at evaluate (:290:30), <anonymous>:3:207)\n    at prepareOrdersGlobalApply (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:2043:15)\n    at loadFromServer (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:15946:5)\n    at async Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31021:13)\n    at async Object.refresh (http://127.0.0.1:34323/app-main.js?v=7.0.339&h=5e5b8c6abb6ed5b5&rev=20261026-personal-order-notes:31238:23)\n    at async runImport (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:884:7)\n    at async goNext (http://127.0.0.1:34323/excel-import-wizard.js?rev=2&v=7.0.339&h=19efd04ae4273b0e:815:36)"
+      }
+    ]
+  },
+  "network": {
+    "rowAck": true,
+    "noteWrites": 1,
+    "rowWrites": 1,
+    "blockedRefresh": 0
+  },
+  "retainedServerNoteId": "note_mw7ta72f4f1be3",
+  "serverValueRetained": true,
+  "valueReadEndpoint": "/api/page-projection/cp",
+  "englishText": "The import finished."
+}

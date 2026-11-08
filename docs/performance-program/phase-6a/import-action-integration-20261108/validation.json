@@ -1,0 +1,66 @@
+{
+  "foundation": "3bb73d017fffee542617803eedf5fbcbea080083",
+  "foundationMerge": "a08356da",
+  "preservedCompletionSafetyTestBodies": 21,
+  "preservedFactoryBeforeSha256": "fa463b4ba6d9862a109167b8e51f6903987a3284fcff2b980f371a38e1d1aa3a",
+  "sourceAppSha256": "bf1d1c2556afaf948ec35a50c77e632e6ad748916a90e2fe5578e04c37f8b29a",
+  "sourceWizardSha256": "19efd04ae4273b0e59ad2b4d9546f510d5ec4e297c32ff688cb46fe58fcdaf3f",
+  "sourceQueueSha256": "e9350c83b36d65a888f7564cf6bdc754f925928dcf6fafb5080ea787974812a6",
+  "nativePass": 49,
+  "related": {
+    "files": 58,
+    "pass": 893,
+    "fail": 0,
+    "skip": 0
+  },
+  "thinEnabled": false,
+  "phase6cEnabled": false,
+  "fullCurrentTree": {
+    "status": "passed",
+    "command": "npm --prefix resources/app test",
+    "runner": "default concurrency=4, all10 batches, one invocation",
+    "files": 1352,
+    "seconds": 240.4,
+    "counts": {
+      "tests": 9970,
+      "pass": 9905,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 65
+    },
+    "rawLogSha256": "b49b1de67a690ada553e66c3941d5c1012952aa732ef5b1f4063cd0f690c24c5",
+    "TMPDIR": "/tmp/buyerlog-phase6a-model-import-standard-tmp",
+    "sourceAfterFullUnchanged": true
+  },
+  "browserCurrentTree": {
+    "normalFull": "PASS",
+    "armedFullFault": "PASS; actual column/value retained",
+    "armedFullSuccessBeforeOriginFix": "FAIL; preserved",
+    "armedFullSuccessAfterOriginFix": "PASS;actualSSE;single own reload;depth0",
+    "fixture": "30source/27CP, programmatic workbook setup, no timing acceptance",
+    "thinProfile": false
+  },
+  "independentPhase6aReview": "pending final stable diff",
+  "changedSymbolTests": {
+    "files": 44,
+    "pass": 513,
+    "fail": 0
+  },
+  "profileLineageTargeted": {
+    "files": 3,
+    "pass": 70,
+    "fail": 0
+  },
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 52,
+  "protected916": {
+    "pass": 23,
+    "byteEqualMain": "1796193f"
+  },
+  "currentPR": "no new overlapping app-main PR; #918 remains separate draft",
+  "TEST": false,
+  "STABLE": false
+}

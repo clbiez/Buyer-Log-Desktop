@@ -1465,28 +1465,28 @@
       "id": "orders-source-continuity-schema-actions",
       "type": "fix",
       "module": {
-        "tr": "CP ve Siparişler",
-        "en": "CP and Orders"
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
       },
       "title": {
-        "tr": "Not sütunu işlemlerinde eski ekran yanıtlarına karşı koruma",
-        "en": "Protect note-column actions from stale screen responses"
+        "tr": "Sütun ve aktarım işlemleri özgün veriye bağlı kalır",
+        "en": "Column and import actions stay bound to their original data"
       },
       "body": {
-        "tr": "Paylaşılan veya kişisel bir not sütununu ekleme, adlandırma ya da kaldırma işlemi beklerken kullanıcı veya veri kaynağı değişirse önceki ekrandan kalan yanıt artık yerel sütunları ve kayıtlı tercihleri değiştiremez. İşlem güncel ekran üzerinden yeniden denenebilir. Mevcut tam veri yükleme davranışı korunur.",
-        "en": "If the user or data source changes while a shared or personal note column is being added, renamed or removed, a response from the previous screen can no longer change local columns or saved preferences. The action can be retried from the current screen. Existing full-data loading is preserved."
+        "tr": "Not ve model sütunu işlemleri ile CP Excel aktarımı gerekli tam veriyi aldıktan sonra başlar. Pencere, kullanıcı veya kaynak değişirse gönderilmemiş eski yazımlar durdurulur; geç yanıt yeni pencereye uygulanmaz. Aktarımın kendi yenilemesi özgün işlemle tamamlanır ve kendi not sütunu bildirimi ikinci bir yenileme başlatmaz. Model sütunu başka kaynağa taşındığında son şema gösterilir.",
+        "en": "Note and model column actions and CP Excel import start after the required full data is ready. If the window, user or source changes, unsent old writes are stopped and late responses cannot update a new window. An import can complete its own reload without its note-column notification starting a second reload. Moving a model column to another source displays the final schema."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "orders-source-continuity-20261108.png",
+        "src": "orders-verified-source-import-20261108.png",
         "alt": {
-          "tr": "Değişiklik sonrası 30 sentetik siparişli gerçek Buyer Log ekranı",
-          "en": "Actual post-change Buyer Log screen with 30 synthetic orders"
+          "tr": "Gerçek demo CP aktarımı, bir güncellenmiş satır ve bir özel alanla başarılı tamamlandı",
+          "en": "Actual demo CP import completed with one updated row and one custom field"
         },
         "caption": {
-          "tr": "Türkçe ve açık tema; gerçek tarayıcıda doğrulanan mevcut Siparişler ekranı. Bu görsel performans karşılaştırması değildir.",
-          "en": "Turkish and light theme; the existing Orders screen verified in a real browser. This image is not a performance comparison."
+          "tr": "Değişiklik sonrası gerçek uygulama; sıkı yaşam döngüsü kontrolleri açık tam-veri aktarımı tek yenilemeyle tamamlandı. İnce profil kapalı.",
+          "en": "Actual post-change app; full-data import with strict lifecycle checks completed with one reload. The thin profile is disabled."
         }
       }
     },

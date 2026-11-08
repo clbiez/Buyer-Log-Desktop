@@ -290,7 +290,9 @@ test('v7.42 · veri tabanı sütunu penceresinde başlık seçimi var', () => {
      PATCH .../source/:id). Bütün diziyi PUT etmek, bayat bir görünümde başka
      bir pencerede eklenmiş sütunu sessizce düşürüyordu. Korunan asıl iddia
      aynı: seçilen başlık (grup) kayda GİDİYOR. */
-  assert.match(fn, /writeCpModelColumn\(selectedConnectionId,\{op:'(add|update)',[^}]*group,/,
+  assert.match(fn, /const connectionId=selectedConnectionId,field=\{\.\.\.selectedField\}/,
+    'kaynak ve alan beklemelerden önce aynı kullanıcı işleminden alınmalı');
+  assert.match(fn, /writeCpModelColumn\(connectionId,\{op:'(add|update)',[^}]*group,/,
     'seçilen üst başlık kayda gitmeli');
   assert.doesNotMatch(fn, /cpColumns\.push\(/, 'tam dizi üzerinde düzenleme kalmamalı');
 });

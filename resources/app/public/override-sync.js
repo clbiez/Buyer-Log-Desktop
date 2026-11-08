@@ -16,8 +16,18 @@ function notifyOverrideSaveError(message){
   const now=Date.now();
   if(now-lastOverrideErrorToastAt>3500){lastOverrideErrorToastAt=now;showToast(message);}
 }
+function assertOverrideMutationCurrent(opts){
+  const guard=opts.assertCurrent;
+  if(guard==null)return;
+  const stale=()=>Object.assign(new Error(appLang==='en'?'The editing context changed. Reopen the action.':'Düzenleme bağlamı değişti. İşlemi yeniden açın.'),{code:'OVERRIDE_CONTEXT_CHANGED'});
+  if(typeof guard!=='function'||guard.constructor?.name==='AsyncFunction')throw stale();
+  const checked=guard();
+  if(checked&&typeof checked.then==='function'){Promise.resolve(checked).catch(()=>{});throw stale();}
+  if(checked!==undefined&&checked!==true)throw stale();
+}
 function enqueueOverrideMutation(kind,url,opts={}){
   if(overrideBatchCapture){
+    if(opts.assertCurrent!=null)throw new Error(appLang==='en'?'This guarded action cannot be combined with a bulk edit.':'Bu doğrulanan işlem toplu düzenlemeyle birleştirilemez.');
     if(kind!=='orders'||opts.method!=='PATCH'||!url.startsWith('/api/overrides/'))throw new Error('Unsupported bulk override');
     const orderCode=url.slice('/api/overrides/'.length),patch=JSON.parse(opts.body),key=JSON.stringify([orderCode,patch.model||'',patch.ccode||'']);
     const item=overrideBatchCapture.entries.get(key)||{orderCode,patch:{}};
@@ -28,13 +38,16 @@ function enqueueOverrideMutation(kind,url,opts={}){
   const revisionKey=overrideRevisionKey(kind);
   const task=async()=>{
     try{
+      assertOverrideMutationCurrent(opts);
       const requestOpts={...opts,headers:{...(opts.headers||{})},expectedRevision:opts.expectedRevision??(Number(state.storeRevisions[revisionKey])||0)};
+      delete requestOpts.assertCurrent;
       // v6.44 — canlı senkron bu sekmenin kendi yazmasını ayırt edebilsin diye;
       // kendi yazdığın değişiklik için kendine yenileme tetiklemene gerek yok,
       // ekran zaten güncel.
       if(typeof window!=='undefined'&&window.BL_CLIENT_ID)requestOpts.headers['X-Client-Id']=window.BL_CLIENT_ID;
       if(kind==='orders'&&!Object.hasOwn(requestOpts.headers,'X-Supp-Fob-Revision'))requestOpts.headers['X-Supp-Fob-Revision']=String(Number(state.storeRevisions.suppFob)||0);
       const data=await fetchJSON(url,requestOpts);
+      assertOverrideMutationCurrent(opts);
       if(Number.isInteger(Number(data.revision)))state.storeRevisions[revisionKey]=Number(data.revision);
       if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[key]=Number(value);});
       if(data.overrides&&Number.isInteger(Number(data.overrides._revision)))state.storeRevisions.overrides=Number(data.overrides._revision);
@@ -42,6 +55,7 @@ function enqueueOverrideMutation(kind,url,opts={}){
       return data;
     }catch(err){
       if(err.code==='REVISION_CONFLICT'){
+        assertOverrideMutationCurrent(opts);
         const conflictKey=err.revisionKey||revisionKey;
         if(Number.isInteger(Number(err.currentRevision)))state.storeRevisions[conflictKey]=Number(err.currentRevision);
         notifyOverrideSaveError(appLang==='en'?'Data changed in another window. Current data is being reloaded.':'Veri başka bir pencerede değişti. Güncel veriler yeniden yükleniyor.');

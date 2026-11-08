@@ -1,0 +1,75 @@
+{
+  "status": "passed",
+  "classification": "actual demo app/engines/HTTP, programmatic workbook setup through existing _state API; actual success or fault-injected post-ACK GET only, mode in field; no timing acceptance",
+  "mode": "post-ACK-refresh-failure",
+  "armedFull": true,
+  "thinActivation": false,
+  "dismissedDialogs": 1,
+  "setup": {
+    "rows": 1,
+    "headers": [
+      "Order Code",
+      "Model Name",
+      "C.Code",
+      "Import Safety Synthetic"
+    ],
+    "cpRows": 27,
+    "revision": 0
+  },
+  "plan": {
+    "executable": true,
+    "summary": {
+      "sourceRows": 1,
+      "excludedRows": 0,
+      "validRows": 1,
+      "exactMatches": 1,
+      "newRows": 0,
+      "ambiguousRows": 0,
+      "invalidRows": 0,
+      "incomingDuplicates": 0,
+      "reverseDuplicates": 0,
+      "skippedRows": 0,
+      "creates": 0,
+      "updates": 1,
+      "changedCells": 1,
+      "warnings": 0,
+      "blockingConflicts": 0,
+      "newColumns": 1
+    },
+    "blocking": [],
+    "newColumns": [
+      {
+        "id": "new:col:3",
+        "columnId": "col:3",
+        "label": "Import Safety Synthetic",
+        "dataType": "text",
+        "isNew": true
+      }
+    ]
+  },
+  "result": {
+    "status": "failed",
+    "created": 0,
+    "updated": 1,
+    "skipped": 0,
+    "failed": 0,
+    "unconfirmed": 0,
+    "warnings": 0,
+    "conflictsResolved": 0,
+    "customFieldsCreated": 1,
+    "serverWrite": "acknowledged",
+    "errorCode": "IMPORT_REFRESH_FAILED",
+    "errorDetail": "İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.",
+    "message": "Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. İçe aktarma sonrası sunucu verisi yeniden yüklenemedi."
+  },
+  "network": {
+    "rowAck": true,
+    "noteWrites": 1,
+    "rowWrites": 1,
+    "blockedRefresh": 1
+  },
+  "retainedServerNoteId": "note_mw7sxqghc4w8cn",
+  "serverValueRetained": true,
+  "valueReadEndpoint": "/api/page-projection/cp",
+  "englishText": "The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. Server data could not be reloaded after import."
+}

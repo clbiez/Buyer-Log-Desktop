@@ -80,19 +80,7 @@ test('normal same-actor hydration performed by the actual app keeps successful i
  f.adapter.refresh=async()=>{const actualHydration=Function('state','window','data',app.slice(start,end));actualHydration({currentUser:f.profile},f.scope.global,{currentUser:{...f.profile}});};
  await f.run();assert.equal(f.state.result?.status,'success');assert.equal(f.calls.some(x=>x[0]==='audit'&&x[1]==='success'),true);
 });
-function actualCpAdapter(){
- const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'),row={'Order Code':7,'Model Name':'Synthetic','C.Code':'01',Notes:'unchanged',note_existing:'old'};
- const scope={appLang:'en',state:{cp:{rows:[row]},storeRevisions:{orders:1}},window:{BLExcelImportPlan:Plan},CP_NOTE_COLUMN_DEFS:[{id:'note_existing',label:'Existing'}]};
- for(const name of ['norm','turknorm','lineKeyOfRow','importNormalizeText','cpImportRowRevision'])scope[name]=Function('scope','with(scope){return ('+extractFunction(app,name)+');}')(scope);
- const start=app.indexOf('const CP_IMPORT_WRITABLE_FIELDS=['),end=app.indexOf('\n];',start)+3;assert.ok(start>=0&&end>start);
- scope.CP_IMPORT_WRITABLE_FIELDS=Function(app.slice(start,end)+';return CP_IMPORT_WRITABLE_FIELDS;')();
- for(const name of ['cpImportFields','cpImportRowLabel','cpImportReadValue','cpImportCreateCustomColumns'])scope[name]=()=>{};
- scope.cpImportBuildItems=()=>[{orderCode:7,patch:{notes:{Notes:'synthetic'}}}];const sent=[];
- scope.enqueueOverrideMutation=async(...args)=>{sent.push(args);return {updated:1};};
- const at=app.indexOf('window.BLExcelImportBridge={'),stop=app.indexOf('\n};',at)+3;assert.ok(at>=0&&stop>at);
- const object=app.slice(at+'window.BLExcelImportBridge='.length,stop).replace(/;\s*$/,'');
- const adapter=Function('scope','with(scope){return ('+object+');}')(scope).get('cp');return {adapter,scope,row,sent};
-}
+function actualCpAdapter(){return require('./helpers/cp-import-fixture').actualCpAdapter();}
 test('actual CP revision witness survives its own new blank column while still rejecting original-field edits',()=>{
  const f=actualCpAdapter(),before=f.adapter.rowRevision(f.row),plan={executable:true,revisionGuard:{storeRevision:1,rows:[{targetPosition:0,rev:before}]}};
  f.scope.CP_NOTE_COLUMN_DEFS.push({id:'note_created',label:'New'});f.row.note_created='';
@@ -129,4 +117,9 @@ test('changing language after a failed import redraws the new outcome explanatio
 test('the owned CP refresh failure detail also changes language with the outcome',async()=>{
  const cp=actualCpAdapter(),f=fixture();cp.scope.loadFromServer=async()=>false;f.adapter.refresh=cp.adapter.refresh;await f.run();
  f.scope.T=(tr,_en)=>tr;assert.match(f.scope.importResultMessage(f.state.result),/sunucu verisi yeniden yüklenemedi/);
+});
+
+test('replacing a plan in the same wizard while creation is pending preserves the new draft',async()=>{
+ const wait=deferred(),f=fixture({createWait:wait}),pending=f.run();await turn();const replacement={id:'new-draft'};f.state.plan=replacement;f.state.busy='new-busy';wait.resolve();await pending;
+ assert.equal(f.scope.state,f.state);assert.equal(f.state.plan,replacement);assert.equal(f.state.busy,'new-busy');assert.equal(f.calls.some(e=>e[0]==='execute'||e[0]==='close'),false);
 });

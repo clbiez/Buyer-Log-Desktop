@@ -182,7 +182,8 @@ test('Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta bell
 test('özel sütunlar Buyer Log\'un mevcut sistemlerini kullanır', () => {
   // CP: not sütunu tanımları (/api/note-columns). Koleksiyon: kolCustomCols.
   assert.match(APP, /async function cpImportCreateCustomColumns/);
-  assert.match(APP, /saveCpNoteColumnDefs\(next\)/);
+  // Same canonical writer, now carrying the original action and owner guard.
+  assert.match(APP, /saveCpNoteColumnDefs\(next,action\.note,assert\)/);
   assert.match(APP, /kolCustomCols\.push\(\{k,label:def\.label/);
   assert.match(APP, /kolNormalizeCustomCols\(kolCustomCols\)/);
   // Paralel bir özel alan deposu kurulmadı.

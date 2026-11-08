@@ -4583,17 +4583,23 @@ function acknowledgeOrdersNoteAction(action){
 }
 
 // END private Orders note action guards
-async function saveCpNoteColumnDefs(nextDefs,actionIntent=null){
+async function saveCpNoteColumnDefs(nextDefs,actionIntent=null,assertOwner=null){
   _ordersRequireFullSynchronousRead();
   const action=actionIntent||captureOrdersNoteAction('shared');
   // A finite import/rollback must provide its original action; current full
   // state alone cannot certify an externally retained definitions array.
   if(!actionIntent&&ordersConfigurationIntentInvolved(action.intent))throw ordersFullActionError('ORDERS_FULL_STALE');
   assertOrdersNoteAction(action);
+  if(assertOwner)assertOwner();
   const previousIds=new Set(CP_NOTE_COLUMN_DEFS.map(d=>d.id));
-  const res=await fetch('/api/note-columns',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(CP_NOTE_COLUMN_DEFS_REVISION||0)},body:JSON.stringify({columns:nextDefs})});
+  const headers={'Content-Type':'application/json','If-Match':String(CP_NOTE_COLUMN_DEFS_REVISION||0)};
+  if(window.BL_CLIENT_ID)headers['X-Client-Id']=window.BL_CLIENT_ID;
+  const res=await fetch('/api/note-columns',{method:'PUT',headers,body:JSON.stringify({columns:nextDefs})});
+  assertOrdersNoteAction(action);
+  if(assertOwner)assertOwner();
   const data=await res.json().catch(()=>({}));
   assertOrdersNoteAction(action);
+  if(assertOwner)assertOwner();
   if(!res.ok)throw new Error(data.error||res.statusText);
   CP_NOTE_COLUMN_DEFS_REVISION=Number(data.revision)||CP_NOTE_COLUMN_DEFS_REVISION;
   const savedDefs=data.columns||nextDefs,nextIds=new Set((Array.isArray(savedDefs)?savedDefs:[]).map(d=>d&&d.id).filter(Boolean));
@@ -13383,7 +13389,8 @@ function modelConnectionApiAvailable(){
   return location.protocol==='http:'||location.protocol==='https:';
 }
 
-async function modelConnLoad(privateRequest=null){
+async function modelConnLoad(){
+  const privateRequest=arguments[0]??null;
   const continuation=_cpModelLoadRequests.get(privateRequest);
   _cpModelLoadRequests.delete(privateRequest);
   const intent=captureOrdersConfigurationIntent();
@@ -15726,6 +15733,15 @@ function refreshJobLostError(expectedJob,jobState){
   return err;
 }
 async function loadFromServer(force, targets){
+  // The public two-argument contract stays intact; only a private import
+  // continuation can use the optional internal argument.
+  const importRequest=arguments[2]??null;
+  const importContinuation=importRequest===null?null:_cpImportRefreshRequests.get(importRequest);
+  if(importRequest!==null){
+    _cpImportRefreshRequests.delete(importRequest);
+    if(!importContinuation)throw ordersFullActionError('ORDERS_FULL_STALE');
+    importContinuation.beforeStart();
+  }
   const refreshIntent={epoch:_ordersProjectionSourceEpoch,sessionEpoch:_ordersUiSessionEpoch};
   if(force&&ordersProjectionIsThin()){
     try{await ensureOrdersFullForAction('orders.refresh.start');
@@ -16217,6 +16233,7 @@ async function waitForRefreshJob(expectedJob=null){
       try{ await autoOpenRefreshHistory(_overviewRefreshResult); }
       catch(err){ console.warn('Yenileme notları açılamadı:',err); }
     }
+    if(importContinuation){assertOrdersGlobalUpdate(ordersGlobalTransaction);importContinuation.complete(ordersGlobalTransaction);}
     return true;
   }catch(err){
     if(ordersGlobalTransaction&&(ordersGlobalTransaction.epoch!==_ordersProjectionSourceEpoch||ordersGlobalTransaction.sessionEpoch!==_ordersUiSessionEpoch))return false;
@@ -30949,7 +30966,72 @@ function cpImportRowLabel(row){
   if(!row)return '';
   return [row['Order Code'],row['Model Name'],row['C.Code']].map(importNormalizeText).filter(Boolean).join(' · ');
 }
-async function cpImportCreateCustomColumns(defs){
+// BEGIN private CP import action guards
+const _cpImportRefreshRequests=new WeakMap();
+function cpImportActorStamp(){
+  const stamp=user=>user?[String(user.id??''),user.systemRole,user.accessAreas,user.permissions,user.capabilities,user.scopes]:null;
+  return JSON.stringify([stamp(state.currentUser),stamp(window.BL_USER_CONTEXT)]);
+}
+function assertCpImportOwner(check){
+  if(check==null)return;
+  if(typeof check!=='function'||check.constructor?.name==='AsyncFunction')throw ordersFullActionError('ORDERS_FULL_STALE');
+  const result=check();
+  if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});throw ordersFullActionError('ORDERS_FULL_STALE');}
+  if(result!==undefined&&result!==true)throw ordersFullActionError('ORDERS_FULL_STALE');
+}
+function captureCpImportAction(){
+  _ordersRequireFullSynchronousRead();
+  const note=captureOrdersNoteAction('shared'),cp=state.cp,rows=cp?.rows,tab=currentActiveTab(),actor=cpImportActorStamp();
+  let owner=null,writeStarted=false,completion=null;
+  const common=()=>{
+    if(currentActiveTab()!==tab||_ordersUiSessionEpoch!==note.intent.sessionEpoch||cpImportActorStamp()!==actor)throw ordersFullActionError('ORDERS_FULL_STALE');
+    if(owner){
+      const checked=owner();
+      if(checked&&typeof checked.then==='function'){Promise.resolve(checked).catch(()=>{});throw ordersFullActionError('ORDERS_FULL_STALE');}
+      if(checked!==true)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
+    if(window.BLCanAccessArea?.('cp')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+    _ordersRequireFullSynchronousRead();
+  };
+  const action={note,common,
+    assert(){common();assertOrdersNoteAction(note);if(state.cp!==cp||cp?.rows!==rows)throw ordersFullActionError('ORDERS_FULL_STALE');},
+    bindOwner(check){if(owner||typeof check!=='function'||check.constructor?.name==='AsyncFunction')throw ordersFullActionError('ORDERS_FULL_STALE');owner=check;},
+    startWrite(){action.assert();writeStarted=true;},
+    assertRollback(){action.assert();if(writeStarted)throw ordersFullActionError('ORDERS_FULL_STALE');},
+    assertCompletion(){
+      if(!completion){action.assert();return;}
+      common();
+      if(completion.legacy){if(ordersConfigurationLifecycleInvolved())throw ordersFullActionError('ORDERS_FULL_STALE');return;}
+      if(completion.epoch!==_ordersProjectionSourceEpoch||completion.sessionEpoch!==_ordersUiSessionEpoch
+        ||completion.cp!==state.cp||completion.rows!==state.cp?.rows||completion.orders!==state.orders
+        ||completion.notes!==ordersNoteActionStamp('shared'))throw ordersFullActionError('ORDERS_FULL_STALE');
+    },
+    async refresh(){
+      action.assert();completion=null;
+      const failed=()=>Object.assign(new Error(appLang==='en'?'Server data could not be reloaded after import.':'İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.'),{code:'IMPORT_REFRESH_FAILED'});
+      if(!ordersConfigurationIntentInvolved(note.intent)){
+        if(!await loadFromServer(false))throw failed();
+        completion=Object.freeze({legacy:true});action.assertCompletion();return;
+      }
+      const request=Object.freeze({});
+      _cpImportRefreshRequests.set(request,{beforeStart:()=>action.assert(),complete(token){
+        assertOrdersGlobalUpdate(token);common();
+        completion=Object.freeze({epoch:token.epoch,sessionEpoch:token.sessionEpoch,cp:state.cp,rows:state.cp?.rows,orders:state.orders,notes:ordersNoteActionStamp('shared')});
+      }});
+      try{
+        if(!await loadFromServer(false,undefined,request))throw failed();
+        if(!completion)throw ordersFullActionError('ORDERS_FULL_STALE');
+        action.assertCompletion();
+      }finally{_cpImportRefreshRequests.delete(request);}
+    },
+  };
+  action.assert();return Object.freeze(action);
+}
+// END private CP import action guards
+async function cpImportCreateCustomColumns(defs,importAction=null,assertOwner=null){
+  const action=importAction||captureCpImportAction();
+  const assert=()=>{action.assert();assertCpImportOwner(assertOwner);};
+  assert();
   const previous=CP_NOTE_COLUMN_DEFS.map(def=>({...def}));
   const created=[];
   const next=[...previous];
@@ -30959,8 +31041,9 @@ async function cpImportCreateCustomColumns(defs){
     next.push({id,label:def.label});
   });
   if(!created.length)return {created:[],rollback:async()=>{}};
-  await saveCpNoteColumnDefs(next);
-  return {created,rollback:async()=>{ try{ await saveCpNoteColumnDefs(previous); }catch(err){ console.warn('Not sütunu geri alınamadı:',err&&err.message); } }};
+  await saveCpNoteColumnDefs(next,action.note,assert);
+  assert();
+  return {created,rollback:async()=>{ assert();action.assertRollback();await saveCpNoteColumnDefs(previous,action.note,assert);assert(); }};
 }
 function cpImportBuildItems(plan,fieldIdMap){
   const rows=(state.cp&&state.cp.rows)||[];
@@ -31099,6 +31182,10 @@ function kolImportRowLabel(row){
 }
 
 window.BLExcelImportBridge={
+  prepareOpen(moduleId,open){
+    if(moduleId==='cp'&&ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.import.open','excel-import',()=>()=>true,open);
+    return open();
+  },
   modules(){
     const out=[];
     if(document.getElementById('view-cp'))out.push('cp');
@@ -31107,6 +31194,7 @@ window.BLExcelImportBridge={
   },
   get(moduleId){
     const revisionNotes=moduleId==='cp'?CP_NOTE_COLUMN_DEFS.map(def=>({id:def.id})):null;
+    const importAction=moduleId==='cp'?captureCpImportAction():null;
     if(moduleId==='cp')return {
       id:'cp',
       label:'CP Tracker',
@@ -31119,23 +31207,36 @@ window.BLExcelImportBridge={
       rowRevision:row=>cpImportRowRevision(row,revisionNotes),
       rowLabel:cpImportRowLabel,
       readValue:cpImportReadValue,
-      createCustomColumns:cpImportCreateCustomColumns,
-      async execute(plan,fieldIdMap,progress){
+      bindOwner:check=>importAction.bindOwner(check),
+      assertCurrent:()=>importAction.assert(),
+      assertCompletion:()=>importAction.assertCompletion(),
+      createCustomColumns:(defs,owner)=>cpImportCreateCustomColumns(defs,importAction,owner),
+      async execute(plan,fieldIdMap,progress,owner){
+        importAction.assert();assertCpImportOwner(owner);
         if(plan.operations.some(op=>op.op==='create'))throw new Error(appLang==='en'?'CP rows cannot be created by import.':'CP satırları içe aktarmayla oluşturulamaz.');
         const items=cpImportBuildItems(plan,fieldIdMap);
         if(!items.length)return {created:0,updated:0,failed:0};
         if(typeof progress==='function')progress({stage:'importing',done:0,total:items.length});
+        const command=JSON.stringify(plan),mapping=JSON.stringify([...fieldIdMap]);
+        const assertCurrent=()=>{
+          importAction.assert();assertCpImportOwner(owner);
+          if(JSON.stringify(plan)!==command||JSON.stringify([...fieldIdMap])!==mapping)throw ordersFullActionError('ORDERS_FULL_STALE');
+          const valid=window.BLExcelImportPlan.assertApplicable(plan,{revision:Number(state.storeRevisions?.orders)||0,rows:state.cp?.rows||[],rowRevision:row=>cpImportRowRevision(row,revisionNotes)});
+          if(!valid.ok)throw ordersFullActionError('ORDERS_FULL_STALE');
+        };
+        importAction.startWrite();
         // Tek istek, tek revizyon kapısı: sunucu ya hepsini yazar ya hiçbirini.
         const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{
           method:'POST',headers:{'Content-Type':'application/json'},
           expectedRevision:plan.revisionGuard.storeRevision,
+          assertCurrent,
           body:JSON.stringify({items}),
         });
         const skipped=Array.isArray(data.skipped)?data.skipped.length:0;
         if(typeof progress==='function')progress({stage:'importing',done:items.length,total:items.length});
         return {created:0,updated:Number(data.updated)||0,failed:skipped};
       },
-      async refresh(){if(!await loadFromServer(false))throw Object.assign(new Error(appLang==='en'?'Server data could not be reloaded after import.':'İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.'),{code:'IMPORT_REFRESH_FAILED'});},
+      async refresh(){await importAction.refresh();},
     };
     if(moduleId==='collection')return {
       id:'collection',
