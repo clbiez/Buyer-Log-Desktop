@@ -1,0 +1,60 @@
+{
+  "commands": [
+    {
+      "name": "baseline",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-profile-rejection-preparation/profile-rejection.test.cjs"
+      ],
+      "exitCode": 1,
+      "sha256": "f2023a2e149a387583ca61bd9f35e104217964e1f60415e52b60b50bb87ae107",
+      "counts": {
+        "tests": [
+          "17"
+        ],
+        "pass": [
+          "8"
+        ],
+        "fail": [
+          "9"
+        ],
+        "cancelled": [
+          "0"
+        ],
+        "skipped": [
+          "0"
+        ]
+      }
+    },
+    {
+      "name": "candidate",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-profile-rejection-preparation/profile-rejection.test.cjs"
+      ],
+      "exitCode": 0,
+      "sha256": "134208c33420790c2e44ba7da970805fa3e6cbbdbe78f3f4ea6332d3d531c4de",
+      "counts": {
+        "tests": [
+          "17"
+        ],
+        "pass": [
+          "17"
+        ],
+        "fail": [
+          "0"
+        ],
+        "cancelled": [
+          "0"
+        ],
+        "skipped": [
+          "0"
+        ]
+      }
+    }
+  ]
+}

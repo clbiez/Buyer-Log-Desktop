@@ -1,0 +1,7 @@
+{
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "stdout": "{\"scenario\":\"automations\",\"module\":\"automations\",\"lang\":\"en\",\"alreadyStarted\":false,\"candidate\":false,\"sourceSha256\":\"148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c\",\"status\":\"observed\",\"immediate\":{\"returnedType\":\"undefined\",\"returnedFalse\":false,\"activeTab\":\"automations\",\"events\":[\"desktop:automations\",\"panels-close\",\"opened:automations\",\"flush:automations\",\"toolbar:automations\",\"excel:automations\",\"title\",\"feature:automations\",\"inbox\"],\"favoriteMarked\":false},\"startupPromisePreserved\":false,\"startupOutcome\":\"resolved\",\"events\":[\"desktop:automations\",\"panels-close\",\"opened:automations\",\"flush:automations\",\"toolbar:automations\",\"excel:automations\",\"title\",\"feature:automations\",\"inbox\",\"automation-init\",\"automation-import\"],\"authChecks\":[\"automations\"],\"permissions\":{\"automations\":true},\"activeTab\":\"automations\",\"favoriteMarked\":false,\"unhandled\":[],\"handledLate\":0,\"expectedLocalizedMessage\":\"Orders data or selection changed. Try the action again.\"}\n",
+  "stderr": ""
+}

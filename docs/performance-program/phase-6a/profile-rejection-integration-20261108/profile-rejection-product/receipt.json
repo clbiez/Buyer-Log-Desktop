@@ -1,0 +1,33 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "profile-rejection",
+    "orders-config-barriers",
+    "orders-profile-barriers",
+    "module-schema",
+    "module-projection-schema",
+    "tab-revisit-perf",
+    "cp-orders-hydration-revision"
+  ],
+  "exitCode": 0,
+  "sha256": "c8c7e6025ebc8193898ed31f46b06d1e9eeb610cf65a419ee07422cd200a4b0e",
+  "counts": {
+    "tests": [
+      "123"
+    ],
+    "pass": [
+      "123"
+    ],
+    "fail": [
+      "0"
+    ],
+    "cancelled": [
+      "0"
+    ],
+    "skipped": [
+      "0"
+    ]
+  }
+}

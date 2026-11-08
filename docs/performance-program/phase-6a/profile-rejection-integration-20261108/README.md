@@ -1,0 +1,9 @@
+# Profile failure observers / preserved failed full run
+
+TR: switchTab beş türetilmiş profile Promise’ını karşılar (first-visit observer, CP, Orders, Collection, Shipping). Asıl profileReady/startupPageProfileReady nesnesi ve reddi korunur; başarısızlık başarılı tablo çizimine çevrilmez. Her switch için tek TR/EN mevcut error hook/toast; favorite-marker/retry/lifecycle tasarımı değişmez. Gerçek bütünswitchTab izole child’da native unhandledRejection gözlemiyle aynı17vaka: **8PASS/9RED→17PASS**. Üründe mevcut CP/schema/profil regresyonlarıyla **123/123PASS**. Explicit sentetik modül izinleri çalışır; CP-only oturum Orders'a giremez. AsyncAPI'ye dönüş yok; source dışı değişmediği frozen function/outside SHA ile doğrulanır.
+
+Ayrı tam koşu4bf75b5e **4080PASS/1FAIL/63SKIP**, yalnız batch1–2çalıştı; kalan8çalışmadı. Tek hata source-slice'ın hydrate:function() imzasını aramasıydı. Mevcut bütünsilme/tombstone assertion'ları korundu; başlangıç/bitiriş anchor doğrulaması eklendi. Gerçekbrowserhydrate tombstone native testleri ve profile kapılarıyla23/23PASS. Bu düzeltme eski kırmızıtam koşuyu yeşil yapmış sayılmaz. Yeni bütün10-batch koşusu zorunludur.
+
+EN: Five derived profile observer promises are handled without converting the original startup rejection to success. Actual whole-function native fixtures preserve permissions, synchronous navigation, failure gating and localized single notification. Same17 cases:8pass/9fail baseline→17pass; production-related package123pass. The prior all-suite attempt stopped in batch2 at a source-extraction signature assumption (4080pass/1fail/63skip); all real tombstone assertions/behavior remain protected. A fresh default all10-batch run remains required.
+
+Public thin remains disabled; source/schema/publication adapters and other sync-consumer barriers remain open. Original native child JSON and failed logs are retained. No push/merge/TEST/STABLE.

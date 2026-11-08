@@ -1,0 +1,7 @@
+{
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "stdout": "{\"scenario\":\"reject\",\"module\":\"shipping\",\"lang\":\"tr\",\"alreadyStarted\":false,\"candidate\":false,\"sourceSha256\":\"148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c\",\"status\":\"observed\",\"immediate\":{\"returnedType\":\"undefined\",\"returnedFalse\":false,\"activeTab\":\"shipping\",\"events\":[\"desktop:shipping\",\"panels-close\",\"opened:shipping\",\"flush:shipping\",\"toolbar:shipping\",\"excel:shipping\",\"title\",\"profiles-start\",\"feature:deferredUi\",\"inbox\"],\"favoriteMarked\":true},\"startupPromisePreserved\":true,\"startupOutcome\":\"rejected\",\"events\":[\"desktop:shipping\",\"panels-close\",\"opened:shipping\",\"flush:shipping\",\"toolbar:shipping\",\"excel:shipping\",\"title\",\"profiles-start\",\"feature:deferredUi\",\"inbox\"],\"authChecks\":[\"shipping\"],\"permissions\":{\"shipping\":true},\"activeTab\":\"shipping\",\"favoriteMarked\":true,\"unhandled\":[{\"message\":\"Error\",\"code\":\"SYNTHETIC_PROFILE_REJECT\"},{\"message\":\"Error\",\"code\":\"SYNTHETIC_PROFILE_REJECT\"}],\"handledLate\":0,\"expectedLocalizedMessage\":\"Sipariş verisi veya seçim değişti. İşlemi tekrar deneyin.\"}\n",
+  "stderr": ""
+}

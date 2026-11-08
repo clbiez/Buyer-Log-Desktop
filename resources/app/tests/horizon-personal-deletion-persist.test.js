@@ -153,7 +153,10 @@ test('sunucu silinen anahtarları istemciye bildirir', () => {
 });
 
 test('hydrate silinen anahtarı geri göndermez', () => {
-  const block = STORAGE.slice(STORAGE.indexOf('hydrate:function()'), STORAGE.indexOf('  };\n  Object.defineProperty'));
+  const start = STORAGE.indexOf('hydrate:function(');
+  const end = STORAGE.indexOf('  };\n  Object.defineProperty', start);
+  assert.ok(start >= 0 && end > start, 'gerçek hydrate metodu imzadan bağımsız bulunmalı');
+  const block = STORAGE.slice(start, end);
   assert.ok(block, 'hydrate bloğu bulunmalı');
   assert.match(block, /data\.deletions/, 'hydrate sunucudaki silme kaydını okumalı');
   assert.match(block, /native\.removeItem\(actual\(key\)\)/, 'silinen anahtarın yerel kopyası da temizlenmeli');

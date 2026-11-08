@@ -2353,15 +2353,21 @@ function switchTab(tab){
   const profileFirstVisit=profileAllowed&&!_favoritesAppliedPages.has(tab);
   if(profileFirstVisit)_favoritesAppliedPages.add(tab);
   const profileReady=profileFirstVisit?applyProfilesForCurrentPage(true):Promise.resolve();
+  let profileFailureReported=false;
+  const reportProfileFailure=error=>{
+    if(profileFailureReported)return;
+    profileFailureReported=true;
+    showToast(error?.message||ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});
+  };
   if(!startupReadySignaled)startupPageProfileReady=profileReady;
-  if(profileFirstVisit)void profileReady.then(()=>{if(currentActiveTab()!==tab)_favoritesAppliedPages.delete(tab);});
+  if(profileFirstVisit)void profileReady.then(()=>{if(currentActiveTab()!==tab)_favoritesAppliedPages.delete(tab);}).catch(reportProfileFailure);
   if(tab==='cp'&&(!state.cp||warmedUnrendered)){
     const dataReady=ensureCpLoaded({deferRender:profileFirstVisit||warmedUnrendered});
     void (profileFirstVisit||warmedUnrendered?Promise.all([dataReady,profileReady]).then(()=>{
       if(currentActiveTab()!=='cp'||!state.cp)return;
       if(profileFirstVisit)applyStoredProfilesForCurrentPage(true);
       renderCP();
-    }):dataReady);
+    }).catch(reportProfileFailure):dataReady);
   }
   if(tab==='orders'&&(!state.orders||warmedUnrendered)){
     const dataReady=ensureOrdersLoaded({deferRender:profileFirstVisit||warmedUnrendered});
@@ -2369,11 +2375,11 @@ function switchTab(tab){
       if(currentActiveTab()!=='orders'||!state.orders)return;
       if(profileFirstVisit)applyStoredProfilesForCurrentPage(true);
       renderOrders();
-    }):dataReady);
+    }).catch(reportProfileFailure):dataReady);
   }
   if(tab==='koleksiyon'&&profileFirstVisit){
     const dataReady=ensureCollectionCatalogLoaded({deferRender:true});
-    void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function'){applyStoredProfilesForCurrentPage(true);renderKol();}});
+    void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function'){applyStoredProfilesForCurrentPage(true);renderKol();}}).catch(reportProfileFailure);
   }
   if(tab==='koleksiyon'&&kolFabricRepaintPending){kolFabricRepaintPending=false;if(typeof renderKol==='function')renderKol();}
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
@@ -2479,7 +2485,7 @@ function switchTab(tab){
     void profileReady.then(()=>{if(currentActiveTab()==='shipping'&&typeof renderShipTable==='function'){
       applyStoredProfilesForCurrentPage(true);
       renderShipTable();
-    }});
+    }}).catch(reportProfileFailure);
   }
   if(tab==='lfl')void window.BLPerf.ensureFeature('lfl').then(()=>window.initLFL?.()).catch(err=>showToast(err.message));
   if(tab==='opencosting'){ window.BLPerf.ensureFeature('openCosting').then(()=>window.initOpenCosting?.()).catch(err=>showToast(err.message)); }

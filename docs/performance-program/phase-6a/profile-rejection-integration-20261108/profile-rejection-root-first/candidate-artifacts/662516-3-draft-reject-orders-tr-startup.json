@@ -1,0 +1,7 @@
+{
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "stdout": "{\"scenario\":\"reject\",\"module\":\"orders\",\"lang\":\"tr\",\"alreadyStarted\":false,\"candidate\":true,\"sourceSha256\":\"148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c\",\"status\":\"observed\",\"immediate\":{\"returnedType\":\"undefined\",\"returnedFalse\":false,\"activeTab\":\"orders\",\"events\":[\"desktop:orders\",\"panels-close\",\"opened:orders\",\"flush:orders\",\"toolbar:orders\",\"excel:orders\",\"title\",\"profiles-start\",{\"load\":\"orders\",\"options\":{\"deferRender\":true}},\"feature:deferredUi\",\"inbox\"],\"favoriteMarked\":true},\"startupPromisePreserved\":true,\"startupOutcome\":\"rejected\",\"events\":[\"desktop:orders\",\"panels-close\",\"opened:orders\",\"flush:orders\",\"toolbar:orders\",\"excel:orders\",\"title\",\"profiles-start\",{\"load\":\"orders\",\"options\":{\"deferRender\":true}},\"feature:deferredUi\",\"inbox\",{\"toast\":\"Sipariş verisi veya seçim değişti. İşlemi tekrar deneyin.\",\"kind\":\"error\"}],\"authChecks\":[\"orders\"],\"permissions\":{\"orders\":true},\"activeTab\":\"orders\",\"favoriteMarked\":true,\"unhandled\":[],\"handledLate\":0,\"expectedLocalizedMessage\":\"Sipariş verisi veya seçim değişti. İşlemi tekrar deneyin.\"}\n",
+  "stderr": ""
+}
