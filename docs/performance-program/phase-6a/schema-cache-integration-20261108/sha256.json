@@ -1,0 +1,11 @@
+{
+  "README.md": "d448c98732a8b353c1307575c2204016c2c45733a321f387c9bb7c1ae84b5df2",
+  "prepared-wiring.md": "e3e9c4578ca168e6de51c137501600a0d0eef4bb3d2a16dafa714ab46230e838",
+  "unrun-prepared-helper.js.txt": "a1401b5bd9d81464133f592a974f483bcc86494a847260b6ddf5a536cda909e8",
+  "schema-cache-red/native.tap.gz": "752d77199088f8e5be1a08e4b69bd231d7e4d87cc18ca5d447d484dd5ac6d870",
+  "schema-cache-red/receipt.json": "7eb888ac404dd96cc01f574d9b3423ea3896ce7f4c05620e213c3022f85d1492",
+  "schema-cache-first-green/native.log.gz": "c1de3c8689279568a51a73af0bc1b71b1bca0c2aa209e65e3c547dedcaf95914",
+  "schema-cache-first-green/receipt.json": "da1ee941a83c6655bc361365de63dc1271106a48964bd2b4751257d83a2d0e32",
+  "schema-cache-dependency-green/native.log.gz": "0a67efc15ebbd675468e32d4cbeecb83565e8cdb4e54f8c72df777ad96c1292e",
+  "schema-cache-dependency-green/receipt.json": "a9645aef712ef6baa9950d9621c4447a91a249a9ff46679d324eb1c35822a40b"
+}

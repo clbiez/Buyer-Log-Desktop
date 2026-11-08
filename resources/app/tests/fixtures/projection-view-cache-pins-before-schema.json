@@ -1,0 +1,29 @@
+{
+  "baseline": {
+    "sha256": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+    "gitBlob": "2c09b29e8fe936f3d229a45c1616366096f297d0",
+    "bytes": 22196
+  },
+  "candidate": {
+    "sha256": "ed88794d32fdcb5f7666a45428bfc668f87627e9ed2c30a23a21daadc2cf5c2d",
+    "gitBlob": "f08f0ba871b7d475d31d8f7a7b97da5a7c2b5bc8",
+    "bytes": 38722
+  },
+  "scope": "Literal checked-in cache and frozen full-cache predecessor; v2 fixture assertions unchanged",
+  "descriptorExtension": {
+    "preparationBaselineSha256": "cb0123c09194cf7c48c39f1c1bab0756f2bebec8060f2bedea3aa45a196f7222",
+    "rootNativeReceipt": "/tmp/buyerlog-phase6a-ready-units-first/receipt.json",
+    "baseline": {
+      "pass": 2,
+      "fail": 10
+    },
+    "candidate": {
+      "pass": 12,
+      "fail": 0
+    },
+    "legacy20": {
+      "pass": 20,
+      "fail": 0
+    }
+  }
+}

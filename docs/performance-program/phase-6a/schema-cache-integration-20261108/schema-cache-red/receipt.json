@@ -1,0 +1,16 @@
+{
+  "exitCode": 1,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/page-projection-schema-cache.test.js"
+  ],
+  "counts": {
+    "pass": 0,
+    "fail": 12,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "a454174279a715aa66848cf9f60c30ba8cc74b58e91eb49724539ceeead0d514"
+}

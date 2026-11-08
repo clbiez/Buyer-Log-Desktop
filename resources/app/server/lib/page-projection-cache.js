@@ -7,6 +7,9 @@ const zlib = require('zlib');
 const { promisify, types } = require('util');
 const { LOCAL_DATA_ROOT } = require('../user-data');
 const { stringifyWithDates } = require('./json-dates');
+const schemaBindings = require('./page-projection-schema-binding').create({
+  schemaApi: require('../../public/module-projection-schema'),
+});
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
@@ -109,14 +112,17 @@ function loadManifestCandidates(userId) {
   return out;
 }
 function loadManifest(userId) { return loadManifestCandidates(userId)[0] || null; }
-async function saveManifest(userId, manifest) {
+async function saveManifest(userId, manifest, publishNewModuleSchemas = false) {
   const file = manifestPath(userId);
   await fs.promises.mkdir(path.dirname(file), { recursive: true });
+  const current = loadManifestFile(file); // Primary only: optional schema never gains backup authority.
+  const ownSchemas = schemaBindings.retainCurrent(publishNewModuleSchemas ? manifest : current, manifest, String(userId));
+  if (Object.keys(ownSchemas).length) manifest.moduleSchemas = ownSchemas;
+  else delete manifest.moduleSchemas;
   // .bak gerçek bir önceki başarılı generation'ı temsil eder. Aynı aktif generation
   // üzerinde LRU touch veya tek-modül patch yapılırken backup'ı mevcut manifest ile
   // ezmek fallback'i yok ederdi; yalnız generation değişirken primary'yi yedekle.
   try {
-    const current = loadManifestFile(file);
     if (current && current.activeGeneration !== manifest.activeGeneration) {
       await fs.promises.copyFile(file, file + '.bak');
     }
@@ -250,7 +256,8 @@ async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, pro
 }
 async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null,projections={},extra={},assertCurrent,mergePrevious=false}={}){
   const moduleKey=Object.keys(projections).sort().join(',');
-  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null,extra.sourceProjectionKeys||null])));
+  const schemaCandidates=schemaBindings.snapshotPrepared(extra.moduleSchemas);
+  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null,extra.sourceProjectionKeys||null,schemaBindings.preparedKey(schemaCandidates)])));
   return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`,()=>enqueueUserMutation(userId,async()=>{
     assertCurrent?.();
     const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};let committed=false;
@@ -272,7 +279,8 @@ async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null
         modules[module]={bytes:buffer.length,uncompressedBytes:Number(entry.uncompressedBytes)||0,checksum:checksum(buffer)};
       }
       const manifest={schemaVersion:CACHE_SCHEMA_VERSION,activeGeneration:id,previousGeneration:previous&&previous.activeGeneration||null,contextHash:String(contextHash||''),sourceLoadedAt,createdAt:new Date().toISOString(),modules,backlogVariants:{},...extra};
-      assertCurrent?.();await saveManifest(userId,manifest);committed=true;assertCurrent?.();await cleanupGenerations(userId,new Set([id,manifest.previousGeneration].filter(Boolean)));return manifest;
+      manifest.moduleSchemas=schemaBindings.bindCommitted(manifest,schemaCandidates,String(userId));
+      assertCurrent?.();await saveManifest(userId,manifest,true);committed=true;assertCurrent?.();await cleanupGenerations(userId,new Set([id,manifest.previousGeneration].filter(Boolean)));return manifest;
     }catch(error){if(!committed){try{await fs.promises.rm(root,{recursive:true,force:true});}catch(_){}}throw error;}
   }));
 }
@@ -326,6 +334,7 @@ async function writeProjection(userId, module, contextHash, value) {
     const meta = await writeJsonGzip(modulePath(userId, manifest.activeGeneration, module), value);
     manifest.modules = manifest.modules || {};
     manifest.modules[module] = meta;
+    manifest.moduleSchemas = schemaBindings.drop(manifest.moduleSchemas, module);
     await saveManifest(userId, manifest);
     return meta;
   }));
@@ -592,6 +601,11 @@ async function writeBacklog(userId, contextHash, key, value) {
     return meta;
   }));
 }
+function readCurrentModuleSchema(userId, module, contextHash, cached) {
+  const primary = loadManifestFile(manifestPath(userId));
+  if (!primary || primary.contextHash !== contextHash) return null;
+  return schemaBindings.readCurrent({ ownerId: String(userId), module, manifest: primary, cached });
+}
 function invalidate(userId) {
   const prefix = userRoot(userId) + path.sep;
   for (const [key, entry] of compressedLru) {
@@ -619,5 +633,6 @@ function listSnapshotUserIds(snapshotRoot) {
 module.exports = {
   ROOT, CACHE_SCHEMA_VERSION, BACKLOG_MAX_VARIANTS, safeUserId, manifestPath, loadManifest,
   MEMORY_MAX_ENTRIES, MEMORY_MAX_BYTES, VIEW_LIMITS, readViewCompressed, writeViewCompressed,
+  prepareModuleSchemas: schemaBindings.prepare, readCurrentModuleSchema,
   readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
 };

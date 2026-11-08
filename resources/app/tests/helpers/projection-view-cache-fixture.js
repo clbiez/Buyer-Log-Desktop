@@ -13,6 +13,7 @@ function fixture(t,optionalModulePath){
   return typeof actual==='function'?(...args)=>hooks.has(key)?hooks.get(key)(actual.bind(target),...args):actual.apply(target,args):actual;}})};
  const loaded=new Module(moduleSource,module);loaded.filename=moduleSource;loaded.paths=module.paths;
  loaded.require=request=>request==='../user-data'?{LOCAL_DATA_ROOT:root}:request==='./json-dates'?require('../../server/lib/json-dates')
+  :request==='./page-projection-schema-binding'?require('../../server/lib/page-projection-schema-binding')
   :request==='fs'?io:require(request);
  const bytes=fs.readFileSync(moduleSource);assert.ok([pins.baseline.sha256,pins.candidate.sha256].includes(sha(bytes)),'exact frozen baseline or candidate cache source');
  loaded._compile(bytes.toString('utf8'),moduleSource);const cache=loaded.exports;

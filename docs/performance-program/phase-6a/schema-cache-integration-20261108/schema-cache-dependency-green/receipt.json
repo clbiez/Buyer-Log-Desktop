@@ -1,0 +1,18 @@
+{
+  "exitCode": 0,
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "page-projection",
+    "page-cache-reuse",
+    "cp-shared-edit-page-cache"
+  ],
+  "counts": {
+    "pass": 70,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "45d6bdbb6d5eb29296b1ebca4709d8d669741e442246a8da75dd3025c1aff087"
+}
