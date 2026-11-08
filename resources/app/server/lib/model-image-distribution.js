@@ -214,16 +214,7 @@ function createModelImageDistribution(deps = {}) {
     const manualProtected = [];
     const staleProtection = [];
     const unavailable = [];
-    const sharedAvailable = options.allowShared !== false && await shared.available();
-    // One view can contain hundreds of models. Resolve their shared metadata
-    // in one heads/manifest pass instead of one SMB directory+manifest scan
-    // per identity.
-    let sharedRecords = new Map();
-    if (sharedAvailable && typeof shared.lookupMany === 'function') {
-      try { sharedRecords = await shared.lookupMany([...unique.keys()], { source }); }
-      catch (error) { trace('SHARED_LOOKUP_BATCH_FAILED', { identities: unique.size, error: (error && error.message) || String(error) }); }
-    }
-
+    const unresolved = [];
     for (const item of unique.values()) {
       const currentRef = ingestLib.currentRefFor(imagemap, item);
       /* BAYAT MANUEL KAYIT ≠ KORUNACAK MANUEL GÖRSEL.
@@ -251,6 +242,19 @@ function createModelImageDistribution(deps = {}) {
         local.push({ ...item, currentRef, imageRef: currentRef, origin: ORIGIN_LOCAL });
         continue;
       }
+
+      unresolved.push({ item, currentRef });
+    }
+
+    // Yerel/manual kararları tamamlanmadan SMB metadata turu başlatma.
+    const sharedAvailable = unresolved.length > 0 && options.allowShared !== false && await shared.available();
+    let sharedRecords = new Map();
+    if (sharedAvailable && typeof shared.lookupMany === 'function') {
+      try { sharedRecords = await shared.lookupMany(unresolved.map(({ item }) => item.key), { source }); }
+      catch (error) { trace('SHARED_LOOKUP_BATCH_FAILED', { identities: unresolved.length, error: (error && error.message) || String(error) }); }
+    }
+
+    for (const { item, currentRef } of unresolved) {
 
       // 3-5) SHARED. Kaynak SIKI: ASAS isteği PLM kökenli nesneyle karşılanmaz.
       let record = sharedRecords.get(item.key) || null;

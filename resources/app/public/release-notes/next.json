@@ -1489,6 +1489,64 @@
           "en": "Actual application with synthetic data. This capture does not prove background timing or durability; separate measurements and regressions provide that evidence."
         }
       }
+    },
+    {
+      "id": "phase7-local-image-planning",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri",
+        "en": "Model images"
+      },
+      "title": {
+        "tr": "Yerel görseller için ortak klasör taraması azaltıldı",
+        "en": "Local images avoid unnecessary shared-folder scans"
+      },
+      "body": {
+        "tr": "Model görseli yerelde hazırsa eksik görsel planı ortak klasörü gereksiz yere taramaz. Manuel sahiplik ve mevcut görsel seçimi korunur.",
+        "en": "When a model image is already available locally, missing-image planning avoids unnecessary shared-folder scans. Manual ownership and existing image selection are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-local-image-planning.png",
+        "alt": {
+          "tr": "Yeni görsel yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the revised image path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Disk işlemi kazanımı ayrıca ölçülür; bu görüntü zamanlama kanıtı değildir.",
+          "en": "Actual application with synthetic data. Disk-operation savings are measured separately; this capture is not timing evidence."
+        }
+      }
+    },
+    {
+      "id": "phase7-image-pack-batch",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri",
+        "en": "Model images"
+      },
+      "title": {
+        "tr": "Ortak görseller toplu yayımlanır",
+        "en": "Shared images publish in batches"
+      },
+      "body": {
+        "tr": "Bir işlemdeki ortak görsellerin paket ve metadata yazımları gruplandırılır. İçerik doğrulama ve tekrar okuma davranışı korunur. Ölçüm Linux yerel disktedir; Windows veya SMB hızlanması ölçülmemiştir.",
+        "en": "Pack and metadata writes for shared images in one operation are grouped. Content verification and readback behavior are preserved. Measurements used Linux local disk; Windows or SMB speedup has not been measured."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-image-pack-batch.png",
+        "alt": {
+          "tr": "Yeni görsel yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the revised image path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Disk işlemi kazanımı ayrıca ölçülür; bu görüntü zamanlama kanıtı değildir.",
+          "en": "Actual application with synthetic data. Disk-operation savings are measured separately; this capture is not timing evidence."
+        }
+      }
     }
   ]
 }
