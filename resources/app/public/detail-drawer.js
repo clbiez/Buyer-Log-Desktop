@@ -635,7 +635,7 @@ function renderTable(){
   }).join('')+'</tr>';
   bindColumnResize(table);
   const rowCells=(row,index)=>(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map((col,colIndex)=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'" data-key="'+escapeHtml(col.key)+'" data-r="'+index+'" data-c="'+colIndex+'">'+reportCell(col,row)+'</td>').join('');
-  const rowHtml=(row,index)=>'<tr data-id="'+escapeHtml(rowKey(row))+'" data-bl-virtual-index="'+index+'">'+rowCells(row,index)+'</tr>';
+  const rowHtml=(row,index)=>'<tr data-id="'+escapeHtml(rowKey(row))+'">'+rowCells(row,index)+'</tr>';
   const moreCells='<td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td>';
   const more=rest>0?{}:null,viewRows=more?shown.concat(more):shown;
   const html=()=>shown.map(rowHtml).join('')+(more?'<tr data-bl-virtual-index="'+shown.length+'">'+moreCells+'</tr>':'');
@@ -665,7 +665,7 @@ function renderTable(){
     const finish=()=>{
       if(tbody._virtualState!==virtual)return;
       tbody._virtualState=null;if(typeof _pendingTableRenders!=='undefined')_pendingTableRenders.delete(tbody);
-      tbody.innerHTML=html();cache.clear();paintGrid();
+      tbody.innerHTML=html();tbody.querySelectorAll('tr').forEach((tr,index)=>{tr.dataset.blVirtualIndex=String(index);});cache.clear();paintGrid();
     };
     table._blFinishNative=()=>tbody._virtualState===virtual&&root.BLGridClipboard.withNativeSelection(table,finish);
     if(typeof _pendingTableRenders!=='undefined')_pendingTableRenders.set(tbody,()=>{if(!table._blFinishNative?.())finish();});
