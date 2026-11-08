@@ -1,0 +1,29 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "user-prefs-sync-v598",
+    "horizon-personal-deletion-persist",
+    "orders-config-barriers"
+  ],
+  "exitCode": 0,
+  "sha256": "e9b8a60f1b1c410b44d2791993f3f621debb0f7b7499c41cf6a9b3649ca4be41",
+  "counts": {
+    "tests": [
+      "37"
+    ],
+    "pass": [
+      "37"
+    ],
+    "fail": [
+      "0"
+    ],
+    "cancelled": [
+      "0"
+    ],
+    "skipped": [
+      "0"
+    ]
+  }
+}

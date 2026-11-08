@@ -15,6 +15,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
+const {extractFunction} = require('./helpers/app-main-functions');
 
 const ROOT = path.join(__dirname, '..');
 process.env.BUYER_LOG_SERVER_DATA_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-prefs-'));
@@ -95,7 +97,10 @@ test('v5.98 yazma sunucuya gönderiliyor ama gecikmeli', () => {
 });
 
 test('v5.98 birleştirme iki yönlü: yeni olan kazanır', () => {
-  const block = STORAGE.slice(STORAGE.indexOf('hydrate:function()'), STORAGE.indexOf('  };\n  Object.defineProperty'));
+  const start = STORAGE.indexOf('hydrate:function(');
+  const end = STORAGE.indexOf('  };\n  Object.defineProperty', start);
+  assert.ok(start >= 0 && end > start, 'gerçek hydrate metodu bulunmalı');
+  const block = STORAGE.slice(start, end);
   // Sunucu daha yeniyse yerele yazılır.
   assert.match(block, /String\(remote\.updatedAt\|\|''\)>localStamp/);
   // Yerel daha yeniyse sunucuya gönderilir — bu tarayıcıda yazılmış notlar
@@ -104,7 +109,7 @@ test('v5.98 birleştirme iki yönlü: yeni olan kazanır', () => {
   // Sunucuda hiç olmayan yerel anahtarlar da yukarı taşınmalı.
   assert.match(block, /if\(!synced\(key\)\|\|data\.entries\[key\]\)return;/);
   // Ağ hatası açılışı engellememeli.
-  assert.match(block, /\.catch\(function\(\)\{return \{applied:0,pushed:0\}\}\)/);
+  assert.match(block, /\.catch\(function\(error\)\{if\(applyBarrierFailed\)throw error;return \{applied:0,pushed:0\}\}\)/);
 });
 
 test('v5.98 açılışta birleştirme çağrılıyor ve Not Defteri önbelleği tazeleniyor', () => {
@@ -113,15 +118,42 @@ test('v5.98 açılışta birleştirme çağrılıyor ve Not Defteri önbelleği 
   const anchor = 'const sync=await authHydrationPromise;';
   const at = APP.indexOf(anchor);
   assert.ok(at > 0, 'açılışta kişisel veri birleştirmesi beklenmeli');
-  assert.match(APP, /authHydrationPromise=Promise\.resolve\(\)\.then\(\(\)=>BLStorage\.hydrate\(\)\)/, 'birleştirme BLStorage.hydrate ile yapılmalı');
+  const hydrate = extractFunction(APP, 'hydrateUserPreferencesAfterUi');
+  assert.match(hydrate, /authHydrationPromise=Promise\.resolve\(\)\.then\(\(\)=>BLStorage\.hydrate\(\{beforeApply:/, 'birleştirme BLStorage.hydrate ve uygulanma öncesi kapısıyla yapılmalı');
   const block = APP.slice(at, at + 500);
   // Not Defteri belleğe alınıyor; taze veri geldiğinde bırakılmalı, yoksa
   // sunucudan gelen notlar ekrana yansımazdı.
   assert.match(block, /if\(sync&&sync\.applied\)\{ _todoState=null; \}/);
   // Hata yakalama da authHydrationPromise'e taşındı; birleştirme başarısız
   // olsa bile açılış devam etmeli ve sebep konsola yazılmalı.
-  assert.match(APP, /\.catch\(error=>\{[\s\S]*?console\.warn\('Kişisel veriler eşitlenemedi:',error\);[\s\S]*?return null;/,
+  assert.match(hydrate, /\.catch\(error=>\{[\s\S]*?console\.warn\('Kişisel veriler eşitlenemedi:',error\);[\s\S]*?return null;/,
     'birleştirme hatası açılışı durdurmamalı, sebebi kaydedilmeli');
+});
+
+for (const [name, localStamp, remoteStamp, expected, applied, pushed] of [
+  ['newer remote notebook', '2026-09-01T10:00:00Z', '2026-09-01T11:00:00Z', 'remote', 1, 0],
+  ['newer local notebook', '2026-09-01T11:00:00Z', '2026-09-01T10:00:00Z', 'local', 0, 1],
+  ['local notebook missing remotely', '2026-09-01T11:00:00Z', null, 'local', 0, 1],
+]) test('native browser hydrate preserves ' + name, async () => {
+  const key = 'lcw.todo.pages.v1', prefix = 'bl.user.synthetic-notebook.';
+  const values = new Map([[prefix + key, 'local'], [prefix + '__syncMeta.v1', JSON.stringify({[key]: localStamp})]]);
+  const writes = [];
+  const sandbox = {
+    BL_USER_CONTEXT: {id: 'synthetic-notebook'},
+    localStorage: {get length(){return values.size;}, key:index=>[...values.keys()][index]??null,
+      getItem:key=>values.get(String(key))??null, setItem:(key,value)=>values.set(String(key),String(value)), removeItem:key=>values.delete(String(key))},
+    fetch:async (_url, options) => {
+      if(options?.method === 'PUT') { writes.push(JSON.parse(options.body).entries); return {ok:true,json:async()=>({ok:true})}; }
+      return {ok:true,json:async()=>({entries:remoteStamp?{[key]:{value:'remote',updatedAt:remoteStamp}}:{}})};
+    },
+  };
+  sandbox.window = sandbox;
+  vm.runInNewContext(STORAGE, sandbox);
+  const result = await sandbox.BLStorage.hydrate();
+  assert.equal(sandbox.BLStorage.getItem(key), expected);
+  assert.equal(result.applied, applied); assert.equal(result.pushed, pushed);
+  assert.equal(writes.length, pushed);
+  if(pushed) assert.equal(writes[0][key].value, 'local');
 });
 
 test('v5.98 uç noktalar kullanıcının kendi kaydına bağlı', () => {
