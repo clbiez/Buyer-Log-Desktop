@@ -1,0 +1,64 @@
+{
+  "revision": "f947fed0f3245104e6e9496fb73c0291fb681efd",
+  "appTree": "7f84d209b784e5926f877dd6c63dfba9b0b5dc90",
+  "all10BatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "totals": {
+    "pass": 8942,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "relatedPass": 226,
+  "reviewedSourceExact": [
+    {
+      "path": "resources/app/server/lib/compute-service.js",
+      "blob": "8de564444f2be3181a7859b36fbf3e347881881d",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/lib/local-db.js",
+      "blob": "424e643c1cb570c605f957b6a3f3d90faefbfb09",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "blob": "132676bf3bd34c90c3610cf2e15f600f01b27a29",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/workers/compute-worker.js",
+      "blob": "a0c5b6354f1a96503133dd6c2f59fc68d928cad7",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/phase7-snapshot-compute.test.js",
+      "blob": "5a8602cb8b72fa7529c893bcfbe02cadcca1e199",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/phase7-snapshot-durability.test.js",
+      "blob": "cf614e174ee17f9c26705db75d9f8f376abf2a22",
+      "exactPriorReview": true
+    }
+  ],
+  "i18n": "0/0",
+  "notes": 51,
+  "mainIncluded": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "historicalTradeoff": {
+    "eventLoopGapMs": [
+      319.655,
+      47.562
+    ],
+    "checkpointMs": [
+      374.92,
+      404.012
+    ],
+    "rssMiB": [
+      273.508,
+      289.195
+    ],
+    "scope": "Originalthreepairwarm-pool30ksyntheticlocalcheckpoint, notcurrentapphealthoruniversal200msguarantee; fallbackcanretainoldstall"
+  },
+  "merge": "P1 stop before merge; no new approval; no TEST/STABLE"
+}
