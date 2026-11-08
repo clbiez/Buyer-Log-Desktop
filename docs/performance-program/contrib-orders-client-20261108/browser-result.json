@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "rows": 2,
+  "planHash": "758bf42140acc18d32b84f211e7e166db4a142f12d9241b09f6749c0f3640293",
+  "rawSha256": "e3776d5183ed42d8bfe1c03f8f6fe0f09632999c2eb23507a21b4eb9ec4d3c5b",
+  "gzipSha256": "32717734ad89dfc87b8be732c97c7342e869574a966c646bee9f96e9defb0b50",
+  "classicScripts": true,
+  "nodeGlobals": false,
+  "actualUiIntegration": false,
+  "chromium": "154.0.8037.57"
+}

@@ -1,0 +1,153 @@
+{
+  "baseSha": "d66c1f803097af5991616f0420392e1027888f2e",
+  "branch": "contrib/phase6a-orders-client-20261108",
+  "original31BodiesIdentical": true,
+  "measurementModuleAndHarnessHashesMatch": true,
+  "files": [
+    {
+      "path": "resources/app/public/orders-projection-client.js",
+      "bytes": 19844,
+      "sha256": "7a7c2d3d683ad4a1a740913ddcd5ef0317d8822fa7891c69277b552ad6d80d24"
+    },
+    {
+      "path": "resources/app/tests/orders-projection-client.test.js",
+      "bytes": 18372,
+      "sha256": "2edc12e0f5da1881aab697915058bd76b5548ae7fd5e268eba0cfa86e9b14523"
+    },
+    {
+      "path": "resources/app/tests/orders-projection-client-transport.test.js",
+      "bytes": 10423,
+      "sha256": "56574cc02a6d00f69b8afcedb971ca25d1a7dacff3759d6fb5462ff8a17d97c4"
+    },
+    {
+      "path": "resources/app/tests/fixtures/orders-projection-client/runtime.cjs",
+      "bytes": 7103,
+      "sha256": "d39cabe49bd975d8c201ab9e29bc9f8b20e963f89bb96f2b49805557c558e067"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/README.md",
+      "bytes": 12893,
+      "sha256": "4889df2c0e4b9f1b97d8ec6a2c2758ac5284b753536da7bda1f40338d8a6bb25"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/adoption-green.tap",
+      "bytes": 297,
+      "sha256": "72b72cff433a275d065fe211047af8ab6e3eff0887742fd2974abfe315b2de52"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/adoption-red.tap",
+      "bytes": 1717,
+      "sha256": "b222ebf88abb6e624896a415853f1f6b9c2443ff8e37e148601c713cf3a9886c"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-check.cjs",
+      "bytes": 7536,
+      "sha256": "0a3b1f2f182e4104c2017a39b7dbb872202c9bbb2d1f1e53d451e63dc5a2aa37"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-file-policy-failed.log.gz",
+      "bytes": 273,
+      "sha256": "0ff63afc99aaa5f86051cdf1a7ec5750d5875a4e83ed9161a6811455a2cafd03"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-first-closure-failed.log.gz",
+      "bytes": 239,
+      "sha256": "eaecc2b6e512d9ec96c70c8e5c94b0b7d5c0453d2ba7814d1e3cf182c2abad19"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-object-bridge-failed.log.gz",
+      "bytes": 265,
+      "sha256": "2f7eaed835700e7dec98fbdd8e2240548fa13ad1f9954fdc90d5f8bbc62daa5c"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-result.json",
+      "bytes": 400,
+      "sha256": "8fe12387332e88af6f7990c4f37cf985bfcfbca74fcd0f7d2255511b521c4b2f"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser-sandbox-failed.log.gz",
+      "bytes": 1197,
+      "sha256": "fb6b8faf11cb429b9c4787ff4c90287a33b24535d9c1f6deed72b08dcb8086c3"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/browser.log.gz",
+      "bytes": 266,
+      "sha256": "5b463ca0d66f28260d0e5766e693ccf1376bd9ac26682316e4b35232c0421e6d"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/client-final.txt",
+      "bytes": 5667,
+      "sha256": "084d782f35ed3d059291d8a2ad0994d7471f52ef1e7502f0d9e3c9f3d2651462"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/final-validation.json",
+      "bytes": 276,
+      "sha256": "dfbbe9fd45ee1eeb3cdf53e45c7c3aafa7fb7cabcaf7ecb4bd43855ea9ccfcba"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/i18n.txt",
+      "bytes": 125,
+      "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/inherited-pin.json",
+      "bytes": 669,
+      "sha256": "dec65a824d5f903bd3773f8e17414342790b9e1f7cad75489cdcad3eb5a531c4"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measure.cjs",
+      "bytes": 13145,
+      "sha256": "c203e20f665f0e5f9fc6f7b775f28d9faee887f70475bf81f3538e04952ac9b0"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measurement-first-failed.log.gz",
+      "bytes": 330,
+      "sha256": "1873315e11667d73ea085a38cfbc2f1f99e4727ec67d4b683c2aaecda7b774e5"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measurement-initial/measurement.json",
+      "bytes": 15369,
+      "sha256": "f8e7920ae033804ba641036b467fb14993705a74e1f18379bb6337d961f93af5"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measurement-initial/measurement.log.gz",
+      "bytes": 1228,
+      "sha256": "3407ccc9d12992c253b9745fe18ce89579f56fde69ed34da05ead2038c450c6c"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measurement.json",
+      "bytes": 15857,
+      "sha256": "9aa1b053dedd593d753fa82c80ed50edf20b6204772ab8620a36d971041eebfc"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/measurement.log.gz",
+      "bytes": 1285,
+      "sha256": "62bcc2222358df4e2def73c99474f4cef7f7b19a9219aa1893435435cc1faea8"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/native-green.tap",
+      "bytes": 11968,
+      "sha256": "98c2e74260fba7f42967169a645d5392a9ec32d3975c7a3628eee5b9ef2001ba"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/related-diagnostic.tap.gz",
+      "bytes": 3902,
+      "sha256": "e03fa30d79d005582c1cc9a42ab6e4a012dbd9bc564d1392658dceae0873921c"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/related-green.log.gz",
+      "bytes": 6508,
+      "sha256": "98ecf238cc09d4d5db8287de89178348f2aa3e0c9d1019b16bb2fe1b5f118934"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/related.log.gz",
+      "bytes": 576,
+      "sha256": "2705cdaa2c894d3734004cdc8cebbd7cf57f73dea68d90c681bbe2e197f70a6e"
+    },
+    {
+      "path": "docs/performance-program/contrib-orders-client-20261108/transport-red.tap.gz",
+      "bytes": 1115,
+      "sha256": "4f967ff86600b5096a8bfbbe0e9f560c8fdee18fc088ad53b80853ac1fd33081"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "baseSha": "d66c1f803097af5991616f0420392e1027888f2e",
+  "files": [
+    {
+      "path": "resources/app/public/module-projection-schema.js",
+      "unchangedFromBase": true,
+      "baseSha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390",
+      "currentSha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390"
+    },
+    {
+      "path": "resources/app/tests/fixtures/projection-ready-json-pins.json",
+      "unchangedFromBase": true,
+      "baseSha256": "2c2bc905b708a8e9e67ed0670fad8007bfa9763765877f08666ecbe1988ab876",
+      "currentSha256": "2c2bc905b708a8e9e67ed0670fad8007bfa9763765877f08666ecbe1988ab876"
+    }
+  ]
+}

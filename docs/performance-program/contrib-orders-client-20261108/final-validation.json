@@ -1,0 +1,21 @@
+[
+  {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "orders-projection-client"
+    ],
+    "exitCode": 0,
+    "log": "client-final.txt"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "exitCode": 0,
+    "log": "i18n.txt"
+  }
+]
