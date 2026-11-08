@@ -246,6 +246,57 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
       return sendFull(req,res,state,body.requestNonce,[body,binding,token,guardStamp,pin]);
     }catch(error){return apiError(res,error,'Sipariş görünümü okunamadı.');}
   });
+  // Internal only: stamp the exact ordinary GET lease, never fetch another full
+  // projection or infer schema authority. Native send must use the returned lease.
+  router.bindOrdinaryFullResponse=(req,lease)=>{
+    let released=false;const originalAssert=lease?.assertResponse,originalRelease=lease?.release;
+    const release=()=>{if(!released){released=true;if(typeof originalRelease==='function')originalRelease.call(lease);}};
+    try{
+      if(typeof originalAssert!=='function'||typeof originalRelease!=='function')throw stale();
+      originalAssert.call(lease); // The original acquisition may predate a session/source change.
+      const captured=guard.capture(req,'orders'),context=contextFor(captured.profile);
+      const baseCheck=()=>{originalAssert.call(lease);live(req,captured);};baseCheck();
+      const wrapped={...lease,assertResponse:baseCheck,release};
+      const manifest=lease.manifest,meta=manifest?.modules?.orders;
+      const text=value=>typeof value==='string'&&value.length>0&&value.length<=512;
+      const known=record(manifest)&&manifest.schemaVersion===cache.CACHE_SCHEMA_VERSION
+        &&typeof manifest.activeGeneration==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(manifest.activeGeneration)
+        &&text(manifest.contextHash)&&text(manifest.sourceRevisionKey)
+        &&record(manifest.moduleInputKeys)&&text(manifest.moduleInputKeys.orders)
+        &&record(manifest.sourceProjectionKeys)&&text(manifest.sourceProjectionKeys.orders)
+        &&record(meta)&&typeof meta.checksum==='string'&&/^[a-f0-9]{64}$/.test(meta.checksum)
+        &&Number.isSafeInteger(meta.bytes)&&meta.bytes>0&&meta.bytes<=64*1024*1024
+        &&Number.isSafeInteger(meta.uncompressedBytes)&&meta.uncompressedBytes>0&&meta.uncompressedBytes<=128*1024*1024;
+      // A legacy/unknown response stays on its original authorized full path.
+      // Explicit fallback is conservatively uncertified; no PRIMARY claim is made.
+      if(!known||lease.cacheState==='fallback')return {lease:wrapped,headers:Object.freeze({})};
+      const value=lease.value,input=value?.buffer;
+      let buffer;
+      if(types.isProxy(input))throw stale();
+      if(Buffer.isBuffer(input))buffer=input;
+      else if(input instanceof ArrayBuffer)buffer=Buffer.from(input);
+      else if(ArrayBuffer.isView(input)&&input.buffer instanceof ArrayBuffer)buffer=Buffer.from(input.buffer,input.byteOffset,input.byteLength);
+      else throw stale();
+      if(value.uncompressedBytes!==meta.uncompressedBytes||buffer.length!==meta.bytes)throw stale();
+      const full={manifest,meta,buffer,module:'orders',fallback:false};
+      const stamp=()=>JSON.stringify({schemaVersion:manifest.schemaVersion,generation:manifest.activeGeneration,contextHash:manifest.contextHash,
+        sourceLoadedAt:manifest.sourceLoadedAt,sourceRevisionKey:manifest.sourceRevisionKey,moduleInputKey:manifest.moduleInputKeys?.orders,
+        sourceProjectionKey:manifest.sourceProjectionKeys?.orders,checksum:meta.checksum,bytes:meta.bytes,rawBytes:meta.uncompressedBytes});
+      const initial=stamp();current(req,captured,context,full);
+      const headers=Object.freeze({...responseIdentityHeaders({captured,context,full}),'X-Orders-View-Mode':'full',
+        'X-Orders-Full-Json-Bytes':String(meta.uncompressedBytes)});
+      wrapped.assertResponse=()=>{
+        baseCheck();
+        if(lease.manifest!==manifest||lease.value!==value||value.buffer!==input||manifest.modules?.orders!==meta
+          ||stamp()!==initial||value.uncompressedBytes!==meta.uncompressedBytes)throw stale();
+        current(req,captured,context,full);
+        // One compressed-byte hash at the actual final native send guard. No
+        // main-thread gunzip/raw SHA, row graph, extra full read or buffer copy.
+        if(buffer.length!==meta.bytes||sha(buffer)!==meta.checksum)throw stale();
+      };
+      return {lease:wrapped,headers};
+    }catch(error){release();throw error;}
+  };
   router.readyBackground=Object.freeze({
     stats:()=>({...counters,owned:owned.size,processWide:flights.size,limit:2}),
     idle:()=>Promise.all([...owned].map(job=>job.complete)),

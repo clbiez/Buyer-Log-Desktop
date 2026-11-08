@@ -1,0 +1,82 @@
+[
+  {
+    "command": [
+      "node",
+      "--check",
+      "server/server.js"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-11-08T07:38:19.167024+00:00",
+    "counts": {
+      "pass": 0,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "module-schema",
+      "module-projection-schema",
+      "compute-module-schemas",
+      "projection-schema-output",
+      "page-projection",
+      "projection-ready-worker",
+      "orders-ready",
+      "orders-finite",
+      "projection-inventory",
+      "projection-dependency",
+      "compute-shutdown",
+      "projection-shadow",
+      "orders-full-promotion",
+      "compute-projection-route-wiring",
+      "compute-response",
+      "compute-read-guard"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-11-08T07:38:19.320755+00:00",
+    "counts": {
+      "pass": 341,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "90f2f09bcf5cc71047a54dedbfee093facee61baef7e16d30474481dceb11e35"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-11-08T07:38:35.849831+00:00",
+    "counts": {
+      "pass": 0,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "release:notes:validate"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-11-08T07:38:38.869252+00:00",
+    "counts": {
+      "pass": 0,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  }
+]

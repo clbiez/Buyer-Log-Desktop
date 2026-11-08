@@ -1,0 +1,67 @@
+[
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-red/receipt.json",
+    "sha256": "befc6775d52144c0452695afcbb790a4a37fb31287bc8eb9c94e3cf41659f747",
+    "bytes": 375
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-red/native.tap",
+    "sha256": "0dee2e847e19f1676eae13052bfa72650a9e3e942d831349cc6d7128d6e35ee9",
+    "bytes": 19473
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-green/receipt.json",
+    "sha256": "9e609aedf082c924b8d62edffe234fb01b5eaaf182536b2788860c224fcce063",
+    "bytes": 427
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-green/native.tap",
+    "sha256": "965a61458de0e87f60b9559f47f7d4d5f7a8b8cea0c61b362d36f4ef18f48759",
+    "bytes": 14191
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-fallback-diagnosis/receipt.json",
+    "sha256": "43ef0fb8d2c86513470d05e17050d142b67cf19303f74821a8a66fb82e7fc6c9",
+    "bytes": 270
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-fallback-diagnosis/native.tap",
+    "sha256": "f2c2a3f6d88f99076f9a8fd9010467ea48182eb5158d02480256cb21f5297eed",
+    "bytes": 1083
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-native-fixed/receipt.json",
+    "sha256": "1e374786721ec7b74e3e09fd6fe56b4221f7958b42fb8046c297e0ce5d6f4212",
+    "bytes": 427
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-native-fixed/native.tap",
+    "sha256": "abb6cfc39f82b5631da14593f516b6789182e72e0ebe19f7e52a9e10af84dfd3",
+    "bytes": 13772
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-related-green/3.log",
+    "sha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e",
+    "bytes": 126
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-related-green/2.log",
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+    "bytes": 125
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-related-green/1.log",
+    "sha256": "90f2f09bcf5cc71047a54dedbfee093facee61baef7e16d30474481dceb11e35",
+    "bytes": 37177
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-related-green/receipt.json",
+    "sha256": "8c4acd74158b48b3bfdb7fc7e21a4ffb618bd3a7df2b29919ba49893cb2bc364",
+    "bytes": 1803
+  },
+  {
+    "file": "buyerlog-phase6a-ordinary-binding-related-green/0.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+]

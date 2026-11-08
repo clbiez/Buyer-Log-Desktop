@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-name-pattern=ordinary legacy source metadata",
+    "tests/orders-ready-http.test.js"
+  ],
+  "exitCode": 1,
+  "sha256": "f2c2a3f6d88f99076f9a8fd9010467ea48182eb5158d02480256cb21f5297eed"
+}

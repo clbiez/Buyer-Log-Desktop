@@ -1,0 +1,470 @@
+TAP version 13
+# Subtest: schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+ok 1 - schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+  ---
+  duration_ms: 512.15748
+  type: 'test'
+  ...
+# Subtest: cold POST returns ordinary full before actual background job is allowed to execute
+ok 2 - cold POST returns ordinary full before actual background job is allowed to execute
+  ---
+  duration_ms: 306.925733
+  type: 'test'
+  ...
+# Subtest: ready cache hits require info, preserve stable body across nonces and do not start another worker
+ok 3 - ready cache hits require info, preserve stable body across nonces and do not start another worker
+  ---
+  duration_ms: 210.512104
+  type: 'test'
+  ...
+# Subtest: legacy ready metadata without producer info is a full fallback, never a thin cache hit
+ok 4 - legacy ready metadata without producer info is a full fallback, never a thin cache hit
+  ---
+  duration_ms: 228.138951
+  type: 'test'
+  ...
+# Subtest: actual session, role, view scope and source-filter authority reject before data/worker admission
+ok 5 - actual session, role, view scope and source-filter authority reject before data/worker admission
+  ---
+  duration_ms: 161.844876
+  type: 'test'
+  ...
+# Subtest: strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+ok 6 - strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+  ---
+  duration_ms: 172.541462
+  type: 'test'
+  ...
+# Subtest: legacy or backup own-schema absence returns full mode without creating a schema or ready view
+ok 7 - legacy or backup own-schema absence returns full mode without creating a schema or ready view
+  ---
+  duration_ms: 350.265203
+  type: 'test'
+  ...
+# Subtest: real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+ok 8 - real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+  ---
+  duration_ms: 186.899922
+  type: 'test'
+  ...
+# Subtest: unknown or other-module schema cannot authorize a ready request
+ok 9 - unknown or other-module schema cannot authorize a ready request
+  ---
+  duration_ms: 397.056301
+  type: 'test'
+  ...
+# Subtest: same owner+plan deduplicates and process-wide background admission never exceeds two
+ok 10 - same owner+plan deduplicates and process-wide background admission never exceeds two
+  ---
+  duration_ms: 586.431839
+  type: 'test'
+  ...
+# Subtest: session/access/source/schema changes during deferred native work discard and release the result
+ok 11 - session/access/source/schema changes during deferred native work discard and release the result
+  ---
+  duration_ms: 667.527554
+  type: 'test'
+  ...
+# Subtest: same-generation full rewrite during deferred work invalidates the exact body/schema pin
+ok 12 - same-generation full rewrite during deferred work invalidates the exact body/schema pin
+  ---
+  duration_ms: 166.05576
+  type: 'test'
+  ...
+# Subtest: live guard after awaiting a cached hit prevents delivery after actor/role revocation
+ok 13 - live guard after awaiting a cached hit prevents delivery after actor/role revocation
+  ---
+  duration_ms: 187.923235
+  type: 'test'
+  ...
+# Subtest: another actor or broader guard revision cannot adopt an earlier ready entry
+ok 14 - another actor or broader guard revision cannot adopt an earlier ready entry
+  ---
+  duration_ms: 179.390475
+  type: 'test'
+  ...
+# Subtest: revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+ok 15 - revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+  ---
+  duration_ms: 163.497735
+  type: 'test'
+  ...
+# Subtest: router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+ok 16 - router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+  ---
+  duration_ms: 114.955455
+  type: 'test'
+  ...
+# Subtest: same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+ok 17 - same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+  ---
+  duration_ms: 274.95416
+  type: 'test'
+  ...
+# Subtest: changed full body with old token reports the new exact full checksum without adopting the old ready identity
+ok 18 - changed full body with old token reports the new exact full checksum without adopting the old ready identity
+  ---
+  duration_ms: 162.434454
+  type: 'test'
+  ...
+# Subtest: actual native final response guard runs before identity headers or full data are sent
+ok 19 - actual native final response guard runs before identity headers or full data are sent
+  ---
+  duration_ms: 122.748593
+  type: 'test'
+  ...
+# Subtest: response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+ok 20 - response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+  ---
+  duration_ms: 1.727153
+  type: 'test'
+  ...
+# Subtest: native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+ok 21 - native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+  ---
+  duration_ms: 176.75007
+  type: 'test'
+  ...
+# Subtest: explicit full-parent serves exact actual ready parent without a ready miss, new worker or reserialization
+ok 22 - explicit full-parent serves exact actual ready parent without a ready miss, new worker or reserialization
+  ---
+  duration_ms: 189.980389
+  type: 'test'
+  ...
+# Subtest: full-parent mismatched expected token, gzip checksum or broad guard conflicts without any newly authorized body
+ok 23 - full-parent mismatched expected token, gzip checksum or broad guard conflicts without any newly authorized body
+  ---
+  duration_ms: 215.51419
+  type: 'test'
+  ...
+# Subtest: full-parent accepts only the explicit bounded DTO, not ready-plan knobs or expected raw-hash echo
+ok 24 - full-parent accepts only the explicit bounded DTO, not ready-plan knobs or expected raw-hash echo
+  ---
+  duration_ms: 292.250745
+  type: 'test'
+  ...
+# Subtest: full-parent never rebuilds and rejects missing, unknown, legacy or backup schema authority
+ok 25 - full-parent never rebuilds and rejects missing, unknown, legacy or backup schema authority
+  ---
+  duration_ms: 719.400404
+  type: 'test'
+  ...
+# Subtest: full-parent full-cache read awaits recheck live actor, source, scope and filter authority
+ok 26 - full-parent full-cache read awaits recheck live actor, source, scope and filter authority
+  ---
+  duration_ms: 551.244636
+  type: 'test'
+  ...
+# Subtest: full-parent same-generation full rewrite or schema loss at final native send cannot satisfy the old parent
+ok 27 - full-parent same-generation full rewrite or schema loss at final native send cannot satisfy the old parent
+  ---
+  duration_ms: 277.398129
+  type: 'test'
+  ...
+# Subtest: same native endpoint refuses old owner full-parent after a session switch; a fresh matching owner parent succeeds
+ok 28 - same native endpoint refuses old owner full-parent after a session switch; a fresh matching owner parent succeeds
+  ---
+  duration_ms: 277.570848
+  type: 'test'
+  ...
+# Subtest: revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+ok 29 - revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+  ---
+  duration_ms: 126.137822
+  type: 'test'
+  ...
+# Subtest: first ordinary Orders GET binds its exact native full bytes without schema, second full read or worker
+not ok 30 - first ordinary Orders GET binds its exact native full bytes without schema, second full read or worker
+  ---
+  duration_ms: 139.852803
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:521:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:524:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary first-build worker lease retains its native output, identity streaming and one release
+not ok 31 - ordinary first-build worker lease retains its native output, identity streaming and one release
+  ---
+  duration_ms: 167.471492
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:541:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:543:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary legacy source metadata or explicit native backup fallback returns full without certification
+not ok 32 - ordinary legacy source metadata or explicit native backup fallback returns full without certification
+  ---
+  duration_ms: 143.52836
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:550:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:554:54)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary binding cannot recapture a new actor and relabel an earlier acquired lease
+not ok 33 - ordinary binding cannot recapture a new actor and relabel an earlier acquired lease
+  ---
+  duration_ms: 146.037363
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:566:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:568:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary native final send rechecks original session, current source, filters and current cache bytes
+not ok 34 - ordinary native final send rechecks original session, current source, filters and current cache bytes
+  ---
+  duration_ms: 141.923386
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:572:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 401
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 401
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:577:54)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary full checksum certification validates the actual response bytes, not an unrelated manifest hash
+not ok 35 - ordinary full checksum certification validates the actual response bytes, not an unrelated manifest hash
+  ---
+  duration_ms: 208.316918
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:581:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:583:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary header construction failure releases the actual worker lease without sending partial identity
+not ok 36 - ordinary header construction failure releases the actual worker lease without sending partial identity
+  ---
+  duration_ms: 162.065385
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:586:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:589:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: lone backup may describe actual ordinary bytes but still cannot establish PRIMARY schema authority
+not ok 37 - lone backup may describe actual ordinary bytes but still cannot establish PRIMARY schema authority
+  ---
+  duration_ms: 132.132071
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:593:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:595:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary wrapper retains the original guard and release method snapshots through final send
+not ok 38 - ordinary wrapper retains the original guard and release method snapshots through final send
+  ---
+  duration_ms: 140.782321
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:599:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    500 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-http.test.js:603:52)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actual server installs the bounded ready router without replacing ordinary full/shadow routes
+ok 39 - actual server installs the bounded ready router without replacing ordinary full/shadow routes
+  ---
+  duration_ms: 2.992624
+  type: 'test'
+  ...
+# Subtest: actual server factory retains the live guard, native owner cache and one existing pool
+ok 40 - actual server factory retains the live guard, native owner cache and one existing pool
+  ---
+  duration_ms: 4.34747
+  type: 'test'
+  ...
+# Subtest: actual server cache guard accepts the exact current source and checks runtime before serving
+ok 41 - actual server cache guard accepts the exact current source and checks runtime before serving
+  ---
+  duration_ms: 3.049247
+  type: 'test'
+  ...
+# Subtest: every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+ok 42 - every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+  ---
+  duration_ms: 14.60871
+  type: 'test'
+  ...
+# Subtest: missing source/current manifest, context mismatch and superseded runtime fail closed
+ok 43 - missing source/current manifest, context mismatch and superseded runtime fail closed
+  ---
+  duration_ms: 7.434475
+  type: 'test'
+  ...
+# Subtest: shutdown stops ready background work before closing the shared pool, including dual signals
+ok 44 - shutdown stops ready background work before closing the shared pool, including dual signals
+  ---
+  duration_ms: 8.129232
+  type: 'test'
+  ...
+# Subtest: actual ordinary GET seam uses the bound Orders lease and retains CP original response path
+not ok 45 - actual ordinary GET seam uses the bound Orders lease and retains CP original response path
+  ---
+  duration_ms: 3.368473
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:87:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:88:71)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actual ordinary GET seam localizes expected Orders binding errors without changing global apiError
+not ok 46 - actual ordinary GET seam localizes expected Orders binding errors without changing global apiError
+  ---
+  duration_ms: 2.043863
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:94:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    undefined !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:96:67)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 35
+# fail 11
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9922.998365

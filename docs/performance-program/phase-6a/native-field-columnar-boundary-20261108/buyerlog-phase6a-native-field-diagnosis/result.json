@@ -1,0 +1,1278 @@
+{
+  "classification": "Source byte attribution only, not omission eligibility, native parser latency or performance gain",
+  "synthetic": true,
+  "sourceGeneration": "mw6vhoks-9100b15fc128",
+  "results": [
+    {
+      "module": "cp",
+      "rows": 24982,
+      "sourceGzipSha256": "4366d70ccdf1f5dbac14c438dff5840b349c7f23fec53742fda1626d58cb4f4b",
+      "fullJsonBytes": 61859722,
+      "rowObjectJsonBytes": 61834710,
+      "fields": [
+        {
+          "key": "_logisticSegments",
+          "presentRows": 24982,
+          "keyBytes": 474658,
+          "valueBytes": 8926172,
+          "memberBytesWithoutSeparator": 9425812
+        },
+        {
+          "key": "_logisticArrivalValues",
+          "presentRows": 24982,
+          "keyBytes": 599568,
+          "valueBytes": 449952,
+          "memberBytesWithoutSeparator": 1074502
+        },
+        {
+          "key": "_logisticAllPartialsInWarehouse",
+          "presentRows": 24982,
+          "keyBytes": 824406,
+          "valueBytes": 122201,
+          "memberBytesWithoutSeparator": 971589
+        },
+        {
+          "key": "In-Store (Model Budget)",
+          "presentRows": 24982,
+          "keyBytes": 624550,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 949316
+        },
+        {
+          "key": "Buying Son Onay Tarihi",
+          "presentRows": 24982,
+          "keyBytes": 599568,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 924334
+        },
+        {
+          "key": "_logisticStatusValues",
+          "presentRows": 24982,
+          "keyBytes": 574586,
+          "valueBytes": 309632,
+          "memberBytesWithoutSeparator": 909200
+        },
+        {
+          "key": "_logisticDelTypeValues",
+          "presentRows": 24982,
+          "keyBytes": 599568,
+          "valueBytes": 251287,
+          "memberBytesWithoutSeparator": 875837
+        },
+        {
+          "key": "_imageKey",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 574586,
+          "memberBytesWithoutSeparator": 874370
+        },
+        {
+          "key": "Model Name",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 526185,
+          "memberBytesWithoutSeparator": 850951
+        },
+        {
+          "key": "Original Ex-factory",
+          "presentRows": 24982,
+          "keyBytes": 524622,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 849388
+        },
+        {
+          "key": "Sub-Manufacturer",
+          "presentRows": 24982,
+          "keyBytes": 449676,
+          "valueBytes": 355760,
+          "memberBytesWithoutSeparator": 830418
+        },
+        {
+          "key": "_initialInspection",
+          "presentRows": 24982,
+          "keyBytes": 499640,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 824406
+        },
+        {
+          "key": "Ürün Tanım",
+          "presentRows": 24982,
+          "keyBytes": 374730,
+          "valueBytes": 419447,
+          "memberBytesWithoutSeparator": 819159
+        },
+        {
+          "key": "Merch Marka Yaş Grup Kod",
+          "presentRows": 24982,
+          "keyBytes": 674514,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 799424
+        },
+        {
+          "key": "Kumaşçı",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 474658,
+          "memberBytesWithoutSeparator": 799424
+        },
+        {
+          "key": "Karışım",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 454865,
+          "memberBytesWithoutSeparator": 779631
+        },
+        {
+          "key": "_nonDtrManufacturerRule",
+          "presentRows": 24982,
+          "keyBytes": 624550,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 774442
+        },
+        {
+          "key": "Kumaşçı Ülkesi",
+          "presentRows": 24982,
+          "keyBytes": 499640,
+          "valueBytes": 249820,
+          "memberBytesWithoutSeparator": 774442
+        },
+        {
+          "key": "_asasRetailDate",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 749460
+        },
+        {
+          "key": "Manufacturer",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 355760,
+          "memberBytesWithoutSeparator": 730490
+        },
+        {
+          "key": "_asasExFactory",
+          "presentRows": 24982,
+          "keyBytes": 399712,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 724478
+        },
+        {
+          "key": "_importanceSource",
+          "presentRows": 24982,
+          "keyBytes": 474658,
+          "valueBytes": 224838,
+          "memberBytesWithoutSeparator": 724478
+        },
+        {
+          "key": "_logisticProductionQty",
+          "presentRows": 24982,
+          "keyBytes": 599568,
+          "valueBytes": 96775,
+          "memberBytesWithoutSeparator": 721325
+        },
+        {
+          "key": "_logisticRemainingQty",
+          "presentRows": 24982,
+          "keyBytes": 574586,
+          "valueBytes": 96785,
+          "memberBytesWithoutSeparator": 696353
+        },
+        {
+          "key": "_asasInStore",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 674514
+        },
+        {
+          "key": "Ant. Arrival",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 674514
+        },
+        {
+          "key": "Kumaş Kategorisi",
+          "presentRows": 24982,
+          "keyBytes": 474658,
+          "valueBytes": 174874,
+          "memberBytesWithoutSeparator": 674514
+        },
+        {
+          "key": "Active/Inactive",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 199856,
+          "memberBytesWithoutSeparator": 649532
+        },
+        {
+          "key": "Retail Date",
+          "presentRows": 24982,
+          "keyBytes": 324766,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 649532
+        },
+        {
+          "key": "Buyer Grup (TR)",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 195269,
+          "memberBytesWithoutSeparator": 644945
+        },
+        {
+          "key": "Ex-factory",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 624550
+        },
+        {
+          "key": "_exFactoryRevision",
+          "presentRows": 24982,
+          "keyBytes": 499640,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 624550
+        },
+        {
+          "key": "_logisticPartialCount",
+          "presentRows": 24982,
+          "keyBytes": 574586,
+          "valueBytes": 24982,
+          "memberBytesWithoutSeparator": 624550
+        },
+        {
+          "key": "Merch Alt Grup Kod",
+          "presentRows": 24982,
+          "keyBytes": 499640,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 624550
+        },
+        {
+          "key": "_importanceId",
+          "presentRows": 24982,
+          "keyBytes": 374730,
+          "valueBytes": 224838,
+          "memberBytesWithoutSeparator": 624550
+        },
+        {
+          "key": "_logisticShortageQty",
+          "presentRows": 24982,
+          "keyBytes": 549604,
+          "valueBytes": 24992,
+          "memberBytesWithoutSeparator": 599578
+        },
+        {
+          "key": "_suppFobOverride",
+          "presentRows": 24982,
+          "keyBytes": 449676,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 599568
+        },
+        {
+          "key": "_logisticTotalQty",
+          "presentRows": 24982,
+          "keyBytes": 474658,
+          "valueBytes": 98057,
+          "memberBytesWithoutSeparator": 597697
+        },
+        {
+          "key": "Kumaş Tipi",
+          "presentRows": 24982,
+          "keyBytes": 324766,
+          "valueBytes": 230650,
+          "memberBytesWithoutSeparator": 580398
+        },
+        {
+          "key": "_matchOcode",
+          "presentRows": 24982,
+          "keyBytes": 324766,
+          "valueBytes": 224838,
+          "memberBytesWithoutSeparator": 574586
+        },
+        {
+          "key": "_suppFobImported",
+          "presentRows": 24982,
+          "keyBytes": 449676,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 574586
+        },
+        {
+          "key": "_licensorManual",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 574586
+        },
+        {
+          "key": "_logisticLoadedQty",
+          "presentRows": 24982,
+          "keyBytes": 499640,
+          "valueBytes": 38771,
+          "memberBytesWithoutSeparator": 563393
+        },
+        {
+          "key": "HANDOVER Tarihi",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 99944,
+          "memberBytesWithoutSeparator": 549620
+        },
+        {
+          "key": "_suppFobManual",
+          "presentRows": 24982,
+          "keyBytes": 399712,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 549604
+        },
+        {
+          "key": "Importance",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 224838,
+          "memberBytesWithoutSeparator": 549604
+        },
+        {
+          "key": "Remaining Units",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 96785,
+          "memberBytesWithoutSeparator": 546461
+        },
+        {
+          "key": "Shipment Quantity",
+          "presentRows": 24982,
+          "keyBytes": 474658,
+          "valueBytes": 38771,
+          "memberBytesWithoutSeparator": 538411
+        },
+        {
+          "key": "Line",
+          "presentRows": 24982,
+          "keyBytes": 149892,
+          "valueBytes": 349750,
+          "memberBytesWithoutSeparator": 524624
+        },
+        {
+          "key": "Priority",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 249820,
+          "memberBytesWithoutSeparator": 524622
+        },
+        {
+          "key": "Order Quantity",
+          "presentRows": 24982,
+          "keyBytes": 399712,
+          "valueBytes": 98057,
+          "memberBytesWithoutSeparator": 522751
+        },
+        {
+          "key": "Order Code",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 174874,
+          "memberBytesWithoutSeparator": 499640
+        },
+        {
+          "key": "_licensorSource",
+          "presentRows": 24982,
+          "keyBytes": 424694,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 499640
+        },
+        {
+          "key": "STATUS",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 274789,
+          "memberBytesWithoutSeparator": 499627
+        },
+        {
+          "key": "Category",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 214801,
+          "memberBytesWithoutSeparator": 489603
+        },
+        {
+          "key": "License",
+          "presentRows": 24982,
+          "keyBytes": 224838,
+          "valueBytes": 229628,
+          "memberBytesWithoutSeparator": 479448
+        },
+        {
+          "key": "_suppFobRule",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 474658
+        },
+        {
+          "key": "_suppFobMeta",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 474658
+        },
+        {
+          "key": "Country",
+          "presentRows": 24982,
+          "keyBytes": 224838,
+          "valueBytes": 213545,
+          "memberBytesWithoutSeparator": 463365
+        },
+        {
+          "key": "OPD",
+          "presentRows": 24982,
+          "keyBytes": 124910,
+          "valueBytes": 299784,
+          "memberBytesWithoutSeparator": 449676
+        },
+        {
+          "key": "İplik No",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 149892,
+          "memberBytesWithoutSeparator": 449676
+        },
+        {
+          "key": "Del. Type",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 149133,
+          "memberBytesWithoutSeparator": 448917
+        },
+        {
+          "key": "Special Code",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 61304,
+          "memberBytesWithoutSeparator": 436034
+        },
+        {
+          "key": "Buyer",
+          "presentRows": 24982,
+          "keyBytes": 174874,
+          "valueBytes": 229924,
+          "memberBytesWithoutSeparator": 429780
+        },
+        {
+          "key": "_notesByName",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 424694
+        },
+        {
+          "key": "_ekNotByName",
+          "presentRows": 24982,
+          "keyBytes": 349748,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 424694
+        },
+        {
+          "key": "Colour",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 194180,
+          "memberBytesWithoutSeparator": 419018
+        },
+        {
+          "key": "Supp. FOB",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 106746,
+          "memberBytesWithoutSeparator": 406530
+        },
+        {
+          "key": "_isActive",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 399712
+        },
+        {
+          "key": "Licensor",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 399712
+        },
+        {
+          "key": "Ex→Retail",
+          "presentRows": 24982,
+          "keyBytes": 324766,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 399712
+        },
+        {
+          "key": "Season",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 149892,
+          "memberBytesWithoutSeparator": 374730
+        },
+        {
+          "key": "PLM ID",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 149892,
+          "memberBytesWithoutSeparator": 374730
+        },
+        {
+          "key": "Ek NotHtml",
+          "presentRows": 24982,
+          "keyBytes": 299784,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 374730
+        },
+        {
+          "key": "_canEdit",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 99928,
+          "memberBytesWithoutSeparator": 374730
+        },
+        {
+          "key": "FOB ($)",
+          "presentRows": 24982,
+          "keyBytes": 224838,
+          "valueBytes": 106746,
+          "memberBytesWithoutSeparator": 356566
+        },
+        {
+          "key": "_imageRef",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 349748
+        },
+        {
+          "key": "_imageUrl",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 349748
+        },
+        {
+          "key": "C.Code",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 349748
+        },
+        {
+          "key": "NotesHtml",
+          "presentRows": 24982,
+          "keyBytes": 274802,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 349748
+        },
+        {
+          "key": "Gramaj",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 124910,
+          "memberBytesWithoutSeparator": 349748
+        },
+        {
+          "key": "_notesAt",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 324766
+        },
+        {
+          "key": "_ekNotAt",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 324766
+        },
+        {
+          "key": "_notesBy",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 324766
+        },
+        {
+          "key": "_ekNotBy",
+          "presentRows": 24982,
+          "keyBytes": 249820,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 324766
+        },
+        {
+          "key": "Ek Not",
+          "presentRows": 24982,
+          "keyBytes": 199856,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 274802
+        },
+        {
+          "key": "_id",
+          "presentRows": 24982,
+          "keyBytes": 124910,
+          "valueBytes": 113800,
+          "memberBytesWithoutSeparator": 263692
+        },
+        {
+          "key": "Notes",
+          "presentRows": 24982,
+          "keyBytes": 174874,
+          "valueBytes": 49964,
+          "memberBytesWithoutSeparator": 249820
+        },
+        {
+          "key": "LT",
+          "presentRows": 24982,
+          "keyBytes": 99928,
+          "valueBytes": 70797,
+          "memberBytesWithoutSeparator": 195707
+        },
+        {
+          "key": "%",
+          "presentRows": 24982,
+          "keyBytes": 74946,
+          "valueBytes": 91696,
+          "memberBytesWithoutSeparator": 191624
+        }
+      ]
+    },
+    {
+      "module": "orders",
+      "rows": 30000,
+      "sourceGzipSha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+      "fullJsonBytes": 73145820,
+      "rowObjectJsonBytes": 73115810,
+      "fields": [
+        {
+          "key": "_logisticSegments",
+          "presentRows": 30000,
+          "keyBytes": 570000,
+          "valueBytes": 10249550,
+          "memberBytesWithoutSeparator": 10849550
+        },
+        {
+          "key": "_logisticArrivalValues",
+          "presentRows": 30000,
+          "keyBytes": 720000,
+          "valueBytes": 520204,
+          "memberBytesWithoutSeparator": 1270204
+        },
+        {
+          "key": "_logisticAllPartialsInWarehouse",
+          "presentRows": 30000,
+          "keyBytes": 990000,
+          "valueBytes": 142273,
+          "memberBytesWithoutSeparator": 1162273
+        },
+        {
+          "key": "In-Store (Model Budget)",
+          "presentRows": 30000,
+          "keyBytes": 750000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 1140000
+        },
+        {
+          "key": "Buying Son Onay Tarihi",
+          "presentRows": 30000,
+          "keyBytes": 720000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 1110000
+        },
+        {
+          "key": "_logisticStatusValues",
+          "presentRows": 30000,
+          "keyBytes": 690000,
+          "valueBytes": 359812,
+          "memberBytesWithoutSeparator": 1079812
+        },
+        {
+          "key": "_imageKey",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 690000,
+          "memberBytesWithoutSeparator": 1050000
+        },
+        {
+          "key": "_logisticDelTypeValues",
+          "presentRows": 30000,
+          "keyBytes": 720000,
+          "valueBytes": 289761,
+          "memberBytesWithoutSeparator": 1039761
+        },
+        {
+          "key": "Model Name",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 632041,
+          "memberBytesWithoutSeparator": 1022041
+        },
+        {
+          "key": "Original Ex-factory",
+          "presentRows": 30000,
+          "keyBytes": 630000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 1020000
+        },
+        {
+          "key": "Sub-Manufacturer",
+          "presentRows": 30000,
+          "keyBytes": 540000,
+          "valueBytes": 427225,
+          "memberBytesWithoutSeparator": 997225
+        },
+        {
+          "key": "_initialInspection",
+          "presentRows": 30000,
+          "keyBytes": 600000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 990000
+        },
+        {
+          "key": "Ürün Tanım",
+          "presentRows": 30000,
+          "keyBytes": 450000,
+          "valueBytes": 504077,
+          "memberBytesWithoutSeparator": 984077
+        },
+        {
+          "key": "Merch Marka Yaş Grup Kod",
+          "presentRows": 30000,
+          "keyBytes": 810000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 960000
+        },
+        {
+          "key": "Kumaşçı",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 570000,
+          "memberBytesWithoutSeparator": 960000
+        },
+        {
+          "key": "Karışım",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 546667,
+          "memberBytesWithoutSeparator": 936667
+        },
+        {
+          "key": "_nonDtrManufacturerRule",
+          "presentRows": 30000,
+          "keyBytes": 750000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 930000
+        },
+        {
+          "key": "Kumaşçı Ülkesi",
+          "presentRows": 30000,
+          "keyBytes": 600000,
+          "valueBytes": 300000,
+          "memberBytesWithoutSeparator": 930000
+        },
+        {
+          "key": "_asasRetailDate",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 900000
+        },
+        {
+          "key": "Manufacturer",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 427225,
+          "memberBytesWithoutSeparator": 877225
+        },
+        {
+          "key": "_asasExFactory",
+          "presentRows": 30000,
+          "keyBytes": 480000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 870000
+        },
+        {
+          "key": "_importanceSource",
+          "presentRows": 30000,
+          "keyBytes": 570000,
+          "valueBytes": 270000,
+          "memberBytesWithoutSeparator": 870000
+        },
+        {
+          "key": "_logisticProductionQty",
+          "presentRows": 30000,
+          "keyBytes": 720000,
+          "valueBytes": 101793,
+          "memberBytesWithoutSeparator": 851793
+        },
+        {
+          "key": "_logisticRemainingQty",
+          "presentRows": 30000,
+          "keyBytes": 690000,
+          "valueBytes": 101803,
+          "memberBytesWithoutSeparator": 821803
+        },
+        {
+          "key": "_asasInStore",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 810000
+        },
+        {
+          "key": "Ant. Arrival",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 810000
+        },
+        {
+          "key": "Kumaş Kategorisi",
+          "presentRows": 30000,
+          "keyBytes": 570000,
+          "valueBytes": 210000,
+          "memberBytesWithoutSeparator": 810000
+        },
+        {
+          "key": "Active/Inactive",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 250036,
+          "memberBytesWithoutSeparator": 790036
+        },
+        {
+          "key": "Retail Date",
+          "presentRows": 30000,
+          "keyBytes": 390000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 780000
+        },
+        {
+          "key": "Buyer Grup (TR)",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 234343,
+          "memberBytesWithoutSeparator": 774343
+        },
+        {
+          "key": "Ex-factory",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 750000
+        },
+        {
+          "key": "_exFactoryRevision",
+          "presentRows": 30000,
+          "keyBytes": 600000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 750000
+        },
+        {
+          "key": "_logisticPartialCount",
+          "presentRows": 30000,
+          "keyBytes": 690000,
+          "valueBytes": 30000,
+          "memberBytesWithoutSeparator": 750000
+        },
+        {
+          "key": "Merch Alt Grup Kod",
+          "presentRows": 30000,
+          "keyBytes": 600000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 750000
+        },
+        {
+          "key": "_importanceId",
+          "presentRows": 30000,
+          "keyBytes": 450000,
+          "valueBytes": 270000,
+          "memberBytesWithoutSeparator": 750000
+        },
+        {
+          "key": "_logisticShortageQty",
+          "presentRows": 30000,
+          "keyBytes": 660000,
+          "valueBytes": 30010,
+          "memberBytesWithoutSeparator": 720010
+        },
+        {
+          "key": "_suppFobOverride",
+          "presentRows": 30000,
+          "keyBytes": 540000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 720000
+        },
+        {
+          "key": "_logisticTotalQty",
+          "presentRows": 30000,
+          "keyBytes": 570000,
+          "valueBytes": 117769,
+          "memberBytesWithoutSeparator": 717769
+        },
+        {
+          "key": "HANDOVER Tarihi",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 160160,
+          "memberBytesWithoutSeparator": 700160
+        },
+        {
+          "key": "Kumaş Tipi",
+          "presentRows": 30000,
+          "keyBytes": 390000,
+          "valueBytes": 276868,
+          "memberBytesWithoutSeparator": 696868
+        },
+        {
+          "key": "_matchOcode",
+          "presentRows": 30000,
+          "keyBytes": 390000,
+          "valueBytes": 270000,
+          "memberBytesWithoutSeparator": 690000
+        },
+        {
+          "key": "_suppFobImported",
+          "presentRows": 30000,
+          "keyBytes": 540000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 690000
+        },
+        {
+          "key": "_licensorManual",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 690000
+        },
+        {
+          "key": "_logisticLoadedQty",
+          "presentRows": 30000,
+          "keyBytes": 600000,
+          "valueBytes": 58483,
+          "memberBytesWithoutSeparator": 688483
+        },
+        {
+          "key": "_suppFobManual",
+          "presentRows": 30000,
+          "keyBytes": 480000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 660000
+        },
+        {
+          "key": "Importance",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 270000,
+          "memberBytesWithoutSeparator": 660000
+        },
+        {
+          "key": "Shipment Quantity",
+          "presentRows": 30000,
+          "keyBytes": 570000,
+          "valueBytes": 58483,
+          "memberBytesWithoutSeparator": 658483
+        },
+        {
+          "key": "Remaining Units",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 101803,
+          "memberBytesWithoutSeparator": 641803
+        },
+        {
+          "key": "Line",
+          "presentRows": 30000,
+          "keyBytes": 180000,
+          "valueBytes": 419863,
+          "memberBytesWithoutSeparator": 629863
+        },
+        {
+          "key": "Order Quantity",
+          "presentRows": 30000,
+          "keyBytes": 480000,
+          "valueBytes": 117769,
+          "memberBytesWithoutSeparator": 627769
+        },
+        {
+          "key": "Order Code",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 210000,
+          "memberBytesWithoutSeparator": 600000
+        },
+        {
+          "key": "_licensorSource",
+          "presentRows": 30000,
+          "keyBytes": 510000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 600000
+        },
+        {
+          "key": "Category",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 258131,
+          "memberBytesWithoutSeparator": 588131
+        },
+        {
+          "key": "STATUS",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 314933,
+          "memberBytesWithoutSeparator": 584933
+        },
+        {
+          "key": "License",
+          "presentRows": 30000,
+          "keyBytes": 270000,
+          "valueBytes": 275946,
+          "memberBytesWithoutSeparator": 575946
+        },
+        {
+          "key": "_suppFobRule",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 570000
+        },
+        {
+          "key": "_suppFobMeta",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 120000,
+          "memberBytesWithoutSeparator": 570000
+        },
+        {
+          "key": "Country",
+          "presentRows": 30000,
+          "keyBytes": 270000,
+          "valueBytes": 256459,
+          "memberBytesWithoutSeparator": 556459
+        },
+        {
+          "key": "OPD",
+          "presentRows": 30000,
+          "keyBytes": 150000,
+          "valueBytes": 360000,
+          "memberBytesWithoutSeparator": 540000
+        },
+        {
+          "key": "İplik No",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 180000,
+          "memberBytesWithoutSeparator": 540000
+        },
+        {
+          "key": "Del. Type",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 177571,
+          "memberBytesWithoutSeparator": 537571
+        },
+        {
+          "key": "Special Code",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 73521,
+          "memberBytesWithoutSeparator": 523521
+        },
+        {
+          "key": "Buyer",
+          "presentRows": 30000,
+          "keyBytes": 210000,
+          "valueBytes": 276131,
+          "memberBytesWithoutSeparator": 516131
+        },
+        {
+          "key": "_notesByName",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 510000
+        },
+        {
+          "key": "_ekNotByName",
+          "presentRows": 30000,
+          "keyBytes": 420000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 510000
+        },
+        {
+          "key": "Colour",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 232961,
+          "memberBytesWithoutSeparator": 502961
+        },
+        {
+          "key": "Supp. FOB",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 128259,
+          "memberBytesWithoutSeparator": 488259
+        },
+        {
+          "key": "_isActive",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 125018,
+          "memberBytesWithoutSeparator": 485018
+        },
+        {
+          "key": "Licensor",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 480000
+        },
+        {
+          "key": "Ex→Retail",
+          "presentRows": 30000,
+          "keyBytes": 390000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 480000
+        },
+        {
+          "key": "_canEdit",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 480000
+        },
+        {
+          "key": "Season",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 180000,
+          "memberBytesWithoutSeparator": 450000
+        },
+        {
+          "key": "PLM ID",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 180000,
+          "memberBytesWithoutSeparator": 450000
+        },
+        {
+          "key": "Ek NotHtml",
+          "presentRows": 30000,
+          "keyBytes": 360000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 450000
+        },
+        {
+          "key": "FOB ($)",
+          "presentRows": 30000,
+          "keyBytes": 270000,
+          "valueBytes": 128259,
+          "memberBytesWithoutSeparator": 428259
+        },
+        {
+          "key": "_imageRef",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 420000
+        },
+        {
+          "key": "_imageUrl",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 420000
+        },
+        {
+          "key": "C.Code",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 420000
+        },
+        {
+          "key": "NotesHtml",
+          "presentRows": 30000,
+          "keyBytes": 330000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 420000
+        },
+        {
+          "key": "Gramaj",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 150000,
+          "memberBytesWithoutSeparator": 420000
+        },
+        {
+          "key": "_notesAt",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 390000
+        },
+        {
+          "key": "_ekNotAt",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 390000
+        },
+        {
+          "key": "_notesBy",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 390000
+        },
+        {
+          "key": "_ekNotBy",
+          "presentRows": 30000,
+          "keyBytes": 300000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 390000
+        },
+        {
+          "key": "Ek Not",
+          "presentRows": 30000,
+          "keyBytes": 240000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 330000
+        },
+        {
+          "key": "_id",
+          "presentRows": 30000,
+          "keyBytes": 150000,
+          "valueBytes": 138890,
+          "memberBytesWithoutSeparator": 318890
+        },
+        {
+          "key": "Notes",
+          "presentRows": 30000,
+          "keyBytes": 210000,
+          "valueBytes": 60000,
+          "memberBytesWithoutSeparator": 300000
+        },
+        {
+          "key": "LT",
+          "presentRows": 30000,
+          "keyBytes": 120000,
+          "valueBytes": 84999,
+          "memberBytesWithoutSeparator": 234999
+        },
+        {
+          "key": "%",
+          "presentRows": 30000,
+          "keyBytes": 90000,
+          "valueBytes": 96714,
+          "memberBytesWithoutSeparator": 216714
+        }
+      ]
+    }
+  ]
+}

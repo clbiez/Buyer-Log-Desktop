@@ -1,0 +1,25 @@
+{
+  "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "preparationOnly": true,
+  "executedByPreparer": false,
+  "rejectedForDefaultCp": "Native structured clone rejects Proxy rows at existing worker and bulk snapshot boundaries",
+  "files": {
+    "public/app-main.js": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
+    "public/cp-decision-runtime.js": "aac6ca42aac23f0ae1ce511eefc3405ed81bed65774838385cf048196bb68e00",
+    "public/cp-decision-worker.js": "02745e52e8990f108af909d2f1dc9bfb84f750af2d48a3fdf1cf583adf7d111a",
+    "public/cp-readiness-engine.js": "08d5f0f3981889682e10f791244a929ebf5d2d88319445a9d7dedf502ce352f8",
+    "public/order-decision-engine.js": "b8e839eda49b628a5385bda72847c764de2f7fa4771cfd6d5515615a2105a75d",
+    "public/backlog-delivery-engine.js": "1598ff90292ff35c2d4affa3c6958f9ae2f3bee19b3b86a0afc79e2b431064e2",
+    "public/business-rules.js": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+    "public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+    "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+    "public/checklist-components-engine.js": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216",
+    "public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+    "public/cp-rules-engine.js": "9f53dc430896726c13f91db5f0f052ed7579bd262db138c14e6ae2cf21c310ca",
+    "public/cp-overview-assistant.js": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e",
+    "public/checklist-supplier-sync.js": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc",
+    "tests/helpers/projection-current-normalizer.js": "abcfa7b19d1e435d631637d7bc1d2449a27ffb21065b1d02a54f4ead873eb3cc",
+    "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+    "tests/checklist-components-row-cache.test.js": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+  }
+}

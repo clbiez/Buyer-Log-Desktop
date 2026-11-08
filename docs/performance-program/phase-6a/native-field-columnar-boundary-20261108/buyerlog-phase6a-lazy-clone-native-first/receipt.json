@@ -1,0 +1,17 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "/tmp/bl6lazy-rejection/lazy-row.test.cjs"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "09ce8e9de97256de3d52e097d0e291b09616280f05ea940efb85b057beae786f"
+}

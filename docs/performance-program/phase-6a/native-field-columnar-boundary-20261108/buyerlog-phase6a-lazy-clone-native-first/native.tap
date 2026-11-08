@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: isolated adapter keeps own keys/order, presence, duplicate IDs, mutable slots, Dates and basic ordinary operations
+ok 1 - isolated adapter keeps own keys/order, presence, duplicate IDs, mutable slots, Dates and basic ordinary operations
+  ---
+  duration_ms: 5.166398
+  type: 'test'
+  ...
+# Subtest: native detection rejects source Proxies/getters/custom toJSON before packing or invoking traps
+ok 2 - native detection rejects source Proxies/getters/custom toJSON before packing or invoking traps
+  ---
+  duration_ms: 0.977136
+  type: 'test'
+  ...
+# Subtest: actual current normalizer/canonical/formula/checklist/CP decision computation works on a tiny retained-field fixture only
+ok 3 - actual current normalizer/canonical/formula/checklist/CP decision computation works on a tiny retained-field fixture only
+  ---
+  duration_ms: 88.634283
+  type: 'test'
+  ...
+# Subtest: native Proxy structured clone, actual CP runtime worker boundary and actual bulk snapshot path reject default CP use
+ok 4 - native Proxy structured clone, actual CP runtime worker boundary and actual bulk snapshot path reject default CP use
+  ---
+  duration_ms: 72.753908
+  type: 'test'
+  ...
+# Subtest: prototype deliberately rejects unsupported descriptor/seal operations rather than pretending full object equivalence
+ok 5 - prototype deliberately rejects unsupported descriptor/seal operations rather than pretending full object equivalence
+  ---
+  duration_ms: 0.865174
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 308.929652

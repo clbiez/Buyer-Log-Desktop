@@ -21,7 +21,7 @@ async function gate(promise,signal){
 }
 test.after(()=>fs.rmSync(ROOT,{recursive:true,force:true}));
 let count=0;
-async function fixture(t,{canonicalDefinition=false}={}){
+async function fixture(t,{canonicalDefinition=false,ordinaryGet=false,ordinaryWorkerLease=false}={}){
   const n=++count,owner='synthetic-owner-'+n,actor='synthetic-actor-'+n,other='synthetic-other-'+n;
   const profiles=new Map([actor,other].map(id=>[id,{id,owner,status:'ACTIVE',enabled:true,areas:['cp','orders'],viewScope:{all:true}}]));
   const sessions=new Map([['first',actor],['second',other]]);
@@ -73,8 +73,9 @@ async function fixture(t,{canonicalDefinition=false}={}){
   const observedCache={...cache,
     async readProjectionCompressed(...args){f.fullReads++;const value=await cache.readProjectionCompressed(...args);await f.afterFullRead?.();return value;},
     async readViewCompressed(...args){f.viewReads++;f.lastReadOptions=args[3];const value=await cache.readViewCompressed(...args);await f.afterViewRead?.();return value;},
+    readCurrentModuleSchema(...args){f.schemaReads=(f.schemaReads||0)+1;return cache.readCurrentModuleSchema(...args);},
   };
-  const router=createOrdersReadyRouter({express,cache:observedCache,guard,
+  const router=createOrdersReadyRouter({express,cache:observedCache,guard:{capture(...args){f.hookCaptures=(f.hookCaptures||0)+1;return guard.capture(...args);}},
     assertSourceFilters(targets){assert.deepEqual(targets,['orders']);if(!f.filtersReady)throw Object.assign(Error('source filters required'),{code:'SOURCE_FILTER_REQUIRED',statusCode:409});},
     contextFor,assertCachedCurrent,
     async sourceFor(profile){if(profile.owner!==owner||f.sourceToken!==descriptor.generation)throw stale();await gate(f.beforeSource?.promise);return descriptor;},
@@ -87,7 +88,38 @@ async function fixture(t,{canonicalDefinition=false}={}){
     publishReady:(...args)=>cache.writeViewCompressed(...args), // Requires the real guarded-writer extension; no fake pre/post adapter.
     send:(...args)=>{f.beforeSend?.();return sendComputedResponse(...args);},onBackgroundError:value=>f.backgroundErrors.push(value),
     apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code||'TEST_ERROR',error:error.message})});
-  const app=express();app.use('/api/page-projection',router);
+  const app=express();
+  if(ordinaryGet)app.get('/api/page-projection/orders',async(req,res)=>{
+    let lease,handed=false;
+    try{
+      const acquired=guard.capture(req,'orders'),ctx=contextFor(acquired.profile);let nativeLease;
+      if(ordinaryWorkerLease){
+        // Actual normal full-build output lease, independent of the binding
+        // hook. The hook must not submit another task or require a schema.
+        f.ordinaryWorkerCalls=(f.ordinaryWorkerCalls||0)+1;
+        const produced=await service.run('projections',descriptor,params),entry=produced.value.compressed.orders;
+        try{
+          const manifest=await cache.writeCompressedGeneration(owner,{contextHash:ctx.contextHash,sourceLoadedAt:source.loadedAt,
+            projections:{orders:{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}},
+            extra:{sourceProjectionKeys:produced.value.sourceProjectionKeys,moduleInputKeys:inputKeys,sourceRevisionKey:descriptor.checksum}});
+          nativeLease={...produced,value:entry,manifest,cacheState:'miss',assertResponse:acquired.assertResponse};
+        }catch(error){produced.release();throw error;}
+      }else{
+        const cached=await observedCache.readProjectionCompressed(ctx.id,'orders',ctx.contextHash);acquired.assertResponse();
+        if(!cached)throw stale();
+        nativeLease={value:{buffer:cached.buffer,uncompressedBytes:cached.meta.uncompressedBytes},manifest:cached.manifest,
+          cacheState:cached.fallback?'fallback':'hit',assertResponse:acquired.assertResponse,release(){}};
+      }
+      lease={...nativeLease,release(){f.ordinaryReleases=(f.ordinaryReleases||0)+1;nativeLease.release();}};
+      f.lastOrdinaryLease=lease;f.beforeOrdinaryBind?.(lease);
+      if(typeof router.bindOrdinaryFullResponse!=='function')throw TypeError('Actual ordinary binding hook is not installed');
+      handed=true;const bound=router.bindOrdinaryFullResponse(req,lease);f.lastOrdinaryBound=bound;
+      f.beforeOrdinarySend?.(bound,lease);
+      return sendComputedResponse(req,res,bound.lease,{headers:{'X-Page-Cache':lease.cacheState,
+        'X-Page-Cache-Generation':lease.manifest?.activeGeneration||'',...bound.headers}});
+    }catch(error){if(lease&&!handed)lease.release();return res.status(error.statusCode||500).json({code:error.code||'TEST_ERROR'});}
+  });
+  app.use('/api/page-projection',router);
   app.use((error,_req,res,_next)=>res.status(error.status||500).json({code:error.type||'ERROR'}));
   const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
   f.router=router;
@@ -484,4 +516,102 @@ test('revoked CP area cannot reuse earlier CP-derived own schema while Orders ar
  f.profiles.get(f.actor).areas=['orders'];
  const after=await f.get();assert.equal(after.status,200);assert.deepEqual(after.body,{mode:'full'});
  const ready=await f.post(f.body(before));assert.equal(ready.status,409);assert.equal(ready.body.code,'ORDERS_FULL_REQUIRED');assert.equal(ready.body.rows,undefined);assert.equal(f.jobs.length,0);
+});
+
+test('first ordinary Orders GET binds its exact native full bytes without schema, second full read or worker',async t=>{
+  const f=await fixture(t,{ordinaryGet:true}),manifest=f.primary();delete manifest.moduleSchemas;
+  fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));
+  const got=await f.request('GET','orders');assert.equal(got.status,200);assert.ok(Array.isArray(got.body.rows));
+  assert.equal(got.headers.get('x-orders-binding-version'),'1');assert.equal(got.headers.get('x-orders-view-mode'),'full');
+  assert.equal(got.headers.get('x-orders-owner-b64'),Buffer.from(f.owner).toString('base64url'));
+  assert.equal(got.headers.get('x-orders-actor-b64'),Buffer.from(f.actor).toString('base64url'));
+  assert.equal(got.headers.get('x-orders-page-context-sha256'),sha(f.context.contextHash));
+  const accessHash=createAccessContext({userId:f.actor,systemRole:'moderator',manageAll:true,viewScope:f.profiles.get(f.actor).viewScope,editScopes:{all:true},authority:{},profiles:[]}).accessHash;
+  const broadContext=sha(JSON.stringify(['BROAD-GUARD',f.context.contextHash,f.guardRevision]));
+  assert.equal(got.headers.get('x-orders-access-hash'),accessHash);assert.equal(got.headers.get('x-orders-broad-context-sha256'),sha(broadContext));
+  assert.equal(got.headers.get('x-orders-guard-sha256'),sha(JSON.stringify({userId:f.actor,contextHash:broadContext,accessHash,sourceToken:f.sourceToken})));
+  assert.equal(got.headers.get('x-orders-cache-generation'),manifest.activeGeneration);assert.equal(got.headers.get('x-orders-full-gzip-sha256'),sha(f.fullBuffer));
+  assert.equal(got.headers.get('x-orders-full-json-bytes'),String(Buffer.byteLength(got.text)));
+  assert.equal(got.headers.get('x-page-cache'),'hit');assert.equal(got.headers.get('x-page-cache-generation'),manifest.activeGeneration);
+  assert.equal(got.headers.get('x-orders-request-nonce'),null,'ordinary GET does not invent a request nonce');
+  assert.equal(f.lastOrdinaryBound.lease.value,f.lastOrdinaryLease.value);assert.equal(f.lastOrdinaryBound.lease.value.buffer,f.lastOrdinaryLease.value.buffer);
+  assert.equal(f.fullReads,1);assert.equal(f.viewReads,0);assert.equal(f.schemaReads||0,0);assert.equal(f.jobs.length,0);assert.equal(f.ordinaryReleases,1);
+  assert.deepEqual((await f.get()).body,{mode:'full'},'full receipt identity does not grant missing schema authority');
+});
+test('ordinary first-build worker lease retains its native output, identity streaming and one release',async t=>{
+  const f=await fixture(t,{ordinaryGet:true,ordinaryWorkerLease:true}),got=await f.request('GET','orders',undefined,'first','identity');
+  assert.equal(got.status,200);assert.equal(got.headers.get('content-encoding'),null);assert.equal(got.headers.get('x-page-cache'),'miss');
+  assert.equal(got.headers.get('x-orders-full-gzip-sha256'),f.primary().modules.orders.checksum);
+  assert.equal(got.headers.get('content-length'),String(Buffer.byteLength(got.text)));
+  assert.equal(f.lastOrdinaryBound.lease.value,f.lastOrdinaryLease.value);assert.ok(f.lastOrdinaryLease.value.buffer instanceof ArrayBuffer);
+  await new Promise(setImmediate);assert.equal(f.ordinaryWorkerCalls,1);assert.equal(f.ordinaryReleases,1);assert.equal(f.pool.stats().leasedOutputBytes,0);
+  assert.equal(f.fullReads,0);assert.equal(f.viewReads,0);assert.equal(f.schemaReads||0,0);assert.equal(f.jobs.length,0);
+});
+test('ordinary legacy source metadata or explicit native backup fallback returns full without certification',async t=>{
+  for(const missing of ['sourceRevisionKey','moduleInputKeys','sourceProjectionKeys']){
+    const f=await fixture(t,{ordinaryGet:true}),manifest=f.primary();delete manifest[missing];
+    fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));
+    const got=await f.request('GET','orders');assert.equal(got.status,200);assert.ok(Array.isArray(got.body.rows));
+    assert.equal(got.headers.get('x-orders-binding-version'),null);assert.equal(got.headers.get('x-orders-full-gzip-sha256'),null);
+    assert.equal(f.ordinaryReleases,1);assert.equal(f.schemaReads||0,0);
+  }
+  const unknown=await fixture(t,{ordinaryGet:true});unknown.beforeOrdinaryBind=lease=>{lease.manifest={...lease.manifest,schemaVersion:999};};
+  const unknownResponse=await unknown.request('GET','orders');assert.equal(unknownResponse.status,200);
+  assert.equal(unknownResponse.headers.get('x-orders-binding-version'),null);assert.ok(Array.isArray(unknownResponse.body.rows));assert.equal(unknown.ordinaryReleases,1);
+  const f=await fixture(t,{ordinaryGet:true}),previous=f.primary();
+  await cache.writeCompressedGeneration(f.owner,{contextHash:f.context.contextHash,sourceLoadedAt:previous.sourceLoadedAt,
+    projections:{orders:{buffer:f.fullBuffer,uncompressedBytes:previous.modules.orders.uncompressedBytes}},
+    extra:{sourceRevisionKey:previous.sourceRevisionKey,moduleInputKeys:previous.moduleInputKeys,sourceProjectionKeys:previous.sourceProjectionKeys}});
+  const manifest=f.primary(),backup=JSON.parse(fs.readFileSync(cache.manifestPath(f.owner)+'.bak','utf8'));
+  assert.notEqual(manifest.activeGeneration,previous.activeGeneration);assert.equal(backup.activeGeneration,previous.activeGeneration);
+  manifest.modules.orders.checksum='0'.repeat(64);fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));
+  const got=await f.request('GET','orders');assert.equal(got.status,200,JSON.stringify({body:got.body,cacheState:f.lastOrdinaryLease?.cacheState,hookCaptures:f.hookCaptures}));assert.equal(got.headers.get('x-page-cache'),'fallback');
+  assert.equal(got.headers.get('x-orders-binding-version'),null);assert.ok(Array.isArray(got.body.rows));assert.equal(f.ordinaryReleases,1);
+});
+test('same-generation backup is not a native fallback candidate and cannot certify corrupt current bytes',async t=>{
+  const f=await fixture(t,{ordinaryGet:true}),manifest=f.primary();
+  fs.copyFileSync(cache.manifestPath(f.owner),cache.manifestPath(f.owner)+'.bak');
+  manifest.modules.orders.checksum='0'.repeat(64);fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));
+  const got=await f.request('GET','orders');assert.equal(got.status,409);assert.equal(got.body.rows,undefined);
+  assert.equal(got.headers.get('x-orders-binding-version'),null);assert.equal(f.lastOrdinaryLease,undefined);
+});
+test('ordinary binding cannot recapture a new actor and relabel an earlier acquired lease',async t=>{
+  const f=await fixture(t,{ordinaryGet:true});f.beforeOrdinaryBind=()=>f.sessions.set('first',f.sessions.get('second'));
+  const got=await f.request('GET','orders');assert.equal(got.status,409);assert.equal(got.body.rows,undefined);
+  assert.equal(got.headers.get('x-orders-owner-b64'),null);assert.equal(f.hookCaptures||0,0,'original lease guard runs before new capture');
+  assert.equal(f.ordinaryReleases,1);
+});
+test('ordinary native final send rechecks original session, current source, filters and current cache bytes',async t=>{
+  for(const [status,change] of [[401,f=>f.sessions.delete('first')],[409,f=>{f.sourceToken='superseded';}],
+    [409,f=>{f.filtersReady=false;}],[403,f=>{f.profiles.get(f.actor).areas=[];}],
+    [409,f=>{const manifest=f.primary();manifest.modules.orders.checksum='0'.repeat(64);fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));}]]){
+    const f=await fixture(t,{ordinaryGet:true});f.beforeOrdinarySend=()=>change(f);
+    const got=await f.request('GET','orders');assert.equal(got.status,status);assert.equal(got.body.rows,undefined);
+    assert.equal(got.headers.get('x-orders-binding-version'),null);assert.equal(f.ordinaryReleases,1);
+  }
+});
+test('ordinary full checksum certification validates the actual response bytes, not an unrelated manifest hash',async t=>{
+  const f=await fixture(t,{ordinaryGet:true});f.beforeOrdinarySend=(_bound,lease)=>{lease.value.buffer[lease.value.buffer.length-1]^=1;};
+  const got=await f.request('GET','orders');assert.equal(got.status,409);assert.equal(got.body.rows,undefined);
+  assert.equal(got.headers.get('x-orders-full-gzip-sha256'),null);assert.equal(f.ordinaryReleases,1);
+});
+test('ordinary header construction failure releases the actual worker lease without sending partial identity',async t=>{
+  const f=await fixture(t,{ordinaryGet:true,ordinaryWorkerLease:true}),longId='x'.repeat(513);
+  f.profiles.set(longId,{...f.profiles.get(f.actor),id:longId});f.sessions.set('first',longId);
+  const got=await f.request('GET','orders');assert.equal(got.status,409);assert.equal(got.body.rows,undefined);
+  assert.equal(got.headers.get('x-orders-owner-b64'),null);assert.equal(f.ordinaryReleases,1);
+  assert.equal(f.pool.stats().leasedOutputBytes,0);
+});
+test('lone backup may describe actual ordinary bytes but still cannot establish PRIMARY schema authority',async t=>{
+  const f=await fixture(t,{ordinaryGet:true});fs.copyFileSync(cache.manifestPath(f.owner),cache.manifestPath(f.owner)+'.bak');fs.unlinkSync(cache.manifestPath(f.owner));
+  const got=await f.request('GET','orders');assert.equal(got.status,200);assert.equal(got.headers.get('x-orders-full-gzip-sha256'),sha(f.fullBuffer));
+  assert.equal(got.headers.get('x-orders-owner-b64'),Buffer.from(f.owner).toString('base64url'));
+  assert.equal(f.schemaReads||0,0);assert.deepEqual((await f.get()).body,{mode:'full'});
+});
+test('ordinary wrapper retains the original guard and release method snapshots through final send',async t=>{
+  const f=await fixture(t,{ordinaryGet:true});let originalChecks=0,beforeSendChecks=0,replacements=0;
+  f.beforeOrdinaryBind=lease=>{const check=lease.assertResponse;lease.assertResponse=function(){originalChecks++;return check.call(lease);};};
+  f.beforeOrdinarySend=(_bound,lease)=>{beforeSendChecks=originalChecks;lease.assertResponse=()=>{replacements++;throw stale();};lease.release=()=>{replacements++;};};
+  const got=await f.request('GET','orders');assert.equal(got.status,200);assert.ok(originalChecks>beforeSendChecks);
+  assert.equal(replacements,0);assert.equal(f.ordinaryReleases,1);
 });

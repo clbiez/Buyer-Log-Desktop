@@ -67,3 +67,35 @@ test('shutdown stops ready background work before closing the shared pool, inclu
  finishReady();await new Promise(setImmediate);assert.equal(calls.filter(c=>c[0]==='pool').length,1);assert.equal(calls.some(c=>c[0]==='exit'),false);
  finishPool();await pending;assert.deepEqual(calls.at(-1),['exit',0]);
 });
+
+function ordinaryGetSeam(){
+ const f={calls:[],lease:{cacheState:'hit',manifest:{activeGeneration:'actual-generation'},value:{buffer:Buffer.from('native-lease-shape')},release(){f.calls.push('release');}}};
+ f.bound={...f.lease,assertResponse(){f.calls.push('bound-guard');}};
+ const start=source.indexOf("app.get('/api/page-projection/:module',"),end=source.indexOf('\n// Explicit private',start);
+ assert.ok(start>=0&&end>start);
+ const scope={String,app:{get(route,handler){assert.equal(route,'/api/page-projection/:module');f.handler=handler;}},
+  PAGE_PROJECTION_AREAS:{orders:'orders',cp:'cp'},PAGE_PROJECTION_TARGETS:{orders:['orders'],cp:['cp']},
+  userAccess:{hasArea:(profile,area)=>profile.areas.includes(area)},sourceFilterReadiness:()=>({ready:true}),
+  ensureComputedProjection:async(req,module)=>{f.calls.push(['acquire',module]);return f.lease;},
+  ordersReadyRouter:{bindOrdinaryFullResponse(req,lease){f.calls.push(['bind',req,lease]);if(f.bindingFailure){lease.release();throw f.bindingFailure;}return {lease:f.bound,headers:{'X-Orders-Binding-Version':'1'}};}},
+  sendComputedResponse:(req,res,lease,options)=>{f.calls.push(['send',lease,options]);return res;},
+  apiError:(res,error)=>{f.error=error;return res;}};
+ vm.createContext(scope);vm.runInContext(source.slice(start,end),scope);
+ f.request=module=>{const res={status(value){f.status=value;return res;},json(value){f.json=value;return res;}};
+  return f.handler({params:{module},currentUser:{areas:['orders','cp']}},res);};return f;
+}
+test('actual ordinary GET seam uses the bound Orders lease and retains CP original response path',async()=>{
+ const orders=ordinaryGetSeam();await orders.request('orders');assert.equal(orders.calls.filter(c=>c[0]==='bind').length,1);
+ const sent=orders.calls.find(c=>c[0]==='send');assert.equal(sent[1],orders.bound);assert.equal(sent[1].value,orders.lease.value);
+ assert.equal(sent[2].headers['X-Orders-Binding-Version'],'1');assert.equal(sent[2].headers['X-Page-Cache'],'hit');assert.equal(sent[2].headers['X-Page-Cache-Generation'],'actual-generation');
+ const cp=ordinaryGetSeam();await cp.request('cp');assert.equal(cp.calls.some(c=>c[0]==='bind'),false);assert.equal(cp.calls.find(c=>c[0]==='send')[1],cp.lease);
+ assert.equal(cp.calls.find(c=>c[0]==='send')[2].headers['X-Orders-Binding-Version'],undefined);
+});
+test('actual ordinary GET seam localizes expected Orders binding errors without changing global apiError',async()=>{
+ const f=ordinaryGetSeam();f.bindingFailure=Object.assign(Error('stale binding'),{code:'PROJECTION_VIEW_STALE',statusCode:409});
+ await f.request('orders');assert.equal(f.error,undefined);assert.equal(f.status,409);assert.equal(f.json.code,'PROJECTION_VIEW_STALE');
+ assert.equal(f.json.error,'Sipariş verisi değişti. Görünümü yeniden yükleyin.');assert.equal(f.json.errorEn,'Orders data changed. Reload the view.');
+ assert.equal(f.calls.filter(c=>c==='release').length,1);assert.equal(f.calls.some(c=>c[0]==='send'),false);
+ const unexpected=ordinaryGetSeam();unexpected.bindingFailure=Object.assign(Error('unexpected IO failure'),{code:'EIO'});
+ await unexpected.request('orders');assert.equal(unexpected.error,unexpected.bindingFailure);assert.equal(unexpected.status,undefined);
+});

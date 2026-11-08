@@ -8592,8 +8592,21 @@ app.get('/api/page-projection/:module', async (req, res) => {
     const filterStatus = sourceFilterReadiness(PAGE_PROJECTION_TARGETS[module], req);
     if (!filterStatus.ready) return res.status(409).json({ error:sourceFilterReadinessMessage(filterStatus, 'tr'), code:'SOURCE_FILTER_REQUIRED', sourceFilterStatus:filterStatus });
     const lease=await ensureComputedProjection(req,module);
-    return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
-  } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
+    const bound=module==='orders'?ordersReadyRouter.bindOrdinaryFullResponse(req,lease):{lease,headers:{}};
+    return sendComputedResponse(req,res,bound.lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||'',...bound.headers}});
+  } catch (err) {
+    if(req.params.module==='orders'){
+      const local={
+        PROJECTION_VIEW_STALE:[409,'Sipariş verisi değişti. Görünümü yeniden yükleyin.','Orders data changed. Reload the view.'],
+        COMPUTE_STALE_GENERATION:[409,'Sipariş verisi veya erişim değişti. Görünümü yeniden yükleyin.','Orders data or access changed. Reload the view.'],
+        SESSION_REQUIRED:[401,'Oturumunuz artık geçerli değil.','Your session is no longer valid.'],
+        AREA_FORBIDDEN:[403,'Siparişler alanına erişiminiz yok.','You do not have access to Orders.'],
+        SOURCE_FILTER_REQUIRED:[409,'Sipariş kaynak filtrelerini tamamlayın.','Complete the Orders source filters.'],
+      }[err?.code];
+      if(Array.isArray(local))return res.status(local[0]).json({error:local[1],errorEn:local[2],code:err.code});
+    }
+    apiError(res, err, 'Hazır ekran önbelleği okunamadı.');
+  }
 });
 
 // Explicit private full/full reads validate the lazy-detail contract. Ordinary
