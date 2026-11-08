@@ -1,13 +1,14 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {extractFunction}=require('./helpers/app-main-functions'),server=require('./helpers/server-source')();
+const {prepareModuleSchemas}=require('../server/lib/page-projection-cache');
 function setup(change){
   const profile={id:'a',status:'ACTIVE'},active={loadedAt:'r1',asasOrders:[]},reusedBuffer=Buffer.from('verified existing Orders gzip');let contextHash='ctx',sourceToken='g1',calls=0,released=0,written;
   const context={Object,Array,Set,Map,Buffer,process,APP_VERSION:'test',COLLECTION_CATALOG_SCHEMA_VERSION:3,
     pageProjectionContext:()=>({id:'a',contextHash,filterStatus:{ready:true}}),cacheForUser:()=>active,
     effectiveOverridesForUser:()=>({}),pageCacheRuntimeMeta:()=>({loadedAt:'r1'}),projectionSourceRevision:()=> 'r1',
     derivedInputKeys:{keys:()=>({cp:'cp-key',orders:'orders-key',overview:'overview-key',backlog:'backlog-key'})},
-    pageProjectionCache:{readReusableProjections:async()=>({projections:{orders:{buffer:reusedBuffer}},manifest:{activeGeneration:'existing'}}),writeCompressedGeneration:async(_id,options)=>{options.assertCurrent();written=options;return {activeGeneration:'new'};}},
+    pageProjectionCache:{prepareModuleSchemas,readReusableProjections:async()=>({projections:{orders:{buffer:reusedBuffer}},manifest:{activeGeneration:'existing'}}),writeCompressedGeneration:async(_id,options)=>{options.assertCurrent();written=options;return {activeGeneration:'new'};}},
     userAccess:{hasArea:()=>true,profileById:()=>profile,computeAccessContext:()=>({accessHash:'authority'})},
     computeSourceFor:async()=>({ownerId:'a',generation:'g1'}),computeSourceToken:()=>sourceToken,
     computeParamsFor:(_profile,_descriptor,_task,parts)=>parts,

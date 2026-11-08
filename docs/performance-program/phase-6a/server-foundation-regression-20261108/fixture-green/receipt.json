@@ -1,0 +1,18 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "compute-bulk-projection-wiring",
+    "module-schema",
+    "projection-schema-output"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 58,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "d9f3462be8e67a2cf05a98ee1a631cbcba1518f4e07852df09c10c0cff8ba73c"
+}
