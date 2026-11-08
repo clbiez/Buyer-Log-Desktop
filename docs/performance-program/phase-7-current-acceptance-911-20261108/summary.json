@@ -1,0 +1,40 @@
+{
+  "revision": "0d4c29f00bbc401d929c3c66aec063d5d12890e9",
+  "appTree": "6a4a40f76b8d5e1e8d3653308f6e426e0c7c94a2",
+  "all10BatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "totals": {
+    "pass": 8934,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "relatedPass": 10,
+  "reviewedSourceExact": [
+    {
+      "path": "resources/app/server/lib/parser-process-client.js",
+      "blob": "e2d0cd1d192fa676f0b8b087f88cecd79be58685",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/lib/test-reports/isolated-extract.js",
+      "blob": "5a0e77a77e99a253e0f847dc2be69817418d13b1",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/workers/file-parser-process.js",
+      "blob": "61e5b6f28d652cef3ab6509e3be288515ec4372d",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/phase7-parser-batch.test.js",
+      "blob": "b895aa26eb1a145e5f3440858defd337a40366df",
+      "exactPriorReview": true
+    }
+  ],
+  "i18n": "0/0",
+  "notes": 51,
+  "mainIncluded": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "benchmark": "Historical3pairs retained at original63159fb3-source SHA; not relabeled current acceptance or new application gain",
+  "merge": "not authorized; P1 stop before merge; no TEST/STABLE"
+}

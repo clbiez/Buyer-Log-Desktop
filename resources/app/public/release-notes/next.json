@@ -1547,6 +1547,35 @@
           "en": "Actual application with synthetic data. Disk-operation savings are measured separately; this capture is not timing evidence."
         }
       }
+    },
+    {
+      "id": "phase7-parser-interactive-batches",
+      "type": "improvement",
+      "module": {
+        "tr": "Dosya içe aktarma",
+        "en": "File import"
+      },
+      "title": {
+        "tr": "Küçük rapor grupları birlikte hazırlanır",
+        "en": "Small report groups prepare together"
+      },
+      "body": {
+        "tr": "Küçük rapor dosyaları işe özel sınırlı grupta ayrıştırılır; etkileşimli isteklerin büyük işler arkasında beklemesi azaltılır. Dosya güvenliği, iptal ve erişim kontrolleri korunur.",
+        "en": "Small report files parse in a bounded job-specific batch, reducing interactive requests waiting behind large jobs. File safety, cancellation and access checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-parser-interactive-batches.png",
+        "alt": {
+          "tr": "Yeni ayrıştırma yolu etkinken gerçek demo Buyer Log ekranı",
+          "en": "Actual demo Buyer Log with the revised parsing path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Ayrıştırma süreleri ve dosya güvenliği ayrı ölçüm ve testlerle doğrulanır.",
+          "en": "Actual application with synthetic data. Parsing times and file safety are verified by separate measurements and tests."
+        }
+      }
     }
   ]
 }
