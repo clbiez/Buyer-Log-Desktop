@@ -1,0 +1,27 @@
+✖ INT-03: successful downloads do not accumulate job-sized Buffer roots before the single canonical commit (20.610038ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 189.748902
+
+✖ failing tests:
+
+test at tests/plm-image-byte-budget-int03.test.js:39:1
+✖ INT-03: successful downloads do not accumulate job-sized Buffer roots before the single canonical commit (20.610038ms)
+  AssertionError [ERR_ASSERTION]: job retains 25165824 bytes before commit
+      at Object.commit (/workspace/buyerlog-int03/resources/app/tests/plm-image-byte-budget-int03.test.js:44:12)
+      at Object.runPlmImageSync (/workspace/buyerlog-int03/resources/app/server/lib/plm-image-sync-service.js:361:21)
+      at async TestContext.<anonymous> (/workspace/buyerlog-int03/resources/app/tests/plm-image-byte-budget-int03.test.js:50:18)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
