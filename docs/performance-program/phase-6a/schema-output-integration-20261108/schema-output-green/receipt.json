@@ -1,0 +1,31 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-schema-output",
+    "compute-module-schemas",
+    "module-projection-schema",
+    "projection-ready-worker",
+    "projection-private-worker"
+  ],
+  "exitCode": 1,
+  "sha256": "cad1da14ba1f1e372b11fea2652399014f49facf9831f22fad01d237c341e13b",
+  "counts": {
+    "tests": [
+      "57"
+    ],
+    "pass": [
+      "56"
+    ],
+    "fail": [
+      "1"
+    ],
+    "cancelled": [
+      "0"
+    ],
+    "skipped": [
+      "0"
+    ]
+  }
+}

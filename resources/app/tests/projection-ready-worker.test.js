@@ -10,13 +10,14 @@ const tasks=require(path.join(APP,'server/lib/compute-tasks'));
 const schemaApi=require(path.join(APP,'public/module-projection-schema'));
 const MiB=1024*1024,A='__CPX_WORKER_A',B='__CPX_WORKER_B';
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
-async function fixture(t){
+async function fixture(t,{extraKeys=0}={}){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-ready-worker-'));
  const workers=[],{Worker}=require('node:worker_threads');class ObservedWorker extends Worker{constructor(...args){super(...args);workers.push(this);}}
  const pool=createComputePool({WorkerClass:ObservedWorker,maxWorkers:1,memoryBudgetBytes:512*MiB,maxPendingBytes:256*MiB});
  const service=createComputeService({pool,root});t.after(async()=>{await service.close();fs.rmSync(root,{recursive:true,force:true});});
  const rows=[0,1].map(index=>({ocode:'0001',model:'Synthetic '+index,ccode:'R',colour:'Red',buyer:'Synthetic Buyer',merch:'M',ageGroup:'A',buyerGrup:'G',license:'',manufacturer:'Synthetic',season:'W7',countryRaw:'TURKIYE',qty:10,kalan:5,fob:0,
   opd:new Date(2026,0,1),ex:new Date(2026,6,1),retail:new Date(2026,7,1),mb:new Date(2026,8,1),_cpExtra:{[A]:index?null:0,[B]:index?0:false,__CPX_UNREGISTERED:'keep native unknown'}}));
+ for(const row of rows)for(let index=0;index<extraKeys;index++)row._cpExtra['__CPX_UNREGISTERED_'+index]=index%2?false:0;
  const source={loadedAt:'2026-11-08T00:00:00.000Z',asasOrders:rows,asasOrdersByTarget:{cp:rows,orders:rows},antrepoMap:{}};
  const descriptor=await service.seedSource({ownerId:'demo-owner',generation:'compute-g1',source,uncompressedBytes:1024});
  const full=tasks.buildProjections(source,{modules:['orders'],overrides:{},horizons:{},cpAllowed:true}).orders;
@@ -166,5 +167,18 @@ test('cold ready preparation derives the absent full JSON hash off-thread from e
  }finally{lease.release();}
  await rejected(f,{viewInfo:{...withoutRawHash,fullJsonSha256:undefined}},'PROJECTION_VIEW_INVALID');
  await rejected(f,{viewInfo:{...withoutRawHash,fullJsonSha256:'0'.repeat(64)}},'PROJECTION_VIEW_STALE');
+ assert.equal(f.pool.stats().leasedOutputBytes,0);
+});
+
+test('large complete schema registry is charged after real IPC representation changes',async t=>{
+ const f=await fixture(t,{extraKeys:400}),lease=await f.run();
+ try{
+  assert.equal(lease.value.kind,'ready');assert.ok(lease.value.registryKeys.length>450);
+  const metadata=v8.serialize({info:lease.value.info,registryKeys:lease.value.registryKeys}).byteLength;
+  const transferred=Buffer.from(lease.value.buffer).length;
+  assert.ok(lease.metrics.outputBytes>=transferred+metadata*4,JSON.stringify({reported:lease.metrics.outputBytes,transferred,receivedMetadataBytes:metadata}));
+  const rows=decoded(lease.value).rows;
+  assert.equal(rows[0].__CPX_UNREGISTERED_0,0);assert.equal(rows[0].__CPX_UNREGISTERED_399,false);
+ }finally{lease.release();}
  assert.equal(f.pool.stats().leasedOutputBytes,0);
 });

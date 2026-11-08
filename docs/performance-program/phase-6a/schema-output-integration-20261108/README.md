@@ -1,0 +1,9 @@
+# Opt-in own-module schemas and IPC accounting
+
+TR: collectModuleSchemas===true dışında mevcut worker yolu/yanıtı değişmez. Aynı mevcut ortak builder callback’i kullanılır; CP alanı/target/binding bilgisi veya ortak kaynak topolojisi bilinmiyorsa Orders metadata null kalır. Tam gzip bytes aynıdır; Orders-only iş CP parser çağırmaz. Native7 vaka önce1PASS/6FAIL; ilk adayda lease testi kırmızı kaldı (toplam56PASS/1FAIL).
+
+[Doğrulandı] Gerçek V8 clone diziyi packed yerine indexed temsil edebilir: aynı metadata JSON’u3286→3714 bayt; worker işinin sourceMeta dahil3534→3962 bayt. Ücret yalnız kaynaktaki binary boya bağlıysa eksik kalır. Yeni opt-in metadata için orijinal ve bounded metadata V8 roundtrip boylarının büyüğü ücretlenir; source rows veya gzip buffer clone edilmez. Ready-builder metadata’sı zaten frozen array temsilindedir:450+ alan stress testi eski hesapla geçti; ona gereksiz düzeltme yapılmadı. Aynı lease assertion'ı korunarak son5dosya58/58PASS.
+
+EN: Schema collection is internal and explicitly opt-in. Existing full gzip bytes remain identical; denied/unknown/separate-source schema never becomes known. The real first7-case baseline was1pass/6fail. Initial candidate retained one genuine output-accounting failure. Native structured-clone changes array serialization representation while JSON stays identical; the opt-in path now charges the larger original/destination-like bounded metadata encoding. Only metadata is round-tripped. The independent large ready-metadata stress case already passed and did not justify changing that path. Final targeted acceptance:58/58 across5files.
+
+No server policy or public thin activation is added. Full-suite/final performance/HTTP/client/review acceptance remains open. The file named ready-large-registry-charge-red.log is an attempted falsification that PASSED, not RED evidence. Earlier failures/logs stay retained. No push/merge/TEST/STABLE.

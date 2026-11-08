@@ -1,0 +1,23 @@
+{
+  "status": "inactive-optin-worker-schema-output-preparation-unrun",
+  "sourceCommit": "2ce7eda88807f377865270f409fc54ed9a7a80fb",
+  "repository": "/workspace/buyerlog-post-main-acceptance",
+  "sourceBlobs": {
+    "resources/app/server/workers/compute-worker.js": "4bd0c660aa9365567e3b59c4326792da1dab0caf",
+    "resources/app/server/lib/compute-tasks.js": "fffa068554c68d3a12009ce3d5d1938ac289ae9f",
+    "resources/app/server/lib/compute-module-schemas.js": "1ea774b236b7d5adb41d914f8a612837adedf75f"
+  },
+  "schemaSha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+  "sha256": {
+    "reference/server/workers/compute-worker.js": "6829b7259370a5c74643847a4940677ec166abdcf1943b5d6055cc671c59d70a",
+    "candidate/server/workers/compute-worker.js": "0eb4771ad1a9b8516e517e30b817fa9d59ef5b0b23cf88f3d44a21425459a73d",
+    "worker-optin.patch": "d2bba1920d843881eb08232a7b1cc4c0a0b4ed36b6e71e14759c3c4a9fddceb6",
+    "projection-schema-output.test.cjs": "f14ee739e3421f3d955af320b305f91857028ec59f1b69f90151eca607ec45ef",
+    "native-worker-preload.cjs": "cfc498944cd3bbfd6e0c29f06cb249b413925f2d8e6c4b82302948337810a56c"
+  },
+  "nativeCasesPrepared": 7,
+  "execution": { "tests": false, "syntax": false, "moduleLoad": false, "browser": false, "server": false, "benchmark": false },
+  "productWrites": false,
+  "existingReady14Changed": false,
+  "scope": "Only opt-in projections worker metadata output and existing output lease accounting"
+}

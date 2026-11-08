@@ -157,10 +157,11 @@ async function execute(task,data,transfer){
       antrepoSourceFields:Object.values(source.antrepoMapByTarget?.backlog||source.antrepoMap||{}).some(value=>(Array.isArray(value)?value:[value]).some(row=>row?._sourceFields&&Object.keys(row._sourceFields).length>0))};
     if(task==='projections'){
       if(params.catalogOrdersBuffer){const raw=await promisify(zlib.gunzip)(Buffer.from(params.catalogOrdersBuffer));params.catalogRows=JSON.parse(raw.toString('utf8')).rows||[];}
-      const values=tasks.buildProjections(source,params),compressed={};
+      let moduleSchemas;
+      const values=params.collectModuleSchemas===true?tasks.buildProjections(source,params,{onSchemas:value=>{moduleSchemas=value;}}):tasks.buildProjections(source,params),compressed={};
       for(const [module,value] of Object.entries(values))compressed[module]=await compress(value,'projection',transfer);
       const response=params.legacyModule?await compress(legacyValue(params.legacyModule,values,params,source),'api',transfer):null;
-      return {compressed,sourceMeta:projectionRuntimeMeta(source),sourceProjectionKeys:projectionSourceKeys(source),...(response?{response}:{})};
+      return {compressed,sourceMeta:projectionRuntimeMeta(source),sourceProjectionKeys:projectionSourceKeys(source),...(response?{response}:{}),...(params.collectModuleSchemas===true?{moduleSchemas}:{})};
     }
     if(task==='backlog-workbook'){
       const report=tasks.buildBacklog('export',source,params);
@@ -179,7 +180,14 @@ parentPort.on('message',async message=>{
   busy=true;const start=performance.now(),transfer=[];
   try{
     const value=await execute(message.task,message.payload||{},transfer);
-    const metadata=value.sourceMeta||value.runtimeMeta||(message.task==='projection-ready-orders'?{info:value.info,registryKeys:value.registryKeys}:null),metadataBytes=message.task==='excel-utility'?v8.serialize(value).byteLength:metadata?v8.serialize(metadata).byteLength:0,memory=process.memoryUsage();
+    const schemaOutput=message.task==='projections'&&Object.hasOwn(value,'moduleSchemas');
+    const metadata=schemaOutput?{sourceMeta:value.sourceMeta,moduleSchemas:value.moduleSchemas}:value.sourceMeta||value.runtimeMeta||(message.task==='projection-ready-orders'?{info:value.info,registryKeys:value.registryKeys}:null);
+    const encodedMetadata=metadata?v8.serialize(metadata):null;
+    // IPC can change packed metadata arrays to indexed representations. Charge
+    // the destination-like encoding too; only bounded metadata is round-tripped,
+    // never source rows or compressed projection buffers.
+    const metadataBytes=message.task==='excel-utility'?v8.serialize(value).byteLength:encodedMetadata
+      ?(schemaOutput?Math.max(encodedMetadata.byteLength,v8.serialize(v8.deserialize(encodedMetadata)).byteLength):encodedMetadata.byteLength):0,memory=process.memoryUsage();
     const outputBytes=transfer.reduce((sum,buffer)=>sum+buffer.byteLength,0)+metadataBytes*4+1024;
     if(message.payload?.maxOutputBytes&&outputBytes>message.payload.maxOutputBytes)throw Object.assign(Error('Compute output estimate exceeded'),{code:'COMPUTE_ESTIMATE_EXCEEDED'});
     parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,

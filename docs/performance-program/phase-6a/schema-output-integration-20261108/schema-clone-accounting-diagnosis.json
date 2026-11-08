@@ -1,0 +1,30 @@
+{
+  "sourceV8Bytes": 3286,
+  "structuredCloneV8Bytes": 3714,
+  "v8RoundTripBytes": 3714,
+  "jsonUtf8Bytes": 3328,
+  "jsonUtf16Bytes": 6580,
+  "jsonEqualAfterClone": true,
+  "sourceKeysFrozen": false,
+  "cloneKeysFrozen": false,
+  "arrayRepresentation": {
+    "plain": {
+      "source": 16,
+      "clone": 22,
+      "sourceWire": "ff0f4103220161220162220163240003",
+      "cloneWire": "ff0f6103490022016149022201624904220163400303"
+    },
+    "frozen": {
+      "source": 22,
+      "clone": 22,
+      "sourceWire": "ff0f6103490022016149022201624904220163400303",
+      "cloneWire": "ff0f6103490022016149022201624904220163400303"
+    },
+    "sparse": {
+      "source": 12,
+      "clone": 12,
+      "sourceWire": "ff0f61034904220163400103",
+      "cloneWire": "ff0f61034904220163400103"
+    }
+  }
+}
