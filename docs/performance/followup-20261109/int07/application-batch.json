@@ -1,0 +1,129 @@
+{
+  "ok": true,
+  "entries": {
+    "100": {
+      "plmId": "100",
+      "styleId": "200",
+      "isSetStyle": true,
+      "hasPrint": true,
+      "totalPrintCount": 6,
+      "summary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+      "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+      "fabric": "",
+      "fabricSummary": "A - Kumaş bilgisi yok\nB - Kumaş bilgisi yok\nC - Kumaş bilgisi yok\nD - Kumaş bilgisi yok\nE - Kumaş bilgisi yok\nF - Kumaş bilgisi yok",
+      "needsAi": false,
+      "fetchedAt": "2026-11-08T21:47:58.439Z",
+      "ai": {
+        "status": "not-needed"
+      },
+      "placements": [
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        }
+      ]
+    },
+    "110": {
+      "plmId": "110",
+      "styleId": "210",
+      "isSetStyle": true,
+      "hasPrint": true,
+      "totalPrintCount": 6,
+      "summary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+      "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+      "fabric": "",
+      "fabricSummary": "A - Kumaş bilgisi yok\nB - Kumaş bilgisi yok\nC - Kumaş bilgisi yok\nD - Kumaş bilgisi yok\nE - Kumaş bilgisi yok\nF - Kumaş bilgisi yok",
+      "needsAi": false,
+      "fetchedAt": "2026-11-08T21:47:58.420Z",
+      "ai": {
+        "status": "not-needed"
+      },
+      "placements": [
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        },
+        {
+          "placement": "front_body",
+          "placementTr": "Ön",
+          "placementEn": "Front",
+          "count": 1,
+          "printType": "Pigment"
+        }
+      ]
+    }
+  },
+  "requested": 2,
+  "found": 2,
+  "revision": 2,
+  "updatedAt": "2026-11-08T21:47:58.440Z"
+}

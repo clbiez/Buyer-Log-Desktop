@@ -1,0 +1,27 @@
+{
+  "baseMainSha": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "branch": "fix/followup-plm-bom-budget-20261109",
+  "node": "v24.19.0",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "codeAndValidationInputSha256": {
+    "resources/app/server/lib/plm-bom-sync.js": "351cff8512d2a2695873fcc99675d96b358f9eab560d3cf572e9527f92dac6cb",
+    "resources/app/server/lib/plm-bom-int07-budget.js": "374451a2115adf21384b4fa2adb82300cd2bf09118a9d92229a938a7771b3a3d",
+    "resources/app/tests/plm-bom-int07-budget.test.js": "1830e48b094886c74eb3851e8f661f7b95f53691f8218f8a6e281a8b32b10e50",
+    "resources/app/tests/plm-bom-int07-transport.test.js": "e41fce6e4001c8119179b51b7a64988ee2c00097d0fbfe1660dd8fd664ef3045",
+    "resources/app/public/release-notes/next.json": "3c8c7d7be46eaf573ac0ce65cd19a9555ad699484d6af4099982cc87fa7788df",
+    "resources/app/public/release-notes/next-assets/int07-bom-owner-read-budget-20261109.png": "f903e81066769c7cfafc9e48464661c75ea056c7348ac3a2c2fc252bb6740964"
+  },
+  "protectedFilesUnchanged": [
+    "resources/app/server/lib/plm-image-download-queue.js",
+    "resources/app/server/lib/plm-image-sync-service.js",
+    "resources/app/server/lib/corenectum-api-client.js",
+    "resources/app/server/server.js",
+    "resources/app/tests/fixtures/i18n-coverage-baseline.json"
+  ],
+  "priorReleaseEntries": 6,
+  "priorReleaseEntriesPreservedByteForByte": true,
+  "newReleaseId": "int07-bom-owner-read-budget-20261109",
+  "i18nNewMissing": 0,
+  "i18nBaselineMissing": 0,
+  "releaseNotesValidation": "PASS: 7 entries"
+}
