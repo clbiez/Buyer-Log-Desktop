@@ -1,0 +1,19 @@
+{
+  "risk": "P2: renderer-local warmup eligibility; no business mutation/polling changes",
+  "baseMain": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "existingReleaseEntries": 6,
+  "onlyAddedReleaseId": "shell05-native-module-warmup-20261109",
+  "allExistingReleaseBytesOutsideInsertionPreserved": true,
+  "shell06SymbolsAbsentFromDiff": true,
+  "workspaceManagerUnchanged": true,
+  "perfRuntimeUnchanged": true,
+  "screenshot": {
+    "width": 1439,
+    "height": 871,
+    "sha256": "a581b1f234ae8e9fc79662b15c36788aba0b1c701239830ff20b71b310a898fc",
+    "visuallyReviewed": true,
+    "content": "Actual Electron Orders view, synthetic 20 rows; CP pending, Orders ready"
+  },
+  "node": "v24.19.0",
+  "kernel": "Linux-6.18.57-x86_64-with-glibc2.41"
+}

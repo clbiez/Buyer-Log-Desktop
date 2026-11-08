@@ -1,0 +1,129 @@
+{
+  "status": "PASS",
+  "runner": "npm test -> node tests/run-tests.js",
+  "files": 1315,
+  "batches": [
+    {
+      "batch": 1,
+      "files": 300,
+      "tests": 1804,
+      "pass": 1744,
+      "fail": 0,
+      "skipped": 60,
+      "cancelled": 0
+    },
+    {
+      "batch": 2,
+      "files": 300,
+      "tests": 2338,
+      "pass": 2335,
+      "fail": 0,
+      "skipped": 3,
+      "cancelled": 0
+    },
+    {
+      "batch": 3,
+      "files": 300,
+      "tests": 2038,
+      "pass": 2038,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 4,
+      "files": 300,
+      "tests": 2047,
+      "pass": 2046,
+      "fail": 0,
+      "skipped": 1,
+      "cancelled": 0
+    },
+    {
+      "batch": 5,
+      "files": 110,
+      "tests": 819,
+      "pass": 819,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 6,
+      "files": 1,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 7,
+      "files": 1,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 8,
+      "files": 1,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 9,
+      "files": 1,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "batch": 10,
+      "files": 1,
+      "tests": 15,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 1,
+      "cancelled": 0
+    }
+  ],
+  "concurrency": 4,
+  "totals": {
+    "tests": 9093,
+    "pass": 9028,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "elapsedSeconds": 210.1,
+  "environment": {
+    "os": "Debian 13 x86_64",
+    "node": "v24.19.0",
+    "APPDATA": "/tmp/shell05-test-profile/appdata",
+    "LOCALAPPDATA": "/tmp/shell05-test-profile/localappdata",
+    "HOME": "inherited; unchanged"
+  },
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "initialAttempt": {
+    "status": "FAIL",
+    "stoppedAtBatch": 1,
+    "pass": 1571,
+    "fail": 29,
+    "skipped": 0,
+    "cancelled": 0,
+    "cause": "Unwritable default /home/agent/.buyer-log/write-recovery",
+    "rerun": "Fresh npm test invocation, all batches; no aggregation of remaining batches"
+  },
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "d22b172dc1ef17e0a817812a53bc36daa7abc1b3d96e64372bceff288c77417a",
+    "resources/app/tests/shell05-native-module-warmup.test.js": "71ccd3b7611fbae3f9af2d92ea751f4f4317b4b6bfd44cf5a41b29ece5481562",
+    "resources/app/public/release-notes/next.json": "b81f448996343a7e0783ae76801ca2f518d03aea256876e4d847920e045def00"
+  }
+}
