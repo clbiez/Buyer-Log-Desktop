@@ -1,0 +1,59 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js orders-projection-client
+
+[Buyer Log tests] 2 test dosyası, 1 batch, concurrency=1.
+
+[Buyer Log tests] Batch 1/1 (2 dosya)
+✔ all original 31 test bodies and historical red/green receipts remain exact (1.419857ms)
+✔ classic browser export and full-parent transport work without Node globals (72.541005ms)
+✔ accept preserves exact retained values, own presence, insertion order and references (53.879659ms)
+✔ ready rejects missing retained union, omitted keys, accessors and unowned requests (164.015919ms)
+✔ root-supplied hidden extra demand is retained and unknown capture stays full (34.494857ms)
+✔ every parent identity mismatch cancels before decoded read; 409 never retries (31.489734ms)
+✔ parent stream rejects oversized, truncated and aborted decoded bodies (31.058331ms)
+✔ abort during hash cannot return a successful parent receipt (28.918175ms)
+✔ independent raw-byte hash never borrows expected digest or gzip checksum (33.146389ms)
+✔ adapter plus actual promotion restores full rows and duplicate-ID selection by ordinal (41.57966ms)
+✔ uninitialized and caller-authored guard strings cannot select a finite request (51.724269ms)
+✔ actual complete full initializes actual migration once, then metadata-only compile needs no row provider (58.667497ms)
+✔ actual native ready body preserves sparse own 0 false null, row order, duplicate IDs and unknown keys (46.622835ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.colFilters.orders.__CPX_ZERO={values:new Set(['0'])};} (44.195876ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersSort.key='__CPX_FALSE';} (38.179539ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.ordersQuickActive.add('Active');} (38.873838ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.controls.get('ordersSearch').value='changed';} (37.913226ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.globals.colmgr.orders.hidden.delete('__CPX_UNUSED');} (36.904541ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.f.formula.save('orders',[{id:'new',label:'New',formula:'[__CPX_UNUSED]'}]);} (38.077865ms)
+✔ real captured filter/sort/quick/column/formula/rule drift prevents cached finite decision f=>{f.state.overrides.pricingRules.push({value:0});} (36.472608ms)
+✔ malformed formula storage never masquerades as empty definitions (31.905753ms)
+✔ unknown schema, changed source/full SHA, page generation and ordinary missing identity stay full (142.843339ms)
+✔ headers nonce owner broad context and late raw keys are independently checked (156.808561ms)
+✔ capture reads no row graph and records actual revision/0/false/null filter metadata (31.286967ms)
+✔ capture getter, storage read failure, unknown source and unknown access default full before planning (124.991091ms)
+✔ retirement cancels captured requests even if the same actor/source values later reappear (38.509067ms)
+✔ actual unchanged mutator bodies are fenced before source/preference mutation; invalid non-Orders target retains its fast path (47.841609ms)
+✔ existing legacy quick-filter migration executes on full; thin only checks its accepted capture without writes (30.169687ms)
+✔ actual full promotion helper accepts sparse full rows with empty proven requiredKeys and preserves per-row shapes (3.522446ms)
+✔ full-parent adapter uses actual additional header producer, exact DTO and owned decoded-byte hash; identity is never echoed (45.366175ms)
+✔ full-parent header mismatch or session replacement cancels before body reading and is never retried through ready (32.865343ms)
+✔ cold empty-formula current+legacy audit uses actual user-storage migration and plans first Orders network without full rows (41.680893ms)
+✔ cold form-free plan accepts actual native producer raw SHA as first parent and keeps gzip SHA distinct (45.714312ms)
+✔ cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v1":"[{\"id\":\"x\",\"label\":\"X\",\"formula\":\"[Probe]\"}]"} (30.353525ms)
+✔ cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.formulaColumns.orders.v0":"[{\"id\":\"legacy\",\"label\":\"Legacy\"}]"} (33.417178ms)
+✔ cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.bl.formulaColumns.orders.v0":"{broken"} (34.00723ms)
+✔ cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{broken"} (34.228595ms)
+✔ cold current/legacy/inherited/unknown storage must be explicitly empty {"bl.user.owner.__roleWorkspaceDefaults.v1":"{\"bl.formulaColumns.orders.v1\":{\"value\":\"[{\\\"id\\\":\\\"r\\\",\\\"label\\\":\\\"R\\\"}]\"}}"} (36.730829ms)
+✔ cold eligibility checks actual Moderator legacy aliases even if scoped current storage is already empty (31.57293ms)
+✔ cold missing bootstrap registration or late actual formula creation stays full without full receipt fabrication (63.473654ms)
+✔ actual cold wait observes pending hydration and rejects absent/failed hydration or concurrent CP model loading (0.532985ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2125.279793
+[Buyer Log tests] Batch 1/1 süresi: 2.2s.
+
+[Buyer Log tests] PASS — 2 test dosyası (2.2s).
