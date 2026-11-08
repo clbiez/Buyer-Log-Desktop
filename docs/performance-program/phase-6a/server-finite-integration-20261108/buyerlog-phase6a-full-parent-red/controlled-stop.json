@@ -1,0 +1,7 @@
+{
+  "pid": 698200,
+  "startTicks": "20626941",
+  "signal": "SIGTERM",
+  "at": "2026-11-08T06:59:56.865657+00:00",
+  "reason": "New RED fixture awaited cache-read entry on uninstalled404 route; terminate only this owned test child, preserve partial TAP."
+}

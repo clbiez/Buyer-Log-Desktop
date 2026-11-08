@@ -1,0 +1,140 @@
+TAP version 13
+# Subtest: actual server installs the bounded ready router without replacing ordinary full/shadow routes
+not ok 1 - actual server installs the bounded ready router without replacing ordinary full/shadow routes
+  ---
+  duration_ms: 10.129963
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:27:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(position>0)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:28:94)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: actual server factory retains the live guard, native owner cache and one existing pool
+not ok 2 - actual server factory retains the live guard, native owner cache and one existing pool
+  ---
+  duration_ms: 2.915682
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:34:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function assertOrdersReadyCacheCurrent(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/app-main-functions.js:76:21)
+    /workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:97
+    Array.map (<anonymous>)
+    fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:87)
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:35:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+  ...
+# Subtest: actual server cache guard accepts the exact current source and checks runtime before serving
+not ok 3 - actual server cache guard accepts the exact current source and checks runtime before serving
+  ---
+  duration_ms: 2.03049
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:42:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function assertOrdersReadyCacheCurrent(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/app-main-functions.js:76:21)
+    /workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:97
+    Array.map (<anonymous>)
+    fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:87)
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:43:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+  ...
+# Subtest: every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+not ok 4 - every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+  ---
+  duration_ms: 2.264409
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:46:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function assertOrdersReadyCacheCurrent(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/app-main-functions.js:76:21)
+    /workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:97
+    Array.map (<anonymous>)
+    fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:87)
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:49:41)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+  ...
+# Subtest: missing source/current manifest, context mismatch and superseded runtime fail closed
+not ok 5 - missing source/current manifest, context mismatch and superseded runtime fail closed
+  ---
+  duration_ms: 2.334252
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:51:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function assertOrdersReadyCacheCurrent(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/app-main-functions.js:76:21)
+    /workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:97
+    Array.map (<anonymous>)
+    fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:23:87)
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:53:11)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+  ...
+# Subtest: shutdown stops ready background work before closing the shared pool, including dual signals
+not ok 6 - shutdown stops ready background work before closing the shared pool, including dual signals
+  ---
+  duration_ms: 17.697335
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:56:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-server-wiring.test.js:66:9)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 0
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 215.349073

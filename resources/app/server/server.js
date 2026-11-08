@@ -8599,6 +8599,31 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // Explicit private full/full reads validate the lazy-detail contract. Ordinary
 // public CP/Orders loads keep their existing full representation and behavior.
 const projectionShadowSecret=crypto.randomBytes(32);
+function assertOrdersReadyCacheCurrent(_req,context,cached){
+  const pinned=cached?.manifest,current=pageProjectionCache.loadManifest(context?.id);
+  const parent=pinned?.modules?.orders,latest=current?.modules?.orders;
+  if(!context||!pinned||!current||!parent||!latest||!cached.meta
+    ||current.schemaVersion!==pinned.schemaVersion||current.activeGeneration!==pinned.activeGeneration
+    ||current.contextHash!==context.contextHash||pinned.contextHash!==context.contextHash
+    ||current.sourceLoadedAt!==pinned.sourceLoadedAt||current.sourceRevisionKey!==pinned.sourceRevisionKey
+    ||current.moduleInputKeys?.orders!==pinned.moduleInputKeys?.orders
+    ||current.sourceProjectionKeys?.orders!==pinned.sourceProjectionKeys?.orders
+    ||latest.checksum!==parent.checksum||latest.uncompressedBytes!==parent.uncompressedBytes
+    ||cached.meta.checksum!==parent.checksum||cached.meta.uncompressedBytes!==parent.uncompressedBytes
+    ||!pageProjectionMatchesRuntime(current,cacheForUser(context.id),'orders'))
+    throw Object.assign(new Error('Sipariş verisi değişti. / Orders data changed.'),{code:'PROJECTION_VIEW_STALE',statusCode:409,errorEn:'Orders data changed.'});
+}
+function createOrdersReadyRouterForServer(){
+  return require('./lib/orders-ready-http').createOrdersReadyRouter({
+    express,cache:pageProjectionCache,guard:computeReadGuard,assertSourceFilters,contextFor:pageProjectionContext,
+    assertCachedCurrent:assertOrdersReadyCacheCurrent,sourceFor:computeSourceFor,
+    runTask:(...args)=>serverCompute().run(...args),publishReady:(...args)=>pageProjectionCache.writeViewCompressed(...args),
+    send:sendComputedResponse,apiError,
+    onBackgroundError:entry=>logRuntimeFailure('ordersReadyBackground',Object.assign(new Error('Optional Orders view preparation failed.'),{code:entry.code})),
+  });
+}
+const ordersReadyRouter=createOrdersReadyRouterForServer();
+app.use('/api/page-projection', ordersReadyRouter);
 app.use('/api/page-projection',require('./lib/projection-shadow-http').createProjectionShadowRouter({
   express,guard:computeReadGuard,secret:projectionShadowSecret,assertSourceFilters,contextFor:pageProjectionContext,
   projectionFor:async(req,module,{build})=>{
@@ -12980,8 +13005,10 @@ function shutdownComputeRuntime(){
   const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
   httpServer.close();computeReads.clear();
   computeShutdownPromise=Promise.resolve().then(async()=>{
+    // Ready jobs own leases in the same pool: stop and release them first.
+    const readyResults=await Promise.allSettled([ordersReadyRouter.readyBackground.close()]);
     const results=await Promise.allSettled([closeComputeService(),runtimePressureMonitor?.stop()]);
-    const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;
+    const failure=[...readyResults,...results].find(result=>result.status==='rejected');if(failure)throw failure.reason;
   }).catch(error=>{
     process.exitCode=1;logRuntimeFailure('computePoolShutdown',error);
   }).finally(()=>{clearTimeout(deadline);cleanupOrphanExcel();process.exit(process.exitCode||0);});

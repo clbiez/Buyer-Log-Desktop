@@ -1,0 +1,132 @@
+[
+  {
+    "file": "buyerlog-phase6a-finite-port-first/receipt.json",
+    "bytes": 503,
+    "sha256": "935ba717830e45aeae01ec5c38603e5d39b237d5f06e1c40be79a37663d40a21"
+  },
+  {
+    "file": "buyerlog-phase6a-finite-port-first/1.log",
+    "bytes": 627,
+    "sha256": "5a7b2b2251182f51c7794d6f878e8d10db5dd88f82043a71fb13d9715577136f"
+  },
+  {
+    "file": "buyerlog-phase6a-finite-port-first/0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "buyerlog-phase6a-finite-port-native/receipt.json",
+    "bytes": 429,
+    "sha256": "87a8703ead946ad68bbd664df52c20d466e5d0c7e97157db010f1713509bacbd"
+  },
+  {
+    "file": "buyerlog-phase6a-finite-port-native/native.tap",
+    "bytes": 11277,
+    "sha256": "0f982e46eff9b108d835398ff821b8324f8a2e7442bef5d28afdcf44f9bea45f"
+  },
+  {
+    "file": "buyerlog-phase6a-ready-server-wiring-red/receipt.json",
+    "bytes": 306,
+    "sha256": "e70051c183aab1fe4753c40e6bba6e081f2827bef965093fb1b3bfa13a515ea3"
+  },
+  {
+    "file": "buyerlog-phase6a-ready-server-wiring-red/native.tap",
+    "bytes": 7227,
+    "sha256": "4a55d5569dee898a748daab1bc9ac2eca2d346dcfffc1ad2a435176e2f6cf7cf"
+  },
+  {
+    "file": "buyerlog-phase6a-ready-server-wiring-green/receipt.json",
+    "bytes": 412,
+    "sha256": "81532250575d2ba88606dd6f6af6a4e345209225a7928a5b619c84ba67999992"
+  },
+  {
+    "file": "buyerlog-phase6a-ready-server-wiring-green/native.tap",
+    "bytes": 7769,
+    "sha256": "fc31b842dff7bbfb0ca6b767512409d87a35dd7ee2dcc6f186df4f97946d688e"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-red/receipt.json",
+    "bytes": 326,
+    "sha256": "a7a883c87285d562a85417f5f834156a29b6442b871ea37d2df94acbed2c3e83"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-red/native.tap",
+    "bytes": 9305,
+    "sha256": "f8460bb0de2857588c75b9d900782a5a6807ee969ca12ef423ea33de483b1ef7"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-red/controlled-stop.json",
+    "bytes": 256,
+    "sha256": "92cb1a23e10c1736c7029e10675e2bd8aed2ccb38fec88ce9c9343d79cde669c"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-red-bounded/receipt.json",
+    "bytes": 326,
+    "sha256": "2929d0b86aca586b4d4b30cefb18c03c3537eb7cb4e0a08afe7bbae112f8d2e5"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-red-bounded/native.tap",
+    "bytes": 12813,
+    "sha256": "9332b4dcd226d532ea8fabd61c4aac18f0ed4e257c098f52c3ce6e81871480e5"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-finite-green/receipt.json",
+    "bytes": 596,
+    "sha256": "85b70b984c3c39cf69e01b5e454fa88e3883a6aa44b5f7e84ea54ee43cac2d2b"
+  },
+  {
+    "file": "buyerlog-phase6a-full-parent-finite-green/native.tap",
+    "bytes": 23478,
+    "sha256": "38e30eff971b8f8ad00e27d24fb535f8ad835ab01725d1dafffa446bbc0b69df"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-static-first/receipt.json",
+    "bytes": 370,
+    "sha256": "2ad750874cf673e7b244bac7615a750ea5360da6d51e333b240d4939acf864dc"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-static-first/1.log",
+    "bytes": 2660,
+    "sha256": "2e40ccd5037c3038c311c9603fed2f5ce30c9c0ff01a0eb37bfae1b3cd426140"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-static-first/0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/5.log",
+    "bytes": 126,
+    "sha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/4.log",
+    "bytes": 125,
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/3.log",
+    "bytes": 2024,
+    "sha256": "e00c02294594660c35362c73b8a2430f6f469ad39488b95c7127dc5d0deb8cb6"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/2.log",
+    "bytes": 34297,
+    "sha256": "861be547df50a108fae065a56ac7ebd40e0fe8eb2d06886e0080df2b94f69b53"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/receipt.json",
+    "bytes": 2887,
+    "sha256": "9d2247d422751844ff41bf3a7526962e9d77f86608976824965817baee66e171"
+  },
+  {
+    "file": "buyerlog-phase6a-server-finite-related-green/0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

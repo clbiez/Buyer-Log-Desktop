@@ -1,0 +1,19 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/projection-inventory-contract.test.js",
+    "tests/projection-dependency-plan.test.js",
+    "tests/orders-finite-closure.test.js"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 43,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "0f982e46eff9b108d835398ff821b8324f8a2e7442bef5d28afdcf44f9bea45f"
+}

@@ -1,0 +1,268 @@
+TAP version 13
+# Subtest: actual f076 source blobs and authoritative42/32/10 remain unchanged; no new inventory
+ok 1 - actual f076 source blobs and authoritative42/32/10 remain unchanged; no new inventory
+  ---
+  duration_ms: 159.919615
+  type: 'test'
+  ...
+# Subtest: actual legacy full/full normalization/formula controls agree before any finite selection
+ok 2 - actual legacy full/full normalization/formula controls agree before any finite selection
+  ---
+  duration_ms: 126.733962
+  type: 'test'
+  ...
+# Subtest: only explicitly registered hidden modelCustom __CPX keys are candidates; all unknown/nonmodel/native keys stay
+ok 3 - only explicitly registered hidden modelCustom __CPX keys are candidates; all unknown/nonmodel/native keys stay
+  ---
+  duration_ms: 78.36045
+  type: 'test'
+  ...
+# Subtest: actual normalization and all42 canonical readers preserve exact retained ordered keys/types/values/SHA
+ok 4 - actual normalization and all42 canonical readers preserve exact retained ordered keys/types/values/SHA
+  ---
+  duration_ms: 65.296647
+  type: 'test'
+  ...
+# Subtest: real formula own Probe=0 beats model alias while absent Probe reads false; hidden dependency is retained
+ok 5 - real formula own Probe=0 beats model alias while absent Probe reads false; hidden dependency is retained
+  ---
+  duration_ms: 54.912401
+  type: 'test'
+  ...
+# Subtest: actual compile.columns keeps both IF branches even when a hidden branch is never executed
+ok 6 - actual compile.columns keeps both IF branches even when a hidden branch is never executed
+  ---
+  duration_ms: 54.084018
+  type: 'test'
+  ...
+# Subtest: real stable-key calculated dependency DAG retains the transitive model dependency
+ok 7 - real stable-key calculated dependency DAG retains the transitive model dependency
+  ---
+  duration_ms: 69.952434
+  type: 'test'
+  ...
+# Subtest: real calculated alias beats model label; conservative closure retains both possible inputs
+ok 8 - real calculated alias beats model label; conservative closure retains both possible inputs
+  ---
+  duration_ms: 91.585382
+  type: 'test'
+  ...
+# Subtest: enable/change live definitions rebuilds closure rather than reusing a hidden-field decision
+ok 9 - enable/change live definitions rebuilds closure rather than reusing a hidden-field decision
+  ---
+  duration_ms: 51.085328
+  type: 'test'
+  ...
+# Subtest: unresolved, malformed, unsupported-function/arity and cyclic actual formulas select exact full fallback
+ok 10 - unresolved, malformed, unsupported-function/arity and cyclic actual formulas select exact full fallback
+  ---
+  duration_ms: 217.360424
+  type: 'test'
+  ...
+# Subtest: literal filter/sort/both-rule-operands/offset/current-operation inputs retain their hidden keys including0/false/null
+ok 11 - literal filter/sort/both-rule-operands/offset/current-operation inputs retain their hidden keys including0/false/null
+  ---
+  duration_ms: 46.666065
+  type: 'test'
+  ...
+# Subtest: whole-source union keeps ALL canonical token matches including blank/false aliases after row50
+ok 12 - whole-source union keeps ALL canonical token matches including blank/false aliases after row50
+  ---
+  duration_ms: 72.454036
+  type: 'test'
+  ...
+# Subtest: complete __canonical own overrides preserve null/false and cannot be stripped with a model field
+ok 13 - complete __canonical own overrides preserve null/false and cannot be stripped with a model field
+  ---
+  duration_ms: 56.078216
+  type: 'test'
+  ...
+# Subtest: unknown consumer closure, predicate, operation or trace-derived claim forces full before any omission
+ok 14 - unknown consumer closure, predicate, operation or trace-derived claim forces full before any omission
+  ---
+  duration_ms: 260.734973
+  type: 'test'
+  ...
+# Subtest: pending/unknown migration or unknown formula storage cannot treat missing references as removable
+ok 15 - pending/unknown migration or unknown formula storage cannot treat missing references as removable
+  ---
+  duration_ms: 207.943856
+  type: 'test'
+  ...
+# Subtest: every named full-before-use barrier is mandatory; synthetic labels are not production barrier proof
+ok 16 - every named full-before-use barrier is mandatory; synthetic labels are not production barrier proof
+  ---
+  duration_ms: 356.259498
+  type: 'test'
+  ...
+# Subtest: CP token, CP schema, unknown/missing/versioned schema and wrong rowcount/key universe stay full
+ok 17 - CP token, CP schema, unknown/missing/versioned schema and wrong rowcount/key universe stay full
+  ---
+  duration_ms: 311.496704
+  type: 'test'
+  ...
+# Subtest: visible/unregistered/model-metadata mismatch never drops a key; duplicate registration selects full
+ok 18 - visible/unregistered/model-metadata mismatch never drops a key; duplicate registration selects full
+  ---
+  duration_ms: 176.363693
+  type: 'test'
+  ...
+# Subtest: getters/nonplain/proxy unsupported inputs select full without invoking getters; source stays untouched
+ok 19 - getters/nonplain/proxy unsupported inputs select full without invoking getters; source stays untouched
+  ---
+  duration_ms: 229.770106
+  type: 'test'
+  ...
+# Subtest: sparse rows, extra array properties and512-key union admission overflow leave exact full fallback
+ok 20 - sparse rows, extra array properties and512-key union admission overflow leave exact full fallback
+  ---
+  duration_ms: 154.90843
+  type: 'test'
+  ...
+# Subtest: legacy full/no-omission and unsupported profile paths preserve source; no source graph is copied by compile
+ok 21 - legacy full/no-omission and unsupported profile paths preserve source; no source graph is copied by compile
+  ---
+  duration_ms: 160.51595
+  type: 'test'
+  ...
+# Subtest: candidate fields compose with actual frozen stateless core and exact bounded full details before public use
+ok 22 - candidate fields compose with actual frozen stateless core and exact bounded full details before public use
+  ---
+  duration_ms: 88.894457
+  type: 'test'
+  ...
+# Subtest: the authoritative inventory stays 32 required, 10 uncertain, zero removable; contracts/matrix remain references
+ok 23 - the authoritative inventory stays 32 required, 10 uncertain, zero removable; contracts/matrix remain references
+  ---
+  duration_ms: 50.072739
+  type: 'test'
+  ...
+# Subtest: missing closure, unknown/omitted consumer or dynamic consumer returns exact full identity
+ok 24 - missing closure, unknown/omitted consumer or dynamic consumer returns exact full identity
+  ---
+  duration_ms: 162.770861
+  type: 'test'
+  ...
+# Subtest: missing adapter and unproven deferred full barrier cannot be silently ignored
+ok 25 - missing adapter and unproven deferred full barrier cannot be silently ignored
+  ---
+  duration_ms: 36.390495
+  type: 'test'
+  ...
+# Subtest: first-N trace, sampled keys, unknown source contract and context drift cannot certify a plan
+ok 26 - first-N trace, sampled keys, unknown source contract and context drift cannot certify a plan
+  ---
+  duration_ms: 179.265854
+  type: 'test'
+  ...
+# Subtest: real runtime module binding order is retained without raw header rewriting
+ok 27 - real runtime module binding order is retained without raw header rewriting
+  ---
+  duration_ms: 66.06808
+  type: 'test'
+  ...
+# Subtest: real canonical token fallback, blank-own path and unknown canonical ID select full
+ok 28 - real canonical token fallback, blank-own path and unknown canonical ID select full
+  ---
+  duration_ms: 33.515219
+  type: 'test'
+  ...
+# Subtest: real own __canonical override preserves null/false precedence and retains the entire container
+ok 29 - real own __canonical override preserves null/false precedence and retains the entire container
+  ---
+  duration_ms: 32.166183
+  type: 'test'
+  ...
+# Subtest: actual formula own 0 and hidden model alias false both survive a finite conservative plan
+ok 30 - actual formula own 0 and hidden model alias false both survive a finite conservative plan
+  ---
+  duration_ms: 36.469592
+  type: 'test'
+  ...
+# Subtest: live formula settings change the finite demand without using earlier row observations
+ok 31 - live formula settings change the finite demand without using earlier row observations
+  ---
+  duration_ms: 58.274136
+  type: 'test'
+  ...
+# Subtest: real lazy IF compile includes both branches rather than two-row observed reads
+ok 32 - real lazy IF compile includes both branches rather than two-row observed reads
+  ---
+  duration_ms: 49.015358
+  type: 'test'
+  ...
+# Subtest: formula alias dependency closure uses the actual formula API and preserves own-name alternatives
+ok 33 - formula alias dependency closure uses the actual formula API and preserves own-name alternatives
+  ---
+  duration_ms: 32.118324
+  type: 'test'
+  ...
+# Subtest: unresolved/model references, invalid functions and cyclic formulas keep exact full fallback
+ok 34 - unresolved/model references, invalid functions and cyclic formulas keep exact full fallback
+  ---
+  duration_ms: 123.329255
+  type: 'test'
+  ...
+# Subtest: unknown literal filter/sort/raw key or unresolved rule declaration cannot be omitted
+ok 35 - unknown literal filter/sort/raw key or unresolved rule declaration cannot be omitted
+  ---
+  duration_ms: 94.286268
+  type: 'test'
+  ...
+# Subtest: constructor snapshots adapter/manifest declarations instead of following same-revision object mutations
+ok 36 - constructor snapshots adapter/manifest declarations instead of following same-revision object mutations
+  ---
+  duration_ms: 28.759869
+  type: 'test'
+  ...
+# Subtest: an adapter cannot mutate request identity while composing an apparently closed plan
+ok 37 - an adapter cannot mutate request identity while composing an apparently closed plan
+  ---
+  duration_ms: 27.230139
+  type: 'test'
+  ...
+# Subtest: runtime canonical bindings changing during dependency composition keep the exact full envelope
+ok 38 - runtime canonical bindings changing during dependency composition keep the exact full envelope
+  ---
+  duration_ms: 36.905219
+  type: 'test'
+  ...
+# Subtest: sealed runtime fields equal the exact ordered original \#891 projection with no new IDs/classes/removals
+ok 39 - sealed runtime fields equal the exact ordered original \#891 projection with no new IDs/classes/removals
+  ---
+  duration_ms: 58.394012
+  type: 'test'
+  ...
+# Subtest: candidate artifact is byte-exact deterministic generation from that source only
+ok 40 - candidate artifact is byte-exact deterministic generation from that source only
+  ---
+  duration_ms: 103.961854
+  type: 'test'
+  ...
+# Subtest: runtime contract is readonly and cannot become a replacement mutable inventory
+ok 41 - runtime contract is readonly and cannot become a replacement mutable inventory
+  ---
+  duration_ms: 0.290766
+  type: 'test'
+  ...
+# Subtest: official public helpers retain the already-reviewed algorithms byte-for-byte
+ok 42 - official public helpers retain the already-reviewed algorithms byte-for-byte
+  ---
+  duration_ms: 160.866979
+  type: 'test'
+  ...
+# Subtest: the same public artifacts load in a browser realm without repo docs, fs or a network inventory
+ok 43 - the same public artifacts load in a browser realm without repo docs, fs or a network inventory
+  ---
+  duration_ms: 2.019685
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 43
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4875.954044

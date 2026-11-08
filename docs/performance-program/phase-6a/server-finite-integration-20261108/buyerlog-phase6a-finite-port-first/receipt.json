@@ -1,0 +1,23 @@
+[
+  {
+    "command": [
+      "node",
+      "scripts/generate-projection-inventory-contract.cjs",
+      "--check"
+    ],
+    "exitCode": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "projection-inventory-contract",
+      "projection-dependency-plan",
+      "orders-finite-closure"
+    ],
+    "exitCode": 0,
+    "sha256": "5a7b2b2251182f51c7794d6f878e8d10db5dd88f82043a71fb13d9715577136f"
+  }
+]

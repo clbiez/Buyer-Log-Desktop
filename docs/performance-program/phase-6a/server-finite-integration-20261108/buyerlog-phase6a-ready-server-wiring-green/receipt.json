@@ -1,0 +1,19 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/orders-ready-server-wiring.test.js",
+    "tests/compute-shutdown.test.js",
+    "tests/orders-ready-http.test.js"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 30,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "fc31b842dff7bbfb0ca6b767512409d87a35dd7ee2dcc6f186df4f97946d688e"
+}

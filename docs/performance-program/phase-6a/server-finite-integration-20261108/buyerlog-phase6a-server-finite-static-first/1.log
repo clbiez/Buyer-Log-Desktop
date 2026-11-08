@@ -1,0 +1,39 @@
+
+> buyer-log-desktop@7.0.339 i18n:check
+> node scripts/i18n-coverage.js
+
+YENİ  public/projection-dependency-plan.js:59  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:9  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:10  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:11  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:13  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:14  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:17  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:18  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:19  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:20  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:21  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:22  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:23  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:24  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:25  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:27  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:28  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:29  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:30  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:31  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:32  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:35  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:36  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:39  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:40  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:41  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:42  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:44  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:45  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:47  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:48  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:49  ince satırda gerekli
+YENİ  public/projection-inventory-contract.js:50  ince satırda gerekli
+[i18n] Yeni eksik: 33 · Baseline'daki eski eksik: 0
+[i18n] Yeni Türkçe metinlerin İngilizce karşılığını yazın (L(tr,en) / isEn()?en:tr / {tr,en} veya i18n-dictionary.js).

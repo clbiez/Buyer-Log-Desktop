@@ -1,0 +1,17 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/orders-ready-http.test.js"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "pass": 21,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "f8460bb0de2857588c75b9d900782a5a6807ee969ca12ef423ea33de483b1ef7"
+}

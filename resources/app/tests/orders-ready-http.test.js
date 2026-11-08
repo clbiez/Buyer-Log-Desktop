@@ -345,6 +345,140 @@ test('native guarded cache declines and drains invalid asynchronous callbacks, i
   }finally{process.removeListener('unhandledRejection',observe);lease.release();}
 });
 
+// Additive full-parent coverage. All adopted 22 test bodies remain unchanged.
+function fullParentRequest(metadata,checksum,nonce='full_parent_nonce'){
+  return {token:metadata.token,requestNonce:nonce,fullGzipChecksum:checksum,guardStamp:metadata.guardStamp};
+}
+async function waitForParentRead(entered,pending){
+  // A missing route or early rejection must fail this assertion, not leave the
+  // RED fixture waiting forever for a read that can no longer happen.
+  await Promise.race([entered.promise,pending.then(result=>{
+    assert.fail('full-parent finished before the required cache-read boundary: '+result.status);
+  })]);
+}
+async function actualThinParent(f){
+  const metadata=(await f.get()).body,cold=await f.post(f.body(metadata));await f.idle();
+  const ready=await f.post(f.body(metadata,'known_ready_parent'));
+  assert.equal(ready.headers.get('x-orders-view-mode'),'ready');
+  return {metadata,cold,ready,request:fullParentRequest(metadata,ready.headers.get('x-orders-full-gzip-sha256'))};
+}
+test('explicit full-parent serves exact actual ready parent without a ready miss, new worker or reserialization',async t=>{
+  const f=await fixture(t),parent=await actualThinParent(f),jobs=f.jobs.length,viewReads=f.viewReads,started=f.router.readyBackground.stats().started;
+  for(const encoding of ['gzip','identity']){
+    const got=await f.request('POST','orders/full-parent',parent.request,'first',encoding);
+    assert.equal(got.status,200);assert.equal(got.headers.get('x-orders-view-mode'),'full');assert.equal(got.text,parent.cold.text);
+    assert.equal(got.headers.get('x-orders-request-nonce'),'full_parent_nonce');assert.equal(got.headers.get('x-orders-plan-hash'),null);
+    assert.equal(got.headers.get('x-orders-owner-b64'),Buffer.from(f.owner).toString('base64url'));
+    assert.equal(got.headers.get('x-orders-actor-b64'),Buffer.from(f.actor).toString('base64url'));
+    assert.equal(got.headers.get('x-orders-access-hash'),parent.metadata.token.accessHash);
+    assert.equal(got.headers.get('x-orders-guard-sha256'),parent.metadata.guardStamp);
+    assert.equal(got.headers.get('x-orders-cache-generation'),parent.metadata.token.sourceGeneration);
+    assert.equal(got.headers.get('x-orders-full-gzip-sha256'),sha(f.fullBuffer));
+    assert.equal(Buffer.from(got.headers.get('x-orders-source-projection-key-b64'),'base64url').toString('utf8'),parent.metadata.token.sourceProjectionKey);
+    assert.equal(Buffer.from(got.headers.get('x-orders-module-input-key-b64'),'base64url').toString('utf8'),parent.metadata.token.moduleInputKey);
+    assert.equal(got.headers.get('x-orders-source-revision'),parent.metadata.token.sourceRevision);
+    assert.equal(got.headers.get('x-orders-full-json-bytes'),String(Buffer.byteLength(got.text)));
+    assert.equal(got.headers.get('x-orders-full-row-count'),String(parent.ready.body.projection.schema.rowCount));
+    // Actual worker raw SHA matches actual decoded full bytes. It is NOT the
+    // compressed checksum in the response parent identity header.
+    assert.equal(sha(Buffer.from(got.text,'utf8')),parent.ready.body.projection.viewInfo.fullJsonSha256);
+    assert.equal(Buffer.byteLength(got.text),parent.ready.body.projection.viewInfo.fullJsonBytes);
+    assert.notEqual(sha(Buffer.from(got.text,'utf8')),got.headers.get('x-orders-full-gzip-sha256'));
+    assert.equal(got.body.profile,undefined);assert.equal(Object.hasOwn(got.body.rows[0],KEY),true);
+  }
+  await f.idle();assert.equal(f.jobs.length,jobs);assert.equal(f.viewReads,viewReads);assert.equal(f.router.readyBackground.stats().started,started);
+});
+test('full-parent mismatched expected token, gzip checksum or broad guard conflicts without any newly authorized body',async t=>{
+  const f=await fixture(t),parent=await actualThinParent(f),jobs=f.jobs.length;
+  const changes=Object.keys(parent.request.token).map(key=>({...parent.request,token:{...parent.request.token,[key]:parent.request.token[key]+'changed'}}));
+  changes.push({...parent.request,fullGzipChecksum:'0'.repeat(64)},{...parent.request,guardStamp:'0'.repeat(64)},
+    {...parent.request,fullGzipChecksum:parent.ready.body.projection.viewInfo.fullJsonSha256});
+  for(const body of changes){
+    const got=await f.request('POST','orders/full-parent',body);assert.equal(got.status,409);assert.equal(got.body.code,'PROJECTION_VIEW_STALE');
+    assert.equal(got.body.rows,undefined);assert.equal(got.headers.get('x-orders-owner-b64'),null);assert.equal(got.headers.get('x-orders-full-gzip-sha256'),null);
+  }
+  const switched=await f.request('POST','orders/full-parent',parent.request,'second');assert.equal(switched.status,409);assert.equal(switched.body.rows,undefined);
+  assert.equal(f.jobs.length,jobs);
+});
+test('full-parent accepts only the explicit bounded DTO, not ready-plan knobs or expected raw-hash echo',async t=>{
+  const f=await fixture(t),metadata=(await f.get()).body,body=fullParentRequest(metadata,sha(f.fullBuffer));
+  for(const invalidBody of [{...body,planHash:'0'.repeat(64)},{...body,omittedModelKeys:[KEY]},
+    {...body,fullJsonSha256:'0'.repeat(64)},{...body,identity:{...body.token}},
+    {...body,token:{...body.token,unexpected:'value'}},{...body,guardStamp:17},
+    {...body,requestNonce:'bad\r\nheader'},{...body,fullGzipChecksum:'not-a-sha'}]){
+    assert.equal((await f.request('POST','orders/full-parent',invalidBody)).status,400);
+  }
+  assert.equal((await f.request('POST','orders/full-parent',{...body,padding:'x'.repeat(70*1024)})).status,413);
+  assert.equal(f.jobs.length,0);assert.equal(f.router.readyBackground.stats().started,0);
+});
+test('full-parent never rebuilds and rejects missing, unknown, legacy or backup schema authority',async t=>{
+  for(const mode of ['missing','unknown','legacy','backup']){
+    const f=await fixture(t),metadata=(await f.get()).body,body=fullParentRequest(metadata,sha(f.fullBuffer));
+    if(mode==='missing')cache.invalidate(f.owner);
+    else{
+      const manifest=f.primary();
+      if(mode==='unknown')manifest.moduleSchemas.orders.schema.status='unknown';
+      if(mode==='legacy')delete manifest.moduleSchemas;
+      if(mode==='backup'){fs.writeFileSync(cache.manifestPath(f.owner)+'.bak',JSON.stringify(manifest));fs.unlinkSync(cache.manifestPath(f.owner));}
+      else fs.writeFileSync(cache.manifestPath(f.owner),JSON.stringify(manifest));
+    }
+    const got=await f.request('POST','orders/full-parent',body);assert.equal(got.status,409);assert.equal(got.body.rows,undefined);
+    assert.equal(f.jobs.length,0);assert.equal(f.router.readyBackground.stats().started,0);
+  }
+});
+test('full-parent full-cache read awaits recheck live actor, source, scope and filter authority',async t=>{
+  for(const change of [f=>f.sessions.set('first',f.sessions.get('second')),
+    f=>{f.sourceToken='superseded';},f=>{f.profiles.get(f.actor).viewScope={all:false,buyers:['changed']};},f=>{f.filtersReady=false;}]){
+    const f=await fixture(t),metadata=(await f.get()).body,body=fullParentRequest(metadata,sha(f.fullBuffer)),entered=deferred(),resume=deferred();
+    f.afterFullRead=async()=>{entered.resolve();await resume.promise;};
+    const pending=f.request('POST','orders/full-parent',body);await waitForParentRead(entered,pending);change(f);resume.resolve();
+    const got=await pending;assert.equal(got.status,409);assert.equal(got.body.rows,undefined);assert.equal(got.headers.get('x-orders-owner-b64'),null);
+  }
+});
+test('full-parent same-generation full rewrite or schema loss at final native send cannot satisfy the old parent',async t=>{
+  const f=await fixture(t),parent=await actualThinParent(f),entered=deferred(),resume=deferred();
+  f.afterFullRead=async()=>{entered.resolve();await resume.promise;};
+  const pending=f.request('POST','orders/full-parent',parent.request);await waitForParentRead(entered,pending);
+  await cache.writeProjection(f.owner,'orders',f.context.contextHash,{...parent.cold.body,parentChanged:true});resume.resolve();
+  const changed=await pending;assert.equal(changed.status,409);assert.equal(changed.body.rows,undefined);
+  const other=await fixture(t),metadata=(await other.get()).body,body=fullParentRequest(metadata,sha(other.fullBuffer));
+  other.beforeSend=()=>{const manifest=other.primary();delete manifest.moduleSchemas;fs.writeFileSync(cache.manifestPath(other.owner),JSON.stringify(manifest));};
+  const late=await other.request('POST','orders/full-parent',body);assert.equal(late.status,409);assert.equal(late.body.rows,undefined);
+  assert.equal(late.headers.get('x-orders-owner-b64'),null);assert.equal(late.headers.get('x-orders-source-projection-key-b64'),null);
+});
+test('same native endpoint refuses old owner full-parent after a session switch; a fresh matching owner parent succeeds',async t=>{
+  const a=await fixture(t),b=await fixture(t),owners=new Map([[a.owner,a],[b.owner,b]]);
+  const profiles=new Map([[a.actor,a.profiles.get(a.actor)],[b.actor,b.profiles.get(b.actor)]]);let sessionActor=a.actor,taskCalls=0;
+  const sessionProfile=()=>profiles.get(sessionActor),contextFor=profile=>owners.get(profile.owner).context;
+  const guard=createComputeReadGuard({sessionProfile,profileById:id=>profiles.get(id),hasArea:(profile,area)=>profile.areas.includes(area),
+    contextFor:profile=>({contextHash:sha(JSON.stringify(['full-parent-cross-owner',contextFor(profile).contextHash]))}),
+    accessFor:profile=>createAccessContext({userId:profile.id,systemRole:'moderator',manageAll:true,viewScope:profile.viewScope,editScopes:{all:true},authority:{},profiles:[]}),
+    sourceTokenFor:id=>owners.get(profiles.get(id).owner).sourceToken});
+  const router=createOrdersReadyRouter({express,cache,guard,contextFor,
+    assertSourceFilters(targets){assert.deepEqual(targets,['orders']);if(!owners.get(sessionProfile().owner).filtersReady)throw stale();},
+    assertCachedCurrent(_req,ctx,cached){
+      const profile=sessionProfile(),owner=owners.get(profile.owner),primary=owner.primary();
+      if(contextFor(profile).id!==ctx.id||contextFor(profile).contextHash!==ctx.contextHash||owner.sourceToken!==owner.descriptor.generation
+        ||cached.manifest.contextHash!==ctx.contextHash||primary.activeGeneration!==cached.manifest.activeGeneration
+        ||primary.modules.orders.checksum!==cached.meta.checksum||cached.manifest.sourceProjectionKeys.orders!==owner.descriptor.projectionKeys.orders)throw stale();
+    },sourceFor:async profile=>owners.get(profile.owner).descriptor,
+    runTask:(task,descriptor,payload,options)=>{taskCalls++;return owners.get(descriptor.ownerId).service.run(task,descriptor,payload,options);},
+    publishReady:(...args)=>cache.writeViewCompressed(...args),send:sendComputedResponse,
+    apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code||'TEST_ERROR'})});
+  const app=express();app.use('/api/page-projection',router);const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+  t.after(async()=>{await router.readyBackground.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+  const base=`http://127.0.0.1:${server.address().port}/api/page-projection/orders`;
+  const old=await (await fetch(base+'/schema')).json();sessionActor=b.actor;
+  const post=body=>fetch(base+'/full-parent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const wrong=await post(fullParentRequest(old,sha(a.fullBuffer)));assert.equal(wrong.status,409);assert.equal((await wrong.json()).rows,undefined);
+  assert.equal(wrong.headers.get('x-orders-owner-b64'),null);
+  const fresh=await (await fetch(base+'/schema')).json(),right=await post(fullParentRequest(fresh,sha(b.fullBuffer),'new_ui_load'));
+  assert.equal(right.status,200);assert.ok(Array.isArray((await right.json()).rows));
+  assert.equal(right.headers.get('x-orders-owner-b64'),Buffer.from(b.owner).toString('base64url'));
+  assert.equal(right.headers.get('x-orders-actor-b64'),Buffer.from(b.actor).toString('base64url'));
+  assert.equal(right.headers.get('x-orders-full-gzip-sha256'),sha(b.fullBuffer));assert.equal(taskCalls,0);
+});
+
 test('revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted',async t=>{
  const f=await fixture(t),before=(await f.get()).body;assert.equal(before.mode,'schema');
  f.profiles.get(f.actor).areas=['orders'];

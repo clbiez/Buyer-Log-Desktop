@@ -1,0 +1,1010 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js module-schema module-projection-schema compute-module-schemas projection-schema-output page-projection projection-ready-worker orders-ready-http
+
+[Buyer Log tests] 13 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (13 dosya)
+✖ runtime sources and unchanged frozen schema helper match the declared pins (37.037255ms)
+✔ default path has byte-identical full output and does not load or scan schema metadata (43.658697ms)
+✔ nonfunction/absent internal hooks and data.onSchemas cannot activate schema work (11.347444ms)
+✖ explicit hook sees schemas without changing return JSON, canonical values or source identities (35.796572ms)
+✔ model definitions exactly match actual legacy registration and preserve key/order/zero/false/null metadata (119.977696ms)
+✔ known metadata copies are isolated from callback and later definition changes (2.800072ms)
+✔ Orders-only shared scope produces its schema from Orders rows without any CP/shared row builder (2.188898ms)
+✔ callback adds no date, horizon or parser work beyond the original Orders-only path (7.063612ms)
+✔ CP schema denial keeps Orders schema null despite broad cpAllowed and Orders exposure flags (6.327896ms)
+✔ unknown CP target or binding never becomes a grant; Orders has independent required true flags (27.399233ms)
+✔ raw missing/null definitions stay unknown despite the legacy CP envelope [] fallback (11.594346ms)
+✔ explicit known empty definitions and empty target rows are distinct from unknown (2.02548ms)
+✔ same row references in distinct arrays are eligible; JSON-equal copied rows are not (6.916664ms)
+✔ different target row membership or order rejects Orders shared-CP metadata (4.310679ms)
+✔ actual different effective horizons reject shared metadata without comparing labels (2.62102ms)
+✔ Antrepo must be the exact same object, not equal content or a target label (5.397951ms)
+✔ schema collection reads no raw cell graph and overview-only work adds no CP/Orders row builder (3.331008ms)
+✔ malformed/accessor definitions fail closed without invoking hooks or changing legacy output (1.803964ms)
+✔ Orders own-target schema needs no CP object and preserves complete actual legacy-shaped raw definitions (12.201153ms)
+✔ raw definitions retain duplicates, missing optional legacy ID and unknown custom fields without normalization (2.232066ms)
+✔ metadata snapshot copies only bounded definitions and cannot be changed by later definition mutation (2.233738ms)
+✔ row-key universe scans the entire same snapshot, retains exact first-seen order and duplicate business rows (26.659461ms)
+✔ row scan reads no cell graph, preserves Date data values, and ignores nonenumerable source linkage (0.834911ms)
+✔ authoritative zero rows/empty definitions is known; missing/null/false flags never become [] (1.475337ms)
+✔ shared CP schema for Orders requires explicit sameRows and sameAntrepo plus independent target/binding/exposure knowledge (6.87035ms)
+✔ CP and Orders use their own schemas; v1 CP-schema denied and target-unknown fail closed (1.898962ms)
+✔ undefined/nonboolean policy is unknown and the broader compute data.cpAllowed is not a schema exposure substitute (0.756194ms)
+✔ unknown policy and direct row/metadata getters are never invoked (1.333433ms)
+✔ nonplain objects, Node proxies, sparse rows, model toJSON and cyclic metadata are unknown without callbacks (3.148033ms)
+✔ version/missing/malformed/unknown status/different-module metadata yields unknown/null without layout-destructive [] (2.196343ms)
+✔ public metadata has exact UTF8 byte admission at64KiB hard cap and caller-only lower configuration (3.143377ms)
+✔ source key universe512 is complete; key513 produces unknown rather than truncation or firstN sampling (5.111606ms)
+✔ same UMD source validates JSON transport in a browser realm without Node imports (6.359805ms)
+node:assert:152
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: actual7f8 source server/lib/compute-module-schemas.js
++ actual - expected
+
++ 'e51d54e87ba2dccf57ad966ec658b1f831730422a6d75c7649ad78fa2030ad1a'
+- 'ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d'
+
+    at Object.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/fixtures/module-schema-policy/runtime-fixture.cjs:5:71)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at Object.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-caller.test.js:4:21)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'e51d54e87ba2dccf57ad966ec658b1f831730422a6d75c7649ad78fa2030ad1a',
+  expected: 'ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+✖ tests/module-schema-caller.test.js (133.075261ms)
+node:assert:152
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: actual7f8 source server/lib/compute-module-schemas.js
++ actual - expected
+
++ 'e51d54e87ba2dccf57ad966ec658b1f831730422a6d75c7649ad78fa2030ad1a'
+- 'ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d'
+
+    at Object.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/fixtures/module-schema-policy/runtime-fixture.cjs:5:71)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at Object.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-policy.test.js:3:59)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'e51d54e87ba2dccf57ad966ec658b1f831730422a6d75c7649ad78fa2030ad1a',
+  expected: 'ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+✖ tests/module-schema-policy.test.js (150.608066ms)
+✔ explicit projection-JSON schema uses exact serialized own-key union and keeps source mode unchanged (6.178382ms)
+✔ projection-JSON presence keeps own proto keys, constructor and nested arrays without copying row graphs (0.795584ms)
+✔ projection-JSON metadata declines custom value toJSON hooks and accessors without invoking them (0.69706ms)
+✔ unsupported projection key modes and BigInt are unknown; zero-row mode keeps an empty universe (0.676209ms)
+✔ projection-JSON key capture rejects inherited serialization hooks without running them (0.578724ms)
+✔ actual CP and Orders producer schemas match their untouched native serialized projections (31.642717ms)
+✔ schema GET is hit-only own metadata; PAGE context differs from separately live broad guard (498.588233ms)
+✔ cold POST returns ordinary full before actual background job is allowed to execute (325.250482ms)
+✔ ready cache hits require info, preserve stable body across nonces and do not start another worker (296.556615ms)
+✔ legacy ready metadata without producer info is a full fallback, never a thin cache hit (224.317029ms)
+✔ actual session, role, view scope and source-filter authority reject before data/worker admission (216.390235ms)
+✔ strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work (392.47696ms)
+✔ legacy or backup own-schema absence returns full mode without creating a schema or ready view (170.279184ms)
+✔ real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes (151.346515ms)
+✔ unknown or other-module schema cannot authorize a ready request (569.072729ms)
+✔ same owner+plan deduplicates and process-wide background admission never exceeds two (802.945757ms)
+✔ session/access/source/schema changes during deferred native work discard and release the result (855.218796ms)
+✔ same-generation full rewrite during deferred work invalidates the exact body/schema pin (298.356251ms)
+✔ live guard after awaiting a cached hit prevents delivery after actor/role revocation (312.228444ms)
+✔ another actor or broader guard revision cannot adopt an earlier ready entry (239.155762ms)
+✔ revoke before the native final manifest guard prevents publication; never rewinds the full manifest (245.706248ms)
+✔ router shutdown aborts only its admitted jobs and leaves the existing shared pool usable (222.285783ms)
+✔ same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity (302.824013ms)
+✔ changed full body with old token reports the new exact full checksum without adopting the old ready identity (147.014993ms)
+✔ actual native final response guard runs before identity headers or full data are sent (147.828676ms)
+✔ response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed (2.729158ms)
+✔ native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises (192.682186ms)
+✔ revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted (125.943418ms)
+✔ known schema is own bounded metadata bound to exact full gzip and current manifest (18.788936ms)
+✔ prepared schema snapshot does not borrow caller definitions or consume full gzip (5.649682ms)
+✔ queued mutation of gzip cannot attach original schema to changed committed full checksum (3.371537ms)
+✔ unknown missing legacy malformed other-module and accessor schemas never become known (8.348277ms)
+✔ malformed top-level reader/producer options do not execute getters (0.531424ms)
+✔ schema metadata over 64 KiB is declined rather than truncated or normalized (3.252981ms)
+✔ unknown catalog properties, inherited entries, getters and wrong record shape fail closed (6.803912ms)
+✔ every stable binding field including same-generation raw bytes and full checksum must match (20.631409ms)
+✔ fallback true, omitted fallback and legacy manifests cannot supply a schema (2.063776ms)
+✔ primary replacement rejects a still-valid prior cached body even when previous manifest is available (1.795948ms)
+✔ cached module/meta/body each independently must agree with primary and schema binding (2.639816ms)
+✔ schema mutation without matching schema checksum is rejected on read and retain (2.912102ms)
+✔ same generation safe reuse retains only exact existing binding, never caller extra metadata (4.17838ms)
+✔ new generation/rewrite cannot rebind old bound records masquerading as producer candidates (2.168504ms)
+✔ drop is one-way across same-generation A→B→A edits unless a fresh producer supplies schema (1.445695ms)
+✔ per-module drop preserves only valid other-module metadata (2.01032ms)
+✔ single-flight metadata key distinguishes known, unknown and changed-schema preparations (1.584185ms)
+✔ native compressed writer atomically publishes bound own schema alongside unchanged gzip (35.685343ms)
+✔ caller mutation before queued write cannot bind old schema to the newly written full bytes (22.071159ms)
+✔ missing primary cannot obtain schema from a valid .bak even if native full fallback succeeds (14.243177ms)
+✔ same-generation rewrite and restoration of original bytes cannot resurrect dropped schema (19.362431ms)
+✔ same-byte explicit writeProjection still revokes the old schema (12.758836ms)
+✔ safe reuse retains exact primary schema; changed source key drops and later extra cannot resurrect (12.255892ms)
+✔ fallback full-cache reuse cannot promote the backup schema into a new primary (10.704899ms)
+✔ rewriteGeneration preserves full behavior but cannot import old generation schema (32.408602ms)
+✔ new ordinary full generation without opt-in metadata does not inherit known schema (29.32823ms)
+✔ direct primary schema corruption is rejected without consulting backup (7.283979ms)
+✔ unrelated native backlog manifest mutation preserves valid primary schema (19.185069ms)
+✔ native backlog fallback mutation retains full behavior without resurrecting backup schema (33.505282ms)
+✖ actual baseline AND candidate corrupt-primary JSON promotes backup to index0: fallbackfalse,oldergeneration,exactfullrows (47.230959ms)
+✖ actual baseline full-cache generation/read still preserves duplicate IDs,0,false,null and absence (4.88396ms)
+✖ derived single-gzip roundtrip keeps exact bytes,primary generation,full module meta and backup unchanged (0.6228ms)
+✖ every generation/context/input/source/full checksum/revision/plan mismatch is a miss and cannot publish (0.545956ms)
+✖ PRIMARY only: previous valid derived view never supplies a new generation or missing/corrupt primary (0.551997ms)
+✖ same-generation full rewrite changes checksum and invalidates earlier derived metadata naturally (0.49086ms)
+✖ rewriteGeneration and new generation never inherit derived views or switch back to an old generation (0.519632ms)
+✖ corrupt/missing/truncated derived files return null without altering or rebuilding full source (0.86825ms)
+✖ returned LRU buffer is read-only by contract; an accidental mutation is detected,not returned as valid (0.515944ms)
+✖ partial temp-file write never publishes derived metadata or changes primary full bytes (0.650491ms)
+✖ new derived rename failure is a miss with no copy fallback; legacy atomicWrite remains untouched (6.045917ms)
+✖ derived file exists and verifies before manifest patch; manifest failure leaves no published entry (0.906475ms)
+✖ pin advance during async write is detected before manifest publication,without rolling it back (0.500489ms)
+✖ pin advance during derived read is rejected by post-read primary check (0.508695ms)
+✖ max2 FIFO eviction removes only derived files and keeps already returned read buffers live (1.526023ms)
+✖ aggregate compressed budget and raw/registry/metadata limits are bounded and caller can only lower (1.784349ms)
+✖ byte/checksum/gzip envelope/registry errors reject before touching the generation (0.63974ms)
+✖ same-owner derived writes share actual mutation queue with full writeProjection (0.773404ms)
+✖ queued full mutation cannot delete/change a file during its derived read; returned buffer outlives generation cleanup (0.563386ms)
+✖ concurrent derived variants retain both records and queued input buffer/pin/registry mutation cannot alter published bytes (0.431323ms)
+✖ owner/module/path/schema metadata mismatch never chooses another entry; old orphan cleanup leaves canonical files (0.544592ms)
+✖ actual ready-json-builder info persists separately from exact registry keys and body checksum (5.589138ms)
+✖ legacy entry remains readable, but descriptor-required read cannot receive missing info (0.704821ms)
+✖ caller mutations after enqueue and after read cannot modify cached JSON descriptor (0.426924ms)
+✖ ordered JSON info has stable identity bound to exact pins and compressed bytes (1.047506ms)
+✖ raw model definitions retain own-key order and0/false/null/__proto__/constructor through detached metadata (1.234009ms)
+✖ undefined/nonfinite/Date/function/symbol/sparse/cyclic/nonplain/accessor/Proxy info fails before publish (1.080247ms)
+✖ 64KiB metadata and caller-lowered catalogue bound include descriptor bytes (0.799913ms)
+✖ swapped/missing/corrupted descriptor checksum or payload fails closed without full-source mutation (3.799658ms)
+✖ descriptor from another plan cannot be copied under an otherwise matching view (1.280228ms)
+✖ generation/full-checksum staleness or corrupt PRIMARY never substitutes old descriptor (1.166956ms)
+✖ descriptor file/manifest publication failure cannot expose an uncommitted info identity (1.400754ms)
+✖ invalid descriptor read predicates fail closed and cannot be changed while queued (2.747918ms)
+✔ new task ready roundtrip uses actual worker and retains ordinary JSON/source ownership (263.541572ms)
+✔ ready task never reloads a source replica even on a new native thread (262.533976ms)
+✔ unknown schema and canonical registration return exact original gzip, with no full graph in output (168.445211ms)
+✔ same source compute generation and a different page generation are valid independent identities (324.63711ms)
+✔ owner/module and each stable token/view/source binding fail closed (2028.112101ms)
+✔ descriptor sourceProjectionKey proof cannot be replaced by mutually consistent token and pin (142.611702ms)
+✔ exact compressed length and compressed SHA reject stale/corrupt bytes (480.795007ms)
+✔ gunzip bound, actual raw length and full raw SHA are all enforced (538.875446ms)
+✔ unsupported raw size is rejected by projectionOnly service admission before worker dispatch (156.442778ms)
+✔ ready admission uses declared raw expansion and actual serialized parameter bytes (163.073561ms)
+✔ ready info and registry bytes are included in the existing transferred output lease charge (142.313058ms)
+✔ byte-offset views hash only their exact gzip range and nonce never enters cached JSON (128.524192ms)
+✔ generation change after native completion rejects result and releases the ordinary output lease (117.437037ms)
+✔ cold ready preparation derives the absent full JSON hash off-thread from exact verified gzip (255.465628ms)
+✔ large complete schema registry is charged after real IPC representation changes (149.030941ms)
+✔ explicit schema collection returns own Orders metadata alongside byte-identical full projection (344.576087ms)
+✔ all nontrue collection switches retain the old output and do not invoke the callback source (153.704226ms)
+✔ schema denial and unknown bindings remain null despite broad compute permission (227.462158ms)
+✔ distinct row identity or Antrepo topology cannot borrow shared CP definitions (526.096867ms)
+✔ Orders-only schema collection succeeds with CP and shared parser builders trapped (181.197317ms)
+✔ collected schema metadata is charged in the existing output lease and release stays idempotent (195.936716ms)
+✔ callback-source error rejects the native job instead of publishing false schema authority (187.128003ms)
+ℹ tests 147
+ℹ suites 0
+ℹ pass 110
+ℹ fail 37
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7379.993111
+
+✖ failing tests:
+
+test at tests/compute-module-schemas.test.js:82:1
+✖ runtime sources and unchanged frozen schema helper match the declared pins (37.037255ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390'
+  - '8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/compute-module-schemas.test.js:90:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390',
+    expected: '8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/compute-module-schemas.test.js:111:1
+✖ explicit hook sees schemas without changing return JSON, canonical values or source identities (35.796572ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      '_id',
+      '_matchOcode',
+      '_isActive',
+      'Active/Inactive',
+  ...
+      'License',
+  -   'Category',
+  -   'Special Code',
+      'PLM ID',
+      'Model Name',
+      'Ürün Tanım',
+      'C.Code',
+      'Colour',
+  ...
+      'Ex→Retail',
+  -   'Buying Son Onay Tarihi',
+      'In-Store (Model Budget)',
+      '_initialInspection',
+      'Order Quantity',
+      'Shipment Quantity',
+      'Remaining Units',
+  ...
+      'Buyer Grup (TR)',
+  -   'Line',
+  -   'Kumaş Kategorisi',
+  -   'Kumaşçı Ülkesi',
+  -   'Kumaşçı',
+  -   'Kumaş Tipi',
+  -   'İplik No',
+  -   'Gramaj',
+  -   'Karışım',
+      '__CPX_ZERO',
+      '__CPX_FALSE',
+      '__CPX_NULL',
+      'Importance',
+      '_importanceId',
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/compute-module-schemas.test.js:121:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [
+      '_id',                    '_matchOcode',                     '_isActive',
+      'Active/Inactive',        '_imageKey',                       '_imageRef',
+      '_imageUrl',              'Priority',                        'Season',
+      'Country',                'Manufacturer',                    'Sub-Manufacturer',
+      'Licensor',               'License',                         'PLM ID',
+      'Model Name',             'Ürün Tanım',                      'C.Code',
+      'Colour',                 'Order Code',                      'FOB ($)',
+      'Supp. FOB',              '_suppFobManual',                  '_suppFobRule',
+      '_suppFobMeta',           '_suppFobImported',                '_suppFobOverride',
+      '_licensorManual',        '_licensorSource',                 '_nonDtrManufacturerRule',
+      'OPD',                    'Original Ex-factory',             'Ex-factory',
+      '_asasExFactory',         '_exFactoryRevision',              '_asasRetailDate',
+      '_asasInStore',           'HANDOVER Tarihi',                 'Retail Date',
+      'Ex→Retail',              'In-Store (Model Budget)',         '_initialInspection',
+      'Order Quantity',         'Shipment Quantity',               'Remaining Units',
+      '%',                      'STATUS',                          'Ant. Arrival',
+      'Del. Type',              '_logisticSegments',               '_logisticStatusValues',
+      '_logisticDelTypeValues', '_logisticArrivalValues',          '_logisticProductionQty',
+      '_logisticShortageQty',   '_logisticRemainingQty',           '_logisticLoadedQty',
+      '_logisticPartialCount',  '_logisticAllPartialsInWarehouse', '_logisticTotalQty',
+      'Notes',                  'Ek Not',                          'NotesHtml',
+      'Ek NotHtml',             '_notesAt',                        '_ekNotAt',
+      '_notesBy',               '_notesByName',                    '_ekNotBy',
+      '_ekNotByName',           'Merch Marka Yaş Grup Kod',        'Merch Alt Grup Kod',
+      'Buyer',                  'Buyer Grup (TR)',                 '__CPX_ZERO',
+      '__CPX_FALSE',            '__CPX_NULL',                      'Importance',
+      '_importanceId',          '_importanceSource',               'LT',
+      '_canEdit'
+    ],
+    expected: [
+      '_id',                    '_matchOcode',                     '_isActive',
+      'Active/Inactive',        '_imageKey',                       '_imageRef',
+      '_imageUrl',              'Priority',                        'Season',
+      'Country',                'Manufacturer',                    'Sub-Manufacturer',
+      'Licensor',               'License',                         'Category',
+      'Special Code',           'PLM ID',                          'Model Name',
+      'Ürün Tanım',             'C.Code',                          'Colour',
+      'Order Code',             'FOB ($)',                         'Supp. FOB',
+      '_suppFobManual',         '_suppFobRule',                    '_suppFobMeta',
+      '_suppFobImported',       '_suppFobOverride',                '_licensorManual',
+      '_licensorSource',        '_nonDtrManufacturerRule',         'OPD',
+      'Original Ex-factory',    'Ex-factory',                      '_asasExFactory',
+      '_exFactoryRevision',     '_asasRetailDate',                 '_asasInStore',
+      'HANDOVER Tarihi',        'Retail Date',                     'Ex→Retail',
+      'Buying Son Onay Tarihi', 'In-Store (Model Budget)',         '_initialInspection',
+      'Order Quantity',         'Shipment Quantity',               'Remaining Units',
+      '%',                      'STATUS',                          'Ant. Arrival',
+      'Del. Type',              '_logisticSegments',               '_logisticStatusValues',
+      '_logisticDelTypeValues', '_logisticArrivalValues',          '_logisticProductionQty',
+      '_logisticShortageQty',   '_logisticRemainingQty',           '_logisticLoadedQty',
+      '_logisticPartialCount',  '_logisticAllPartialsInWarehouse', '_logisticTotalQty',
+      'Notes',                  'Ek Not',                          'NotesHtml',
+      'Ek NotHtml',             '_notesAt',                        '_ekNotAt',
+      '_notesBy',               '_notesByName',                    '_ekNotBy',
+      '_ekNotByName',           'Merch Marka Yaş Grup Kod',        'Merch Alt Grup Kod',
+      'Buyer',                  'Buyer Grup (TR)',                 'Line',
+      'Kumaş Kategorisi',       'Kumaşçı Ülkesi',                  'Kumaşçı',
+      'Kumaş Tipi',             'İplik No',                        'Gramaj',
+      'Karışım',                '__CPX_ZERO',                      '__CPX_FALSE',
+      '__CPX_NULL',             'Importance',                      '_importanceId',
+      '_importanceSource',      'LT',                              '_canEdit'
+    ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/module-schema-caller.test.js:1:1
+✖ tests/module-schema-caller.test.js (133.075261ms)
+  'test failed'
+
+test at tests/module-schema-policy.test.js:1:1
+✖ tests/module-schema-policy.test.js (150.608066ms)
+  'test failed'
+
+test at tests/page-projection-view-backup.test.js:5:1
+✖ actual baseline AND candidate corrupt-primary JSON promotes backup to index0: fallbackfalse,oldergeneration,exactfullrows (47.230959ms)
+  AssertionError [ERR_ASSERTION]: candidate exact actual source
+  + actual - expected
+  
+  + '4edfdff1b22877ddb35b4ea0feb741729b7761ca314f5b0012fd629e7deb7b43'
+  - '9bf6c459e9fad7a99d9a424217c904d7febc075337e684f4787c1a9623aa8bab'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-backup.test.js:9:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '4edfdff1b22877ddb35b4ea0feb741729b7761ca314f5b0012fd629e7deb7b43',
+    expected: '9bf6c459e9fad7a99d9a424217c904d7febc075337e684f4787c1a9623aa8bab',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:5:1
+✖ actual baseline full-cache generation/read still preserves duplicate IDs,0,false,null and absence (4.88396ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:6:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:11:1
+✖ derived single-gzip roundtrip keeps exact bytes,primary generation,full module meta and backup unchanged (0.6228ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:12:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:21:1
+✖ every generation/context/input/source/full checksum/revision/plan mismatch is a miss and cannot publish (0.545956ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:22:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:29:1
+✖ PRIMARY only: previous valid derived view never supplies a new generation or missing/corrupt primary (0.551997ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:30:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:41:1
+✖ same-generation full rewrite changes checksum and invalidates earlier derived metadata naturally (0.49086ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:42:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:50:1
+✖ rewriteGeneration and new generation never inherit derived views or switch back to an old generation (0.519632ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:51:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:57:1
+✖ corrupt/missing/truncated derived files return null without altering or rebuilding full source (0.86825ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:58:62)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:65:1
+✖ returned LRU buffer is read-only by contract; an accidental mutation is detected,not returned as valid (0.515944ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:66:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:70:1
+✖ partial temp-file write never publishes derived metadata or changes primary full bytes (0.650491ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:71:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:76:1
+✖ new derived rename failure is a miss with no copy fallback; legacy atomicWrite remains untouched (6.045917ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:77:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:83:1
+✖ derived file exists and verifies before manifest patch; manifest failure leaves no published entry (0.906475ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:84:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:90:1
+✖ pin advance during async write is detected before manifest publication,without rolling it back (0.500489ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:91:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:97:1
+✖ pin advance during derived read is rejected by post-read primary check (0.508695ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:98:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:104:1
+✖ max2 FIFO eviction removes only derived files and keeps already returned read buffers live (1.526023ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:105:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:112:1
+✖ aggregate compressed budget and raw/registry/metadata limits are bounded and caller can only lower (1.784349ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:113:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:122:1
+✖ byte/checksum/gzip envelope/registry errors reject before touching the generation (0.63974ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:123:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:132:1
+✖ same-owner derived writes share actual mutation queue with full writeProjection (0.773404ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:133:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:143:1
+✖ queued full mutation cannot delete/change a file during its derived read; returned buffer outlives generation cleanup (0.563386ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:144:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:155:1
+✖ concurrent derived variants retain both records and queued input buffer/pin/registry mutation cannot alter published bytes (0.431323ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:156:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-cache.test.js:162:1
+✖ owner/module/path/schema metadata mismatch never chooses another entry; old orphan cleanup leaves canonical files (0.544592ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-cache.test.js:163:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:5:1
+✖ actual ready-json-builder info persists separately from exact registry keys and body checksum (5.589138ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:6:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:14:1
+✖ legacy entry remains readable, but descriptor-required read cannot receive missing info (0.704821ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:15:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:20:1
+✖ caller mutations after enqueue and after read cannot modify cached JSON descriptor (0.426924ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:21:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:30:1
+✖ ordered JSON info has stable identity bound to exact pins and compressed bytes (1.047506ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:31:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:38:1
+✖ raw model definitions retain own-key order and0/false/null/__proto__/constructor through detached metadata (1.234009ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:39:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:46:1
+✖ undefined/nonfinite/Date/function/symbol/sparse/cyclic/nonplain/accessor/Proxy info fails before publish (1.080247ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:47:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:57:1
+✖ 64KiB metadata and caller-lowered catalogue bound include descriptor bytes (0.799913ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:58:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:66:1
+✖ swapped/missing/corrupted descriptor checksum or payload fails closed without full-source mutation (3.799658ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:69:47)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:74:1
+✖ descriptor from another plan cannot be copied under an otherwise matching view (1.280228ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:75:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:79:1
+✖ generation/full-checksum staleness or corrupt PRIMARY never substitutes old descriptor (1.166956ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:80:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:86:1
+✖ descriptor file/manifest publication failure cannot expose an uncommitted info identity (1.400754ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:87:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/page-projection-view-descriptor.test.js:93:1
+✖ invalid descriptor read predicates fail closed and cannot be changed while queued (2.747918ms)
+  AssertionError [ERR_ASSERTION]: exact frozen baseline or candidate cache source
+      at fixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-view-cache-fixture.js:18:51)
+      at readyFixture (/workspace/buyerlog-post-main-acceptance/resources/app/tests/helpers/projection-ready-descriptor-fixture.js:7:10)
+      at TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/page-projection-view-descriptor.test.js:94:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+[Buyer Log tests] Batch 1/1 süresi: 7.5s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.

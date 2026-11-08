@@ -1,0 +1,20 @@
+[
+  {
+    "command": [
+      "node",
+      "--check",
+      "server/server.js"
+    ],
+    "exitCode": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "exitCode": 1,
+    "sha256": "2e40ccd5037c3038c311c9603fed2f5ce30c9c0ff01a0eb37bfae1b3cd426140"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/orders-ready-server-wiring.test.js"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "pass": 0,
+    "fail": 6,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "4a55d5569dee898a748daab1bc9ac2eca2d346dcfffc1ad2a435176e2f6cf7cf"
+}

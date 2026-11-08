@@ -1,0 +1,550 @@
+TAP version 13
+# Subtest: shutdown stops admission and waits for worker exit/private replica cleanup before process exit
+ok 1 - shutdown stops admission and waits for worker exit/private replica cleanup before process exit
+  ---
+  duration_ms: 9.549757
+  type: 'test'
+  ...
+# Subtest: shutdown waits for the profiler inspector connection to close before exiting the main isolate
+ok 2 - shutdown waits for the profiler inspector connection to close before exiting the main isolate
+  ---
+  duration_ms: 4.268621
+  type: 'test'
+  ...
+# Subtest: actual f076 source blobs and authoritative42/32/10 remain unchanged; no new inventory
+ok 3 - actual f076 source blobs and authoritative42/32/10 remain unchanged; no new inventory
+  ---
+  duration_ms: 176.43428
+  type: 'test'
+  ...
+# Subtest: actual legacy full/full normalization/formula controls agree before any finite selection
+ok 4 - actual legacy full/full normalization/formula controls agree before any finite selection
+  ---
+  duration_ms: 159.451373
+  type: 'test'
+  ...
+# Subtest: only explicitly registered hidden modelCustom __CPX keys are candidates; all unknown/nonmodel/native keys stay
+ok 5 - only explicitly registered hidden modelCustom __CPX keys are candidates; all unknown/nonmodel/native keys stay
+  ---
+  duration_ms: 43.400537
+  type: 'test'
+  ...
+# Subtest: actual normalization and all42 canonical readers preserve exact retained ordered keys/types/values/SHA
+ok 6 - actual normalization and all42 canonical readers preserve exact retained ordered keys/types/values/SHA
+  ---
+  duration_ms: 51.157976
+  type: 'test'
+  ...
+# Subtest: real formula own Probe=0 beats model alias while absent Probe reads false; hidden dependency is retained
+ok 7 - real formula own Probe=0 beats model alias while absent Probe reads false; hidden dependency is retained
+  ---
+  duration_ms: 60.443716
+  type: 'test'
+  ...
+# Subtest: actual compile.columns keeps both IF branches even when a hidden branch is never executed
+ok 8 - actual compile.columns keeps both IF branches even when a hidden branch is never executed
+  ---
+  duration_ms: 64.84402
+  type: 'test'
+  ...
+# Subtest: real stable-key calculated dependency DAG retains the transitive model dependency
+ok 9 - real stable-key calculated dependency DAG retains the transitive model dependency
+  ---
+  duration_ms: 71.992965
+  type: 'test'
+  ...
+# Subtest: real calculated alias beats model label; conservative closure retains both possible inputs
+ok 10 - real calculated alias beats model label; conservative closure retains both possible inputs
+  ---
+  duration_ms: 76.404729
+  type: 'test'
+  ...
+# Subtest: enable/change live definitions rebuilds closure rather than reusing a hidden-field decision
+ok 11 - enable/change live definitions rebuilds closure rather than reusing a hidden-field decision
+  ---
+  duration_ms: 51.334657
+  type: 'test'
+  ...
+# Subtest: unresolved, malformed, unsupported-function/arity and cyclic actual formulas select exact full fallback
+ok 12 - unresolved, malformed, unsupported-function/arity and cyclic actual formulas select exact full fallback
+  ---
+  duration_ms: 206.925039
+  type: 'test'
+  ...
+# Subtest: literal filter/sort/both-rule-operands/offset/current-operation inputs retain their hidden keys including0/false/null
+ok 13 - literal filter/sort/both-rule-operands/offset/current-operation inputs retain their hidden keys including0/false/null
+  ---
+  duration_ms: 43.537663
+  type: 'test'
+  ...
+# Subtest: whole-source union keeps ALL canonical token matches including blank/false aliases after row50
+ok 14 - whole-source union keeps ALL canonical token matches including blank/false aliases after row50
+  ---
+  duration_ms: 66.481898
+  type: 'test'
+  ...
+# Subtest: complete __canonical own overrides preserve null/false and cannot be stripped with a model field
+ok 15 - complete __canonical own overrides preserve null/false and cannot be stripped with a model field
+  ---
+  duration_ms: 51.411985
+  type: 'test'
+  ...
+# Subtest: unknown consumer closure, predicate, operation or trace-derived claim forces full before any omission
+ok 16 - unknown consumer closure, predicate, operation or trace-derived claim forces full before any omission
+  ---
+  duration_ms: 242.209571
+  type: 'test'
+  ...
+# Subtest: pending/unknown migration or unknown formula storage cannot treat missing references as removable
+ok 17 - pending/unknown migration or unknown formula storage cannot treat missing references as removable
+  ---
+  duration_ms: 186.459002
+  type: 'test'
+  ...
+# Subtest: every named full-before-use barrier is mandatory; synthetic labels are not production barrier proof
+ok 18 - every named full-before-use barrier is mandatory; synthetic labels are not production barrier proof
+  ---
+  duration_ms: 316.369623
+  type: 'test'
+  ...
+# Subtest: CP token, CP schema, unknown/missing/versioned schema and wrong rowcount/key universe stay full
+ok 19 - CP token, CP schema, unknown/missing/versioned schema and wrong rowcount/key universe stay full
+  ---
+  duration_ms: 291.799062
+  type: 'test'
+  ...
+# Subtest: visible/unregistered/model-metadata mismatch never drops a key; duplicate registration selects full
+ok 20 - visible/unregistered/model-metadata mismatch never drops a key; duplicate registration selects full
+  ---
+  duration_ms: 175.325985
+  type: 'test'
+  ...
+# Subtest: getters/nonplain/proxy unsupported inputs select full without invoking getters; source stays untouched
+ok 21 - getters/nonplain/proxy unsupported inputs select full without invoking getters; source stays untouched
+  ---
+  duration_ms: 165.52415
+  type: 'test'
+  ...
+# Subtest: sparse rows, extra array properties and512-key union admission overflow leave exact full fallback
+ok 22 - sparse rows, extra array properties and512-key union admission overflow leave exact full fallback
+  ---
+  duration_ms: 149.168818
+  type: 'test'
+  ...
+# Subtest: legacy full/no-omission and unsupported profile paths preserve source; no source graph is copied by compile
+ok 23 - legacy full/no-omission and unsupported profile paths preserve source; no source graph is copied by compile
+  ---
+  duration_ms: 142.999978
+  type: 'test'
+  ...
+# Subtest: candidate fields compose with actual frozen stateless core and exact bounded full details before public use
+ok 24 - candidate fields compose with actual frozen stateless core and exact bounded full details before public use
+  ---
+  duration_ms: 48.744761
+  type: 'test'
+  ...
+# Subtest: metadata-only plans equal full-body plans through the same actual finite closure core
+ok 25 - metadata-only plans equal full-body plans through the same actual finite closure core
+  ---
+  duration_ms: 195.228197
+  type: 'test'
+  ...
+# Subtest: metadata compilation needs no envelope/row provider and fabricates no rows to validate closure
+ok 26 - metadata compilation needs no envelope/row provider and fabricates no rows to validate closure
+  ---
+  duration_ms: 45.939216
+  type: 'test'
+  ...
+# Subtest: metadata rowCount type/range/zero consistency is checked; full mode still checks actual positive count
+ok 27 - metadata rowCount type/range/zero consistency is checked; full mode still checks actual positive count
+  ---
+  duration_ms: 389.417078
+  type: 'test'
+  ...
+# Subtest: duplicate/missing/unknown/CP/versioned schema cannot produce metadata authority
+ok 28 - duplicate/missing/unknown/CP/versioned schema cannot produce metadata authority
+  ---
+  duration_ms: 295.852135
+  type: 'test'
+  ...
+# Subtest: complete metadata includes late raw fields and literal demand without firstN source sampling
+ok 29 - complete metadata includes late raw fields and literal demand without firstN source sampling
+  ---
+  duration_ms: 82.097332
+  type: 'test'
+  ...
+# Subtest: metadata-only canonical token closure retains every colliding physical key, including late blank/false aliases
+ok 30 - metadata-only canonical token closure retains every colliding physical key, including late blank/false aliases
+  ---
+  duration_ms: 44.839338
+  type: 'test'
+  ...
+# Subtest: formula and captured hidden/filter setting changes compile fresh metadata closure instead of reusing an old plan
+ok 31 - formula and captured hidden/filter setting changes compile fresh metadata closure instead of reusing an old plan
+  ---
+  duration_ms: 42.44823
+  type: 'test'
+  ...
+# Subtest: actual formula storage drift during metadata compilation rejects rather than certifying stale fields
+ok 32 - actual formula storage drift during metadata compilation rejects rather than certifying stale fields
+  ---
+  duration_ms: 42.414174
+  type: 'test'
+  ...
+# Subtest: actual canonical binding drift during metadata compilation keeps full mode
+ok 33 - actual canonical binding drift during metadata compilation keeps full mode
+  ---
+  duration_ms: 46.059322
+  type: 'test'
+  ...
+# Subtest: metadata getters/proxies and unknown declarations are rejected without invoking hooks
+ok 34 - metadata getters/proxies and unknown declarations are rejected without invoking hooks
+  ---
+  duration_ms: 119.178853
+  type: 'test'
+  ...
+# Subtest: schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+ok 35 - schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+  ---
+  duration_ms: 248.013223
+  type: 'test'
+  ...
+# Subtest: cold POST returns ordinary full before actual background job is allowed to execute
+ok 36 - cold POST returns ordinary full before actual background job is allowed to execute
+  ---
+  duration_ms: 233.622107
+  type: 'test'
+  ...
+# Subtest: ready cache hits require info, preserve stable body across nonces and do not start another worker
+ok 37 - ready cache hits require info, preserve stable body across nonces and do not start another worker
+  ---
+  duration_ms: 171.744161
+  type: 'test'
+  ...
+# Subtest: legacy ready metadata without producer info is a full fallback, never a thin cache hit
+ok 38 - legacy ready metadata without producer info is a full fallback, never a thin cache hit
+  ---
+  duration_ms: 175.660392
+  type: 'test'
+  ...
+# Subtest: actual session, role, view scope and source-filter authority reject before data/worker admission
+ok 39 - actual session, role, view scope and source-filter authority reject before data/worker admission
+  ---
+  duration_ms: 145.366236
+  type: 'test'
+  ...
+# Subtest: strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+ok 40 - strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+  ---
+  duration_ms: 159.525844
+  type: 'test'
+  ...
+# Subtest: legacy or backup own-schema absence returns full mode without creating a schema or ready view
+ok 41 - legacy or backup own-schema absence returns full mode without creating a schema or ready view
+  ---
+  duration_ms: 140.171361
+  type: 'test'
+  ...
+# Subtest: real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+ok 42 - real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+  ---
+  duration_ms: 139.181057
+  type: 'test'
+  ...
+# Subtest: unknown or other-module schema cannot authorize a ready request
+ok 43 - unknown or other-module schema cannot authorize a ready request
+  ---
+  duration_ms: 280.982292
+  type: 'test'
+  ...
+# Subtest: same owner+plan deduplicates and process-wide background admission never exceeds two
+ok 44 - same owner+plan deduplicates and process-wide background admission never exceeds two
+  ---
+  duration_ms: 765.943949
+  type: 'test'
+  ...
+# Subtest: session/access/source/schema changes during deferred native work discard and release the result
+ok 45 - session/access/source/schema changes during deferred native work discard and release the result
+  ---
+  duration_ms: 753.436796
+  type: 'test'
+  ...
+# Subtest: same-generation full rewrite during deferred work invalidates the exact body/schema pin
+ok 46 - same-generation full rewrite during deferred work invalidates the exact body/schema pin
+  ---
+  duration_ms: 146.487123
+  type: 'test'
+  ...
+# Subtest: live guard after awaiting a cached hit prevents delivery after actor/role revocation
+ok 47 - live guard after awaiting a cached hit prevents delivery after actor/role revocation
+  ---
+  duration_ms: 151.776645
+  type: 'test'
+  ...
+# Subtest: another actor or broader guard revision cannot adopt an earlier ready entry
+ok 48 - another actor or broader guard revision cannot adopt an earlier ready entry
+  ---
+  duration_ms: 166.705331
+  type: 'test'
+  ...
+# Subtest: revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+ok 49 - revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+  ---
+  duration_ms: 153.465022
+  type: 'test'
+  ...
+# Subtest: router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+ok 50 - router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+  ---
+  duration_ms: 189.362242
+  type: 'test'
+  ...
+# Subtest: same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+ok 51 - same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+  ---
+  duration_ms: 443.52917
+  type: 'test'
+  ...
+# Subtest: changed full body with old token reports the new exact full checksum without adopting the old ready identity
+ok 52 - changed full body with old token reports the new exact full checksum without adopting the old ready identity
+  ---
+  duration_ms: 143.271961
+  type: 'test'
+  ...
+# Subtest: actual native final response guard runs before identity headers or full data are sent
+ok 53 - actual native final response guard runs before identity headers or full data are sent
+  ---
+  duration_ms: 170.037339
+  type: 'test'
+  ...
+# Subtest: response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+ok 54 - response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+  ---
+  duration_ms: 1.658087
+  type: 'test'
+  ...
+# Subtest: native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+ok 55 - native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+  ---
+  duration_ms: 269.494752
+  type: 'test'
+  ...
+# Subtest: explicit full-parent serves exact actual ready parent without a ready miss, new worker or reserialization
+ok 56 - explicit full-parent serves exact actual ready parent without a ready miss, new worker or reserialization
+  ---
+  duration_ms: 182.44968
+  type: 'test'
+  ...
+# Subtest: full-parent mismatched expected token, gzip checksum or broad guard conflicts without any newly authorized body
+ok 57 - full-parent mismatched expected token, gzip checksum or broad guard conflicts without any newly authorized body
+  ---
+  duration_ms: 413.133506
+  type: 'test'
+  ...
+# Subtest: full-parent accepts only the explicit bounded DTO, not ready-plan knobs or expected raw-hash echo
+ok 58 - full-parent accepts only the explicit bounded DTO, not ready-plan knobs or expected raw-hash echo
+  ---
+  duration_ms: 325.824868
+  type: 'test'
+  ...
+# Subtest: full-parent never rebuilds and rejects missing, unknown, legacy or backup schema authority
+ok 59 - full-parent never rebuilds and rejects missing, unknown, legacy or backup schema authority
+  ---
+  duration_ms: 1346.839115
+  type: 'test'
+  ...
+# Subtest: full-parent full-cache read awaits recheck live actor, source, scope and filter authority
+ok 60 - full-parent full-cache read awaits recheck live actor, source, scope and filter authority
+  ---
+  duration_ms: 739.685061
+  type: 'test'
+  ...
+# Subtest: full-parent same-generation full rewrite or schema loss at final native send cannot satisfy the old parent
+ok 61 - full-parent same-generation full rewrite or schema loss at final native send cannot satisfy the old parent
+  ---
+  duration_ms: 376.01321
+  type: 'test'
+  ...
+# Subtest: same native endpoint refuses old owner full-parent after a session switch; a fresh matching owner parent succeeds
+ok 62 - same native endpoint refuses old owner full-parent after a session switch; a fresh matching owner parent succeeds
+  ---
+  duration_ms: 2642.038129
+  type: 'test'
+  ...
+# Subtest: revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+ok 63 - revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+  ---
+  duration_ms: 825.000639
+  type: 'test'
+  ...
+# Subtest: actual server installs the bounded ready router without replacing ordinary full/shadow routes
+ok 64 - actual server installs the bounded ready router without replacing ordinary full/shadow routes
+  ---
+  duration_ms: 4.017622
+  type: 'test'
+  ...
+# Subtest: actual server factory retains the live guard, native owner cache and one existing pool
+ok 65 - actual server factory retains the live guard, native owner cache and one existing pool
+  ---
+  duration_ms: 9.646284
+  type: 'test'
+  ...
+# Subtest: actual server cache guard accepts the exact current source and checks runtime before serving
+ok 66 - actual server cache guard accepts the exact current source and checks runtime before serving
+  ---
+  duration_ms: 3.554327
+  type: 'test'
+  ...
+# Subtest: every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+ok 67 - every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+  ---
+  duration_ms: 33.015246
+  type: 'test'
+  ...
+# Subtest: missing source/current manifest, context mismatch and superseded runtime fail closed
+ok 68 - missing source/current manifest, context mismatch and superseded runtime fail closed
+  ---
+  duration_ms: 14.435574
+  type: 'test'
+  ...
+# Subtest: shutdown stops ready background work before closing the shared pool, including dual signals
+ok 69 - shutdown stops ready background work before closing the shared pool, including dual signals
+  ---
+  duration_ms: 105.496492
+  type: 'test'
+  ...
+# Subtest: the authoritative inventory stays 32 required, 10 uncertain, zero removable; contracts/matrix remain references
+ok 70 - the authoritative inventory stays 32 required, 10 uncertain, zero removable; contracts/matrix remain references
+  ---
+  duration_ms: 506.359807
+  type: 'test'
+  ...
+# Subtest: missing closure, unknown/omitted consumer or dynamic consumer returns exact full identity
+ok 71 - missing closure, unknown/omitted consumer or dynamic consumer returns exact full identity
+  ---
+  duration_ms: 220.949065
+  type: 'test'
+  ...
+# Subtest: missing adapter and unproven deferred full barrier cannot be silently ignored
+ok 72 - missing adapter and unproven deferred full barrier cannot be silently ignored
+  ---
+  duration_ms: 38.400477
+  type: 'test'
+  ...
+# Subtest: first-N trace, sampled keys, unknown source contract and context drift cannot certify a plan
+ok 73 - first-N trace, sampled keys, unknown source contract and context drift cannot certify a plan
+  ---
+  duration_ms: 151.866295
+  type: 'test'
+  ...
+# Subtest: real runtime module binding order is retained without raw header rewriting
+ok 74 - real runtime module binding order is retained without raw header rewriting
+  ---
+  duration_ms: 75.660573
+  type: 'test'
+  ...
+# Subtest: real canonical token fallback, blank-own path and unknown canonical ID select full
+ok 75 - real canonical token fallback, blank-own path and unknown canonical ID select full
+  ---
+  duration_ms: 43.853351
+  type: 'test'
+  ...
+# Subtest: real own __canonical override preserves null/false precedence and retains the entire container
+ok 76 - real own __canonical override preserves null/false precedence and retains the entire container
+  ---
+  duration_ms: 37.973037
+  type: 'test'
+  ...
+# Subtest: actual formula own 0 and hidden model alias false both survive a finite conservative plan
+ok 77 - actual formula own 0 and hidden model alias false both survive a finite conservative plan
+  ---
+  duration_ms: 46.00133
+  type: 'test'
+  ...
+# Subtest: live formula settings change the finite demand without using earlier row observations
+ok 78 - live formula settings change the finite demand without using earlier row observations
+  ---
+  duration_ms: 52.159078
+  type: 'test'
+  ...
+# Subtest: real lazy IF compile includes both branches rather than two-row observed reads
+ok 79 - real lazy IF compile includes both branches rather than two-row observed reads
+  ---
+  duration_ms: 132.792462
+  type: 'test'
+  ...
+# Subtest: formula alias dependency closure uses the actual formula API and preserves own-name alternatives
+ok 80 - formula alias dependency closure uses the actual formula API and preserves own-name alternatives
+  ---
+  duration_ms: 32.086125
+  type: 'test'
+  ...
+# Subtest: unresolved/model references, invalid functions and cyclic formulas keep exact full fallback
+ok 81 - unresolved/model references, invalid functions and cyclic formulas keep exact full fallback
+  ---
+  duration_ms: 349.146498
+  type: 'test'
+  ...
+# Subtest: unknown literal filter/sort/raw key or unresolved rule declaration cannot be omitted
+ok 82 - unknown literal filter/sort/raw key or unresolved rule declaration cannot be omitted
+  ---
+  duration_ms: 579.295219
+  type: 'test'
+  ...
+# Subtest: constructor snapshots adapter/manifest declarations instead of following same-revision object mutations
+ok 83 - constructor snapshots adapter/manifest declarations instead of following same-revision object mutations
+  ---
+  duration_ms: 74.428822
+  type: 'test'
+  ...
+# Subtest: an adapter cannot mutate request identity while composing an apparently closed plan
+ok 84 - an adapter cannot mutate request identity while composing an apparently closed plan
+  ---
+  duration_ms: 67.39609
+  type: 'test'
+  ...
+# Subtest: runtime canonical bindings changing during dependency composition keep the exact full envelope
+ok 85 - runtime canonical bindings changing during dependency composition keep the exact full envelope
+  ---
+  duration_ms: 85.375512
+  type: 'test'
+  ...
+# Subtest: sealed runtime fields equal the exact ordered original \#891 projection with no new IDs/classes/removals
+ok 86 - sealed runtime fields equal the exact ordered original \#891 projection with no new IDs/classes/removals
+  ---
+  duration_ms: 78.856481
+  type: 'test'
+  ...
+# Subtest: candidate artifact is byte-exact deterministic generation from that source only
+ok 87 - candidate artifact is byte-exact deterministic generation from that source only
+  ---
+  duration_ms: 248.033605
+  type: 'test'
+  ...
+# Subtest: runtime contract is readonly and cannot become a replacement mutable inventory
+ok 88 - runtime contract is readonly and cannot become a replacement mutable inventory
+  ---
+  duration_ms: 0.452754
+  type: 'test'
+  ...
+# Subtest: official public helpers retain the already-reviewed algorithms byte-for-byte
+ok 89 - official public helpers retain the already-reviewed algorithms byte-for-byte
+  ---
+  duration_ms: 660.381798
+  type: 'test'
+  ...
+# Subtest: the same public artifacts load in a browser realm without repo docs, fs or a network inventory
+ok 90 - the same public artifacts load in a browser realm without repo docs, fs or a network inventory
+  ---
+  duration_ms: 8.834691
+  type: 'test'
+  ...
+1..90
+# tests 90
+# suites 0
+# pass 90
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22135.961857

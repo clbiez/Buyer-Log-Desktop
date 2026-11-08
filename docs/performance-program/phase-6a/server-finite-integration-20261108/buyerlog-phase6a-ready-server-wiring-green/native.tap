@@ -1,0 +1,190 @@
+TAP version 13
+# Subtest: shutdown stops admission and waits for worker exit/private replica cleanup before process exit
+ok 1 - shutdown stops admission and waits for worker exit/private replica cleanup before process exit
+  ---
+  duration_ms: 13.439144
+  type: 'test'
+  ...
+# Subtest: shutdown waits for the profiler inspector connection to close before exiting the main isolate
+ok 2 - shutdown waits for the profiler inspector connection to close before exiting the main isolate
+  ---
+  duration_ms: 14.786446
+  type: 'test'
+  ...
+# Subtest: schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+ok 3 - schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+  ---
+  duration_ms: 322.730782
+  type: 'test'
+  ...
+# Subtest: cold POST returns ordinary full before actual background job is allowed to execute
+ok 4 - cold POST returns ordinary full before actual background job is allowed to execute
+  ---
+  duration_ms: 221.348918
+  type: 'test'
+  ...
+# Subtest: ready cache hits require info, preserve stable body across nonces and do not start another worker
+ok 5 - ready cache hits require info, preserve stable body across nonces and do not start another worker
+  ---
+  duration_ms: 283.07164
+  type: 'test'
+  ...
+# Subtest: legacy ready metadata without producer info is a full fallback, never a thin cache hit
+ok 6 - legacy ready metadata without producer info is a full fallback, never a thin cache hit
+  ---
+  duration_ms: 183.492394
+  type: 'test'
+  ...
+# Subtest: actual session, role, view scope and source-filter authority reject before data/worker admission
+ok 7 - actual session, role, view scope and source-filter authority reject before data/worker admission
+  ---
+  duration_ms: 163.768939
+  type: 'test'
+  ...
+# Subtest: strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+ok 8 - strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+  ---
+  duration_ms: 317.904054
+  type: 'test'
+  ...
+# Subtest: legacy or backup own-schema absence returns full mode without creating a schema or ready view
+ok 9 - legacy or backup own-schema absence returns full mode without creating a schema or ready view
+  ---
+  duration_ms: 263.361622
+  type: 'test'
+  ...
+# Subtest: real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+ok 10 - real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+  ---
+  duration_ms: 182.56003
+  type: 'test'
+  ...
+# Subtest: unknown or other-module schema cannot authorize a ready request
+ok 11 - unknown or other-module schema cannot authorize a ready request
+  ---
+  duration_ms: 490.805856
+  type: 'test'
+  ...
+# Subtest: same owner+plan deduplicates and process-wide background admission never exceeds two
+ok 12 - same owner+plan deduplicates and process-wide background admission never exceeds two
+  ---
+  duration_ms: 1044.212753
+  type: 'test'
+  ...
+# Subtest: session/access/source/schema changes during deferred native work discard and release the result
+ok 13 - session/access/source/schema changes during deferred native work discard and release the result
+  ---
+  duration_ms: 1011.931562
+  type: 'test'
+  ...
+# Subtest: same-generation full rewrite during deferred work invalidates the exact body/schema pin
+ok 14 - same-generation full rewrite during deferred work invalidates the exact body/schema pin
+  ---
+  duration_ms: 161.12618
+  type: 'test'
+  ...
+# Subtest: live guard after awaiting a cached hit prevents delivery after actor/role revocation
+ok 15 - live guard after awaiting a cached hit prevents delivery after actor/role revocation
+  ---
+  duration_ms: 262.320442
+  type: 'test'
+  ...
+# Subtest: another actor or broader guard revision cannot adopt an earlier ready entry
+ok 16 - another actor or broader guard revision cannot adopt an earlier ready entry
+  ---
+  duration_ms: 269.974844
+  type: 'test'
+  ...
+# Subtest: revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+ok 17 - revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+  ---
+  duration_ms: 350.65244
+  type: 'test'
+  ...
+# Subtest: router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+ok 18 - router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+  ---
+  duration_ms: 279.768992
+  type: 'test'
+  ...
+# Subtest: same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+ok 19 - same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+  ---
+  duration_ms: 472.5024
+  type: 'test'
+  ...
+# Subtest: changed full body with old token reports the new exact full checksum without adopting the old ready identity
+ok 20 - changed full body with old token reports the new exact full checksum without adopting the old ready identity
+  ---
+  duration_ms: 199.201531
+  type: 'test'
+  ...
+# Subtest: actual native final response guard runs before identity headers or full data are sent
+ok 21 - actual native final response guard runs before identity headers or full data are sent
+  ---
+  duration_ms: 163.268022
+  type: 'test'
+  ...
+# Subtest: response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+ok 22 - response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+  ---
+  duration_ms: 9.403618
+  type: 'test'
+  ...
+# Subtest: native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+ok 23 - native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+  ---
+  duration_ms: 489.740355
+  type: 'test'
+  ...
+# Subtest: revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+ok 24 - revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+  ---
+  duration_ms: 311.74497
+  type: 'test'
+  ...
+# Subtest: actual server installs the bounded ready router without replacing ordinary full/shadow routes
+ok 25 - actual server installs the bounded ready router without replacing ordinary full/shadow routes
+  ---
+  duration_ms: 2.713986
+  type: 'test'
+  ...
+# Subtest: actual server factory retains the live guard, native owner cache and one existing pool
+ok 26 - actual server factory retains the live guard, native owner cache and one existing pool
+  ---
+  duration_ms: 5.837239
+  type: 'test'
+  ...
+# Subtest: actual server cache guard accepts the exact current source and checks runtime before serving
+ok 27 - actual server cache guard accepts the exact current source and checks runtime before serving
+  ---
+  duration_ms: 3.459816
+  type: 'test'
+  ...
+# Subtest: every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+ok 28 - every actual parent pin must still match even when generation or gzip bytes alone are unchanged
+  ---
+  duration_ms: 17.925186
+  type: 'test'
+  ...
+# Subtest: missing source/current manifest, context mismatch and superseded runtime fail closed
+ok 29 - missing source/current manifest, context mismatch and superseded runtime fail closed
+  ---
+  duration_ms: 10.69858
+  type: 'test'
+  ...
+# Subtest: shutdown stops ready background work before closing the shared pool, including dual signals
+ok 30 - shutdown stops ready background work before closing the shared pool, including dual signals
+  ---
+  duration_ms: 11.016744
+  type: 'test'
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8308.927352

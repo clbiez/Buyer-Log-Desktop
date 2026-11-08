@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/orders-ready-http.test.js",
+    "tests/orders-ready-server-wiring.test.js",
+    "tests/compute-shutdown.test.js",
+    "tests/orders-finite-schema.test.js",
+    "tests/projection-inventory-contract.test.js",
+    "tests/projection-dependency-plan.test.js",
+    "tests/orders-finite-closure.test.js"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "pass": 90,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "38e30eff971b8f8ad00e27d24fb535f8ad835ab01725d1dafffa446bbc0b69df"
+}

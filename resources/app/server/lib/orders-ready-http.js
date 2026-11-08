@@ -70,6 +70,29 @@ function dto(body){
   if(Buffer.byteLength(JSON.stringify(body))>MAX_BODY)throw failure('ORDERS_READY_TOO_LARGE',413,'İstek çok büyük.','Request too large.');
   return {token:Object.fromEntries(TOKEN_KEYS.map(key=>[key,body.token[key]])),requestNonce:body.requestNonce,omittedModelKeys:keys,planHash:body.planHash};
 }
+function fullParentDto(body){
+  if(!exact(body,['token','requestNonce','fullGzipChecksum','guardStamp'])||!validToken(body.token)
+    ||typeof body.requestNonce!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(body.requestNonce)
+    ||typeof body.fullGzipChecksum!=='string'||!/^[a-f0-9]{64}$/.test(body.fullGzipChecksum)
+    ||typeof body.guardStamp!=='string'||!/^[a-f0-9]{64}$/.test(body.guardStamp))throw invalid();
+  if(Buffer.byteLength(JSON.stringify(body))>MAX_BODY)throw failure('ORDERS_READY_TOO_LARGE',413,'İstek çok büyük.','Request too large.');
+  return {token:Object.fromEntries(TOKEN_KEYS.map(key=>[key,body.token[key]])),requestNonce:body.requestNonce,
+    fullGzipChecksum:body.fullGzipChecksum,guardStamp:body.guardStamp};
+}
+function fullParentHeaders(token,binding){
+  function encoded(value){
+    if(typeof value!=='string'||!value.length||value.length>512||Buffer.byteLength(value)>512)throw stale();
+    const bytes=Buffer.from(value,'utf8');if(bytes.toString('utf8')!==value)throw stale();return bytes.toString('base64url');
+  }
+  if(!Number.isSafeInteger(binding.pin.uncompressedBytes)||binding.pin.uncompressedBytes<1||binding.pin.uncompressedBytes>128*1024*1024
+    ||!Number.isSafeInteger(binding.schema.rowCount)||binding.schema.rowCount<0||binding.schema.rowCount>50000
+    ||!/^[a-f0-9]{64}$/.test(token.sourceRevision))throw stale();
+  const headers={'X-Orders-Source-Projection-Key-B64':encoded(token.sourceProjectionKey),
+    'X-Orders-Module-Input-Key-B64':encoded(token.moduleInputKey),'X-Orders-Source-Revision':token.sourceRevision,
+    'X-Orders-Full-Json-Bytes':String(binding.pin.uncompressedBytes),'X-Orders-Full-Row-Count':String(binding.schema.rowCount)};
+  if(Object.entries(headers).reduce((sum,[key,value])=>sum+key.length+value.length+4,0)>2048)throw stale();
+  return headers;
+}
 function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contextFor,assertCachedCurrent,sourceFor,runTask,publishReady,send,apiError,onBackgroundError=()=>{}}={}){
   for(const name of ['readProjectionCompressed','readCurrentModuleSchema','readViewCompressed'])if(typeof cache?.[name]!=='function')throw TypeError('Actual cache API required: '+name);
   for(const callback of [assertSourceFilters,contextFor,assertCachedCurrent,sourceFor,runTask,publishReady,send,apiError,onBackgroundError])if(typeof callback!=='function')throw TypeError('Orders ready callback required');
@@ -168,14 +191,15 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
       finally{lease?.release();if(flights.get(key)===job)flights.delete(key);owned.delete(job);done();}
     });
   }
-  function sendFull(req,res,state,nonce,prepare){
+  function sendFull(req,res,state,nonce,prepare,parent){
     const {captured,context,full}=state;
     if(!full)throw failure('ORDERS_FULL_REQUIRED',409,'Tam sipariş görünümünü yeniden yükleyin.','Reload the ordinary full Orders projection.');
     current(req,captured,context,full);
-    const headers={...responseIdentityHeaders(state),'X-Orders-View-Mode':'full','X-Orders-Request-Nonce':nonce};
+    parent?.assertResponse();
+    const headers={...parent?.headers,...responseIdentityHeaders(state),'X-Orders-View-Mode':'full','X-Orders-Request-Nonce':nonce};
     if(prepare)res.once('finish',()=>background(req,state,...prepare)); // No worker/serialization in the response path.
     return send(req,res,{value:{buffer:full.buffer,uncompressedBytes:full.meta.uncompressedBytes},
-      assertResponse:()=>current(req,captured,context,full),release(){}},
+      assertResponse:()=>{current(req,captured,context,full);parent?.assertResponse();},release(){}},
     {headers});
   }
   router.get('/orders/schema',async(req,res)=>{
@@ -190,6 +214,19 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
       if(Buffer.byteLength(JSON.stringify(result))>MAX_BODY)return res.set('Cache-Control','no-store').json({mode:'full'});
       return res.set('Cache-Control','no-store').json(result);
     }catch(error){return apiError(res,error,'Sipariş şeması okunamadı.');}
+  });
+  // Explicit promotion of this exact pending full parent. A different current
+  // owner/source is a conflict here, never an ordinary-new-full fallback.
+  router.post('/orders/full-parent',express.json({limit:MAX_BODY,strict:true}),async(req,res)=>{
+    try{
+      const body=fullParentDto(req.body),state=await acquire(req),{captured,context,full}=state;
+      if(!full)throw stale();
+      const binding=schemaFor(req,captured,context,full);if(!binding)throw stale();
+      const token=tokenFor(captured,context,full),guardStamp=sha(captured.key);
+      if(!sameToken(body.token,token)||body.fullGzipChecksum!==binding.pin.fullChecksum||body.guardStamp!==guardStamp)throw stale();
+      const check=captureGuard(req,captured,context,full,binding,token,guardStamp);check();
+      return sendFull(req,res,state,body.requestNonce,undefined,{assertResponse:check,headers:fullParentHeaders(token,binding)});
+    }catch(error){return apiError(res,error,'Tam sipariş kaynağı okunamadı. / Full Orders source could not be read.');}
   });
   router.post('/orders/ready',express.json({limit:MAX_BODY,strict:true}),async(req,res)=>{
     try{
