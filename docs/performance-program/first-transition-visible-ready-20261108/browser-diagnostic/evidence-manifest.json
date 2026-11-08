@@ -7,7 +7,9 @@
     },
     {
       "path": "browser-diagnostic/control-A1/benchmark.log",
-      "sha256": "9a8313da5c7f606a41fcc426571a887c6de7344b85f67af7a3cd400a7faa27b8"
+      "sha256": "9a8313da5c7f606a41fcc426571a887c6de7344b85f67af7a3cd400a7faa27b8",
+      "repositoryRepresentation": "browser-diagnostic/control-A1/benchmark.log.gz",
+      "gzipSha256": "514aa17f9839d6be192ee22bd43395e16c0df9d1172c4dba166df901df13fdd8"
     },
     {
       "path": "browser-diagnostic/control-A1/post-timing-data.json",
@@ -27,7 +29,9 @@
     },
     {
       "path": "browser-diagnostic/control-A2/benchmark.log",
-      "sha256": "c10ecd7e54462b6fc933739db93561b487ccd3421e7aa0be6c56e67b3c9e71d0"
+      "sha256": "c10ecd7e54462b6fc933739db93561b487ccd3421e7aa0be6c56e67b3c9e71d0",
+      "repositoryRepresentation": "browser-diagnostic/control-A2/benchmark.log.gz",
+      "gzipSha256": "2251e6695277daf9747fda3011ef43c488d9aec7cc92d7ff2a676c9cfca90fea"
     },
     {
       "path": "browser-diagnostic/control-A2/post-timing-data.json",
@@ -47,7 +51,9 @@
     },
     {
       "path": "browser-diagnostic/candidate-B/benchmark.log",
-      "sha256": "bb068ced130b12e8a6f853e6acee53acc26afa7e059225c8fc420b944e92f7c7"
+      "sha256": "bb068ced130b12e8a6f853e6acee53acc26afa7e059225c8fc420b944e92f7c7",
+      "repositoryRepresentation": "browser-diagnostic/candidate-B/benchmark.log.gz",
+      "gzipSha256": "0f09bbebd4e203d898efa7ba38ca3f66cea50380c3d87828bf4ff1a83384876e"
     },
     {
       "path": "browser-diagnostic/candidate-B/post-timing-data.json",
