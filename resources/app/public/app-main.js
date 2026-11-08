@@ -9792,9 +9792,9 @@ document.getElementById('cpDirtyRevert')?.addEventListener('click',()=>{
   updateSavebar();
   renderCP();
 });
-function refreshCpRowOnly(id){
+function refreshCpRowOnly(id,rowIndex=null){
   if(!state.cp||!Array.isArray(state.cp.rows))return;
-  const row = state.cp.rows.find(r=>r._id===id);
+  const row = rowIndex&&rowIndex.rows===state.cp.rows?rowIndex.byId.get(id):state.cp.rows.find(r=>r._id===id);
   if(!row) return;
   const cf = computeFlags(row);
   const trCP = document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
@@ -9833,9 +9833,19 @@ function refreshRowsEverywhere(ids){
   // değiştirebilen bir edit sonrası tek satırı çizmeden önce aynı unified
   // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
-  new Set(ids).forEach(id=>refreshCpRowOnly(id));
+  const uniqueIds=new Set(ids),rowIndex=buildIndex();
+  uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
+  function buildIndex(){
+    const rows=state.cp&&state.cp.rows;
+    if(uniqueIds.size<=1||!Array.isArray(rows))return null;
+    // A pass belongs only to this synchronous refresh, after priority sync.
+    // Keep Array.find's first strict match (Map otherwise keeps the last/NaN).
+    const byId=new Map();
+    for(const row of rows){const id=row._id;if(id===id&&!byId.has(id))byId.set(id,row);}
+    return {rows,byId};
+  }
 }
 // ================= GERİ AL / İLERİ AL (undo/redo) =================
 let undoStack = [];
