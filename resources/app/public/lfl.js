@@ -1150,7 +1150,7 @@
         const trigger=event.currentTarget,panel=tools.querySelector('.lflGenericColPanel');
         if(openLflColumnPanel===panel){closeLflColumnPanel();return;}
         closeLflColumnPanel();
-        window.BLTableFramework.renderColumnPanel(tableKey,panel,rerender);
+        window.BLTableFramework.renderColumnPanel(tableKey,panel,()=>tools._lflRerender());
         panel._buyerLogAnchor=trigger;
         panel.classList.add('show','viewportFloating');
         openLflColumnPanel=panel;
@@ -1160,8 +1160,9 @@
         });
       });
       tools.querySelector('[data-lfl-freeze]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();closeLflColumnPanel();window.BLTableFramework.startFreeze(tableId,tableKey,event.currentTarget);});
-      tools.querySelector('[data-lfl-clear]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();window.BLTableFramework.clearFilters(tableKey);rerender();if(window.showToast)showToast(isEn()?'Column filters cleared.':'Sütun filtreleri temizlendi.');});
+      tools.querySelector('[data-lfl-clear]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();window.BLTableFramework.clearFilters(tableKey);tools._lflRerender();if(window.showToast)showToast(isEn()?'Column filters cleared.':'Sütun filtreleri temizlendi.');});
     }
+    tools._lflRerender=rerender;
     const labels={export:isEn()?'Export Excel':'Excel’e Aktar',columns:isEn()?'Columns':'Sütunlar',freeze:isEn()?'Freeze':'Dondur',clear:isEn()?'Clear filters':'Filtreleri temizle'};
     tools.querySelector('[data-lfl-export] span').textContent=labels.export;tools.querySelector('[data-lfl-columns] span').textContent=labels.columns;tools.querySelector('[data-lfl-freeze] span').textContent=labels.freeze;tools.querySelector('[data-lfl-clear] span').textContent=labels.clear;
     const freezeBtn=tools.querySelector('[data-lfl-freeze]'),freezeOn=Boolean(window.BLTableFramework?.isFrozen?.(tableKey));
@@ -1195,13 +1196,15 @@
     if(drillKey&&tbody._lflDrillHandler){const keys=[...table.querySelectorAll('thead tr.colRow th[data-k]')].map(th=>th.dataset.k),index=keys.indexOf(drillKey);if(index>=0)tbody.querySelectorAll('tr[data-id]').forEach(tr=>{const cell=tr.children[index];if(cell){cell.dataset.lflDrill='1';cell.classList.add('lflPortfolioDrillCell');const hint=isEn()?'Double-click to view portfolio details':'Portföy detayını görmek için çift tıkla';const text=cell.textContent.trim();cell.title=text?`${text}\n${hint}`:hint;}});}
     if(!tbody._lflDrillBound){tbody._lflDrillBound=true;tbody.addEventListener('dblclick',event=>{const cell=event.target.closest('td[data-lfl-drill="1"]'),tr=cell?.closest('tr[data-id]');if(!cell||!tr||typeof tbody._lflDrillHandler!=='function')return;const source=tbody._lflDrillRows?.get(String(tr.dataset.id));if(source)tbody._lflDrillHandler(source);});}
   }
-  function renderCpTable({tableId,viewName,columns,sourceRows,emptyText,maxRows=0,rowClass,footer,count,drillKey,onDrill,title,rerenderOverride}){
+  function renderCpTable({tableId,viewName,columns,sourceRows,emptyText,maxRows=0,rowClass,footer,count,drillKey,onDrill,title,rerenderOverride,preparedRows}){
     const api=window.BLTableFramework;if(!api)return {filtered:sourceRows||[],visible:sourceRows||[]};
-    const tableKey=LFL_CP_TABLE_KEYS[viewName],all=frameworkRows(sourceRows,columns);
+    const tableKey=LFL_CP_TABLE_KEYS[viewName],all=preparedRows||frameworkRows(sourceRows,columns);
     const renderedColumns=frameworkColumns(columns);
     const drillColumnIndex=drillKey?renderedColumns.findIndex(column=>column.key===drillKey):-1;
     api.register(tableKey,renderedColumns,()=>all);
-    const rerender=()=>{window.BLTableFramework.closeFilter();closeLflColumnPanel();if(typeof rerenderOverride==='function')rerenderOverride();else render();};
+    // Veri/Trial/FX, genel filtre veya dil değişiminde tam render yeni closure
+    // kurar. Tablo içi sıralama/filtre aynı hazırlanmış satırları kullanır.
+    const rerender=()=>{window.BLTableFramework.closeFilter();closeLflColumnPanel();if(typeof rerenderOverride==='function')rerenderOverride();else renderCpTable({tableId,viewName,columns,sourceRows,emptyText,maxRows,rowClass,footer,count,drillKey,onDrill,title,preparedRows:all});};
     ensureCpTableTools(tableId,tableKey,rerender);
     const filtered=api.filteredRows(tableKey,all),sorted=sortFrameworkRows(filtered,viewName,columns),visible=maxRows?sorted.slice(0,maxRows):sorted;
     const view=state.tableViews[viewName]||emptyTableView();state.tableViews[viewName]=view;

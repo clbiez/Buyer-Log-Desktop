@@ -1,0 +1,352 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scenario": "first-intent-after-startup",
+  "startedAt": "2026-11-08T00:07:09.503Z",
+  "app": "/tmp/buyerlog-shared-ui908/resources/app",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "fixtureRoot": "/tmp/buyerlog-first-transition-12HWwy",
+  "status": "passed",
+  "transitions": [
+    {
+      "module": "cp",
+      "status": "passed",
+      "intentAtMs": 5049,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 4,
+      "maxPollGapMs": 9943.300000011921,
+      "dispatchAtMs": 5122.4000000059605,
+      "dispatchDelayMs": 73.40000000596046,
+      "dataReadyMs": 21162.20000001788,
+      "firstRowsPaintedMs": 21328.30000001192,
+      "elapsedMs": 29091.59999999404,
+      "paintedAtMs": 34140.59999999404,
+      "observationEndMs": 31561.30000001192,
+      "rows": 24982,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 4940.9000000059605,
+        "startupReadyMs": 4975.4000000059605,
+        "startupCompleteMs": 5048.300000011921,
+        "continueAtMs": 5042,
+        "continueIntentAtMs": 4975.4000000059605,
+        "continueDispatchDelayMs": 66.59999999403954,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 5048.300000011921,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 471.7000000178814,
+            "duration": 96
+          },
+          {
+            "startTime": 584.0999999940395,
+            "duration": 67
+          },
+          {
+            "startTime": 680.0999999940395,
+            "duration": 111
+          },
+          {
+            "startTime": 807.8000000119209,
+            "duration": 68
+          },
+          {
+            "startTime": 880,
+            "duration": 402
+          },
+          {
+            "startTime": 1298.5,
+            "duration": 63
+          },
+          {
+            "startTime": 1444.9000000059605,
+            "duration": 51
+          },
+          {
+            "startTime": 1608.0999999940395,
+            "duration": 51
+          },
+          {
+            "startTime": 1697.9000000059605,
+            "duration": 187
+          },
+          {
+            "startTime": 1885.0999999940395,
+            "duration": 264
+          },
+          {
+            "startTime": 2187.7000000178814,
+            "duration": 73
+          },
+          {
+            "startTime": 2260.7000000178814,
+            "duration": 168
+          },
+          {
+            "startTime": 2641.0999999940395,
+            "duration": 203
+          },
+          {
+            "startTime": 3141.4000000059605,
+            "duration": 82
+          },
+          {
+            "startTime": 3224.300000011921,
+            "duration": 53
+          },
+          {
+            "startTime": 3281.5999999940395,
+            "duration": 102
+          },
+          {
+            "startTime": 3405.300000011921,
+            "duration": 406
+          },
+          {
+            "startTime": 3818.0999999940395,
+            "duration": 55
+          },
+          {
+            "startTime": 3886.9000000059605,
+            "duration": 69
+          },
+          {
+            "startTime": 4092.5,
+            "duration": 56
+          },
+          {
+            "startTime": 4194.700000017881,
+            "duration": 97
+          },
+          {
+            "startTime": 4295.0999999940395,
+            "duration": 162
+          },
+          {
+            "startTime": 4457.5999999940395,
+            "duration": 246
+          },
+          {
+            "startTime": 4710.200000017881,
+            "duration": 186
+          },
+          {
+            "startTime": 4932.0999999940395,
+            "duration": 92
+          },
+          {
+            "startTime": 5041,
+            "duration": 75
+          },
+          {
+            "startTime": 5122.300000011921,
+            "duration": 90
+          },
+          {
+            "startTime": 5361.200000017881,
+            "duration": 129
+          },
+          {
+            "startTime": 5511.4000000059605,
+            "duration": 982
+          },
+          {
+            "startTime": 6498.4000000059605,
+            "duration": 507
+          },
+          {
+            "startTime": 7005.700000017881,
+            "duration": 64
+          },
+          {
+            "startTime": 7136.9000000059605,
+            "duration": 1019
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    },
+    {
+      "module": "orders",
+      "status": "passed",
+      "intentAtMs": 2804.5999999940395,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 4,
+      "maxPollGapMs": 3221.9000000059605,
+      "dispatchAtMs": 2816.699999988079,
+      "dispatchDelayMs": 12.099999994039536,
+      "dataReadyMs": 6945,
+      "firstRowsPaintedMs": 7070.5999999940395,
+      "elapsedMs": 10878.40000000596,
+      "paintedAtMs": 13683,
+      "observationEndMs": 13679.5,
+      "rows": 30000,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 2692.399999976158,
+        "startupReadyMs": 2747.399999976158,
+        "startupCompleteMs": 2803.699999988079,
+        "continueAtMs": 2798.699999988079,
+        "continueIntentAtMs": 2747.399999976158,
+        "continueDispatchDelayMs": 51.30000001192093,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 2803.699999988079,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 575.0999999940395,
+            "duration": 90
+          },
+          {
+            "startTime": 681.8999999761581,
+            "duration": 70
+          },
+          {
+            "startTime": 784.3999999761581,
+            "duration": 86
+          },
+          {
+            "startTime": 890,
+            "duration": 90
+          },
+          {
+            "startTime": 1115.2999999821186,
+            "duration": 51
+          },
+          {
+            "startTime": 1337.3999999761581,
+            "duration": 147
+          },
+          {
+            "startTime": 1485.7999999821186,
+            "duration": 55
+          },
+          {
+            "startTime": 1653.0999999940395,
+            "duration": 168
+          },
+          {
+            "startTime": 1943.8999999761581,
+            "duration": 60
+          },
+          {
+            "startTime": 2022.7999999821186,
+            "duration": 60
+          },
+          {
+            "startTime": 2176.699999988079,
+            "duration": 100
+          },
+          {
+            "startTime": 2283.0999999940395,
+            "duration": 266
+          },
+          {
+            "startTime": 2586.399999976158,
+            "duration": 60
+          },
+          {
+            "startTime": 2682.399999976158,
+            "duration": 95
+          },
+          {
+            "startTime": 3161,
+            "duration": 360
+          },
+          {
+            "startTime": 3534.699999988079,
+            "duration": 578
+          },
+          {
+            "startTime": 4113.0999999940395,
+            "duration": 53
+          },
+          {
+            "startTime": 4228.199999988079,
+            "duration": 1304
+          },
+          {
+            "startTime": 5706.5999999940395,
+            "duration": 54
+          },
+          {
+            "startTime": 5803.199999988079,
+            "duration": 698
+          },
+          {
+            "startTime": 6528.5999999940395,
+            "duration": 566
+          },
+          {
+            "startTime": 7113.399999976158,
+            "duration": 2318
+          },
+          {
+            "startTime": 9432,
+            "duration": 315
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    }
+  ],
+  "rendererErrors": [],
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6vhoks-9100b15fc128",
+    "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "sourceRows": 30000,
+  "stalls": [],
+  "serverLog": "/tmp/buyerlog-first-transition-12HWwy/server.log",
+  "finishedAt": "2026-11-08T00:08:35.481Z"
+}

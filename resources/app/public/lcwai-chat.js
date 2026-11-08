@@ -791,7 +791,8 @@
     return `<div class="lcwaiQuery blMotionEnter"><div class="lcwaiQueryHead"><b>${esc(L('Buyer Log hesapladı', 'Calculated by Buyer Log'))}</b><small>${esc(L('LCW AI isteği yorumladı; rakamlar tüm kayıtlar üzerinde Buyer Log tarafından hesaplandı.', 'LCW AI interpreted the request; Buyer Log calculated the figures on all records.'))}</small></div><ul class="lcwaiQueryLines">${lines}</ul>${notes}<p class="lcwaiNote">${esc(L('Yanlış anladıysam düzeltmeyi yazmanız yeterli (ör. “adet yerine PO sayısı”, “Mısır da hariç”).', 'If I misunderstood, just write the correction (e.g. “PO count instead of quantity”, “exclude Egypt too”).'))}</p></div>`;
   }
 
-  function renderMessages() {
+  let messageView = null;
+  function renderMessages(activeMessage) {
     const box = $('[data-chat-messages]');
     if (!box) return;
     const composer = $('[data-chat-form]'), outputs = $('[data-chat-outputs]');
@@ -801,16 +802,33 @@
       outputs.setAttribute('aria-pressed', String(state.viewingOutputs));
     }
     if (state.viewingOutputs) {
+      messageView = null;
       box.innerHTML = `<div class="blMotionEnter"><b>${esc(L('Dosyalarım · Son 60 gün', 'My files · Last 60 days'))}</b><p class="lcwaiNote">${esc(L('Dosyalar ve düzenlenebilir taslaklar bu cihazda 60 gün saklanır. Sohbeti silmek dosyaları silmez. Düzenlediğinizde taslağın 60 günlük süresi yenilenir.', 'Files and editable drafts are kept on this device for 60 days. Deleting a chat keeps its files. Editing renews the draft’s 60-day period.'))}</p><button type="button" class="lcwaiBtn" data-outputs-refresh${state.outputsLoading ? ' disabled' : ''}>${esc(L('Yenile', 'Refresh'))}</button></div>${state.outputsLoading ? `<p class="lcwaiNote">${esc(L('Dosyalar yükleniyor…', 'Loading files…'))}</p>` : state.outputsError ? `<p class="lcwaiMsgError">${esc(L('Dosyalar yüklenemedi. Yeniden deneyin.', 'Files could not be loaded. Try again.'))}</p>` : state.outputFiles.length ? state.outputFiles.map(file => fileCardHtml(file)).join('') : `<p class="lcwaiNote">${esc(L('Son 60 günde oluşturulmuş dosya yok.', 'No files created in the last 60 days.'))}</p>`}`;
       return;
     }
     const conv = activeConversation();
+    const sameView = messageView && messageView.box === box && messageView.conv === conv;
+    const follow = !sameView || box.scrollHeight - box.clientHeight - box.scrollTop < 48;
+    const top = box.scrollTop;
     if (!conv.messages.length) {
+      messageView = null;
       box.innerHTML = emptyStateHtml();
       return;
     }
+    const index = conv.messages.length - 1;
+    // Akış yalnız kendi yanıtını değiştirir; tamamlanan mesajları ve seçimleri
+    // yerinde tut. Markdown aynı güvenli mesaj çiziminden geçmeye devam eder.
+    if (activeMessage && sameView && messageView.lang === isEn()
+      && messageView.message === activeMessage && conv.messages[index] === activeMessage
+      && messageView.index === index && messageView.node?.parentNode === box) {
+      messageView.node.outerHTML = messageHtml(activeMessage, index, conv);
+      messageView.node = box.lastElementChild;
+      box.scrollTop = follow ? box.scrollHeight : top;
+      return;
+    }
     box.innerHTML = conv.messages.map((message, index) => messageHtml(message, index, conv)).join('');
-    box.scrollTop = box.scrollHeight;
+    messageView = { box, conv, index, message: conv.messages[index], node: box.lastElementChild, lang: isEn() };
+    box.scrollTop = follow ? box.scrollHeight : top;
   }
 
   /* Boş ekran: önce giriş, sonra "ne hakkında konuşalım?" konu seçimi. */
@@ -1117,6 +1135,7 @@
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
     const answer = { role: 'ai', text: '', streaming: true, phase: '' };
+    let pendingPaint = 0;
     conv.messages.push(answer);
     if (!reuse) { state.files = []; state.contexts = []; const input = $('[data-chat-input]'); if (input) input.value = ''; }
     renderChips(); renderList(); renderMessages(); setBusy(true);
@@ -1182,8 +1201,7 @@
       const sendContexts = computedContexts || [...(userMessage.contexts || []), ...followUp];
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
       renderMessages();
-      let pendingPaint = 0;
-      const paint = () => { if (!pendingPaint) pendingPaint = requestAnimationFrame(() => { pendingPaint = 0; if (state.activeId === conv.id) renderMessages(); }); };
+      const paint = () => { if (!pendingPaint) pendingPaint = requestAnimationFrame(() => { pendingPaint = 0; if (state.activeId === conv.id) renderMessages(answer); }); };
       const result = await api.chat({
         requestId: state.requestId,
         chatId: conv.chatId,
@@ -1227,6 +1245,7 @@
       if (error && error.code === 'LCWAI_CANCELLED') answer.error = L('İstek iptal edildi.', 'The request was cancelled.');
       if (error && error.code === 'LCWAI_QUOTA_EXCEEDED' && error.remoteMessage) answer.error += ` (${error.remoteMessage})`;
     } finally {
+      if (pendingPaint) cancelAnimationFrame(pendingPaint);
       answer.streaming = false;
       setBusy(false);
       persistConversations();

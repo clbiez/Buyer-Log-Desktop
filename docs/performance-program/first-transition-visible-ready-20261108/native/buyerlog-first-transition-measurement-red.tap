@@ -1,0 +1,55 @@
+✔ first intent includes handler dispatch delay and waits for actual visible rows and paint (9.779713ms)
+✖ row DOM behind an overlay cannot satisfy first visible paint (4.955767ms)
+✖ a blocked timer turn cannot skip late trivia settlement and certify the covered screen (8.688355ms)
+✔ a denied first transition fails instead of reporting a ready previous screen (4.516624ms)
+✔ an unready first transition has a bounded failure with partial evidence (2.890215ms)
+✔ metadata-only startup is compared with its envelope while actual projection identity remains mandatory (5.879533ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 192.572632
+
+✖ failing tests:
+
+test at tests/first-transition-benchmark.test.js:28:1
+✖ row DOM behind an overlay cannot satisfy first visible paint (4.955767ms)
+  AssertionError [ERR_ASSERTION]: a covered row is not visible even when its container has a rectangle
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/first-transition-benchmark.test.js:30:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/first-transition-benchmark.test.js:36:1
+✖ a blocked timer turn cannot skip late trivia settlement and certify the covered screen (8.688355ms)
+  AssertionError [ERR_ASSERTION]: elapsed blocked time is not an observed stable screen
+      at TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/first-transition-benchmark.test.js:43:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'passed',
+    expected: 'passed',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: an unchanged real directory read retains list inputs and resolved records
+ok 1 - an unchanged real directory read retains list inputs and resolved records
+  ---
+  duration_ms: 7.671467
+  type: 'test'
+  ...
+# Subtest: changed lock, revision and recipients still replace the snapshot and publish it
+ok 2 - changed lock, revision and recipients still replace the snapshot and publish it
+  ---
+  duration_ms: 4.395576
+  type: 'test'
+  ...
+# Subtest: partial reads preserve omitted fields, and explicit empty records clear aliases
+ok 3 - partial reads preserve omitted fields, and explicit empty records clear aliases
+  ---
+  duration_ms: 3.402523
+  type: 'test'
+  ...
+# Subtest: headings and current-user changes remain part of snapshot invalidation
+ok 4 - headings and current-user changes remain part of snapshot invalidation
+  ---
+  duration_ms: 3.081951
+  type: 'test'
+  ...
+# Subtest: concurrent forced reads still share one in-flight request
+ok 5 - concurrent forced reads still share one in-flight request
+  ---
+  duration_ms: 2.71963
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.023899

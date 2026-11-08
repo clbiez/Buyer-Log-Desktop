@@ -41,11 +41,16 @@ jobs:
       - name: Supp. FOB quick calculator and royalty commission regression
         run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Unified license cards, category pricing and legacy peer compatibility
-        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
+        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/license-quick-fob-close.test.js tests/email-directory-snapshot-identity.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
       - name: Checklist Worker, formula editor and attention regressions
         run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-studio-workspace.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
+      # CP checklist performance guards (#886, #888, #889, #892, #916): row-level
+      # caches, single refresh and delta recalculation. Removing them made the
+      # first CP open ~3.8 s slower and a single answer ~8 s; keep them on every PR.
+      - name: CP checklist pass caches, single refresh and delta recalculation
+        run: node --test tests/checklist-components-row-cache.test.js tests/cp-personal-layer-delta.test.js tests/checklist-columns-delta.test.js tests/checklist-summary-contribution-cache.test.js tests/checklist-applies-row-memo.test.js tests/checklist-answer-batch-notify.test.js tests/checklist-assistant-view-reuse.test.js tests/checklist-remote-merge-noop.test.js tests/checklist-components-count-lookups.test.js
       - name: Thinking Orbs startup and navigation regression
-        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js tests/intake-ui-controls.test.js
+        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js tests/intake-ui-controls.test.js tests/first-transition-benchmark.test.js
       - name: Post-update startup freeze, launch notice steps and module gate
         run: node --test tests/launcher-sync-offthread-v70335.test.js tests/launcher-early-notice.test.js tests/launcher-offthread-verification.test.js tests/startup-progress-splash-v70321.test.js tests/startup-background-warmup.test.js tests/updater-launcher-upgrade-gate.test.js
       - name: Global Flow startup curtain and performance visibility

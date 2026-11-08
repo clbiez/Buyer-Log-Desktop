@@ -1,0 +1,68 @@
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +79ms
+[PERF] DELTA_STORE_MODE +123ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +243ms
+Buyer Log runtime config: /tmp/buyerlog-startup-analytics-smoke-main5b8-v2/config.json · port=6497 · host=127.0.0.1
+[PERF] SERVER_READY +368ms
+Buyer Log sunucusu çalışıyor: http://localhost:6497
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-analytics-smoke-main5b8-v2/source
+[RUNTIME] heap-limit heapUsedMb=46 heapLimitMb=4288 rssMb=143
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +372ms
+[PERF] SHARED_SYNC_ROOT +372ms
+[PERF] SHARED_HUB_BOOTSTRAP +404ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +421ms
+[PERF] LOCAL_DB_READY +421ms
+[PERF] LOCAL_STATE_READY +422ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +450ms
+[2026-11-07T21:39:23.767Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-07T21:39:23.767Z] [ASAS Excel] [pivot-refresh] END duration=0ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-07T21:39:23.768Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4479ms
+[PERF] DELTA_STORE_HYDRATED +4482ms
+[2026-11-07T21:39:36.349Z] [ASAS Excel] [file-parse] END duration=12581ms category=wait
+[2026-11-07T21:39:36.449Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-07T21:39:36.450Z] [ANTREPO Excel] [pivot-refresh] END duration=1ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-07T21:39:36.450Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-07T21:39:37.613Z] [ANTREPO Excel] [file-parse] END duration=1163ms category=wait
+[2026-11-07T21:39:38.694Z] [Refresh] [comparison] START category=wait
+[2026-11-07T21:39:39.618Z] [Refresh] [comparison] END duration=924ms category=wait
+[2026-11-07T21:39:39.618Z] [Local storage] [snapshot-save] START category=save
+[2026-11-07T21:39:54.802Z] [Local storage] [snapshot-save] END duration=15184ms category=save
+[2026-11-07T21:39:54.803Z] [Local storage] [page-cache-write] START category=cache
+[2026-11-07T21:40:12.350Z] [Local storage] [page-cache-write] END duration=17547ms category=cache
+[PERF] APP_BOOT_START · server received +54739ms · client +198ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +54739ms · client +199ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +54739ms · client +199ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +54739ms · client +201ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +54739ms · client +294ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +54739ms · client +451ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +54739ms · client +459ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +54739ms · client +1355ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +54739ms · client +1355ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +54739ms · client +1745ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +54739ms · client +1751ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +54739ms · client +1752ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +54739ms · client +1752ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +54739ms · client +1841ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +54739ms · client +1844ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +54740ms · client +1909ms · duration 66ms
+[PERF] DATASOURCE_PREPARATION_START · server received +54740ms · client +1910ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +54740ms · client +1938ms · duration 28ms
+[PERF] FILTER_PIVOT_INIT_START · server received +54740ms · client +1938ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +54740ms · client +1938ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +54740ms · client +1938ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +54740ms · client +1938ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +54740ms · client +1938ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +54740ms · client +1938ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +54740ms · client +1939ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +54740ms · client +1939ms · duration 0ms
+[PERF] UI_FIRST_RENDER · server received +54740ms · client +1939ms · duration 0ms
+[PERF] UI_READY · server received +54740ms · client +2003ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +54740ms
+[PERF] BACKGROUND_SYNC_START +57964ms
+[PERF] SYNC_COMPLETE +58173ms · duration 172ms
+[RUNTIME] event-loop-stall blockedMs=5182 cpuMs=19948 heapUsedMb=518 heapLimitMb=4288 rssMb=1759
+[RUNTIME] event-loop-stall blockedMs=3113 cpuMs=4391 heapUsedMb=393 heapLimitMb=4288 rssMb=1790
+[PERF] SYNC_COMPLETE +114218ms · duration 16ms

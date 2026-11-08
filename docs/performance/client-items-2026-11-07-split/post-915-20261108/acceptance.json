@@ -1,0 +1,93 @@
+{
+  "revision": "bd82ec0c524d11394dab2b6c04be80d7f8a23dce",
+  "appTree": "8ea2b6e51a065afcfa4f82a630d0e131bbe5821c",
+  "startedAt": "2026-11-07T22:40:04.285879+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "card-functional-browser",
+      "command": [
+        "node",
+        "scripts/card-render-acceptance.js",
+        "--verify-only",
+        "--assert-optimized",
+        "--count",
+        "500"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-card-functional-browser-f3vcbple",
+      "startedAt": "2026-11-07T22:40:04.286709+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:40:07.174309+00:00",
+      "logSha256": "45a06bee3b1e617ea90b920ef423b3f4fa50c9e62160e59e101904cc34776967",
+      "gzipSha256": "8f9f78dbca8aa09ef5e3b08c5af552af36ce00d7e06f6611242fdc338907185a"
+    },
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "license",
+        "manufacturers",
+        "email-groups",
+        "email-directory",
+        "cp-rule",
+        "lcwai",
+        "card-detail"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-related-integrated-kx2dzuhw",
+      "startedAt": "2026-11-07T22:40:07.177541+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:40:14.716443+00:00",
+      "logSha256": "88ee6caa73785fa8c48ea722958b2c59da94420e66b1b1c0766a0d78bb965332",
+      "gzipSha256": "4311fe9ca4cb56ab9389270903b04cd00644c52a8189bc22489b73854c98ffb4"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-full-integrated-nl0fzgst",
+      "startedAt": "2026-11-07T22:40:14.723888+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:44:01.195329+00:00",
+      "logSha256": "ef0a6d22b8885256caca4b00b8f9e18c0f8cc42e99e408f9e071171e452a72f9",
+      "gzipSha256": "2d2cd59e5b27972dddb52556cf2ebc95740064ba7519fc67c7e71aba8b576c16"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-i18n-integrated-kuvwqhkr",
+      "startedAt": "2026-11-07T22:44:01.336738+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:44:04.190049+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-release-integrated-m6dl6rf8",
+      "startedAt": "2026-11-07T22:44:04.191892+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T22:44:05.194472+00:00",
+      "logSha256": "74cdfea2feb220c428e40411208d334f064eaaa679451c3ce3f05c96b6ffc7e0",
+      "gzipSha256": "4257b1ef27ceeb177e1e518e6966ac28e5c4bf6ddf255d71a15e62009ed3e793"
+    }
+  ],
+  "finishedAt": "2026-11-07T22:44:05.195138+00:00"
+}

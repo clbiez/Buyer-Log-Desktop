@@ -1,0 +1,30 @@
+{
+  "pr": 904,
+  "before": "ff8c84bd351dc849555c874f946c67d8ce8a2d28",
+  "main": "d77f83e55bf06bbf3776aaea5de79d9bdd58e2a8",
+  "merge": "fe490f5e33cc9067bdb46b421cec87073000fe95",
+  "appTree": "20cc30a171db9121f4809f6997312bc71d02e765",
+  "notes": 46,
+  "tree": "/workspace/buyerlog-analytics904",
+  "ownNoteIds": [
+    "analytics-delivery-worker",
+    "analytics-lfl-sort",
+    "analytics-transit-summary"
+  ],
+  "counts": {
+    "pass": 8902,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "files": 1296,
+  "related": 227,
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "newPerformanceClaim": false
+}
