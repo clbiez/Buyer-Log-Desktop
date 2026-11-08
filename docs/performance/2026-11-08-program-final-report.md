@@ -138,7 +138,7 @@ the stated reasons. This update reconciles final session evidence and actual PR 
 | A | INT-03 | Kapsam dışı: Üretime bağlantı korunan PLM indirme/Sync pipeline’ına dokunur / Production integration touches protected PLM download/Sync paths. Önceki durum / Prior status: Byte-budget helper var; PLM Sync'e dokunulmuyor, üretim pipeline'ı bağlanmadı / Helper exists; production pipeline untouched. |
 | B | INT-06 | Kapsam dışı: Üretim journal/snapshot entegrasyonu ayrı kalıcılık işi / Production journal/snapshot integration is separate persistence work. Önceki durum / Prior status: Prototip yazım tasarrufuna karşın son RSS +%5,85; kabul edilmedi / Final prototype RSS regression rejected. |
 | B | ANA-12 | Kapsam dışı: Gerçek HTTP → job iptali atanmış dosyalar dışındaki backend/worker bağlantısını gerektirir / Real route cancellation needs unassigned backend/worker integration. Önceki durum / Prior status: İstemci/backend helper var; gerçek HTTP→job iptali ve üretim CPU kabulü yok / Helpers exist; real route cancellation unintegrated. |
-| B | INT-08 | Atlandı: yalnız model-image-cache.js izni, app-main.js warmup ve prior/loaded yollarının orijinali doğrudan yüklemesini kapsamıyor; A/B ve hash karşılaştırması yapılmadı, PR/merge yok / Skipped: allowed file cannot cover direct-original loading paths; no A/B, hash comparison, PR or merge. |
+| B | INT-08 | Uygulandı: tablolarda kaynak başına kalıcı küçük önizleme; warmup/prior/loaded yolları önizlemeyi, zoom/çekmece/pano/export orijinali kullanır. Siparişler, kayıt haritası, orijinal dosyalar ve export ölçüleri eşdeğer; ölçüm ve kabul kanıtı bu satırı güncelleyen INT-08 PR açıklamasındadır / Implemented: persistent per-source table previews cover warmup/prior/loaded paths; zoom/drawer/clipboard/export retain originals. Orders, registry, original files and export geometry match; measurements and acceptance evidence are in the INT-08 PR that updates this row. |
 | C | DS-11 | Kapsam dışı: Gerçek SMB/peer RTT kabul ortamı yok / Real SMB/peer RTT acceptance environment is unavailable. Önceki durum / Prior status: Gerçek SMB/peer RTT ortamı yok / Real SMB/peer RTT environment unavailable. |
 | B | INT-07 | Kapsam dışı: Korunan PLM akışına girer; gerçek kapasite/retry kabul ortamı yok / Touches protected PLM flows; real capacity/retry acceptance is unavailable. Önceki durum / Prior status: Gerçek PLM kapasite/retry kabul ortamı yok / Real PLM capacity/retry acceptance unavailable. |
 | C | INT-10 | Kapsam dışı: Gerçek upstream kapasite/kazanç kabulü doğrulanmadı / Real upstream capacity/benefit acceptance is unverified. Önceki durum / Prior status: Upstream upload kapasitesi ve kazancı doğrulanmadı / Upstream upload capacity and benefit unverified. |
@@ -157,8 +157,8 @@ the stated reasons. This update reconciles final session evidence and actual PR 
 `checklist-supplier-sync.js` ve `checklist-components-engine.js` korunan kapsamdır.
 **EN:** Excluded rows are not implementation commitments; protected PLM/#916/checklist paths remain untouched.
 
-INT-08 için Linux tanı ortamı vardı; eksik olan preview/native üretim kabulüdür.
-**EN:** INT-08 is not “unmeasured for lack of any environment”; the missing part is implementation and product acceptance.
+INT-08, Linux/Chromium üzerinde gerçek Buyer Log ve sentetik demo veriyle doğrulandı; Windows/Electron/SMB ölçümü yapılmadı.
+**EN:** INT-08 was verified in actual Buyer Log on Linux/Chromium with synthetic demo data; Windows/Electron/SMB were not measured.
 SHELL-07 ölçülen düşük pay nedeniyle atlandı; SHELL-08/workspace-blur #908 ile merge edilmeden kapatıldı.
 **EN:** SHELL-07 was skipped for low measured cost; SHELL-08/blur were not shipped.
 6d SQLite kararı **bekle**; SMB ortak klasöre SQLite kurulmadı, veri migrasyonu yapılmadı.
