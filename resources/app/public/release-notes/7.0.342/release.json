@@ -1,0 +1,1645 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.342",
+  "channel": "stable",
+  "publishedAt": "2026-11-05",
+  "title": {
+    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı · Ajans lisanslarında royalty · Sade LCW AI Excel çıktısı",
+    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses · Clean LCW AI Excel output"
+  },
+  "summary": {
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir. LCW AI Excel dosyaları artık varsayılan olarak sade: zebra satırlar ve her sayısal sütuna eklenen veri çubukları kaldırıldı; toplam satırı, vurgu kuralı, veri çubuğu, zebra ve sabit sütun yalnız istendiğinde Buyer Log renkleriyle eklenir. CP açılışında kontrol listesi başlıkları sipariş başına bir kez belirlenir ve değişmeyen ortak cevaplar kararları yeniden hesaplatmaz; demo veride tarayıcı işlem süresi yaklaşık dörtte bire, en uzun donma 79 sn'den 9 sn'ye indi. Toplu kontrol listesi güncellemeleri CP'yi her cevap için değil işlemin sonunda bir kez yeniler; 100 siparişlik toplu onay dakikalar yerine saniyeler sürer. Kontrol listesi değişikliğinden sonra CP sütunları aynı kararla ikinci kez hazırlanmaz. Kontrol listesi durumunu değiştirmek yalnız ilgili siparişleri yeniden hesaplar; tek değişiklik CP'yi 8 sn yerine yaklaşık yarım saniye meşgul eder. Küresel Akış kaynak ayrıntılarını çekmece açıldığında alır; Backlog panelleri ilk açılışta aynı satır isteğini paylaşır. Excel ve PowerPoint dosyaları arka planda hazırlanır. Koleksiyon fiyat referansları ortak worker havuzunda hazırlanır. OAB filtrelerinin ilk dosya okuması asenkron yapılır; seçenekler ve önbellek korunur. Değişmeyen yenileme geçmişi okumaları revision artırıp dosyayı yeniden yazmaz. Siparişler yüklenirken CP kararları gereksiz yere yeniden hazırlanmaz; seçimler ve taslaklar korunur. LCW AI yanıt akışında yalnız aktif mesaj çizilir; önceki mesajlardaki seçim ve okuma konumu korunur. Üretici ve iletişim kartlarında liste ile seçili ayrıntı ayrı güncellenir; seçimde liste konumu ve taslaklar korunur. Teslimat hesabı worker’a taşındı; LFL tablo sıralamaları yalnız ilgili tabloyu yeniler ve Yol Süreleri alt süreç özetlerinde tekrarlanan taramalar azaltıldı. CP açılıştan hemen sonra açıldığında satırlar daha erken görünür; kontrol listesi set bilgisini her satır için bir kez okur.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds. LCW AI Excel files are now plain by default: striped rows and the data bars added to every numeric column are gone; a total row, highlight rules, data bars, stripes and frozen columns are added in Buyer Log colours only when requested. When CP opens, checklist headings are resolved once per order and unchanged shared answers no longer trigger a full recompute; on demo data browser processing time fell to about a quarter and the longest freeze from 79 s to 9 s. Bulk checklist updates refresh CP once at the end rather than after every answer; bulk approval of 100 orders takes seconds instead of minutes. After a checklist change, CP columns are no longer rebuilt a second time with the same decision. Changing a checklist status recalculates only the affected orders; a single change keeps CP busy for about half a second instead of 8 s. Global Flow fetches source details when the drawer opens, and Backlog panels share the same initial row request. Excel and PowerPoint files are prepared in the background. Collection price references prepare in the common worker pool. The initial OAB filter file read is asynchronous; options and caching are preserved. Unchanged refresh-history reads no longer advance the revision or rewrite the file. Loading Orders avoids an extra CP decision refresh while preserving selections and drafts. LCW AI streams redraw only the active message, preserving selection and reading position in earlier messages. Manufacturer and contact cards update the list and selected detail separately, preserving list position and drafts during selection. Delivery calculation runs in a worker; LFL sorting refreshes only its table, and Transit Times process summaries use fewer repeated scans. When CP is opened right after startup, rows appear sooner; the checklist reads set details once per row."
+  },
+  "stats": {
+    "features": 4,
+    "improvements": 38,
+    "fixes": 14
+  },
+  "changes": [
+    {
+      "id": "refresh-server-restart-lost-job",
+      "type": "fix",
+      "module": {
+        "tr": "Veri yenileme",
+        "en": "Data refresh"
+      },
+      "title": {
+        "tr": "Sunucu yeniden başlarsa yenileme donmadan sonlanır",
+        "en": "Refresh ends cleanly when the server restarts"
+      },
+      "body": {
+        "tr": "Yenileme sırasında Buyer Log sunucusu kapanıp otomatik olarak yeniden başlarsa geçen süre sayacı artık donmuyor ve uygulama 25 dakika beklemiyor. Birkaç saniye içinde \"Yenileme sırasında sunucu yeniden başladı\" penceresi açılır: yenilemenin tamamlanmadığı, ekrandaki verinin bu yenilemeyle güncellenmediği ve hangi günlük dosyalarının (logs/backend.log, logs/server-restart.log) paylaşılacağı yazılır. Önceden aynı durum, uzun bekleyişten sonra yalnız \"Refresh job could not be verified.\" hatasıyla bitiyordu.",
+        "en": "If the Buyer Log server stops and restarts automatically during a refresh, the elapsed counter no longer freezes and the app no longer waits 25 minutes. Within seconds a \"The server restarted during the refresh\" dialog explains that the refresh was not completed, that the data on screen was not updated by it, and which log files (logs/backend.log, logs/server-restart.log) to share. Previously the same situation ended only after a long wait with \"Refresh job could not be verified.\""
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-server-restart-lost-job.png",
+        "alt": {
+          "tr": "Yenileme sırasında sunucu yeniden başladığında açılan, kodu REFRESH_JOB_LOST olan hata penceresi",
+          "en": "Error dialog with code REFRESH_JOB_LOST shown when the server restarts during a refresh"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: yenileme sürerken sunucu süreci kapatılıp yeniden başlatıldı; kayıp iş birkaç saniyede bildirildi.",
+          "en": "Actual Buyer Log with isolated demo data: the server process was stopped and restarted during a refresh; the lost job was reported within seconds."
+        }
+      }
+    },
+    {
+      "id": "license-agency-royalty-orders",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler · CP · License Royalty",
+        "en": "Orders · CP · License Royalty"
+      },
+      "title": {
+        "tr": "Ajans lisanslarında Supp. FOB royalty ile hesaplanır",
+        "en": "Supp. FOB includes royalty for agency licenses"
+      },
+      "body": {
+        "tr": "Bir lisansın License Royalty sözleşmelerinin tamamı DTR dışı bir lisansörle tanımlıysa (ör. Formula 1 → FASHION UK), o lisansın siparişleri üretici NON-DTR MANUFACTURERS listesinde olmasa da artık otomatik DTR sayılmaz. Licensor sözleşmeden gelir; Supp. FOB, Türkiye siparişlerinde TR komisyonu, yurt dışı siparişlerinde YD komisyonuyla (FOB − hologram) × (1 − royalty) olarak hesaplanır. Önceden bu satırlarda Supp. FOB = FOB görünüyor ve royalty düşülmüyordu. Sözleşmesi olmayan veya DTR sözleşmesi bulunan lisanslarda üretici listesi tek sınıflandırma kaynağı olmaya devam eder; elle seçilen Licensor ve elle girilen Supp. FOB korunur. Bu siparişlerde Sub-MFR artık üretici adıyla otomatik dolmaz; asıl üretim yapan firmayı girin.",
+        "en": "When every License Royalty contract of a license names a non-DTR licensor (e.g. Formula 1 → FASHION UK), its orders are no longer classified DTR automatically just because the manufacturer is missing from NON-DTR MANUFACTURERS. The Licensor comes from the contract and Supp. FOB is calculated as (FOB − hologram) × (1 − royalty), with the TR commission for Turkey orders and the overseas commission for other countries. Previously these rows showed Supp. FOB = FOB without deducting royalty. Licenses without contracts or with a DTR contract still use the manufacturer list as the only classification source; a manually selected Licensor and manually entered Supp. FOB are kept. Sub-MFR is no longer filled automatically with the manufacturer on these orders; enter the actual producing factory."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-agency-royalty-orders.png",
+        "alt": {
+          "tr": "Siparişler tablosunda ajans lisanslı Türkiye siparişi FOB ₺384,98, Supp. FOB 290,54; DTR siparişi FOB ile aynı",
+          "en": "Orders table: an agency-licensed Turkey order with FOB ₺384.98 and Supp. FOB 290.54; the DTR order equals FOB"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: üretici NON-DTR listesinde değil, sözleşme %24,5 royalty + 0,16 hologram; Türkiye ve yurt dışı siparişleri royalty ile hesaplanır, DTR lisansı değişmez.",
+          "en": "Actual Buyer Log with isolated demo data: the manufacturer is not on the NON-DTR list and the contract is 24.5% royalty + 0.16 hologram; Turkey and overseas orders include royalty while the DTR license is unchanged."
+        }
+      }
+    },
+    {
+      "id": "loading-approval-exfactory",
+      "type": "fix",
+      "module": {
+        "tr": "CP, Siparişler ve Backlog",
+        "en": "CP, Orders and Backlog"
+      },
+      "title": {
+        "tr": "Geç yükleme onayı Ex-Factory hesaplarını günceller",
+        "en": "Late loading approval updates Ex-Factory calculations"
+      },
+      "body": {
+        "tr": "ASAS yükleme onayı geçerli Ex-Factory tarihinden sonraysa Buyer Log bu tarihi otomatik Ex-Factory revizyonu olarak kullanır. Ex→Retail, LT, kurallar, checklist ve raporlar aynı tarihi esas alır. ASAS orijinali ve mevcut manuel revizyon kayıtları korunur; onaydan daha ileri bir manuel tarih varsa o tarih kullanılır. Ex-Factory hücresinde ASAS orijinal tarihi ile yükleme onay tarihi yalnız iki tarih ve aralarında bir nokta ile yan yana görünür. Orijinal tarih soluk, hesaplamada kullanılan tarih vurguludur; kaynak açıklaması fareyle üzerine gelince açılır. Simge ve otomatik etiketi gösterilmez; manuel revizyon eski → yeni oku ile ayrı kalır. Hücre, yapıştırma, içe aktarma ve tekli/toplu API düzenlemeleriyle değiştirilemez; ASAS onayı yenilendiğinde yeniden hesaplanır.",
+        "en": "When ASAS loading approval is later than the effective Ex-Factory date, Buyer Log uses it as an automatic Ex-Factory revision. Ex→Retail, LT, rules, checklists and reports use the same date. The ASAS original and existing manual revision records are preserved; a manual date later than approval remains effective. The Ex-Factory cell shows only the original ASAS date and loading approval date side by side with a dot between them. The original is muted and the effective date emphasized; hovering explains the sources. No icon or automatic-mode label is shown; manual revisions retain their separate old → new arrows. Cell editing, paste, import and single/batch API edits cannot change the automatic date; it is recalculated when ASAS approval is refreshed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "loading-approval-exfactory.png",
+        "alt": {
+          "tr": "Buyer Log CP ekranında yan yana orijinal ASAS ve yükleme onay tarihleri; ayrı manuel revizyon",
+          "en": "Original ASAS and loading approval dates side by side, with a separate manual revision in Buyer Log CP"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: 30.10.26 planı yerine 05.11.26 onayı kullanılır; otomatik ve manuel revizyonlar ayrı görünür.",
+          "en": "Actual Buyer Log with isolated demo data: approval on 05 Nov 2026 replaces the 30 Oct plan; automatic and manual revisions look distinct."
+        }
+      }
+    },
+    {
+      "id": "excel-import-lcw-ai",
+      "type": "feature",
+      "module": {
+        "tr": "Excel İçe Aktarma",
+        "en": "Excel Import"
+      },
+      "title": {
+        "tr": "Excel eşleme ve veri kontrolünde LCW AI",
+        "en": "LCW AI for Excel mapping and data review"
+      },
+      "body": {
+        "tr": "Import your Excel içinden seçili sayfanın örnek satırlarını LCW AI ile inceleyin. Sütun eşlemeleri, eşleşme alanları ve güvenli biçim düzeltmeleri önce önerilir; hücrelerin önce/sonra değerleri sayfalı listede gösterilir. Öneri kabul edildiğinde mevcut aktarım önizlemesi yenilenir ve değişiklikler geri alınabilir. Eksik kimlikler, belirsiz eşleşmeler, tekrarlar ve farklı para birimleri otomatik değiştirilmez. Kayıt yalnız son aktarım onayıyla yapılır.",
+        "en": "Review sample rows from the selected sheet with LCW AI in Import your Excel. Column mappings, match fields and safe format corrections are proposed first, with paginated before/after cell values. Accepting a suggestion rebuilds the existing import preview and supports undo. Missing identifiers, ambiguous matches, duplicates and foreign currencies are never changed automatically. Data is saved only after final import approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-import-lcw-ai.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içinde LCW AI eşleme önerisi ve iki fiyat hücresinin önce/sonra önizlemesi",
+          "en": "LCW AI mapping suggestion and before/after preview of two price cells in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo Excel ile gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. Sütun önerisi ve yerel doğrulayıcının ürettiği hücre düzeltmeleri gösteriliyor.",
+          "en": "Actual app with an isolated demo workbook; the LCW AI response was stubbed for acceptance testing. Shows the column suggestion and cell corrections produced by the local validator."
+        }
+      }
+    },
+    {
+      "id": "backlog-analysis-scope-performance",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Geniş horizon üzerinde hızlı Backlog analizi",
+        "en": "Faster Backlog analysis within a broad horizon"
+      },
+      "body": {
+        "tr": "Sezon, Buyer ve uygun sipariş filtreleri pahalı hesaplamalardan önce uygulanır. Genel Bakış, Teslimat Analizi ve Grafik aynı filtreli veriyi paylaşır; gruplama değiştiğinde detaylar yeniden indirilmez. Filtre seçenekleri yalnız açılan sütun için hazırlanır ve diğer sezonlar görünür kalır. Kaynak yenilemesi tüm panellere yansır; IAS parsiyelleri, üretim bakiyesi, Excel ve ekran toplamları aynı kuralları korur.",
+        "en": "Season, Buyer and eligible order filters apply before expensive calculations. Overview, Delivery Analysis and Chart share the same filtered data; changing grouping does not download details again. Filter choices load only for the opened column and other seasons remain available. Source refreshes update all panels while IAS partials, production balances, Excel and screen totals preserve their existing rules."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-analysis-scope.png",
+        "alt": {
+          "tr": "Backlog analizinde S7 seçili ve 59 satır görüntülenirken W6 ile W7 seçenekleri de listeleniyor",
+          "en": "Backlog analysis showing 59 rows with S7 selected while retaining W6 and W7 choices"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: analiz dar kapsamda çalışır; diğer sezonların filtre seçenekleri ayrı yüklenir.",
+          "en": "Actual Buyer Log with isolated demo data: analysis uses the narrow scope while other seasons remain available through separately loaded filter choices."
+        }
+      }
+    },
+    {
+      "id": "table-freeze-two-panes",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Donmuş sol bölme kendi içinde kaydırılır",
+        "en": "The frozen left pane scrolls on its own"
+      },
+      "body": {
+        "tr": "Sütunları Dondur artık iki bağımsız bölme sunar: donmuş sol bölme ve sağdaki tablo ayrı ayrı sağa sola kaydırılır. Sol bölmenin altındaki kendi kaydırma çubuğu, bölme üzerinde yatay tekerlek/trackpad veya Shift+tekerlek yalnız donmuş sütunları kaydırır; sağ taraf yerinde kalır. Bölme sınırı sürüklenerek genişletilir veya daraltılır, genişlik tablo görünümüyle hatırlanır; sınıra çift tıklamak tüm donmuş sütunları gösterir. Donmuş sütunlar ekrana sığmazsa dondurma artık iptal edilmez; bölme daralır ve kendi içinde kaydırılır. Klavyeyle donmuş bölmede gizli kalan bir hücreye gelindiğinde bölme onu gösterir.",
+        "en": "Freeze Columns now offers two independent panes: the frozen left pane and the table on the right scroll left and right separately. The frozen pane's own scrollbar, horizontal wheel/trackpad over the pane or Shift+wheel scroll only the frozen columns while the right side stays put. Drag the pane boundary to make it wider or narrower; the width is remembered with the table view, and double-clicking the boundary shows all frozen columns. If the frozen columns do not fit on screen, freezing is no longer cancelled; the pane narrows and scrolls on its own. When the keyboard moves to a cell hidden in the frozen pane, the pane reveals it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-freeze-pane-scroll.png",
+        "alt": {
+          "tr": "On donmuş sütunlu CP Tracker: sol bölme kendi çubuğuyla kaydırılmış, sağ bölme ayrı kaydırılmış, aradaki sınır belirgin",
+          "en": "CP Tracker with ten frozen columns: the left pane scrolled with its own bar, the right pane scrolled separately, with a clear boundary"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: donmuş sol bölme ve sağ tablo bağımsız olarak kaydırıldı.",
+          "en": "Actual Buyer Log with isolated demo data: the frozen left pane and the right table are scrolled independently."
+        }
+      }
+    },
+    {
+      "id": "license-cards-personal-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kendi lisans favorilerinizi atlas için tek seferde seçin",
+        "en": "Select your personal license favorites for the atlas in one click"
+      },
+      "body": {
+        "tr": "Satırdaki yıldızla lisans kartını kendi favorilerinize ekleyin veya çıkarın; Favorilerim ile listeyi süzün. Favorileri seç, arama ve filtrelerden bağımsız bütün favorilerinizi mevcut atlas seçimine ekler. Favoriler kullanıcı hesabına bağlı kişisel tercihlerde saklanır; aynı uygulama sunucusuna bağlanan tarayıcılarda açılışta yüklenir. Kartları yalnız görüntüleyebilen kullanıcılar da kendi favorilerini yönetebilir; ortak kartları düzenleme yetkisi değişmez.",
+        "en": "Use the star on a row to add or remove a license card from your own favorites; filter the list with My favorites. Select favorites adds all your favorites to the existing atlas selection regardless of search and filters. Favorites are stored in account-specific personal preferences and loaded at startup in browsers connected to the same application server. View-only users can manage their own favorites too; shared-card editing permissions are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-personal-favorites.png",
+        "alt": {
+          "tr": "Lisans kartlarında iki kişisel favori ve atlas için toplu seçim",
+          "en": "Two personal favorites in license cards and bulk selection for the atlas"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi ve yalnız görüntüleme yetkisi: yıldızlar kişiseldir; Favorileri seç iki lisansı atlas seçimine ekler.",
+          "en": "Actual Buyer Log with isolated demo data and view-only access: stars are personal; Select favorites adds two licenses to the atlas selection."
+        }
+      }
+    },
+    {
+      "id": "staggered-disclosures",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz",
+        "en": "Interface"
+      },
+      "title": {
+        "tr": "Uygulama genelinde kademeli açılma ve kapanma",
+        "en": "Staggered expansion and collapse across the application"
+      },
+      "body": {
+        "tr": "Veri Yönetimi, Backlog, Global Flow, transit analizi, alan seçicileri ve standart açılır bölümler aynı Motion+ hareketini kullanır. Panel açılırken en fazla altı görünür içerik grubu 32 ms arayla görünür; kapanırken içerik söner ve panel daralır. Hızlı tıklamalarda son tercih geçerlidir; odak, alan değerleri, klavye ve azaltılmış hareket korunur.",
+        "en": "Data Management, Backlog, Global Flow, transit analysis, field pickers and native disclosures use the same Motion+ profile. Up to six visible content groups appear 32 ms apart as a panel opens; content fades as the panel contracts on close. Rapid clicks settle on the latest choice, preserving focus, field values, keyboard operation and reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "staggered-disclosures.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve Yenileme bölümünde kademeli olarak açılan içerik",
+          "en": "Content appearing in stages in the Data Management Horizon and Refresh section"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu; ortak bölüm animasyonunun açılış karesi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the shared disclosure opening animation."
+        }
+      }
+    },
+    {
+      "id": "data-management-collapsed-sections",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Daraltılmış bölümler ve birleşik bağlantı yönetimi",
+        "en": "Collapsed sections and unified connection management"
+      },
+      "body": {
+        "tr": "Entegrasyon laboratuvarı, bağlantı kartları ve veri eşleştirme ayarları Bağlantı ve yapılandırma başlığı altında birlikte açılır ve kapanır. Bu bölüm, Kaynak modu, Horizon ve yenileme ve Araçlar ilk kullanımda daraltılmış gelir; sonraki açma-kapama tercihleriniz hatırlanır. Diğer ekranlardan bir kaynağa, modüle veya araca gidildiğinde ilgili bölüm otomatik açılır.",
+        "en": "The integration lab, connection cards and data matching settings expand and collapse together under Connections and configuration. This section, Source mode, Horizon and refresh, and Tools start collapsed on first use; subsequent expand/collapse preferences are remembered. Navigating to a source, module or tool from another screen automatically expands its section."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-collapsed-sections.png",
+        "alt": {
+          "tr": "Veri Yönetimi ekranında başlangıçta daraltılmış dört bölüm",
+          "en": "Four initially collapsed sections in Data Management"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu: Bağlantı ve yapılandırma, Kaynak modu, Horizon ve yenileme ve Araçlar kapalı başlar.",
+          "en": "Actual Buyer Log in an isolated demo session: Connections and configuration, Source mode, Horizon and refresh, and Tools start collapsed."
+        }
+      }
+    },
+    {
+      "id": "startup-login-no-flash",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Girişte kesintisiz genel kültür geçişi",
+        "en": "Seamless trivia transition after sign-in"
+      },
+      "body": {
+        "tr": "Girişten genel kültüre geçiş ilk çizimden önce hazırlanır; genel kültür yalnız katlanan üçgenlerin altından açılır. Geciken veya başarısız kare aktarımı giriş ekranını sonradan geri getirmez. Animasyon kapalıyken veya azaltılmış hareket tercihinde ekran doğrudan açılır.",
+        "en": "The transition from sign-in to trivia is prepared before the first paint, revealing trivia through the folding triangles. A delayed or failed frame handoff never brings the sign-in screen back later. With motion off or reduced motion enabled, the screen opens directly."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-login-no-flash.png",
+        "alt": {
+          "tr": "Giriş ekranının katlanan üçgenleri altından ilk kez açılan genel kültür kartı",
+          "en": "Trivia card first revealed beneath the folding triangles of the sign-in screen"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda gerçek Buyer Log; parola temizlendikten sonra geçiş sırasında yakalandı. İlk çizim sırası tarayıcıda kare kare kontrol edildi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the transition after clearing the password. First-paint order was checked frame by frame in the browser."
+        }
+      }
+    },
+    {
+      "id": "collection-lfl-country-checkboxes",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat kıyasında tikli ülke seçimi",
+        "en": "Checkbox country selection in price comparisons"
+      },
+      "body": {
+        "tr": "Previous Season, LFL ve Sezon Etkisi için hesaba katılmayacak ülkeleri aynı listede tikleyin veya tikini kaldırın. Seçim sırasında liste açık kalır; Escape veya liste dışına tıklama listeyi kapatır. Seçili ülke etiketleri kaldırıldı. Buyer kuralı ve diğer kullanıcıların yalnız görüntüleme yetkisi korunur.",
+        "en": "Check or uncheck countries to exclude from Previous Season, LFL and Season Impact in the same list. The list stays open while selecting; Escape or a click outside closes it. Selected-country tags have been removed. The buyer rule and other users’ view-only access are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-country-checkboxes.png",
+        "alt": {
+          "tr": "Fiyat çekmecesinde Fas ve Mısır tikli ülke listesi",
+          "en": "Country list in the price drawer with Morocco and Egypt checked"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: ülkeler aynı listeden seçilir; altta tekrarlanan etiketler yoktur.",
+          "en": "Actual Buyer Log with isolated demo data: countries are selected in one list without duplicate tags underneath."
+        }
+      }
+    },
+    {
+      "id": "checklist-rules-studio-workspace",
+      "type": "improvement",
+      "module": {
+        "tr": "Kontrol ve Kurallar",
+        "en": "Checklist & Rules"
+      },
+      "title": {
+        "tr": "LCW AI odaklı sade kural çalışma alanı",
+        "en": "A simpler rule workspace with LCW AI first"
+      },
+      "body": {
+        "tr": "Öncelik kuralları ve kontrol soruları soldaki listeden aranır ve etkinliğe göre süzülür. Sağda yalnız seçilen kayıt açılır; LCW AI görünür başlar, koşulların sade özeti ve gerçek sipariş etkisi gösterilir. Elle düzenleme gerektiğinde açılır. AI önerisi önce taslağa alınır, kontrol edilip kaydedilene kadar kurallara uygulanmaz.",
+        "en": "Search and filter priority rules and checklist questions in the list on the left. Only the selected item opens on the right, with LCW AI visible first, a plain-language condition summary and live order impact. Manual editing opens when needed. AI suggestions first enter a draft and take effect only after review and saving."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-rules-studio-workspace.png",
+        "alt": {
+          "tr": "Solda kural listesi, sağda LCW AI ve seçili kuralın sade özeti",
+          "en": "Rule list on the left, LCW AI and the selected rule’s plain summary on the right"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: seçili kural, LCW AI ile düzenleme ve kontrol sonrası kaydetme.",
+          "en": "Actual Buyer Log with isolated demo data: selected rule, LCW AI editing and saving after review."
+        }
+      }
+    },
+    {
+      "id": "module-staggered-flow",
+      "type": "improvement",
+      "module": {
+        "tr": "Modül geçişleri",
+        "en": "Module navigation"
+      },
+      "title": {
+        "tr": "Modüller arasında kademeli akış",
+        "en": "Staggered flow between modules"
+      },
+      "body": {
+        "tr": "Modül değiştirirken önce başlık, ardından özetler ve ana içerik 40 ms aralıklarla, toplam 440 ms içinde açılır. Tablo üst kapsayıcıları sabit kalır; veri satırları ayrı sıralı giriş kullanır. Aynı modüle tıklama ve veri yenileme geçişi tekrarlamaz; hızlı gezinme eski hareketi iptal eder. Seçim, düzenleme, kaydırma ve azaltılmış hareket tercihi korunur.",
+        "en": "Switching modules reveals the header, summaries and main content in 40 ms steps within 440 ms. Table ancestors stay still; data rows use a separate staggered entrance. Clicking the same module or refreshing data does not repeat the transition; rapid navigation cancels the previous motion. Selection, editing, scrolling and reduced-motion preferences are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "module-staggered-flow.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üzerinde modül geçişinde sırayla beliren başlık ve içerik blokları",
+          "en": "Header and content blocks appearing in sequence during module navigation in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek Buyer Log; kademeli akışın ortasında yakalanan ekran.",
+          "en": "Actual Buyer Log with isolated demo data, captured during the staggered transition."
+        }
+      }
+    },
+    {
+      "id": "menu-opening-motion",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Menüler tek ve akıcı hareketle açılır",
+        "en": "Menus open in one smooth motion"
+      },
+      "body": {
+        "tr": "Araçlar, Excel ve diğer buton menüleri ilk çizimde tek kez açılır. Açık menünün içindeki tıklamalar giriş hareketini tekrarlamaz; hızlı kapatıp açma yeni bir hareket başlatır. Çekmecelerin mevcut animasyonu, ekran kenarı konumu ve azaltılmış hareket tercihi korunur.",
+        "en": "Tools, Excel and other button menus animate once at their first paint. Clicking inside an open menu no longer replays its entrance; quickly closing and reopening starts a fresh entrance. Drawers retain their existing animation, viewport placement and reduced-motion behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "menu-opening-motion.png",
+        "alt": {
+          "tr": "CP Tracker Araçlar menüsü açık, anonim demo verili gerçek Buyer Log",
+          "en": "Actual Buyer Log with the CP Tracker Tools menu open on anonymous demo data"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu. Tek açılış ve hızlı yeniden açma davranışı tarayıcıda animasyon sayısıyla doğrulandı.",
+          "en": "Actual Buyer Log in an isolated demo session. Single entrance and fast reopening were verified by counting browser animations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-chat-history-delete",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Sohbet geçmişinden konuşma silme",
+        "en": "Delete conversations from chat history"
+      },
+      "body": {
+        "tr": "Sohbet satırındaki silme düğmesi onaydan sonra konuşmayı bu cihazdaki kullanıcı geçmişinden kaldırır. Silinen sohbet yeniden açılışta geri gelmez. Son sohbet silindiğinde yeni boş sohbet açılır; oluşturulan dosyalar Dosyalarım ekranında kalır. Yanıt oluşturulurken silme kapalıdır.",
+        "en": "After confirmation, the delete button on each chat row removes that conversation from the user’s history on this device. Deleted chats do not return after reopening. Deleting the last chat opens a new empty chat; created files remain in My files. Deletion is disabled while a response is being created."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-files-60-days.png",
+        "alt": {
+          "tr": "Demo sohbet silindikten sonra kalan sohbetin silme düğmesi ve Dosyalarım ekranındaki dosyalar",
+          "en": "Delete button on the remaining chat and files in My files after deleting a demo conversation"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: raporun sohbeti silinmiş, dosyaları bağımsız arşivde kalmıştır.",
+          "en": "Actual Buyer Log with isolated demo data: the report conversation was deleted and its files remain in the independent archive."
+        }
+      }
+    },
+    {
+      "id": "lcwai-files-retain-60-days",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Dosyalar ve düzenlenebilir taslaklar 60 gün erişilebilir",
+        "en": "Files and editable drafts stay accessible for 60 days"
+      },
+      "body": {
+        "tr": "Dosyalarım ekranı son 60 günde oluşturulan kişisel çıktıları sohbet geçmişinden bağımsız listeler. 40 taslak ve 500 kayıt sınırları yakın tarihli dosyaları artık düşürmez. Dosyalar aynı cihazda açılabilir ve LCW AI bağlantısı olmadan düzenlenip yeniden oluşturulabilir. Düzenleme taslağın 60 günlük süresini yeniler. İndirilenler klasöründeki dosyalar otomatik silinmez. Önceden silinmiş taslaklar geri getirilemez.",
+        "en": "My files lists personal outputs created in the last 60 days independently of chat history. The 40-draft and 500-record caps no longer discard recent files. Files can be opened on the same device and edited and recreated without an LCW AI connection. Editing renews the draft’s 60-day period. Files in Downloads are not automatically deleted. Previously deleted drafts cannot be recovered."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retained-file-edit.png",
+        "alt": {
+          "tr": "İki günlük raporun sohbeti silindikten sonra gerçek çıktı düzenleyicide yeniden oluşturulması",
+          "en": "Recreating a two-day-old report in the actual output editor after deleting its chat"
+        },
+        "caption": {
+          "tr": "Gerçek çıktı düzenleyici: 45 dosya arasındaki en eski demo raporu açıldı ve bağlantı olmadan güncellenmiş dosya oluşturuldu.",
+          "en": "Actual output editor: the oldest of 45 demo reports was opened and an updated file was created offline."
+        }
+      }
+    },
+    {
+      "id": "table-staggered-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo geçişleri",
+        "en": "Table transitions"
+      },
+      "title": {
+        "tr": "Tablolar sıralı satırlarla açılır",
+        "en": "Tables enter with staggered rows"
+      },
+      "body": {
+        "tr": "Modül değiştirirken ilk iki görünür tablonun en çok altışar görünür veri satırı hafifçe yükselerek sırayla belirir. Eski hücre renk dalgası kaldırıldı; tablo başlığı, kaydırma alanı ve hücre renkleri sabit kalır. Seçili veya düzenlenen satırlar atlanır. Aynı modüle tıklama ve veri yenileme hareketi tekrarlamaz; etkileşim ve hızlı gezinme önceki hareketi iptal eder. Azaltılmış harekette ve yazılım çiziminde tablo doğrudan görünür.",
+        "en": "When switching modules, up to six visible data rows in each of the first two visible tables enter sequentially with a subtle lift. The old cell tint wave is removed; table headers, scroll containers and cell colours stay still. Selected or edited rows are skipped. Clicking the same module or refreshing data does not replay the entrance; interaction and rapid navigation cancel old effects. Reduced motion and software compositing show the table immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-staggered-rows.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda sabit başlık altında sırayla beliren veri satırları",
+          "en": "Data rows entering in sequence beneath the fixed header in the actual Buyer Log CP table"
+        },
+        "caption": {
+          "tr": "İzole sentetik verili gerçek Buyer Log oturumunda sıralı satır girişinin bir karesi. Veri, başlık ve kaydırma konumu korunur.",
+          "en": "A frame of the staggered-row entrance in an actual Buyer Log session with isolated synthetic data. Data, headers and scroll positions are preserved."
+        }
+      }
+    },
+    {
+      "id": "license-card-compact-editor",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kompakt lisans kartı düzenleme penceresi",
+        "en": "Compact license card editor"
+      },
+      "body": {
+        "tr": "Lisans kartını ayrı bir pencerede düzenleyin. İlk açılışta yalnız seçili sözleşme görünür; geçmiş ve diğer sözleşmeler ile ek lisansör formu kendi düğmeleriyle açılır. Artwork brief alanı kaldırıldı ve görsel önizlemesi listedeki küçük görselle aynı boyuta getirildi. Kapatma taslağı korur, Vazgeç değişiklikleri geri alır.",
+        "en": "Edit a license card in a separate dialog. Only the selected contract appears initially; history, other contracts and the additional licensor form open with their own buttons. The artwork brief field has been removed and the image preview matches the list thumbnail size. Closing keeps the draft; Cancel discards edits."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-card-compact-editor.png",
+        "alt": {
+          "tr": "Kapalı sözleşme geçmişi ve lisansör formuyla kompakt lisans kartı penceresi",
+          "en": "Compact license card dialog with contract history and additional licensor form collapsed"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzünde izole demo verisi. Küçük görsel, tek sözleşme ve sabit kaydetme alanı.",
+          "en": "Actual Buyer Log UI with isolated demo data, showing the thumbnail, one contract and fixed save actions."
+        }
+      }
+    },
+    {
+      "id": "audit-small-session-records",
+      "type": "fix",
+      "module": {
+        "tr": "Denetim Günlüğü",
+        "en": "Audit Log"
+      },
+      "title": {
+        "tr": "Oturum kayıtları gereksiz büyümez",
+        "en": "Session records stay small"
+      },
+      "body": {
+        "tr": "Giriş, çıkış ve ilk parola kurulumunda ayrıntısız denetim kayıtları artık tüm kullanıcı ve sipariş erişim deposunu kopyalamaz. Ayrıntılı kayıtlarda hassas alan temizliği ve normal yedekleme korunur. Geçmiş günlükler değiştirilmez.",
+        "en": "Detail-free audit records for sign-in, sign-out and initial password setup no longer copy the entire user and order-access store. Sensitive-field redaction for detailed records and normal backups are preserved. Historical logs are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "audit-session-details.png",
+        "alt": {
+          "tr": "Demo girişinden sonra gerçek Buyer Log kullanıcı ve yetki yönetimi ekranı",
+          "en": "Actual Buyer Log user and authorization management after a demo sign-in"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda gerçek kullanıcı yönetimi. Oturum kayıtlarının küçük kaldığı aynı oturumun günlük dosyasından ayrıca doğrulandı.",
+          "en": "Actual user management in an isolated demo session. Small session records were separately verified in the audit file from this same session."
+        }
+      }
+    },
+    {
+      "id": "source-dense-excel-reading",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veriler",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Excel kaynak okumaları optimize edildi",
+        "en": "Excel source reads optimized"
+      },
+      "body": {
+        "tr": "ASAS, Antrepo, CPUpdate ve LFL kaynak dosyaları daha düşük okuma maliyetiyle işlenir. Parser sonuçları ve tarih davranışı sparse/dense eşdeğerlik testleriyle korunur.",
+        "en": "ASAS, Warehouse, CPUpdate and LFL source files use a lower-cost reading path. Parser results and date behavior are protected by sparse/dense equivalence tests."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-dense-orders.png",
+        "alt": {
+          "tr": "Dense kaynak okumasından sonra demo siparişlerini gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen showing demo orders after dense source reading"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle değişiklik sonrası gerçek Siparişler ekranı. Hesaplama eşdeğerliği ve okuma süreleri ayrıca test ve benchmark ile doğrulandı.",
+          "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
+        }
+      }
+    },
+    {
+      "id": "lcwai-retry-keeps-context",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Tekrar Dene artık eklenen Buyer Log verisini de gönderir",
+        "en": "Try Again now also sends the added Buyer Log data"
+      },
+      "body": {
+        "tr": "Bağlam dosyası (ör. Siparişler — Tüm kayıtlar) yüklenemediğinde ya da hazırlık yarıda kaldığında “Tekrar Dene” ve “Yeniden üret” isteği LCW AI’a bağlamsız ve eksiz gidiyordu; model veriyi görmediği için “veri sağlanmadı” diyerek boş tablo veya dosya üretiyordu. Artık tekrar denemede bağlam ve CSV eki yeniden hazırlanır. Uygulama yeniden açıldıktan sonra da hiç gönderilememiş mesaj aynı bağlamla tekrarlanır; eklenen dosyalar artık mevcut değilse istek sessizce gönderilmez, dosyaları yeniden eklemeniz istenir.",
+        "en": "When a context file (e.g. Orders — All records) failed to upload or preparation stopped midway, “Try Again” and “Regenerate” sent the request to LCW AI without the context and attachments; the model never saw the data and produced an empty table or file saying no data was provided. Retrying now rebuilds the context and its CSV attachment. After the app is reopened, a message that was never delivered is retried with the same context; if its attached files are no longer available, the request is not sent silently and you are asked to add the files again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retry-keeps-context.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında, Orders — All records bağlamıyla tekrar denenen mesaj ve tablo yanıtı",
+          "en": "Message retried with the Orders — All records context and its table answer in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. İlk CSV yüklemesi başarısız olduktan sonra Tekrar Dene isteği bağlam ve CSV ekiyle gönderildi.",
+          "en": "Actual app with isolated demo data; the LCW AI response was stubbed for acceptance testing. After the first CSV upload failed, Try Again sent the request with the context and its CSV attachment."
+        }
+      }
+    },
+    {
+      "id": "lcwai-data-query",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a doğal dille veri sorun; rakamları Buyer Log hesaplar",
+        "en": "Ask LCW AI about your data in plain language; Buyer Log calculates the figures"
+      },
+      "body": {
+        "tr": "“günaydın bana sıparıs adetlerını model butce ayına göre w6 da çıkarır mısın” gibi Türkçe karaktersiz, kısaltmalı ya da yazım hatalı istekler anlaşılır. LCW AI yalnız isteği yorumlayıp bir sorgu planı yazar; Buyer Log planı doğrular, değerleri gerçek veride eşleştirir (Mısır → Egypt, Yuzme → Yüzme) ve tüm kayıtlar üzerinde kendisi hesaplar. On binlerce satır LCW AI’a yüklenmez, rakamlar modelden gelmez. Cevabın üstünde nasıl anlaşıldığı (veri, filtre, satır/sütun, değer, eşleşen kayıt) ve yapılan varsayımlar yazar; yanlışsa “Mısır da hariç”, “adet yerine PO sayısı” diye düzeltmek yeterlidir. Belirsiz istekte ya da veride olmayan bir kodda tahmin yapılmaz, seçenekli soru sorulur. Sonuç “Excel olarak indir” ile ya da Excel yanıt biçimiyle LCW AI’a gitmeden dosyaya dönüşür. Ayrıca LCW AI bilgisindeki MB tanımı düzeltildi: MB = Model Bütçe (In-Store) tarihi.",
+        "en": "Requests written without Turkish characters, with abbreviations or typos, such as “good morning get me order qty by model budget month in w6”, are understood. LCW AI only interprets the request and writes a query plan; Buyer Log validates the plan, matches values to the real data (Mısır → Egypt, Yuzme → Yüzme) and calculates on all records itself. Tens of thousands of rows are no longer uploaded to LCW AI and figures never come from the model. Above the answer you see how the request was understood (data, filters, rows/columns, value, matched records) and any assumptions; to correct it, just write “exclude Egypt too” or “PO count instead of quantity”. Ambiguous requests and codes missing from the data are never guessed; you get a question with options. “Download as Excel”, or the Excel answer format, turns the result into a file without sending it to LCW AI. The MB definition in LCW AI’s knowledge was also corrected: MB = the Model Budget (In-Store) date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-data-query.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında dağınık yazılmış istek, “Buyer Log hesapladı” yorumu ve MB ayı × Buying Group tablosu",
+          "en": "Casually written request, the “Calculated by Buyer Log” interpretation and the MB month × Buying Group table in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Toplamlar uygulamanın kendi verisiyle bağımsız olarak doğrulandı (102 kayıt, 338.400 adet).",
+          "en": "Actual app with isolated demo data; the LCW AI plan was stubbed for acceptance testing. Totals were checked independently against the app’s own data (102 records, 338,400 units)."
+        }
+      }
+    },
+    {
+      "id": "lcwai-large-context-trimmed",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Büyük tablo bağlamı artık isteği durdurmuyor",
+        "en": "Large table context no longer stops the request"
+      },
+      "body": {
+        "tr": "Tüm kayıtlar bağlamı LCW AI dosya sınırını aştığında istek “dosya çok büyük” hatasıyla duruyordu. Artık tamamen boş sütunlar dosyaya girmez; sınır yine aşılırsa ilk satırlar gönderilir ve bu hem LCW AI’a hem cevabın üstünde size açıkça yazılır. Kesin toplam ve sayımlar için isteği doğrudan yazmanız yeterlidir; Buyer Log tüm kayıtlar üzerinde hesaplar.",
+        "en": "When the all-records context exceeded the LCW AI file limit, the request stopped with a “file too large” error. Columns that are completely blank are now left out of the file; if the limit is still exceeded, the first rows are sent and this is stated clearly both to LCW AI and to you above the answer. For exact totals and counts, just ask directly; Buyer Log calculates them on all records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-large-context-trimmed.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında kısaltılmış bağlam uyarısı ve nitelikselliği belirten cevap",
+          "en": "Trimmed-context warning and an answer stating it is qualitative in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; dosya sınırı ve LCW AI yanıtı kabul testi için küçültülüp taklit edildi.",
+          "en": "Actual app with isolated demo data; the file limit and the LCW AI response were reduced and stubbed for acceptance testing."
+        }
+      }
+    },
+    {
+      "id": "collection-order-sync-in-place",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Siparişten Koleksiyona aktarım Supp. FOB ve Sub MFR ile, kayıt çoğaltmadan çalışır",
+        "en": "Orders-to-Collection import uses Supp. FOB and Sub MFR without duplicating records"
+      },
+      "body": {
+        "tr": "CP ve Siparişlerden Koleksiyona aktarımda onaylı fiyat artık nihai FOB değil Supp. FOB, onaylı üretici ise Sub-Manufacturer olarak alınır; Koleksiyon royalty ve hologramı bu fiyata yalnız bir kez ekler. Koleksiyonda aynı MB ayı + PLM ID + Renk Kodu ile kayıt varsa yeni satır açılmaz, mevcut kayıt yerinde güncellenir: fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet ve kumaş siparişten taşınır; onaylı üretici veya fiyat farklıysa yalnız önizlemede onayladığınız kayıtlarda değişir.",
+        "en": "When importing from CP and Orders into Collection, the confirmed price is now Supp. FOB instead of the final FOB and the confirmed manufacturer is the Sub-Manufacturer; Collection adds royalty and hologram to this price only once. If Collection already has a record with the same MB month + PLM ID + Colour Code, no new row is created and the existing record is updated in place: pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity and fabric are copied from the order; a different confirmed manufacturer or price changes only for the records you approve in the preview."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-order-sync.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log önizlemesinde mevcut kaydın güncellenmesi ve Sub MFR · Supp. FOB fiyat onayı",
+          "en": "Existing record update and Sub MFR · Supp. FOB price approval in the actual Buyer Log preview"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; mevcut Koleksiyon kaydı ve CP Sub MFR/Supp. FOB değerleri kabul testi için hazırlandı.",
+          "en": "Actual app with isolated demo data; the existing Collection record and CP Sub MFR/Supp. FOB values were prepared for acceptance testing."
+        }
+      }
+    },
+    {
+      "id": "startup-primary-screen-ready",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış ve modül hazırlığı",
+        "en": "Startup and module preparation"
+      },
+      "title": {
+        "tr": "Açılan ekran hazır olduğunda devam edin",
+        "en": "Continue when the opening screen is ready"
+      },
+      "body": {
+        "tr": "Açılış perdesi kimlik, yetki ve açılan ekranın birincil verisi hazır olduğunda devam düğmesini gösterir. CP, Siparişler ve Koleksiyon hazırlığı çalışma alanı açıldıktan sonra, açma niyetinize ve son kullanımınıza göre arka planda yürür. Sol menüde bekliyor, yükleniyor, hazır ve hata durumları gösterilir; CP ve Siparişler yükleme hatalarında yeniden deneme sunulur.",
+        "en": "The startup curtain offers Continue when identity, permissions and the opening screen’s primary data are ready. CP, Orders and Collection prepare in the background after the workspace opens, ordered by your opening intent and recent use. The sidebar shows pending, loading, ready and error states; CP and Orders offer retry after a loading failure."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-primary-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo açılışında kimlik, veri ve ekran kapıları hazır; devam düğmesi gösteriliyor",
+          "en": "Actual Buyer Log demo startup with identity, data and screen gates ready and Continue available"
+        },
+        "caption": {
+          "tr": "20 sentetik siparişle gerçek uygulama. Genel Bakış hazırken CP ve Siparişler henüz yüklenmeden devam düğmesi sunulur.",
+          "en": "Actual app with 20 synthetic orders. Continue is available with Overview ready before CP and Orders have loaded."
+        }
+      }
+    },
+    {
+      "id": "client-computation-catalog-index",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon ve ortak sıralama",
+        "en": "Collection and shared sorting"
+      },
+      "title": {
+        "tr": "Koleksiyon değerleri ve sıralama için tekrarlanan hesaplar azaltıldı",
+        "en": "Less repeated work for Collection values and sorting"
+      },
+      "body": {
+        "tr": "Koleksiyon filtreleri aynı tam kaynak kataloğuyla hazırlanır; üretici seçenekleri de korunur. Modelden gelen hücre değerleri her alan için tüm tablo taranmadan okunur. Ortak metin sıralaması aynı düzeni daha az tekrar işlemle korur.",
+        "en": "Collection filters use the same complete source catalog, including manufacturer options. Inherited model cells are read without scanning the whole table for every field. Shared text sorting preserves the same order with less repeated work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "client-computation-collection.png",
+        "alt": {
+          "tr": "Altı sentetik kayıtla gerçek Buyer Log Koleksiyon ekranı ve hazır filtre kataloğu",
+          "en": "Actual Buyer Log Collection screen with six synthetic records and its filter catalog ready"
+        },
+        "caption": {
+          "tr": "20 sentetik siparişten altı demo Koleksiyon kaydı. Tam katalog ve model alan okumaları gerçek uygulamada doğrulandı.",
+          "en": "Six demo Collection records from 20 synthetic orders. The complete catalog and model field reads were checked in the actual app."
+        }
+      }
+    },
+    {
+      "id": "lcwai-merch-calendar",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI analizleri LCW Merch Calendar’a göre yapar",
+        "en": "LCW AI analyses follow the LCW Merch Calendar"
+      },
+      "body": {
+        "tr": "Veri sorularında ay, hafta, çeyrek ve yıl artık Veri Yönetimi’nden yüklenen LCW Merch Calendar’a göre hesaplanır; dönemler “Mart 2026”, “12. Hafta Mart 2026” gibi LCW adlarıyla gösterilir ve “Mart’tan sonra”, “2026 Ç3” gibi filtreler LCW aralıklarını kullanır. Yorum kutusu hangi takvimin kullanıldığını yazar; takvim aralığı dışında kalan tarihler ayrı satırda gösterilir, takvim yüklü değilse dönemlerin yaklaşık olduğu açıkça belirtilir. Miladi ay yalnız açıkça istendiğinde kullanılır. LCW AI da bugünkü LCW dönemini ve LCW ay aralıklarını gerçek takvimden öğrenir; “bu ay”, “geçen hafta” gibi ifadeleri LCW’ye göre yorumlar.",
+        "en": "In data questions, months, weeks, quarters and years are now calculated by the LCW Merch Calendar uploaded under Data Management; periods are shown with LCW names such as “March 2026” or “Week 12 March 2026”, and filters such as “after March” or “2026 Q3” use LCW ranges. The interpretation box states which calendar was used; dates outside the calendar range are shown in a separate row, and if no calendar is loaded the periods are clearly marked as approximate. Gregorian months are used only when explicitly requested. LCW AI also learns today’s LCW period and the LCW month ranges from the actual calendar, so it reads “this month” or “last week” in LCW terms."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-merch-calendar.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında LCW Merch Calendar’a göre Model Bütçe ayı tablosu ve kullanılan takvim satırı",
+          "en": "Model Budget month table by LCW Merch Calendar and the calendar line in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veri ve örnek bir 4-4-5 Merch Calendar ile gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Ay toplamları sayfanın tarih boyutuyla bağımsız doğrulandı; 154 kaydın 25’i miladi takvimde başka aya düşerdi.",
+          "en": "Actual app with isolated demo data and a sample 4-4-5 Merch Calendar; the LCW AI plan was stubbed for acceptance testing. Month totals were checked independently with the page’s date dimension; 25 of 154 records would fall in another month on the Gregorian calendar."
+        }
+      }
+    },
+    {
+      "id": "lcwai-excel-plain-format",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Excel çıktısı",
+        "en": "LCW AI · Excel output"
+      },
+      "title": {
+        "tr": "LCW AI Excel dosyaları sade; biçim yalnız istenirse eklenir",
+        "en": "LCW AI Excel files are plain; formatting is added only on request"
+      },
+      "body": {
+        "tr": "LCW AI ile oluşturulan Excel dosyalarında her sayfaya kendiliğinden eklenen zebra satır kuralı ve her sayısal sütundaki veri çubukları kaldırıldı. Varsayılan tablo artık gri başlık, ince satır çizgisi, sağa yaslı sayılar ve gizli kılavuz çizgileriyle sade gelir; yalnız alt başlık varsa ayrı Özet sayfası açılmaz. İsterseniz sohbette (“toplam satırı ekle”, “%20 üstü gecikmeyi kırmızı yap”, “ilk sütunu sabitle”) ya da Excel düzenleyicisindeki yeni Excel biçimi bölümünde hizalama, toplam satırı (filtreye duyarlı SUBTOTAL), en fazla 2 veri çubuğu, sayfa başına en fazla 8 vurgu kuralı, zebra satır ve sabit sütun açabilirsiniz. Renkler yalnız Buyer Log durum tonlarıdır (risk, uyarı, olumlu, bilgi); önizleme dosyayla aynı kuralları gösterir ve kayıtlı Excel şablonları bu biçimi de saklar.",
+        "en": "Excel files created with LCW AI no longer get an automatic striped-row rule on every sheet or data bars on every numeric column. The default table is now plain: grey header, thin row lines, right-aligned numbers and hidden gridlines; a subtitle alone no longer creates a separate Summary sheet. When you want it, ask in the chat (“add a total row”, “make delays above 20% red”, “freeze the first column”) or use the new Excel formatting section of the Excel editor to set alignment, a total row (filter-aware SUBTOTAL), up to 2 data bars, up to 8 highlight rules per sheet, striped rows and frozen columns. Colours are only Buyer Log status tones (risk, warning, positive, info); the preview shows the same rules as the file and saved Excel templates keep this formatting too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-excel-plain-format.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Excel düzenleyicisi önizlemesinde vurgu kuralları, iki veri çubuğu ve toplam satırı olan demo gecikme tablosu",
+          "en": "Demo delay table with highlight rules, two data bars and a total row in the actual Buyer Log Excel editor preview"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, izole demo verisi: biçim Excel biçimi bölümünden açıldı; oran > %20 risk, %10–20 uyarı, “Gecikti” risk, 5 Kasım öncesi termin bilgi tonunda. Biçim istenmeyen sayfalar sade kalır.",
+          "en": "Actual app with isolated demo data: formatting was turned on in the Excel formatting section; rate > 20% is risk, 10–20% warning, “Gecikti” risk and due dates before 5 November info. Sheets without requested formatting stay plain."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-columns-faster",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP kontrol listesi sütunları çok daha hızlı hazırlanır, ekran daha az donar",
+        "en": "CP checklist columns are prepared much faster and the screen freezes far less"
+      },
+      "body": {
+        "tr": "CP açılırken her siparişin hangi kontrol listesi başlıklarına tabi olduğu artık sipariş başına bir kez belirlenir; önceden kurallar her başlık için baştan değerlendiriliyordu. Ortak checklist kaydı yerel cevaplarla aynıysa artık yeniden yazılmaz ve bütün CP kararları boşuna yeniden hesaplanmaz; set/parça bilgisi de bir kez okunur. 24.982 satırlık demo veride tekrar açılışta tarayıcının işlem süresi medyan 122,8 sn'den 31,9 sn'ye, en uzun kesintisiz bekleme 79,2 sn'den 8,8 sn'ye indi; ilk ekran 32,2 sn yerine 13,9 sn'de açıldı. Kontrol listesi hücrelerinin içeriği değişmedi: 174.874 hücre önce ve sonra birebir aynı. Tedarikçi soru seçimi ve checklist e-posta eki hazırlığı da aynı yöntemi kullanır.",
+        "en": "When CP opens, the checklist headings that apply to each order are now determined once per order; previously the rules were re-evaluated for every heading. When the shared checklist record matches the local answers it is no longer rewritten, so all CP decisions are not recomputed needlessly, and set/part information is read once. On 24,982 demo rows, browser processing on a repeat opening fell from a median of 122.8 s to 31.9 s and the longest uninterrupted block from 79.2 s to 8.8 s; the first screen opened in 13.9 s instead of 32.2 s. Checklist cell contents are unchanged: all 174,874 cells are identical before and after. Supplier question selection and checklist email attachment preparation use the same method."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-checklist-columns-faster.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında 24.982 demo siparişin Kontrol Listesi sütunları; her satırda yalnız o siparişe uygulanan başlıklar dolu",
+          "en": "Checklist columns for 24,982 demo orders in the actual Buyer Log CP Tracker; each row fills only the headings that apply to that order"
+        },
+        "caption": {
+          "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000. Süreler aynı makinede üç koşunun medyanıdır (iki ölçüm turu); Windows/Electron ölçümü değildir.",
+          "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000. Timings are medians of three runs on the same machine (two measurement rounds), not a Windows/Electron measurement."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-bulk-single-refresh",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Toplu kontrol listesi güncellemesi CP'yi bir kez yeniler",
+        "en": "Bulk checklist updates refresh CP only once"
+      },
+      "body": {
+        "tr": "Toplu durum uygulama, hologram işaretleme ve test raporu aktarımı her cevabı yine tek tek kaydeder; ancak CP kararları ve kontrol listesi sütunları artık her cevap için değil, işlemin sonunda bir kez yenilenir. 24.982 satırlık demo veride 10 siparişe toplu onay 74,9 sn yerine 7,7 sn, 100 siparişe toplu onay 7,9 sn sürdü; önceden her cevap ekranı yaklaşık 7,6 sn donduruyordu. Kaydedilen cevaplar ve hata durumları değişmedi; işlem yarıda kesilse de uygulanan cevaplar korunur ve ekran yenilenir.",
+        "en": "Bulk status updates, hologram marking and test report import still save each answer individually, but CP decisions and checklist columns now refresh once at the end instead of after every answer. On 24,982 demo rows, bulk approval for 10 orders took 7.7 s instead of 74.9 s, and for 100 orders 7.9 s; previously each answer froze the screen for about 7.6 s. Saved answers and error handling are unchanged; if the operation stops midway, the applied answers are kept and the screen refreshes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-bulk-checklist.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında ilk sayfadaki siparişlere toplu uygulanan PPS onayı; uygulanmayan satırlarda başlık boş kalır",
+          "en": "PPS approval bulk-applied to the first page of orders in the actual Buyer Log CP Tracker; rows where the heading does not apply stay empty"
+        },
+        "caption": {
+          "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000; görünen 50 satıra tek toplu işlemle onay verildi. Süreler aynı makinede ölçüldü; Windows/Electron ölçümü değildir.",
+          "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000; the 50 visible rows were approved in one bulk operation. Timings were measured on the same machine, not on Windows/Electron."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-single-refresh",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Kontrol listesi değişikliğinden sonra CP ikinci kez donmaz",
+        "en": "CP no longer freezes a second time after a checklist change"
+      },
+      "body": {
+        "tr": "Bir kontrol listesi durumunu değiştirdikten sonra CP sütunları hemen güncellenir; kısa süre sonra aynı kararla tüm sütunlar ikinci kez baştan hazırlanıyordu. Karar, satırlar, test görevleri, başlıklar ve dil değişmediyse bu ikinci hazırlık artık yapılmaz. 24.982 satırlık demo veride her değişiklikten sonra gelen yaklaşık 3–4 sn'lik ikinci donma kalktı (üç ölçümün üçünde tam hazırlık sayısı ikiden bire indi). Hücre içerikleri değişmez; karar değiştiğinde sütunlar eskisi gibi baştan hazırlanır.",
+        "en": "After you change a checklist status, CP columns update immediately; shortly afterwards all columns were rebuilt a second time with the same decision. When the decision, rows, test tasks, headings and language are unchanged, that second rebuild is now skipped. On 24,982 demo rows the second freeze of about 3–4 s after each change is gone (full rebuilds fell from two to one in all three measurements). Cell contents are unchanged; when the decision changes, columns are rebuilt as before."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-checklist-single-refresh.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında ilk siparişin PPS onayı Reddedildi olarak tek değişiklikle güncellenmiş",
+          "en": "In the actual Buyer Log CP Tracker the first order's PPS approval is updated to Rejected with a single change"
+        },
+        "caption": {
+          "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000; diğer satırlardaki onaylar önceki demo işlemlerinden kalmadır. Süreler aynı makinede ölçüldü; Windows/Electron ölçümü değildir.",
+          "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000; approvals in other rows remain from earlier demo operations. Timings were measured on the same machine, not on Windows/Electron."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-delta",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Kontrol listesi durumunu değiştirmek CP'yi artık dondurmaz",
+        "en": "Changing a checklist status no longer freezes CP"
+      },
+      "body": {
+        "tr": "Bir kontrol listesi durumunu değiştirdiğinizde yalnız o sipariş ve aynı ürün opsiyonundaki siparişler yeniden hesaplanır; diğer siparişlerin kararları, kontrol listesi özeti ve hücreleri korunur. Önceden tek bir değişiklik bütün CP kararlarını ve sütunlarını baştan hazırlatıyordu. 24.982 satırlık demo veride tek değişiklik 7,3–8,5 sn yerine 0,2–0,6 sn sürüyor; ekranın en uzun beklemesi 8–9 sn'den yaklaşık 1–1,7 sn'ye indi. Kararlar, öncelikler ve hücreler tam yeniden hesapla birebir aynıdır. Kural, ayar, PLM veya CP verisi değiştiğinde her şey eskisi gibi baştan hesaplanır.",
+        "en": "When you change a checklist status, only that order and orders of the same product option are recalculated; other orders keep their decisions, checklist summary and cells. Previously a single change rebuilt every CP decision and column. On 24,982 demo rows a single change takes 0.2–0.6 s instead of 7.3–8.5 s, and the longest wait fell from 8–9 s to about 1–1.7 s. Decisions, priorities and cells are identical to a full recalculation. When rules, settings, PLM or CP data change, everything is recalculated as before."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-checklist-delta.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında ilk siparişin PPS onayı tek değişiklikle Gerekmiyor olarak güncellenmiş",
+          "en": "In the actual Buyer Log CP Tracker the first order's PPS approval is updated to Not required with a single change"
+        },
+        "caption": {
+          "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000; diğer satırlardaki onaylar önceki demo işlemlerinden kalmadır. Süreler aynı makinede ölçüldü; Windows/Electron ölçümü değildir.",
+          "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000; approvals in other rows remain from earlier demo operations. Timings were measured on the same machine, not on Windows/Electron."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-global-flow-details",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview · Küresel Akış",
+        "en": "Overview · Global Flow"
+      },
+      "title": {
+        "tr": "Harita kaynak ayrıntılarını çekmece açılınca yükler",
+        "en": "Map source details load when the drawer opens"
+      },
+      "body": {
+        "tr": "Küresel Akış haritaya gereken alanları yükler; kaynak ayrıntıları bir nokta veya rota açıldığında alınır. Detay çekmecesi aynı siparişleri, parsiyelleri ve kaynak alanlarını gösterir. Backlog detayları ve kaynak ayrıntılı Excel akışı korunur.",
+        "en": "Global Flow loads the fields needed by the map and fetches source details when a point or route is opened. The detail drawer retains the same orders, partials and source fields. Backlog detail and source-detailed Excel workflows remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-globalflow-details-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo verisinde İstanbul çekmecesi: üç sipariş ve 11.900 adet",
+          "en": "Actual Buyer Log demo: the Istanbul drawer with three orders and 11,900 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema; harita tıklamasından sonra kaynak ayrıntıları yetkili istekle yüklendi.",
+          "en": "Actual post-change app in Turkish and light theme; an authorized request loaded source details after clicking the map."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-backlog-shared-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog panelleri ilk açılışta aynı veri isteğini paylaşır",
+        "en": "Backlog panels share the same request on first opening"
+      },
+      "body": {
+        "tr": "Genel Bakış, Teslimat Analizi ve Grafik, pivotun kaynak revizyonu belli olduktan sonra ortak satır verisini kullanır. Sayfa açılırken Delivery hazırlığının erken başlaması aynı detay isteğini yeniden başlatmaz. Filtreler, sipariş kapsamı ve ekran toplamları korunur.",
+        "en": "Overview, Delivery Analysis and Chart use shared rows once the pivot source revision is known. Early Delivery preparation no longer restarts the same detail request during opening. Filters, order scope and screen totals are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-backlog-shared-rows-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Backlog demo ekranında 20 sipariş ve 71.200 adetlik ortak operasyon özeti",
+          "en": "Actual Backlog demo screen with 20 orders and a shared operation summary of 71,200 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama: Genel Bakış özeti hazır; kabul koşusu tüm görünür raporların hazır olmasını ve Delivery toplam eşitliğini ayrıca doğrular.",
+          "en": "Actual post-change app with the Overview summary ready; the acceptance scenario separately verifies all visible reports and matching Delivery totals."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-office-background",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Dosyalarım",
+        "en": "LCW AI · My files"
+      },
+      "title": {
+        "tr": "Excel ve PowerPoint dosyaları arka planda hazırlanır",
+        "en": "Excel and PowerPoint files are prepared in the background"
+      },
+      "body": {
+        "tr": "Excel ve PowerPoint oluşturma sürerken Buyer Log diğer sunucu isteklerini işlemeye devam eder. Dosyalar aynı biçim ve içerik kurallarıyla Dosyalarım listesine kaydedilir; yayımlanmadan önce oturum ve dosya sahipliği yeniden doğrulanır.",
+        "en": "Buyer Log continues handling other server requests while Excel and PowerPoint files are being created. Files retain the same format and content rules in My files; session and file ownership are checked again before publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-office-files-en-dark.png",
+        "alt": {
+          "tr": "Gerçek Dosyalarım ekranında oluşturulmuş demo Excel ve PowerPoint dosyaları",
+          "en": "Actual My files screen with generated demo Excel and PowerPoint files"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, İngilizce ve koyu tema. Demo dosyalar gerçek yerel API ve dosya üreticileriyle oluşturuldu; harici AI oturumu veya credential kullanılmadı.",
+          "en": "Actual post-change app in English and dark theme. Demo files were created through the real local API and renderers, without an external AI session or credentials."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-collection-lfl-background",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon fiyat referansları",
+        "en": "Collection price references"
+      },
+      "title": {
+        "tr": "LFL fiyat referansları arka planda hazırlanır",
+        "en": "LFL price references prepare in the background"
+      },
+      "body": {
+        "tr": "Fiyat çekmecesinin LFL ve Previous Season özetleri arka planda hazırlanır. Güncelleme tamamlanana kadar kayıtlı referanslar görüntülenmeye devam eder.",
+        "en": "LFL and Previous Season summaries for the price drawer prepare in the background. Saved references remain visible until the update completes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-lfl-reference-tr-light.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinde 9,82 USD LFL ve Previous Season referansları",
+          "en": "Actual demo price drawer with a USD 9.82 LFL reference and Previous Season comparison"
+        },
+        "caption": {
+          "tr": "20 sentetik sipariş ve S6/S7 sezonlu görsel demo verisiyle gerçek uygulama; fiyat referansları ve örnek model karşılaştırması hazır.",
+          "en": "Actual app with 20 synthetic orders and S6/S7 visual demo seasons; price references and the sample model comparison are ready."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-oab-async-file-read",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB filtreleri ilk dosya okumasını asenkron yapar",
+        "en": "OAB filters read their file asynchronously on first use"
+      },
+      "body": {
+        "tr": "Paketlenmiş OAB filtre dosyası ilk kullanımda asenkron okunur; aynı dosya sürümünü bekleyen istekler tek yüklemeyi paylaşır. Sonraki istekler mevcut yerel indeksleri kullanır. Sezon, MAG ve Buyer Group seçenekleri korunur; yanıt öncesi oturum ve OAB görüntüleme yetkisi yeniden doğrulanır.",
+        "en": "The bundled OAB filter file is read asynchronously on first use; requests waiting for the same file version share one load. Later requests reuse the local indexes. Season, MAG and Buyer Group options are preserved; the session and OAB view permission are checked again before the response."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-oab-async-filters-tr-light.png",
+        "alt": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log demo ekranında açık OAB sezon listesi",
+          "en": "Open OAB season list in the actual post-change Buyer Log demo"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, Türkçe ve açık tema. Paketlenmiş seçenekler asenkron yerel dosya okumasından sonra gösterilir.",
+          "en": "Actual app in Turkish and light theme. Bundled options appear after the asynchronous local file read."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-history-idempotent-read",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak veriler · Geçmiş",
+        "en": "Source data · History"
+      },
+      "title": {
+        "tr": "Değişmeyen geçmiş okumaları dosyayı yeniden yazmaz",
+        "en": "Unchanged history reads no longer rewrite the file"
+      },
+      "body": {
+        "tr": "Detayları sınıra indirilmiş yenileme geçmişi tekrar açıldığında içerik değişmediyse revision artırılmaz ve dosya yeniden yazılmaz. Toplam değişiklik sayısı, saklanan detaylar, gerçek değişikliklerin kaydı ve mevcut saklama sınırları korunur.",
+        "en": "Reopening a refresh history whose details are already capped no longer advances its revision or rewrites the file when its contents are unchanged. Total changes, retained details, real updates and existing retention limits are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-history-read-tr-light.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamada 42.726 değişiklik içeren kaynak geçmişi",
+          "en": "Source history with 42,726 changes in the actual demo app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema. Geçmiş içeriği korunur; yazılmama durumu dosya ve revision kontrolleriyle doğrulanır.",
+          "en": "Actual post-change app in Turkish and light theme. History content is preserved; file and revision checks verify the absence of writes."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-only-hydration",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Siparişler yüklenirken CP için fazladan karar yenilemesi yapılmaz",
+        "en": "Loading Orders avoids an extra CP decision refresh"
+      },
+      "body": {
+        "tr": "Siparişler yanıtının kendi güncellemesi yalnız Siparişler kararlarını yeniler. CP seçimi ve taslak düzenlemeleri korunur; ortak kurallar veya gerçek CP verisi değiştiğinde gerekli CP güncellemesi devam eder.",
+        "en": "The Orders response updates Orders decisions without triggering an additional CP refresh. CP selections and draft edits are preserved; shared-rule or actual CP data changes still trigger the required CP update."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-hydration-scope.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo ekranında Siparişler yüklendikten sonra seçimi korunan CP satırı",
+          "en": "Actual Buyer Log demo with a CP row selection preserved after loading Orders"
+        },
+        "caption": {
+          "tr": "İzole 20 siparişlik demo kaynağı, Türkçe ve açık tema. Siparişler yanıtı sonrası CP görünümü ve seçimi korundu; revizyon ve olay kapsamı ayrıca doğrulandı.",
+          "en": "Isolated demo source with 20 orders, Turkish and light theme. The CP view and selection remain after the Orders response; revision and event scopes were verified separately."
+        }
+      }
+    },
+    {
+      "id": "pricing-client-calculation-cost",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat taleplerinde arama ve hesaplama hızlandı",
+        "en": "Faster quotation search and calculations"
+      },
+      "body": {
+        "tr": "Fiyat taleplerinde arama yalnız sol listeyi yeniler; açık fiyat hücresi ve detay ekranı korunur. Çok buyer içeren büyük fiyat çalışmalarında üretici karşılaştırmaları daha hızlı hazırlanır. Aynı demo veride sonuçlar önceki sürümle birebir eşittir.",
+        "en": "Quotation search refreshes only the left list, preserving the open price cell and detail view. Supplier comparisons are prepared faster in large pricing workspaces with multiple buyers. Results match the previous version exactly on the same demo data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-client-cost.png",
+        "alt": {
+          "tr": "30 bin teklif satırında arama sonrası açık kalan fiyat hücresi ve üretici matrisi",
+          "en": "Price cell and supplier matrix preserved after searching 30,000 quotation lines"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: 200 talep, 30.000 teklif satırı; arama sırasında aynı fiyat input’u korunur.",
+          "en": "Actual Buyer Log with isolated demo data: 200 requests and 30,000 quotation lines; search preserves the same price input."
+        }
+      }
+    },
+    {
+      "id": "open-costing-line-calculation-cost",
+      "type": "improvement",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Preliminary Costing"
+      },
+      "title": {
+        "tr": "Maliyet satırı düzenlemeleri daha hızlı güncellenir",
+        "en": "Cost line edits update faster"
+      },
+      "body": {
+        "tr": "Bir maliyet kalemi değiştiğinde ilgili satır ve toplamlar daha hızlı güncellenir. Para birimi veya kur ayı değişiminde bütün satırlar yeniden hesaplanır; hesap sırası ve yuvarlama sonuçları korunur.",
+        "en": "Changing a cost item updates its line and totals faster. Changing the currency or FX month recalculates all lines; calculation order and rounding results are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "open-costing-client-cost.png",
+        "alt": {
+          "tr": "100 demo maliyet satırında değiştirilen tüketim ve güncel kumaş ara toplamı",
+          "en": "Edited usage and updated fabric subtotal on 100 demo cost lines"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, anonim demo maliyet: ilk satırın tüketimi 0,03 olarak güncellendi; kumaş ara toplamı 7,18 USD.",
+          "en": "Actual Buyer Log with anonymous demo costing: first-line usage updated to 0.03; fabric subtotal is USD 7.18."
+        }
+      }
+    },
+    {
+      "id": "startup-feature-assets",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · İsteğe bağlı modüller",
+        "en": "Startup · Optional modules"
+      },
+      "title": {
+        "tr": "İsteğe bağlı modüller açılıştan ayrıldı",
+        "en": "Optional modules load on demand"
+      },
+      "body": {
+        "tr": "Backlog ek raporları, Excel içe aktarma sihirbazı ve Koleksiyon spreadsheet kodu ilgili özellik açıldığında yüklenir. LFL, Üreticiler, Lisans Kartları, Pricing Desk, Veri Yönetimi ve diğer isteğe bağlı ekranların stilleri ilk açılışa ertelenir. Ekran, stilleri ve kodu hazır olduğunda gösterilir; ortak stillerin önceliği korunur. Rehber ve açılış kartlarının verisi HTML ayrıştırmasını bekletmeden yüklenir. Üreticilerde sipariş alt detayı, Backlog daha önce açılmamış olsa da doğru yerleşimle gösterilir.",
+        "en": "Additional Backlog reports, the Excel import wizard and Collection spreadsheet code load when the feature is opened. Styles for LFL, Manufacturers, License Cards, Pricing Desk, Data Management and other optional screens are deferred until first use. Screens appear when their styles and code are ready, preserving the priority of shared styles. Guide and startup-card data load without blocking HTML parsing. Manufacturer order details display correctly even when Backlog has not been opened."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-feature-assets.png",
+        "alt": {
+          "tr": "Backlog açılmadan Üreticilerden açılan stilli sipariş alt detayı",
+          "en": "Styled order drill-down opened from Manufacturers before visiting Backlog"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, 30 bin satırlık sentetik kaynak: Üreticilerden açılan 500 satırlık sipariş alt detayı. Backlog sekmesi daha önce açılmadı.",
+          "en": "Actual Buyer Log with a synthetic 30,000-row source: a 500-row order drill-down opened from Manufacturers. The Backlog tab has not been opened."
+        }
+      }
+    },
+    {
+      "id": "resumed-authority-current-profile",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı ve Yetki Yönetimi",
+        "en": "User and Authorization Management"
+      },
+      "title": {
+        "tr": "Bekleyen istekler güncel kullanıcı yetkisiyle kontrol edilir",
+        "en": "Pending requests use current user authority"
+      },
+      "body": {
+        "tr": "Bir istek yetki kontrolüne ulaşmadan önce rolünüz veya kişisel yetkiniz değişirse işlem güncel kullanıcı profilinizle değerlendirilir. Kaldırılan yetki eski istek profilinden kullanılamaz. Yetki değişikliği tek başına geçerli oturumunuzu kapatmaz; parola değişikliği ve pasif hesap kontrolleri korunur.",
+        "en": "If your role or personal permissions change before a request reaches its authorization check, the operation uses your current user profile. Revoked permissions cannot survive in an earlier request profile. An access change alone does not end a valid session; password changes and inactive accounts still invalidate access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "resumed-authority-current-profile.png",
+        "alt": {
+          "tr": "İzole demo Buyer Log Kullanıcı Yönetimi ekranında kişisel yönetim yetkisi kaldırılmış aktif kullanıcı",
+          "en": "Active demo user with personal administration access removed in the actual Buyer Log User Management screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole sentetik kullanıcılar. Yetki listesi güncel profili gösterir; bekleyen isteğin reddi ayrıca yerel ve merkezi IAM regresyonlarıyla doğrulandı.",
+          "en": "Actual Buyer Log with isolated synthetic users. The permission list shows the current profile; local and central IAM regressions separately verify denial of pending requests."
+        }
+      }
+    },
+    {
+      "id": "lcwai-active-stream",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Yanıt akışında sohbet geçmişi yerinde kalır",
+        "en": "Chat history stays in place while answers stream"
+      },
+      "body": {
+        "tr": "LCW AI yanıtı gelirken yalnız aktif mesaj yeniden çizilir. Önceki mesajlardaki metin seçimi ve yukarı kaydırdığınız okuma konumu akış sırasında korunur; en alttaysanız yeni metin izlenir. Güvenli Markdown gösterimi ve yanıt içeriği aynı kalır.",
+        "en": "Only the active message is redrawn as an LCW AI answer arrives. Text selection in earlier messages and your reading position survive streaming; at the bottom, new text stays in view. Safe Markdown rendering and answer content stay the same."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-active-stream.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında yeni yanıt akarken önceki demo özeti seçili",
+          "en": "An earlier demo summary remains selected while a new answer streams in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama. LCW AI yanıt akışı kabul testi için taklit edildi; geçmiş DOM kimliği ve metin seçimi tarayıcıda doğrulandı.",
+          "en": "Actual app with isolated demo data. The LCW AI answer stream was stubbed for acceptance testing; history DOM identity and text selection were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "manufacturer-separate-detail",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üretici seçimi listeyi yerinde tutar",
+        "en": "Manufacturer selection keeps the list in place"
+      },
+      "body": {
+        "tr": "Üretici kartları arasında geçerken yalnız seçili ayrıntı yenilenir. Liste konumu korunur; filtre değiştiğinde seçili üretici aynı kalıyorsa ayrıntı gereksiz yere yeniden kurulmaz. Sipariş analizleri aynı kaynaktan gelir.",
+        "en": "Switching manufacturer cards refreshes only the selected detail. List position is preserved; changing filters keeps the detail when the same manufacturer remains selected. Order analyses use the same source."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-separate-detail.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Üreticiler ekranında demo siparişlerden seçili üretici ve sabit liste",
+          "en": "Selected manufacturer from demo orders and the retained list in the actual Buyer Log Manufacturers screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole sentetik siparişler ve demo kartlar. Liste düğümlerinin seçim sırasında korunduğu tarayıcıda doğrulandı.",
+          "en": "Actual Buyer Log with isolated synthetic orders and demo cards. List nodes were verified to survive selection in the browser."
+        }
+      }
+    },
+    {
+      "id": "email-directory-separate-detail",
+      "type": "improvement",
+      "module": {
+        "tr": "İletişim rehberi",
+        "en": "Contact directory"
+      },
+      "title": {
+        "tr": "Rehber seçimi ve düzenleme listeyi yeniden kurmaz",
+        "en": "Directory selection and editing avoid rebuilding the list"
+      },
+      "body": {
+        "tr": "Rehberde kayıt seçimi yalnız ayrıntıyı günceller. Liste konumu ve aktif düzenleme alanındaki taslak korunur. Yeni rehber veya kilit bilgisi geldiğinde görünüm yenilenir; kayıt ve kilit denetimleri aynı kalır. İçeriği değişmeyen rehber okumaları da listeyi geçersiz kılmaz.",
+        "en": "Selecting a directory record updates only its detail. List position and the draft in the active edit field are preserved. New directory or lock information refreshes the view; save and lock checks stay the same. Directory reads with unchanged content also retain the existing list."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "email-directory-separate-detail.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log iletişim rehberinde demo üretici için aktif iletişim taslağı ve üretici listesi",
+          "en": "Active contact draft for a demo manufacturer and the directory list in the actual Buyer Log contact directory"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole sentetik siparişler ve demo kartlar. Liste düğümlerinin seçim sırasında korunduğu tarayıcıda doğrulandı.",
+          "en": "Actual Buyer Log with isolated synthetic orders and demo cards. List nodes were verified to survive selection in the browser."
+        }
+      }
+    },
+    {
+      "id": "analytics-delivery-worker",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog Teslimat Analizi",
+        "en": "Backlog Delivery Analysis"
+      },
+      "title": {
+        "tr": "Teslimat hesabı arayüzden ayrı çalışır",
+        "en": "Delivery calculation runs separately from the interface"
+      },
+      "body": {
+        "tr": "Teslimat analizi aynı kural motorunu tarayıcı worker’ında çalıştırır. Veri ve sonuçlar küçük parçalarla aktarılır; ayar veya filtre değişince eski hesap iptal edilir. Tarih yorumları, toplamlar ve sipariş detay bağlantıları korunur.",
+        "en": "Delivery analysis runs the same rule engine in a browser worker. Data and results travel in small batches; changing settings or filters cancels the previous calculation. Date interpretation, totals and order detail links are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "analytics-delivery-worker.png",
+        "alt": {
+          "tr": "Tamamlanmış demo teslimat riski analizi",
+          "en": "Completed demo delivery risk analysis"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log; izole sentetik 30.000 siparişlik seed 7 fixture ile Chromium’da doğrulandı.",
+          "en": "Actual Buyer Log; verified in Chromium with the isolated synthetic 30,000-order seed 7 fixture."
+        }
+      }
+    },
+    {
+      "id": "analytics-lfl-sort",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "Tablo sıralaması yalnız ilgili tabloyu yeniler",
+        "en": "Sorting refreshes only the selected table"
+      },
+      "body": {
+        "tr": "LFL grup, üretici ve senaryo tablolarında sıralama ve tablo içi filtreler yalnız ilgili tabloyu günceller. Hazırlanmış satırlar tekrar kullanılır; KPI, kaynak bilgisi ve diğer tablolar yeniden kurulmaz. Genel filtre, veri, Trial ve dil değişiklikleri tüm görünümü yenilemeye devam eder.",
+        "en": "Sorting and table filters in LFL group, manufacturer and scenario tables update only that table. Prepared rows are reused; KPIs, source information and other tables are not rebuilt. Global filters, data, Trial and language changes still refresh the full view."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "analytics-lfl-sort.png",
+        "alt": {
+          "tr": "Demo LFL analizinde sıralanmış kıyas tablosu ve korunan özetler",
+          "en": "Sorted comparison table and preserved summaries in demo LFL analysis"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log; izole sentetik 30.000 siparişlik seed 7 fixture ile Chromium’da doğrulandı.",
+          "en": "Actual Buyer Log; verified in Chromium with the isolated synthetic 30,000-order seed 7 fixture."
+        }
+      }
+    },
+    {
+      "id": "analytics-transit-summary",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "Ülke ve taşıt özetlerinde daha az tekrar hesap yapılır",
+        "en": "Country and vehicle summaries do less repeated work"
+      },
+      "body": {
+        "tr": "Yol süreleri analizinde alt süreçler ülke ve taşıt için bir kez gruplanır. Her ülkenin tüm süreç listesini yeniden taraması kaldırıldı; yıl kapsamı, sevkiyat veya adet ağırlıkları, ortalamalar ve P80 değerleri korunur.",
+        "en": "Transit analysis groups process steps by country and vehicle once. Each country no longer scans the entire step list; year scope, shipment or quantity weights, means and P80 values are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "analytics-transit-summary.png",
+        "alt": {
+          "tr": "Sentetik demo raporuyla ülke ve taşıt bazında yol süresi özeti",
+          "en": "Transit time summary by country and vehicle using a synthetic demo report"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log; 30.000 siparişlik seed 7 fixture yanında modülün gerçek kayıt API’siyle hazırlanan 36 kayıt ve 48 step içeren sentetik rapor.",
+          "en": "Actual Buyer Log; alongside the 30,000-order seed 7 fixture, a synthetic report with 36 records and 48 steps was saved through the module’s real API."
+        }
+      }
+    },
+    {
+      "id": "cp-first-open-row-cache",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP ilk açılışta daha erken kullanılabilir",
+        "en": "CP becomes usable sooner on first open"
+      },
+      "body": {
+        "tr": "Kontrol listesi, bir siparişin set ürün olup olmadığını her kalem için satırın açıklama alanlarından yeniden okuyordu; CP'de bulunmayan başlıklar her seferinde bütün sütunlarda aranıyordu. Artık bir hesaplama boyunca her satır bir kez okunur. 24.982 satırlık demo veride açılıştan hemen sonra CP'ye geçiş medyanı 17,1 sn'den 13,2 sn'ye indi; satırlar 13,6 sn yerine 10,5 sn'de görünür. Kararlar, öncelikler ve 174.874 kontrol listesi hücresi önceki sonuçla birebir aynıdır.",
+        "en": "The checklist re-read a row's description fields for every item to decide whether an order is a set product, and headings that CP rows do not have were searched across every column each time. Each row is now read once per calculation. On 24,982 demo rows, switching to CP right after startup fell from a median of 17.1 s to 13.2 s; rows appear at 10.5 s instead of 13.6 s. Decisions, priorities and all 174,874 checklist cells are identical to the previous result."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-first-open-row-cache.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamada 24.982 satırlı CP Tracker",
+          "en": "CP Tracker with 24,982 rows in the actual demo app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema; ilk geçişten sonra görünen CP satırları.",
+          "en": "Actual post-change app in Turkish and light theme; CP rows shown after the first switch."
+        }
+      }
+    },
+    {
+      "id": "phase7-snapshot-common-pool",
+      "type": "improvement",
+      "module": {
+        "tr": "Yerel kayıt",
+        "en": "Local storage"
+      },
+      "title": {
+        "tr": "Büyük kayıt kontrol noktaları arka planda hazırlanır",
+        "en": "Large storage checkpoints prepare in the background"
+      },
+      "body": {
+        "tr": "Büyük yerel kayıt kontrol noktalarının JSON hazırlığı ortak hesaplama havuzunda yürütülür. Ölçülen sunucu duraklaması azalırken toplam kayıt süresi ve bellek artmıştır. Havuz kullanılamazsa mevcut kayıt kapasitesini koruyan yerel yol sürer.",
+        "en": "Large local checkpoints prepare their JSON in the shared compute pool. The measured server pause decreases while total checkpoint time and memory increase. If the pool cannot serve the job, the existing local path preserves write capacity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-snapshot-common-pool.png",
+        "alt": {
+          "tr": "Arka plan kayıt yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the background storage path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Bu görüntü arka plan süre veya dayanıklılık kanıtı değildir; bunlar ayrı ölçüm ve regresyonlarla doğrulanır.",
+          "en": "Actual application with synthetic data. This capture does not prove background timing or durability; separate measurements and regressions provide that evidence."
+        }
+      }
+    },
+    {
+      "id": "phase7-local-image-planning",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri",
+        "en": "Model images"
+      },
+      "title": {
+        "tr": "Yerel görseller için ortak klasör taraması azaltıldı",
+        "en": "Local images avoid unnecessary shared-folder scans"
+      },
+      "body": {
+        "tr": "Model görseli yerelde hazırsa eksik görsel planı ortak klasörü gereksiz yere taramaz. Manuel sahiplik ve mevcut görsel seçimi korunur.",
+        "en": "When a model image is already available locally, missing-image planning avoids unnecessary shared-folder scans. Manual ownership and existing image selection are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-local-image-planning.png",
+        "alt": {
+          "tr": "Yeni görsel yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the revised image path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Disk işlemi kazanımı ayrıca ölçülür; bu görüntü zamanlama kanıtı değildir.",
+          "en": "Actual application with synthetic data. Disk-operation savings are measured separately; this capture is not timing evidence."
+        }
+      }
+    },
+    {
+      "id": "phase7-image-pack-batch",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri",
+        "en": "Model images"
+      },
+      "title": {
+        "tr": "Ortak görseller toplu yayımlanır",
+        "en": "Shared images publish in batches"
+      },
+      "body": {
+        "tr": "Bir işlemdeki ortak görsellerin paket ve metadata yazımları gruplandırılır. İçerik doğrulama ve tekrar okuma davranışı korunur. Ölçüm Linux yerel disktedir; Windows veya SMB hızlanması ölçülmemiştir.",
+        "en": "Pack and metadata writes for shared images in one operation are grouped. Content verification and readback behavior are preserved. Measurements used Linux local disk; Windows or SMB speedup has not been measured."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-image-pack-batch.png",
+        "alt": {
+          "tr": "Yeni görsel yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the revised image path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Disk işlemi kazanımı ayrıca ölçülür; bu görüntü zamanlama kanıtı değildir.",
+          "en": "Actual application with synthetic data. Disk-operation savings are measured separately; this capture is not timing evidence."
+        }
+      }
+    },
+    {
+      "id": "phase7-parser-interactive-batches",
+      "type": "improvement",
+      "module": {
+        "tr": "Dosya içe aktarma",
+        "en": "File import"
+      },
+      "title": {
+        "tr": "Küçük rapor grupları birlikte hazırlanır",
+        "en": "Small report groups prepare together"
+      },
+      "body": {
+        "tr": "Küçük rapor dosyaları işe özel sınırlı grupta ayrıştırılır; etkileşimli isteklerin büyük işler arkasında beklemesi azaltılır. Dosya güvenliği, iptal ve erişim kontrolleri korunur.",
+        "en": "Small report files parse in a bounded job-specific batch, reducing interactive requests waiting behind large jobs. File safety, cancellation and access checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-parser-interactive-batches.png",
+        "alt": {
+          "tr": "Yeni ayrıştırma yolu etkinken gerçek demo Buyer Log ekranı",
+          "en": "Actual demo Buyer Log with the revised parsing path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Ayrıştırma süreleri ve dosya güvenliği ayrı ölçüm ve testlerle doğrulanır.",
+          "en": "Actual application with synthetic data. Parsing times and file safety are verified by separate measurements and tests."
+        }
+      }
+    },
+    {
+      "id": "ana09-freeze-picker-virtualization",
+      "type": "fix",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Sütun dondururken büyük tablolar hafif kalır",
+        "en": "Large tables stay responsive when freezing columns"
+      },
+      "body": {
+        "tr": "Sütun dondurma seçicisi artık tüm tabloların satırlarını DOM’a yüklemez. Yalnız seçilen tablo yenilenir; diğer tablolar ve sanal kaydırma korunur.",
+        "en": "The Freeze Columns picker no longer loads every table’s rows into the DOM. Only the selected table refreshes; other tables and virtual scrolling are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana09-freeze-picker-virtualization.png",
+        "alt": {
+          "tr": "30.000 demo siparişli gerçek Buyer Log tablosunda ilk iki sütun dondurulmuş",
+          "en": "Actual Buyer Log table with 30,000 demo orders and the first two columns frozen"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, sentetik veri. Sanal satır penceresi, kaydırma ve diğer tablonun korunması çalışma zamanı kontrolleriyle doğrulandı.",
+          "en": "Actual application after the change, using synthetic data. Runtime checks verify the virtual row window, scrolling and preservation of the other table."
+        }
+      }
+    },
+    {
+      "id": "ana03-backlog-on-demand",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Kapalı Backlog dalları açılınca çizilir",
+        "en": "Collapsed Backlog branches render when opened"
+      },
+      "body": {
+        "tr": "Kapalı pivot dallarının satırları artık yalnız dal açıldığında çizilir; ilk çizim ve dal açma hızlanır. Açık dal durumu, toplamlar, seçimler ve Excel çıktısı korunur.",
+        "en": "Rows in collapsed pivot branches now render only when the branch opens, speeding up initial rendering and expansion. Expanded state, totals, selections and Excel output are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana03-backlog-on-demand.png",
+        "alt": {
+          "tr": "Demo verilerle gerçek Buyer Log Backlog pivotu ve açılan dal",
+          "en": "Actual Buyer Log Backlog pivot and expanded branch with demo data"
+        },
+        "caption": {
+          "tr": "30.000 sentetik siparişten hazırlanan pivot: kapalı dallar açılınca çizilir.",
+          "en": "Pivot prepared from 30,000 synthetic orders: collapsed branches render when opened."
+        }
+      }
+    }
+  ]
+}

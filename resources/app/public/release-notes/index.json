@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.342",
+      "publishedAt": "2026-11-05",
+      "title": {
+        "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı · Ajans lisanslarında royalty · Sade LCW AI Excel çıktısı",
+        "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses · Clean LCW AI Excel output"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 38,
+        "fixes": 14
+      },
+      "file": "release-notes/7.0.342/release.json"
+    },
+    {
       "version": "7.0.337",
       "publishedAt": "2026-11-05",
       "title": {
