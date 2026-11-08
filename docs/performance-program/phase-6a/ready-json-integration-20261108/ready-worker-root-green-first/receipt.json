@@ -1,0 +1,13 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-ready-worker",
+    "projection-private-worker",
+    "page-cache"
+  ],
+  "exitCode": 0,
+  "tmpdir": "/tmp/bl6-ready-worker-green-9m74wgr3",
+  "sha256": "c2f8fefefca7e83ed5099213d23e17edb16ecb92a963de06a3ddcbcbdf58dbe4"
+}

@@ -1,0 +1,118 @@
+--- a/resources/app/server/lib/page-projection-cache.js
++++ b/resources/app/server/lib/page-projection-cache.js
+@@ -364,8 +364,56 @@
+     result.push(d.value); }
+   return new Set(result).size === result.length ? result : null;
+ }
++// Opaque producer descriptor, not a field registry or authorization proof. Never call user JSON hooks.
++function viewInfoSnapshot(input, maximum = VIEW_LIMITS.maxMetadataBytes) {
++  try {
++    if (!viewData(input) || Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON')
++      || Object.getOwnPropertyDescriptor(Array.prototype, 'toJSON')) return null;
++    const ancestors = new WeakSet(); let bytes = 0, nodes = 0;
++    const charge = size => { bytes += size; if (bytes > maximum) throw new Error('VIEW_INFO_LIMIT'); };
++    const text = value => {
++      if (value.length > maximum) throw new Error('VIEW_INFO_LIMIT');
++      const json = JSON.stringify(value); charge(Buffer.byteLength(json)); return json;
++    };
++    function copy(value, depth = 0) {
++      if (++nodes > 16384 || depth > 24) throw new Error('VIEW_INFO_LIMIT');
++      if (value === null) { charge(4); return null; }
++      if (typeof value === 'boolean') { charge(value ? 4 : 5); return value; }
++      if (typeof value === 'string') { text(value); return value; }
++      if (typeof value === 'number' && Number.isFinite(value)) { charge(JSON.stringify(value).length); return value === 0 ? 0 : value; }
++      if (!value || typeof value !== 'object' || types.isProxy(value) || ancestors.has(value)) throw new Error('VIEW_INFO_DATA_ONLY');
++      const array = Array.isArray(value);
++      if (array ? Object.getPrototypeOf(value) !== Array.prototype || value.length > 16384 : !viewData(value)) throw new Error('VIEW_INFO_DATA_ONLY');
++      const keys = Reflect.ownKeys(value);
++      if (keys.length > 16385 || array && keys.length !== value.length + 1) throw new Error('VIEW_INFO_DATA_ONLY');
++      ancestors.add(value); charge(2); const result = array ? [] : {}; let count = 0;
++      try { for (const key of keys) {
++        if (array && key === 'length') continue;
++        const descriptor = Object.getOwnPropertyDescriptor(value, key);
++        if (typeof key !== 'string' || !descriptor?.enumerable || !Object.hasOwn(descriptor, 'value')
++          || array && (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= value.length)) throw new Error('VIEW_INFO_DATA_ONLY');
++        if (count++) charge(1); if (!array) { text(key); charge(1); }
++        Object.defineProperty(result, key, { value: copy(descriptor.value, depth + 1), enumerable: true, writable: true, configurable: true });
++      } } finally { ancestors.delete(value); }
++      return result;
++    }
++    const value = copy(input), json = JSON.stringify(value);
++    return Buffer.byteLength(json) <= maximum ? { value, json } : null;
++  } catch (_) { return null; }
++}
++function viewInfoChecksum(userId, module, pin, digest, json) {
++  return checksum(Buffer.from(JSON.stringify(['buyerlog-ready-view-info-v1', userId, module,
++    ...VIEW_PIN_KEYS.map(key => pin[key]), digest, json])));
++}
+ function viewMetaValid(meta, userId, module, pin) {
+-  return viewData(meta) && Object.keys(meta).length === 10 && meta.schemaVersion === 1 && meta.profile === 'cp-orders-private-view-v1'
++  if (!viewData(meta)) return false;
++  const hasInfo = Object.hasOwn(meta, 'info') || Object.hasOwn(meta, 'infoChecksum');
++  if (hasInfo) {
++    const info = viewInfoSnapshot(meta.info);
++    if (!info || typeof meta.infoChecksum !== 'string' || !/^[a-f0-9]{64}$/.test(meta.infoChecksum)
++      || !pin || viewInfoChecksum(userId, module, pin, meta.checksum, info.json) !== meta.infoChecksum) return false;
++  }
++  return Object.keys(meta).length === (hasInfo ? 12 : 10) && meta.schemaVersion === 1 && meta.profile === 'cp-orders-private-view-v1'
+     && meta.ownerId === userId && meta.module === module && sameViewPin(viewPin(meta.pin), pin)
+     && Number.isSafeInteger(meta.bytes) && meta.bytes > 0 && meta.bytes <= VIEW_LIMITS.maxCompressedBytes
+     && Number.isSafeInteger(meta.uncompressedBytes) && meta.uncompressedBytes > 0 && meta.uncompressedBytes <= VIEW_LIMITS.maxRawBytes
+@@ -407,9 +455,13 @@
+     }
+   }
+ }
+-async function readViewCompressed(userId, module, request) {
++async function readViewCompressed(userId, module, request, options = {}) {
+   const pin = viewPin(request);
+-  if (typeof userId !== 'string' || !userId.length || userId.length > 512 || module !== 'orders' || !pin) return null;
++  if (typeof userId !== 'string' || !userId.length || userId.length > 512 || module !== 'orders' || !pin
++    || !viewData(options) || Object.keys(options).some(key => !['requireInfo', 'infoChecksum'].includes(key))
++    || Object.hasOwn(options, 'requireInfo') && typeof options.requireInfo !== 'boolean'
++    || Object.hasOwn(options, 'infoChecksum') && (typeof options.infoChecksum !== 'string' || !/^[a-f0-9]{64}$/.test(options.infoChecksum))) return null;
++  const requireInfo = options.requireInfo === true || Object.hasOwn(options, 'infoChecksum'), expectedInfo = options.infoChecksum;
+   return enqueueUserMutation(userId, async () => {
+     try {
+       const manifest = loadManifestFile(manifestPath(userId));
+@@ -417,6 +469,7 @@
+       const catalog = manifest.derivedViews?.[module], meta = catalog?.[pin.planHash];
+       if (!viewData(catalog) || Object.keys(catalog).length > VIEW_LIMITS.maxEntries
+         || Buffer.byteLength(JSON.stringify(catalog)) > VIEW_LIMITS.maxMetadataBytes || !viewMetaValid(meta, userId, module, pin)) return null;
++      if ((requireInfo && !Object.hasOwn(meta, 'info')) || (expectedInfo && meta.infoChecksum !== expectedInfo)) return null;
+       let total = 0;
+       for (const [key, entry] of Object.entries(catalog)) {
+         if (!viewMetaValid(entry, userId, module, viewPin(entry?.pin)) || key !== entry.pin.planHash
+@@ -432,16 +485,21 @@
+       const current = loadManifestFile(manifestPath(userId)), latest = current?.derivedViews?.[module]?.[pin.planHash];
+       if (!primaryViewMatches(current, module, pin) || !viewMetaValid(latest, userId, module, pin)
+         || JSON.stringify(latest) !== JSON.stringify(meta)) return null;
+-      return { ...result, manifest: current, module, meta: latest, hit: true, fallback: false, bytes: result.buffer.length };
++      const info = Object.hasOwn(latest, 'info') ? viewInfoSnapshot(latest.info) : null;
++      return { ...result, manifest: current, module, meta: latest, hit: true, fallback: false, bytes: result.buffer.length,
++        ...(info ? { info: info.value, infoChecksum: latest.infoChecksum } : {}) };
+     } catch (_) { return null; } // optional data never falls back to a previous generation or triggers a rebuild
+   });
+ }
+ async function writeViewCompressed(userId, module, request, entry, options = {}) {
+   const pin = viewPin(request);
++  const hasInfo = viewData(entry) && Object.hasOwn(entry, 'info');
+   if (typeof userId !== 'string' || !userId.length || userId.length > 512 || module !== 'orders' || !pin || !viewData(entry)
+-    || Object.keys(entry).length !== 5 || !['buffer','bytes','uncompressedBytes','checksum','registryKeys'].every(key => Object.hasOwn(entry, key))
++    || Object.keys(entry).length !== (hasInfo ? 6 : 5) || !['buffer','bytes','uncompressedBytes','checksum','registryKeys'].every(key => Object.hasOwn(entry, key))
+     || !viewData(options) || Object.keys(options).some(key => key !== 'limits')) return null;
+   const limits = viewLimits(options.limits); if (!limits) return null;
++  const info = hasInfo ? viewInfoSnapshot(entry.info, limits.maxMetadataBytes) : null;
++  if (hasInfo && !info) return null;
+   const registryKeys = viewKeys(entry.registryKeys, limits.maxRegistryKeys);
+   if (!registryKeys || !Buffer.isBuffer(entry.buffer) || types.isProxy(entry.buffer)
+     || entry.buffer.length <= 0 || entry.buffer.length > limits.maxCompressedBytes || entry.bytes !== entry.buffer.length
+@@ -451,7 +509,8 @@
+   // Bounded compressed copy protects the queued operation from caller mutation; no row graph is copied.
+   const buffer = Buffer.from(entry.buffer), meta = { schemaVersion: 1, profile: 'cp-orders-private-view-v1', ownerId: userId, module,
+     pin, bytes: buffer.length, uncompressedBytes: entry.uncompressedBytes, checksum: entry.checksum,
+-    registryKeys, createdAt: new Date().toISOString() };
++    registryKeys, createdAt: new Date().toISOString(),
++    ...(info ? { info: info.value, infoChecksum: viewInfoChecksum(userId, module, pin, entry.checksum, info.json) } : {}) };
+   if (Buffer.byteLength(JSON.stringify({ [pin.planHash]: meta })) > limits.maxMetadataBytes) return null;
+   return enqueueUserMutation(userId, async () => {
+     let file, committed = false;

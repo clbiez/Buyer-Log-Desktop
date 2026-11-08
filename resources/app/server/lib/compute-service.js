@@ -84,7 +84,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
-      const projectionOnly=task==='projection-private-view'||task==='projection-private-details';
+      const projectionOnly=task==='projection-private-view'||task==='projection-private-details'||task==='projection-ready-orders';
       if(projectionOnly&&(!Number.isSafeInteger(params.projectionBytes)||params.projectionBytes<1||params.projectionBytes>128*MiB))throw failure('COMPUTE_JOB_INVALID');
       const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
       const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;

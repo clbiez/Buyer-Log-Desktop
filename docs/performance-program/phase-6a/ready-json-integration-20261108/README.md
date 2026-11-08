@@ -1,0 +1,13 @@
+# Orders ready JSON / bounded descriptor foundation
+
+TR: Varsayılan veri yanıtı değişmedi. Gerçek tek JSON/gzip builder canonical alanlar ve belirsiz/verisi bilinmeyen alanları tutar; yalnız önceden doğrulanmış açık model planını kullanabilir. Descriptor metadata ayrı64KiB bütçe ve mevcut owner/generation/context/full checksum/plan pinleriyle aynı cache yayınına bağlanır. Eksik metadata, yetki veya alan envanteri değildir; yeni okuyucu requireInfo:true kullanmalıdır. Native helper21 PASS. Byte-exact önceki cache kaynağında aynı12 vaka2 PASS/10 FAIL; yeni kaynak12 PASS, eski20 vaka20 PASS. Gerçek ürün modüllerinde54/54 PASS. Eski21 cache test assertion'ları ve canonical/schema/native source kontrolleri korundu. Yeni source pin, incelenmiş cache revizyonuna bağlı; önceki pin ve kaynak/kanıt korunur.
+
+EN: Default full-data responses are unchanged. The ordinary JSON/gzip builder retains canonical/unknown native fields and requires a separately certified explicit model plan. The optional bounded descriptor is distinct from the field registry and authorization; required-info readers reject missing/legacy metadata. Original12 descriptor cases give2 pass/10 behavioral failures on the byte-identical prior cache,12 pass on the candidate, with all20 legacy cases passing. Production-module targeted acceptance:54/54. Previous pins/assertions/evidence remain preserved.
+
+Actual worker dispatch, guarded ready HTTP serving, client consumer closure, final3-pair firstCP/payload/heap measurements, full-suite checks on final code, release evidence and independent P1 review remain OPEN. No measured old prototype timing is transferred to the combined guarded helper. No push/merge/TEST/STABLE.
+
+## Actual worker integration checkpoint
+
+The real shared worker task was added after a valid first-fixture unknown-task RED (0 PASS/1 FAIL). Original13 native worker assertions pass, along with unchanged private/cache cases (30/30). Page cache generation and compute source generation are distinct and separately checked. Existing byte-based pool admission/output leases are used; raw model snapshots are not loaded for this task.
+
+The initial full cache supplies a compressed SHA and exact decoded length but has no raw JSON SHA. A separate native RED (0/1, PROJECTION_VIEW_INVALID) exposed this integration gap. The worker now derives an absent raw hash after exact gzip verification and bounded inflation. A provided wrong hash remains STALE; an own undefined/invalid hash remains INVALID. The original13 tests and this new14th case, existing private worker/cache/descriptor/builder checks pass: **85/85**, nine files. This does not replace final all10-batch acceptance, guarded HTTP/client integration or actual performance measurements.

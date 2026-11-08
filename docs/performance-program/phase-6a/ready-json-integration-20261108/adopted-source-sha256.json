@@ -1,0 +1,8 @@
+{
+  "server/workers/compute-worker.js": "6829b7259370a5c74643847a4940677ec166abdcf1943b5d6055cc671c59d70a",
+  "server/lib/compute-service.js": "876697326b0e8061444420494b6360003724694aee7da91d65b399be95ab06e9",
+  "server/lib/projection-ready-json.js": "02723a8bc1ea56e95711d2f90070493e7c3bf4424604feea359cef2f1d86df32",
+  "server/lib/projection-native-json.js": "f4a1d0691d16bfbddedd4a64fd66c2b47705ce1d4276553b70e2d82d73365b9e",
+  "server/lib/page-projection-cache.js": "ed88794d32fdcb5f7666a45428bfc668f87627e9ed2c30a23a21daadc2cf5c2d",
+  "tests/projection-ready-worker.test.js": "aa32aae2be113acfa443e1a62e7aa8dccb8876c9ba06d45570b4bae222595358"
+}

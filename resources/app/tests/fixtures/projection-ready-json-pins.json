@@ -1,0 +1,28 @@
+{
+  "status": "adopted-production-native-json-and-schema-provenance",
+  "canonicalCommit": "72da1190828e84105cac171169ee58d39b6a0295",
+  "sourceRepository": "/workspace/buyerlog-post-main-acceptance",
+  "sha256": {
+    "../server/lib/projection-native-json.js": "f4a1d0691d16bfbddedd4a64fd66c2b47705ce1d4276553b70e2d82d73365b9e",
+    "../public/module-projection-schema.js": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a"
+  },
+  "canonicalBlobs": {
+    "../server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
+    "../public/canonical-fields.js": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
+    "../public/canonical-module-bindings.js": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5"
+  },
+  "nativeSource": "/tmp/bl6plain/native-thin.cjs",
+  "schemaSource": "/tmp/buyerlog-phase6a-own-module-schema/candidate-v1/frozen/module-projection-schema.js",
+  "nativeCasesPrepared": 21,
+  "execution": {
+    "preparation21Passed": true,
+    "productionAdoptionPending": true
+  },
+  "productionWrites": true,
+  "integration": "Internal builder/cache descriptor only; public default thin still disabled",
+  "relocation": {
+    "originalBuilderSha256": "02664e78892b8d3399edde6ad2e76e32a2e705282d8d6adb3992ff60fce95719",
+    "productionBuilderSha256": "02723a8bc1ea56e95711d2f90070493e7c3bf4424604feea359cef2f1d86df32",
+    "changes": "Three require paths only; native/schema/canonical assertions retained."
+  }
+}

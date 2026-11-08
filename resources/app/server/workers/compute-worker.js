@@ -47,6 +47,49 @@ async function execute(task,data,transfer){
     const authority=data.authorityBytes?require('../lib/compute-authority-codec').decodeAuthority(data.authorityBytes):data.params;
     return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex')};
   }
+  if(task==='projection-ready-orders'){
+    // Internal trusted-server task, not a client schema/plan authorization gate.
+    // This path consumes the exact pinned cached gzip; never reload raw source.
+    const p=data.params,fail=code=>Object.assign(Error(code),{code}),hash=bytes=>require('node:crypto').createHash('sha256').update(bytes).digest('hex');
+    if(String(p.token?.ownerId)!==String(data.ownerId)||String(p.viewInfo?.ownerId)!==String(data.ownerId))throw fail('COMPUTE_SOURCE_OWNER_MISMATCH');
+    if(!Number.isSafeInteger(p.projectionBytes)||p.projectionBytes<1||p.projectionBytes>128*MiB
+      ||!Number.isSafeInteger(p.projectionCompressedBytes)||p.projectionCompressedBytes<1||p.projectionCompressedBytes>64*MiB
+      ||typeof p.projectionChecksum!=='string'||!/^[a-f0-9]{64}$/.test(p.projectionChecksum)
+      ||typeof p.computeGeneration!=='string'||!p.computeGeneration||p.computeGeneration.length>512
+      ||!(Buffer.isBuffer(p.projectionBuffer)||p.projectionBuffer instanceof ArrayBuffer||(ArrayBuffer.isView(p.projectionBuffer)&&p.projectionBuffer.buffer instanceof ArrayBuffer)))throw fail('PROJECTION_VIEW_INVALID');
+    const input=p.projectionBuffer,bytes=Buffer.isBuffer(input)?input:input instanceof ArrayBuffer?Buffer.from(input):Buffer.from(input.buffer,input.byteOffset,input.byteLength);
+    if(bytes.byteLength!==p.projectionCompressedBytes||hash(bytes)!==p.projectionChecksum)throw fail('PROJECTION_VIEW_STALE');
+    const pin=p.projectionPin,token=p.token,info=p.viewInfo,core=require('../lib/projection-view-core');
+    // Actual exported core API validates existing TOKEN_KEYS/PIN_KEYS and
+    // module/input/context linkage; its rebound token is intentionally unused.
+    core.bindProjectionPin(token,pin);
+    const hasFullHash=Object.hasOwn(info,'fullJsonSha256');
+    if(token.module!=='orders'||!Number.isSafeInteger(info.planEpoch)||info.planEpoch<0
+      ||hasFullHash&&(typeof info.fullJsonSha256!=='string'||!/^[a-f0-9]{64}$/.test(info.fullJsonSha256)))throw fail('PROJECTION_VIEW_INVALID');
+    if(p.computeGeneration!==String(data.source?.generation)||String(data.source?.ownerId)!==String(data.ownerId)
+      ||token.sourceGeneration!==pin.cacheGeneration||info.sourceGeneration!==token.sourceGeneration
+      ||pin.sourceLoadedAt!==String(data.source?.loadedAt||'')||token.sourceProjectionKey!==data.source?.projectionKeys?.orders
+      ||token.sourceRevision!==hash(JSON.stringify([pin.sourceRevisionKey,pin.checksum]))
+      ||pin.checksum!==p.projectionChecksum||pin.uncompressedBytes!==p.projectionBytes
+      ||info.fullJsonBytes!==p.projectionBytes||info.actorId!==token.actorId||info.accessHash!==token.accessHash
+      ||info.sourceKey!==token.sourceProjectionKey||String(info.planEpoch)!==token.planRevision)throw fail('PROJECTION_VIEW_STALE');
+    let raw,envelope,fullJsonSha256;
+    try{raw=await promisify(zlib.gunzip)(bytes,{maxOutputLength:p.projectionBytes});
+      if(raw.length!==p.projectionBytes)throw fail('PROJECTION_VIEW_STALE');
+      fullJsonSha256=hash(raw);
+      if(hasFullHash&&fullJsonSha256!==info.fullJsonSha256)throw fail('PROJECTION_VIEW_STALE');
+      envelope=JSON.parse(raw.toString('utf8'));
+    }catch(error){throw ['PROJECTION_VIEW_STALE','PROJECTION_VIEW_INVALID'].includes(error.code)?error:fail('PROJECTION_VIEW_STALE');}
+    raw=null;
+    // The initial full cache has a compressed checksum and raw byte count, not
+    // a raw JSON hash. Derive that missing metadata here after verification;
+    // never inflate the cached full projection on the main thread for it.
+    const verifiedInfo=hasFullHash?info:{...info,fullJsonSha256};
+    const ready=await require('../lib/projection-ready-json').prepareReadyJson(envelope,{schema:p.schema,omittedKeys:p.omittedKeys,viewInfo:verifiedInfo});
+    const result=ready.kind==='ready'?ready:{kind:'full',reason:ready.reason,uncompressedBytes:p.projectionBytes,checksum:p.projectionChecksum};
+    const owned=Uint8Array.from(ready.kind==='ready'?ready.buffer:bytes);transfer.push(owned.buffer);
+    return {...result,buffer:owned.buffer};
+  }
   if(task==='projection-private-view'||task==='projection-private-details'){
     const p=data.params,fail=code=>Object.assign(Error(code),{code});
     if(String(p.token?.ownerId)!==String(data.ownerId))throw fail('COMPUTE_SOURCE_OWNER_MISMATCH');
@@ -136,7 +179,7 @@ parentPort.on('message',async message=>{
   busy=true;const start=performance.now(),transfer=[];
   try{
     const value=await execute(message.task,message.payload||{},transfer);
-    const metadata=value.sourceMeta||value.runtimeMeta,metadataBytes=message.task==='excel-utility'?v8.serialize(value).byteLength:metadata?v8.serialize(metadata).byteLength:0,memory=process.memoryUsage();
+    const metadata=value.sourceMeta||value.runtimeMeta||(message.task==='projection-ready-orders'?{info:value.info,registryKeys:value.registryKeys}:null),metadataBytes=message.task==='excel-utility'?v8.serialize(value).byteLength:metadata?v8.serialize(metadata).byteLength:0,memory=process.memoryUsage();
     const outputBytes=transfer.reduce((sum,buffer)=>sum+buffer.byteLength,0)+metadataBytes*4+1024;
     if(message.payload?.maxOutputBytes&&outputBytes>message.payload.maxOutputBytes)throw Object.assign(Error('Compute output estimate exceeded'),{code:'COMPUTE_ESTIMATE_EXCEEDED'});
     parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,

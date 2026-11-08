@@ -1,0 +1,45 @@
+{
+  "status": "inactive-worker-task-preparation-unrun",
+  "sourceCommit": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+  "sourceRepository": "/workspace/buyerlog-post-main-acceptance",
+  "sourceBlobs": {
+    "resources/app/server/workers/compute-worker.js": "3bd287d9ad07e583e60fccfd607fab697519bddf",
+    "resources/app/server/lib/compute-service.js": "04515443595c788b8ec6fe72328f616ec74f75f1",
+    "resources/app/server/lib/projection-view-core.js": "e678fc64f39d455ed68b9bdca4d84e86fe186a21",
+    "resources/app/server/lib/projection-shadow-http.js": "34787b2ca0aa5e751d7baf9ee07250b38052cfca",
+    "resources/app/server/lib/page-projection-cache.js": "95361cce870e8c94403cac2f91726e493a5520d0",
+    "resources/app/server/lib/compute-task-access.js": "6d2e6b5a9073cdca96b61be7dfae06d7f84755d7",
+    "resources/app/public/module-projection-schema.js": "7b8585c3f912c5cf3ee9bbc8f1f2afa9c5dd4926"
+  },
+  "sha256": {
+    "reference/server/workers/compute-worker.js": "2e55e7a09cfc5dec5655320cb612c33297aac99e2fa17f98e564a80900b50b25",
+    "reference/server/lib/compute-service.js": "4ea7073a6354cf1e8dea05df9d4c38da1092b30152601ddfcd261c0c553ed773",
+    "candidate/server/workers/compute-worker.js": "e392de32c99685ed6c28f354e60e7126fcaece80ab7278711a26540ffe50d440",
+    "candidate/server/lib/compute-service.js": "876697326b0e8061444420494b6360003724694aee7da91d65b399be95ab06e9",
+    "projection-ready-worker.test.cjs": "f44ac59fc5c57189b8b99874f21bb9cbd4a2390b4b214843a52d386af1bd4d0d",
+    "worker-service.patch": "ebaffbb20391531e8d9786218f03581ac25bc1dd3d609bf0c0e0f478c06c6646"
+  },
+  "builderSource": {
+    "file": "/tmp/buyerlog-phase6a-ready-json-builder/ready-json-builder.cjs",
+    "sha256": "02664e78892b8d3399edde6ad2e76e32a2e705282d8d6adb3992ff60fce95719",
+    "adaptation": "root already adopted as projection-ready-json.js with three import path rewrites; no helper patch or overwrite here"
+  },
+  "alreadyAdoptedProductDependenciesReadOnly": {
+    "resources/app/server/lib/projection-ready-json.js": {
+      "gitBlob": "6c03b32e9ba4dab786b1bf74d6394bade3939573",
+      "sha256": "02723a8bc1ea56e95711d2f90070493e7c3bf4424604feea359cef2f1d86df32"
+    },
+    "resources/app/server/lib/projection-native-json.js": {
+      "sha256": "f4a1d0691d16bfbddedd4a64fd66c2b47705ce1d4276553b70e2d82d73365b9e"
+    },
+    "resources/app/server/lib/page-projection-cache.js": {
+      "gitBlob": "f08f0ba871b7d475d31d8f7a7b97da5a7c2b5bc8",
+      "sha256": "ed88794d32fdcb5f7666a45428bfc668f87627e9ed2c30a23a21daadc2cf5c2d"
+    }
+  },
+  "existingFrozenSchemaSha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+  "nativeCasesPrepared": 13,
+  "execution": { "tests": false, "syntax": false, "moduleLoad": false, "server": false, "browser": false, "benchmark": false },
+  "productionWrites": false,
+  "priorEvidenceChanged": false
+}

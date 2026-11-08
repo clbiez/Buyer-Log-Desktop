@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-ready-json",
+    "page-projection-view",
+    "page-projection-cache"
+  ],
+  "exitCode": 0,
+  "tmpdir": "/tmp/bl6-ready-adopt-gus3dz7h",
+  "sha256": "7406775554bdca62e241b6f3f76e1d6eb1f18bf82105b3721d265d9f84210285",
+  "finishedAt": "2026-11-08T04:44:29.286261+00:00"
+}

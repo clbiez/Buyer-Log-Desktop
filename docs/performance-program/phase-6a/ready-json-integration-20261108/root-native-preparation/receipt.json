@@ -1,0 +1,56 @@
+{
+  "startedAt": "2026-11-08T04:42:57.432523+00:00",
+  "commands": [
+    {
+      "name": "builder",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ready-json-builder/ready-json-builder.test.cjs"
+      ],
+      "tmpdir": "/tmp/bl6-ready-units-9mys4nzc",
+      "exitCode": 0,
+      "sha256": "12afa3612413f4756d910b95d1930d0d7e6dcbed91548a6810cd1947b0b6f980"
+    },
+    {
+      "name": "descriptor-baseline",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ready-cache-descriptor-preparation/descriptor-cache.test.cjs"
+      ],
+      "tmpdir": "/tmp/bl6-ready-units-d0kraxfi",
+      "exitCode": 1,
+      "sha256": "7afb0319fb88398d8ae6496afc10d25fc3d13c6be57aa0bb61517284c867587b"
+    },
+    {
+      "name": "descriptor-candidate",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ready-cache-descriptor-preparation/descriptor-cache.test.cjs"
+      ],
+      "tmpdir": "/tmp/bl6-ready-units-s9tqjjeq",
+      "exitCode": 0,
+      "sha256": "47dd0280527e33e39a8f86e7c3f205065c840c27fd45e5294c0fe4d134d65732"
+    },
+    {
+      "name": "descriptor-legacy",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ready-cache-descriptor-preparation/legacy-ready-view-cache.test.cjs"
+      ],
+      "tmpdir": "/tmp/bl6-ready-units-5nt2mn53",
+      "exitCode": 0,
+      "sha256": "4d48bad1b9add433b82b61140c041308eb17e19182984054b553f15c1dc00809"
+    }
+  ],
+  "scope": "Root isolated actual native preparation checks; production unchanged",
+  "status": "completed-with-retained-behavioral-baseline-red",
+  "finishedAt": "2026-11-08T04:43:00.102167+00:00"
+}

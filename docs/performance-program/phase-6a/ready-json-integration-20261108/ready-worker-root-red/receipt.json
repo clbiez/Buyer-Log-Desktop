@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--test",
+    "--test-concurrency=1",
+    "--test-name-pattern=new task ready roundtrip",
+    "/tmp/buyerlog-phase6a-ready-worker-preparation/projection-ready-worker.test.cjs"
+  ],
+  "exitCode": 1,
+  "tmpdir": "/tmp/bl6-ready-worker-red-v916vaie",
+  "sha256": "d482fbd45e9e08b74d640adb64680978066dbacac7a63403512ca49431b4e8ec",
+  "scope": "Selected real valid first fixture only; unknown task RED before worker adoption, not full13-suite result"
+}

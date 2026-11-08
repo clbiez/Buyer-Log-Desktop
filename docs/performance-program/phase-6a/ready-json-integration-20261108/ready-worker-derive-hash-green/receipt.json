@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-ready",
+    "projection-private-worker",
+    "page-cache",
+    "page-projection-view"
+  ],
+  "exitCode": 0,
+  "tmpdir": "/tmp/bl6-coldhash-green-abrtp3rz",
+  "sha256": "9f81186278fa9f5c2c8a2b3cec8e2402f1f6408c7d35cec2e9e88ffce1749463"
+}
