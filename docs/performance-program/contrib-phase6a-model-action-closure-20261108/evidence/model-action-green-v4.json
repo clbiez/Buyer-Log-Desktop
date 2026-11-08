@@ -1,0 +1,39 @@
+{
+  "started": "2026-11-08T11:13:08.665Z",
+  "finished": "2026-11-08T11:13:09.608Z",
+  "command": [
+    "node",
+    "--test",
+    "scripts/prototypes/phase6a-model-action-closure-20261108/model-action.test.cjs",
+    "scripts/prototypes/phase6a-model-action-closure-20261108/remaining-consumer-gates.test.cjs"
+  ],
+  "baseline": false,
+  "prototypeSha256": {
+    "action-ownership.js": "cd180648018f376fb810367b6a33ec2169d3f996d2054b44fe3c7797ee3351d4",
+    "app-main.js": "b2a1152d1f615fcae40f4bb9a01f9219301054afbc2180cb29b1b12000df1cb3",
+    "build-candidate.cjs": "888c95ab887ead9469775b442df08c336d8862bd1f8f7c496ac0faa469e8a4b5",
+    "candidate-i18n.cjs": "86448edff395df9230f9eb3aed3b53896adeb1502cd995d5641de10d5a064fa4",
+    "config-regression-proof.json": "23bd204f5df2b9fb71166b34647bd18c89ed80751013da6598f3c9e22a695ca5",
+    "consumer-proof.json": "e963c76f1ab8dab6069fccd7c42ce97e47fe05480a32fd25c5b0661e15d1b336",
+    "consumer-source.cjs": "39c751eaaa239582f51ccc59480e68b56e8938eddc3a6b72a1251f3f7ca390ec",
+    "independent-move-schema.probe.cjs": "b975df63e37e021945c2dbb7f0b5a902a0519853c62869cf12da482229332480",
+    "model-action.test.cjs": "f4a080573f6fe23356243cfa4aba186828ede41f96d6d2b384920e940444fae4",
+    "native-fixture.cjs": "4dce8c6bf0aca61362af8357f50346cdb8e95a734acd48912ff385579c968974",
+    "orders-config-writers.test.cjs": "bbf72f4a3691fbe708f47a69efe3e4d74a1368f7072d624d8a19891090c13b5a",
+    "patch-recipe.json": "cee6941f07fdaa6c9445f0606440ce784bf5b80965fa05551711f062c06e38de",
+    "prepare-config-regression.cjs": "a4b6adf19762f7342ee40ca47b79aac6520859eed969439cf13da06e24e37bdc",
+    "prepare-consumers.cjs": "e7afe41e4335fbd859edef62b4e1bee94072e13de055ce891e84f68e1479a112",
+    "remaining-consumer-gates.test.cjs": "fc3cfbeb219c507d4f3eee2405ce8c0d538dcd6e95c23b23864ab3f734ea0794",
+    "run-evidence.cjs": "266677ce23b1022d1f30483f9bb7209296b14fc95929804777222b36b7d04baa",
+    "validate-native.cjs": "caf85febdfcd7bb94ebd30769a488d721fb19b41a1396da34d680fb1f7995e0a",
+    "write-candidate.js": "e874d4540dbdc0033514bac0630d431beec39f82f53de83601179e7f5d243a51"
+  },
+  "logSha256": "f7a76969a5e46f689f20f3772bbabc5c83dd8a84a6c18467e238d123075d00ec",
+  "exitCode": 0,
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64"
+  }
+}

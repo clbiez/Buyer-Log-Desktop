@@ -1,0 +1,318 @@
+{
+  "algorithm": "sha256",
+  "excludes": [
+    "artifact-sha256.json (self)"
+  ],
+  "files": [
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/README.md",
+      "bytes": 10114,
+      "sha256": "a763869e9e8ebe96ca2d002c8d7f6151a2c712986eb6136e4a0e5570e74dd1bf"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/.gitignore",
+      "bytes": 87,
+      "sha256": "4e99de10e238cfce73aa1934354ba2a80dedea747e85dbafbc716591a5847dd5"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-final.json",
+      "bytes": 2366,
+      "sha256": "557f1165a6ca7cc39a084f0cf5ddf2c55193ffac0915d9b61b4cc5c3a0b86dfe"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-final.log.gz",
+      "bytes": 3012,
+      "sha256": "df19500778a870fba0d2221dfae82cc9ca405c8e572945f94b8c5d63fa900add"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-first.json",
+      "bytes": 381,
+      "sha256": "26d68e6c4616d81141c694793224a25d50d86bec7a5d3dc82b5551ec8c1c1040"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-first.log.gz",
+      "bytes": 2323,
+      "sha256": "d8562be5bfd51650aa251e2537259f9bcecebe1c5e32aa8058279b0a62c39299"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v2.json",
+      "bytes": 479,
+      "sha256": "68324bb70bb5172c743788152de579d52d8506497b989aab08cb57c198848d09"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v2.log.gz",
+      "bytes": 2610,
+      "sha256": "1bc17f3ba405a12b84100a7bdaf4828c2b62cce52150daf38fab1433849bf5e4"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v4.json",
+      "bytes": 2366,
+      "sha256": "0e1987d5f0992dfdb505432123c1d78735c88755fed325687b0e44da74ab8d10"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v4.log.gz",
+      "bytes": 2978,
+      "sha256": "85bbbcc767d16442a05a1fc62d9330703fb4c32f1f1fc707b3df48f8748f86bd"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v6.json",
+      "bytes": 2458,
+      "sha256": "db2dec5c759cee1b61957ea257510214f4869501995b0df205994fe9426a57f8"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-green-v6.log.gz",
+      "bytes": 3190,
+      "sha256": "aea1456628f772d8ae9c8a854fca6fd64930aed8d4b529252131320945835628"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-final.json",
+      "bytes": 2267,
+      "sha256": "ef3f41a21389a95adffe0bf4555488cf181db7b8bd5b98ec5a050953c8430fc1"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-final.log.gz",
+      "bytes": 21427,
+      "sha256": "977b1a5fdb1988d5ee76bc469a8cb43b658316d2f0425e1978a63dcbb8952aed"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-v3.json",
+      "bytes": 2267,
+      "sha256": "0b67a2d5403d0f61c074cdd954d0197147097f38df49ef83ee9c69a465c11b54"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-v3.log.gz",
+      "bytes": 21073,
+      "sha256": "fcd51ce6b05c85d969b73ad94f4f5854b195fb7afcbc6231039605ca3f07b206"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-v5.json",
+      "bytes": 2359,
+      "sha256": "e55b4e9664a8cde7366cb464dfa0b249466d185c112c310d1bbee5fe4bd9903f"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red-v5.log.gz",
+      "bytes": 21541,
+      "sha256": "156a26770cdb550c870ec603e5f733d3deaea19b08ab0827fe26bda58f634a7a"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red.json",
+      "bytes": 381,
+      "sha256": "390095a9431bc51276dac9eef01c3e1acebb11d513599718ddbf1cab2455c959"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/model-action-red.log.gz",
+      "bytes": 20558,
+      "sha256": "58a05a64411121f34897ceeb02b8f1a304234e11f953c306856784bf65ec0b09"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/move-schema-baseline-diagnostic.json",
+      "bytes": 2467,
+      "sha256": "64fb51e5bfb0bd7c0dda58b3eba2de07137f20a7673c2c6e8e5747596e33ba2d"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/move-schema-baseline-diagnostic.log.gz",
+      "bytes": 571,
+      "sha256": "d6df476243b45f710fb61020e3f68599abc2e481277ee9207c8e3e6cd0ddd1ac"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/move-schema-candidate-diagnostic.json",
+      "bytes": 2468,
+      "sha256": "3628e8d56172c6ffd4a0486cdaaf83438399b29107439665db5cda1a64ee0ac7"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/move-schema-candidate-diagnostic.log.gz",
+      "bytes": 571,
+      "sha256": "23c3f8823fb1ff237054b41ad5ad6a5fa8f42a28f5db4908e8b18dcac9a3cfed"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-accepted.json",
+      "bytes": 2440,
+      "sha256": "72ff23735dd50897b32cb89f4c25667a8c54fc0ff787311583079e4546a847fe"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-accepted.log.gz",
+      "bytes": 10958,
+      "sha256": "c2c8fdaaf7b282cc8635463219295573786d72017236382971c58121330012b9"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-final.json",
+      "bytes": 2344,
+      "sha256": "51c7993779929ba3f81100e8ce74f40f2206f0b48b0d31ff740c8bce92c197f9"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-final.log.gz",
+      "bytes": 10936,
+      "sha256": "962cbcb133aa103ec7602e6ae9b17e11e993475d1a43e1aade5db3dead7c5a57"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-first.json",
+      "bytes": 365,
+      "sha256": "00b80b8516c4d7348466ddf047145091a9d2e0cb9075988d5644c5603a53b6cf"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/native-first.log.gz",
+      "bytes": 9863,
+      "sha256": "9d644afedc33e45d70ef90869404a5f8925ad938eade5ebe75de84edcb168a83"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/ownership-green-accepted.json",
+      "bytes": 2554,
+      "sha256": "cf2c53419d4fdd9845f09da641ea419268cfcb5be689cfbba93d98b9f9a756c4"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/ownership-green-accepted.log.gz",
+      "bytes": 3213,
+      "sha256": "90b995f9f638eb8a79783821e4e8f127ed26469f12a9bb9cb962dc6dffca491b"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/ownership-red-accepted.json",
+      "bytes": 2455,
+      "sha256": "73cea40f173d78a07bce8d9b477ebd830757f0901c11136feb1648d330d084e9"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/ownership-red-accepted.log.gz",
+      "bytes": 21813,
+      "sha256": "315de1782cf47825a3674cc8149e384fab5a28603ff0990178be51a51837dc20"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/patch-final-proof.json",
+      "bytes": 2437,
+      "sha256": "ecc07f5d9754505ccc5e17a04dea54c5718269fbc58b3177ca0c0c2b1b56118d"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/patch-final-proof.log.gz",
+      "bytes": 242,
+      "sha256": "399c26c3f1ba699096d11a78bf6f12632a204c9a21cdc5c1b8e38d15ac1bc7e0"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/patch-format-initial.json",
+      "bytes": 2398,
+      "sha256": "95e8be553563c5382f95c39b2ae7f73a024f8c21586b3e03394c6cc073c70e27"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence/patch-format-initial.log.gz",
+      "bytes": 123,
+      "sha256": "4f862261bf902bb94305f291fcca113d87085e992a2f53488bd2478ffdc2d970"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/files.txt",
+      "bytes": 6051,
+      "sha256": "c22f5dc448147b877f491bafbc12b378a508691b1106c115a2b3e9858dab0a32"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/patch-recipe.md",
+      "bytes": 6083,
+      "sha256": "63a70edf19ea7ebf487fcca3b139b7d4d0a0a6226a3cb5f5620ae94a83464d34"
+    },
+    {
+      "file": "docs/performance-program/contrib-phase6a-model-action-closure-20261108/validation.json",
+      "bytes": 4777,
+      "sha256": "08067903e25ca2f4c0a6588b0ccc4e0cdce3869389d16a9c3ad0deadbe89ea8f"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/action-ownership.js",
+      "bytes": 3707,
+      "sha256": "cd180648018f376fb810367b6a33ec2169d3f996d2054b44fe3c7797ee3351d4"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/app-main.js",
+      "bytes": 3151558,
+      "sha256": "253c6471d5952206e5118b60edb6b0d38fc99e2e314fd243449fef1a88963327"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/app-main.patch",
+      "bytes": 20687,
+      "sha256": "f25ea53a1f914c7008ca4de1f16d49f7ab8b88f5846cd4b3a49772b9c5ec15f3"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/build-candidate.cjs",
+      "bytes": 9396,
+      "sha256": "180cfbc14f9735066c12969e5270b44f5f84f8f40bb985e66ad1b7de154aaac8"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/candidate-i18n.cjs",
+      "bytes": 470,
+      "sha256": "86448edff395df9230f9eb3aed3b53896adeb1502cd995d5641de10d5a064fa4"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/check-recipe.cjs",
+      "bytes": 2654,
+      "sha256": "ca6f60cd0d4a28c7bb76f957f7151f133db0e833ad7beff56bd73d96c7ba5f6f"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/config-regression-proof.json",
+      "bytes": 223,
+      "sha256": "23bd204f5df2b9fb71166b34647bd18c89ed80751013da6598f3c9e22a695ca5"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/consumer-proof.json",
+      "bytes": 347,
+      "sha256": "e963c76f1ab8dab6069fccd7c42ce97e47fe05480a32fd25c5b0661e15d1b336"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/consumer-source.cjs",
+      "bytes": 813,
+      "sha256": "39c751eaaa239582f51ccc59480e68b56e8938eddc3a6b72a1251f3f7ca390ec"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/final-validation.cjs",
+      "bytes": 1231,
+      "sha256": "ff8d9254c5c1d92b01f9497152db3b2b7e34adfef9bcdbdd279a8ac80340c0c2"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/independent-move-schema.probe.cjs",
+      "bytes": 996,
+      "sha256": "b975df63e37e021945c2dbb7f0b5a902a0519853c62869cf12da482229332480"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/model-action.test.cjs",
+      "bytes": 20154,
+      "sha256": "5616fd9230291289bff467312666dbd8a415218661e5eb8cc86840170377cc09"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/native-fixture.cjs",
+      "bytes": 11506,
+      "sha256": "4dce8c6bf0aca61362af8357f50346cdb8e95a734acd48912ff385579c968974"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/orders-config-writers.test.cjs",
+      "bytes": 21649,
+      "sha256": "bbf72f4a3691fbe708f47a69efe3e4d74a1368f7072d624d8a19891090c13b5a"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/patch-recipe.json",
+      "bytes": 17356,
+      "sha256": "fac254a741661acb3a56f4d5f5cf4fcb9bf13bcace647ff8da4f4258f9c34902"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/prepare-config-regression.cjs",
+      "bytes": 1672,
+      "sha256": "a4b6adf19762f7342ee40ca47b79aac6520859eed969439cf13da06e24e37bdc"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/prepare-consumers.cjs",
+      "bytes": 1716,
+      "sha256": "e7afe41e4335fbd859edef62b4e1bee94072e13de055ce891e84f68e1479a112"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/remaining-consumer-gates.test.cjs",
+      "bytes": 12399,
+      "sha256": "fc3cfbeb219c507d4f3eee2405ce8c0d538dcd6e95c23b23864ab3f734ea0794"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/run-evidence.cjs",
+      "bytes": 1759,
+      "sha256": "c748b5ae3146557d2cc50ae60e04a1ebbd62eb39a8413afce5512f62ddf246d7"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/validate-native.cjs",
+      "bytes": 1576,
+      "sha256": "59475ffa51b94ef15072a2c94963e07218177b2bdf54194abe2424a71f26f90c"
+    },
+    {
+      "file": "scripts/prototypes/phase6a-model-action-closure-20261108/write-candidate.js",
+      "bytes": 1957,
+      "sha256": "0819f913b1465a6b71a5954b67d368c1341addb07c6af40076d2961556677fd2"
+    }
+  ]
+}
