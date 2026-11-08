@@ -1,0 +1,18 @@
+{
+  "revision": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+  "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "preparationOnly": true,
+  "executed": false,
+  "files": {
+    "public/app-main.js": "7db9cbce871ebf6202e3584b82548a7c21492a82bc3fca2f77d1904557500f6f",
+    "public/formula-columns.js": "8385798937fd6a63cc4cd20f74980e754ce6dc8364a694c432d6fe1845fa257c",
+    "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+    "public/user-storage.js": "0b817df9b1240ec3f33fe681f0155567491c825bb3e2026e58100ecc10357f83",
+    "public/preset-store.js": "06ec4dc511c2b29ecf5c1d61b43ecc859904ef15b9b817fce23444d0f0a92ff9",
+    "public/preset-share.js": "afe65bb80084da510c98883c322a48806180e441372fe101de610ca464a63742",
+    "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+    "tests/orders-full-consumer-gates.test.js": "d9f2956eba8c0043fa3bf4176e0ec6092424de06c37b3a6576b3a72c12d39891",
+    "tests/formula-columns-rename-assistant-v7175.test.js": "8b47d52103e57d57ab119fb4ddb3d7be685bb31e509feea0ccad572f76dc4c6d",
+    "tests/user-storage-isolation.test.js": "0db954dbaa89623162ca6113671bbbd15c5181cbd11eb3276d19869507f3d60c"
+  }
+}

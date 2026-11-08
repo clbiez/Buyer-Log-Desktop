@@ -1,0 +1,11 @@
+# Orders configuration full-data barriers
+
+TR: Kullanıcı tercihi yanıtı ilk role/local/meta değişiminden önce optional beforeApply kapısını bekler. Tam veri yolundaki callback Promise üretmiyorsa ek await yoktur. Profil select/delete/reset ve cached/remote apply girişleri yalnız thin Orders varsa tam veriyi bekler; sayfa/seçim/node değişimi tekrar doğrulanır. Kuyruktaki DELETE request ve yanıt sonrası yerel fallback de korunur. Tamamlanmış server DELETE sonradan geri alınmış sayılmaz.
+
+Gerçek aynı assertion'larla v1 **4PASS/7RED→11PASS**, v2 **9PASS/38RED→47PASS**. Hazırlıktaki v1 “12” sayısı hatalıdır; gerçek11 vaka/receipt esastır ve eski dosya değiştirilmez. Ürün hedefli paketi177PASS. Çağıranları kapsayan26dosya ilk258PASS/4FAIL: fixture gerçek yeni gate'i ve hata formatter'ını yüklemiyordu. Gerçekformatter ile asılordersProjectionIsThin ReferenceError kaydedildi; gerçek loader+private-map+gate fixture'a bağlanınca aynı assertion'larla262/262PASS. No-op/izin veren guard yok.
+
+#916 üç kaynak/test/CI Main ile byte-exact; workflow'daki9dosyalık hızlı adım aynen23/23PASS, i18n0/0, mevcut50not geçerli. sync CP loader, iki profile apply/reset API, nativeclipboard, BLFormulaRows/BLAIScreenData ve syncCpModelColumns gövdeleri korunur. Static source pin, incelenmiş yeni profile kapılarına göre güncellendi; önceki pin/frozen gövdeler korunur.
+
+EN: Real preference/profile entrypoints now await complete Orders before reading or changing dependencies of a thin snapshot. Full-data UI bodies remain synchronous; stale target/page and rejected waits stop before effects. Tests preserve all original assertions and real synchronous APIs. Actual results: v1 4/7RED→11PASS; v2 9/38RED→47PASS; product177PASS; existing26-file callers 258/4FAIL→262PASS after loading actual missing fixture dependencies. #916 exact fast step23PASS, zero i18n baseline/new gaps,50 existing notes valid. Historical failure evidence remains.
+
+Still OPEN: switchTab rejected-profile derived promises, header/sort/schema/adoptRemote and unknown synchronous formula/config readers; real public thin publication/HTTP and finalall10-suite/3-pair firstCP measurement/release evidence/independentreview. Default CP/Orders is stillfull. No push/merge/TEST/STABLE.

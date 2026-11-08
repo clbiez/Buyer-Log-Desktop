@@ -219,11 +219,16 @@
     /* Açılışta sunucudaki kopyayla birleştirir. Kural: hangi taraf daha YENİYSE
        o kazanır. Yerel taraf daha yeniyse sunucuya gönderilir, böylece bu
        tarayıcıda yazılmış notlar diğerlerine de geçer. */
-    hydrate:function(){
+    hydrate:function(options){
+      var applyBarrierFailed=false;
       return fetch('/api/user-preferences',{headers:{'Accept':'application/json'}})
         .then(function(res){return res.ok?res.json():null})
-        .then(function(data){
+        .then(async function(data){
           if(!data||!data.entries)return {applied:0,pushed:0};
+          // Yanıt alındıktan SONRA, rol/yerel/meta mutasyonundan ÖNCE bekle.
+          if(options&&typeof options.beforeApply==='function'){
+            try{var barrier=options.beforeApply();if(barrier&&typeof barrier.then==='function')await barrier;}catch(error){applyBarrierFailed=true;throw error;}
+          }
           roleDefaults=data.roleDefaults&&typeof data.roleDefaults==='object'?data.roleDefaults:{};
           try{native.setItem(ROLE_DEFAULTS_KEY,JSON.stringify(roleDefaults));}catch(_){}
           var meta=readMeta(),applied=0,push={};
@@ -269,7 +274,7 @@
           if(pushed){pending=Object.assign(pending,push);flushPush();}
           return {applied:applied,pushed:pushed};
         })
-        .catch(function(){return {applied:0,pushed:0}});
+        .catch(function(error){if(applyBarrierFailed)throw error;return {applied:0,pushed:0}});
     }
   };
   Object.defineProperty(api,'length',{get:function(){return native.length}});

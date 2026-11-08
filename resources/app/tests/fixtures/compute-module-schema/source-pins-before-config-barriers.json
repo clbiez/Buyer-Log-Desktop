@@ -1,0 +1,32 @@
+{
+  "status": "local-adopted-tests-not-final-acceptance",
+  "sourceCommit": "f0766e544bec6a2a578f0a64adf1d70a8ce0c01d",
+  "sourceRepository": "/workspace/buyerlog-post-main-acceptance",
+  "runtimeAppRoot": "resources/app",
+  "computeOriginalBlob": "6ede5dc0b8c69dad3c830543dfb07509f30eb713",
+  "frozenSchemaSource": "/tmp/buyerlog-phase6a-own-module-schema/candidate-v1/frozen/module-projection-schema.js",
+  "frozenSchemaSha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+  "runtimeBlobs": {
+    "server/lib/compute-tasks.js": "fffa068554c68d3a12009ce3d5d1938ac289ae9f",
+    "server/lib/parse.js": "bf50021755c1bb18783bddf940f844ff82838133",
+    "server/lib/compute-access.js": "a6394d9e645da5d13b76ac2c9b7f0d988ad69dea",
+    "server/lib/horizon-fields.js": "8651a13c8c3a643fb401c83f4307809f14298cd8",
+    "server/lib/collection-catalog.js": "8fc507259c99209fad8bdc26a81292416d1441d8",
+    "server/lib/json-dates.js": "eb7823eeb32fe10bc98eeda09cebdada43600c32",
+    "server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
+    "public/canonical-fields.js": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
+    "public/canonical-module-bindings.js": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5",
+    "public/app-main.js": "be5b4f1c4be4718aeb4bc2ff528d9c34f4aa0502"
+  },
+  "nativeCasesPrepared": 18,
+  "executedByPreparingAgent": {
+    "tests": false,
+    "syntax": false,
+    "moduleLoad": false,
+    "browser": false,
+    "benchmark": false
+  },
+  "productionWrites": false,
+  "workerServerCacheClientWiring": false,
+  "adoptionNote": "Only compute optional callback added; app-main differences are full-before-use gates. Actual syncCpModelColumns must remain exact f076; root extraction proof archived separately. Price-source loader stays in its existing branch, followed by the new full barrier; real behavioral tests retained."
+}

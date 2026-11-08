@@ -16,7 +16,7 @@
     "server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
     "public/canonical-fields.js": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
     "public/canonical-module-bindings.js": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5",
-    "public/app-main.js": "be5b4f1c4be4718aeb4bc2ff528d9c34f4aa0502"
+    "public/app-main.js": "c4df74b8d73a8c56adaf9c9e8633183856b64c0d"
   },
   "nativeCasesPrepared": 18,
   "executedByPreparingAgent": {

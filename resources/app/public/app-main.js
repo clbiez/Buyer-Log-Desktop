@@ -15261,6 +15261,11 @@ async function waitForRefreshJob(expectedJob=null){
     // yeniden uygulamak, kullanıcının o oturumda seçtiği Focus/Extended/All
     // görünümünü ve filtrelerini kayıtlı profile geri döndürüyordu. Yenilemede
     // profil listesi tazelenir ama mevcut ekran düzeni korunur.
+    if(ordersProjectionIsThin()){
+      const profilePage=activeProfilePage();
+      await ensureOrdersFullForAction('orders.profiles.bootstrap');
+      if(ordersProjectionIsThin()||activeProfilePage()!==profilePage)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
     applyCachedProfilesForCurrentPage(initialScreenLoad);
     const startupTab=renderStartupActiveModule();
     if(renderMetric)window.BLPerf?.end?.(renderMetric);
@@ -16835,7 +16840,7 @@ function hydrateUserPreferencesAfterUi(){
   if(authHydrationPromise)return authHydrationPromise;
   if(!window.BLStorage||typeof BLStorage.hydrate!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('AUTH_USER_LOAD_START',{mode:'after-ui'});
-  authHydrationPromise=Promise.resolve().then(()=>BLStorage.hydrate()).then(sync=>{
+  authHydrationPromise=Promise.resolve().then(()=>BLStorage.hydrate({beforeApply:()=>ordersProjectionIsThin()?ensureOrdersFullForAction('orders.preferences.hydrate'):undefined})).then(sync=>{
     window.BLPerf?.mark?.('AUTH_USER_LOAD_READY',{mode:'after-ui',applied:Number(sync&&sync.applied)||0,pushed:Number(sync&&sync.pushed)||0});
     window.BLPerf?.mark?.('AUTH_READY',{mode:'after-ui'});
     if(sync&&Number(sync.applied)>0){
@@ -17480,10 +17485,16 @@ document.getElementById('viewSaveAsBtn').addEventListener('click', async ()=>{
     }
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
-document.getElementById('viewSelect').addEventListener('change', e=>{
-  const page=activeProfilePage();
-  const item = profileItem('view',e.target.value,page);
+document.getElementById('viewSelect').addEventListener('change', async e=>{
+  try{
+  const page=activeProfilePage(),target=e.target,id=target.value;
+  if(ordersProjectionIsThin()){
+    await ensureOrdersFullForAction('orders.profiles.view.select');
+    if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('viewSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+  }
+  const item = profileItem('view',id,page);
   if(item){ applyViewState(item.data); rememberProfileUse('view',item.id,page); }
+  }catch(error){showToast(error?.message||ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});}
 });
 document.getElementById('viewFavBtn').addEventListener('click',async()=>{
   const id=document.getElementById('viewSelect').value;if(!id){alert(appLang==='en'?'Select a view first.':'Önce bir görünüm seç.');return;}
@@ -17500,12 +17511,28 @@ document.getElementById('viewFavBtn').addEventListener('click',async()=>{
 });
 document.getElementById('viewDeleteBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('viewSelect').value; if(!id) return;
-  const page=activeProfilePage();
+  const page=activeProfilePage(),target=document.getElementById('viewSelect');
+  if(ordersProjectionIsThin()){
+    try{
+      await ensureOrdersFullForAction('orders.profiles.view.delete');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('viewSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }catch(error){showToast(error.message,{kind:'error'});return;}
+  }
   if(!viewStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This view does not belong to the active page.':'Bu görünüm aktif sayfaya ait değil.');return;}
   if(!confirm(appLang==='en'?'Are you sure you want to delete this view?':'Bu görünümü silmek istediğine emin misin?')) return;
   const oldFavorite=pageFavoriteId('view',page,viewStore);
   try{
-    const saved=await enqueueProfileMutation('view',()=>fetchJSON(`/api/views/${id}`,{method:'DELETE',expectedRevision:viewStore._revision}));
+    const saved=await enqueueProfileMutation('view',async()=>{
+      if(ordersProjectionIsThin()){
+        await ensureOrdersFullForAction('orders.profiles.view.delete-queued');
+        if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('viewSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+      }
+      return fetchJSON(`/api/views/${id}`,{method:'DELETE',expectedRevision:viewStore._revision});
+    });
+    if(ordersProjectionIsThin()){
+      await ensureOrdersFullForAction('orders.profiles.view.delete-result');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('viewSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
     viewStore=setProfileStore('view',saved,page);
     if(oldFavorite===id)BLStorage.removeItem(`lcw_view_favorite_${page}`);
     if(activeProfilePage()!==page)return;
@@ -17578,7 +17605,16 @@ function resetFiltersToSystemDefault(){
   clearProfileSelection('filter');info.rerender();saveCoreAutoFilterState();
   showToast(appLang==='en'?'System default filters restored.':'Sistem varsayılan filtreleri geri yüklendi.');
 }
-document.getElementById('viewResetBtn')?.addEventListener('click',resetViewToSystemDefault);
+document.getElementById('viewResetBtn')?.addEventListener('click',async event=>{
+  try{
+    if(ordersProjectionIsThin()){
+      const page=activeProfilePage(),target=event.currentTarget;
+      await ensureOrdersFullForAction('orders.profiles.view.reset');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('viewResetBtn')!==target||target.isConnected===false)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
+    resetViewToSystemDefault();
+  }catch(error){showToast(error?.message||ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});}
+});
 
 document.getElementById('filterSaveBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('filterSelect').value;
@@ -17610,10 +17646,16 @@ document.getElementById('filterSaveAsBtn').addEventListener('click', async ()=>{
     }
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
-document.getElementById('filterSelect').addEventListener('change', e=>{
-  const page=activeProfilePage();
-  const item = profileItem('filter',e.target.value,page);
+document.getElementById('filterSelect').addEventListener('change', async e=>{
+  try{
+  const page=activeProfilePage(),target=e.target,id=target.value;
+  if(ordersProjectionIsThin()){
+    await ensureOrdersFullForAction('orders.profiles.filter.select');
+    if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('filterSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+  }
+  const item = profileItem('filter',id,page);
   if(item){ applyFilterState(item.data); rememberProfileUse('filter',item.id,page); }
+  }catch(error){showToast(error?.message||ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});}
 });
 document.getElementById('filterFavBtn').addEventListener('click',async()=>{
   const id=document.getElementById('filterSelect').value;if(!id){alert(appLang==='en'?'Select a filter first.':'Önce bir filtre seç.');return;}
@@ -17630,12 +17672,28 @@ document.getElementById('filterFavBtn').addEventListener('click',async()=>{
 });
 document.getElementById('filterDeleteBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('filterSelect').value; if(!id) return;
-  const page=activeProfilePage();
+  const page=activeProfilePage(),target=document.getElementById('filterSelect');
+  if(ordersProjectionIsThin()){
+    try{
+      await ensureOrdersFullForAction('orders.profiles.filter.delete');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('filterSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }catch(error){showToast(error.message,{kind:'error'});return;}
+  }
   if(!filterStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This filter does not belong to the active page.':'Bu filtre aktif sayfaya ait değil.');return;}
   if(!confirm(appLang==='en'?'Are you sure you want to delete this filter?':'Bu filtreyi silmek istediğine emin misin?')) return;
   const oldFavorite=pageFavoriteId('filter',page,filterStore);
   try{
-    const saved=await enqueueProfileMutation('filter',()=>fetchJSON(`/api/filter-profiles/${id}`,{method:'DELETE',expectedRevision:filterStore._revision}));
+    const saved=await enqueueProfileMutation('filter',async()=>{
+      if(ordersProjectionIsThin()){
+        await ensureOrdersFullForAction('orders.profiles.filter.delete-queued');
+        if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('filterSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+      }
+      return fetchJSON(`/api/filter-profiles/${id}`,{method:'DELETE',expectedRevision:filterStore._revision});
+    });
+    if(ordersProjectionIsThin()){
+      await ensureOrdersFullForAction('orders.profiles.filter.delete-result');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('filterSelect')!==target||target.isConnected===false||target.value!==id)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
     filterStore=setProfileStore('filter',saved,page);
     if(oldFavorite===id)BLStorage.removeItem(`lcw_filter_favorite_${page}`);
     if(activeProfilePage()!==page)return;
@@ -17650,17 +17708,36 @@ document.getElementById('filterDeleteBtn').addEventListener('click', async ()=>{
   catch(err){ alert('Silinemedi: '+err.message); }
 });
 document.getElementById('filterRenameBtn')?.addEventListener('click',()=>renameProfile('filter'));
-document.getElementById('filterResetBtn')?.addEventListener('click',resetFiltersToSystemDefault);
+document.getElementById('filterResetBtn')?.addEventListener('click',async event=>{
+  try{
+    if(ordersProjectionIsThin()){
+      const page=activeProfilePage(),target=event.currentTarget;
+      await ensureOrdersFullForAction('orders.profiles.filter.reset');
+      if(ordersProjectionIsThin()||activeProfilePage()!==page||document.getElementById('filterResetBtn')!==target||target.isConnected===false)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
+    resetFiltersToSystemDefault();
+  }catch(error){showToast(error?.message||ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});}
+});
 
 // Sayfa açılışında: profil listelerini çek, favori görünüm/filtre varsa otomatik uygula.
 let profileApplyGeneration=0;
 async function applyProfilesForCurrentPage(applyFavorites=true){
   const generation=++profileApplyGeneration;
   const page=activeProfilePage();if(!isProfilePage(page))return;
+  if(ordersProjectionIsThin()){
+    await ensureOrdersFullForAction('orders.profiles.cached');
+    if(ordersProjectionIsThin())throw ordersFullActionError('ORDERS_FULL_STALE');
+  }
+  if(generation!==profileApplyGeneration||activeProfilePage()!==page)return;
   applyCachedProfilesForCurrentPage(applyFavorites);
   await refreshViewSelect();await refreshFilterSelect();
   if(generation!==profileApplyGeneration||activeProfilePage()!==page)return;
   if(applyFavorites){
+    if(ordersProjectionIsThin()){
+      await ensureOrdersFullForAction('orders.profiles.remote');
+      if(ordersProjectionIsThin())throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
+    if(generation!==profileApplyGeneration||activeProfilePage()!==page)return;
     applyStoredProfilesForCurrentPage(true);
   }
 }

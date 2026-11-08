@@ -1,0 +1,64 @@
+{
+  "commands": [
+    {
+      "name": "baseline",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-orders-config-barriers/v2/app-main-barriers.test.cjs"
+      ],
+      "draft": false,
+      "exitCode": 1,
+      "tmpdir": "/tmp/bl6-config-v2-usknkzg_",
+      "sha256": "865dffd74117c42b55bd5f2283231a678eddbf7c697f8b05fafa243fdf7a4ba8",
+      "counts": {
+        "tests": [
+          "47"
+        ],
+        "pass": [
+          "9"
+        ],
+        "fail": [
+          "38"
+        ],
+        "cancelled": [
+          "0"
+        ],
+        "skipped": [
+          "0"
+        ]
+      }
+    },
+    {
+      "name": "candidate",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-orders-config-barriers/v2/app-main-barriers.test.cjs"
+      ],
+      "draft": true,
+      "exitCode": 0,
+      "tmpdir": "/tmp/bl6-config-v2-mntui8p3",
+      "sha256": "bd1714699de32ceacd78fadcd8631619ece7908463078306fa4f060840e3625b",
+      "counts": {
+        "tests": [
+          "47"
+        ],
+        "pass": [
+          "47"
+        ],
+        "fail": [
+          "0"
+        ],
+        "cancelled": [
+          "0"
+        ],
+        "skipped": [
+          "0"
+        ]
+      }
+    }
+  ]
+}

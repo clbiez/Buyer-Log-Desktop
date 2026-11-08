@@ -167,6 +167,13 @@ test('combined CP and Orders hydration retains CP invalidation without a second 
 // calls remain observable; the real shared-rule and CP/Orders invalidations run.
 function fullLoader() {
   const s = load(), c = s.context, pricingCalls = [];
+  // Preserve the real error formatter so a missing fixture dependency cannot
+  // mask the loader's original error with a second ReferenceError.
+  s.run(between('function refreshDiagnosisText(', 'function showSourceRefreshFailureModal('));
+  // Execute the production full-data gate and its private controller map;
+  // never substitute a no-op or an unconditional permission result.
+  s.run(between('async function ensureOrdersLoaded(', 'window.BLEnsureOrdersLoaded='));
+  s.run(between('const _ordersFullViewControllers=', '/* Global Flow Map veri kaynağı.'));
   c.state.overrides = {pricingRules: [], transitRules: []};
   c.state.storeRevisions = {};
   c.state.cpLogisticExpanded = new Set();

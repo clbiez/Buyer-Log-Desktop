@@ -1,0 +1,35 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-config-barriers",
+    "orders-profile-barriers",
+    "user-storage",
+    "module-schema",
+    "module-projection-schema",
+    "orders-full",
+    "checklist-components-row-cache",
+    "cp-decision-input-revision"
+  ],
+  "exitCode": 0,
+  "tmpdir": "/tmp/bl6-config-prod-umgc_wq4",
+  "sha256": "3bbc2a726ca4d20ce1781552999e3a9f9e6013698005a33884caddee347979f8",
+  "counts": {
+    "tests": [
+      "177"
+    ],
+    "pass": [
+      "177"
+    ],
+    "fail": [
+      "0"
+    ],
+    "cancelled": [
+      "0"
+    ],
+    "skipped": [
+      "0"
+    ]
+  }
+}

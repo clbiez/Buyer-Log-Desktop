@@ -1,0 +1,80 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "license-cards-favorites",
+    "data-management-unified-panel",
+    "multi-tab-live-sync-v20260926",
+    "shared-master-rule-sync-v7092",
+    "license-royalty-refresh-v1023",
+    "live-sync-no-lock-v719",
+    "override-bulk-capture",
+    "cp-orders-hydration-revision",
+    "source-change-watch-v20260930",
+    "refresh-job-lost-server-restart",
+    "refresh-menu-canonical-v20261013",
+    "table-toolbar-hierarchy-v1032",
+    "refresh-menu-authority-20261013",
+    "refresh-groups-v781",
+    "partial-refresh-keeps-other-pages-v7206",
+    "data-loss-and-filters-v634",
+    "matching-rule-v439",
+    "horizon-filter-drawer-v20261104",
+    "startup-local-first-v782",
+    "orders-config-barriers",
+    "orders-profile-barriers",
+    "refresh-live-data-v509",
+    "auto-refresh-v603",
+    "cp-refresh-button-v1087",
+    "linked-refresh-horizon-v20260928",
+    "live-sync-v644"
+  ],
+  "selectedFiles": [
+    "tests/license-cards-favorites.test.js",
+    "tests/data-management-unified-panel.test.js",
+    "tests/multi-tab-live-sync-v20260926.test.js",
+    "tests/shared-master-rule-sync-v7092.test.js",
+    "tests/license-royalty-refresh-v1023.test.js",
+    "tests/live-sync-no-lock-v719.test.js",
+    "tests/override-bulk-capture.test.js",
+    "tests/cp-orders-hydration-revision.test.js",
+    "tests/source-change-watch-v20260930.test.js",
+    "tests/refresh-job-lost-server-restart.test.js",
+    "tests/refresh-menu-canonical-v20261013.test.js",
+    "tests/table-toolbar-hierarchy-v1032.test.js",
+    "tests/refresh-menu-authority-20261013.test.js",
+    "tests/refresh-groups-v781.test.js",
+    "tests/partial-refresh-keeps-other-pages-v7206.test.js",
+    "tests/data-loss-and-filters-v634.test.js",
+    "tests/matching-rule-v439.test.js",
+    "tests/horizon-filter-drawer-v20261104.test.js",
+    "tests/startup-local-first-v782.test.js",
+    "tests/orders-config-barriers.test.js",
+    "tests/orders-profile-barriers.test.js",
+    "tests/refresh-live-data-v509.test.js",
+    "tests/auto-refresh-v603.test.js",
+    "tests/cp-refresh-button-v1087.test.js",
+    "tests/linked-refresh-horizon-v20260928.test.js",
+    "tests/live-sync-v644.test.js"
+  ],
+  "exitCode": 0,
+  "sha256": "f4e0b96a89ae6727c644cec54583a6712ed2f53615397a0967db9be5802d1566",
+  "counts": {
+    "tests": [
+      "262"
+    ],
+    "pass": [
+      "262"
+    ],
+    "fail": [
+      "0"
+    ],
+    "cancelled": [
+      "0"
+    ],
+    "skipped": [
+      "0"
+    ]
+  }
+}
