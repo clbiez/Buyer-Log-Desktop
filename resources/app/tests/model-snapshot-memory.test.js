@@ -19,7 +19,8 @@ test('saving a snapshot larger than the V8 heap uses bounded JSON chunks and ret
       })().catch(error=>{console.error(error);process.exitCode=1;});
     `;
     const env={...process.env,BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_LOCAL_DATA_ROOT:path.join(root,'local'),BUYER_LOG_SERVER_DATA_ROOT:path.join(root,'server'),BUYER_LOG_TEMP_ROOT:path.join(root,'temp')};
-    const result=spawnSync(process.execPath,['--max-old-space-size=96','-e',script],{env,encoding:'utf8',timeout:60000,maxBuffer:1024*1024});
+    // Bound young space too: newer V8 can add 192 MiB beyond the old-space cap.
+    const result=spawnSync(process.execPath,['--max-old-space-size=96','--max-semi-space-size=1','-e',script],{env,encoding:'utf8',timeout:60000,maxBuffer:1024*1024});
     assert.equal(result.status,0,result.stderr||String(result.error||result.signal));
     const metrics=JSON.parse(result.stdout.trim());assert.ok(metrics.uncompressedBytes>metrics.heapLimit,'fixture must exceed its actual V8 heap limit');
   }finally{fs.rmSync(root,{recursive:true,force:true});}
