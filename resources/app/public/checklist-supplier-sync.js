@@ -591,7 +591,11 @@
     return known ? { orderKeys: orderKeys, optionIds: optionIds } : null;
   }
 
+  // Bir geçiş boyunca satır set kimliği bir kez okunur (checklist-components-engine).
   function refreshColumns(options) {
+    return Components.withRowCache(function () { return refreshColumnsNow(options); });
+  }
+  function refreshColumnsNow(options) {
     const opts = options || {};
     const rows = currentRows(), items = itemCatalog();
     const cols = root.COLS_BY_TABLE && root.COLS_BY_TABLE.cp;

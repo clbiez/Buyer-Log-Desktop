@@ -1,0 +1,16 @@
+CGROUP_BEFORE "low 0\nhigh 0\nmax 8207\noom 1\noom_kill 1\noom_group_kill 0\n"
+HTTP_BEGIN GET /api/status 1794087990188
+STATUS_ATTEMPT {"url":"/api/status","ms":38.537105,"status":null,"attempt":1,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":7.5456910000000335,"status":null,"attempt":2,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":2.9536749999999756,"status":null,"attempt":3,"error":"fetch failed"}
+HTTP_BEGIN GET /api/status 1794087990792
+STATUS_ATTEMPT {"url":"/api/status","ms":1.8602579999999307,"status":null,"attempt":1,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":1.6239170000001195,"status":null,"attempt":2,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":2.5339830000000347,"status":null,"attempt":3,"error":"fetch failed"}
+HTTP_BEGIN GET /api/status 1794087991351
+STATUS_ATTEMPT {"url":"/api/status","ms":1.8009060000001682,"status":null,"attempt":1,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":1.9239469999999983,"status":null,"attempt":2,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":41.691081999999824,"status":200,"attempt":3}
+HTTP_BEGIN POST /api/user-login 1794087991698
+green ready { backlog: 37708, lfl: 30000 }
+SERVER_EXIT {"code":0,"signal":null}

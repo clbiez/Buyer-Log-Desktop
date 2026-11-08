@@ -1,0 +1,12 @@
+{
+  "inspectedBy": "root agent via view_image",
+  "accepted": [
+    "analytics-lfl-sort.png",
+    "analytics-transit-summary.png",
+    "analytics-delivery-visible.png"
+  ],
+  "notAcceptedAsAnalysisImage": "delivery-under-curtain-not-accepted.png",
+  "reason": "first new capture showed module trivia curtain; follow-up explicitly clicked Continue and verified elementFromPoint inside analysis",
+  "releaseImages": "existing own release PNGs inspected and valid; unchanged",
+  "refreshPosts": "one in initial fresh v2 functional run; zero in resume capture"
+}

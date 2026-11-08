@@ -1,0 +1,129 @@
+legacy-resource-authority fixture — dar salt okunur tanı hazırlığı
+Tarih:2026-11-08
+
+SONUÇ / KANIT SINIRI
+[Doğrulandı] İlk Batch3'te altı case, aynı before-hook'un "Fixture timeout"
+hatasını paylaşıyor. Timer tests/legacy-resource-authority.test.js:8'de25000ms;
+ilk case25248.8ms, kalan beşi64.9ms veya daha kısa. Güvenlik assertion'larının
+altı ayrı davranış hatası verdiğine dair bu logda kanıt yok. Gözlenen kesin olay:
+parent25000ms içinde child'ın ready IPC mesajını gözlemleyemedi.
+
+[Doğrulandı: parent'ın ilettiği tekrar sonucu] Aynı300 dosyalı Batch3,
+concurrency4 ve private TMPDIR/env ile yeniden2074PASS/0FAIL ve36.93s vermiş.
+İlk Batch3:2074 total,2068PASS/6FAIL,237.7s. Tekrarı ben çalıştırmadım ve yeni
+tekrarın ham logunu incelemedim. Bu fark kök nedeni kanıtlamaz; "environment
+flake", ürün regresyonu veya kesin CPU/disk nedeni olarak sınıflandırılmadı.
+Root standart tüm10 batch yeniden koşusunu yürütüyor; bu hazırlık onu değiştirmez.
+
+[Bilinmiyor] İlk25s'de hangi HTTP çağrısı/stage bekliyordu; child ready'yi ne
+zaman göndermeye çalıştı; CPU scheduling, asyncfs, disk veya IPC gecikmesinin payı.
+Mevcut logda request/stage breadcrumb veya bu kaynaklara ait zaman serisi yok.
+
+Kaynak pin: /workspace/buyerlog-analytics904
+HEAD:e42f24b6283d68f80dece1a5012f12055ecc3374
+İlk log:docs/performance-program/first-transition-visible-ready-20261108/validation/full-integrated.log
+Satırlar4196 (Batch3),4552–4557 (altı sonuç),6287–6294 (özet),6298–6319
+(ilk before hatası),6441–6443 (batch başarısız). İlk hata kesiti burada
+initial-failure-excerpt.log olarak korunur. Kaynak/log SHA'ları provenance.json'da.
+
+25000ms'YE DAHİL OLAN GERÇEK HAZIRLIK ZİNCİRİ
+Parent timer fork'tan sonra başlar ve yalnız ready IPC ile temizlenir.
+Child helper tests/helpers/legacy-authority-server.cjs içinde:
+  1. Satır6–11: private kökler, IAM modülleri, bir scryptSync ve moderator seed.
+  2. Satır12–17: mevcut kontrollü OS-open/automation hook'ları, user-access modülü.
+  3. Satır54: ephemeral port/config, bütün production server require/bootstrap.
+  4. Satır55: admin login — ilk HTTP çağrısı.
+  5. Satır56: A için GET users/admin→POST users→login, sonra B için aynı üçlü.
+  6. Satır57: admin, A, B için sırayla GET api/data→GET api/test-reports.
+  7. Satır58: iki synthetic order'ı gerçek runtime'lara seed ve syncProfiles.
+  8. Satır59: parse/orderKey analizi ve iki test report'un gerçek store commit'i.
+  9. Satır60: en sonda process.send({ready:true,...}).
+Toplam13 sıralı child HTTP çağrısı vardır:3login+2admin-directory+2create+
+3data+3test-report. Her cevabın JSON parse'ı da aynı await zincirindedir.
+Normal başarı yolunda başlangıç seed'i,3login verifier'ı ve2create hash'i ile
+ready öncesinde6 scryptSync işi vardır; retry olursa sayı farklı olabilir.
+
+Parent'ın ready SONRASI yaptığı3ek login satır9'dadır; bu25000ms timer'ının
+içinde değildir. RPC seedScale/30000 satır handler'ı child'ın main startup'ında
+çağrılmaz. Bu legacy testin before'u ölçek fixture'ı kurmaz; iki order/report
+seed'i,13warm request'ten SONRA yapılır.30k projection maliyeti bu before'a
+kanıtsız atanamaz. Eksik/sahte ready veya erken ready çözüm değildir.
+
+MEVCUT LOG NEYİ YERELLEŞTİRİYOR?
+Child'ın APP_BOOT_START'a göre gözlenen işaretleri:
+  LOCAL_CONFIG_READY537ms;DELTA_STORE_MODE1143ms;
+  COLLECTION_IMAGE_SCOPE_MIGRATION2684ms;SERVER_READY5925ms;
+  LOCAL_DB_CONFIG_PATH6103ms;SHARED_SYNC_ROOT6104ms;
+  SHARED_HUB_BOOTSTRAP6600ms;LOCAL_DB_ACTIVE_CONNECTION12989ms;
+  LOCAL_DB_READY/LOCAL_STATE_READY12990ms.
+server.js:209–221'de config/root işaretlerinden sonra await localDb.ensure(),
+sonra active-connection/ready işaretleri gelir. Dolayısıyla6103→12989 aralığı
+yaklaşık6886ms'lik ensure-await VE scheduling bölgesidir. Bu gerçek, hangi alt
+I/O/CPU işleminin6886ms tuttuğunu kanıtlamaz. require(server) öncesi child
+hazırlığı ve fork scheduling APP_BOOT_START saatinin DIŞINDADIR;12990ms'yi
+parent'ın25s sayacından doğrudan çıkarıp kalan bütçe kesinmiş gibi sunmayın.
+SERVER_READY TCP dinleyiciyi gösterir; tüm fixture seed/report hazırlığı değildir.
+
+MALİYET / CONTENTION DUYARLILIĞI — KAYNAKLA SINIRLI
+• Cold child/module/server bootstrap: tam production modül ağacı ve başlangıç
+  dosya/migration işleri. Parent worker+helper ayrı süreçlerdir; runner'ın4
+  dosya concurrency'si toplam OS süreç/thread sayısının4olduğunu göstermez.
+• Auth/user create: user-access.js:518/526 senkron scrypt,1839+ gerçek validasyon,
+  saveStore835+ atomik auth JSON yazımı, audit ve personal-login kalıcılığı.
+  Main-thread CPU ve private dosya yazımları bütçeyi tüketebilir.1–3profile var;
+  büyük bir IAM dizini maliyeti bu fixture için varsayılmamalı.
+• localDb.ensure (local-db.js:863+): private mkdir, recovery, ilk state yazımı,
+  loadState. Diğer fixture'larla aynı mantıksal DB kilidi olduğuna kanıt yok;
+  private kökler global CPU/disk/async-I/O contention'ını ortadan kaldırmaz.
+• GET api/data (server.js:8502+): localDbReadyPromise bekler. mode=initial
+  kullanılmadığı için8255+ normal/full buildResponse yolu; cache miss'te boş
+  source snapshot denemesi, projection/override/catalog/permission işleri ve
+  pageProjectionCache.writeGeneration olabilir. Server-Timing total/page-cache
+  başlıkları zaten vardır; helper bunları kaydetmiyor.
+• GET api/test-reports (routes/test-report-routes.js:38+): boş store olsa bile
+  authorizedOrders→ensureDataLoaded→scope/live authority→orderKey haritası
+  çalışır (server.js:5330+,5364+). tasks endpoint'indeki boş-task kısa yolu,
+  bu kullanılan GET api/test-reports endpoint'ine uygulanmıyor. Boş kaynak
+  loadedAt:null döndüğü için ensureDataLoaded hızlı koşulu kalıcı true olmayabilir;
+  snapshot yokluğu tekrar kontrol edilebilir. Buradaki veri hacmi küçük kalır.
+• Satır58–59 final seed/syncProfiles/report commit ve IPC hâlâ timer içindedir.
+• helper.request satır18'de fetch/JSON için ayrı AbortSignal yoktur. Tek yavaş
+  await bütçeyi tüketebilir. Admin login'in150×100ms retry döngüsü, request
+  sürelerini kapsayan15s deadline DEĞİLDİR. Geçerli non200 JSON cevabı retry
+  edilmez; döngüden çıkıp assertion'a gider. Mevcut davranış değiştirilmedi.
+
+Batch3 concurrency4 ve ağır başka testler kaynakça görülebilir; reporter dosya
+çıktılarını sıralı/buffer'lı gösterebildiğinden logdaki komşu satırlardan belirli
+testlerin aynı anda çalıştığı veya bu timeout'a sebep olduğu çıkarılamaz.
+Log tail'ında heapUsed49MiB/rss147MiB bir anlık örnektir; peak, OOM veya bellek
+baskısı kanıtı değildir. Yeni bir process/resource ölçümü yapılmadı.
+
+EN KÜÇÜK GELECEK GÖZLENEBİLİRLİK ÖNERİSİ — UYGULANMADI
+Şu an devam eden tam koşuyu ve başarılı exact-repeat provenance'ını değiştirmeyin.
+Sorun tekrar ederse ilk aday yalnız fixture setup için küçük stage kaydıdır:
+  - Child monotonik saatini en üstte, scrypt/module-load öncesinde başlatın.
+  - require(server) begin/end; admin login attempt/status; A/B directory/create/
+    login; üç actor data/testreports; seed/syncProfiles; report commit; ready-send
+    aşamalarına begin/end/error kaydı ekleyin. Sıra ve await'ler aynı kalsın.
+  - Her kayıt: safe stage/actor etiketi, pid, elapsedMs, stageMs, HTTP status;
+    api/data mevcut Server-Timing; headers-available ve JSON-complete ayrımı.
+    Request/response body, password/hash, Cookie/Set-Cookie veya kullanıcı içeriği
+    loglamayın. response.clone/json ile ikinci parse eklemeyin.
+  - Küçük ayrı fixture-progress IPC mesajını parent yalnız son-stage/ring olarak
+    tutsun; ready koşulu/sırası değişmesin. Parent kendi fork-to-ready-received
+    süresini kaydetsin. process.send callback'i parent tüketimi kanıtı değildir.
+    Timer aynı25000ms kalıp yalnız son-stage/elapsed özetini hataya eklesin.
+  - Son-stage13isteğin hangisinde durulduğunu gösterince, gerekirse yalnız o
+    stage için process.cpuUsage delta veya sınırlı event-loop ölçümü düşünün.
+    Bunlar wall time, CPU ve I/O'yu tek başına özdeşleştirmez; ayrı raporlayın.
+  - Parent'ın güvenli küçük stage çıktısı, cleanup'ın sildiği fixture kökü
+    dışında kendi run artifact'ında korunsun. Mevcut failure/RED logları kalsın.
+Bu bir öneridir; diagnostic patch/preload, yeni logger/proses, test ya da ölçüm
+çalıştırılmadı. Önce stage bilinmeden profiler/tracing/retry yükü eklemeyin.
+
+DEĞİŞMEZLER / TESLİM
+Production/test/helper/runner kaynakları değiştirilmedi. Güvenlik assertion'ı,
+25s timeout, concurrency4, fixture sample/ready kriteri gevşetilmedi; fallback,
+skip, erken-ready veya API bypass önerilmedi. Test/benchmark/server çalışmadı.
+Yalnız bu yeni /tmp/buyerlog-legacy-fixture-diagnosis hazırlığı yazıldı.
+INT08 ve DS11 paketlerine dokunulmadı. İlk timeout'un kesin nedeni AÇIK kalır.
