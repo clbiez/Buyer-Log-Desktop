@@ -1,0 +1,75 @@
+{
+  "target": "reviewed 8af8e44069324189b04e12abf58c6b9a20628eb6",
+  "providerProof": "docs/performance-program/phase-6a/sync-provider-integration-20261108/source-pin-review.json",
+  "inventory": {
+    "pr": 891,
+    "head": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+    "sha256": "9ddb58477db99ce381dd57f311eced5e09c3b2176f3b9b58349456a92b6cb352"
+  },
+  "captures": {
+    "app-main.js": {
+      "path": "public/app-main.js",
+      "sha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+      "gitBlob": "9947d0934ce52427d3554ffad9310b13875744e1"
+    },
+    "business-rules.js": {
+      "path": "public/business-rules.js",
+      "sha256": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+      "gitBlob": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e"
+    },
+    "canonical-fields.js": {
+      "path": "public/canonical-fields.js",
+      "sha256": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+      "gitBlob": "790b20613f6ce92a8ab223c9f5000e1326de1c52"
+    },
+    "canonical-module-bindings.js": {
+      "path": "public/canonical-module-bindings.js",
+      "sha256": "c6a06f86dbc46614b7f7845b6092d186324ba80866e2385b584e4782d60a3b5f",
+      "gitBlob": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5"
+    },
+    "chronological-values.js": {
+      "path": "public/chronological-values.js",
+      "sha256": "7ff17b9410c8d779c2d634ccb8563e16c28b3f40f8415279dfa6b0f64e439194",
+      "gitBlob": "db6eacd41c5cecd81c3adbee9384a28750baba08"
+    },
+    "compute-tasks.js": {
+      "path": "server/lib/compute-tasks.js",
+      "sha256": "36b2d224bdc5ba78a6fab4722c629eb75e4f6a4bf701b46fc1849284f8957d4a",
+      "gitBlob": "fffa068554c68d3a12009ce3d5d1938ac289ae9f"
+    },
+    "dependency-plan.js": {
+      "path": "public/projection-dependency-plan.js",
+      "sha256": "f393d36583d1d0d0b86b50a8c01e59bacdec7b836ad6dd9658313ebdb38ad428",
+      "gitBlob": "3315d1cdfb015c93db7e20eb02e1ed41937b693b",
+      "previousSha256": "0e58a3c0abacbfb0b542014ed574feb33d37d9df163f64fadde6d80b7953f368",
+      "previousGitBlob": "811c2236c17cc5caf2b535dd74bfe6685797f0c3",
+      "delta": "Two exact trailing i18n-ignore comments on opaque original #891 data classifications; all algorithm bytes otherwise equal frozen predecessor."
+    },
+    "formula-columns.js": {
+      "path": "public/formula-columns.js",
+      "sha256": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
+      "gitBlob": "d357c208a70b6a936540f19b51608bee6bf49f32"
+    },
+    "formula-engine.js": {
+      "path": "public/formula-engine.js",
+      "sha256": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+      "gitBlob": "6111a8ba5bf0e4dc4659132c0a091f045b5d535c"
+    },
+    "function-extractor.cjs": {
+      "path": "tests/helpers/app-main-functions.js",
+      "sha256": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+      "gitBlob": "fb1d0779e464787ddd02100c0e867102c2ecd25d"
+    },
+    "json-dates.cjs": {
+      "path": "server/lib/json-dates.js",
+      "sha256": "d312f88ce70b772a0f5676a149e8cab7dec21908aa923ab000d2691b21d6e070",
+      "gitBlob": "eb7823eeb32fe10bc98eeda09cebdada43600c32"
+    },
+    "projection-view-core.js": {
+      "path": "server/lib/projection-view-core.js",
+      "sha256": "4eae98d0c2f4926f7404f61d50e51b3e1edcfd01fba4ca43e8f758f4f03bb835",
+      "gitBlob": "e678fc64f39d455ed68b9bdca4d84e86fe186a21"
+    }
+  },
+  "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+}

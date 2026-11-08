@@ -9,8 +9,8 @@
   "captures": {
     "app-main.js": {
       "path": "public/app-main.js",
-      "sha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
-      "gitBlob": "9947d0934ce52427d3554ffad9310b13875744e1"
+      "sha256": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+      "gitBlob": "a3d64e070b852452b9a473ba8f6253c18a0b0230"
     },
     "business-rules.js": {
       "path": "public/business-rules.js",
@@ -71,5 +71,6 @@
       "gitBlob": "e678fc64f39d455ed68b9bdca4d84e86fe186a21"
     }
   },
-  "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+  "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json",
+  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json"
 }

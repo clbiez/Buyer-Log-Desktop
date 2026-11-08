@@ -6312,30 +6312,111 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
 
    Artık ikisi de aynı tek-işlem ucunu kullanıyor: yalnız dokunulan sütun
    gider, yalnız o kaynağın revizyonu karşılaştırılır. */
-async function writeCpModelColumn(sourceId, cpColumn){
+// Private lexical helpers for app-main.js; no window export or authority token.
+const _cpModelLoadRequests=new WeakMap(),_cpModelLoadReceipts=new WeakMap(),_cpModelLoadConsumed=new WeakSet();
+function cpModelActionConfiguration(){
+  return JSON.stringify({items:modelConnState.items,revision:modelConnState.revision,supported:modelConnState.supported,exportFolder:modelConnState.exportFolder});
+}
+function captureCpModelAction(valid=()=>true){
+  const profile=state.currentUser,userContext=window.BL_USER_CONTEXT;
+  const actor=profile?.id,contextActor=userContext?.id,tab=currentActiveTab();
+  const session=_ordersUiSessionEpoch,finite=ordersConfigurationLifecycleInvolved();
+  const definitionSet=CP_MODEL_COLUMN_DEFS,definitions=JSON.stringify(definitionSet);
+  let epoch=_ordersProjectionSourceEpoch,configuration=cpModelActionConfiguration();
+  const assertAt=(wantedEpoch,wantedConfiguration)=>{
+    if(state.currentUser!==profile||window.BL_USER_CONTEXT!==userContext||profile?.id!==actor||userContext?.id!==contextActor
+      ||currentActiveTab()!==tab||_ordersUiSessionEpoch!==session||_ordersProjectionSourceEpoch!==wantedEpoch
+      ||ordersConfigurationLifecycleInvolved()!==finite||CP_MODEL_COLUMN_DEFS!==definitionSet||JSON.stringify(CP_MODEL_COLUMN_DEFS)!==definitions
+      ||cpModelActionConfiguration()!==wantedConfiguration||valid()!==true)throw ordersFullActionError('ORDERS_FULL_STALE');
+    if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+    _ordersRequireFullSynchronousRead();
+  };
+  const action={
+    assert(){assertAt(epoch,configuration);},
+    // Only the actual callee can issue this receipt. Consume before checking it.
+    consume(request){
+      if(_cpModelLoadConsumed.has(request))throw ordersFullActionError('ORDERS_FULL_STALE');
+      _cpModelLoadConsumed.add(request);
+      const receipt=_cpModelLoadReceipts.get(request);_cpModelLoadReceipts.delete(request);
+      if(!receipt){action.assert();return;}
+      if(receipt.action!==action||receipt.startEpoch!==epoch||receipt.before!==configuration
+        ||receipt.session!==session||receipt.revision!==request.revision)throw ordersFullActionError('ORDERS_FULL_STALE');
+      assertAt(receipt.endEpoch,receipt.after);
+      epoch=receipt.endEpoch;configuration=receipt.after;
+    },
+    request(revision){
+      action.assert();
+      const request=Object.freeze({revision});
+      _cpModelLoadRequests.set(request,{action,startEpoch:epoch,before:configuration,session,
+        beforeApply(next){
+          action.assert();
+          // A read/preflight retains the real loader's refresh behavior, but
+          // receives no receipt to rebind the old UI command. The refreshed
+          // config is available to a new explicit action after cancellation.
+          if(revision!=null&&next.revision!==revision)
+            throw ordersFullActionError('ORDERS_FULL_STALE');
+        },
+        beforeCommit(intent){assertAt(intent.epoch,configuration);},
+        applied(intent){
+          if(revision==null)return;
+          // Bind to the callee's validated end, never a freshly captured epoch.
+          _cpModelLoadReceipts.set(request,Object.freeze({action,startEpoch:epoch,endEpoch:intent.epoch,
+            before:configuration,after:cpModelActionConfiguration(),session,revision}));
+        }});
+      return request;
+    },
+  };
+  action.assert();return Object.freeze(action);
+}
+async function loadCpModelActionConfiguration(action,revision=null){
+  const request=action.request(revision);
+  try{await modelConnLoad(request);action.consume(request);action.assert();}
+  finally{_cpModelLoadRequests.delete(request);_cpModelLoadReceipts.delete(request);}
+}
+
+async function writeCpModelColumn(sourceId, cpColumn, action=null){
   const intent=captureOrdersConfigurationIntent();
+  const profile=state.currentUser,userContext=window.BL_USER_CONTEXT,actor=profile?.id,contextActor=userContext?.id;
+  const command=JSON.stringify(cpColumn);
   if(ordersProjectionIsThin())await ensureOrdersFullForAction('orders.model-column.write');
   assertOrdersConfigurationIntent(intent);
+  if(state.currentUser!==profile||window.BL_USER_CONTEXT!==userContext||profile?.id!==actor||userContext?.id!==contextActor
+    ||JSON.stringify(cpColumn)!==command)throw ordersFullActionError('ORDERS_FULL_STALE');
   _ordersRequireFullSynchronousRead();
-  // Revizyon TAZE okunur: bu ekran uzun süre açık kalmış olabilir.
-  await modelConnLoad();
-  assertOrdersConfigurationIntent(intent);
-  _ordersRequireFullSynchronousRead();
+  action=action||captureCpModelAction();
+  action.assert();
+  // Keep the command captured before any await, including direct callers.
+  const assertCommand=()=>{
+    action.assert();
+    if(JSON.stringify(cpColumn)!==command)throw ordersFullActionError('ORDERS_FULL_STALE');
+  };
+  await loadCpModelActionConfiguration(action);
+  assertCommand();
   const source=(modelConnState.items||[]).find(item=>item&&item.id===sourceId);
   if(!source)throw new Error(appLang==='en'?'Connection not found':'Bağlantı bulunamadı');
   const res=await fetch(`/api/data-management/source/${encodeURIComponent(sourceId)}`,{
     method:'PATCH',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({cpColumn,expectedSourceRevision:source.configRevision||''})});
+    body:JSON.stringify({cpColumn:JSON.parse(command),expectedSourceRevision:source.configRevision||''})});
+  assertCommand();
   const data=await res.json().catch(()=>({}));
+  assertCommand();
   if(!res.ok||!data.ok)throw new Error(data.error||res.statusText);
-  await modelConnLoad();
+  // Missing/unknown revision cannot justify an epoch transition. Unchanged
+  // legacy callees still return the same items reference and need no receipt.
+  const revision=Number.isSafeInteger(data.revision)&&data.revision>=0?data.revision:null;
+  await loadCpModelActionConfiguration(action,revision);
+  assertCommand();
   return modelConnState.items;
 }
 async function removeCpModelColumn(id,rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.model-column.remove','cp-model-action',()=>()=>true,()=>removeCpModelColumn(id,rerenderFn));
+  const action=captureCpModelAction();
   const def=CP_MODEL_COLUMN_DEFS.find(d=>d.id===id); if(!def)return;
   if(!confirm(appLang==='en'?`Remove “${def.label}” from the CP/Orders table?`:`“${def.label}” sütununu CP/Siparişler tablosundan kaldırmak istiyor musun?`))return;
   try{
-    const saved=await writeCpModelColumn(def.connectionId,{op:'remove',id});
+    action.assert();
+    const saved=await writeCpModelColumn(def.connectionId,{op:'remove',id},action);
+    action.assert();
     forgetPersistedColumnKeys('cp',[def.header]);forgetPersistedColumnKeys('orders',[def.header]);
     syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
@@ -6344,8 +6425,11 @@ async function removeCpModelColumn(id,rerenderFn){
 }
 
 async function openCpModelColumnModal(editId,rerenderFn){
-  document.getElementById('_cpModelColumnModal')?.remove();
-  try{await modelConnLoad();}catch(err){showToast(err.message||String(err));return;}
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.model-column.open','cp-model-action',()=>()=>true,()=>openCpModelColumnModal(editId,rerenderFn));
+  const oldModal=document.getElementById('_cpModelColumnModal');
+  const opening=captureCpModelAction(()=>document.getElementById('_cpModelColumnModal')===oldModal);
+  try{await loadCpModelActionConfiguration(opening);opening.assert();}catch(err){showToast(err.message||String(err));return;}
+  oldModal?.remove();
   const existing=editId?CP_MODEL_COLUMN_DEFS.find(d=>d.id===editId):null;
   const existingLabels=existing?BLColumnNames.definitionLabels(existing):{en:'',tr:''};
   const connections=(modelConnState.items||[]).filter(item=>['asas','antrepo'].includes(item.role));
@@ -6369,10 +6453,34 @@ async function openCpModelColumnModal(editId,rerenderFn){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const list=modal.querySelector('#_cpModelColumnList'), search=modal.querySelector('#_cpModelSearch'), status=modal.querySelector('#_cpModelStatus');
+  const controls=[...modal.querySelectorAll('input,select,textarea')];
+  const modalNodes=[list,search,status,...controls];
+  const modalDomCurrent=()=>modal.isConnected&&document.getElementById('_cpModelColumnModal')===modal
+    &&modalNodes.every(node=>node.isConnected&&modal.querySelector('#'+node.id)===node);
+  const modalAction=captureCpModelAction(modalDomCurrent);
+  let schemaRequest=0,draftVersion=0;
+  controls.forEach(node=>{node.addEventListener('input',()=>draftVersion++);node.addEventListener('change',()=>draftVersion++);});
+  const modalCurrent=()=>{try{modalAction.assert();return true;}catch(_){return false;}};
   const key=value=>String(value||'').toLocaleLowerCase('tr-TR').replace(/ı/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,' ').trim();
-  const render=()=>{const q=key(search.value);const rows=schemaEntries.filter(e=>e.kind==='column'&&(!q||key(`${e.table} ${e.name}`).includes(q)));list.innerHTML=rows.length?rows.map(e=>{const active=selectedField&&selectedField.table===e.table&&selectedField.name===e.name;return `<button type="button" class="cpModelColumnOption${active?' active':''}" data-table="${escapeHtml(e.table)}" data-name="${escapeHtml(e.name)}"><strong>${escapeHtml(e.name)}</strong><span>${escapeHtml(e.table)}</span></button>`;}).join(''):`<div class="modelConnHint">${escapeHtml(appLang==='en'?'No matching column.':'Eşleşen sütun bulunamadı.')}</div>`;list.querySelectorAll('[data-table]').forEach(btn=>btn.addEventListener('click',()=>{selectedField={table:btn.dataset.table,name:btn.dataset.name,kind:'column'};render();}));};
-  const loadSchema=async()=>{const conn=connections.find(c=>c.id===selectedConnectionId);if(!conn)return;list.innerHTML=`<div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div>`;try{const res=await fetch('/api/model-connections/schema',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({server:conn.server,catalog:conn.catalog})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);schemaEntries=Array.isArray(data.columns)?data.columns:[];render();}catch(err){list.innerHTML=`<div class="modelConnResult bad">${escapeHtml(err.message||String(err))}</div>`;}};
-  modal.querySelector('#_cpModelConnection').addEventListener('change',e=>{selectedConnectionId=e.target.value;selectedField=null;loadSchema();});search.addEventListener('input',render);
+  const render=()=>{if(!modalCurrent())return;const q=key(search.value);const rows=schemaEntries.filter(e=>e.kind==='column'&&(!q||key(`${e.table} ${e.name}`).includes(q)));list.innerHTML=rows.length?rows.map(e=>{const active=selectedField&&selectedField.table===e.table&&selectedField.name===e.name;return `<button type="button" class="cpModelColumnOption${active?' active':''}" data-table="${escapeHtml(e.table)}" data-name="${escapeHtml(e.name)}"><strong>${escapeHtml(e.name)}</strong><span>${escapeHtml(e.table)}</span></button>`;}).join(''):`<div class="modelConnHint">${escapeHtml(appLang==='en'?'No matching column.':'Eşleşen sütun bulunamadı.')}</div>`;list.querySelectorAll('[data-table]').forEach(btn=>btn.addEventListener('click',()=>{if(!modalCurrent())return;draftVersion++;selectedField={table:btn.dataset.table,name:btn.dataset.name,kind:'column'};render();}));};
+  const loadSchema=async()=>{
+    if(!modalCurrent())return;
+    const connectionId=selectedConnectionId,sequence=++schemaRequest;
+    const conn=connections.find(c=>c.id===connectionId);if(!conn)return;
+    const current=()=>modalCurrent()&&sequence===schemaRequest&&connectionId===selectedConnectionId
+      &&modal.querySelector('#_cpModelConnection').value===connectionId;
+    schemaEntries=[];
+    list.innerHTML=`<div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div>`;
+    try{
+      const res=await fetch('/api/model-connections/schema',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({server:conn.server,catalog:conn.catalog})});
+      if(!current())return;
+      const data=await res.json().catch(()=>({}));
+      if(!current())return;
+      if(!res.ok)throw new Error(data.error||res.statusText);
+      schemaEntries=Array.isArray(data.columns)?data.columns:[];render();
+    }catch(err){if(current())list.innerHTML=`<div class="modelConnResult bad">${escapeHtml(err.message||String(err))}</div>`;}
+  };
+  modal.querySelector('#_cpModelConnection').addEventListener('change',e=>{if(!modalCurrent())return;selectedConnectionId=e.target.value;selectedField=null;loadSchema();});search.addEventListener('input',render);
   const groupSelect=modal.querySelector('#_cpModelGroup'), groupNew=modal.querySelector('#_cpModelGroupNew'), groupNewWrap=modal.querySelector('#_cpModelGroupNewWrap');
   const chosenGroup=()=>(groupSelect.value===NEW_GROUP_OPTION?groupNew.value:groupSelect.value).replace(/\s+/g,' ').trim();
   groupSelect.addEventListener('change',()=>{const wantsNew=groupSelect.value===NEW_GROUP_OPTION;groupNewWrap.hidden=!wantsNew;if(wantsNew)groupNew.focus();});
@@ -6380,7 +6488,17 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const close=()=>{releaseKeyboard();modal.remove();};
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>close()));modal.addEventListener('click',e=>{if(e.target===modal)close();});
-  modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const labelEn=modal.querySelector('#_cpModelLabelEn').value.replace(/\s+/g,' ').trim(),labelTr=modal.querySelector('#_cpModelLabelTr').value.replace(/\s+/g,' ').trim(),label=labelTr||labelEn;if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
+  modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const labelEn=modal.querySelector('#_cpModelLabelEn').value.replace(/\s+/g,' ').trim(),labelTr=modal.querySelector('#_cpModelLabelTr').value.replace(/\s+/g,' ').trim(),label=labelTr||labelEn;if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;if(btn.disabled)return;
+    const version=draftVersion,selected=JSON.stringify([selectedConnectionId,selectedField]);
+    const values=JSON.stringify(controls.map(node=>[node.value,node.checked]));
+    let action;
+    try{modalAction.assert();action=captureCpModelAction(()=>modalDomCurrent()
+      &&draftVersion===version&&JSON.stringify([selectedConnectionId,selectedField])===selected
+      &&JSON.stringify(controls.map(node=>[node.value,node.checked]))===values
+      &&controls.every(node=>node.isConnected)&&[...modal.querySelectorAll('input,select,textarea')].every((node,i)=>node===controls[i])
+      &&modal.querySelectorAll('input,select,textarea').length===controls.length);}catch(err){status.textContent=err.message||String(err);return;}
+    const connectionId=selectedConnectionId,field={...selectedField};
+    btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
       /* Sütunu BAŞKA bir kaynağa taşımak iki yazma gerektirir. SIRA ÖNEMLİ:
          ÖNCE EKLE, SONRA KALDIR. Ters sırada, ekleme başarısız olursa sütun
          hiçbir kaynakta kalmaz — sessiz kayıp. Bu sırayla en kötü durum
@@ -6389,14 +6507,16 @@ async function openCpModelColumnModal(editId,rerenderFn){
          (Canlı doğrulamada tam olarak bu oldu: kaldırma başarılı, ekleme
          reddedildi, sütun kayboldu.) */
       const previous=editId?(CP_MODEL_COLUMN_DEFS.find(d=>d.id===editId)||null):null;
-      const movingSource=Boolean(previous&&previous.connectionId&&previous.connectionId!==selectedConnectionId);
-      const entry={kind:'column',table:selectedField.table,name:selectedField.name};
-      const saved=movingSource||!editId
-        ?await writeCpModelColumn(selectedConnectionId,{op:'add',label,labelEn,labelTr,group,entry})
-        :await writeCpModelColumn(selectedConnectionId,{op:'update',id:editId,label,labelEn,labelTr,group,entry});
-      if(movingSource)await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId});
+      const movingSource=Boolean(previous&&previous.connectionId&&previous.connectionId!==connectionId);
+      action.assert();
+      const entry={kind:'column',table:field.table,name:field.name};
+      let saved=movingSource||!editId
+        ?await writeCpModelColumn(connectionId,{op:'add',label,labelEn,labelTr,group,entry},action)
+        :await writeCpModelColumn(connectionId,{op:'update',id:editId,label,labelEn,labelTr,group,entry},action);
+      action.assert();
+      if(movingSource){saved=await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId},action);action.assert();}
       syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));close();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
-  loadSchema(); setTimeout(()=>modal.querySelector(appLang==='en'?'#_cpModelLabelEn':'#_cpModelLabelTr').focus(),0);
+  loadSchema(); setTimeout(()=>{if(modalCurrent())modal.querySelector(appLang==='en'?'#_cpModelLabelEn':'#_cpModelLabelTr').focus();},0);
 }
 /* v7.33 — Hesaplanan sütun penceresi de bu pencereyi açar (ASAS / IAS-Antrepo
    sütununu formülde kullanabilmek için). Aynı akış tek yerde durur. */
@@ -13263,14 +13383,19 @@ function modelConnectionApiAvailable(){
   return location.protocol==='http:'||location.protocol==='https:';
 }
 
-async function modelConnLoad(){
+async function modelConnLoad(privateRequest=null){
+  const continuation=_cpModelLoadRequests.get(privateRequest);
+  _cpModelLoadRequests.delete(privateRequest);
   const intent=captureOrdersConfigurationIntent();
   if(!modelConnectionApiAvailable()){ modelConnState.loaded=true; return modelConnState; }
   const res=await fetch('/api/model-connections');
+  continuation?.action.assert();
   const data=await res.json().catch(()=>({}));
+  continuation?.action.assert();
   if(!res.ok) throw new Error(data.error||res.statusText);
   assertOrdersConfigurationIntent(intent);
   const next={items:(Array.isArray(data.items)?data.items:[]).filter(item=>item&&item.role!=='fabric'),revision:Number(data.revision)||0,supported:data.supported!==false,exportFolder:String(data.exportFolder||'')};
+  continuation?.beforeApply(next);
   let change=null;
   try{
     if(ordersConfigurationIntentInvolved(intent)&&modelConnectionPayloadChanged(next)){
@@ -13278,7 +13403,9 @@ async function modelConnLoad(){
       if(change.needsFull)await loadOrdersForConfigurationApply(change);
     }
     assertOrdersConfigurationIntent(intent);
+    continuation?.beforeCommit(intent);
     Object.assign(modelConnState,next);modelConnState.loaded=true;
+    continuation?.applied(intent);
     void refreshFieldMappingReadinessUI(modelConnState.items);
     return modelConnState;
   }finally{endOrdersConfigurationApply(change);}

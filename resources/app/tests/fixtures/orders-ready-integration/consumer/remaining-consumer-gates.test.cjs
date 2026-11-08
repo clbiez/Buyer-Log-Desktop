@@ -35,7 +35,7 @@ function fixture({thin=true,active=true}={}){
  if(guardStart<0||guardEnd<guardStart)throw Error('CONSUMER_TEST_SETUP: root guard unavailable');
  vm.runInContext(source.slice(guardStart,guardEnd)+'\nwindow.BLOrdersRequireFullSynchronousRead=_ordersRequireFullSynchronousRead;\nlet cpLoadPromise=null;let globalFlowOrdersFullFailure=null;const globalFlowLoadFailed={cp:false,orders:false};let _ordersUiCommandGate=null;',c);
  const names=['ensureOrdersFullForAction','ordersUiChange','globalFlowSourceRows','globalFlowEnsure','refreshCpStartupImageRegistry','ensureCpLoaded','writeCpModelColumn'];
- vm.runInContext(names.map(n=>helper.extractFunction(source,n)).join('\n')+'\nwindow.BLOrdersUiChange=ordersUiChange;',c);
+ vm.runInContext(source.slice(source.indexOf('// Private lexical helpers for app-main.js;'),source.indexOf('async function writeCpModelColumn('))+'\nlet CP_MODEL_COLUMN_DEFS=[];\n'+names.map(n=>helper.extractFunction(source,n)).join('\n')+'\nwindow.BLOrdersUiChange=ordersUiChange;',c);
  const capturedProfile=state.currentUser,capturedEpoch=c._ordersProjectionSourceEpoch,capturedSession=c._ordersUiSessionEpoch;
  const coordinator=promotion.create({snapshot:()=>view,
   fetchFull:async()=>{fetches++;return fullWait.promise;},normalize:(rows,{ordinals})=>({rows,ordinals}),

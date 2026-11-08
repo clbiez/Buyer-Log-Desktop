@@ -1,0 +1,14 @@
+{
+  "tests/contracts/source-pins.json": {
+    "priorSha256": "3682f594c9a50564e6789532de453078769ee70b27fec02de57aaa29a7739bfb",
+    "snapshot": "tests/fixtures/orders-model-action-closure/prior-pins/source-pins.json"
+  },
+  "tests/fixtures/orders-config-barriers-pins.json": {
+    "priorSha256": "5db86d7b179352bb5b5736ed933cc04ff9a995d1424588c1719254e6e1e1566e",
+    "snapshot": "tests/fixtures/orders-model-action-closure/prior-pins/orders-config-barriers-pins.json"
+  },
+  "tests/fixtures/profile-rejection-pins.json": {
+    "priorSha256": "5ed93f5413ad1f51454b749bd7f26187a89823d9628b77e74e615cb3c93cfe1e",
+    "snapshot": "tests/fixtures/orders-model-action-closure/prior-pins/profile-rejection-pins.json"
+  }
+}

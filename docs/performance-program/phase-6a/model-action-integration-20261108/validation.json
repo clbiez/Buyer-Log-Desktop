@@ -1,0 +1,31 @@
+{
+  "contribution": "bd53b5f7f9f2ca7d72c583964e8c376b22f9103e",
+  "historyAdopted": "c36eca5b",
+  "sourcePredecessorSha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+  "sourceCandidateSha256": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+  "prototypeOwnershipTestByteExact": true,
+  "ownershipTestSha256": "5616fd9230291289bff467312666dbd8a415218661e5eb8cc86840170377cc09",
+  "oldConsumerAssertionBodiesByteExact": true,
+  "consumerAssertionBodySha256": "4e86aef9d67563080f64c75823b060802c4d1a0d217c3c7e28532546f76a2772",
+  "nativeCounts": {
+    "model": 147,
+    "consumer": 19,
+    "configuration": 29,
+    "total": 195,
+    "fail": 0,
+    "skip": 0
+  },
+  "thinEnabled": false,
+  "fullCurrentTree": "pending final code stabilization; old9702 is previous tree",
+  "cp30kComparison": "pending final integration",
+  "independentPhase6aReview": "pending final stabilized diff",
+  "TEST": false,
+  "STABLE": false,
+  "ordersPackagePass": 744,
+  "ordersPackageFiles": 45,
+  "sourceAdoptionPass": 4,
+  "protected916Pass": 23,
+  "i18nNew": 0,
+  "i18nBaseline": 0,
+  "sourcePins": "3 strict current registries updated with complete reverse proof and immutable original snapshots; source checks not weakened"
+}

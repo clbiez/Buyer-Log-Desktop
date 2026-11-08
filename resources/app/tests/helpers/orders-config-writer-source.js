@@ -53,6 +53,8 @@ function installLifecycle(context,initial={}){
  // Getters expose actual lexical bindings for assertions/fixture setup; the
  // function under test still resolves the real declarations, not mock guards.
  vm.runInContext(lifecycle+'\n'+bindings.map(name=>`Object.defineProperty(globalThis,${JSON.stringify(name)},{configurable:true,get:()=>${name},set:value=>{${name}=value;}});`).join('\n'),context);
+ const modelStart=candidateApp.indexOf('// Private lexical helpers for app-main.js;');
+ if(modelStart>=0)vm.runInContext(candidateApp.slice(modelStart,candidateApp.indexOf('async function writeCpModelColumn(',modelStart)),context);
  Object.assign(context,initial);
 }
 module.exports={appRoot,source,candidateApp,sourcePaths,behaviorBaseline,extractFunction,installLifecycle,readPinnedOriginal};
