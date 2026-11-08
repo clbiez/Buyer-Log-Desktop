@@ -1,0 +1,9 @@
+cp BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":3520.7999999821186}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":3539.399999976158}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":3583.5999999940395}
+cp first intent: 23224 ms; system to paint 26808 ms
+orders BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":2511.5}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":2527}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":2643.5999999940395}
+orders first intent: 10662 ms; system to paint 13307 ms
+Report: /tmp/buyerlog-908-firstcp-final-after917/pair1-B/measurement.json; retained diagnostics: /tmp/buyerlog-first-transition-gpFvrP

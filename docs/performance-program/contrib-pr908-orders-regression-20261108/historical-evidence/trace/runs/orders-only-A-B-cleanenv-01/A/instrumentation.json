@@ -1,0 +1,29 @@
+{
+  "classification": "NONFORMAL derived SINGLE-ORDERS diagnostic; one A/B pair; no gain or merge acceptance claim",
+  "categories": [
+    "devtools.timeline",
+    "v8.execute",
+    "toplevel"
+  ],
+  "samplingIntervalUs": 1000,
+  "maxTraceBytes": 67108864,
+  "status": "stopped",
+  "boundary": "before native goto through native first-transition completion; stops BEFORE native result evaluate and full-row/schema JSON",
+  "traceEvents": 137495,
+  "traceBytes": 36208236,
+  "errors": [],
+  "startedAt": "2026-11-08T01:07:41.634Z",
+  "recordingBeforeGoto": true,
+  "maxTraceBufferFraction": 0.05758427083492279,
+  "stopReason": "native-first-transition-completed",
+  "stopRequestedAt": "2026-11-08T01:08:13.407Z",
+  "traceComplete": {
+    "dataLossOccurred": false
+  },
+  "cpuProfileComplete": true,
+  "traceDataLoss": false,
+  "traceCompleteReceived": true,
+  "stopCommandsSettledBeforeSupplementalCapture": true,
+  "profileStoppedBeforeSupplementalCapture": true,
+  "stoppedAt": "2026-11-08T01:08:17.248Z"
+}

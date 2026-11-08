@@ -1,0 +1,15 @@
+{
+  "preparationOnly": true,
+  "benchmarkExecuted": false,
+  "syntaxChecked": false,
+  "observedAt": "2026-11-08T01:06:00.156505+00:00",
+  "metadataOnlyCopyEstimateBytes": 106958848,
+  "metadataOnlyCopyFileCount": 58,
+  "perArmPlanningAllowanceBytes": 343932928,
+  "estimatedRequiredFreeBeforeEachArmBytes": 450891776,
+  "observedFreeTmpBytes": 610791424,
+  "preparationTimeFirstArmWouldMeetEstimate": true,
+  "futureAdmissionStillRequired": true,
+  "secondArmAdmission": "uses actual free space AFTER A retained outputs are losslessly compressed and only verified source XLSX copies deduplicated after child exit; no guaranteed pair completion",
+  "executionScope": "No prepared entrypoint/module, syntax checker, browser, app, test or benchmark was invoked."
+}

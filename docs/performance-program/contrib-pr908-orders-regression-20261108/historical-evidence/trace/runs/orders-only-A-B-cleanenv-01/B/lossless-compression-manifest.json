@@ -1,0 +1,26 @@
+[
+  {
+    "rawPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B/renderer.cpuprofile",
+    "rawBytes": 1102128,
+    "rawSha256": "d370935962c40036446d6ada9386baf1d22861e26a922c86803a188bf0eb2e48",
+    "gzipPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B/renderer.cpuprofile.gz",
+    "gzipBytes": 94784,
+    "gzipSha256": "f1b929c865b5f46a0aa344bb4408a76f49fb1d1c9225c262ae1062805c463dad",
+    "verifiedDecodedBytes": 1102128,
+    "verifiedDecodedSha256": "d370935962c40036446d6ada9386baf1d22861e26a922c86803a188bf0eb2e48",
+    "serverAndBrowserExited": true,
+    "rawReleased": true
+  },
+  {
+    "rawPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B/timeline.trace.json",
+    "rawBytes": 30843803,
+    "rawSha256": "c45b4c537933e9e54e4575bbeb0212fbc37e9afe4708e9f4fbcb4603071a76a5",
+    "gzipPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B/timeline.trace.json.gz",
+    "gzipBytes": 2446541,
+    "gzipSha256": "f02e31f8f2a880ed2b633acbfd15428bd6be8f22eae9b5f59b02605ea8c20667",
+    "verifiedDecodedBytes": 30843803,
+    "verifiedDecodedSha256": "c45b4c537933e9e54e4575bbeb0212fbc37e9afe4708e9f4fbcb4603071a76a5",
+    "serverAndBrowserExited": true,
+    "rawReleased": true
+  }
+]

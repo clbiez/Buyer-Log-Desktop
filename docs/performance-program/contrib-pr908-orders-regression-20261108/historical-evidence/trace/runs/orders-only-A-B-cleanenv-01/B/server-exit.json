@@ -1,0 +1,10 @@
+{
+  "pid": 563634,
+  "startTicks": "18525886",
+  "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+  "entry": "/tmp/buyerlog-shared-ui908/resources/app/server/server.js",
+  "spawnedAt": "2026-11-08T01:08:46.261Z",
+  "exitCode": 0,
+  "signal": null,
+  "exitedAt": "2026-11-08T01:09:25.406Z"
+}

@@ -1,0 +1,680 @@
+{
+  "classification": "NONFORMAL derived SINGLE-ORDERS diagnostic; one A/B pair; no gain or merge acceptance claim",
+  "formalAcceptance": false,
+  "status": "passed",
+  "startedAt": "2026-11-08T01:07:34.004402+00:00",
+  "sourceManifest": "/tmp/buyerlog-908-orders-regression-trace/prepared-manifest.json",
+  "sourceManifestSha256": "2e7cb16ed71b9972d7aa2864b87f5b364d429951891d2f4cb654164b6e8a50bc",
+  "timezone": "Europe/Istanbul",
+  "order": [
+    "A",
+    "B"
+  ],
+  "input": {
+    "path": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+    "sha256": "932e3e2e2c75d1b780f654ce4d13d7725a51ed35a78c949357a9e7e3a5a540b3",
+    "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3",
+    "requestedRows": 30000,
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "expected": {
+      "rows": {
+        "koleksiyon": 0,
+        "cp": 24982,
+        "orders": 30000,
+        "overview": 30000
+      },
+      "generation": "mw6vhoks-9100b15fc128",
+      "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      }
+    }
+  },
+  "budgets": {
+    "trace": 67108864,
+    "cpuProfile": 33554432,
+    "captures": 16777216,
+    "logsAndScreenshots": 8388608,
+    "mutableGrowth": 16777216,
+    "browserTransient": 67108864,
+    "postExitCompressionTransient": 67108864,
+    "reserve": 67108864
+  },
+  "copyAllocatedEstimateBytes": 106958848,
+  "activeArmRequiredFreeBytes": 450891776,
+  "admissionPolicy": "Serial per-arm peak; first A retained, losslessly packed and original XLSX deduplicated after confirmed server/browser exit; B admission uses actual remaining free disk. No guaranteed second arm if disk cannot admit it. No concurrent arms.",
+  "runs": [
+    {
+      "arm": "A",
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "status": "passed",
+      "startedAt": "2026-11-08T01:07:34.266396+00:00",
+      "output": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/buyerlog-908-orders-regression-trace/launch-single-orders.cjs",
+        "--app-root",
+        "/workspace/buyerlog-analytics904/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/measurement.json"
+      ],
+      "launcherPid": 563415,
+      "returncode": 0,
+      "childrenExitedBeforeArtifactMutation": true,
+      "children": [
+        {
+          "pid": 563423,
+          "startTicks": "18518940",
+          "executable": "node",
+          "isServer": true,
+          "spawnedAt": "2026-11-08T01:07:36.802Z",
+          "exitCode": 0,
+          "signal": null,
+          "exitedAt": "2026-11-08T01:08:33.055Z"
+        },
+        {
+          "pid": 563441,
+          "startTicks": "18519227",
+          "executable": "chromium",
+          "isServer": false,
+          "spawnedAt": "2026-11-08T01:07:39.676Z",
+          "exitCode": 0,
+          "signal": null,
+          "exitedAt": "2026-11-08T01:08:32.900Z"
+        }
+      ],
+      "finishedAt": "2026-11-08T01:08:43.016823+00:00",
+      "transition": {
+        "module": "orders",
+        "status": "passed",
+        "intentAtMs": 7757.9000000059605,
+        "startedWithRows": null,
+        "moduleContinueCount": 1,
+        "stabilityObservationMs": 1000,
+        "visibilityProbeVersion": 2,
+        "maxStablePollGapMs": 100,
+        "observationRestarts": 10,
+        "maxPollGapMs": 4757.5999999940395,
+        "dispatchAtMs": 7799,
+        "dispatchDelayMs": 41.099999994039536,
+        "dataReadyMs": 9676.799999982119,
+        "firstRowsPaintedMs": 10149.899999976158,
+        "elapsedMs": 11621.09999999404,
+        "paintedAtMs": 19379,
+        "observationEndMs": 23788.69999998808,
+        "rows": 30000,
+        "domRows": 50,
+        "canAccess": true,
+        "rowVisibilityVerified": true,
+        "startup": {
+          "primaryScreenReadyMs": 7564.4000000059605,
+          "startupReadyMs": 7602.4000000059605,
+          "startupCompleteMs": 7757.0999999940395,
+          "continueAtMs": 7746.0999999940395,
+          "continueIntentAtMs": 7602.4000000059605,
+          "continueDispatchDelayMs": 143.69999998807907,
+          "userWaitMs": 0,
+          "systemStartupCompleteMs": 7757.0999999940395,
+          "sampleWindowMs": 10000,
+          "longTasks": [
+            {
+              "startTime": 839.0999999940395,
+              "duration": 56
+            },
+            {
+              "startTime": 1087.5,
+              "duration": 124
+            },
+            {
+              "startTime": 1275.699999988079,
+              "duration": 67
+            },
+            {
+              "startTime": 1347,
+              "duration": 230
+            },
+            {
+              "startTime": 1640.4000000059605,
+              "duration": 171
+            },
+            {
+              "startTime": 1887.199999988079,
+              "duration": 89
+            },
+            {
+              "startTime": 1982.699999988079,
+              "duration": 55
+            },
+            {
+              "startTime": 2053,
+              "duration": 72
+            },
+            {
+              "startTime": 2125.5,
+              "duration": 51
+            },
+            {
+              "startTime": 2210.9000000059605,
+              "duration": 87
+            },
+            {
+              "startTime": 2298.5999999940395,
+              "duration": 61
+            },
+            {
+              "startTime": 2409.0999999940395,
+              "duration": 105
+            },
+            {
+              "startTime": 2582.5,
+              "duration": 84
+            },
+            {
+              "startTime": 2727.9000000059605,
+              "duration": 83
+            },
+            {
+              "startTime": 2914.4000000059605,
+              "duration": 61
+            },
+            {
+              "startTime": 3197.5999999940395,
+              "duration": 351
+            },
+            {
+              "startTime": 3549.699999988079,
+              "duration": 225
+            },
+            {
+              "startTime": 3830.0999999940395,
+              "duration": 167
+            },
+            {
+              "startTime": 4368.5,
+              "duration": 461
+            },
+            {
+              "startTime": 4829.9000000059605,
+              "duration": 59
+            },
+            {
+              "startTime": 4963.699999988079,
+              "duration": 59
+            },
+            {
+              "startTime": 5024.199999988079,
+              "duration": 228
+            },
+            {
+              "startTime": 5253.4000000059605,
+              "duration": 86
+            },
+            {
+              "startTime": 5375.0999999940395,
+              "duration": 51
+            },
+            {
+              "startTime": 5978.799999982119,
+              "duration": 64
+            },
+            {
+              "startTime": 6092,
+              "duration": 84
+            },
+            {
+              "startTime": 6273.799999982119,
+              "duration": 324
+            },
+            {
+              "startTime": 6605.699999988079,
+              "duration": 646
+            },
+            {
+              "startTime": 7253.199999988079,
+              "duration": 68
+            },
+            {
+              "startTime": 7323.5,
+              "duration": 196
+            },
+            {
+              "startTime": 7556.699999988079,
+              "duration": 121
+            },
+            {
+              "startTime": 7798.699999988079,
+              "duration": 74
+            },
+            {
+              "startTime": 8074.5,
+              "duration": 150
+            },
+            {
+              "startTime": 8235,
+              "duration": 1211
+            },
+            {
+              "startTime": 9457.299999982119,
+              "duration": 542.7000000178814
+            }
+          ]
+        },
+        "initialGeneration": null,
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        },
+        "projectionGenerations": [
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128"
+        ],
+        "errors": []
+      },
+      "capture": {
+        "stage": "initial",
+        "module": "orders",
+        "rows": 30000,
+        "normalizedRowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+        "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+        "visibleCellsSha256": "c6a6a9c7db927b18d4b1529890469b69fa82a63441f16bdf83816ce1c32a1da9",
+        "schemaSha256": "4ce8c4b3d9824b419e529288d8c34a152e1e94191de14f9d5e235650f0e6aab3",
+        "cellsPerRow": [
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "unobscured": true,
+        "cover": "cpPictureCell groupBoundary",
+        "probe": {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 7757.9000000059605,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 10,
+          "maxPollGapMs": 4757.5999999940395,
+          "dispatchAtMs": 7799,
+          "dispatchDelayMs": 41.099999994039536,
+          "dataReadyMs": 9676.799999982119,
+          "firstRowsPaintedMs": 10149.899999976158,
+          "elapsedMs": 11621.09999999404,
+          "paintedAtMs": 19379,
+          "observationEndMs": 23788.69999998808,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true
+        },
+        "timezone": "Europe/Istanbul"
+      },
+      "ordersSchemaVariant": 60,
+      "fixtureRoot": "/tmp/buyerlog-first-transition-o59Hw2"
+    },
+    {
+      "arm": "B",
+      "head": "b954526199ed066feff77b438466cd48b78e03f5",
+      "status": "passed",
+      "startedAt": "2026-11-08T01:08:45.130175+00:00",
+      "output": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/buyerlog-908-orders-regression-trace/launch-single-orders.cjs",
+        "--app-root",
+        "/tmp/buyerlog-shared-ui908/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/B/measurement.json"
+      ],
+      "launcherPid": 563626,
+      "returncode": 0,
+      "childrenExitedBeforeArtifactMutation": true,
+      "children": [
+        {
+          "pid": 563634,
+          "startTicks": "18525886",
+          "executable": "node",
+          "isServer": true,
+          "spawnedAt": "2026-11-08T01:08:46.261Z",
+          "exitCode": 0,
+          "signal": null,
+          "exitedAt": "2026-11-08T01:09:25.405Z"
+        },
+        {
+          "pid": 563652,
+          "startTicks": "18526027",
+          "executable": "chromium",
+          "isServer": false,
+          "spawnedAt": "2026-11-08T01:08:47.667Z",
+          "exitCode": 0,
+          "signal": null,
+          "exitedAt": "2026-11-08T01:09:25.283Z"
+        }
+      ],
+      "finishedAt": "2026-11-08T01:09:35.417300+00:00",
+      "transition": {
+        "module": "orders",
+        "status": "passed",
+        "intentAtMs": 3635.5999999940395,
+        "startedWithRows": null,
+        "moduleContinueCount": 1,
+        "stabilityObservationMs": 1000,
+        "visibilityProbeVersion": 2,
+        "maxStablePollGapMs": 100,
+        "observationRestarts": 6,
+        "maxPollGapMs": 2521.5999999940395,
+        "dispatchAtMs": 3659.300000011921,
+        "dispatchDelayMs": 23.700000017881393,
+        "dataReadyMs": 4685.0999999940395,
+        "firstRowsPaintedMs": 4907.200000017881,
+        "elapsedMs": 6869.0999999940395,
+        "paintedAtMs": 10504.699999988079,
+        "observationEndMs": 12577.90000000596,
+        "rows": 30000,
+        "domRows": 50,
+        "canAccess": true,
+        "rowVisibilityVerified": true,
+        "startup": {
+          "primaryScreenReadyMs": 3452.5,
+          "startupReadyMs": 3510.800000011921,
+          "startupCompleteMs": 3635,
+          "continueAtMs": 3626.0999999940395,
+          "continueIntentAtMs": 3510.800000011921,
+          "continueDispatchDelayMs": 115.2999999821186,
+          "userWaitMs": 0,
+          "systemStartupCompleteMs": 3635,
+          "sampleWindowMs": 10000,
+          "longTasks": [
+            {
+              "startTime": 445.40000000596046,
+              "duration": 111
+            },
+            {
+              "startTime": 567.1999999880791,
+              "duration": 81
+            },
+            {
+              "startTime": 685.0999999940395,
+              "duration": 109
+            },
+            {
+              "startTime": 854.1999999880791,
+              "duration": 80
+            },
+            {
+              "startTime": 985.9000000059605,
+              "duration": 135
+            },
+            {
+              "startTime": 1388.800000011921,
+              "duration": 53
+            },
+            {
+              "startTime": 1513.0999999940395,
+              "duration": 57
+            },
+            {
+              "startTime": 1619.699999988079,
+              "duration": 81
+            },
+            {
+              "startTime": 1712.5999999940395,
+              "duration": 83
+            },
+            {
+              "startTime": 1899.5,
+              "duration": 140
+            },
+            {
+              "startTime": 2202.300000011921,
+              "duration": 96
+            },
+            {
+              "startTime": 2783.5,
+              "duration": 66
+            },
+            {
+              "startTime": 2933,
+              "duration": 124
+            },
+            {
+              "startTime": 3061.199999988079,
+              "duration": 265
+            },
+            {
+              "startTime": 3369.800000011921,
+              "duration": 64
+            },
+            {
+              "startTime": 3450.5,
+              "duration": 131
+            },
+            {
+              "startTime": 3899.0999999940395,
+              "duration": 56
+            },
+            {
+              "startTime": 4144.199999988079,
+              "duration": 598
+            },
+            {
+              "startTime": 4753.9000000059605,
+              "duration": 833
+            },
+            {
+              "startTime": 5588.300000011921,
+              "duration": 167
+            },
+            {
+              "startTime": 5802.5,
+              "duration": 2194
+            },
+            {
+              "startTime": 7996.9000000059605,
+              "duration": 276
+            },
+            {
+              "startTime": 8381.699999988079,
+              "duration": 146
+            },
+            {
+              "startTime": 8856.09999999404,
+              "duration": 381
+            },
+            {
+              "startTime": 9253.90000000596,
+              "duration": 229
+            },
+            {
+              "startTime": 9539.90000000596,
+              "duration": 460.09999999403954
+            }
+          ]
+        },
+        "initialGeneration": null,
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        },
+        "projectionGenerations": [
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128",
+          "mw6vhoks-9100b15fc128"
+        ],
+        "errors": []
+      },
+      "capture": {
+        "stage": "initial",
+        "module": "orders",
+        "rows": 30000,
+        "normalizedRowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+        "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+        "visibleCellsSha256": "de378cdec53e573ba35abd87afc8575a2c0587bbd367fb744200fb790a5e5a9b",
+        "schemaSha256": "9e0113e123f64521160d00511101b1c969d84076fe59aefccd52e201501f2261",
+        "cellsPerRow": [
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53,
+          53
+        ],
+        "unobscured": true,
+        "cover": "cpPictureCell groupBoundary",
+        "probe": {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 3635.5999999940395,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 6,
+          "maxPollGapMs": 2521.5999999940395,
+          "dispatchAtMs": 3659.300000011921,
+          "dispatchDelayMs": 23.700000017881393,
+          "dataReadyMs": 4685.0999999940395,
+          "firstRowsPaintedMs": 4907.200000017881,
+          "elapsedMs": 6869.0999999940395,
+          "paintedAtMs": 10504.699999988079,
+          "observationEndMs": 12577.90000000596,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true
+        },
+        "timezone": "Europe/Istanbul"
+      },
+      "ordersSchemaVariant": 53,
+      "fixtureRoot": "/tmp/buyerlog-first-transition-Mh0hTt"
+    }
+  ],
+  "admissions": [
+    {
+      "arm": "A",
+      "at": "2026-11-08T01:07:34.266112+00:00",
+      "freeBytes": 610807808,
+      "requiredBytes": 450891776,
+      "admitted": true
+    },
+    {
+      "arm": "B",
+      "at": "2026-11-08T01:08:45.129520+00:00",
+      "freeBytes": 566337536,
+      "requiredBytes": 450891776,
+      "admitted": true
+    }
+  ],
+  "interpretation": "One instrumented A/B diagnostic only. Profiling overhead/order/system state preclude a gain, root-cause or merge-acceptance claim. CP is unmeasured; natural CP background work remains enabled.",
+  "finishedAt": "2026-11-08T01:09:36.753603+00:00"
+}

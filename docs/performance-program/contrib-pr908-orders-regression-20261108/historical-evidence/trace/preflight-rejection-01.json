@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-08T01:07:27.816208+00:00",
+  "command": [
+    "/usr/bin/python3",
+    "/tmp/buyerlog-908-orders-regression-trace/run-diagnostic.py",
+    "--label",
+    "orders-only-A-B-01"
+  ],
+  "exitCode": 1,
+  "error": "Ambient overrides present (names only): NODE_PATH",
+  "stage": "before output root/app/server/browser start",
+  "applicationRun": false,
+  "resolution": "unset NODE_PATH for this isolated diagnostic process, identical in both arms; existing guard and assertions unchanged; new unique label"
+}

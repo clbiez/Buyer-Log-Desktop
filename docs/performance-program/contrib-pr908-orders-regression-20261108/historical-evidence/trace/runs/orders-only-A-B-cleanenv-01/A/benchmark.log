@@ -1,0 +1,5 @@
+orders BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":7564.4000000059605}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":7602.4000000059605}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":7757.0999999940395}
+orders first intent: 11621 ms; system to paint 19379 ms
+Report: /tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/measurement.json; retained diagnostics: /tmp/buyerlog-first-transition-o59Hw2

@@ -1,0 +1,26 @@
+[
+  {
+    "rawPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/renderer.cpuprofile",
+    "rawBytes": 1658153,
+    "rawSha256": "c5cd7b7223452ac591b804a536573127e0e3d835f3a906e160d5f4c18e147dc6",
+    "gzipPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/renderer.cpuprofile.gz",
+    "gzipBytes": 148611,
+    "gzipSha256": "f504f2fd33b7ab2736b2c4685a88b5ed41b357428a5a3da9c1d27f87752e1f8b",
+    "verifiedDecodedBytes": 1658153,
+    "verifiedDecodedSha256": "c5cd7b7223452ac591b804a536573127e0e3d835f3a906e160d5f4c18e147dc6",
+    "serverAndBrowserExited": true,
+    "rawReleased": true
+  },
+  {
+    "rawPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/timeline.trace.json",
+    "rawBytes": 36208236,
+    "rawSha256": "e732dfe0d1761152ac792ea04f8cc1fef6c10cb167e33a827a0408fc52001ee4",
+    "gzipPath": "/tmp/buyerlog-908-orders-regression-trace/runs/orders-only-A-B-cleanenv-01/A/timeline.trace.json.gz",
+    "gzipBytes": 2860752,
+    "gzipSha256": "801ac631fbea387daa596a98c6544da0f1368cace7f8773b0f94dd879c025e14",
+    "verifiedDecodedBytes": 36208236,
+    "verifiedDecodedSha256": "e732dfe0d1761152ac792ea04f8cc1fef6c10cb167e33a827a0408fc52001ee4",
+    "serverAndBrowserExited": true,
+    "rawReleased": true
+  }
+]
