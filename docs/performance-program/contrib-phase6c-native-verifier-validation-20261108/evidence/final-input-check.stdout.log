@@ -1,0 +1,7 @@
+MANIFEST.portable.sha256: 9 entries verified without editing paths
+MANIFEST.sha256: 7 entries verified without editing paths
+All 10 transferred preparation files and handoff match pinned packet commit.
+Staged 9 pinned contribution inputs, three native locator bridges, and provenance. Frozen preparation untouched.
+candidate-final: recorded 80 passes, no fail/skip/cancel
+native-regressions: recorded 101 passes, no fail/skip/cancel
+Source pins, candidate hash, unchanged production tree and empty i18n baseline verified.

@@ -1,0 +1,300 @@
+TAP version 13
+# Subtest: unready source fails closed; verified refresh preserves exact full JSON key order/checksum
+ok 1 - unready source fails closed; verified refresh preserves exact full JSON key order/checksum
+  ---
+  duration_ms: 52.041373
+  type: 'test'
+  ...
+# Subtest: db.read and optimistic native cache are never a committed refresh proof
+ok 2 - db.read and optimistic native cache are never a committed refresh proof
+  ---
+  duration_ms: 29.533196
+  type: 'test'
+  ...
+# Subtest: in-flight fsync exposes optimistic native state but retains immutable prior committed snapshot
+ok 3 - in-flight fsync exposes optimistic native state but retains immutable prior committed snapshot
+  ---
+  duration_ms: 44.152096
+  type: 'test'
+  ...
+# Subtest: delayed old durable ACK cannot replace a newer committed view
+ok 4 - delayed old durable ACK cannot replace a newer committed view
+  ---
+  duration_ms: 35.85956
+  type: 'test'
+  ...
+# Subtest: fresh authority gates every read; post-durable denial withholds and invalidates view
+ok 5 - fresh authority gates every read; post-durable denial withholds and invalidates view
+  ---
+  duration_ms: 24.15098
+  type: 'test'
+  ...
+# Subtest: missing/corrupt active member and retired namespace never return historical JSON
+ok 6 - missing/corrupt active member and retired namespace never return historical JSON
+  ---
+  duration_ms: 127.087151
+  type: 'test'
+  ...
+# Subtest: refresh verifier failure invalidates readiness and does not publish a candidate
+ok 7 - refresh verifier failure invalidates readiness and does not publish a candidate
+  ---
+  duration_ms: 29.042274
+  type: 'test'
+  ...
+# Subtest: malformed native retirement and row tombstone flags fail closed
+ok 8 - malformed native retirement and row tombstone flags fail closed
+  ---
+  duration_ms: 57.322646
+  type: 'test'
+  ...
+# Subtest: separate retirement control survives rotation and fences a delayed successful ACK
+ok 9 - separate retirement control survives rotation and fences a delayed successful ACK
+  ---
+  duration_ms: 23.946261
+  type: 'test'
+  ...
+# Subtest: async current authority requires async read; malformed verifier proof never marks source ready
+ok 10 - async current authority requires async read; malformed verifier proof never marks source ready
+  ---
+  duration_ms: 24.344001
+  type: 'test'
+  ...
+# Subtest: missing handoff and missing exact-order descriptor fail closed without migration
+ok 11 - missing handoff and missing exact-order descriptor fail closed without migration
+  ---
+  duration_ms: 43.852202
+  type: 'test'
+  ...
+# Subtest: actual current native API commits row, head, receipt and inverse in one frame; exact checksum changes
+ok 12 - actual current native API commits row, head, receipt and inverse in one frame; exact checksum changes
+  ---
+  duration_ms: 72.21537
+  type: 'test'
+  ...
+# Subtest: failed fsync leaves outcome unknown; retry verifies durability instead of trusting replayed receipt
+ok 13 - failed fsync leaves outcome unknown; retry verifies durability instead of trusting replayed receipt
+  ---
+  duration_ms: 33.430467
+  type: 'test'
+  ...
+# Subtest: unverified duplicate cannot report durable success after restart or lost ACK
+ok 14 - unverified duplicate cannot report durable success after restart or lost ACK
+  ---
+  duration_ms: 16.612453
+  type: 'test'
+  ...
+# Subtest: retired transaction receipt cannot acknowledge or reapply an old transaction id
+ok 15 - retired transaction receipt cannot acknowledge or reapply an old transaction id
+  ---
+  duration_ms: 23.877136
+  type: 'test'
+  ...
+# Subtest: malformed native receipt cannot be returned as a durable duplicate
+ok 16 - malformed native receipt cannot be returned as a durable duplicate
+  ---
+  duration_ms: 21.404328
+  type: 'test'
+  ...
+# Subtest: legacy adapter rejects property-order-only changes that alter full JSON source identity
+ok 17 - legacy adapter rejects property-order-only changes that alter full JSON source identity
+  ---
+  duration_ms: 10.712214
+  type: 'test'
+  ...
+# Subtest: private row tombstone and retirement remain authoritative through checkpoint and previous-WAL replay
+ok 18 - private row tombstone and retirement remain authoritative through checkpoint and previous-WAL replay
+  ---
+  duration_ms: 56.047138
+  type: 'test'
+  ...
+# Subtest: owner/source/client generation and pre-append authority recheck reject stale intent without effects
+ok 19 - owner/source/client generation and pre-append authority recheck reject stale intent without effects
+  ---
+  duration_ms: 22.469709
+  type: 'test'
+  ...
+# [LEASE] stale:recovered instanceId=dfa09906-e0ba-4d47-a7fe-dbb35f7990ee pid=1167 resource=/tmp/buyerlog-committed-test-D3Ddsq/BuyerLogLocal.db currentOwner=28597d91-ad04-4e53-9ad2-a1f44c9548e3 leaseAgeMs=21 reason=dead-pid
+# [LEASE] stale:recovered instanceId=dfa09906-e0ba-4d47-a7fe-dbb35f7990ee pid=1167 resource=/tmp/buyerlog-committed-test-6ylQw5/BuyerLogLocal.db currentOwner=ba1cab83-f718-48a2-83df-5c7b9788170b leaseAgeMs=16 reason=dead-pid
+# Subtest: real child SIGKILL before native append or after fsync preserves atomic row/receipt replay
+ok 20 - real child SIGKILL before native append or after fsync preserves atomic row/receipt replay
+  ---
+  duration_ms: 222.623526
+  type: 'test'
+  ...
+# Subtest: synthetic torn frame cuts replay row and receipt together through current native backend
+ok 21 - synthetic torn frame cuts replay row and receipt together through current native backend
+  ---
+  duration_ms: 34.991863
+  type: 'test'
+  ...
+# Subtest: one native private frame contains touched rows plus receipt; legacy mirror and journal survive
+ok 22 - one native private frame contains touched rows plus receipt; legacy mirror and journal survive
+  ---
+  duration_ms: 45.444771
+  type: 'test'
+  ...
+# Subtest: actual existing peer and checkpoint policy excludes the new private owner records
+ok 23 - actual existing peer and checkpoint policy excludes the new private owner records
+  ---
+  duration_ms: 31.983771
+  type: 'test'
+  ...
+# Subtest: absence, explicit null, zero and false remain distinct through real disk replay
+ok 24 - absence, explicit null, zero and false remain distinct through real disk replay
+  ---
+  duration_ms: 48.0311
+  type: 'test'
+  ...
+# Subtest: batch changes row revision once; legacy missing _rev starts at zero
+ok 25 - batch changes row revision once; legacy missing _rev starts at zero
+  ---
+  duration_ms: 38.441053
+  type: 'test'
+  ...
+# Subtest: row-CAS adaptation rejects stale disjoint field; explicit field merge can accept it
+ok 26 - row-CAS adaptation rejects stale disjoint field; explicit field merge can accept it
+  ---
+  duration_ms: 32.149612
+  type: 'test'
+  ...
+# Subtest: three-way conflict keeps current and all intent evidence; atomic peer fields do not leak
+ok 27 - three-way conflict keeps current and all intent evidence; atomic peer fields do not leak
+  ---
+  duration_ms: 37.211088
+  type: 'test'
+  ...
+# Subtest: converged incoming and no incoming delta preserve current row revision
+ok 28 - converged incoming and no incoming delta preserve current row revision
+  ---
+  duration_ms: 25.361544
+  type: 'test'
+  ...
+# Subtest: inverse preserves a newer unrelated field
+ok 29 - inverse preserves a newer unrelated field
+  ---
+  duration_ms: 32.039495
+  type: 'test'
+  ...
+# Subtest: inverse rejects a same-field ABA even when after value matches again
+ok 30 - inverse rejects a same-field ABA even when after value matches again
+  ---
+  duration_ms: 32.554293
+  type: 'test'
+  ...
+# Subtest: stale owner, source generation and structure fail before a service append
+ok 31 - stale owner, source generation and structure fail before a service append
+  ---
+  duration_ms: 31.562394
+  type: 'test'
+  ...
+# Subtest: fresh asynchronous pre-append authority denial leaves no transaction or row effects
+ok 32 - fresh asynchronous pre-append authority denial leaves no transaction or row effects
+  ---
+  duration_ms: 19.942527
+  type: 'test'
+  ...
+# Subtest: revocation after durable append withholds projection; it does not claim rollback
+ok 33 - revocation after durable append withholds projection; it does not claim rollback
+  ---
+  duration_ms: 14.398477
+  type: 'test'
+  ...
+# Subtest: concurrent duplicate replay appends once and returns the original durable receipt
+ok 34 - concurrent duplicate replay appends once and returns the original durable receipt
+  ---
+  duration_ms: 28.992539
+  type: 'test'
+  ...
+# Subtest: same transaction ID with different intent is rejected without rewriting history
+ok 35 - same transaction ID with different intent is rejected without rewriting history
+  ---
+  duration_ms: 15.269062
+  type: 'test'
+  ...
+# Subtest: lost acknowledgment after actual native fsync retries the same transaction exactly once
+ok 36 - lost acknowledgment after actual native fsync retries the same transaction exactly once
+  ---
+  duration_ms: 19.965613
+  type: 'test'
+  ...
+# Subtest: service promise does not report durable success before actual WAL fsync settles
+ok 37 - service promise does not report durable success before actual WAL fsync settles
+  ---
+  duration_ms: 12.658065
+  type: 'test'
+  ...
+# Subtest: native WAL write failure invalidates mutated cache and leaves no partial row/receipt
+ok 38 - native WAL write failure invalidates mutated cache and leaves no partial row/receipt
+  ---
+  duration_ms: 12.544924
+  type: 'test'
+  ...
+# Subtest: real replay exposes neither half of a torn private frame and accepts complete frame without newline
+ok 39 - real replay exposes neither half of a torn private frame and accepts complete frame without newline
+  ---
+  duration_ms: 33.964044
+  type: 'test'
+  ...
+# Subtest: checksum corruption blocks append without replacing historical WAL bytes
+ok 40 - checksum corruption blocks append without replacing historical WAL bytes
+  ---
+  duration_ms: 12.188907
+  type: 'test'
+  ...
+# Subtest: legacy full-state adapter keeps unknown structure, captures row-CAS and blocks structural edits
+ok 41 - legacy full-state adapter keeps unknown structure, captures row-CAS and blocks structural edits
+  ---
+  duration_ms: 15.562807
+  type: 'test'
+  ...
+# Subtest: old full-state expected workspace CAS is not weakened to disjoint-row acceptance
+ok 42 - old full-state expected workspace CAS is not weakened to disjoint-row acceptance
+  ---
+  duration_ms: 12.361357
+  type: 'test'
+  ...
+# Subtest: group and coupled fields fail closed; no scalar substitution into shared/override state
+ok 43 - group and coupled fields fail closed; no scalar substitution into shared/override state
+  ---
+  duration_ms: 17.286433
+  type: 'test'
+  ...
+# Subtest: missing adopted source is explicit; existing generic full-state mirror is not silently imported
+ok 44 - missing adopted source is explicit; existing generic full-state mirror is not silently imported
+  ---
+  duration_ms: 10.721277
+  type: 'test'
+  ...
+# Subtest: existing snapshot/WAL rotation preserves transaction receipt and inverse field clock on cold replay
+ok 45 - existing snapshot/WAL rotation preserves transaction receipt and inverse field clock on cold replay
+  ---
+  duration_ms: 24.798148
+  type: 'test'
+  ...
+# Subtest: source handoff membership stamp mismatch fails before scalar field mutation
+ok 46 - source handoff membership stamp mismatch fails before scalar field mutation
+  ---
+  duration_ms: 12.353975
+  type: 'test'
+  ...
+# Subtest: unsupported checklist/coupled companion payload is rejected rather than silently acknowledged
+ok 47 - unsupported checklist/coupled companion payload is rejected rather than silently acknowledged
+  ---
+  duration_ms: 7.341428
+  type: 'test'
+  ...
+# Subtest: Collection batch does not clear separately owned checklist JSON/evidence or pending journal
+ok 48 - Collection batch does not clear separately owned checklist JSON/evidence or pending journal
+  ---
+  duration_ms: 13.154986
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 704.859327

@@ -1,0 +1,1229 @@
+{
+  "kind": "synthetic-verifier-cost-no-speedup-claim",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "architecture": "x64",
+  "cpus": 4,
+  "candidateSha256": "4223e61261329865ec6fa0c8097a1a9f10d8d34d269aa7a12440120119c9092d",
+  "filesystem": "Filesystem     Type  1K-blocks  Used Available Use% Mounted on\nnone           tmpfs   9220048     4   9220044   1% /tmp",
+  "warmups": 3,
+  "samplesPerCase": 20,
+  "method": "Elapsed time around the actual verifier only; nativeBoundaryMs additionally includes lease admission/cleanup and sentinel. Timings have no I/O wrapper; one separate untimed invocation counts real read/sync calls. Warm caches, one Linux container, synthetic data; no storage power-loss or Windows/Electron claim.",
+  "cases": [
+    {
+      "rows": 100,
+      "layout": "current",
+      "members": {
+        "": {
+          "bytes": 441,
+          "sha256": "80f5e5391d987f27749ad4b349919fa56c989fdeca48582e5a9003e01a8100b4"
+        },
+        ".wal": {
+          "bytes": 26139,
+          "sha256": "db844c32eacb9f4109ba6c0e82eefbe4ce340668bcb923434bd19686303b565f"
+        },
+        ".wal.bak": null
+      },
+      "revision": 1,
+      "verifierMs": {
+        "min": 3.308062,
+        "median": 4.134024999999999,
+        "p95": 6.520078,
+        "max": 6.934664
+      },
+      "verifierCpuMs": {
+        "min": 3.061,
+        "median": 3.6785,
+        "p95": 7.256,
+        "max": 9.127
+      },
+      "nativeBoundaryMs": {
+        "min": 6.276083,
+        "median": 9.213089499999999,
+        "p95": 11.962927,
+        "max": 14.718523
+      },
+      "untimedIo": {
+        "fileSyncs": 2,
+        "directorySyncs": 2,
+        "bytesRead": 26580
+      },
+      "samples": [
+        {
+          "verifierMs": 6.520078,
+          "cpuMs": 6.665,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.667371
+        },
+        {
+          "verifierMs": 3.308062,
+          "cpuMs": 3.222,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.276083
+        },
+        {
+          "verifierMs": 3.661686,
+          "cpuMs": 3.535,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.379447
+        },
+        {
+          "verifierMs": 4.812866,
+          "cpuMs": 4.103,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 14.718523
+        },
+        {
+          "verifierMs": 3.760947,
+          "cpuMs": 3.087,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 10.235986
+        },
+        {
+          "verifierMs": 5.33748,
+          "cpuMs": 4.646,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 10.455798
+        },
+        {
+          "verifierMs": 4.028941,
+          "cpuMs": 3.764,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.047759
+        },
+        {
+          "verifierMs": 4.386972,
+          "cpuMs": 3.787,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.07428
+        },
+        {
+          "verifierMs": 4.1869,
+          "cpuMs": 3.776,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.780224
+        },
+        {
+          "verifierMs": 4.333491,
+          "cpuMs": 3.977,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.61852
+        },
+        {
+          "verifierMs": 4.194902,
+          "cpuMs": 3.673,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 11.871389
+        },
+        {
+          "verifierMs": 5.058919,
+          "cpuMs": 9.127,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 10.526394
+        },
+        {
+          "verifierMs": 4.08115,
+          "cpuMs": 3.133,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.351899
+        },
+        {
+          "verifierMs": 6.934664,
+          "cpuMs": 7.256,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 11.962927
+        },
+        {
+          "verifierMs": 3.729058,
+          "cpuMs": 3.061,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.474683
+        },
+        {
+          "verifierMs": 3.898424,
+          "cpuMs": 3.601,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.406509
+        },
+        {
+          "verifierMs": 3.85619,
+          "cpuMs": 3.504,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.037261
+        },
+        {
+          "verifierMs": 4.268634,
+          "cpuMs": 3.684,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.690982
+        },
+        {
+          "verifierMs": 3.914769,
+          "cpuMs": 3.505,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.492131
+        },
+        {
+          "verifierMs": 3.838433,
+          "cpuMs": 3.096,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.368773
+        }
+      ]
+    },
+    {
+      "rows": 100,
+      "layout": "previous-and-current",
+      "members": {
+        "": {
+          "bytes": 26441,
+          "sha256": "66ac047e14431e05b72fd5d419758425c4e7bebf5057b0f18feca87e3906be36"
+        },
+        ".wal": {
+          "bytes": 240,
+          "sha256": "c8a7754da00da43c5ba11c6a7a2afa788f6ae834758c7bd4086da3482a26e069"
+        },
+        ".wal.bak": {
+          "bytes": 26139,
+          "sha256": "db844c32eacb9f4109ba6c0e82eefbe4ce340668bcb923434bd19686303b565f"
+        }
+      },
+      "revision": 2,
+      "verifierMs": {
+        "min": 3.031513,
+        "median": 4.029607,
+        "p95": 8.238195,
+        "max": 10.705014
+      },
+      "verifierCpuMs": {
+        "min": 2.71,
+        "median": 3.5469999999999997,
+        "p95": 5.899,
+        "max": 11.045
+      },
+      "nativeBoundaryMs": {
+        "min": 6.196458,
+        "median": 7.808325,
+        "p95": 12.139263,
+        "max": 14.818854
+      },
+      "untimedIo": {
+        "fileSyncs": 3,
+        "directorySyncs": 2,
+        "bytesRead": 52820
+      },
+      "samples": [
+        {
+          "verifierMs": 3.576407,
+          "cpuMs": 3.399,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.342211
+        },
+        {
+          "verifierMs": 3.521273,
+          "cpuMs": 3.164,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.948726
+        },
+        {
+          "verifierMs": 4.028921,
+          "cpuMs": 3.304,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.826623
+        },
+        {
+          "verifierMs": 4.421144,
+          "cpuMs": 3.836,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.044202
+        },
+        {
+          "verifierMs": 5.315787,
+          "cpuMs": 4.561,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.626294
+        },
+        {
+          "verifierMs": 4.458631,
+          "cpuMs": 3.695,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 8.52539
+        },
+        {
+          "verifierMs": 10.705014,
+          "cpuMs": 11.045,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 14.818854
+        },
+        {
+          "verifierMs": 5.646567,
+          "cpuMs": 5.47,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 11.65474
+        },
+        {
+          "verifierMs": 5.993381,
+          "cpuMs": 5.899,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.96113
+        },
+        {
+          "verifierMs": 4.967881,
+          "cpuMs": 4.681,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 9.151636
+        },
+        {
+          "verifierMs": 4.030293,
+          "cpuMs": 3.749,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.790027
+        },
+        {
+          "verifierMs": 3.031513,
+          "cpuMs": 2.71,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.306765
+        },
+        {
+          "verifierMs": 8.238195,
+          "cpuMs": 5.425,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 12.139263
+        },
+        {
+          "verifierMs": 3.143062,
+          "cpuMs": 2.784,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.000594
+        },
+        {
+          "verifierMs": 3.038774,
+          "cpuMs": 2.836,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.196458
+        },
+        {
+          "verifierMs": 3.625702,
+          "cpuMs": 3.242,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.953585
+        },
+        {
+          "verifierMs": 3.394211,
+          "cpuMs": 3.035,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.170441
+        },
+        {
+          "verifierMs": 3.433741,
+          "cpuMs": 2.937,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.902576
+        },
+        {
+          "verifierMs": 3.487753,
+          "cpuMs": 2.983,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 6.466567
+        },
+        {
+          "verifierMs": 4.172909,
+          "cpuMs": 4.148,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 7.594192
+        }
+      ]
+    },
+    {
+      "rows": 1000,
+      "layout": "current",
+      "members": {
+        "": {
+          "bytes": 441,
+          "sha256": "16f510061973a95f867461bddecb0901e35ca6eae8d53572a61166de3ebb1be4"
+        },
+        ".wal": {
+          "bytes": 261939,
+          "sha256": "4ae99fe6e0a3e666a569f8e775bf606609ca7beb065df9dc91a42e142900bc04"
+        },
+        ".wal.bak": null
+      },
+      "revision": 1,
+      "verifierMs": {
+        "min": 9.931946,
+        "median": 12.256184999999999,
+        "p95": 16.536231,
+        "max": 17.560169
+      },
+      "verifierCpuMs": {
+        "min": 9.566,
+        "median": 12.6815,
+        "p95": 18.197,
+        "max": 18.34
+      },
+      "nativeBoundaryMs": {
+        "min": 16.366034,
+        "median": 19.031814,
+        "p95": 24.41953,
+        "max": 29.190102
+      },
+      "untimedIo": {
+        "fileSyncs": 2,
+        "directorySyncs": 2,
+        "bytesRead": 262380
+      },
+      "samples": [
+        {
+          "verifierMs": 11.660609,
+          "cpuMs": 18.197,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.834995
+        },
+        {
+          "verifierMs": 11.264971,
+          "cpuMs": 12.068,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 18.588583
+        },
+        {
+          "verifierMs": 11.112601,
+          "cpuMs": 11.759,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 18.994898
+        },
+        {
+          "verifierMs": 16.506425,
+          "cpuMs": 15.864,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 24.41953
+        },
+        {
+          "verifierMs": 10.848943,
+          "cpuMs": 11.704,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.654261
+        },
+        {
+          "verifierMs": 12.887023,
+          "cpuMs": 13.368,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 20.439792
+        },
+        {
+          "verifierMs": 14.868759,
+          "cpuMs": 16.348,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 21.876995
+        },
+        {
+          "verifierMs": 12.141767,
+          "cpuMs": 11.738,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 20.844404
+        },
+        {
+          "verifierMs": 17.560169,
+          "cpuMs": 18.34,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 29.190102
+        },
+        {
+          "verifierMs": 16.536231,
+          "cpuMs": 17.484,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 23.079143
+        },
+        {
+          "verifierMs": 10.102003,
+          "cpuMs": 9.853,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.366034
+        },
+        {
+          "verifierMs": 10.82735,
+          "cpuMs": 10.532,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 18.121067
+        },
+        {
+          "verifierMs": 14.051564,
+          "cpuMs": 14.453,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 21.910316
+        },
+        {
+          "verifierMs": 12.454099,
+          "cpuMs": 13.385,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 18.998453
+        },
+        {
+          "verifierMs": 9.931946,
+          "cpuMs": 9.566,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.849617
+        },
+        {
+          "verifierMs": 12.555939,
+          "cpuMs": 12.945,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 20.622384
+        },
+        {
+          "verifierMs": 10.253632,
+          "cpuMs": 10,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 20.579038
+        },
+        {
+          "verifierMs": 12.370603,
+          "cpuMs": 12.77,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 18.887976
+        },
+        {
+          "verifierMs": 10.562389,
+          "cpuMs": 10.279,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.604266
+        },
+        {
+          "verifierMs": 12.752079,
+          "cpuMs": 12.593,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 19.065175
+        }
+      ]
+    },
+    {
+      "rows": 1000,
+      "layout": "previous-and-current",
+      "members": {
+        "": {
+          "bytes": 262241,
+          "sha256": "f64aea8ff4eb30fb4d84d056c2d9389a2e83adb57e35328821f2f350ff384e9f"
+        },
+        ".wal": {
+          "bytes": 240,
+          "sha256": "c8a7754da00da43c5ba11c6a7a2afa788f6ae834758c7bd4086da3482a26e069"
+        },
+        ".wal.bak": {
+          "bytes": 261939,
+          "sha256": "4ae99fe6e0a3e666a569f8e775bf606609ca7beb065df9dc91a42e142900bc04"
+        }
+      },
+      "revision": 2,
+      "verifierMs": {
+        "min": 9.651432,
+        "median": 10.572003500000001,
+        "p95": 12.596294,
+        "max": 12.919433
+      },
+      "verifierCpuMs": {
+        "min": 9.459,
+        "median": 10.783999999999999,
+        "p95": 13.735,
+        "max": 13.834
+      },
+      "nativeBoundaryMs": {
+        "min": 14.762549,
+        "median": 15.9122275,
+        "p95": 17.671537,
+        "max": 19.873807
+      },
+      "untimedIo": {
+        "fileSyncs": 3,
+        "directorySyncs": 2,
+        "bytesRead": 524420
+      },
+      "samples": [
+        {
+          "verifierMs": 9.822651,
+          "cpuMs": 9.635,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.130335
+        },
+        {
+          "verifierMs": 11.831177,
+          "cpuMs": 13.132,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.646798
+        },
+        {
+          "verifierMs": 12.919433,
+          "cpuMs": 12.795,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 19.873807
+        },
+        {
+          "verifierMs": 11.684576,
+          "cpuMs": 13.735,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.180756
+        },
+        {
+          "verifierMs": 12.596294,
+          "cpuMs": 13.834,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.671537
+        },
+        {
+          "verifierMs": 10.553425,
+          "cpuMs": 10.363,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.81506
+        },
+        {
+          "verifierMs": 10.834411,
+          "cpuMs": 11.205,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.639835
+        },
+        {
+          "verifierMs": 10.590582,
+          "cpuMs": 11.432,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.153182
+        },
+        {
+          "verifierMs": 10.107361,
+          "cpuMs": 9.838,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.039067
+        },
+        {
+          "verifierMs": 11.968725,
+          "cpuMs": 13.544,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 17.110358
+        },
+        {
+          "verifierMs": 10.161132,
+          "cpuMs": 9.964,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.098126
+        },
+        {
+          "verifierMs": 9.740807,
+          "cpuMs": 9.572,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.202654
+        },
+        {
+          "verifierMs": 11.307996,
+          "cpuMs": 12.541,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.15866
+        },
+        {
+          "verifierMs": 9.651432,
+          "cpuMs": 9.459,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 14.906347
+        },
+        {
+          "verifierMs": 10.898166,
+          "cpuMs": 11.554,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.009395
+        },
+        {
+          "verifierMs": 9.970575,
+          "cpuMs": 9.735,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.126731
+        },
+        {
+          "verifierMs": 10.098858,
+          "cpuMs": 10.216,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.519634
+        },
+        {
+          "verifierMs": 11.385493,
+          "cpuMs": 12.599,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 16.309077
+        },
+        {
+          "verifierMs": 9.932397,
+          "cpuMs": 10.211,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 14.762549
+        },
+        {
+          "verifierMs": 9.914199,
+          "cpuMs": 9.676,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 15.694098
+        }
+      ]
+    },
+    {
+      "rows": 10000,
+      "layout": "current",
+      "members": {
+        "": {
+          "bytes": 441,
+          "sha256": "2349c44b34b985e5128533699e7d8b7481ec759f729080303b7091ff9ecb57ce"
+        },
+        ".wal": {
+          "bytes": 2637939,
+          "sha256": "d7a5899cbbdb048db860aa68ac1c49a176064e4212549025016c7f942523d530"
+        },
+        ".wal.bak": null
+      },
+      "revision": 1,
+      "verifierMs": {
+        "min": 92.764348,
+        "median": 112.3423085,
+        "p95": 133.611295,
+        "max": 138.248856
+      },
+      "verifierCpuMs": {
+        "min": 92.107,
+        "median": 122.203,
+        "p95": 188.045,
+        "max": 197.944
+      },
+      "nativeBoundaryMs": {
+        "min": 136.801228,
+        "median": 156.8456755,
+        "p95": 176.514218,
+        "max": 178.045804
+      },
+      "untimedIo": {
+        "fileSyncs": 2,
+        "directorySyncs": 2,
+        "bytesRead": 2638380
+      },
+      "samples": [
+        {
+          "verifierMs": 130.045269,
+          "cpuMs": 153.231,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 168.589283
+        },
+        {
+          "verifierMs": 133.611295,
+          "cpuMs": 188.045,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 173.216954
+        },
+        {
+          "verifierMs": 98.353549,
+          "cpuMs": 111.599,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 138.373434
+        },
+        {
+          "verifierMs": 92.764348,
+          "cpuMs": 92.107,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 137.337198
+        },
+        {
+          "verifierMs": 105.43812,
+          "cpuMs": 114.9,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 146.627093
+        },
+        {
+          "verifierMs": 138.248856,
+          "cpuMs": 197.944,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 178.045804
+        },
+        {
+          "verifierMs": 111.892388,
+          "cpuMs": 122.962,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 153.180411
+        },
+        {
+          "verifierMs": 110.820167,
+          "cpuMs": 125.197,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 153.691934
+        },
+        {
+          "verifierMs": 108.028547,
+          "cpuMs": 107.78,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 153.179039
+        },
+        {
+          "verifierMs": 104.526091,
+          "cpuMs": 113.094,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 147.328233
+        },
+        {
+          "verifierMs": 113.761329,
+          "cpuMs": 133.576,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 175.234149
+        },
+        {
+          "verifierMs": 116.126865,
+          "cpuMs": 133.432,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 156.452203
+        },
+        {
+          "verifierMs": 113.045822,
+          "cpuMs": 121.444,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 171.25682
+        },
+        {
+          "verifierMs": 112.792229,
+          "cpuMs": 119.018,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 160.133493
+        },
+        {
+          "verifierMs": 120.598976,
+          "cpuMs": 168.975,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 163.120374
+        },
+        {
+          "verifierMs": 119.164989,
+          "cpuMs": 126,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 159.467546
+        },
+        {
+          "verifierMs": 98.499861,
+          "cpuMs": 111.034,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 136.801228
+        },
+        {
+          "verifierMs": 97.581442,
+          "cpuMs": 97.107,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 157.239148
+        },
+        {
+          "verifierMs": 103.760183,
+          "cpuMs": 111.855,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 152.374312
+        },
+        {
+          "verifierMs": 125.322283,
+          "cpuMs": 144.855,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 176.514218
+        }
+      ]
+    },
+    {
+      "rows": 10000,
+      "layout": "previous-and-current",
+      "members": {
+        "": {
+          "bytes": 2638241,
+          "sha256": "bd7bd587d5a43f6df397c36f0d1404cf965f4cc9a1f75e91dd0400f943a1f738"
+        },
+        ".wal": {
+          "bytes": 240,
+          "sha256": "c8a7754da00da43c5ba11c6a7a2afa788f6ae834758c7bd4086da3482a26e069"
+        },
+        ".wal.bak": {
+          "bytes": 2637939,
+          "sha256": "d7a5899cbbdb048db860aa68ac1c49a176064e4212549025016c7f942523d530"
+        }
+      },
+      "revision": 2,
+      "verifierMs": {
+        "min": 102.48125,
+        "median": 122.88123949999999,
+        "p95": 149.400507,
+        "max": 151.172846
+      },
+      "verifierCpuMs": {
+        "min": 105.998,
+        "median": 132.5975,
+        "p95": 181.84,
+        "max": 188.666
+      },
+      "nativeBoundaryMs": {
+        "min": 135.368196,
+        "median": 159.9069675,
+        "p95": 184.065756,
+        "max": 195.680901
+      },
+      "untimedIo": {
+        "fileSyncs": 3,
+        "directorySyncs": 2,
+        "bytesRead": 5276420
+      },
+      "samples": [
+        {
+          "verifierMs": 121.86133,
+          "cpuMs": 125.574,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 161.124651
+        },
+        {
+          "verifierMs": 111.2717,
+          "cpuMs": 117.882,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 145.095608
+        },
+        {
+          "verifierMs": 151.172846,
+          "cpuMs": 181.84,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 184.065756
+        },
+        {
+          "verifierMs": 127.882318,
+          "cpuMs": 134.942,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 161.772146
+        },
+        {
+          "verifierMs": 106.554198,
+          "cpuMs": 114.704,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 136.643499
+        },
+        {
+          "verifierMs": 142.968502,
+          "cpuMs": 156.144,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 195.680901
+        },
+        {
+          "verifierMs": 149.400507,
+          "cpuMs": 156.944,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 182.4805
+        },
+        {
+          "verifierMs": 114.207548,
+          "cpuMs": 134.781,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 144.939872
+        },
+        {
+          "verifierMs": 135.184543,
+          "cpuMs": 178.732,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 168.413481
+        },
+        {
+          "verifierMs": 102.48125,
+          "cpuMs": 105.998,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 140.732922
+        },
+        {
+          "verifierMs": 114.313218,
+          "cpuMs": 122.208,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 149.122195
+        },
+        {
+          "verifierMs": 131.883192,
+          "cpuMs": 175.283,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 162.028017
+        },
+        {
+          "verifierMs": 123.901149,
+          "cpuMs": 130.414,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 159.701945
+        },
+        {
+          "verifierMs": 105.426502,
+          "cpuMs": 116.052,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 135.368196
+        },
+        {
+          "verifierMs": 106.868602,
+          "cpuMs": 114.755,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 153.414575
+        },
+        {
+          "verifierMs": 130.708326,
+          "cpuMs": 138.559,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 160.11199
+        },
+        {
+          "verifierMs": 131.268603,
+          "cpuMs": 159.898,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 164.901492
+        },
+        {
+          "verifierMs": 140.318755,
+          "cpuMs": 188.666,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 168.408403
+        },
+        {
+          "verifierMs": 108.042157,
+          "cpuMs": 111.604,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 145.548698
+        },
+        {
+          "verifierMs": 109.153397,
+          "cpuMs": 115.206,
+          "fileSyncs": 0,
+          "directorySyncs": 0,
+          "bytesRead": 0,
+          "nativeBoundaryMs": 140.662996
+        }
+      ]
+    }
+  ]
+}

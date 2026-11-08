@@ -1,0 +1,64 @@
+{
+  "contributionCommit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+  "nativePins": {
+    "local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+    "shared-file-transaction.js": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+    "durable-file-recovery.js": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62"
+  },
+  "files": [
+    {
+      "path": "resources/app/server/lib/collection-committed-source.js",
+      "upstreamSha256": "994658b7fe2a0d9eefe48589958cae5cfd10d1cc375ee492e5786d6dda45859c",
+      "stagedSha256": "994658b7fe2a0d9eefe48589958cae5cfd10d1cc375ee492e5786d6dda45859c",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/server/lib/collection-delta-commit.js",
+      "upstreamSha256": "d98d6ed76beee0283ee082cbec1ec8cf4ee8c7e0cd99655150c5e41adb70f997",
+      "stagedSha256": "d98d6ed76beee0283ee082cbec1ec8cf4ee8c7e0cd99655150c5e41adb70f997",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/tests/collection-committed-source.test.js",
+      "upstreamSha256": "694a43d2edfd16ffb539815e6852e7c6cf0c36830db9bbd603a67d58d8f24a36",
+      "stagedSha256": "694a43d2edfd16ffb539815e6852e7c6cf0c36830db9bbd603a67d58d8f24a36",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/tests/collection-delta-commit.test.js",
+      "upstreamSha256": "095a094df1698826eb9cd08cf7be77d701a81d2402e52137331c4be6b92da3c1",
+      "stagedSha256": "095a094df1698826eb9cd08cf7be77d701a81d2402e52137331c4be6b92da3c1",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/tests/collection-delta-native27.test.js",
+      "upstreamSha256": "d842d463859fe70e5885753f683fe3d57d1c9ddaba6c76e5c1ce2ebec416839e",
+      "stagedSha256": "d842d463859fe70e5885753f683fe3d57d1c9ddaba6c76e5c1ce2ebec416839e",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-committed-native.cjs",
+      "upstreamSha256": "73b9566edc2a3008352bac7e23c2eb627a499890e35669e60f4cb5d80292caf3",
+      "stagedSha256": "2367eb2e18085b628aae74721c62bb778118fe3078ec44e2c76bb8eaa797e953",
+      "adaptation": "Replace Linux fixture verifier with exact candidate API delegation; all tests unchanged."
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-native27-binding.cjs",
+      "upstreamSha256": "d4ec2dab0990e64d951ca46182b3a8c3940d6f8960c22e8bc882750ea98eeec7",
+      "stagedSha256": "d4ec2dab0990e64d951ca46182b3a8c3940d6f8960c22e8bc882750ea98eeec7",
+      "adaptation": null
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-commit-crash-child.cjs",
+      "upstreamSha256": "e3c41144eb25ab300419efc85589af99197f09249fe496cbee8dfe599e3f3a2c",
+      "stagedSha256": "e3c41144eb25ab300419efc85589af99197f09249fe496cbee8dfe599e3f3a2c",
+      "adaptation": null
+    },
+    {
+      "path": "docs/performance-program/parallel-handoff-20261108/03-collection-server/native/collection-delta-service.test.cjs",
+      "upstreamSha256": "f281babf50d4edf7856a1556524fb4e4a573897ffa9304ba719b8b7ec26d8d05",
+      "stagedSha256": "f281babf50d4edf7856a1556524fb4e4a573897ffa9304ba719b8b7ec26d8d05",
+      "adaptation": null
+    }
+  ]
+}

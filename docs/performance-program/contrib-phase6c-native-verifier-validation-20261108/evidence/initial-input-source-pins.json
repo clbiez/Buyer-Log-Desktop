@@ -1,0 +1,209 @@
+{
+  "capturedAtUtc": "2026-11-08T10:22:27.230690+00:00",
+  "kind": "source-input-inventory-not-candidate-validation",
+  "baseCommit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "contributionCommit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+  "fetchedContributionBranchTip": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+  "worktree": "/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108",
+  "package": {
+    "path": "/tmp/buyerlog-phase6c-native-verifier-preparation",
+    "status": "missing_ENOENT",
+    "readme": "not_validated",
+    "manifest": "not_validated",
+    "candidateSourcePins": "not_validated",
+    "regenerated": false
+  },
+  "nativeDrafts": {
+    "requested": 22,
+    "executed": 0,
+    "status": "not_run"
+  },
+  "contributionTests": {
+    "executed": 0,
+    "status": "not_run"
+  },
+  "behavioralRedGreen": "not_produced",
+  "verifierTiming": "not_measured",
+  "lock": {
+    "path": "/tmp/buyerlog-performance-measurement.lock",
+    "invocation": "flock -n -E 75",
+    "heldForThisInventory": true
+  },
+  "entries": [
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "CLAUDE.md",
+      "gitBlob": "0e5d7ac16b188a00719f65abee824cb744ba2e32",
+      "sha256": "ea5ed1dc10a47546e2c4af51af1d414744da021cd07492ef6fb5eebc0e4fb5ce",
+      "bytes": 19849,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "AGENTS.md",
+      "gitBlob": "8df7bb6c044a670859ddffc899be20d7db54196f",
+      "sha256": "ad2a6dd0c30551e92512cba413b31bf0314c0d1edb598d813a490952c07a98bc",
+      "bytes": 2202,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/local-db.js",
+      "gitBlob": "32350fc8097aa5faea478b280bee748367d2cb2a",
+      "sha256": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+      "bytes": 100394,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/shared-file-transaction.js",
+      "gitBlob": "af8979342626fb9008748d7c70132e7e93382eef",
+      "sha256": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+      "bytes": 32298,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/durable-file-recovery.js",
+      "gitBlob": "3441406f2ee382dac62e466cd212f6b8aaa58e92",
+      "sha256": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62",
+      "bytes": 17948,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/local-path-policy.js",
+      "gitBlob": "f69cbe7ddfbdf20dfca9be99f79364f5e832fcc1",
+      "sha256": "04cf88d1307fa1954f3a3abd072c7371d6156f8b2537eb49e70a5856d948ba52",
+      "bytes": 640,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/large-json.js",
+      "gitBlob": "a169005c00be1f98f3ed5e7bb73df2dbe76141e2",
+      "sha256": "f4400d0ba64cb120525d967b2cc7f2f47a79bdb0c35b10812d0013e82fa4125c",
+      "bytes": 8362,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/hlc.js",
+      "gitBlob": "a8027fe680005da99383335954f99d8b85fa8a79",
+      "sha256": "6916172daca8a0775e6c475ace3e75f2994bc67612e759d43bb11924f9f4cd52",
+      "bytes": 4212,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/hlc-email-list.js",
+      "gitBlob": "23ce9d5da8ebaca073163a4db2dc0719bfcfa823",
+      "sha256": "9cbd32efd6dba545dc2182188be7a4b781203c1af845e58c3b59e7f9654ce134",
+      "bytes": 5473,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/quotation-ledger.js",
+      "gitBlob": "66ba9456deac177547424c09992a36f5331d3e89",
+      "sha256": "dbc526e1aaab252892b7f7fce4a9ef45cc267a37ae8c28846a81501bb1d701d6",
+      "bytes": 11253,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/lib/lease-worker-registry.js",
+      "gitBlob": "377b3984ddf0172090807092a48e2336905867af",
+      "sha256": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+      "bytes": 6031,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/server/server.js",
+      "gitBlob": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+      "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "bytes": 812458,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/public/app-main.js",
+      "gitBlob": "1311e659e818e8227840a6258498f98283897e91",
+      "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+      "bytes": 3079292,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "path": "resources/app/tests/fixtures/i18n-coverage-baseline.json",
+      "gitBlob": "39563c6e20403878214f5d0456b1fdda2a5b4a47",
+      "sha256": "20a8ac09f090a7e86be2d626769455a17b636e8822ef0db9967b38a9e151978d",
+      "bytes": 208,
+      "worktreeMatchesPinnedBytes": true
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "docs/performance-program/contrib-committed-source-20261108/native-adapter-request.md",
+      "gitBlob": "1d68ff2376ee5d096e3ead2c848ea7c7c531edd7",
+      "sha256": "f2d9599b987d9b71e5aaab7e29e86fe038911bf368cba1482283294080fc3afe",
+      "bytes": 4472
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/server/lib/collection-committed-source.js",
+      "gitBlob": "0394194d55f671355c1d6db7af6ca886f4a9690b",
+      "sha256": "994658b7fe2a0d9eefe48589958cae5cfd10d1cc375ee492e5786d6dda45859c",
+      "bytes": 14412
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/server/lib/collection-delta-commit.js",
+      "gitBlob": "4a1d918581728667132e8b85bff0317513f73c73",
+      "sha256": "d98d6ed76beee0283ee082cbec1ec8cf4ee8c7e0cd99655150c5e41adb70f997",
+      "bytes": 11084
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/collection-committed-source.test.js",
+      "gitBlob": "3a5062c55e7c3c80a6dd3b38092efc2520bce829",
+      "sha256": "694a43d2edfd16ffb539815e6852e7c6cf0c36830db9bbd603a67d58d8f24a36",
+      "bytes": 8948
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/collection-delta-commit.test.js",
+      "gitBlob": "fb01b8ee276e19cc23c4ec260470a92b488d80b2",
+      "sha256": "095a094df1698826eb9cd08cf7be77d701a81d2402e52137331c4be6b92da3c1",
+      "bytes": 10248
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/collection-delta-native27.test.js",
+      "gitBlob": "dc81078498056af6801298df2efe2ae47712547d",
+      "sha256": "d842d463859fe70e5885753f683fe3d57d1c9ddaba6c76e5c1ce2ebec416839e",
+      "bytes": 1450
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/fixtures/collection-committed-native.cjs",
+      "gitBlob": "702a6164bb063016b0fb04742f39ecc87d50e84a",
+      "sha256": "73b9566edc2a3008352bac7e23c2eb627a499890e35669e60f4cb5d80292caf3",
+      "bytes": 4645
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/fixtures/collection-native27-binding.cjs",
+      "gitBlob": "5dd360e3415a3a0fdd19b9ff24131e264db977eb",
+      "sha256": "d4ec2dab0990e64d951ca46182b3a8c3940d6f8960c22e8bc882750ea98eeec7",
+      "bytes": 328
+    },
+    {
+      "commit": "7652f3d294f3a530a28938eff81cbe477c5a0884",
+      "path": "resources/app/tests/fixtures/collection-commit-crash-child.cjs",
+      "gitBlob": "5e1ee108a549ce81224054a990833a57c2910fbe",
+      "sha256": "e3c41144eb25ab300419efc85589af99197f09249fe496cbee8dfe599e3f3a2c",
+      "bytes": 1414
+    }
+  ]
+}

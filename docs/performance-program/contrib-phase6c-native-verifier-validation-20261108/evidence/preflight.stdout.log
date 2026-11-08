@@ -1,0 +1,10 @@
+Input preflight only; no tests or benchmarks invoked.
+Base commit: 1796193f0a57c7785e7bf9fdb3557e33c550b25e
+Contribution commit / fetched branch tip: 7652f3d294f3a530a28938eff81cbe477c5a0884
+Pinned source files recorded: 23
+All base inventory files match pinned bytes; i18n baseline files is empty.
+Preparation package: missing_ENOENT
+Requested native drafts: 22; executed: 0.
+Contribution tests with real candidate API: executed: 0.
+Behavioral RED/GREEN: not produced. Verifier timing: not measured.
+Exit code: 2 (input blocker, not a behavioral test failure).

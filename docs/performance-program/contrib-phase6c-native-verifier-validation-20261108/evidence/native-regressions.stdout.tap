@@ -1,0 +1,616 @@
+TAP version 13
+# Subtest: async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+ok 1 - async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+  ---
+  duration_ms: 27.568374
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+ok 2 - async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 9.657212
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+ok 3 - async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 6.639299
+  type: 'test'
+  ...
+# Subtest: async prior-intent conflict preserves the external target and quarantines recovery evidence
+ok 4 - async prior-intent conflict preserves the external target and quarantines recovery evidence
+  ---
+  duration_ms: 9.620937
+  type: 'test'
+  ...
+# Subtest: async lease initialization, retry, ownership check and release use nonblocking filesystem I/O
+ok 5 - async lease initialization, retry, ownership check and release use nonblocking filesystem I/O
+  ---
+  duration_ms: 36.739562
+  type: 'test'
+  ...
+# Subtest: new leases after the source callback completes ignore it while direct detached writes stay fenced
+ok 6 - new leases after the source callback completes ignore it while direct detached writes stay fenced
+  ---
+  duration_ms: 16.87771
+  type: 'test'
+  ...
+# Subtest: sync callers cannot block their own async initializer before owner metadata exists
+ok 7 - sync callers cannot block their own async initializer before owner metadata exists
+  ---
+  duration_ms: 3.807337
+  type: 'test'
+  ...
+# Subtest: release waits for an in-flight renewal before deleting its own metadata
+ok 8 - release waits for an in-flight renewal before deleting its own metadata
+  ---
+  duration_ms: 5.473286
+  type: 'test'
+  ...
+# Subtest: a synchronous caller returns busy without blocking the async owner on the same event loop
+ok 9 - a synchronous caller returns busy without blocking the async owner on the same event loop
+  ---
+  duration_ms: 16.629349
+  type: 'test'
+  ...
+# Subtest: a separately leased write after a completed sync scope ignores the completed parent
+ok 10 - a separately leased write after a completed sync scope ignores the completed parent
+  ---
+  duration_ms: 7.590036
+  type: 'test'
+  ...
+# Subtest: a separately leased write after a completed async scope ignores the completed parent
+ok 11 - a separately leased write after a completed async scope ignores the completed parent
+  ---
+  duration_ms: 6.691047
+  type: 'test'
+  ...
+# Subtest: an active outer lease that loses ownership still fences a separately leased write
+ok 12 - an active outer lease that loses ownership still fences a separately leased write
+  ---
+  duration_ms: 10.194374
+  type: 'test'
+  ...
+# Subtest: a detached write without a new lease stays fenced after its original scope ends
+ok 13 - a detached write without a new lease stays fenced after its original scope ends
+  ---
+  duration_ms: 2.643277
+  type: 'test'
+  ...
+# Subtest: a transient Windows metadata rename denial retries before entering the callback
+ok 14 - a transient Windows metadata rename denial retries before entering the callback
+  ---
+  duration_ms: 26.035157
+  type: 'test'
+  ...
+# Subtest: persistent metadata rename denial never enters the callback and preserves source bytes
+ok 15 - persistent metadata rename denial never enters the callback and preserves source bytes
+  ---
+  duration_ms: 349.522721
+  type: 'test'
+  ...
+# Subtest: transient owner metadata open and read denials preserve lease verification
+ok 16 - transient owner metadata open and read denials preserve lease verification
+  ---
+  duration_ms: 38.679244
+  type: 'test'
+  ...
+# Subtest: Sync refuses age-only takeover of a live owner
+ok 17 - Sync refuses age-only takeover of a live owner
+  ---
+  duration_ms: 110.636546
+  type: 'test'
+  ...
+# Subtest: Async refuses age-only takeover of a live owner
+ok 18 - Async refuses age-only takeover of a live owner
+  ---
+  duration_ms: 110.317379
+  type: 'test'
+  ...
+# Subtest: two real processes do not overlap after the actual five-second threshold
+ok 19 - two real processes do not overlap after the actual five-second threshold
+  ---
+  duration_ms: 5422.528183
+  type: 'test'
+  ...
+# Subtest: unknown remote liveness is not treated as proof of owner death
+ok 20 - unknown remote liveness is not treated as proof of owner death
+  ---
+  duration_ms: 111.693705
+  type: 'test'
+  ...
+# Subtest: dead owner recovery with concurrent sync/async reclaimers preserves every write and generation
+ok 21 - dead owner recovery with concurrent sync/async reclaimers preserves every write and generation
+  ---
+  duration_ms: 381.130624
+  type: 'test'
+  ...
+# Subtest: a stale token cannot commit through the durable writer or delete its successor lock
+ok 22 - a stale token cannot commit through the durable writer or delete its successor lock
+  ---
+  duration_ms: 9.64267
+  type: 'test'
+  ...
+# Subtest: generations increase across sync/async acquisition and failed callbacks release their own lease
+ok 23 - generations increase across sync/async acquisition and failed callbacks release their own lease
+  ---
+  duration_ms: 8.790732
+  type: 'test'
+  ...
+# Subtest: crash during metadata publication leaves no debris that can permanently block reclamation
+ok 24 - crash during metadata publication leaves no debris that can permanently block reclamation
+  ---
+  duration_ms: 62.732064
+  type: 'test'
+  ...
+# Subtest: a transient maintenance-pin unlink failure does not strand the live process
+ok 25 - a transient maintenance-pin unlink failure does not strand the live process
+  ---
+  duration_ms: 22.206147
+  type: 'test'
+  ...
+# Subtest: terminated worker-thread ownership is recovered while its parent PID remains alive, also by another process
+ok 26 - terminated worker-thread ownership is recovered while its parent PID remains alive, also by another process
+  ---
+  duration_ms: 220.756923
+  type: 'test'
+  ...
+# Subtest: abandoned initialization marker after persistent unlink failure is recoverable once access returns
+ok 27 - abandoned initialization marker after persistent unlink failure is recoverable once access returns
+  ---
+  duration_ms: 239.248767
+  type: 'test'
+  ...
+# Subtest: a live sibling worker initialization pin stays protected and is reclaimed after thread exit
+ok 28 - a live sibling worker initialization pin stays protected and is reclaimed after thread exit
+  ---
+  duration_ms: 209.765706
+  type: 'test'
+  ...
+# Subtest: fenced native database mutators cannot expose uncommitted cached state
+ok 29 - fenced native database mutators cannot expose uncommitted cached state
+  ---
+  duration_ms: 12.116117
+  type: 'test'
+  ...
+# Subtest: transient retirement-marker EPERM is retried without losing the fenced write
+ok 30 - transient retirement-marker EPERM is retried without losing the fenced write
+  ---
+  duration_ms: 37.031583
+  type: 'test'
+  ...
+# Subtest: transient retirement-marker EACCES is retried without losing the fenced write
+ok 31 - transient retirement-marker EACCES is retried without losing the fenced write
+  ---
+  duration_ms: 38.191832
+  type: 'test'
+  ...
+# Subtest: transient retirement-marker EBUSY is retried without losing the fenced write
+ok 32 - transient retirement-marker EBUSY is retried without losing the fenced write
+  ---
+  duration_ms: 35.385762
+  type: 'test'
+  ...
+# Subtest: transient retirement-marker denial does not authorize takeover of a live owner
+ok 33 - transient retirement-marker denial does not authorize takeover of a live owner
+  ---
+  duration_ms: 112.729198
+  type: 'test'
+  ...
+# Subtest: persistent retirement-marker denial fails closed with the original owner and data
+ok 34 - persistent retirement-marker denial fails closed with the original owner and data
+  ---
+  duration_ms: 348.125742
+  type: 'test'
+  ...
+# Subtest: unclassified retirement-marker I/O failure cannot authorize takeover
+ok 35 - unclassified retirement-marker I/O failure cannot authorize takeover
+  ---
+  duration_ms: 1.574691
+  type: 'test'
+  ...
+# Subtest: transient lock-directory rmdir EPERM is retried and the write completes (sync and async)
+ok 36 - transient lock-directory rmdir EPERM is retried and the write completes (sync and async)
+  ---
+  duration_ms: 95.877535
+  type: 'test'
+  ...
+# Subtest: transient lock-directory rmdir EACCES is retried and the write completes (sync and async)
+ok 37 - transient lock-directory rmdir EACCES is retried and the write completes (sync and async)
+  ---
+  duration_ms: 94.943198
+  type: 'test'
+  ...
+# Subtest: transient lock-directory rmdir EBUSY is retried and the write completes (sync and async)
+ok 38 - transient lock-directory rmdir EBUSY is retried and the write completes (sync and async)
+  ---
+  duration_ms: 94.729274
+  type: 'test'
+  ...
+# Subtest: a persistent lock-directory rmdir denial still fails closed
+ok 39 - a persistent lock-directory rmdir denial still fails closed
+  ---
+  duration_ms: 91.329874
+  type: 'test'
+  ...
+# Subtest: transient lock-directory mkdir EPERM is retried and the write completes (sync and async)
+ok 40 - transient lock-directory mkdir EPERM is retried and the write completes (sync and async)
+  ---
+  duration_ms: 97.483098
+  type: 'test'
+  ...
+# Subtest: transient lock-directory mkdir EACCES is retried and the write completes (sync and async)
+ok 41 - transient lock-directory mkdir EACCES is retried and the write completes (sync and async)
+  ---
+  duration_ms: 94.190479
+  type: 'test'
+  ...
+# Subtest: transient lock-directory mkdir EBUSY is retried and the write completes (sync and async)
+ok 42 - transient lock-directory mkdir EBUSY is retried and the write completes (sync and async)
+  ---
+  duration_ms: 95.324354
+  type: 'test'
+  ...
+# Subtest: a persistent lock-directory mkdir denial still fails closed (Sync)
+ok 43 - a persistent lock-directory mkdir denial still fails closed (Sync)
+  ---
+  duration_ms: 91.126797
+  type: 'test'
+  ...
+# Subtest: a persistent lock-directory mkdir denial still fails closed (Async)
+ok 44 - a persistent lock-directory mkdir denial still fails closed (Async)
+  ---
+  duration_ms: 106.51513
+  type: 'test'
+  ...
+# Subtest: local compaction keeps current records, tombstones, conflicts/migrations and canonical business hash
+ok 45 - local compaction keeps current records, tombstones, conflicts/migrations and canonical business hash
+  ---
+  duration_ms: 122.568078
+  type: 'test'
+  ...
+# Subtest: compaction preserves unsynced events and compact ACK identities while dropping uploaded full payload history
+ok 46 - compaction preserves unsynced events and compact ACK identities while dropping uploaded full payload history
+  ---
+  duration_ms: 84.631326
+  type: 'test'
+  ...
+# Subtest: stray/incomplete compaction file never replaces valid primary state on restart
+ok 47 - stray/incomplete compaction file never replaces valid primary state on restart
+  ---
+  duration_ms: 30.784077
+  type: 'test'
+  ...
+# Subtest: local journal clocks are monotonic across rollback, batch writes and independent concurrent DB handles
+ok 48 - local journal clocks are monotonic across rollback, batch writes and independent concurrent DB handles
+  ---
+  duration_ms: 46.094382
+  type: 'test'
+  ...
+# Subtest: WAL replay restores exact recorded local, remote and package clocks without physical clock calls
+ok 49 - WAL replay restores exact recorded local, remote and package clocks without physical clock calls
+  ---
+  duration_ms: 20.869696
+  type: 'test'
+  ...
+# Subtest: future remote clock advances local state and emits trace while exact duplicate receives do not tick
+ok 50 - future remote clock advances local state and emits trace while exact duplicate receives do not tick
+  ---
+  duration_ms: 28.644402
+  type: 'test'
+  ...
+# Subtest: same-owner concurrent shared field writes use HLC instead of misleading at timestamps
+ok 51 - same-owner concurrent shared field writes use HLC instead of misleading at timestamps
+  ---
+  duration_ms: 32.328202
+  type: 'test'
+  ...
+# Subtest: legacy remote events retain at/device fallback and do not manufacture a physical receive stamp
+ok 52 - legacy remote events retain at/device fallback and do not manufacture a physical receive stamp
+  ---
+  duration_ms: 11.638869
+  type: 'test'
+  ...
+# Subtest: email ID merge uses item clocks, preserves untouched clocks and carries metadata outside business patch
+ok 53 - email ID merge uses item clocks, preserves untouched clocks and carries metadata outside business patch
+  ---
+  duration_ms: 34.514828
+  type: 'test'
+  ...
+# Subtest: email delete and resurrection decisions use clocks and do not lose unrelated IDs
+ok 54 - email delete and resurrection decisions use clocks and do not lose unrelated IDs
+  ---
+  duration_ms: 33.840018
+  type: 'test'
+  ...
+# Subtest: coalesced events carry the greatest HLC stamp while source sequence boundaries remain unchanged
+ok 55 - coalesced events carry the greatest HLC stamp while source sequence boundaries remain unchanged
+  ---
+  duration_ms: 0.673829
+  type: 'test'
+  ...
+# Subtest: malformed late event clocks or item clocks reject the entire batch before state or WAL mutation
+ok 56 - malformed late event clocks or item clocks reject the entire batch before state or WAL mutation
+  ---
+  duration_ms: 7.831461
+  type: 'test'
+  ...
+# Subtest: coalescing unions per-item clocks and retains the greatest clock independently for each ID
+ok 57 - coalescing unions per-item clocks and retains the greatest clock independently for each ID
+  ---
+  duration_ms: 0.571304
+  type: 'test'
+  ...
+# Subtest: checkpoint recovery observes imported CP and email clocks before a new local edit and persists them
+ok 58 - checkpoint recovery observes imported CP and email clocks before a new local edit and persists them
+  ---
+  duration_ms: 10.730074
+  type: 'test'
+  ...
+# Subtest: business patch metadata cannot poison validated email item clocks
+ok 59 - business patch metadata cannot poison validated email item clocks
+  ---
+  duration_ms: 9.678214
+  type: 'test'
+  ...
+# Subtest: late HLC exhaustion leaves cached and reopened DB equal with no partial batch/package writes
+ok 60 - late HLC exhaustion leaves cached and reopened DB equal with no partial batch/package writes
+  ---
+  duration_ms: 13.652584
+  type: 'test'
+  ...
+# Subtest: warm single-writer appends never reread the accumulated WAL to count entries
+ok 61 - warm single-writer appends never reread the accumulated WAL to count entries
+  ---
+  duration_ms: 512.53312
+  type: 'test'
+  ...
+# Subtest: external writer invalidates both counters and cached business state
+ok 62 - external writer invalidates both counters and cached business state
+  ---
+  duration_ms: 21.076298
+  type: 'test'
+  ...
+# Subtest: a failed partial append invalidates metadata and the next save repairs the actual tail
+ok 63 - a failed partial append invalidates metadata and the next save repairs the actual tail
+  ---
+  duration_ms: 34.460255
+  type: 'test'
+  ...
+# Subtest: same-size WAL replacement with restored mtime cannot reuse stale counters or records
+ok 64 - same-size WAL replacement with restored mtime cannot reuse stale counters or records
+  ---
+  duration_ms: 15.009845
+  type: 'test'
+  ...
+# Subtest: entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+ok 65 - entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+  ---
+  duration_ms: 4695.684222
+  type: 'test'
+  ...
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (warm writer)
+ok 66 - ND-003: acknowledged write survives a torn WAL tail (warm writer)
+  ---
+  duration_ms: 40.809321
+  type: 'test'
+  ...
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (cold writer)
+ok 67 - ND-003: acknowledged write survives a torn WAL tail (cold writer)
+  ---
+  duration_ms: 44.405883
+  type: 'test'
+  ...
+# Subtest: complete checksummed final entry without a newline remains replayable after append
+ok 68 - complete checksummed final entry without a newline remains replayable after append
+  ---
+  duration_ms: 22.482094
+  type: 'test'
+  ...
+# Subtest: non-tail checksum corruption rejects writes without modifying the WAL
+ok 69 - non-tail checksum corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 16.40214
+  type: 'test'
+  ...
+# Subtest: non-tail middle corruption rejects writes without modifying the WAL
+ok 70 - non-tail middle corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 18.191657
+  type: 'test'
+  ...
+# Subtest: non-tail version corruption rejects writes without modifying the WAL
+ok 71 - non-tail version corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 16.310041
+  type: 'test'
+  ...
+# Subtest: failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+ok 72 - failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+  ---
+  duration_ms: 19.960391
+  type: 'test'
+  ...
+# Subtest: transaction cannot checkpoint past checksum corruption
+ok 73 - transaction cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 18.988342
+  type: 'test'
+  ...
+# Subtest: compact cannot checkpoint past checksum corruption
+ok 74 - compact cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 14.929754
+  type: 'test'
+  ...
+# Subtest: rotateDeviceId cannot checkpoint past checksum corruption
+ok 75 - rotateDeviceId cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 21.103229
+  type: 'test'
+  ...
+# Subtest: torn-tail recovery preserves the prior WAL generation and backup fallback
+ok 76 - torn-tail recovery preserves the prior WAL generation and backup fallback
+  ---
+  duration_ms: 45.571196
+  type: 'test'
+  ...
+# Subtest: failure during snapshot keeps evidence and allows a safe retry
+ok 77 - failure during snapshot keeps evidence and allows a safe retry
+  ---
+  duration_ms: 34.09981
+  type: 'test'
+  ...
+# Subtest: failure during rotation keeps evidence and allows a safe retry
+ok 78 - failure during rotation keeps evidence and allows a safe retry
+  ---
+  duration_ms: 26.138232
+  type: 'test'
+  ...
+# Subtest: küçük bir yazma büyük snapshotı yeniden yazmaz; yalnız küçük WAL kaydı ekler
+ok 79 - küçük bir yazma büyük snapshotı yeniden yazmaz; yalnız küçük WAL kaydı ekler
+  ---
+  duration_ms: 174.435037
+  type: 'test'
+  ...
+# Subtest: toplu yazma tek WAL turunda toplanır
+ok 80 - toplu yazma tek WAL turunda toplanır
+  ---
+  duration_ms: 16.493749
+  type: 'test'
+  ...
+# Subtest: WAL satırı fsync edilmeden çağırana dönülmez
+ok 81 - WAL satırı fsync edilmeden çağırana dönülmez
+  ---
+  duration_ms: 8.618852
+  type: 'test'
+  ...
+# Subtest: yarım kalmış son satır atılır, öncekiler korunur
+ok 82 - yarım kalmış son satır atılır, öncekiler korunur
+  ---
+  duration_ms: 17.00354
+  type: 'test'
+  ...
+# Subtest: bozulmuş bir satır ve sonrası uygulanmaz
+ok 83 - bozulmuş bir satır ve sonrası uygulanmaz
+  ---
+  duration_ms: 16.045581
+  type: 'test'
+  ...
+# Subtest: süreç yeniden başladığında WAL oynatılır
+ok 84 - süreç yeniden başladığında WAL oynatılır
+  ---
+  duration_ms: 8.593474
+  type: 'test'
+  ...
+# Subtest: oynatma determinist: kimlik ve zaman damgası yeniden üretilmez
+ok 85 - oynatma determinist: kimlik ve zaman damgası yeniden üretilmez
+  ---
+  duration_ms: 16.612553
+  type: 'test'
+  ...
+# Subtest: WAL eşiği aşınca sıkıştırılır ve veri görüntüye geçer
+ok 86 - WAL eşiği aşınca sıkıştırılır ve veri görüntüye geçer
+  ---
+  duration_ms: 173.52713
+  type: 'test'
+  ...
+# Subtest: sıkıştırma bir kuşak WAL saklar; bozuk görüntüde aradaki yazmalar kurtarılır
+ok 87 - sıkıştırma bir kuşak WAL saklar; bozuk görüntüde aradaki yazmalar kurtarılır
+  ---
+  duration_ms: 12.255241
+  type: 'test'
+  ...
+# Subtest: anlık görüntü biçimi değişmedi — WAL silinse de dosya tek başına okunur
+ok 88 - anlık görüntü biçimi değişmedi — WAL silinse de dosya tek başına okunur
+  ---
+  duration_ms: 12.066946
+  type: 'test'
+  ...
+# Subtest: DB taşınırken WAL geride bırakılmaz
+ok 89 - DB taşınırken WAL geride bırakılmaz
+  ---
+  duration_ms: 14.005276
+  type: 'test'
+  ...
+# Subtest: okunmayan legacy assetler arşive taşınır ve sıcak durumdan çıkar
+ok 90 - okunmayan legacy assetler arşive taşınır ve sıcak durumdan çıkar
+  ---
+  duration_ms: 35.036787
+  type: 'test'
+  ...
+# Subtest: asset boşaltımı idempotenttir ve ikinci kez arşiv yazmaz
+ok 91 - asset boşaltımı idempotenttir ve ikinci kez arşiv yazmaz
+  ---
+  duration_ms: 27.814096
+  type: 'test'
+  ...
+# Subtest: yetim temp/rollback dosyaları süpürülür, gerçek veri korunur
+ok 92 - yetim temp/rollback dosyaları süpürülür, gerçek veri korunur
+  ---
+  duration_ms: 33.812596
+  type: 'test'
+  ...
+# Subtest: süpürücü erişilemeyen klasörde sessizce boş sonuç döner
+ok 93 - süpürücü erişilemeyen klasörde sessizce boş sonuç döner
+  ---
+  duration_ms: 0.553406
+  type: 'test'
+  ...
+# Subtest: arka plan hatası sunucuyu düşürmez; yalnız uncaughtException ölümcüldür
+ok 94 - arka plan hatası sunucuyu düşürmez; yalnız uncaughtException ölümcüldür
+  ---
+  duration_ms: 0.447717
+  type: 'test'
+  ...
+# Subtest: createLocalDb açılışta diske hiç dokunmaz
+ok 95 - createLocalDb açılışta diske hiç dokunmaz
+  ---
+  duration_ms: 2.072874
+  type: 'test'
+  ...
+# Subtest: yeni bir kurulumda cihaz kimliği bir kez üretilip kalıcı olur
+ok 96 - yeni bir kurulumda cihaz kimliği bir kez üretilip kalıcı olur
+  ---
+  duration_ms: 5.234485
+  type: 'test'
+  ...
+# Subtest: local DB bakımı normal açılışta arka planda kalır, Shared Hub bootstrap gerektiğinde aynı işi bekleyebilir
+ok 97 - local DB bakımı normal açılışta arka planda kalır, Shared Hub bootstrap gerektiğinde aynı işi bekleyebilir
+  ---
+  duration_ms: 0.344651
+  type: 'test'
+  ...
+# Subtest: a stale lock with a empty owner.json is recovered instead of blocking writes forever
+ok 98 - a stale lock with a empty owner.json is recovered instead of blocking writes forever
+  ---
+  duration_ms: 28.58423
+  type: 'test'
+  ...
+# Subtest: a stale lock with a truncated owner.json is recovered instead of blocking writes forever
+ok 99 - a stale lock with a truncated owner.json is recovered instead of blocking writes forever
+  ---
+  duration_ms: 21.083619
+  type: 'test'
+  ...
+# Subtest: a stale lock with a binary owner.json is recovered instead of blocking writes forever
+ok 100 - a stale lock with a binary owner.json is recovered instead of blocking writes forever
+  ---
+  duration_ms: 21.039262
+  type: 'test'
+  ...
+# Subtest: a fresh lock with an unreadable owner.json is still respected until the grace period passes
+ok 101 - a fresh lock with an unreadable owner.json is still respected until the grace period passes
+  ---
+  duration_ms: 158.527099
+  type: 'test'
+  ...
+1..101
+# tests 101
+# suites 0
+# pass 101
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8569.117007

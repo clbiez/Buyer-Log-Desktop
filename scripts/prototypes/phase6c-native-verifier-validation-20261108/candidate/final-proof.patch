@@ -1,0 +1,34 @@
+--- preparation/local-db.js
++++ candidate/local-db.js
+@@ -917,6 +917,22 @@
+     const handle=await fsp.open(folder,'r');
+     try { await handle.sync(); } finally { await handle.close(); }
+   }
++  function assertPrivateDurabilityFinalFiles(scope, folder) {
++    // The final asynchronous lease read can yield after currentTags/readdir.
++    // Fence the proof with native metadata/intent checks and no further await.
++    const tags = ['', WAL_SUFFIX, WAL_SUFFIX+'.bak'].map(suffix => {
++      try {
++        const stat = fs.lstatSync(scope.file+suffix);
++        if (!stat.isFile() || stat.isSymbolicLink()) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'non-file native member before proof');
++        return statTag(stat);
++      } catch (error) { if (error.code==='ENOENT') return ''; throw error; }
++    }).join('|');
++    if (scope.tags!==tags) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'generation changed during final lease check');
++    let names;
++    try { names=fs.readdirSync(path.join(folder,'.buyerlog-db-recovery')); }
++    catch (error) { if (error.code!=='ENOENT') throw error; }
++    if (names?.some(name=>name.endsWith('.intent.json'))) throw privateDurabilityError('PRIVATE_DURABILITY_RECOVERY_PENDING', 'native recovery appeared during final lease check');
++  }
+   async function verifyPrivateRecordDurability(state) {
+     const scope=privatePrepareScope.getStore();requirePrivatePrepare(scope,state);
+     if (scope.verifying) throw privateDurabilityError('PRIVATE_DURABILITY_SCOPE_REQUIRED', 'concurrent verification in one prepare');
+@@ -958,6 +974,8 @@
+       await assertNoPrivateDurabilityRecovery(folder);
+       if (scope.tags!==await currentTags()) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'generation changed before proof');
+       await scope.lease.assertOwnedAsync();requirePrivatePrepare(scope,state);
++      scope.lease.assertOwned();
++      assertPrivateDurabilityFinalFiles(scope,folder);
+       if (jsonSha256(state)!==expectedStateHash) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'state changed before proof');
+       return { verified:true,nativeRevision:scope.revision };
+     } finally { scope.verifying=false; }

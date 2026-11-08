@@ -1,0 +1,100 @@
+TAP version 13
+# Subtest: committed refresh/duplicate keep the exact native DB, state, lease and fence; verifier admits zero nested leases
+ok 1 - committed refresh/duplicate keep the exact native DB, state, lease and fence; verifier admits zero nested leases
+  ---
+  duration_ms: 59.03214
+  type: 'test'
+  ...
+# Subtest: generation replacement during the final lease await rejects committed publication: snapshot
+not ok 2 - generation replacement during the final lease await rejects committed publication: snapshot
+  ---
+  duration_ms: 30.045916
+  type: 'test'
+  location: '/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:26:30'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'PRIVATE_DURABILITY_STATE_CHANGED'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:103:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generation replacement during the final lease await rejects committed publication: .wal
+not ok 3 - generation replacement during the final lease await rejects committed publication: .wal
+  ---
+  duration_ms: 30.137635
+  type: 'test'
+  location: '/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:26:30'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'PRIVATE_DURABILITY_STATE_CHANGED'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:103:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: duplicate sync/close failures propagate and the same transaction ID resolves without another frame
+not ok 4 - duplicate sync/close failures propagate and the same transaction ID resolves without another frame
+  ---
+  duration_ms: 40.043827
+  type: 'test'
+  location: '/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:26:30'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'EOPNOTSUPP'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (/workspace/scratch/buyerlog-phase6c-native-verifier-validation-20261108/scripts/prototypes/phase6c-native-verifier-validation-20261108/integration-boundaries.test.cjs:119:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actual lease loss during duplicate verification never publishes or appends
+ok 5 - actual lease loss during duplicate verification never publishes or appends
+  ---
+  duration_ms: 29.867356
+  type: 'test'
+  ...
+# Subtest: native partial-tail recovery retains damaged previous WAL and strict committed refresh declines proof
+ok 6 - native partial-tail recovery retains damaged previous WAL and strict committed refresh declines proof
+  ---
+  duration_ms: 29.391677
+  type: 'test'
+  ...
+# Subtest: pending real recovery intent blocks warm committed refresh; cold native recovery permits proof and same-ID retry
+ok 7 - pending real recovery intent blocks warm committed refresh; cold native recovery permits proof and same-ID retry
+  ---
+  duration_ms: 37.513887
+  type: 'test'
+  ...
+# Subtest: base and candidate both replay snapshotted native private conflicts twice; strict verifier rejects the divergent warm state
+ok 8 - base and candidate both replay snapshotted native private conflicts twice; strict verifier rejects the divergent warm state
+  ---
+  duration_ms: 40.015463
+  type: 'test'
+  ...
+# Subtest: parallel verification in one genuine native prepare rejects reentry and adds no frame
+ok 9 - parallel verification in one genuine native prepare rejects reentry and adds no frame
+  ---
+  duration_ms: 18.216146
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 6
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 395.281903

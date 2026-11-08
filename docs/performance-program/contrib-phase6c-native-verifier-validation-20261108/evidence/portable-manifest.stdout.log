@@ -1,0 +1,9 @@
+MANIFEST.sha256: OK
+README.md: OK
+base/local-db.js: OK
+local-db.js: OK
+native-adapter-request.md: OK
+native-verifier.patch: OK
+tests/helpers/native-verifier-subject.cjs: OK
+tests/local-db-private-durability.test.js: OK
+tests/native-verifier-crash-child.cjs: OK

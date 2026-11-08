@@ -1,0 +1,31 @@
+✔ verified duplicate appends no frame, creates no revision/event and preserves exact native member bytes (30.48186ms)
+✔ db.read and a raw state reference are not a verification scope (8.534533ms)
+✔ copied/foreign state and another DB instance fail even inside a genuine native prepare (13.256142ms)
+✔ escaped prepare callback cannot reuse a completed lease context (9.049962ms)
+✔ prepare mutation without a revision bump cannot manufacture a durable state (13.217523ms)
+✔ prepare revision mutation cannot manufacture a matching receipt (8.541785ms)
+✔ native file generation replacement after prepare begins fails before proof (8.32034ms)
+✔ fsync EIO after native append leaves an unknown result; db.read alone cannot resolve it (23.660162ms)
+✔ a lost ACK after successful native commit resolves through verification without another frame (15.969825ms)
+✔ every required snapshot/current WAL sync error declines proof, including optional recovery error codes (46.239008ms)
+✔ directory and recovery-directory sync failures are not silently accepted (11.714951ms)
+✔ close failure after a successful sync still declines proof (7.99663ms)
+✔ valid previous WAL is verified and synced even if its records were already snapshotted (18.565459ms)
+✔ a corrupt previous WAL cannot be ignored in favor of a valid current snapshot (13.89636ms)
+✔ unknown checksummed WAL operation is rejected instead of accepted as a native no-op (15.235965ms)
+✔ invalid private WAL document schema cannot be certified by matching revision alone (8.367471ms)
+✔ pending native recovery intent blocks proof without invoking a replacement/recovery write (8.362943ms)
+✔ lease loss during file sync is checked again and never produces a receipt (10.060761ms)
+[LEASE] stale:recovered instanceId=924e5839-8ab1-4c5c-9320-f8d11e166464 pid=1056 resource=/tmp/bl-native-proof-rmeyPX/BuyerLogLocal.db currentOwner=420ad41e-5ab1-49fc-b035-f0471e7551e4 leaseAgeMs=11 reason=dead-pid
+✔ process exit before append fsync acknowledgement resolves only through a later strict cold proof (72.137793ms)
+✔ a valid checksummed final WAL frame without newline is verified without changing its bytes (10.750804ms)
+✔ state mutation during the final lease await is caught before returning proof (7.425456ms)
+✔ a real prepared native recovery intent must finish through native recovery before cold verification (18.354079ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 448.074682
