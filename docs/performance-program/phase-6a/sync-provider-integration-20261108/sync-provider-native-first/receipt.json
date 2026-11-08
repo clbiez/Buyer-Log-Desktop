@@ -1,0 +1,36 @@
+[
+  {
+    "label": "baseline",
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "/tmp/buyerlog-phase6a-sync-provider-closure-counts/providers.test.cjs"
+    ],
+    "exitCode": 1,
+    "counts": {
+      "pass": 4,
+      "fail": 8,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "da3febf980e5f65099aa726a5073151d5e2af4a922da8b0773c2074b324a3b5d"
+  },
+  {
+    "label": "candidate",
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "/tmp/buyerlog-phase6a-sync-provider-closure-counts/providers.test.cjs"
+    ],
+    "exitCode": 0,
+    "counts": {
+      "pass": 12,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "bd71ab2d340242090a5d952838c9387143cd1eaefacebe68532cdbb5130fed03"
+  }
+]

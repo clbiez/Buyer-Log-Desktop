@@ -1,0 +1,18 @@
+{
+  "exitCode": 0,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/orders-sync-provider.test.js",
+    "tests/orders-table-summary.test.js",
+    "tests/orders-full-consumer-gates.test.js"
+  ],
+  "counts": {
+    "pass": 54,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "a7f194257af180e3ca585e2b8f5ce7b6791f24315413394165a36abd47e2b209"
+}

@@ -621,7 +621,7 @@
   function tableRows(tableKey) {
     const provider = window.BLFormulaRows && window.BLFormulaRows[tableKey];
     if (typeof provider === 'function') {
-      try { const rows = provider(); return Array.isArray(rows) ? rows : []; } catch (_) { return []; }
+      try { const rows = provider(); return Array.isArray(rows) ? rows : []; } catch (error) { if (error && error.code === 'ORDERS_FULL_REQUIRED') throw error; return []; }
     }
     const state = window.state || {};
     const source = state[tableKey] && state[tableKey].rows;

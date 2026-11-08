@@ -1,0 +1,17 @@
+{
+  "exitCode": 0,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/orders-sync-provider.test.js",
+    "tests/formula-columns-v728.test.js"
+  ],
+  "counts": {
+    "pass": 68,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "8809ed559d715e25c38cf21304d6bc5cca71afadb111e801dfa789fbab00e420"
+}

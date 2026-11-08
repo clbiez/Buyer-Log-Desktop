@@ -1,10 +1,10 @@
 {
   "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
   "files": {
-    "public/app-main.js": "7d7e55ffed3dd023a9aaa0d5902561a62a9d79a21ab0d130a85e765eabe7d274",
+    "public/app-main.js": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
     "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1"
   },
   "baselineSwitchSha256": "487734b754aea980a95a1b785c7b1fb3176cd656f8933f39667dbf78ef1269df",
-  "outsideSwitchSha256": "1c89190f3f382be57bb66880b309b0d5b0500fcf8fb813d18fc9fb4e9f3c5612",
+  "outsideSwitchSha256": "89a5def97d9b37ac4ced7cf6e400d91b1fa6ce00ffd0e1f038991505f95ee908",
   "beforeAppSha256": "148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c"
 }

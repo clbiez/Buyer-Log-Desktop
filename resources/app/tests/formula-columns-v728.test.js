@@ -35,6 +35,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { extractFunction } = require('./helpers/app-main-functions');
 
 const ROOT = path.join(__dirname, '..');
 const engine = require('../public/formula-engine.js');
@@ -217,7 +218,15 @@ test('hesaplama üç çizimden de ÖNCE yapılır (sıralama ve sayfa filtreleri
     const start = appMain.indexOf(`function ${fn}(`);
     assert.ok(start > 0, `${fn} bulunamadı`);
     const head = appMain.slice(start, start + 400);
-    assert.ok(head.includes(`applyFormulaColumns('${key}')`), `${fn} formül hesaplamasını çağırmıyor`);
+    const call = key === 'orders' ? '_applyOrdersFormulaColumnsForCurrentView()' : `applyFormulaColumns('${key}')`;
+    assert.ok(head.includes(call), `${fn} formül hesaplamasını çağırmıyor`);
+    if (key === 'orders') {
+      // The public provider is now full-only. Its named private renderer path
+      // still computes before filtering; a native whole-renderer regression
+      // observes the actual formula result at ordersEvaluateAll.
+      const body = extractFunction(appMain, fn);
+      assert.ok(body.indexOf(call) < body.indexOf('ordersEvaluateAll()'));
+    }
   }
 });
 

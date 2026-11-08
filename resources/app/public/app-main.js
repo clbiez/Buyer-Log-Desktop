@@ -27,6 +27,17 @@ const state = { currentUser:window.BL_USER_CONTEXT||null, cp:null, orders:null, 
   // ortada kalan sütunlar yatay kaydırılır.
   freeze:{} };
 
+const _ordersRequireFullSynchronousRead=()=>{
+  if(ordersProjectionIsThin())throw Object.assign(ordersFullActionError('ORDERS_FULL_STALE'),{code:'ORDERS_FULL_REQUIRED'});
+};
+// Private named renderer only. The loader must already certify its finite plan.
+const _applyOrdersFormulaColumnsForCurrentView=()=>{
+  try{
+    const fc=window.BLFormulaColumns;if(!fc)return;
+    fc.refresh('orders',state.orders&&Array.isArray(state.orders.rows)?state.orders.rows:[]);
+  }catch(error){if(error?.code==='ORDERS_FULL_REQUIRED')throw error;}
+};
+
 var startupPageProfileReady=Promise.resolve(),startupRevealPromise=null;
 var modulePreparation=window.BLStartupPreparation?.create({
   readHistory:()=>JSON.parse(BLStorage.getItem('lcw.startup.moduleLastUsed.v1')||'{}'),
@@ -9779,7 +9790,7 @@ function ordersCycleImageSize(){
 function renderOrdersNow(){
   if(!state.orders)return;
   cpPlmDetailsSync();
-  applyFormulaColumns('orders');
+  _applyOrdersFormulaColumnsForCurrentView();
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
@@ -13658,6 +13669,11 @@ window.BLAIScreenData = {
   },
   pageTitle: tab => { const item = APP_PAGE_META[tab]; return item ? (appLang === 'en' ? item.en : item.tr) : tab; },
 };
+const _ordersFullScreenTable=window.BLAIScreenData.table;
+window.BLAIScreenData.table=function(tab,opts={}){
+  if(tab==='orders'&&!opts?.columnsOnly)_ordersRequireFullSynchronousRead();
+  return _ordersFullScreenTable.call(this,tab,opts);
+};
 // Üst çubuktaki LCW AI düğmesi: her ekrandan genel LCW AI çalışma alanına.
 document.addEventListener('click',event=>{if(event.target.closest&&event.target.closest('#lcwaiTopBtn')){event.preventDefault();switchTab('lcwai');}});
 window.BLFormulaRows = {
@@ -13665,6 +13681,8 @@ window.BLFormulaRows = {
   orders: () => (state.orders && Array.isArray(state.orders.rows) ? state.orders.rows : []),
   ship: () => (Array.isArray(shipRows) ? shipRows : []),
 };
+const _ordersFullFormulaRows=window.BLFormulaRows.orders;
+window.BLFormulaRows.orders=()=>{_ordersRequireFullSynchronousRead();return _ordersFullFormulaRows();};
 /* Formül sütunlarını satırlara işler. Çizimden ÖNCE çağrılır: sıralama, sayfa
    filtreleri ve Excel'e aktarma satırın üzerindeki gerçek değeri okur. */
 function applyFormulaColumns(tableKey){
@@ -13673,7 +13691,11 @@ function applyFormulaColumns(tableKey){
     fc.refresh(tableKey, window.BLFormulaRows[tableKey]());
   }catch(_){ /* formül motoru yoksa tablo formülsüz çizilir; veri kaybı olmaz */ }
 }
-window.applyFormulaColumns = applyFormulaColumns;
+const _ordersFullApplyFormulaColumns=applyFormulaColumns;
+window.applyFormulaColumns=function(tableKey){
+  if(tableKey==='orders')_ordersRequireFullSynchronousRead();
+  return _ordersFullApplyFormulaColumns(tableKey);
+};
 
 // ================= dynamic table height (fills available viewport, keeps sticky headers reliable) =================
 function fitTableHeights(){

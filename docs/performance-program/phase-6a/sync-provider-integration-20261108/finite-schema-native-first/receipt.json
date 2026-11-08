@@ -1,0 +1,42 @@
+[
+  {
+    "label": "baseline",
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "--test-concurrency=1",
+      "/tmp/buyerlog-phase6a-orders-finite-schema-baseline/orders-finite-closure.test.cjs",
+      "/tmp/buyerlog-phase6a-orders-finite-schema-baseline/orders-finite-schema.test.cjs",
+      "/tmp/buyerlog-phase6a-dependency-plan/dependency-plan.test.cjs"
+    ],
+    "exitCode": 1,
+    "counts": {
+      "pass": 39,
+      "fail": 10,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "820d3205bf5b091889e879a934b5647cbec966bae93e2b6214f762faf91abcdd"
+  },
+  {
+    "label": "candidate",
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "--test-concurrency=1",
+      "/tmp/buyerlog-phase6a-orders-finite-schema/orders-finite-closure.test.cjs",
+      "/tmp/buyerlog-phase6a-orders-finite-schema/orders-finite-schema.test.cjs",
+      "/tmp/buyerlog-phase6a-dependency-plan/dependency-plan.test.cjs"
+    ],
+    "exitCode": 0,
+    "counts": {
+      "pass": 49,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "8cf852b0a80f462ab8789e262b188a9889403c47c6df6d93b4b056cde6d56d83"
+  }
+]

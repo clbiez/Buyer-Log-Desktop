@@ -1,0 +1,10 @@
+{
+  "baselineApp": "7d7e55ffed3dd023a9aaa0d5902561a62a9d79a21ab0d130a85e765eabe7d274",
+  "currentApp": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
+  "oldFormula": "8385798937fd6a63cc4cd20f74980e754ce6dc8364a694c432d6fe1845fa257c",
+  "currentFormula": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
+  "exactComposition": "currentApp == reviewed guard recipe(counts recipe(frozen7f8)); currentFormula == one reviewed FULL_REQUIRED catch edit; protected named functions unchanged",
+  "nativeCandidate": 12,
+  "actualProduct": 54,
+  "noAssertionChange": true
+}

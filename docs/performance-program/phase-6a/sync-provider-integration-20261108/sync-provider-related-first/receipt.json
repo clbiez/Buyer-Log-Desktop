@@ -1,0 +1,25 @@
+{
+  "exitCode": 1,
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "formula",
+    "orders-sync-provider",
+    "orders-table-summary",
+    "orders-full",
+    "orders-config-barriers",
+    "cp-orders-full-load",
+    "cp-decision-input-revision",
+    "checklist-components-row-cache",
+    "profile-rejection",
+    "compute-module-schemas"
+  ],
+  "counts": {
+    "pass": 266,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "6ec6164847161d84d8d6b3cf4c4078846fc8f9d79c7d9bae41a550efc3a6a401"
+}

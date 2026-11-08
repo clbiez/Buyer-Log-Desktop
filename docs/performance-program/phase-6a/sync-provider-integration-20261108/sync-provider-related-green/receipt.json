@@ -1,0 +1,47 @@
+[
+  {
+    "exitCode": 0,
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "formula",
+      "orders-sync-provider",
+      "orders-table-summary",
+      "orders-full",
+      "orders-config-barriers",
+      "cp-orders-full-load",
+      "cp-decision-input-revision",
+      "checklist-components-row-cache",
+      "profile-rejection",
+      "compute-module-schemas"
+    ],
+    "counts": {
+      "pass": 268,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "7399817e2716b2d64bce2195d8da67d207cd7467020852d1a8b3af61290254b1"
+  },
+  {
+    "exitCode": 0,
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "counts": {},
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "exitCode": 0,
+    "command": [
+      "npm",
+      "run",
+      "release:notes:validate"
+    ],
+    "counts": {},
+    "sha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  }
+]

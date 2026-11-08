@@ -1,0 +1,21 @@
+{
+  "README.md": "db80b23a334cf3de80bfb6d5f109b68efd34abe4a5d2856268476b203d62414d",
+  "protected-916.json": "ee13df99fcaa0dac3fdb1103a816c39751d2ef1585c505eb5ac8d5347d1662ee",
+  "source-pin-review.json": "a8b2446c21c85d1b3cde4bc10c8fd544f6d0459bf5ac21e8ee4640e12a2ee3df",
+  "sync-provider-product-first/native.tap.gz": "06b2eda67cac9dcc3b345449d444467c3e6a3baf1218c847e3d703eff25d2e77",
+  "sync-provider-product-first/receipt.json": "a672c7d1e079d8488ca4fdf4b02e8e9e2a9616b2b829da8877081cb2517c1ac6",
+  "sync-provider-related-first/native.log.gz": "66d0335d436c8585cdc12df9c201e74f807f71756aac5c954c9a040e71ebf36a",
+  "sync-provider-related-first/receipt.json": "ced39179e64720f4caeca0182531d9cca6f530051826b63b42635958aec88914",
+  "sync-provider-render-contract-green/native.tap.gz": "b01eb9f8acfd34c3d1fea866e801f4314b12837cc34f1a831ff97f8f378f4b03",
+  "sync-provider-render-contract-green/receipt.json": "1eaa55287c5f1f9d4235321ae70badc7873ab859b2e655136c6e6380b1b312ae",
+  "sync-provider-related-green/2.log.gz": "59ad5ee71a26cf4dee7221dd77b617bd15e69ad3f0085b04127bb911b728a84b",
+  "sync-provider-related-green/0.log.gz": "93da8943e020e71e8a4653c8e501f5b0a4289143c05c8ebad6ad66736df90e31",
+  "sync-provider-related-green/receipt.json": "22ec289f6fd8f26827cb840d96605446ff2572800b19dca93646e78a556f51e1",
+  "sync-provider-related-green/1.log.gz": "77f9fb0c6dd0f60cbcac4942c2734e389d85971dce64fd32f0956acdc8f78d52",
+  "sync-provider-native-first/candidate.tap.gz": "f1b035e35fede1f7c09156b6a5248085dd93fa55a6891ec542409a6117d0c290",
+  "sync-provider-native-first/baseline.tap.gz": "4f810a749efbeac429542ebb275cc7b5bcaa1d18a7f56929dd6f7d2d51c3816a",
+  "sync-provider-native-first/receipt.json": "eb387f5f2f1e88ec0ed0b084d0f0150450af79b1e4a404170185bb911d034f81",
+  "finite-schema-native-first/candidate.tap.gz": "959d3eb68279d6c24e05465225e5016d21f72adba8bf3069136d2078cfb21de6",
+  "finite-schema-native-first/baseline.tap.gz": "6d8f814069f8373dec9a85530cd22c508e37c33ccd0f57f1060329e2f2ca8427",
+  "finite-schema-native-first/receipt.json": "74c5052da7b9cef090df8cc244fe81481110247a61b7d43d2332341460e96e52"
+}
