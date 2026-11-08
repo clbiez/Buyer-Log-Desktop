@@ -15315,16 +15315,47 @@ async function waitForRefreshJob(expectedJob=null){
   }
 }
 
-let sharedRevisionSnapshot=null,sharedRevisionTimer=0;
-async function pollSharedRevisions(){
-  try{
-    const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store'});if(!response.ok)return;const next=await response.json(),previous=sharedRevisionSnapshot;sharedRevisionSnapshot=next;
+let sharedRevisionSnapshot=null,sharedRevisionContext=null;
+// Revision timer'ı yalnız mevcut canlı bağlantı liderinin ömründe çalışır.
+function createSharedRevisionPoller({isCurrent,announce}){
+  let active=false,timer=0,request=null,retryMs=7000;
+  function accept(next){
+    if(!isCurrent()||!next||!next.entities||typeof next.entities!=='object')return;
+    const previous=sharedRevisionSnapshot;
+    // Devir sırasında kuyruğa girmiş eski bir yayın baseline'ı geriye götürmez.
+    if(previous&&Number(next.revision)<Number(previous.revision))return;
+    sharedRevisionSnapshot=next;
     if(!previous)return;
-    const changed=[];for(const [entity,item] of Object.entries(next.entities||{}))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
+    const changed=[];for(const [entity,item] of Object.entries(next.entities))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
     if(changed.length)window.dispatchEvent(new CustomEvent('bl-shared-revision',{detail:{changed,revisions:next}}));
-  }catch(_){/* lightweight polling must not disturb the user */}
+  }
+  function schedule(ms){clearTimeout(timer);timer=setTimeout(pollSharedRevisions,ms);}
+  async function pollSharedRevisions(){
+    if(!active||!isCurrent()||request||navigator.onLine===false)return;
+    clearTimeout(timer);
+    const controller=new AbortController();request=controller;
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error('Revision poll failed');
+      const next=await response.json();
+      if(!active||controller.signal.aborted||!isCurrent())return;
+      accept(next);announce({type:'revisions',revisions:next});retryMs=7000;
+    }catch(_){retryMs=Math.min(retryMs*2,30000);/* background failure stays quiet */}
+    finally{
+      clearTimeout(timeout);if(request===controller)request=null;
+      if(active&&isCurrent()&&navigator.onLine!==false)schedule(Math.max(retryMs,document.visibilityState==='hidden'?30000:0));
+    }
+  }
+  return {
+    accept,
+    snapshot:()=>sharedRevisionSnapshot,
+    start(ms=2500){active=true;schedule(ms);},
+    wake(){if(active&&!request)void pollSharedRevisions();},
+    pause(){clearTimeout(timer);request?.abort();},
+    stop(){active=false;clearTimeout(timer);request?.abort();}
+  };
 }
-setTimeout(()=>{void pollSharedRevisions();sharedRevisionTimer=window.setInterval(pollSharedRevisions,7000);},2500);
 
 // Yenile: ASAS aktif Data Model bağlantısından gelir. Antrepo varsayılan olarak
 // kaynak klasöründeki Excel'den okunur; yalnız Database modu seçilmişse IAS model
@@ -38884,7 +38915,12 @@ function refreshSharedMasterClient(area){
    yeniden kurulur; boşlukta kaçırılmış olabilecek değişiklikler için açık veri
    hafif yoldan yeniden okunur. API yoksa eski davranış: sekme kendi bağlantısı. */
 function initLiveSync(){
-  if(!window.BL_CLIENT_ID)return;
+  const contextKey=()=>{
+    const user=window.BL_USER_CONTEXT||(typeof state!=='undefined'&&state.currentUser)||{};
+    return JSON.stringify([user.id||null,user.iamRevision,user.role,user.systemRole,user.enabled,user.status,user.dataScope,user.scopes,user.permissions,user.accessAreas,user.capabilities,user.collectionAccess,user.delegatedUserIds]);
+  };
+  const context=contextKey();
+  if(sharedRevisionContext!==context){sharedRevisionSnapshot=null;sharedRevisionContext=context;}
   const url=`/api/live-events?clientId=${encodeURIComponent(window.BL_CLIENT_ID)}`;
   const handle=payload=>{
     if(!payload||!payload.area)return;
@@ -38923,51 +38959,92 @@ function initLiveSync(){
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
     }
   };
-  const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('buyerlog-live-sync'):null;
+  let channel=null;
+  try{if(typeof BroadcastChannel==='function')channel=new BroadcastChannel('buyerlog-live-sync:'+context);}catch(_){/* disabled API: local fallback */}
   const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
-  const shared=Boolean(channel&&locks);
-  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false;
-  const announce=message=>{if(shared)channel.postMessage(message);};
+  // Kimlik belirlenemiyorsa başka bir oturumun süzülmüş SSE verisi paylaşılmaz.
+  let shared=Boolean(channel&&locks&&JSON.parse(context)[0]&&window.BL_CLIENT_ID);
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false,stopped=false,leader=false,releaseLeadership=null;
+  const lockController=new AbortController();
+  function stop(){
+    stopped=true;liveSyncConnected=false;
+    clearTimeout(retryTimer);source?.close();poller.stop();
+    lockController.abort();releaseLeadership?.();channel?.close();
+    window.removeEventListener('pagehide',onPageHide);
+    window.removeEventListener('bl:user-access-applied',onAccess);
+    window.removeEventListener('online',onWake);window.removeEventListener('offline',onOffline);
+    document.removeEventListener('visibilitychange',onVisible);
+  }
+  function isCurrent(){
+    if(stopped)return false;
+    if(contextKey()!==context){stop();sharedRevisionSnapshot=null;initLiveSync();return false;}
+    return true;
+  }
+  const announce=message=>{if(shared&&isCurrent())channel.postMessage({...message,context});};
+  const poller=createSharedRevisionPoller({isCurrent,announce});
+  function onAccess(){isCurrent();}
+  function onWake(){if(!isCurrent())return;if(shared&&!leader)announce({type:'revisions?'});else poller.wake();}
+  function onOffline(){poller.pause();}
+  function onVisible(){if(document.visibilityState!=='hidden')onWake();}
+  function onPageHide(event){stop();if(event.persisted)window.addEventListener('pageshow',()=>initLiveSync(),{once:true});}
+  window.addEventListener('pagehide',onPageHide);
+  window.addEventListener('bl:user-access-applied',onAccess);
+  window.addEventListener('online',onWake);window.addEventListener('offline',onOffline);
+  document.addEventListener('visibilitychange',onVisible);
   function connect(){
-    if(typeof EventSource==='undefined')return;
-    source=new EventSource(url);
+    if(!isCurrent()||!window.BL_CLIENT_ID||typeof EventSource==='undefined')return;
+    source?.close();
+    const opened=new EventSource(url);source=opened;
     source.onopen=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=true;retryMs=1000;announce({type:'status',connected:true});
-      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();}
+      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();poller.wake();}
     };
     source.onmessage=event=>{
+      if(!isCurrent()||source!==opened)return;
       let payload=null;
       try{payload=JSON.parse(event.data);}catch(_){return;}
       if(!payload||!payload.area)return;
       announce({type:'event',payload});
       handle(payload);
     };
-    // Geçici hatada EventSource kendiliğinden yeniden dener; kalıcı kapanmada
-    // (readyState CLOSED, ör. 401) denemez: yeniden kurulur.
+    // EventSource açıkken kendi retry yolunu kullanır; CLOSED ayrıca kurulur.
     source.onerror=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=false;gap=true;announce({type:'status',connected:false});
-      if(source&&source.readyState===2){
+      if(source.readyState===2){
         clearTimeout(retryTimer);
         retryTimer=setTimeout(connect,retryMs);
         retryMs=Math.min(retryMs*2,30000);
       }
     };
   }
-  if(!shared){connect();return;}
+  function localFallback(){shared=false;leader=true;channel?.close();poller.start();connect();}
+  if(!shared){localFallback();return;}
   channel.onmessage=event=>{
+    if(!isCurrent())return;
     const message=event&&event.data||{};
+    if(message.context!==context)return;
     if(message.type==='event'&&message.payload)handle(message.payload);
     else if(message.type==='status'){followed=true;liveSyncConnected=Boolean(message.connected);}
+    else if(message.type==='revisions'){followed=true;poller.accept(message.revisions);}
     else if(message.type==='resync')liveSyncResyncAfterGap();
-    else if(message.type==='status?'&&source)announce({type:'status',connected:liveSyncConnected});
+    else if(message.type==='revisions?'&&leader){
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+      poller.wake();
+    }else if(message.type==='status?'&&leader){
+      announce({type:'status',connected:liveSyncConnected});
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+    }
   };
   announce({type:'status?'});
-  // Kilit sekme açık kaldığı sürece tutulur (dönen söz hiç çözülmez).
-  locks.request('buyerlog-live-sync-leader',()=>new Promise(()=>{
-    // Önceki liderden devralındıysa arada kaçırılmış olay olabilir.
+  // Aynı kilit hem SSE'yi hem revision polling'i yönetir; ikinci seçim yoktur.
+  locks.request('buyerlog-live-sync-leader:'+context,{signal:lockController.signal},()=>new Promise(resolve=>{
+    if(stopped){resolve();return;}
+    releaseLeadership=resolve;leader=true;
     if(followed)gap=true;
-    connect();
-  }));
+    poller.start(followed?0:2500);connect();
+  })).catch(()=>{if(!stopped&&isCurrent())localFallback();});
 }
 /* Canlı bağlantı boşluğundan sonra açık veriler hafif yoldan yeniden okunur
    (tam kaynak yenilemesi değil). */

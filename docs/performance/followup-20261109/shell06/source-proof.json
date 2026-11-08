@@ -1,0 +1,40 @@
+{
+  "baseMain": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "branch": "perf/followup-shared-revisions-20261109",
+  "runtime": "{\"node\":\"v24.19.0\",\"platform\":\"linux\",\"arch\":\"x64\"}",
+  "kernel": "6.18.57",
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "71b57bca69c2c909b2fae5ff13ef83f494bee98532b298e551aa833087ccd3fb",
+    "resources/app/public/release-notes/next.json": "ff45810424a6c89f8bbf0b1365ccfcb35f57d0be5b0e71456edb4b45b2f81ebe",
+    "resources/app/public/release-notes/next-assets/shell06-shared-revisions-20261109.png": "0b5eb4a48ad101dbfbeb1288ec33a15f04561e98ce0588da8cce952cbaa70217",
+    "resources/app/tests/shared-revision-leader.test.js": "fa548f32b91453d61da54ef4b825831e365f3337f38e113edcfa41ed8f33ea9e",
+    "resources/app/tests/multi-tab-live-sync-v20260926.test.js": "6772df99885f780cea26836d4bad0209735ca33006a8981140966e8d1743bb46"
+  },
+  "mainBranchProtection": {
+    "protected": false,
+    "requiredChecks": []
+  },
+  "nativeElectronAcceptance": "NOT VERIFIED: Linux Chromium browser acceptance only; no Electron runtime installed. Whole SHELL-06 is not claimed complete.",
+  "criticalDiffReview": {
+    "type": "same-agent review",
+    "independentModelReview": false,
+    "checked": [
+      "one existing lock controls SSE and revision fetch",
+      "per-tab snapshots preserve bl-shared-revision payload and catch-up",
+      "pending/in-flight ownership cleanup and stale callback rejection",
+      "identity/access namespace and envelope checks",
+      "no server modifications or unrelated refactor",
+      "existing release-note objects and metadata preserved"
+    ]
+  },
+  "ownershipBoundary": {
+    "appMainIdenticalOutsideTwoAuthorizedBlocks": true,
+    "serverUnchanged": true
+  },
+  "fullSuiteEnvironment": {
+    "BUYER_LOG_DATA_ROOT": "/tmp/buyerlog-shell06-suite",
+    "runner": "npm test via tests/run-tests.js",
+    "concurrency": 4,
+    "firstAttempt": "failed at batch 1 due to read-only default home; retained separately; final suite restarted from batch 1"
+  }
+}
