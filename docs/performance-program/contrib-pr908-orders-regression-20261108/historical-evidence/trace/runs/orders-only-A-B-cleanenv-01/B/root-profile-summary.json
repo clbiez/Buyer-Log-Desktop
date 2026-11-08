@@ -1,0 +1,430 @@
+{
+  "arm": "B",
+  "profileDurationMs": 16312.648,
+  "sampledMs": 16311.219,
+  "selfTop": [
+    [
+      "(program)",
+      6542.96
+    ],
+    [
+      "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+      3490.87
+    ],
+    [
+      "(idle)",
+      1838.36
+    ],
+    [
+      "(garbage collector)",
+      970.42
+    ],
+    [
+      "model-option-stats.js?v=7.0.339&h=21f3166a51f3225c",
+      430.67
+    ],
+    [
+      "column-schema.js?v=7.0.339&h=6e033d4a98cc118d",
+      328.18
+    ],
+    [
+      "business-rules.js?v=7.0.339&h=1c5ec8c9c1a7302d",
+      326.37
+    ],
+    [
+      "cp-decision-runtime.js?v=7.0.339&h=aac6ca42aac23f0a",
+      307.6
+    ],
+    [
+      "model-image-cache.js?v=7.0.339&h=7179b1ddd7eb5eed&rev=3",
+      291.75
+    ],
+    [
+      "i18n-runtime.js?v=7.0.339&h=f7e3b19fc5debb64",
+      217.3
+    ],
+    [
+      "visible",
+      164.24
+    ],
+    [
+      "?module=overview",
+      106.46
+    ]
+  ],
+  "inclusiveTop": [
+    [
+      "(root)",
+      16311.22
+    ],
+    [
+      "(program)",
+      6542.96
+    ],
+    [
+      "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+      5377.47
+    ],
+    [
+      "(idle)",
+      1838.36
+    ],
+    [
+      "(garbage collector)",
+      970.42
+    ],
+    [
+      "cp-plm-details.js?v=7.0.339&h=b44515736223f59c&rev=1",
+      780.59
+    ],
+    [
+      "license-royalty-commissions.js?v=7.0.339&h=a664c9a35fd49750&rev=2",
+      653.79
+    ],
+    [
+      "model-option-stats.js?v=7.0.339&h=21f3166a51f3225c",
+      446.24
+    ],
+    [
+      "business-rules.js?v=7.0.339&h=1c5ec8c9c1a7302d",
+      372.51
+    ],
+    [
+      "column-schema.js?v=7.0.339&h=6e033d4a98cc118d",
+      334.85
+    ],
+    [
+      "cp-decision-runtime.js?v=7.0.339&h=aac6ca42aac23f0a",
+      315.63
+    ],
+    [
+      "model-image-cache.js?v=7.0.339&h=7179b1ddd7eb5eed&rev=3",
+      301.64
+    ],
+    [
+      "",
+      245.49
+    ],
+    [
+      "i18n-runtime.js?v=7.0.339&h=f7e3b19fc5debb64",
+      232.87
+    ]
+  ],
+  "functionsInclusiveTop": [
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "runDeferredRender",
+        1631
+      ],
+      1896.65
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "deferRenderForTab",
+        1638
+      ],
+      1895.56
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "renderOrdersNow",
+        9674
+      ],
+      1838.85
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "renderOrders",
+        1646
+      ],
+      1838.85
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "",
+        11851
+      ],
+      1320.77
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "",
+        2145
+      ],
+      1232.24
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "",
+        2331
+      ],
+      1126.04
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "turknorm",
+        11541
+      ],
+      957.13
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "normalizeCPDates",
+        1324
+      ],
+      897.91
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "reviveServerDates",
+        14249
+      ],
+      897.91
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "",
+        1325
+      ],
+      887.85
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "renderFullTable",
+        7685
+      ],
+      855.59
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "applyPricingRulesToLoadedRows",
+        11849
+      ],
+      801.79
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "",
+        2215
+      ],
+      772.12
+    ],
+    [
+      [
+        "cp-plm-details.js?v=7.0.339&h=b44515736223f59c&rev=1",
+        "",
+        55
+      ],
+      764.11
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "refreshCpStartupImageRegistry",
+        2133
+      ],
+      735.29
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "applyCpStartupImageRegistry",
+        2090
+      ],
+      732.09
+    ],
+    [
+      [
+        "app-main.js?v=7.0.339&h=3cf55dba638ffc1a&rev=20261026-personal-order-notes",
+        "repaint",
+        3857
+      ],
+      712.81
+    ]
+  ],
+  "nativeTrace": {
+    "Layout": {
+      "durationMs": 789.81,
+      "events": 74
+    },
+    "UpdateLayoutTree": {
+      "durationMs": 429.41,
+      "events": 128
+    },
+    "FunctionCall": {
+      "durationMs": 2536.33,
+      "events": 2839
+    },
+    "EvaluateScript": {
+      "durationMs": 649.83,
+      "events": 200
+    },
+    "EventDispatch": {
+      "durationMs": 290.75,
+      "events": 561
+    },
+    "RunTask": {
+      "durationMs": 0.0,
+      "events": 0
+    }
+  },
+  "rows": {
+    "cp": 24982,
+    "orders": 30000
+  },
+  "moduleSummary": {
+    "cp": {
+      "status": "ready",
+      "error": ""
+    },
+    "orders": {
+      "status": "ready",
+      "error": ""
+    },
+    "koleksiyon": {
+      "status": "ready",
+      "error": ""
+    }
+  },
+  "perfRelevantMarks": [
+    {
+      "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+      "startTime": 515.3000000119209,
+      "duration": 0
+    },
+    {
+      "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+      "startTime": 601.1999999880791,
+      "duration": 0
+    },
+    {
+      "name": "LOCAL_CONFIG_READY",
+      "startTime": 1630.5,
+      "duration": 0
+    },
+    {
+      "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+      "startTime": 1865.5,
+      "duration": 0
+    },
+    {
+      "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+      "startTime": 1888.300000011921,
+      "duration": 0
+    },
+    {
+      "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+      "startTime": 1888.5999999940395,
+      "duration": 0
+    },
+    {
+      "name": "FRONTEND_BOOTSTRAP_READY",
+      "startTime": 1888.9000000059605,
+      "duration": 0
+    },
+    {
+      "name": "DOM_CREATION_READY",
+      "startTime": 2020.300000011921,
+      "duration": 0
+    },
+    {
+      "name": "LOCAL_DB_READY",
+      "startTime": 2780.0999999940395,
+      "duration": 0
+    },
+    {
+      "name": "CACHE_LOAD_READY",
+      "startTime": 2783.9000000059605,
+      "duration": 0
+    },
+    {
+      "name": "DATASOURCE_PREPARATION_READY",
+      "startTime": 2808.4000000059605,
+      "duration": 0
+    },
+    {
+      "name": "FILTER_PIVOT_INIT_READY",
+      "startTime": 2808.5999999940395,
+      "duration": 0
+    },
+    {
+      "name": "IMAGE_THUMBNAIL_INIT_READY",
+      "startTime": 2808.5999999940395,
+      "duration": 0
+    },
+    {
+      "name": "TABLE_RENDER_READY",
+      "startTime": 2826.800000011921,
+      "duration": 0
+    },
+    {
+      "name": "ACTIVE_MODULE_INIT_READY",
+      "startTime": 2826.9000000059605,
+      "duration": 0
+    },
+    {
+      "name": "UI_READY",
+      "startTime": 3452.300000011921,
+      "duration": 0
+    },
+    {
+      "name": "AUTH_USER_LOAD_READY",
+      "startTime": 3990.800000011921,
+      "duration": 0
+    },
+    {
+      "name": "AUTH_READY",
+      "startTime": 3990.9000000059605,
+      "duration": 0
+    },
+    {
+      "name": "OVERVIEW_MODULE_LOAD_READY",
+      "startTime": 8281.09999999404,
+      "duration": 0
+    },
+    {
+      "name": "OVERVIEW_MODULE_LOAD_READY",
+      "startTime": 8284.5,
+      "duration": 0
+    },
+    {
+      "name": "EXCEL_ENGINE_LOAD_READY",
+      "startTime": 8300.40000000596,
+      "duration": 0
+    },
+    {
+      "name": "BACKGROUND_WARMUP_START",
+      "startTime": 8645.800000011921,
+      "duration": 0
+    },
+    {
+      "name": "CP_LOAD_READY",
+      "startTime": 15190.699999988079,
+      "duration": 0
+    },
+    {
+      "name": "CP_PRIORITY_READY",
+      "startTime": 22056.09999999404,
+      "duration": 0
+    },
+    {
+      "name": "BACKGROUND_WARMUP_READY",
+      "startTime": 22056.69999998808,
+      "duration": 0
+    }
+  ]
+}

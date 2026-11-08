@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scenario": "first-intent-after-startup",
+  "startedAt": "2026-11-08T00:48:59.360Z",
+  "app": "/workspace/buyerlog-analytics904/resources/app",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "fixtureRoot": "/tmp/buyerlog-first-transition-KH9BEK",
+  "status": "passed",
+  "transitions": [
+    {
+      "module": "cp",
+      "status": "passed",
+      "intentAtMs": 5350.5,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 7,
+      "maxPollGapMs": 32888.5,
+      "dispatchAtMs": 5378.4000000059605,
+      "dispatchDelayMs": 27.900000005960464,
+      "dataReadyMs": 51444.5,
+      "firstRowsPaintedMs": 51633.59999999404,
+      "elapsedMs": 54032.30000001192,
+      "paintedAtMs": 59382.80000001192,
+      "observationEndMs": 60450.09999999404,
+      "rows": 24982,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 5229.300000011921,
+        "startupReadyMs": 5268.800000011921,
+        "startupCompleteMs": 5349.199999988079,
+        "continueAtMs": 5342.5,
+        "continueIntentAtMs": 5268.800000011921,
+        "continueDispatchDelayMs": 73.69999998807907,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 5349.199999988079,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 899.3000000119209,
+            "duration": 284
+          },
+          {
+            "startTime": 1280.0999999940395,
+            "duration": 128
+          },
+          {
+            "startTime": 1444.699999988079,
+            "duration": 59
+          },
+          {
+            "startTime": 1506.699999988079,
+            "duration": 97
+          },
+          {
+            "startTime": 1606.199999988079,
+            "duration": 160
+          },
+          {
+            "startTime": 2022.9000000059605,
+            "duration": 102
+          },
+          {
+            "startTime": 2130.9000000059605,
+            "duration": 158
+          },
+          {
+            "startTime": 2290.9000000059605,
+            "duration": 311
+          },
+          {
+            "startTime": 2749.9000000059605,
+            "duration": 147
+          },
+          {
+            "startTime": 3301.300000011921,
+            "duration": 97
+          },
+          {
+            "startTime": 3876.9000000059605,
+            "duration": 170
+          },
+          {
+            "startTime": 4161.9000000059605,
+            "duration": 373
+          },
+          {
+            "startTime": 4541.5,
+            "duration": 497
+          },
+          {
+            "startTime": 5039.5,
+            "duration": 86
+          },
+          {
+            "startTime": 5127.800000011921,
+            "duration": 73
+          },
+          {
+            "startTime": 5227.300000011921,
+            "duration": 82
+          },
+          {
+            "startTime": 5378.199999988079,
+            "duration": 244
+          },
+          {
+            "startTime": 5622.9000000059605,
+            "duration": 54
+          },
+          {
+            "startTime": 5887.300000011921,
+            "duration": 1058
+          },
+          {
+            "startTime": 6985.699999988079,
+            "duration": 376
+          },
+          {
+            "startTime": 7366.300000011921,
+            "duration": 80
+          },
+          {
+            "startTime": 7559.300000011921,
+            "duration": 100
+          },
+          {
+            "startTime": 7660.699999988079,
+            "duration": 69
+          },
+          {
+            "startTime": 8028.4000000059605,
+            "duration": 390
+          },
+          {
+            "startTime": 8507.90000000596,
+            "duration": 684
+          },
+          {
+            "startTime": 9193.300000011921,
+            "duration": 77
+          },
+          {
+            "startTime": 9274.59999999404,
+            "duration": 725.4000000059605
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    },
+    {
+      "module": "orders",
+      "status": "passed",
+      "intentAtMs": 2648.5,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 7,
+      "maxPollGapMs": 2859.5,
+      "dispatchAtMs": 2676.5,
+      "dispatchDelayMs": 28,
+      "dataReadyMs": 8039.799999982119,
+      "firstRowsPaintedMs": 8114.699999988079,
+      "elapsedMs": 13435.09999999404,
+      "paintedAtMs": 16083.59999999404,
+      "observationEndMs": 16776.79999998212,
+      "rows": 30000,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 2576.199999988079,
+        "startupReadyMs": 2592.699999988079,
+        "startupCompleteMs": 2647.5,
+        "continueAtMs": 2638.2999999821186,
+        "continueIntentAtMs": 2592.699999988079,
+        "continueDispatchDelayMs": 45.599999994039536,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 2647.5,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 467.19999998807907,
+            "duration": 91
+          },
+          {
+            "startTime": 565.1999999880791,
+            "duration": 60
+          },
+          {
+            "startTime": 666.2999999821186,
+            "duration": 82
+          },
+          {
+            "startTime": 809.5999999940395,
+            "duration": 147
+          },
+          {
+            "startTime": 1020.8999999761581,
+            "duration": 56
+          },
+          {
+            "startTime": 1219.7999999821186,
+            "duration": 199
+          },
+          {
+            "startTime": 1420.0999999940395,
+            "duration": 70
+          },
+          {
+            "startTime": 1678.0999999940395,
+            "duration": 130
+          },
+          {
+            "startTime": 1988.5,
+            "duration": 96
+          },
+          {
+            "startTime": 2188.899999976158,
+            "duration": 84
+          },
+          {
+            "startTime": 2273.2999999821186,
+            "duration": 179
+          },
+          {
+            "startTime": 2494.899999976158,
+            "duration": 58
+          },
+          {
+            "startTime": 3367.899999976158,
+            "duration": 82
+          },
+          {
+            "startTime": 3672,
+            "duration": 106
+          },
+          {
+            "startTime": 3848.199999988079,
+            "duration": 93
+          },
+          {
+            "startTime": 4204.899999976158,
+            "duration": 732
+          },
+          {
+            "startTime": 4937.399999976158,
+            "duration": 50
+          },
+          {
+            "startTime": 5004.299999982119,
+            "duration": 1821
+          },
+          {
+            "startTime": 6952.5,
+            "duration": 292
+          },
+          {
+            "startTime": 7268.5,
+            "duration": 557
+          },
+          {
+            "startTime": 7829.0999999940395,
+            "duration": 2170.9000000059605
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    }
+  ],
+  "rendererErrors": [],
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6vhoks-9100b15fc128",
+    "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "sourceRows": 30000,
+  "stalls": [],
+  "serverLog": "/tmp/buyerlog-first-transition-KH9BEK/server.log",
+  "finishedAt": "2026-11-08T00:50:55.850Z"
+}

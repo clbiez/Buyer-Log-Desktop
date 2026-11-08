@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scenario": "first-intent-after-startup",
+  "startedAt": "2026-11-08T01:07:35.372Z",
+  "app": "/workspace/buyerlog-analytics904/resources/app",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "fixtureRoot": "/tmp/buyerlog-first-transition-o59Hw2",
+  "status": "passed",
+  "transitions": [
+    {
+      "module": "orders",
+      "status": "passed",
+      "intentAtMs": 7757.9000000059605,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 10,
+      "maxPollGapMs": 4757.5999999940395,
+      "dispatchAtMs": 7799,
+      "dispatchDelayMs": 41.099999994039536,
+      "dataReadyMs": 9676.799999982119,
+      "firstRowsPaintedMs": 10149.899999976158,
+      "elapsedMs": 11621.09999999404,
+      "paintedAtMs": 19379,
+      "observationEndMs": 23788.69999998808,
+      "rows": 30000,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 7564.4000000059605,
+        "startupReadyMs": 7602.4000000059605,
+        "startupCompleteMs": 7757.0999999940395,
+        "continueAtMs": 7746.0999999940395,
+        "continueIntentAtMs": 7602.4000000059605,
+        "continueDispatchDelayMs": 143.69999998807907,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 7757.0999999940395,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 839.0999999940395,
+            "duration": 56
+          },
+          {
+            "startTime": 1087.5,
+            "duration": 124
+          },
+          {
+            "startTime": 1275.699999988079,
+            "duration": 67
+          },
+          {
+            "startTime": 1347,
+            "duration": 230
+          },
+          {
+            "startTime": 1640.4000000059605,
+            "duration": 171
+          },
+          {
+            "startTime": 1887.199999988079,
+            "duration": 89
+          },
+          {
+            "startTime": 1982.699999988079,
+            "duration": 55
+          },
+          {
+            "startTime": 2053,
+            "duration": 72
+          },
+          {
+            "startTime": 2125.5,
+            "duration": 51
+          },
+          {
+            "startTime": 2210.9000000059605,
+            "duration": 87
+          },
+          {
+            "startTime": 2298.5999999940395,
+            "duration": 61
+          },
+          {
+            "startTime": 2409.0999999940395,
+            "duration": 105
+          },
+          {
+            "startTime": 2582.5,
+            "duration": 84
+          },
+          {
+            "startTime": 2727.9000000059605,
+            "duration": 83
+          },
+          {
+            "startTime": 2914.4000000059605,
+            "duration": 61
+          },
+          {
+            "startTime": 3197.5999999940395,
+            "duration": 351
+          },
+          {
+            "startTime": 3549.699999988079,
+            "duration": 225
+          },
+          {
+            "startTime": 3830.0999999940395,
+            "duration": 167
+          },
+          {
+            "startTime": 4368.5,
+            "duration": 461
+          },
+          {
+            "startTime": 4829.9000000059605,
+            "duration": 59
+          },
+          {
+            "startTime": 4963.699999988079,
+            "duration": 59
+          },
+          {
+            "startTime": 5024.199999988079,
+            "duration": 228
+          },
+          {
+            "startTime": 5253.4000000059605,
+            "duration": 86
+          },
+          {
+            "startTime": 5375.0999999940395,
+            "duration": 51
+          },
+          {
+            "startTime": 5978.799999982119,
+            "duration": 64
+          },
+          {
+            "startTime": 6092,
+            "duration": 84
+          },
+          {
+            "startTime": 6273.799999982119,
+            "duration": 324
+          },
+          {
+            "startTime": 6605.699999988079,
+            "duration": 646
+          },
+          {
+            "startTime": 7253.199999988079,
+            "duration": 68
+          },
+          {
+            "startTime": 7323.5,
+            "duration": 196
+          },
+          {
+            "startTime": 7556.699999988079,
+            "duration": 121
+          },
+          {
+            "startTime": 7798.699999988079,
+            "duration": 74
+          },
+          {
+            "startTime": 8074.5,
+            "duration": 150
+          },
+          {
+            "startTime": 8235,
+            "duration": 1211
+          },
+          {
+            "startTime": 9457.299999982119,
+            "duration": 542.7000000178814
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    }
+  ],
+  "rendererErrors": [],
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6vhoks-9100b15fc128",
+    "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "sourceRows": 30000,
+  "stalls": [],
+  "serverLog": "/tmp/buyerlog-first-transition-o59Hw2/server.log",
+  "finishedAt": "2026-11-08T01:08:33.055Z"
+}

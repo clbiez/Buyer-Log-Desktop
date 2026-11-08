@@ -1,0 +1,19 @@
+{
+  "classification": "NONFORMAL derived SINGLE-ORDERS diagnostic; one A/B pair; no gain or merge acceptance claim",
+  "arm": "B",
+  "node": {
+    "execPath": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "version": "v24.19.0"
+  },
+  "originalFilename": "/workspace/buyerlog-analytics904/resources/app/scripts/benchmark-first-transitions.js",
+  "originalSourceSha256": "bd746f1a38b692223b8f62b88aa4e3355932714e01fde4ca8fbd4f41d0025cd1",
+  "derivedSourceSha256": "79cf2546d797a425dbd9da86b93a2dd4b07071242ced3231643bb61bed272bdd",
+  "exactChange": {
+    "old": "for(const module of ['cp','orders']){",
+    "new": "for(const module of ['orders']){",
+    "expectedCount": 1
+  },
+  "appRoot": "/tmp/buyerlog-shared-ui908/resources/app",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "startedAt": "2026-11-08T01:08:45.203Z"
+}

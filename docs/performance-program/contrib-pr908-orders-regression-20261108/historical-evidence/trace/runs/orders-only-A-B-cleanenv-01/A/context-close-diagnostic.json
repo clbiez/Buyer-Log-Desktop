@@ -1,0 +1,11 @@
+{
+  "observer": {
+    "path": "/tmp/buyerlog-908-final-schema-observer.cjs",
+    "sha256": "1b0301d765ae8970917430c95dabe113749b76815bc2d115a5e59a273f2fe451",
+    "snapshot": "/tmp/buyerlog-908-orders-regression-trace/source-snapshots/schema-observer.cjs"
+  },
+  "actualSchemaObserverInvoked": true,
+  "profileStoppedBeforeObserver": true,
+  "failures": [],
+  "closedAt": "2026-11-08T01:08:32.756Z"
+}
