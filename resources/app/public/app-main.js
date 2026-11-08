@@ -7492,7 +7492,7 @@ function freezeStartFor(tableId,tableKey,trigger=null){
     return true;
   }
   freezeCancel();
-  if(typeof flushPendingTableRenders==='function')flushPendingTableRenders();
+  // Seçim yalnız başlığı okur; global flush sanal gövdeleri tam DOM'a çevirir.
   _freezePick={tableId,tableKey,trigger:actualTrigger};
   window.BLTableFreeze.startPick(table,{onPick:freezeCommitPick,onCancel:freezeReleasePick});
   freezeSetTriggerState(actualTrigger,true);
