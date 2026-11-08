@@ -3315,7 +3315,7 @@ function canonicalModelImageKnown(plmId,colourCode,colour=''){
 // aynı görsel için yarışan Image nesneleri oluşmaz.
 const BLImageRuntime=(()=>{
   const IMAGE_HOVER_DELAY=140,IMAGE_REQUEST_CONCURRENCY=4,NEGATIVE_CACHE_TTL=30000,MAX_LOADED_KEYS=2048;
-  /* Sıcak tutma: başarıyla yüklenen her kaynak için bir HTMLImageElement
+  /* Sıcak tutma: başarıyla yüklenen her önizleme için bir HTMLImageElement
      referansı tutulur; referans yaşadıkça tarayıcı görseli bellek
      önbelleğinden düşürmez ve tablo yeniden çizildiğinde görsel ilk karede
      yerinde olur. İki sınır birlikte uygulanır: adet ve sıkıştırılmış bayt
@@ -3324,8 +3324,8 @@ const BLImageRuntime=(()=>{
   const WARM_IMAGE_LIMIT=500,WARM_IMAGE_BYTE_BUDGET=96*1024*1024,WARMUP_START_DELAY=600;
   /* Yeniden açılış: bu cihazda daha önce yüklenmiş görsel adresleri sınırlı
      bir listede tutulur. Görsel adresi ref'e bağlıdır ve içeriği değişmez;
-     bu yüzden açılışta bu hücreler yer tutucu/gözlemci beklemeden gerçek
-     kaynakla basılır ve tarayıcı disk önbelleğinden okur. Görsel artık
+     bu yüzden açılışta bu hücreler gözlemci beklemeden önizlemeyi
+     disk önbelleğinden okur. Görsel artık
      yoksa (silinmiş/erişim yok) hücre yer tutucuya döner ve kayıt düşer. */
   const KNOWN_IMAGES_KEY='bl.modelImages.known.v1',KNOWN_IMAGES_LIMIT=WARM_IMAGE_LIMIT;
   /* PLM'e OTOMATİK istek YOK: görselsiz/açılamayan hücre yalnız yer tutucuyla
@@ -3347,7 +3347,7 @@ const BLImageRuntime=(()=>{
   const keepWarm=(src,image)=>{
     if(!isCacheableSource(src))return;
     let ref=image;
-    if(!ref||ref.isConnected){try{ref=new Image();ref.decoding='async';ref.src=src;}catch(_){return;}}
+    if(!ref||ref.isConnected){try{ref=new Image();ref.decoding='async';ref.src=image?.currentSrc||image?.src||window.BLModelImageCache?.peekThumbnail?.(src)||src;}catch(_){return;}}
     dropWarm(src);
     const bytes=encodedBytes(src,image||ref);
     warm.set(src,{image:ref,bytes});warmBytes+=bytes;
@@ -3368,14 +3368,17 @@ const BLImageRuntime=(()=>{
   // Hücre üreticileri için: 'loaded' bu oturumda yüklendi, 'prior' bu cihazda
   // daha önce yüklendi (disk önbelleği), '' bilinmiyor (lazy yol).
   const loadState=src=>{const value=key(src);if(isLoaded(value))return 'loaded';if(!known.has(value))return '';const until=failed.get(value);return until&&until>Date.now()?'':'prior';};
+  const previewSource=src=>window.BLModelImageCache?window.BLModelImageCache.peekThumbnail(src):src;
+  const cancelled=()=>Object.assign(new Error('Model image state was reset.'),{code:'BL_IMAGE_CANCELLED'});
   const pump=()=>{
     while(active<IMAGE_REQUEST_CONCURRENCY&&queue.length){
       const item=queue.shift();active++;
       const image=new Image();image.decoding='async';let settled=false;
-      const finish=(error)=>{if(settled)return;settled=true;active--;inFlight.delete(item.src);if(error){failed.set(item.src,Date.now()+NEGATIVE_CACHE_TTL);item.reject(error);}else{rememberLoaded(item.src,image);item.resolve(image);}pump();};
+      const finish=(error)=>{if(settled)return;settled=true;active--;if(inFlight.get(item.src)!==item.promise){item.reject(cancelled());pump();return;}inFlight.delete(item.src);if(error){failed.set(item.src,Date.now()+NEGATIVE_CACHE_TTL);item.reject(error);}else{rememberLoaded(item.src,image);item.resolve(image);}pump();};
       image.onload=()=>{const decode=image.decode?.();if(decode&&typeof decode.then==='function')decode.catch(()=>{}).then(()=>finish()).catch(()=>finish());else finish();};
       image.onerror=()=>finish(new Error('Image could not be loaded.'));
-      image.src=item.src;
+      if(window.BLModelImageCache)void window.BLModelImageCache.getThumbnail({source:item.src}).then(url=>{image.src=url;}).catch(finish);
+      else image.src=item.src;
     }
   };
   const load=(src,{warmup=0}={})=>{
@@ -3384,7 +3387,8 @@ const BLImageRuntime=(()=>{
     const failedUntil=failed.get(value);if(failedUntil){if(failedUntil>Date.now())return Promise.reject(new Error('Image is negatively cached.'));failed.delete(value);}
     if(loaded.has(value))return Promise.resolve(null);
     if(inFlight.has(value))return inFlight.get(value);
-    const promise=new Promise((resolve,reject)=>queue.push({src:value,resolve,reject,warmup}));inFlight.set(value,promise);pump();return promise;
+    const item={src:value,warmup};
+    const promise=new Promise((resolve,reject)=>{item.resolve=resolve;item.reject=reject;queue.push(item);});item.promise=promise;inFlight.set(value,promise);pump();return promise;
   };
   const waitForExistingImage=(img,src)=>{
     if(img?.complete&&img.naturalWidth>0)return Promise.resolve(null);
@@ -3397,16 +3401,18 @@ const BLImageRuntime=(()=>{
       if(img.complete&&img.naturalWidth>0)done();
     });
   };
-  // Önceki oturumdan bilinen görsel gerçek kaynağıyla basıldı: yüklenince
-  // kaydedilir; yüklenemezse yer tutucuya döner ve bir daha doğrudan basılmaz.
+  // Önceki oturumdan bilinen görselin önizlemesi görünürlük beklemez;
+  // yüklenemezse yer tutucuya döner ve kalıcı bilinenler listesinden düşer.
   const watchPriorImage=img=>{
     const src=key(img.dataset.src);
     const done=()=>{if(img.dataset.src!==src)return;delete img.dataset.blImagePrior;img.dataset.blImageLoaded='1';img.dataset.blImageFailed='0';rememberLoaded(src);};
-    const fail=()=>{
+    const fail=error=>{
+      if(error?.code==='BL_IMAGE_CANCELLED')return;
       if(img.dataset.src!==src)return;
       delete img.dataset.blImagePrior;forgetKnown(src);failed.set(src,Date.now()+NEGATIVE_CACHE_TTL);img.dataset.blImageFailed='1';
       try{if(typeof kolImagePlaceholderSvg==='function')img.src=kolImagePlaceholderSvg();}catch(_){}
     };
+    if(window.BLModelImageCache){void load(src).then(()=>window.BLModelImageCache.bind(img)).then(()=>{if(img.dataset.src===src)done();}).catch(fail);return;}
     if(img.complete){if(img.naturalWidth>0)done();else if(img.currentSrc||img.getAttribute('src'))fail();return;}
     img.addEventListener('load',()=>{if(img.naturalWidth>0)done();else fail();},{once:true});
     img.addEventListener('error',fail,{once:true});
@@ -3415,16 +3421,19 @@ const BLImageRuntime=(()=>{
   const loadTableImage=img=>{
     const src=key(img?.dataset?.src);if(!img||!isImageSource(src)||img.dataset.blImageLoaded==='1'||img.dataset.blImageFailed==='1')return;
     const markFailed=()=>{if(img.isConnected&&img.dataset.src===src)img.dataset.blImageFailed='1';};
+    const markLoadFailed=error=>{if(error?.code!=='BL_IMAGE_CANCELLED')markFailed();};
+    if(img.closest?.('#blSharedDetailDrawer')&&window.BLModelImageCache){void window.BLModelImageCache.preloadOriginal(window.BLModelImageCache.fromImage(img)).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markLoadFailed);return;}
     /* Bu oturumda zaten yüklenmiş görsel, sayfa/sekme değişip tablo yeniden
        çizildiğinde yer tutucuyla beklemez: kaynak hemen bağlanır ve tarayıcı
        önbelleğinden gelir. Eskiden her yeniden çizimde görseller bir an
        kayboluyordu. */
-    if(loaded.has(src)){img.src=src;img.dataset.blImageLoaded='1';img.dataset.blImageFailed='0';return;}
+    const preview=previewSource(src);
+    if(loaded.has(src)&&preview){img.src=preview;img.dataset.blImageLoaded='1';img.dataset.blImageFailed='0';return;}
     // Yer tutucunun (data: SVG) load olayı sayılmaz; yalnız gerçek kaynak.
     let absolute=src;try{absolute=new URL(src,location.href).href;}catch(_){}
     img.addEventListener('load',()=>{if(img.dataset.src===src&&img.naturalWidth>0&&(img.currentSrc===absolute||img.src===absolute))rememberLoaded(src);});
-    if(window.BLModelImageCache){void window.BLModelImageCache.bind(img).catch(markFailed);return;}
-    void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markFailed);
+    if(window.BLModelImageCache){void load(src).then(()=>window.BLModelImageCache.bind(img)).catch(markLoadFailed);return;}
+    void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markLoadFailed);
   };
   const ensureObserver=()=>{
     if(observer||typeof IntersectionObserver==='undefined')return;
@@ -3451,7 +3460,8 @@ const BLImageRuntime=(()=>{
     const list=Array.isArray(srcs)?srcs:[srcs],all=new Set();
     // Eski adresler (/api/cp-images, ?v=) ve tek URL biçimi birlikte düşürülür.
     for(const src of list){const value=key(src);if(!value)continue;all.add(value);const canonical=key(modelImageUrl(value));if(canonical)all.add(canonical);}
-    for(const value of all){loaded.delete(value);failed.delete(value);dropWarm(value);forgetKnown(value);}
+    for(const value of all){loaded.delete(value);failed.delete(value);inFlight.delete(value);dropWarm(value);forgetKnown(value);}
+    for(let i=queue.length-1;i>=0;i--)if(all.has(queue[i].src)){const item=queue.splice(i,1)[0];item.reject(cancelled());}
     void window.BLModelImageCache?.invalidate([...all]).catch(()=>{});
   };
   /* Tablo yeniden çizilirken değişmeyen satırın <img> öğesi yerinde kalır:
@@ -3538,13 +3548,14 @@ const BLImageRuntime=(()=>{
     // inFlight'ta hiç çözülmeyen bir promise kalır ve aynı kaynak bir daha
     // hiç yüklenemezdi. Negatif önbelleğe yazılmaz: bu bir hata değil, iptal.
     warmupToken++;
-    while(queue.length){const item=queue.shift();inFlight.delete(item.src);item.reject(new Error('Model image state was reset.'));}
+    while(queue.length){const item=queue.shift();inFlight.delete(item.src);item.reject(cancelled());}
+    inFlight.clear();
     loaded.clear();failed.clear();warm.clear();warmBytes=0;
     known.clear();clearTimeout(knownSaveTimer);knownSaveTimer=0;try{storage()?.removeItem(KNOWN_IMAGES_KEY);}catch(_){}
     try{await window.BLModelImageCache?.clearAll?.();}catch(_){}
     return true;
   };
-  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,WARM_IMAGE_LIMIT,WARM_IMAGE_BYTE_BUDGET,inFlight,failed,observe,release,load,isLoaded,loadState,isWarm:src=>warm.has(key(src)),adoptLoaded,warmup,cancelWarmup,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,stats:()=>({loaded:loaded.size,warm:warm.size,warmBytes,known:known.size,queued:queue.length,active})};
+  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,WARM_IMAGE_LIMIT,WARM_IMAGE_BYTE_BUDGET,inFlight,failed,observe,release,load,isLoaded,loadState,previewSource,isWarm:src=>warm.has(key(src)),adoptLoaded,warmup,cancelWarmup,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,stats:()=>({loaded:loaded.size,warm:warm.size,warmBytes,known:known.size,queued:queue.length,active})};
 })();
 window.BLImageRuntime=BLImageRuntime;
 // CP ve Orders satırının görsel kaynağı: kanonik kayıt biliniyorsa oradan,
@@ -3557,9 +3568,9 @@ function tableRowImageSource(row){
 }
 function cpImageCellHtml(row){
   const dims=cpImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
-  // Bu oturumda yüklenmiş görsel yer tutucuyla başlamaz: gerçek kaynakla ve
+  // Bu oturumda yüklenmiş görsel yer tutucuyla başlamaz: önizlemeyle ve
   // hemen (eager) basılır. Bilinmeyen görseller lazy yolda kalır.
-  const known=has?BLImageRuntime.loadState(source):'',src=known?source:cpImagePlaceholder();
+  const preview=has?BLImageRuntime.previewSource(source):'',known=has?(preview?BLImageRuntime.loadState(source):BLImageRuntime.loadState(source)?'prior':''):'',src=known&&preview?preview:cpImagePlaceholder();
   // 'prior': önceki oturumdan bilinen görsel disk önbelleğinden hemen okunur.
   const loadAttrs=known==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':known==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"';
   return `<td class="cpPictureCell"><img src="${escapeHtml(src)}" data-src="${escapeHtml(source)}" data-image-key="${escapeHtml(modelImageCacheKey(modelId,colourCode))}" data-model-id="${escapeHtml(modelId)}" data-colour-code="${escapeHtml(colourCode)}" data-id="${row._id}" data-has-image="${has?'1':'0'}" data-reuse-key="cp" data-img-box="${has?`${dims.w}x${dims.h}`:'0'}" ${loadAttrs} class="cpThumb kolThumb" aria-label="${escapeHtml(appLang==='en'?'Click: select paste target · Double-click: choose image · Right-click: remove or fetch from PLM':'Tek tık: yapıştırma hedefi · Çift tık: görsel seç · Sağ tık: kaldır veya PLM\'den çağır')}" style="max-width:${has?dims.w:22}px;max-height:${has?dims.h:22}px;opacity:${has?1:.55};"></td>`;
@@ -8271,7 +8282,7 @@ function _copyImageFitBox(naturalWidth,naturalHeight,cellWidth,cellHeight,paddin
 function _copyImageNaturalSize(dataUrl,thumb,fallbackWidth,fallbackHeight,sizeCache){
   const fallback={width:Math.max(1,Number(fallbackWidth)||1),height:Math.max(1,Number(fallbackHeight)||1)};
   const thumbWidth=Number(thumb?.naturalWidth)||0,thumbHeight=Number(thumb?.naturalHeight)||0;
-  if(thumbWidth>0&&thumbHeight>0)return Promise.resolve({width:thumbWidth,height:thumbHeight});
+  if(thumbWidth>0&&thumbHeight>0&&!/^blob:/.test(thumb?.currentSrc||thumb?.src||''))return Promise.resolve({width:thumbWidth,height:thumbHeight});
   const key=String(dataUrl||'');
   if(sizeCache&&sizeCache.has(key))return Promise.resolve(sizeCache.get(key));
   if(!/^data:image\//i.test(key)||typeof Image!=='function')return Promise.resolve(fallback);
@@ -9617,7 +9628,7 @@ function filteredOrders(){
 }
 function ordersImageCellHtml(row){
   const dims=ordersImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
-  const known=has?BLImageRuntime.loadState(source):'',src=known?source:cpImagePlaceholder();
+  const preview=has?BLImageRuntime.previewSource(source):'',known=has?(preview?BLImageRuntime.loadState(source):BLImageRuntime.loadState(source)?'prior':''):'',src=known&&preview?preview:cpImagePlaceholder();
   // 'prior': önceki oturumdan bilinen görsel disk önbelleğinden hemen okunur.
   const loadAttrs=known==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':known==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"';
   return `<td class="cpPictureCell"><img src="${escapeHtml(src)}" data-src="${escapeHtml(source)}" data-image-key="${escapeHtml(modelImageCacheKey(modelId,colourCode))}" data-model-id="${escapeHtml(modelId)}" data-colour-code="${escapeHtml(colourCode)}" data-id="${row._id}" data-has-image="${has?'1':'0'}" data-reuse-key="orders" data-img-box="${has?`${dims.w}x${dims.h}`:'0'}" ${loadAttrs} class="cpThumb kolThumb" aria-label="${escapeHtml(appLang==='en'?'Model image · Right-click to remove':'Model görseli · Kaldırmak için sağ tıklayın')}" style="max-width:${has?dims.w:22}px;max-height:${has?dims.h:22}px;opacity:${has?1:.55};"></td>`;
@@ -28968,12 +28979,12 @@ function renderKol(){
       const collectionImageSource=kolModelImageSource(r);
       const hasCollectionImage=Boolean(collectionImageSource);
       // Tek URL: Koleksiyon'un eski ?v= / cp-images adresleri CP ile aynı biçime iner.
-      const collectionImageUrl=modelImageUrl(collectionImageSource),collectionImageKnown=hasCollectionImage?BLImageRuntime.loadState(collectionImageUrl):'';
+      const collectionImageUrl=modelImageUrl(collectionImageSource),collectionImagePreview=hasCollectionImage?BLImageRuntime.previewSource(collectionImageUrl):'',collectionImageKnown=hasCollectionImage?(collectionImagePreview?BLImageRuntime.loadState(collectionImageUrl):BLImageRuntime.loadState(collectionImageUrl)?'prior':''):'';
       const collectionImageTitle=appLang==='en'
         ? 'Click: select paste target · Double-click: choose image · Right-click: remove or fetch from PLM'
         : 'Tek tık: yapıştırma hedefi · Çift tık: görsel seç · Sağ tık: kaldır veya PLM\'den çağır';
       const collectionModelId=r.plmId||r.modelKod||r.id,collectionColourCode=r.colourCode||'';
-      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown?collectionImageUrl:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};cursor:pointer;object-fit:contain;"></td>`;
+      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown&&collectionImagePreview?collectionImagePreview:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};cursor:pointer;object-fit:contain;"></td>`;
     }
     const confirmed=kolConfirmedPricing(r),confirmedDisplay=kolConfirmedDisplay(r);
     const effectivePricing=kolEffectivePricing(r),validPrices=kolManufacturers.map(m=>kolParseMoneyNum(effectivePricing&&effectivePricing[m.name])).filter(n=>Number.isFinite(n)&&n>0);

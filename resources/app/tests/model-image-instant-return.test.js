@@ -118,7 +118,7 @@ test('ısıtma iptali kuyruğu negatif önbelleğe yazmadan çözer; bekleyenler
 function cellHarness(knownSources, priorSources = new Set()) {
   const names = ['tableRowImageSource', 'cpImageCellHtml', 'ordersImageCellHtml'];
   const body = names.map(name => extractFunction(APP, name)).join('\n');
-  const BLImageRuntime = { loadState: src => (knownSources.has(src) ? 'loaded' : priorSources.has(src) ? 'prior' : '') };
+  const BLImageRuntime = { previewSource: src => knownSources.has(src) ? 'blob:preview' : '', loadState: src => (knownSources.has(src) ? 'loaded' : priorSources.has(src) ? 'prior' : '') };
   return new Function('BLImageRuntime', 'modelImageUrl', 'canonicalModelImageSource', 'canonicalModelImageKnown',
     'cpImageDims', 'ordersImageDims', 'cpImagePlaceholder', 'escapeHtml', 'modelImageCacheKey', 'appLang',
     `${body};return {cpImageCellHtml,ordersImageCellHtml};`)(
@@ -131,7 +131,7 @@ const ROW = { _id: 7, 'PLM ID': '215013', 'C.Code': 'S01', _imageRef: 'ci_1', _i
 test('bilinen kaynakla CP/Orders hücresi gerçek src + eager üretir; bilinmeyen yer tutucu + lazy kalır', () => {
   const known = cellHarness(new Set(['/api/collection-images/ci_1']));
   for (const html of [known.cpImageCellHtml(ROW), known.ordersImageCellHtml(ROW)]) {
-    assert.match(html, /<img src="\/api\/collection-images\/ci_1"/);
+    assert.match(html, /<img src="blob:preview"/);
     assert.match(html, /data-src="\/api\/collection-images\/ci_1"/);
     assert.match(html, /loading="eager"/);
     assert.match(html, /fetchpriority="auto"/);
@@ -140,7 +140,7 @@ test('bilinen kaynakla CP/Orders hücresi gerçek src + eager üretir; bilinmeye
   }
   const prior = cellHarness(new Set(), new Set(['/api/collection-images/ci_1']));
   for (const html of [prior.cpImageCellHtml(ROW), prior.ordersImageCellHtml(ROW)]) {
-    assert.match(html, /<img src="\/api\/collection-images\/ci_1"/);
+    assert.match(html, /<img src="data:image\/svg\+xml;utf8,placeholder"/);
     assert.match(html, /loading="eager" fetchpriority="auto" data-bl-image-prior="1"/);
     assert.doesNotMatch(html, /data-bl-image-loaded/);
   }
@@ -176,7 +176,7 @@ test('tek URL yardımcısı CP ve Koleksiyon için aynı adresi verir; görsel d
 test('CP, Orders, Koleksiyon ve Quotations/detay görselleri aynı yardımcıdan geçer', () => {
   assert.match(extractFunction(APP, 'tableRowImageSource'), /modelImageUrl\(/);
   for (const name of ['cpImageCellHtml', 'ordersImageCellHtml']) assert.match(extractFunction(APP, name), /tableRowImageSource\(row\)/);
-  assert.match(APP, /const collectionImageUrl=modelImageUrl\(collectionImageSource\),collectionImageKnown=hasCollectionImage\?BLImageRuntime\.loadState\(collectionImageUrl\):'';/);
+  assert.match(APP, /collectionImagePreview=hasCollectionImage\?BLImageRuntime\.previewSource\(collectionImageUrl\):''/);
   assert.match(APP, /data-src="\$\{escapeHtml\(collectionImageUrl\)\}"/);
   assert.match(extractFunction(APP, 'detailImageThumbHtml'), /const source=modelImageUrl\(norm\(url\)\);/);
   const sync = APP.slice(APP.indexOf('function applySyncedPlmImages'), APP.indexOf('function notifyPlmOperationStarted'));

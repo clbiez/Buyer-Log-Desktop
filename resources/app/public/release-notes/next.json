@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Tablo görsellerinde daha düşük bellek kullanımı",
+    "en": "Lower memory use for table images"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tablolarda küçük önizlemeler kullanılır; büyük görsel ve dışa aktarma orijinali korur.",
+    "en": "Tables use small previews; large views and exports retain the original."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "int08-table-image-previews",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri",
+        "en": "Model images"
+      },
+      "title": {
+        "tr": "Tablo görselleri küçük önizlemelerden yüklenir",
+        "en": "Table images load from small previews"
+      },
+      "body": {
+        "tr": "Model görseli tablolarda en uzun kenarı 256 piksel olan bir önizlemeden gösterilir. Önizleme cihazda saklanır ve sayfaya dönüşte yeniden kullanılır. Büyük önizleme, detay çekmecesi, pano ve Excel dışa aktarma orijinal görseli kullanır.",
+        "en": "Tables display model images from a preview with a maximum edge of 256 pixels. The preview is stored on the device and reused when returning to the page. Large previews, the detail drawer, clipboard and Excel exports use the original image."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "int08-table-image-previews.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler tablosunda sentetik model görseli önizlemeleri",
+          "en": "Synthetic model image previews in the actual Buyer Log Orders table"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, sentetik demo veri. Bellek, decode ve çıktı eşdeğerliği ayrı ölçüm ve testlerle doğrulanır.",
+          "en": "Actual post-change application with synthetic demo data. Memory, decoding and output equivalence are verified separately by measurements and tests."
+        }
+      }
+    }
+  ]
 }

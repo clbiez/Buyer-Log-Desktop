@@ -58,7 +58,7 @@ test('/api ara katmanı Pragma eklemeye devam eder; görsel rotaları ondan SONR
 test('daha önce yüklenmiş tablo görseli yeniden çizimde yer tutucuyla beklemez', () => {
   const start = APP.indexOf('const loadTableImage=img=>{');
   const loadTableImage = APP.slice(start, APP.indexOf('const autoIdentityFromImage=', start));
-  assert.match(loadTableImage, /if\(loaded\.has\(src\)\)\{img\.src=src;img\.dataset\.blImageLoaded='1'/);
+  assert.match(loadTableImage, /if\(loaded\.has\(src\)&&preview\)\{img\.src=preview;img\.dataset\.blImageLoaded='1'/);
   assert.match(loadTableImage, /rememberLoaded\(src\)/, 'bağlanan görsel yüklendiğinde hatırlanmalı');
   assert.match(loadTableImage, /img\.currentSrc===absolute\|\|img\.src===absolute/, 'yer tutucunun load olayı sayılmamalı');
 
