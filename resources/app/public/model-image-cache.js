@@ -7,8 +7,8 @@
 
   options=options||{};
 
-  const CACHE_NAME='buyer-log-model-thumbnails-v1';
-  const THUMB_MAX_DIMENSION=Math.max(32,Number(options.thumbnailMaxDimension)||96);
+  const CACHE_NAME='buyer-log-model-thumbnails-v2';
+  const THUMB_MAX_DIMENSION=Math.min(256,Math.max(32,Number(options.thumbnailMaxDimension)||256));
   const THUMB_MEMORY_LIMIT=Math.max(1,Number(options.thumbnailMemoryLimit)||256);
   const ORIGINAL_MEMORY_LIMIT=Math.max(1,Number(options.originalMemoryLimit)||24);
   const DISK_LIMIT=Math.max(20,Number(options.diskLimit)||600);
@@ -135,12 +135,15 @@
     const modelIdentity=identity(modelId||source,colourCode),version=sourceHash(source);
     return {source,modelId,colourCode,identity:modelIdentity,version,key:`${modelIdentity}\u0000${version}`};
   };
-  const cacheRequest=desc=>{
+  const cacheRequest=async desc=>{
     if(!RequestCtor)return null;
     const origin=clean(env.location&&env.location.origin)||'http://localhost';
-    return new RequestCtor(`${origin}/.buyer-log-cache/model-thumb/${encodeURIComponent(desc.identity)}/${desc.version}.webp`,{credentials:'same-origin'});
+    const crypto=env.crypto||globalThis.crypto;
+    const digest=crypto?.subtle?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${THUMB_MAX_DIMENSION}:${desc.source}`))),byte=>byte.toString(16).padStart(2,'0')).join(''):encodeURIComponent(desc.source);
+    return new RequestCtor(`${origin}/.buyer-log-cache/model-thumb/${digest}/${desc.version}.webp`,{credentials:'same-origin'});
   };
   const openDisk=async()=>env.caches&&typeof env.caches.open==='function'?env.caches.open(CACHE_NAME):null;
+  const cancelled=()=>Object.assign(new Error('Model image state was reset.'),{code:'BL_IMAGE_CANCELLED'});
 
   async function browserThumbnailer(blob){
     if(typeof env.createImageBitmap==='function'&&typeof env.OffscreenCanvas==='function'){
@@ -151,7 +154,7 @@
         const canvas=new env.OffscreenCanvas(width,height),ctx=canvas.getContext('2d',{alpha:false});
         if(!ctx)throw new Error('Thumbnail canvas is unavailable.');
         ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);ctx.drawImage(bitmap,0,0,width,height);
-        return canvas.convertToBlob({type:'image/webp',quality:.72});
+        return canvas.convertToBlob({type:'image/webp',quality:.85});
       }finally{try{bitmap.close?.();}catch(_){}}
     }
     if(!env.document||!env.Image||!env.URL?.createObjectURL)throw new Error('WEBP thumbnail conversion is unavailable.');
@@ -163,7 +166,7 @@
       const canvas=env.document.createElement('canvas');canvas.width=width;canvas.height=height;
       const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('Thumbnail canvas is unavailable.');
       ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);ctx.drawImage(image,0,0,width,height);
-      return new Promise((resolve,reject)=>canvas.toBlob(out=>out?resolve(out):reject(new Error('WEBP thumbnail encoding failed.')),'image/webp',.72));
+      return new Promise((resolve,reject)=>canvas.toBlob(out=>out?resolve(out):reject(new Error('WEBP thumbnail encoding failed.')),'image/webp',.85));
     }finally{try{env.URL.revokeObjectURL(inputUrl);}catch(_){}}
   }
   const thumbnailer=typeof options.thumbnailer==='function'?options.thumbnailer:browserThumbnailer;
@@ -174,11 +177,27 @@
     for(let i=0;i<Math.max(0,keys.length-DISK_LIMIT);i++)await cache.delete(keys[i]);
   }
   async function getThumbnail(input){
-    const desc=descriptor(input);if(!isSource(desc.source))return '';
-    // Table cells intentionally use the stored source as-is. Creating a canvas
-    // thumbnail here delayed every import and silently degraded the artwork.
-    return desc.source;
+    const desc=descriptor({...input,source:imageUrl(input&&input.source)});if(!isSource(desc.source))return '';
+    const hit=touch(thumbnailMemory,desc.source);if(hit)return hit.url;
+    if(thumbnailInFlight.has(desc.source))return thumbnailInFlight.get(desc.source);
+    const pending=(async()=>{
+      let disk=null,blob=null;const request=await cacheRequest(desc);
+      try{disk=await openDisk();const response=request&&await disk?.match(request);if(response)blob=await response.blob();}catch(_){}
+      if(!blob){
+        const response=await env.fetch(desc.source,{cache:'force-cache',credentials:'same-origin'});
+        if(!response?.ok)throw new Error('Image could not be loaded.');
+        blob=await thumbnailer(await response.blob());
+        if(thumbnailInFlight.get(desc.source)!==pending)throw cancelled();
+        try{if(disk&&request&&ResponseCtor){await disk.put(request,new ResponseCtor(blob));await trimDisk(disk);}}catch(_){}
+      }
+      if(thumbnailInFlight.get(desc.source)!==pending){try{if(disk&&request)await disk.delete(request);}catch(_){}throw cancelled();}
+      const url=env.URL.createObjectURL(blob);
+      remember(thumbnailMemory,desc.source,{url,source:desc.source,identity:desc.identity},THUMB_MEMORY_LIMIT,revoke);
+      return url;
+    })().finally(()=>{if(thumbnailInFlight.get(desc.source)===pending)thumbnailInFlight.delete(desc.source);});
+    thumbnailInFlight.set(desc.source,pending);return pending;
   }
+  const peekThumbnail=source=>touch(thumbnailMemory,imageUrl(source))?.url||'';
   async function preloadOriginal(input){
     const desc=descriptor(input);if(!isSource(desc.source))return '';
     if(touch(originalMemory,desc.key))return desc.source;
@@ -248,9 +267,10 @@
   async function invalidate(input){
     const list=Array.isArray(input)?input:[input],sources=new Set(),identities=new Set();
     for(const item of list){
-      if(typeof item==='string')sources.add(clean(item));
-      else if(item){const desc=descriptor(item);sources.add(desc.source);identities.add(desc.identity);}
+      if(typeof item==='string'){sources.add(clean(item));sources.add(imageUrl(item));}
+      else if(item){const desc=descriptor(item);sources.add(desc.source);sources.add(imageUrl(desc.source));identities.add(desc.identity);}
     }
+    for(const source of sources)thumbnailInFlight.delete(source);
     for(const [key,entry] of [...thumbnailMemory])if(sources.has(entry.source)||identities.has(entry.identity)){thumbnailMemory.delete(key);revoke(entry);}
     for(const [key,entry] of [...originalMemory])if(sources.has(entry.source)||identities.has(entry.identity))originalMemory.delete(key);
     const cache=await openDisk();if(!cache||typeof cache.keys!=='function')return;
@@ -277,5 +297,5 @@
     return true;
   }
   const stats=()=>({thumbnailMemoryEntries:thumbnailMemory.size,originalMemoryEntries:originalMemory.size,thumbnailInFlight:thumbnailInFlight.size,originalInFlight:originalInFlight.size});
-  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
+  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
 });

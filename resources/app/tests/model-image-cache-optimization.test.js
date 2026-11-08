@@ -55,7 +55,7 @@ test('model görsel anahtarı ModelID + ColourCode ile kararlı üretilir', () =
   assert.equal(cache.identity('Model 42', ''), 'MODEL 42|');
 });
 
-test('tablo alanı kaynak görsel URL\'sini doğrudan kullanır ve thumbnail üretmez', async () => {
+test('tablo önizlemesi tek kez üretilir ve diskten tekrar kullanılır', async () => {
   const counters = { fetches: 0, created: 0, revoked: 0, conversions: 0 };
   const disk = fakeCacheStorage();
   const thumbnailer = async blob => {
@@ -67,17 +67,19 @@ test('tablo alanı kaynak görsel URL\'sini doğrudan kullanır ve thumbnail ür
   const request = { modelId: '2108736', colourCode: 'BLUE-01', source: '/api/cp-images/ci_1' };
   const [a, b] = await Promise.all([first.getThumbnail(request), first.getThumbnail(request)]);
   assert.equal(a, b);
-  assert.equal(a, request.source);
-  assert.equal(counters.fetches, 0);
-  assert.equal(counters.conversions, 0);
+  assert.match(a, /^blob:/);
+  assert.equal(counters.fetches, 1);
+  assert.equal(counters.conversions, 1);
 
   const reopened = createModelImageCache(fakeEnvironment(disk, counters), { thumbnailer });
   const fromDisk = await reopened.getThumbnail(request);
-  assert.equal(fromDisk, request.source);
-  assert.equal(disk.entries.size, 0);
+  assert.match(fromDisk, /^blob:/);
+  assert.equal(counters.fetches, 1);
+  assert.equal(counters.conversions, 1);
+  assert.equal(disk.entries.size, 1);
 });
 
-test('tablo thumbnail yolu ham source kullanır; hover original cache LRU ile sınırlı kalır', async () => {
+test('tablo preview ve hover original cache ayrı LRU sınırlarında kalır', async () => {
   const counters = { fetches: 0, created: 0, revoked: 0, conversions: 0 };
   const env = fakeEnvironment(fakeCacheStorage(), counters);
   const cache = createModelImageCache(env, {
@@ -86,12 +88,12 @@ test('tablo thumbnail yolu ham source kullanır; hover original cache LRU ile s�
     thumbnailer: async () => new Blob(['thumb'], { type: 'image/webp' }),
   });
   const base = { modelId: 'M1', colourCode: 'C1' };
-  assert.equal(await cache.getThumbnail({ ...base, source: '/img/old' }), '/img/old');
-  assert.equal(await cache.getThumbnail({ ...base, source: '/img/new' }), '/img/new');
+  assert.match(await cache.getThumbnail({ ...base, source: '/img/old' }), /^blob:/);
+  assert.match(await cache.getThumbnail({ ...base, source: '/img/new' }), /^blob:/);
   await cache.getThumbnail({ modelId: 'M2', colourCode: 'C2', source: '/img/two' });
-  assert.equal(cache.stats().thumbnailMemoryEntries, 0, 'table yolu artık object URL thumbnail cache üretmemeli');
-  assert.equal(counters.created, 0);
-  assert.equal(counters.revoked, 0);
+  assert.equal(cache.stats().thumbnailMemoryEntries, 2, 'preview LRU sınırı korunur');
+  assert.equal(counters.created, 3);
+  assert.equal(counters.revoked, 1);
 
   await cache.preloadOriginal({ ...base, source: '/img/new' });
   await cache.preloadOriginal({ modelId: 'M2', colourCode: 'C2', source: '/img/two' });
@@ -168,17 +170,17 @@ test('Collection, CP, Orders, Backlog, LFL, OAB ve quotation ortak thumbnail ür
   assert.match(QUOTATIONS, /BLImageRuntime\?\.observe\?\.\(img\)/);
 });
 
-test('bind ham görseli anında tablo hücresine bağlar ve invalidate çalışır', async () => {
+test('bind 256 px önizlemeyi tabloya bağlar ve invalidate temizler', async () => {
   const counters = { fetches: 0, created: 0, revoked: 0, conversions: 0, closed: 0 };
   const disk = fakeCacheStorage(), env = fakeEnvironment(disk, counters);
-  env.createImageBitmap = async () => ({ width: 240, height: 120, close() { counters.closed++; } });
+  env.createImageBitmap = async () => ({ width: 2400, height: 1200, close() { counters.closed++; } });
   env.OffscreenCanvas = class FakeCanvas {
     constructor(width, height) { this.width = width; this.height = height; }
     getContext() { return { fillStyle: '', fillRect() {}, drawImage() {} }; }
     async convertToBlob(options) {
       counters.conversions++;
-      assert.equal(this.width, 96);
-      assert.equal(this.height, 48);
+      assert.equal(this.width, 256);
+      assert.equal(this.height, 128);
       assert.equal(options.type, 'image/webp');
       return new Blob(['webp'], { type: 'image/webp' });
     }
@@ -192,10 +194,11 @@ test('bind ham görseli anında tablo hücresine bağlar ve invalidate çalış�
   const url = await cache.bind(img);
   assert.equal(img.src, url);
   assert.equal(img.dataset.blImageLoaded, '1');
-  assert.equal(url, '/api/collection-images/ci_9');
-  assert.equal(counters.conversions, 0);
-  assert.equal(counters.closed, 0);
-  assert.equal(disk.entries.size, 0);
+  assert.match(url, /^blob:/);
+  assert.equal(img.dataset.src, '/api/collection-images/ci_9');
+  assert.equal(counters.conversions, 1);
+  assert.equal(counters.closed, 1);
+  assert.equal(disk.entries.size, 1);
 
   await cache.invalidate('/api/collection-images/ci_9');
   assert.equal(disk.entries.size, 0);

@@ -183,11 +183,13 @@ function detailModule(){
   return '';
 }
 function lookupValue(col,row){
-  const refs=fieldRefs(col),sources=rowSources(row);
-  const canonical=root.BLCanonicalFields,moduleId=detailModule();
-  const ids=[...new Set([col&&col.canonicalId,...refs.map(ref=>canonical?.canonicalId?.(moduleId,ref))].filter(Boolean))];
+  const plan=active?.backlogLookupPlans?.get(col),sources=rowSources(row);
+  const refs=plan?plan.refs:fieldRefs(col);
+  const canonical=root.BLCanonicalFields,moduleId=plan?plan.moduleId:detailModule();
+  const ids=plan?plan.ids:[...new Set([col&&col.canonicalId,...refs.map(ref=>canonical?.canonicalId?.(moduleId,ref))].filter(Boolean))];
   const token=canonical&&canonical.token?canonical.token:(value=>String(value==null?'':value).toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim());
-  const wanted=[...new Set(refs.map(token).filter(Boolean))];
+  const wanted=plan?plan.wanted:[...new Set(refs.map(token).filter(Boolean))];
+  if(!plan)active?.backlogLookupPlans?.set(col,{refs,moduleId,ids,wanted});
   // Dış satırın kanonik değeri, içteki eski ham anahtardan önce gelir.
   for(const source of sources){
     for(const ref of refs){
@@ -596,6 +598,7 @@ function registerClipboard(){
     rows:()=>active&&active.renderedRows||[],
     columns:()=>active&&active.renderedColumns||[],
     rowId:row=>rowKey(row),
+    ensureVisible:cell=>document.getElementById(CLIPBOARD_TABLE_ID)?._blEnsureVisible?.(cell),
     columnId:col=>col&&col.key,
     header:col=>col&&col.label||'',
     value:(row,col)=>reportCellText(col,row),
@@ -608,9 +611,16 @@ function registerClipboard(){
     },
   });
 }
+function releaseVirtualBody(table){
+  const body=table?.tBodies?.[0];
+  if(body){body._virtualState=null;if(typeof _pendingTableRenders!=='undefined')_pendingTableRenders.delete(body);}
+  if(table){table._blFinishNative=null;table._blEnsureVisible=null;table._blAfterVirtualPaint=null;}
+}
 function renderTable(){
   const host=document.getElementById('blSharedDetailDrawer');if(!host||!active)return;
   const table=host.querySelector('[data-bl-detail-table]'),summary=host.querySelector('[data-bl-detail-summary]');if(!table)return;
+  releaseVirtualBody(table);
+  active.backlogLookupPlans=active.source==='backlog'?new WeakMap():null;
   const rows=filteredRows(),columns=reportColumns(),helper=root.BLDetailImages;
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,hasRowActions=active.rowActions.length>0,colspan=Math.max(1,columns.length+(showImages?1:0)+(hasRowActions?1:0));
@@ -624,12 +634,59 @@ function renderTable(){
       '<span class="colResizer" data-bl-detail-col-resize="'+escapeHtml(col.key)+'" title="'+escapeHtml(L('Sürükleyerek genişliği ayarla · çift tıklayarak sığdır','Drag to resize · double-click to fit'))+'"></span></th>';
   }).join('')+'</tr>';
   bindColumnResize(table);
-  table.querySelector('tbody').innerHTML=shown.length?shown.map((row,index)=>'<tr data-id="'+escapeHtml(rowKey(row))+'">'+(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map((col,colIndex)=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'" data-key="'+escapeHtml(col.key)+'" data-r="'+index+'" data-c="'+colIndex+'">'+reportCell(col,row)+'</td>').join('')+'</tr>').join('')+
-    (rest>0?'<tr><td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td></tr>':''):
-    '<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
+  const rowCells=(row,index)=>(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map((col,colIndex)=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'" data-key="'+escapeHtml(col.key)+'" data-r="'+index+'" data-c="'+colIndex+'">'+reportCell(col,row)+'</td>').join('');
+  const rowHtml=(row,index)=>'<tr data-id="'+escapeHtml(rowKey(row))+'">'+rowCells(row,index)+'</tr>';
+  const moreCells='<td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td>';
+  const more=rest>0?{}:null,viewRows=more?shown.concat(more):shown;
+  const html=()=>shown.map(rowHtml).join('')+(more?'<tr data-bl-virtual-index="'+shown.length+'">'+moreCells+'</tr>':'');
+  const tbody=table.querySelector('tbody');
+  if(active.source==='backlog'&&rows.length>RENDER_CHUNK&&typeof root.setupVirtualizedBody==='function'&&root.BLGridClipboard?.withNativeSelection){
+    const cache=new Map();
+    root.setupVirtualizedBody(tbody,table,viewRows,(row,index)=>{
+      if(cache.has(index))return cache.get(index);
+      const tr=document.createElement('tr');tr.dataset.blVirtualIndex=String(index);
+      if(row!==more)tr.dataset.id=rowKey(row);
+      tr.innerHTML=row===more?moreCells:rowCells(row,index);cache.set(index,tr);return tr;
+    },colspan);
+    const virtual=tbody._virtualState,paint=virtual.paint,scrollHost=table.parentElement;
+    const paintGrid=()=>{
+      if(root.BLGridClipboard.state(CLIPBOARD_TABLE_ID)?.activeCell)root.BLGridClipboard.afterRender(CLIPBOARD_TABLE_ID);
+      tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+        const rowIndex=String(Number(tr.dataset.blVirtualIndex)+2);
+        if(tr.getAttribute('aria-rowindex')!==rowIndex)tr.setAttribute('aria-rowindex',rowIndex);
+        if(tr.getAttribute('role')!=='row')tr.setAttribute('role','row');
+        tr.querySelectorAll('td[data-key]').forEach((td,index)=>{
+          if(td.getAttribute('aria-rowindex')!==rowIndex)td.setAttribute('aria-rowindex',rowIndex);
+          if(td.getAttribute('role')!=='gridcell'){td.setAttribute('role','gridcell');td.setAttribute('aria-colindex',String(index+1));td.setAttribute('aria-selected','false');}
+        });
+      });
+    };
+    table._blAfterVirtualPaint=paintGrid;
+    const finish=()=>{
+      if(tbody._virtualState!==virtual)return;
+      tbody._virtualState=null;if(typeof _pendingTableRenders!=='undefined')_pendingTableRenders.delete(tbody);
+      tbody.innerHTML=html();tbody.querySelectorAll('tr').forEach((tr,index)=>{tr.dataset.blVirtualIndex=String(index);});cache.clear();paintGrid();
+    };
+    table._blFinishNative=()=>tbody._virtualState===virtual&&root.BLGridClipboard.withNativeSelection(table,finish);
+    if(typeof _pendingTableRenders!=='undefined')_pendingTableRenders.set(tbody,()=>{if(!table._blFinishNative?.())finish();});
+    virtual.paint=(...args)=>{
+      if(table._blFinishNative())return;
+      paint(...args);paintGrid();
+      for(const index of cache.keys())if(index<virtual.renderedStart-15||index>=virtual.renderedEnd+15)cache.delete(index);
+    };
+    table._blEnsureVisible=cell=>{
+      if(tbody._virtualState!==virtual)return;
+      const index=shown.findIndex(row=>rowKey(row)===cell.rowId);
+      if(index<0)return;
+      const row=tbody.querySelector('tr[data-id="'+cell.rowId+'"]'),hostRect=scrollHost.getBoundingClientRect(),rowRect=row?.getBoundingClientRect();
+      if(rowRect&&rowRect.top>=hostRect.top+table.tHead.getBoundingClientRect().height&&rowRect.bottom<=hostRect.bottom)return;
+      scrollHost.scrollTop=index*virtual.rowHeight;virtual.paint();
+    };
+  }else tbody.innerHTML=shown.length?html():'<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
   renderReportStats(rows);syncFilterTools();registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows,imageIndex);
   registerClipboard();root.BLGridClipboard?.afterRender?.(CLIPBOARD_TABLE_ID);
+  table._blAfterVirtualPaint?.();
 }
 
 function downloadBuffer(buffer,name,mime){
@@ -735,6 +792,7 @@ async function exportExcel(mode='visible'){
 function render(){
   const host=ensureHost();if(!active){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');return;}
   root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:false});
+  releaseVirtualBody(host.querySelector('[data-bl-detail-table]'));
   host.innerHTML='<div class="blDetailDrawerBackdrop" data-bl-detail-close></div><section class="blDetailDrawerPanel" role="dialog" aria-modal="true" aria-labelledby="blDetailDrawerTitle">'+
     '<div class="blDetailResizeHandle" data-bl-detail-resize title="'+escapeHtml(L('Genişliği değiştirmek için sürükleyin','Drag to resize'))+'"></div>'+
     '<header class="blDetailDrawerHead"><div class="blDetailDrawerTitle"><b id="blDetailDrawerTitle">'+escapeHtml(active.title)+'</b><span data-bl-detail-summary></span></div>'+
@@ -851,13 +909,16 @@ function open(options){
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
-function close(options={}){if(active&&active.searchTimer)clearTimeout(active.searchTimer);active?.exportOperation?.cancel();if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:options.restoreFocus!==false});host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
+function close(options={}){releaseVirtualBody(document.getElementById(CLIPBOARD_TABLE_ID));if(active&&active.searchTimer)clearTimeout(active.searchTimer);active?.exportOperation?.cancel();if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:options.restoreFocus!==false});host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
 document.addEventListener('keydown',event=>{
   if(event.key!=='Escape'||!active)return;
   // Açık sütun filtresi paneli önce kapanır; çekmece ikinci Escape ile kapanır.
   if(document.querySelector('.colFilterPanel')){if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();return;}
   close();
 });
+document.addEventListener('copy',event=>{
+  if(!event.defaultPrevented&&!root.BLGridClipboard?.nativeEditingTarget(event.target))document.getElementById(CLIPBOARD_TABLE_ID)?._blFinishNative?.();
+},true);
 if(typeof root.MutationObserver==='function')new root.MutationObserver(()=>{if(active)render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 return {open,close,inferColumns,normalizeColumns,safeFilePart,isOpen:()=>Boolean(active)};
 });

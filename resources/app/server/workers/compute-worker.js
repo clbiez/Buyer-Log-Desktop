@@ -35,6 +35,11 @@ function legacyValue(module,values,params,source={}){
 }
 async function execute(task,data,transfer){
   if(task==='health')return {ok:true};
+  if(task==='local-db-snapshot'){
+    const state=v8.deserialize(Buffer.from(data.snapshotBytes));data.snapshotBytes=null;
+    const buffer=require('../lib/compute-ipc').takeEncodedBuffer(require('../lib/large-json').jsonToBuffer(state));
+    transfer.push(buffer);return {buffer,revision:state.revision};
+  }
   if(task==='seed-source'){
     const encoded=codec.encode({ownerId:data.ownerId,generation:data.generation,source:data.source,antrepoMetadata:data.antrepoMetadata});
     if(encoded.bytes.length>data.maxBytes)throw Object.assign(Error('Source replica byte admission exceeded'),{code:'COMPUTE_SOURCE_TOO_LARGE'});

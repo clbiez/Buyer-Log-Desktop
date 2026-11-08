@@ -34,7 +34,7 @@
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { withFileLeaseAsync, replaceFileWithRetry, getBuyerLogInstanceId } = require('./shared-file-transaction');
+const { withFileLeaseAsync, replaceFileWithRetry, getBuyerLogInstanceId, assertHeldFileLeases } = require('./shared-file-transaction');
 const { hubFiles } = require('./hub-dirent');
 
 const SCHEMA_VERSION = 2;
@@ -159,7 +159,7 @@ async function atomicJson(file, value) {
   const temporary = `${file}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
   try {
     const handle = await fsp.open(temporary, 'wx');
-    try { await handle.writeFile(JSON.stringify(value), 'utf8'); try { await handle.sync(); } catch (_) {} }
+    try { await handle.writeFile(JSON.stringify(value), 'utf8'); await handle.sync(); }
     finally { await handle.close(); }
     await replaceFileWithRetry(temporary, file);
   } finally { try { await fsp.unlink(temporary); } catch (_) {} }
@@ -387,64 +387,91 @@ function createSharedImageStore(options = {}) {
     } catch (_) { return false; }
   }
 
-  async function appendPack(root, deviceId, contentHash, mimeType, buffer) {
+  // One shard lease at a time, then its pack lease: the existing index →
+  // pack lock order remains acyclic for concurrent devices and old clients.
+  async function appendPackBatch(root, deviceId, contents) {
     const device = safeSegment(deviceId, 80) || 'unknown';
-    const packRoot = path.join(root, PACKS, device);
-    const headFile = path.join(packRoot, 'head.json');
+    const packRoot = path.join(root, PACKS, device), headFile = path.join(packRoot, 'head.json');
     return withFileLeaseAsync(headFile, async () => {
       await fsp.mkdir(packRoot, { recursive: true });
       const head = await readJsonSafe(headFile, null);
       let packNo = Math.max(1, Math.trunc(Number(head && head.packNo) || 1));
-      let packName = `pack-${String(packNo).padStart(6, '0')}.blpack`;
-      let packFile = path.join(packRoot, packName);
-      let size = 0;
-      try { size = (await fsp.stat(packFile)).size; } catch (_) { size = 0; }
-      if (size > 0 && size + buffer.length > MAX_PACK_BYTES) {
-        packNo += 1; packName = `pack-${String(packNo).padStart(6, '0')}.blpack`;
-        packFile = path.join(packRoot, packName); size = 0;
+      let handle = null, size = 0, packName = '', dirty = false;
+      const locators = new Map();
+      async function closePack() {
+        if (!handle) return;
+        const current = handle; handle = null;
+        try { if (dirty) { assertHeldFileLeases(); await current.sync(); assertHeldFileLeases(); } }
+        finally { await current.close(); }
+        dirty = false;
       }
-      const handle = await fsp.open(packFile, 'a+');
-      let offset = size;
       try {
-        const stat = await handle.stat(); offset = stat.size;
-        await handle.write(buffer, 0, buffer.length, null);
-        try { await handle.sync(); } catch (_) {}
-      } finally { await handle.close(); }
-      const relative = `${PACKS}/${device}/${packName}`;
-      await atomicJson(headFile, { schemaVersion: SCHEMA_VERSION, packNo, size: offset + buffer.length, updatedAt: new Date().toISOString() });
-      return { contentHash, mimeType: clean(mimeType, 60).toLowerCase(), bytes: buffer.length, objectPath: '', packPath: relative, packOffset: offset, packLength: buffer.length };
+        for (const content of contents) {
+          for (;;) {
+            if (!handle) {
+              packName = `pack-${String(packNo).padStart(6, '0')}.blpack`;
+              handle = await fsp.open(path.join(packRoot, packName), 'a+');
+              // The actual tail may exceed head.size after a crashed append.
+              size = (await handle.stat()).size;
+            }
+            if (!size || size + content.buffer.length <= MAX_PACK_BYTES) break;
+            await closePack(); packNo += 1;
+          }
+          const offset = size; let written = 0;
+          while (written < content.buffer.length) {
+            assertHeldFileLeases();
+            const result = await handle.write(content.buffer, written, content.buffer.length - written, null);
+            if (!result.bytesWritten) throw Object.assign(new Error('Pack write made no progress'), { code: 'EIO' });
+            written += result.bytesWritten; dirty = true;
+          }
+          size += written;
+          locators.set(content.contentHash, { contentHash: content.contentHash, mimeType: clean(content.mimeType, 60).toLowerCase(), bytes: written,
+            objectPath: '', packPath: `${PACKS}/${device}/${packName}`, packOffset: offset, packLength: written });
+        }
+        await closePack();
+        assertHeldFileLeases();
+        await atomicJson(headFile, { schemaVersion: SCHEMA_VERSION, packNo, size, updatedAt: new Date().toISOString() });
+        return locators;
+      } finally { if (handle) await handle.close(); }
     }, { timeoutMs: 15000, staleMs: 120000 });
   }
 
-  async function putPackedContent(root, deviceId, contentHash, mimeType, buffer) {
-    const indexFile = contentIndexFile(root, contentHash);
-    return withFileLeaseAsync(indexFile, async () => {
+  async function putPackedContents(root, deviceId, contents) {
+    const shards = new Map(), result = new Map();
+    for (const content of contents) {
+      const file = contentIndexFile(root, content.contentHash);
+      if (!shards.has(file)) shards.set(file, new Map());
+      if (!shards.get(file).has(content.contentHash)) shards.get(file).set(content.contentHash, content);
+    }
+    for (const [indexFile, unique] of shards) await withFileLeaseAsync(indexFile, async () => {
       const index = await readJsonSafe(indexFile, { schemaVersion: SCHEMA_VERSION, records: {} });
       index.records = index.records && typeof index.records === 'object' ? index.records : {};
-      let existing = normalizeContentLocator(index.records[contentHash]);
-      if (existing && await locatorUsable(root, existing)) return { locator: existing, reused: true };
-
-      // Lazy migration: before appending new bytes, index an existing v1 object
-      // or v2 pack locator from manifests if this content already exists.
-      try {
-        const legacy = (await legacyContentCache()).get(contentHash);
-        // Hash de doğrulanır: kalıcı silmede sıfırlanan bir pack dilimi başka
-        // cihazın eski manifestosunda hâlâ görünebilir; boyutu tutsa da
-        // içeriği gitmiştir ve yeniden kullanılamaz.
-        if (legacy && await locatorUsable(root, legacy) && await locatorIntact(root, legacy)) {
-          index.records[contentHash] = legacy;
-          index.schemaVersion = SCHEMA_VERSION; index.updatedAt = new Date().toISOString();
-          await atomicJson(indexFile, index);
-          return { locator: legacy, reused: true };
-        }
-      } catch (_) { /* index warm-up failure must not block a local publish */ }
-
-      const locator = await appendPack(root, deviceId, contentHash, mimeType, buffer);
-      index.records[contentHash] = locator;
-      index.schemaVersion = SCHEMA_VERSION; index.updatedAt = new Date().toISOString();
-      await atomicJson(indexFile, index);
-      return { locator, reused: false };
+      const missing = []; let changed = false;
+      for (const content of unique.values()) {
+        let existing = normalizeContentLocator(index.records[content.contentHash]);
+        if (existing && await locatorUsable(root, existing)) { result.set(content.contentHash, { locator: existing, reused: true }); continue; }
+        try {
+          const legacy = (await legacyContentCache()).get(content.contentHash);
+          if (legacy && await locatorUsable(root, legacy) && await locatorIntact(root, legacy)) existing = legacy;
+          else existing = null;
+        } catch (_) { existing = null; }
+        if (existing) {
+          index.records[content.contentHash] = existing; changed = true;
+          result.set(content.contentHash, { locator: existing, reused: true });
+        } else missing.push(content);
+      }
+      if (missing.length) {
+        const appended = await appendPackBatch(root, deviceId, missing);
+        for (const [hash, locator] of appended) { index.records[hash] = locator; result.set(hash, { locator, reused: false }); }
+        changed = true;
+      }
+      if (changed) {
+        assertHeldFileLeases();
+        index.schemaVersion = SCHEMA_VERSION; index.updatedAt = new Date().toISOString();
+        await atomicJson(indexFile, index);
+      }
     }, { timeoutMs: 20000, staleMs: 120000 });
+    return result;
   }
 
   /* Tek bir kimlik için en iyi PAYLAŞILAN kayıt. `source` verilirse KAYNAK SIKI
@@ -495,7 +522,7 @@ function createSharedImageStore(options = {}) {
 
     const revision = await nextRevision();
     const now = new Date().toISOString();
-    const prepared = [];
+    let prepared = [];
     let reused = 0;
     let skipped = 0;
 
@@ -522,17 +549,25 @@ function createSharedImageStore(options = {}) {
       if (!buffer || !buffer.length || buffer.length > MAX_OBJECT_BYTES) { skipped += 1; continue; }
       const contentHash = clean(entry.contentHash, 80).toLowerCase() || hashOf(buffer);
       if (!/^[0-9a-f]{64}$/.test(contentHash) || !extensionFor(entry.mimeType)) { skipped += 1; continue; }
-      const packed = await putPackedContent(root, deviceId, contentHash, entry.mimeType, buffer);
-      if (packed.reused) reused += 1;
-      const locator = packed.locator;
+      prepared.push({ entry, canonicalKey, source, contentHash, buffer, mimeType: entry.mimeType });
+    }
+    const packedContents = await putPackedContents(root, deviceId, prepared.filter(item => item.buffer));
+    const seen = new Set(), records = [];
+    for (const item of prepared) {
+      if (!item.buffer) { records.push(item); continue; }
+      const { entry, canonicalKey, source, contentHash, buffer } = item;
+      const packed = packedContents.get(contentHash), locator = packed.locator;
+      if (packed.reused || seen.has(contentHash)) reused += 1;
+      seen.add(contentHash);
       const record = normalizeRecord({
         ...entry, canonicalKey, source, contentHash, bytes: buffer.length,
         objectPath: locator.objectPath || '', packPath: locator.packPath || '',
         packOffset: locator.packOffset || 0, packLength: locator.packLength || 0,
         status: STATUS_AVAILABLE, revision, updatedAt: now, updatedByDevice: deviceId,
       });
-      if (record) prepared.push(record); else skipped += 1;
+      if (record) records.push(record); else skipped += 1;
     }
+    prepared = records;
     if (!prepared.length) return { published: 0, skipped, reused, available: true, revision, deviceId };
 
     const manifestFile = path.join(root, MANIFESTS, `${deviceId}.json`);

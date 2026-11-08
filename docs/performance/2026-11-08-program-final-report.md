@@ -1,0 +1,173 @@
+# Buyer Log — performans programı kapanışı / performance program closure
+
+**Tarih / Date: 2026-11-08.** Kullanıcı kapsamı dondurarak programın kapatılmasını istedi.
+Bu kapanış, başlangıçtaki bütün mimari hedeflerin uygulandığı anlamına gelmez.
+**EN:** User-authorized scope freeze and closure; unfinished architecture is explicitly deferred.
+TEST ve STABLE yayımlanmadı / Neither TEST nor STABLE was published.
+
+## Kanıtın sınırı / Evidence boundary
+
+[Doğrulandı / Verified] Aşağıdaki süreler mevcut raporlardaki medyanlardır;
+kapanışta yeni benchmark, tanı veya performans ölçümü yapılmadı.
+Farklı fazların SHA, ortam ve senaryoları değişir; rakamlar toplanarak genel hızlanma çıkarılamaz.
+**EN:** Historical medians retain their original revisions and workloads; no new performance campaign or cumulative speedup claim.
+Ana iş yükü Linux, 4 vCPU, 16 GiB, headless Chromium ve 30k sentetik sipariştir.
+**Windows/Electron ürün performansı ve native sekme kabulü ölçülmedi.**
+6d'nin ayrı Linux/Electron 39 DB prototipi, Windows/Electron UI kabulü değildir.
+**EN:** No Windows/Electron product-performance or native-tab acceptance; the isolated Linux/Electron 39 database prototype is separate.
+
+## Faz 0–7 / Phases 0–7
+
+| Faz / Phase | Durum / Status | PR | Önce → sonra medyan / Before → after median |
+| --- | --- | --- | --- |
+| 0 Ölçüm / Instrumentation | Main'de / Merged | #872 | 3 koşu refresh bazı / three-run refresh baseline: 53,231 s; hızlanma iddiası yok / no speedup claim. |
+| 1 Audit | Main'de / Merged | #873 | Gerçek demo LOGIN satırı / actual demo LOGIN line: 2.485.108 → 360 B; ayrı mikro çağrı / separate micro-call: 186,557 → 0,995 ms. |
+| 2 Dense kaynak okuma / Source reads | Main'de / Merged | #874 | ASAS read+parse worker task: 15,603 → 8,383 s; refresh: 48,088 → 40,679 s; çıktı SHA'ları eşit / equal output SHAs. |
+| 3 Perde / Startup curtain | Main'de; ödünleşim korundu / Merged with tradeoff | #879 | Overview gate: 40,472 → 4,683 s; özgün ilk CP niyeti / original first CP intent: 4,769 → 76,695 s. |
+| 4 İstemci hesapları / Client computation | Main'de / Merged | #881 | Katalog pipeline / catalog: 5525,734 → 1961,454 ms; sort: 5562,102 → 358,282 ms; alan okuma / field reads: 1571,498 → 17,979 ms. |
+| 5 Ortak worker havuzu / Shared pool | Main'de; performans kabul açığı var / Merged with acceptance gap | #885, #902 | Refresh: 52,760 → 64,684 s (+%22,60); aynı sekme CP / same-tab CP: 14,335 → 10,251 s; Orders: 3,768 → 2,904 s. |
+| 6a İnce projeksiyon / Thin projection | Üretimde etkin değil; ertelendi / Not activated, deferred | #891 kapatıldı / closed | Envanter ve yerel aday var; geçerli entegre üretim önce/sonrası yok / inventory and local candidate only; no accepted production A/B. |
+| 6b Kabuk / Shell | Kısmi / Partial | #914 | Son seri / final cohort: DCL 2120,9 → 1766,7 ms; primary 3657,9 → 3177,8 ms; ilk 10 s JS 183 → 172, CSS 45 → 28 istek / requests. |
+| 6c Delta kalıcılık / Delta persistence | Hazırlıklar var; üretime bağlanmadı / Prepared, not integrated | Katkı dalları / contribution branches | Modül/prototip sayıları üretim kazancı değildir / module and prototype figures are not production gains. |
+| 6d SQLite | Prototip raporu; karar **bekle** / Prototype report; decision **wait** | #900 kapatıldı / closed | 200k prototype: açılış / open 2543 → 3,6 ms; compaction 20,98 → 1,39 s; tüm kayıt okuma / full materialization 24,7 → 1188,1 ms. |
+| 7 İstemci / Client | Seçili maddeler Main'de / Selected items merged | #901, #904, #906 | CPR-05 61.348 → 134 ms; CPR-06 edit 548 → 284 ms; CPR-07 search 4472 → 356 ms; CPR-12 15,22 → 1,48 ms; ANA-07 180 → 17 ms; ANA-11 249 → 52 ms. |
+| 7 DS-08 | Main'de / Merged (37cc293d) | #909 | Sentetik sıcak-havuz checkpoint / synthetic warm-pool checkpoint: gap 319,655 → 47,562 ms; toplam / total 374,920 → 404,012 ms; RSS 273,508 → 289,195 MiB. |
+| 7 INT-04/05 | Main'de / Merged (f127b83f) | #910 | Linux yerel / local: 300 image planning 21,809 → 3,548 ms; 200 image pack publish 2851,865 → 257,209 ms. |
+| 7 INT-11 | Main'de / Merged (6db40d29) | #911 | Beş küçük rapor / five small reports: 681,646 → 273,170 ms; throughput veya kurumsal p95 iddiası yok / no throughput or enterprise p95 claim. |
+
+Tablo PR numaraları `https://github.com/clbiez/Buyer-Log-Desktop/pull/<numara>` adresindedir.
+**EN:** Each PR number identifies the corresponding GitHub pull request; merged and deferred work remain distinct.
+
+## Kabul edilen ödünleşimler / Accepted closure tradeoffs
+
+- **Faz 3:** Daha erken Overview perdesi, CP'nin ilk tıklamasındaki beklemeyi artırdı;
+  ilk karşılaştırma 4,769 → 76,695 s idi; #905'in farklı, daha sonraki kohortunda
+  1,681 → 12,860 s, sayfa → CP toplamında 75,646 → 14,391 s ölçüldü.
+  #916'nın kendi kohortunda ilk CP 17,1 → 13,2 s oldu; bu farklı seriler birbirinin yerine geçmez.
+  **EN:** Earlier curtain release trades against first CP intent; subsequent cohorts improve it without proving the original wait eliminated.
+- **Faz 5:** Kullanıcının kapanış kararıyla yaklaşık **+%22 refresh** artışı
+  (kayıtlı son kohort +%22,60) ve **sağlanmayan 200 ms eşiği** açıkça kabul kaydıdır;
+  eşik değiştirilmedi ve PASS sayılmadı.
+  Global Flow maksimumları 215,376 / 254,510 / 248,552 ms; Backlog 197,275 / 390,196 / 126,369 ms idi.
+  **EN:** Closure accepts the recorded refresh cost and unresolved responsiveness gap; this is not a passed 200 ms acceptance gate.
+- **#914:** Başlangıç yükü azalırken ilk modül kullanımı pahalılaşabilir;
+  son kohortta Manufacturers 487,1 → 627,6 ms, taze Collection 611,5 → 793,8 ms.
+  İlk tarihsel uzun-görev toplamı +%3,5; sonraki kabul kohortunda 5572,0 → 6053,9 ms (+%8,65).
+  **EN:** Deferred assets shift work to first use; long-task totals did not improve and cohort differences remain visible.
+- **#904:** Yeni dataset timer aralığı 673 → 209 ms iken toplam 679 → 1583 ms;
+  mevcut dataset cache miss'inde 973 → 474 ms iken toplam 981 → 1362 ms.
+  **EN:** Worker execution improves the observed renderer timer gap at a higher total completion cost, not measured input latency.
+- **#906:** Lisans CARD-01 parçası, tekrarlanan +%24,42 search p95 gerilemesi nedeniyle
+  kullanıcı kararıyla ayrıldı; diğer kazanımlar korundu.
+  **EN:** The license-card portion was excluded, not silently accepted.
+
+## Kapanış doğrulaması ve merge kuyruğu / Closing validation and merge queue
+
+| PR | Test edilen head / Tested head | Standart tam test / Standard full test | i18n | Release notes | Gerçek CI / Actual CI | Merge commit |
+| --- | --- | --- | --- | --- | --- | --- |
+| #909 | `d2991df0` + Main `1796193f` | 10/10 batch; 1.303 files; 8.942 PASS, 0 FAIL, 65 SKIP, 0 CANCEL | 0/0 | PASS (51) | [SUCCESS](https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/42435205055) | `37cc293d` |
+| #910 | `588d7b80` + Main `37cc293d` | 10/10 batch; 1.305 files; 8.956 PASS, 0 FAIL, 65 SKIP, 0 CANCEL | 0/0 | PASS (53) | [SUCCESS](https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/42496958358) | `f127b83f` |
+| #911 | `00f438aa` + Main `f127b83f` | 10/10 batch; 1.306 files; 8.959 PASS, 0 FAIL, 65 SKIP, 0 CANCEL | 0/0 | PASS (54) | [SUCCESS](https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/42497452889) | `6db40d29` |
+
+Tam test, varsayılan concurrency=4 ile tek `npm test` çağrısındaki **10 batch** demektir;
+ayrı batch toplamı veya eski head CI'ı son kapının yerine kullanılmadı.
+**EN:** Final gates require the unchanged standard runner and actual checks for the final head.
+İlk #909 koşusunda ortak auth/local-DB ortam override'ları testlerin özel köklerini gölgeledi;
+üretim veya assertion değiştirilmeden bu override'lar kaldırılarak tek düzeltme denemesi yapıldı.
+PLM Sync, #916 motorları/testi ve korunan CP checklist hızlı kontrol adımı değiştirilmedi.
+**EN:** No PLM Sync or protected #916 code, tests, steps, thresholds or i18n baseline were relaxed.
+#908 **atlandı ve kapatıldı**: son üç çiftte CP 11.324 → 12.229 ms (+%8);
+kanıtlanmış tek düzeltme bulunmadığından yeni tanı açılmadı.
+**EN:** #908 was skipped and closed for an unresolved CP regression; micro wins did not override the first-CP guard.
+
+## Merge edilmeden kapatılan PR'lar / PRs closed without merging
+
+Her dal arşiv olarak korundu / All branches remain available as archives.
+
+| PR | Tek cümle sonuç / One-sentence outcome |
+| --- | --- |
+| #890 | INT-06 checkpoint hazırlığı korundu; üretim journal/snapshot entegrasyonu yapılmadı / Preparation archived; production integration deferred. |
+| #891 | 6a alan envanteri ve shadow hazırlığı arşivlendi; thin üretimde açılmadı / Inventory archived; thin mode not activated. |
+| #893 | Sabit tarihsel FX kaynağında kuyruk timeout'u doğrulandı; dört eski timeout'un tekil nedeni bilinmiyor / Controlled queue exhaustion verified, individual historical attribution unknown. |
+| #895 | ANA-12 istemci iptal hazırlığı korundu; gerçek route/job entegrasyonu yok / Client cancellation preparation archived, production linkage absent. |
+| #896 | ADMIN-01 hazırlığı arşivlendi; son demo sunucu tanısında health p95 13,73/20,02 ms, worker faydası kanıtlanmadı / Preparation archived; worker benefit unproven. |
+| #897 | Yetki bulgusu arşivlendi; ayrı #915 güncel yetki kapısını düzeltti, ADMIN-03 hesap optimizasyonu uygulanmadı / Authority fix merged separately; hierarchy optimization deferred. |
+| #898 | INT-01 tam kopyalama adayı reddedildi: 7,122 → 8,928 s ve RSS 1009 → 830 MiB / Full-copy candidate rejected despite lower RSS. |
+| #899 | INT-03 fixture/bellek hazırlığı korundu; ortak byte budget üretim yoluna bağlanmadı / Preparation archived; production byte budgeting deferred. |
+| #900 | JSON/WAL–SQLite prototipi korundu; karar **bekle**, pilot/migrasyon izni yok / Prototype retained; **wait**, no pilot or migration authorization. |
+| #903 | INT-12 taklit transport hazırlığı korundu; 244/288 → 179/199 ms üretim kanıtı değil, spekülatif istek 1→2 riski açık / Mock result is not enterprise acceptance. |
+| #905 | Faz 3 yeniden ölçümü arşivlendi; ilk CP ödünleşimi sonuçları yukarıda korunur / Remeasurement archived; first-CP tradeoff retained above. |
+| #907 | Tarihsel/güncel FX tanısı arşivlendi; queue-BUSY/parse-failed ayrımı ve kaçırılan güncelleme üretimde düzeltilmedi / Diagnostics archived; remaining FX behavior deferred. |
+
+#918 açık ve merge edilmemiştir; açıklamasında **performans programı dışı** yazar;
+kullanıcı ayrıca karar verecektir / Remains open, unmerged and outside this program for a separate decision.
+
+## ERTELENEN İŞ — kapanış sonuçları ve kapsam dışı işler / DEFERRED — closure outcomes and exclusions
+
+A/B/C kaynak incelemesindeki öncelik düzeyleridir. Sohbet 1–8 için gerçek sonuçlar aşağıdadır;
+uygulandı durumu merge edilmiş üretim PR’ı gerektirir. Atlanan adaylar üretim kazanımı değildir.
+**EN:** Priority A/B/C follows the review. Sessions 1–8 are recorded below; implementation requires a merged production PR. Skipped candidates are not shipped gains.
+
+Sohbet 1–8 ve ANA-03 kurtarması tamamlandı: 13 maddeden ANA-03 ve ANA-09 uygulandı; diğer 11 madde
+aşağıdaki nedenlerle atlandı. Sohbetlerin ölçüm/eşdeğerlik sonuçları ve GitHub PR durumları
+işlendi; bu rapor güncellemesinde yeni performans ölçümü yapılmadı.
+**EN:** All eight sessions and the ANA-03 recovery are complete: ANA-03 and ANA-09 shipped; the other 11 items were skipped for
+the stated reasons. This update reconciles final session evidence and actual PR states without new measurements.
+
+| Öncelik / Priority | Madde / Item | Sonuç ve gerekçe / Outcome and reason |
+| --- | --- | --- |
+| A | ANA-02 | Atlandı: arama kazancı 100 ms kapısının altında; çıktı hash’leri aynı, PR/merge yok / Skipped: search gain below the 100 ms gate; equal output hashes, no PR or merge. |
+| A | ANA-03 | Uygulandı: #923'ün yalnız görünür pivot satırlarını çizen değişikliği [#927](https://github.com/clbiez/Buyer-Log-Desktop/pull/927) ile main'e normal merge edildi (`f8aef9b9`); ANA-04 kodu yok. İkinci turda güncel main `8531ef23` ile #923 renderer SHA-256'sı aynı (`85694d5e…`). Önceki 30k medyanları: ilk çizim 7346,0 → 385,4 ms, dal açma 7924,6 → 36,3 ms; görünür çıktı/ağaç/export hash'leri aynı. #927 tam test: 10/10 batch, 8.963 PASS, 0 FAIL; önceki iki IAM vakası, i18n 0/0, görsel sürüm notları ve PR checks PASS / Implemented and merged in #927; current-main renderer is byte-identical to the recovered renderer, historical 30k medians and output parity retained; recovery gates and prior IAM cases passed. |
+| A | ANA-04 | Uygulandı: [#934](https://github.com/clbiez/Buyer-Log-Desktop/pull/934), mevcut ortak sanal gövdeyi kullanır; Backlog'un 300 satır/Daha fazla göster kapsamı ve native seçim konumu korunur. Aynı 30k seed7 fixture, main/dal dönüşümlü üç çift: ilk çizim medyanı Backlog detay 2406,4 → 1527,3 ms (%36,53), Intake 8898,1 → 98,4 ms (%98,89); DOM satırları 301 → 47 ve 30.003 → 38. Kaydırma penceresinde uzun görev toplamı medyanı 1973 → 921 ms ve 7274 → 553 ms; bu tüm sayfa penceresidir, her kaydırma için nedensel hızlanma iddiası değildir. Native tam seçim/kopya aralığı 962.847 karakter ve aynı hash; Backlog Ctrl+A/Ctrl+C 300 satır/62.193 karakterle, hücre HTML'i ve export girdisi hash'leriyle eşdeğer. 1k gerçek pano, aynı 500/501. satırlarda ters seçim+scroll, ArrowDown, Tab ve 300 → 600 Daha fazla göster PASS. Main normal merge ile alındı; gerçek post-change demo PNG ve TR/EN notu var; ham kanıt/betik yalnız /tmp'de / Implemented in #934 using the existing virtual body: faster initial rendering with full/partial native selection, model copy, keyboard and export parity; three alternating 30k pairs, bounded DOM, normal main integration, bilingual visual notes, no raw evidence added to docs. |
+| A | CPR-04 | Atlandı: açılış, filtre ve sıralama kazançlarının tümü %10 kapısının altında; hash’ler aynı, yüklü fiyat kuralı ve render kayıt çağrısı yok; PR/merge yok / Skipped: all gains below 10%; equal hashes, no loaded pricing rules or render saves, no PR or merge. |
+| A | CPR-08 | Atlandı: tek hücre → formül süresi geriledi; formül hücreleri ve hata özetleri eşdeğer, PR/merge yok / Skipped: single-cell formula timing regressed; equivalent formula cells and error summaries, no PR or merge. |
+| B | ANA-08 | Atlandı: üç A/B çiftinde Overview uzun görev kazancı %10 ve 100 ms kapılarının altında; çıktı hash'leri aynı, kod değişikliği yok / Skipped: Overview long-task gain misses both gates; equal hashes, no code change. |
+| C | ANA-09 | Uygulandı: freeze değişikliği yalnız etkilenen tabloyu yeniler ve sanallaştırmayı korur; 30k satır/510k hücre hash'i aynı. [#924](https://github.com/clbiez/Buyer-Log-Desktop/pull/924) main'e merge edildi; 10/10 batch, 0 FAIL, i18n 0/0, release notes ve PR checks PASS / Implemented and merged: table-local freeze refresh preserves virtualization and full output parity; all gates passed. |
+| B | ANA-10 | Uygulandı: toplu CP yenilemesi öncelik senkronizasyonundan sonra çağrıya özel ilk katı kimlik eşleşmesi indeksini kullanır; aynı 30k fixture üzerinde üç dönüşümlü gerçek ekran çiftinde tam satır ve görünür DOM hash’leri aynı, eski adayın tarihsel nedeni çözülmüş sayılmadı; test/inceleme/PR kapıları uygulama PR açıklamasındadır / Implemented: bulk CP refresh uses a call-local first-strict-match index after priority synchronization; full row and visible DOM hashes match in three alternating real-UI pairs on the same 30k fixture. This does not attribute the historical candidate mismatch; validation and review gates are recorded in the implementation PR. |
+| B | DS-01 | Kapsam dışı: 6c kalıcılık/sahiplik entegrasyonu bu sekiz sohbete atanmadı / Phase-6c persistence/ownership integration was not assigned. Önceki durum / Prior status: Delta/legacy çift kalıcılık yolu korunuyor / Duplicate persistence path remains. |
+| A | DS-02 | Atlandı: üç A/B çiftinde API süresi geriledi, event-loop gap tasarrufu 100 ms kapısının altında; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: API timing regressed and loop-gap savings missed 100 ms; equal output hashes, no production change, PR or merge. |
+| A | DS-03 | Atlandı: üç A/B çiftinde API kazancı %7,4 ile %10 kapısının altında, açılış geriledi; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: API gain below 10% and opening regressed; equal output hashes, no production change, PR or merge. |
+| A | DS-04 | Atlandı: üç A/B çiftinde override okuma tasarrufu 100 ms kapısının altında; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: override-read savings below 100 ms; equal output hashes, no production change, PR or merge. |
+| B | DS-10 | Kapsam dışı: Senkron/delta-store değişiklikleri yasak / Sync/delta-store changes are excluded. Önceki durum / Prior status: No-change sync sonrası hydrate kaldırılmadı / Post-sync hydration unchanged. |
+| B | 6b: SHELL-05 | Kapsam dışı: Native modül hazırlığı ayrı Electron/shell entegrasyonu ve ürün kabulü gerektirir / Requires separate Electron/shell integration and acceptance. Önceki durum / Prior status: Native sekmenin yalnız kendi modülünü hazırlaması uygulanmadı / Native module-only preparation deferred. |
+| B | 6b: SHELL-06 | Kapsam dışı: Context/asset/caller bağlantısı ve Electron kabulü bu sekiz sohbete atanmadı / Caller integration and Electron acceptance were not assigned. Önceki durum / Prior status: Helper 73 test ve Chromium'da doğrulandı; context/asset/caller bağlantısı ve Electron kabulü yok / Helper verified but unwired. |
+| B | 6b: app-main yaşam döngüsü / lifecycle | Kapsam dışı: Yaşam döngüsü entegrasyonu dar fonksiyon izinlerini aşan mimari değişikliktir / Lifecycle integration exceeds permitted function-level changes. Önceki durum / Prior status: load/mount/activate/deactivate/dispose entegrasyonu tamamlanmadı / Lifecycle integration incomplete. |
+| A | 6a ince projeksiyon / thin projection | Kapsam dışı: Full-data tüketicilerinin dönüşümü ve thin üretim kabulü ayrı iş / Consumer migration and production thin-mode acceptance are separate work. Önceki durum / Prior status: Yerel aday kapalı; full-data tüketici ve son üretim kabulü tamamlanmadı / Candidate disabled; consumer and production acceptance incomplete. |
+| A | 6c delta kalıcılık / persistence | Kapsam dışı: WAL/undo/owner adaptörleri ayrı kalıcılık/senkron entegrasyonu / WAL/undo/owner adapters require separate persistence/sync integration. Önceki durum / Prior status: CPR-02/03, DS-07/09, WAL/undo/owner kaynak sahipliği adaptörleri üretimde etkin değil / Delta/WAL/undo/owner adapters not activated. |
+| A | INT-01 | Kapsam dışı: Immutable kaynak sahipliğini yeniden tasarlamak verilen dar kapsamı aşar / Immutable source ownership redesign exceeds this scope. Önceki durum / Prior status: Tam grafik kopyası yavaşladı; immutable kaynak sahipliği tasarımı bekliyor / Full copying regressed; ownership design remains pending. |
+| A | INT-03 | Kapsam dışı: Üretime bağlantı korunan PLM indirme/Sync pipeline’ına dokunur / Production integration touches protected PLM download/Sync paths. Önceki durum / Prior status: Byte-budget helper var; PLM Sync'e dokunulmuyor, üretim pipeline'ı bağlanmadı / Helper exists; production pipeline untouched. |
+| B | INT-06 | Kapsam dışı: Üretim journal/snapshot entegrasyonu ayrı kalıcılık işi / Production journal/snapshot integration is separate persistence work. Önceki durum / Prior status: Prototip yazım tasarrufuna karşın son RSS +%5,85; kabul edilmedi / Final prototype RSS regression rejected. |
+| B | ANA-12 | Kapsam dışı: Gerçek HTTP → job iptali atanmış dosyalar dışındaki backend/worker bağlantısını gerektirir / Real route cancellation needs unassigned backend/worker integration. Önceki durum / Prior status: İstemci/backend helper var; gerçek HTTP→job iptali ve üretim CPU kabulü yok / Helpers exist; real route cancellation unintegrated. |
+| B | INT-08 | Uygulandı: tablolarda kaynak başına kalıcı küçük önizleme; warmup/prior/loaded yolları önizlemeyi, zoom/çekmece/pano/export orijinali kullanır. Siparişler, kayıt haritası, orijinal dosyalar ve export ölçüleri eşdeğer; ölçüm ve kabul kanıtı bu satırı güncelleyen INT-08 PR açıklamasındadır / Implemented: persistent per-source table previews cover warmup/prior/loaded paths; zoom/drawer/clipboard/export retain originals. Orders, registry, original files and export geometry match; measurements and acceptance evidence are in the INT-08 PR that updates this row. |
+| C | DS-11 | Kapsam dışı: Gerçek SMB/peer RTT kabul ortamı yok / Real SMB/peer RTT acceptance environment is unavailable. Önceki durum / Prior status: Gerçek SMB/peer RTT ortamı yok / Real SMB/peer RTT environment unavailable. |
+| B | INT-07 | Kapsam dışı: Korunan PLM akışına girer; gerçek kapasite/retry kabul ortamı yok / Touches protected PLM flows; real capacity/retry acceptance is unavailable. Önceki durum / Prior status: Gerçek PLM kapasite/retry kabul ortamı yok / Real PLM capacity/retry acceptance unavailable. |
+| C | INT-10 | Kapsam dışı: Gerçek upstream kapasite/kazanç kabulü doğrulanmadı / Real upstream capacity/benefit acceptance is unverified. Önceki durum / Prior status: Upstream upload kapasitesi ve kazancı doğrulanmadı / Upstream upload capacity and benefit unverified. |
+| C | ADMIN-02 | Kapsam dışı: Güvenli disk geçişi azaltımı kanıtlanmadı; yedekleme/bütünlük işi atanmadı / Safe pass reduction is unproven; backup/integrity changes were not assigned. Önceki durum / Prior status: Güvenli disk geçişi azaltımı kanıtlanmadı / Safe reduction of disk passes unproven. |
+| C | ADMIN-01 | Kapsam dışı: Mevcut tanı worker faydasını kanıtlamadı; yeni yedekleme/offload işi atanmadı / Existing diagnostics did not prove worker benefit; new backup/offload work was not assigned. Önceki durum / Prior status: Gerçek demo tanısı worker faydasını kanıtlamadı / Real demo-server diagnostic did not prove offload benefit. |
+| B | ADMIN-03 | Kapsam dışı: #915 yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu atanmadı / Hierarchy optimization beyond the separate #915 authority fix was not assigned. Önceki durum / Prior status: Yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu yapılmadı / Hierarchy optimization not implemented. |
+| C | INT-12 | Kapsam dışı: Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk remain unresolved. Önceki durum / Prior status: Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk unresolved. |
+| B | CPR-06 kalan / remainder | Uygulandı: büyük fiyat matrisinin ilk çizimi pencereyle sınırlandı; tam kopyalama ve pencere dışına yapıştırma veri modelinden yapılır, Excel modeli korunur; aynı 30k fixture ile üç dönüşümlü çiftte tam pano hash’i main ile birebir aynı. Odak/seçim uçları, klavye, sticky sütun ve tek geri alma doğrulandı; kapılar ve sayılar uygulama PR açıklamasındadır / Implemented: large matrices render a row window; full copy and offscreen paste use the data model, while Excel retains all models. Complete clipboard hashes match main in three alternating pairs on the same 30k fixture; editing/selection endpoints, keyboard, sticky columns and single-step undo are verified. Gates and measurements are in the implementation PR. |
+| B | CPR-09 / CP ilk açılış worker'ı | İkinci turda atlandı: aynı 30k fixture ile üç dönüşümlü main/dal çiftinde ilk satır erken görünse de ana thread donması arttı ve toplam süre gerilemesi kabul kapısını aştı; karar hash'i ve 174.874 checklist hücresi birebir aynı. Aday geri alındı; üretim worker değişikliği yok, #916 korumaları korundu; sayılar kapanış PR açıklamasındadır / Skipped in round two: three alternating main/branch pairs on the same 30k fixture showed earlier rows but a longer main-thread freeze and total-time regression beyond the acceptance gate; decision hashes and all 174,874 checklist cells matched exactly. Prototype reverted; no production worker change, #916 guards preserved; measurements are in the closure PR description. |
+| A | CPR-10 kalan / remainder | Kapsam dışı: Tam delta/WAL bağlantısı ayrı 6c kalıcılık işi / Full delta/WAL integration belongs to separate phase-6c persistence work. Önceki durum / Prior status: Önceki batch kazanımları var; tam delta/WAL entegrasyonu uygulanmadı / Earlier batching retained; full delta integration deferred. |
+| C | CARD-01 lisans / license | Kapsam dışı: Lisans parçası arama gerilemesiyle ayrıldı; yeniden optimizasyon atanmadı / License portion was excluded after regression and was not reassigned. Önceki durum / Prior status: +%24,42 arama p95 gerilemesi nedeniyle parça ayrıldı / Portion excluded for search regression. |
+
+**Yapılmayacaklar — kapsam dışı / Out of scope:** Yukarıdaki “kapsam dışı” satırları bu sekiz sohbetin uygulama kapsamına alınmadı;
+önceki prototip/ölçümler uygulama veya merge sayılmaz. PLM Sync/BOM, #916 hızlı kontrolü,
+`checklist-components-row-cache` testi, `withRowCache`, `cp-overview-assistant.js`,
+`checklist-supplier-sync.js` ve `checklist-components-engine.js` korunan kapsamdır.
+**EN:** Excluded rows are not implementation commitments; protected PLM/#916/checklist paths remain untouched.
+
+INT-08, Linux/Chromium üzerinde gerçek Buyer Log ve sentetik demo veriyle doğrulandı; Windows/Electron/SMB ölçümü yapılmadı.
+**EN:** INT-08 was verified in actual Buyer Log on Linux/Chromium with synthetic demo data; Windows/Electron/SMB were not measured.
+SHELL-07 ölçülen düşük pay nedeniyle atlandı; SHELL-08/workspace-blur #908 ile merge edilmeden kapatıldı.
+**EN:** SHELL-07 was skipped for low measured cost; SHELL-08/blur were not shipped.
+6d SQLite kararı **bekle**; SMB ortak klasöre SQLite kurulmadı, veri migrasyonu yapılmadı.
+**EN:** SQLite remains **wait**; no migration, pilot or SQLite-on-SMB deployment.
+SQLite açılışı tüm state'i yüklemez; yedekleme güvenceleri eşit değildir ve SIGKILL güç kesintisi dayanıklılığını kanıtlamaz.
+**EN:** SQLite open excludes full materialization; backup guarantees differ and SIGKILL does not prove power-loss durability.
+
+## Kaynaklar / Sources
+
+- Mevcut [Faz 0](../performance-program/phase-0.md), [1](../performance-program/phase-1.md), [2](../performance-program/phase-2.md), [3](../performance-program/phase-3.md), [4](../performance-program/phase-4.md), [5 son rapor](../performance-program/phase-5-review2-final-report.md).
+- [#914 son kabul](2026-11-07-startup-post-901-acceptance.md), [#901](2026-11-07-pricing-post-912-acceptance.md), [#904](2026-11-07-analytics-post-main-acceptance.md), [Faz 7 sunucu](../performance-program/phase-7-server-report.md).
+- Kapatılan PR'lardaki özgün dallar ve katkı commit'leri arşivdir; ham kanıtlar yeniden eklenmedi / Original branches retain historical evidence; no new raw evidence was added.

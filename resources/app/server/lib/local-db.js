@@ -231,7 +231,7 @@ async function readState(file, deviceId = null) {
   throw dataIntegrityError(file, errors);
 }
 
-async function writeState(file, state) {
+async function writeState(file, state, { encodeSnapshot = null, assertCurrent = () => {} } = {}) {
   const folder = path.dirname(path.resolve(file));
   const recovery = createDurableFileRecovery({
     recoveryRoot: path.join(folder, '.buyerlog-db-recovery'),
@@ -239,7 +239,13 @@ async function writeState(file, state) {
   });
   /* Parçalı serileştirme: tek dev string oluşmaz (bkz. large-json.js). Girinti
      yok — okuyan her yol JSON.parse kullanır; dosya ~%30 küçülür. */
-  await recovery.replace(file, jsonToBuffer(state));
+  if (!encodeSnapshot) { assertCurrent(); await recovery.replace(file, jsonToBuffer(state)); return; }
+  const lease = await encodeSnapshot(state);
+  try {
+    assertCurrent();
+    if (lease.value.revision !== state.revision) throw dataIntegrityError(file);
+    await recovery.replace(file, Buffer.from(lease.value.buffer));
+  } finally { lease.release(); }
 }
 
 /* Belge defteri (delta-store DOCUMENT_REVISION_META): her cihaz kendi
@@ -530,7 +536,7 @@ function readDeviceIdSync(file) {
   } finally { fs.closeSync(handle); }
 }
 
-function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL_MAX_BYTES } = {}) {
+function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL_MAX_BYTES, encodeSnapshot = null } = {}) {
   let dbFile = path.resolve(file);
   let deviceId = null;
   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
@@ -686,9 +692,12 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      writeState hedefi yazdıktan sonra sha256 ile doğruluyor, yani buraya
      dönülmüşse görüntü gerçekten diskte. */
   async function writeSnapshot(state) {
+    const target = dbFile, revision = state.revision;
+    const assertCurrent = () => { if (dbFile !== target || state.revision !== revision) throw dataIntegrityError(target); };
     await inspectWalForWrite(true);
-    await writeState(dbFile, state);
-    try { await replaceFileWithRetry(walFile(), `${walFile()}.bak`); }
+    await writeState(target, state, { encodeSnapshot, assertCurrent });
+    assertCurrent();
+    try { await replaceFileWithRetry(`${target}.wal`, `${target}.wal.bak`); }
     catch (error) { if (error && error.code !== 'ENOENT') throw error; }
     walMetadata = null;
   }
