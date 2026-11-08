@@ -1,0 +1,232 @@
+{
+  "baseSha": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "synthetic": true,
+  "nativeElectron": "NOT VERIFIED",
+  "scenarios": [
+    {
+      "name": "baseline-three-tabs",
+      "durationMs": 21002,
+      "requests": [
+        {
+          "page": 0,
+          "at": 1794174202061,
+          "offsetMs": 5524
+        },
+        {
+          "page": 2,
+          "at": 1794174202252,
+          "offsetMs": 5715
+        },
+        {
+          "page": 1,
+          "at": 1794174202630,
+          "offsetMs": 6093
+        },
+        {
+          "page": 0,
+          "at": 1794174209061,
+          "offsetMs": 12524
+        },
+        {
+          "page": 2,
+          "at": 1794174209250,
+          "offsetMs": 12713
+        },
+        {
+          "page": 1,
+          "at": 1794174209630,
+          "offsetMs": 13093
+        },
+        {
+          "page": 0,
+          "at": 1794174216061,
+          "offsetMs": 19524
+        },
+        {
+          "page": 2,
+          "at": 1794174216251,
+          "offsetMs": 19714
+        },
+        {
+          "page": 1,
+          "at": 1794174216630,
+          "offsetMs": 20093
+        }
+      ],
+      "count": 9,
+      "requestingTabs": [
+        0,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "shared-three-tabs",
+      "durationMs": 21001,
+      "requests": [
+        {
+          "page": 0,
+          "at": 1794174229088,
+          "offsetMs": 6065
+        },
+        {
+          "page": 0,
+          "at": 1794174236095,
+          "offsetMs": 13072
+        },
+        {
+          "page": 0,
+          "at": 1794174243103,
+          "offsetMs": 20080
+        }
+      ],
+      "count": 3,
+      "requestingTabs": [
+        0
+      ]
+    },
+    {
+      "name": "revision-fanout",
+      "revision": 2,
+      "received": [
+        {
+          "at": 1794174250115,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:44:04.028Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        },
+        {
+          "at": 1794174250116,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:44:04.028Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        },
+        {
+          "at": 1794174250116,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:44:04.028Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "leader-close-handoff",
+      "newLeader": 1,
+      "requestsAfterClose": [
+        {
+          "page": 1,
+          "at": 1794174250183
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "name": "slow-request",
+      "delayMs": 12000,
+      "startsDuringFirst8500ms": 0,
+      "maxActive": 1
+    },
+    {
+      "name": "offline-online",
+      "offlineMs": 8000,
+      "offlineRevisionRequests": 0,
+      "recoveredRevision": 4
+    },
+    {
+      "name": "normal-SSE",
+      "serverRevision": 1,
+      "tabState": [
+        {
+          "revision": 1,
+          "connected": true,
+          "rules": [
+            "shell06-demo"
+          ]
+        },
+        {
+          "revision": 1,
+          "connected": true,
+          "rules": [
+            "shell06-demo"
+          ]
+        }
+      ],
+      "leaderSSE": [
+        {
+          "area": "pricingRules",
+          "ownerId": null,
+          "at": "2026-11-08T21:44:38.832Z",
+          "originClientId": "",
+          "mode": "reload"
+        }
+      ]
+    },
+    {
+      "name": "HTTP-error-backoff",
+      "statuses": [
+        503,
+        200
+      ],
+      "retryDelayMs": 14004
+    },
+    {
+      "name": "post-change-screenshot",
+      "path": "resources/app/public/release-notes/next-assets/shell06-shared-revisions-20261109.png",
+      "width": 1440,
+      "height": 900,
+      "note": "Actual synthetic Orders screen; polling and SSE behavior proven by request/event logs, not PNG."
+    }
+  ],
+  "browser": "154.0.8037.57",
+  "status": "PASS"
+}

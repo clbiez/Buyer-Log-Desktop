@@ -4,9 +4,9 @@
   "concurrency": 4,
   "result": "PASS",
   "counts": {
-    "tests": 9101,
+    "tests": 9103,
     "suites": 0,
-    "pass": 9036,
+    "pass": 9038,
     "fail": 0,
     "cancelled": 0,
     "skipped": 65,
@@ -16,11 +16,11 @@
   "environment": {
     "node": "v24.19.0",
     "os": "Linux x64",
-    "BUYER_LOG_DATA_ROOT": "/tmp/buyerlog-shell06-suite"
+    "BUYER_LOG_DATA_ROOT": "/tmp/buyerlog-shell06-suite-final-restore"
   },
   "targeted": {
-    "tests": 60,
-    "pass": 60,
+    "tests": 62,
+    "pass": 62,
     "fail": 0,
     "skipped": 0,
     "cancelled": 0
@@ -28,5 +28,6 @@
   "i18n": "0 new missing; baseline empty",
   "releaseNotes": "7 valid records; only shell06-shared-revisions-20261109 appended",
   "rawLog": "full-test.log.gz",
-  "priorFailedAttempt": "full-test-attempt1-readonly-home.log.gz"
+  "priorFailedAttempt": "full-test-attempt1-readonly-home.log.gz",
+  "priorHeadPass": "full-test-before-bfcache-fix.log.gz (historical only)"
 }

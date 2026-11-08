@@ -88,6 +88,19 @@ test('BFCache restore restarts ownership and clears the baseline if access chang
   a.win.BL_USER_CONTEXT={id:'different-user',iamRevision:2};a.win.dispatchEvent(new Event('pageshow'));await b.tick(2500);assert.equal(b.sources.filter(s=>!s.closed).length,1);
   b.requests.at(-1).resolve(snapshot(6));await b.flush();assert.equal(a.events.length,0,'new user gets a fresh baseline');
 });
+test('same-user BFCache restore catches up retained views even without another live tab',async()=>{
+  const b=browser(),a=b.tab('a');await b.tick(2500);b.sources[0].onopen();b.requests[0].resolve(snapshot(1));await b.flush();
+  const hide=new Event('pagehide');Object.defineProperty(hide,'persisted',{value:true});a.win.dispatchEvent(hide);await b.flush();
+  a.win.dispatchEvent(new Event('pageshow'));await b.flush();const restored=b.sources.at(-1);restored.onopen();await b.tick(2500);
+  b.requests.at(-1).resolve(snapshot(3));await b.flush();assert.equal(a.events.at(-1).revisions.revision,3);
+  assert.equal(a.resync.length,1,'retained data must be re-read after the suspension gap');
+});
+test('BFCache restore refreshes retained follower data while another tab remains leader',async()=>{
+  const b=browser();b.tab('leader');const f=b.tab('follower');await b.tick(2500);b.sources[0].onopen();b.requests[0].resolve(snapshot(1));await b.flush();
+  const hide=new Event('pagehide');Object.defineProperty(hide,'persisted',{value:true});f.win.dispatchEvent(hide);await b.flush();
+  f.win.dispatchEvent(new Event('pageshow'));await b.flush();assert.equal(b.sources.length,1,'restored follower must keep sharing the current leader');
+  assert.equal(f.resync.length,1,'retained follower data must refresh without waiting to become leader');
+});
 test('followers compare their own snapshots, reject stale publications and exclude unscoped messages',async()=>{
   const b=browser(),a=b.tab('a'),f=b.tab('f');await b.tick(2500);b.requests[0].resolve(snapshot(1));await b.flush();
   const channels=[...b.channels],sender=channels[0],context=JSON.stringify(['same-user',1,null,null,null,null,null,null,{read:true},null,null,null,null]);

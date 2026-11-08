@@ -7,52 +7,52 @@
   "scenarios": [
     {
       "name": "baseline-three-tabs",
-      "durationMs": 21002,
+      "durationMs": 21001,
       "requests": [
         {
           "page": 0,
-          "at": 1794174202061,
-          "offsetMs": 5524
+          "at": 1794174987047,
+          "offsetMs": 6032
         },
         {
           "page": 2,
-          "at": 1794174202252,
-          "offsetMs": 5715
+          "at": 1794174987216,
+          "offsetMs": 6201
         },
         {
           "page": 1,
-          "at": 1794174202630,
-          "offsetMs": 6093
+          "at": 1794174987260,
+          "offsetMs": 6245
         },
         {
           "page": 0,
-          "at": 1794174209061,
-          "offsetMs": 12524
+          "at": 1794174994047,
+          "offsetMs": 13032
         },
         {
           "page": 2,
-          "at": 1794174209250,
-          "offsetMs": 12713
+          "at": 1794174994217,
+          "offsetMs": 13202
         },
         {
           "page": 1,
-          "at": 1794174209630,
-          "offsetMs": 13093
+          "at": 1794174994260,
+          "offsetMs": 13245
         },
         {
           "page": 0,
-          "at": 1794174216061,
-          "offsetMs": 19524
+          "at": 1794175001047,
+          "offsetMs": 20032
         },
         {
           "page": 2,
-          "at": 1794174216251,
-          "offsetMs": 19714
+          "at": 1794175001217,
+          "offsetMs": 20202
         },
         {
           "page": 1,
-          "at": 1794174216630,
-          "offsetMs": 20093
+          "at": 1794175001260,
+          "offsetMs": 20245
         }
       ],
       "count": 9,
@@ -64,22 +64,22 @@
     },
     {
       "name": "shared-three-tabs",
-      "durationMs": 21001,
+      "durationMs": 21000,
       "requests": [
         {
           "page": 0,
-          "at": 1794174229088,
-          "offsetMs": 6065
+          "at": 1794175013187,
+          "offsetMs": 6467
         },
         {
           "page": 0,
-          "at": 1794174236095,
-          "offsetMs": 13072
+          "at": 1794175020193,
+          "offsetMs": 13473
         },
         {
           "page": 0,
-          "at": 1794174243103,
-          "offsetMs": 20080
+          "at": 1794175027200,
+          "offsetMs": 20480
         }
       ],
       "count": 3,
@@ -92,7 +92,7 @@
       "revision": 2,
       "received": [
         {
-          "at": 1794174250115,
+          "at": 1794175034210,
           "changed": [
             "quotation"
           ],
@@ -102,11 +102,11 @@
             "entities": {
               "quotation": {
                 "revision": 2,
-                "updatedAt": "2026-11-08T21:44:04.028Z"
+                "updatedAt": "2026-11-08T21:57:07.725Z"
               },
               "collection": {
                 "revision": 1,
-                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "updatedAt": "2026-11-08T21:56:18.507Z",
                 "actorId": "moderator",
                 "ownerId": "moderator"
               }
@@ -114,7 +114,7 @@
           }
         },
         {
-          "at": 1794174250116,
+          "at": 1794175034210,
           "changed": [
             "quotation"
           ],
@@ -124,11 +124,11 @@
             "entities": {
               "quotation": {
                 "revision": 2,
-                "updatedAt": "2026-11-08T21:44:04.028Z"
+                "updatedAt": "2026-11-08T21:57:07.725Z"
               },
               "collection": {
                 "revision": 1,
-                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "updatedAt": "2026-11-08T21:56:18.507Z",
                 "actorId": "moderator",
                 "ownerId": "moderator"
               }
@@ -136,7 +136,7 @@
           }
         },
         {
-          "at": 1794174250116,
+          "at": 1794175034210,
           "changed": [
             "quotation"
           ],
@@ -146,11 +146,11 @@
             "entities": {
               "quotation": {
                 "revision": 2,
-                "updatedAt": "2026-11-08T21:44:04.028Z"
+                "updatedAt": "2026-11-08T21:57:07.725Z"
               },
               "collection": {
                 "revision": 1,
-                "updatedAt": "2026-11-08T21:43:13.249Z",
+                "updatedAt": "2026-11-08T21:56:18.507Z",
                 "actorId": "moderator",
                 "ownerId": "moderator"
               }
@@ -165,7 +165,7 @@
       "requestsAfterClose": [
         {
           "page": 1,
-          "at": 1794174250183
+          "at": 1794175034370
         }
       ],
       "revision": 3
@@ -205,7 +205,7 @@
         {
           "area": "pricingRules",
           "ownerId": null,
-          "at": "2026-11-08T21:44:38.832Z",
+          "at": "2026-11-08T21:57:43.058Z",
           "originClientId": "",
           "mode": "reload"
         }
@@ -217,7 +217,7 @@
         503,
         200
       ],
-      "retryDelayMs": 14004
+      "retryDelayMs": 14016
     },
     {
       "name": "post-change-screenshot",

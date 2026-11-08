@@ -38986,7 +38986,14 @@ function initLiveSync(){
   function onWake(){if(!isCurrent())return;if(shared&&!leader)announce({type:'revisions?'});else poller.wake();}
   function onOffline(){poller.pause();}
   function onVisible(){if(document.visibilityState!=='hidden')onWake();}
-  function onPageHide(event){stop();if(event.persisted)window.addEventListener('pageshow',()=>initLiveSync(),{once:true});}
+  function onPageHide(event){
+    stop();
+    if(event.persisted)window.addEventListener('pageshow',()=>{
+      initLiveSync();
+      // BFCache veriyi bellekte tutar; takipçi kalsak da aradaki değişiklikleri oku.
+      liveSyncResyncAfterGap();
+    },{once:true});
+  }
   window.addEventListener('pagehide',onPageHide);
   window.addEventListener('bl:user-access-applied',onAccess);
   window.addEventListener('online',onWake);window.addEventListener('offline',onOffline);
