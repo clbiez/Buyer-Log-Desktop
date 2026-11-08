@@ -1,0 +1,310 @@
+CGROUP_BEFORE "low 0\nhigh 0\nmax 8114\noom 1\noom_kill 1\noom_group_kill 0\n"
+SOURCE {"app":"/workspace/buyerlog-analytics904/resources/app","root":"/tmp/buyerlog-startup-analytics-smoke-main5b8-v2"}
+HTTP_BEGIN GET /api/status 1794087562183
+STATUS_ATTEMPT {"url":"/api/status","ms":52.316237,"status":null,"attempt":1,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":3.0152719999996407,"status":null,"attempt":2,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":18.86123099999986,"status":null,"attempt":3,"error":"fetch failed"}
+HTTP_BEGIN GET /api/status 1794087562815
+STATUS_ATTEMPT {"url":"/api/status","ms":3.413115000000289,"status":null,"attempt":1,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":2.3686650000004192,"status":null,"attempt":2,"error":"fetch failed"}
+STATUS_ATTEMPT {"url":"/api/status","ms":2.348757000000205,"status":null,"attempt":3,"error":"fetch failed"}
+HTTP_BEGIN GET /api/status 1794087563381
+STATUS_ATTEMPT {"url":"/api/status","ms":74.78801599999952,"status":200,"attempt":1}
+HTTP_BEGIN POST /api/user-login 1794087563458
+HTTP_BEGIN POST /api/refresh 1794087563702
+HTTP_BEGIN GET /api/refresh-status 1794087563733
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":65.97569599999952,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087564050
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":18.32142500000009,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087564320
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.989478000000418,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087564582
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.908682000000226,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087564844
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.82261600000038,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087565106
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":12.22495600000002,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087565369
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":19.582304999999906,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087565640
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":12.430027000000337,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087565904
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.246508000000176,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087566166
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.059377000000495,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087566428
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.152349000000868,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087566687
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.352082000000337,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087566947
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.572540999999546,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087567205
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.889430000000175,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087567465
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.900869999999486,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087567724
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.517705000000205,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087567983
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.10982199999853,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087568242
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":20.326380000000427,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087568516
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":14.695718000000852,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087568781
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.2625909999987925,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087569039
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":12.349206999999296,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087569302
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.750119000000268,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087569565
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":20.776153999999224,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087569843
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":12.350413000000117,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087570107
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.08365700000104,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087570366
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.867137999999613,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087570629
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.93250900000021,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087570891
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":48.30545500000153,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087571198
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.06628499999897,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087571456
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.713902999999846,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087571712
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.741448999999193,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087571969
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":14.3279360000015,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087572234
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":25.722520999999688,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087572511
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":16.378875000000335,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087572779
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.306636999999682,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087573039
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.30835499999921,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087573296
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.670027000000118,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087573555
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.620866999999635,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087573816
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.202009000000544,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087574073
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.535334000000148,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087574333
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.333214999998745,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087574591
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.924307000001136,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087574849
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.002773999998681,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087575107
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.093321000000287,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087575367
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":976.343522000001,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087576593
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.817657999999938,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087576851
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.237784000000829,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087577111
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.860829000001104,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087577369
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.01777100000254,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087577628
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":1225.2625439999974,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087579105
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":240.38248999999996,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087579597
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5122.695449000003,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087584971
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.757589999997435,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087585230
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.356777000000875,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087585491
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.1669699999984005,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087585748
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":14.929435000001831,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087586019
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":33.360751000000164,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087586311
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.125124999998661,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087586571
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.156425000001036,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087586831
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":21.671573999999964,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087587104
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":16.012721999999485,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087587371
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.25843999999779,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087587633
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":187.2349890000005,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087588089
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":629.3855829999993,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087588980
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.562326999999641,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087589236
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.696803000002546,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087589498
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":44.50429200000144,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087589794
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":16.547426000000996,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087590063
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.905206999999791,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087590323
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":22.2439340000019,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087590600
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.24986600000193,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087590860
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":35.76804800000173,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087591148
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.867103000000498,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087591406
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.799234999998589,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087591695
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":77.32297400000243,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087592332
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":40.41015999999945,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087592635
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":41.215064999996684,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087592998
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":54.26978599999711,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087593336
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":39.727293000003556,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087593634
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.487584000002244,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087593893
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.827688999997918,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087594153
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.668811000003188,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087594414
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.24777599999652,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087594675
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":370.45044100000086,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087595297
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.002801999995427,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087595558
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":1217.7837050000016,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087597026
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.4093400000056135,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087597284
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.126905999997689,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087597546
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.379758999995829,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087597805
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.800119999999879,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087598063
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.00954400000046,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087598324
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":23.506273999999394,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087598599
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.46366599999601,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087598860
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.687880999998015,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087599118
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":16.670002000006207,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087599385
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.410306999998284,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087599644
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.0677340000038384,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087599900
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.833964999997988,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087600158
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.658465000000433,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087600420
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.746537999999418,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087600677
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.494742999995651,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087600933
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.53183700000227,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087601193
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.3801149999999325,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087601450
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":15.330863000002864,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087601716
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":14.845519000002241,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087601982
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":58.52448100000038,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087602292
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.435850000001665,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087602548
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":15.036497000000963,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087602814
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.408450999995694,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087603073
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.594414999999572,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087603331
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.645387999997183,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087603587
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.0902769999956945,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087603845
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.650360999999975,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087604102
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":19.2129350000032,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087604378
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.643935000000056,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087604633
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.71081000000413,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087604889
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.01492899999721,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087605145
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.532903999999689,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087605402
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.653974000000744,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087605661
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.514487000000372,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087605921
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.186138999997638,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087606180
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.758506999998644,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087606440
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.696810999994341,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087606697
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":11.952879999997094,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087606962
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.216253999999026,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087607220
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":18.596606999999494,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087607491
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.21832600000198,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087607748
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.494034000003012,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087608007
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.537383000002592,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087608267
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.244459999994433,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087608525
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":18.735889000003226,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087608795
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":49.286189999998896,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087609095
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":8.118693000003987,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087609353
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":5.784315999997489,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087609616
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":48.4837950000001,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087609926
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":15.749905999997281,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087610193
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.1751880000010715,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087610449
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":9.09030999999959,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087610709
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.468715000002703,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087610967
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":10.649482000000717,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087611230
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.405739000001631,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087611487
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":23.62880199999927,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087611762
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":7.902577000000747,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087612020
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.344655000000785,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087612278
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":6.264997999998741,"status":200,"attempt":1}
+HTTP_BEGIN GET /api/refresh-status 1794087612535
+STATUS_ATTEMPT {"url":"/api/refresh-status","ms":1014.253727999996,"status":200,"attempt":1}
+green ready { backlog: 37708, lfl: 30000 }
+Transit opened
+CGROUP_AFTER "low 0\nhigh 0\nmax 8207\noom 1\noom_kill 1\noom_group_kill 0\n"
+SERVER_EXIT {"code":0,"signal":null,"at":1794087677312}

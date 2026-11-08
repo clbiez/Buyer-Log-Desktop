@@ -1,0 +1,184 @@
+{
+  "protocol": "Three independent pairs: A/B, B/A, A/B. Each arm launches a fresh Chromium process. Click/frame observations are nested samples, not independent runs.",
+  "startedAt": "2026-11-07T18:20:34.976Z",
+  "driverPid": 61355,
+  "head": "c1460f01c56e0251df0a19b3ce14fe5936fe5f25",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "logicalCpus": 5,
+  "totalMemory": 18882662400,
+  "fixture": {
+    "cards": [
+      500,
+      5000
+    ],
+    "selectionObservations": 10,
+    "searchObservations": 10,
+    "saveObservations": 5,
+    "aiHistoryMessages": 100,
+    "aiPaintObservations": 40
+  },
+  "variants": {
+    "A": {
+      "dir": "/tmp/client-followup-sources/A",
+      "sourceHashes": {
+        "license-cards.js": "22334c26a19575d6f264589741e3e10abaf9e3f4609d78f824a0f9b8ababd451",
+        "manufacturers.js": "57a7d803fb6b1a585e8f5109b2558baed05a2f9ad41cc4128eed7cdb5f35f360",
+        "email-groups.js": "9fa5039a87501eba69a08ee55db43167d528e494d2fc9d5be5b9140086752452",
+        "lcwai-chat.js": "d9b79fa315930f9b6901f30d37bbfc76dee1f3650c4c2cfc1429f55a8d3c65b6"
+      }
+    },
+    "B": {
+      "dir": "/tmp/client-followup-sources/B",
+      "sourceHashes": {
+        "license-cards.js": "ecd3ed5b8ad19bd9ce060ba3820a3eab852d4c993757f4a240ccf4fb01c788d2",
+        "manufacturers.js": "c869821baadbf4af7102687f6771fbc1a9834e69ef6fe7a8f4b3bf2f86d7c170",
+        "email-groups.js": "560939255dae4396933444ce1168713b20c753b47ab07a9294e57d3a92a547f4",
+        "lcwai-chat.js": "fd0634d0bb2211f6376ee4bb4b48828b52a34955fb02a8224585868481f2a427"
+      }
+    }
+  },
+  "sharedHashes": {
+    "license-cards-engine.js": "284f9e06f56ffd5a8a572e1e62805a3f205546306e73abfb7546bc2b218ab429",
+    "manufacturer-cards-engine.js": "fe945db5c0db48166177f7fddcbde03e727cc25ed612d94be72893257145b0e9",
+    "business-rules.js": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+    "lcwai-markdown.js": "e22f4b68699088f31f3a4d428cae648cc348cf066ed396a73b285653ccadf23f"
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "A",
+      "target": "card",
+      "processId": 61363,
+      "startedAt": "2026-11-07T18:20:34.988Z",
+      "finishedAt": "2026-11-07T18:22:46.033Z",
+      "file": "pair-1-A-card.json",
+      "sha256": "93f59e76f40d50eac2025279eed6d61309adb18370d392b4be8cdae04f578d3e"
+    },
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "B",
+      "target": "card",
+      "processId": 61727,
+      "startedAt": "2026-11-07T18:22:46.033Z",
+      "finishedAt": "2026-11-07T18:24:01.057Z",
+      "file": "pair-1-B-card.json",
+      "sha256": "36f79dce380a83187487adaa67fb8c4b1155cbf303632a8a50b3c7af1bc7b1f4"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "B",
+      "target": "card",
+      "processId": 62035,
+      "startedAt": "2026-11-07T18:24:01.057Z",
+      "finishedAt": "2026-11-07T18:25:15.544Z",
+      "file": "pair-2-B-card.json",
+      "sha256": "6df3d48fa712d8b94c318723b14904abc4eed6b85b52fe890c2f0959d95ef8ca"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "A",
+      "target": "card",
+      "processId": 62354,
+      "startedAt": "2026-11-07T18:25:15.544Z",
+      "finishedAt": "2026-11-07T18:27:26.252Z",
+      "file": "pair-2-A-card.json",
+      "sha256": "5ce1dff513489f55ae09e7436955ed8704a172daec5774b72b600227b1826436"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "A",
+      "target": "card",
+      "processId": 62708,
+      "startedAt": "2026-11-07T18:27:26.252Z",
+      "finishedAt": "2026-11-07T18:29:37.621Z",
+      "file": "pair-3-A-card.json",
+      "sha256": "d530fe377db4a722eb02e076d7854aee6d9b1e4146558ed383430ef7d243e1b4"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "B",
+      "target": "card",
+      "processId": 63123,
+      "startedAt": "2026-11-07T18:29:37.621Z",
+      "finishedAt": "2026-11-07T18:30:51.026Z",
+      "file": "pair-3-B-card.json",
+      "sha256": "d37131845d64f91fbc5cf0523905429cec3fee1340d5d56e98eb49694dc6c11f"
+    },
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "A",
+      "target": "int",
+      "processId": 63425,
+      "startedAt": "2026-11-07T18:30:51.027Z",
+      "finishedAt": "2026-11-07T18:30:55.392Z",
+      "file": "pair-1-A-int.json",
+      "sha256": "a2ec5d9394958c34b10de97fbc215c6c622b15a202945ae621c19d4b62b1d290"
+    },
+    {
+      "pair": 1,
+      "order": "AB",
+      "variant": "B",
+      "target": "int",
+      "processId": 63564,
+      "startedAt": "2026-11-07T18:30:55.393Z",
+      "finishedAt": "2026-11-07T18:30:57.772Z",
+      "file": "pair-1-B-int.json",
+      "sha256": "9d2dca514b0f91e8c36d4ef2692a39dadd9f51924f0f513f80cea4f344a3d8e1"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "B",
+      "target": "int",
+      "processId": 63690,
+      "startedAt": "2026-11-07T18:30:57.773Z",
+      "finishedAt": "2026-11-07T18:31:00.207Z",
+      "file": "pair-2-B-int.json",
+      "sha256": "eb709e6aba2039cc814fcba26d89c1e37b0963025194930a49af16a06a65f640"
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "variant": "A",
+      "target": "int",
+      "processId": 63829,
+      "startedAt": "2026-11-07T18:31:00.207Z",
+      "finishedAt": "2026-11-07T18:31:04.746Z",
+      "file": "pair-2-A-int.json",
+      "sha256": "57519cdd3ef52df84938218ad222692f11ba3dcba24b42a77e2b40f233ac2a5e"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "A",
+      "target": "int",
+      "processId": 63958,
+      "startedAt": "2026-11-07T18:31:04.746Z",
+      "finishedAt": "2026-11-07T18:31:09.466Z",
+      "file": "pair-3-A-int.json",
+      "sha256": "1ee203aa05008df5d6ce5a66416005ab29ca5e615047790f3cd0048cd9f40c49"
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "variant": "B",
+      "target": "int",
+      "processId": 64088,
+      "startedAt": "2026-11-07T18:31:09.466Z",
+      "finishedAt": "2026-11-07T18:31:11.883Z",
+      "file": "pair-3-B-int.json",
+      "sha256": "d5dfbd36e6376190f9a4ebbb2bbc36a93340577cb91e4c17a4bdd1b245db0ad3"
+    }
+  ],
+  "finishedAt": "2026-11-07T18:31:11.885Z"
+}

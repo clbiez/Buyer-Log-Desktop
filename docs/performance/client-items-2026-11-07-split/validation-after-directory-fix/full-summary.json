@@ -1,0 +1,54 @@
+{
+  "totals": {
+    "tests": 8968,
+    "pass": 8903,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "batches": [
+    [
+      "1",
+      "43.7"
+    ],
+    [
+      "2",
+      "40.6"
+    ],
+    [
+      "3",
+      "37.1"
+    ],
+    [
+      "4",
+      "55.2"
+    ],
+    [
+      "5",
+      "15.7"
+    ],
+    [
+      "6",
+      "0.3"
+    ],
+    [
+      "7",
+      "2.5"
+    ],
+    [
+      "8",
+      "0.2"
+    ],
+    [
+      "9",
+      "7.3"
+    ],
+    [
+      "10",
+      "12.3"
+    ]
+  ],
+  "revision": "4277ccbb243eef48a71c5dd0561e950b06f0827d",
+  "appTree": "76d3e7965f39a735913bed79454cba88d36c2f11",
+  "runner": "unchanged npm test; one invocation; default concurrency4; private TMPDIR; no NODE_OPTIONS"
+}

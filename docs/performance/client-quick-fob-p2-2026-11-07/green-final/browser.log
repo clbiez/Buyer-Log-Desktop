@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": "rate-close",
+    "source": "supp",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "supp",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  },
+  {
+    "scenario": "rate-close",
+    "source": "yd",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "yd",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  },
+  {
+    "scenario": "rate-close",
+    "source": "tr",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  },
+  {
+    "scenario": "period-cancel",
+    "source": "tr",
+    "checks": {
+      "quickEquivalent": true,
+      "rowsEquivalent": true,
+      "detailEquivalent": true,
+      "listRetained": true,
+      "amountRetained": true,
+      "selectionEquivalent": true,
+      "validSelectionRetained": true,
+      "removedRuleAbsent": true,
+      "meaningfulCalculationChange": true,
+      "reopenedDetailEquivalent": true,
+      "reopenedRoyalty": true
+    }
+  }
+]

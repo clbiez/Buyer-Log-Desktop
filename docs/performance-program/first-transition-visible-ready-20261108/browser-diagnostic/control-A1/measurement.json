@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scenario": "first-intent-after-startup",
+  "startedAt": "2026-11-08T00:04:00.737Z",
+  "app": "/workspace/buyerlog-analytics904/resources/app",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "fixtureRoot": "/tmp/buyerlog-first-transition-dqucXA",
+  "status": "passed",
+  "transitions": [
+    {
+      "module": "cp",
+      "status": "passed",
+      "intentAtMs": 3442.600000023842,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 4,
+      "maxPollGapMs": 10407.199999988079,
+      "dispatchAtMs": 3473.7000000178814,
+      "dispatchDelayMs": 31.099999994039536,
+      "dataReadyMs": 20922.19999998808,
+      "firstRowsPaintedMs": 21061.59999999404,
+      "elapsedMs": 28549.09999999404,
+      "paintedAtMs": 31991.70000001788,
+      "observationEndMs": 29585.899999976158,
+      "rows": 24982,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 3363.5,
+        "startupReadyMs": 3376.9000000059605,
+        "startupCompleteMs": 3441.600000023842,
+        "continueAtMs": 3434.5,
+        "continueIntentAtMs": 3376.9000000059605,
+        "continueDispatchDelayMs": 57.599999994039536,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 3441.600000023842,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 567.7000000178814,
+            "duration": 82
+          },
+          {
+            "startTime": 741.6000000238419,
+            "duration": 103
+          },
+          {
+            "startTime": 909.7000000178814,
+            "duration": 78
+          },
+          {
+            "startTime": 1046,
+            "duration": 76
+          },
+          {
+            "startTime": 1175.7000000178814,
+            "duration": 55
+          },
+          {
+            "startTime": 1460,
+            "duration": 132
+          },
+          {
+            "startTime": 1593,
+            "duration": 63
+          },
+          {
+            "startTime": 1767.300000011921,
+            "duration": 119
+          },
+          {
+            "startTime": 2016.300000011921,
+            "duration": 67
+          },
+          {
+            "startTime": 2680.5,
+            "duration": 209
+          },
+          {
+            "startTime": 2894.2000000178814,
+            "duration": 331
+          },
+          {
+            "startTime": 3279.800000011921,
+            "duration": 66
+          },
+          {
+            "startTime": 3473.600000023842,
+            "duration": 61
+          },
+          {
+            "startTime": 3952.100000023842,
+            "duration": 620
+          },
+          {
+            "startTime": 4579.800000011921,
+            "duration": 1010
+          },
+          {
+            "startTime": 5591.200000017881,
+            "duration": 63
+          },
+          {
+            "startTime": 5711.200000017881,
+            "duration": 815
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    },
+    {
+      "module": "orders",
+      "status": "passed",
+      "intentAtMs": 2754.800000011921,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 4,
+      "maxPollGapMs": 2702.300000011921,
+      "dispatchAtMs": 2799.300000011921,
+      "dispatchDelayMs": 44.5,
+      "dataReadyMs": 8924.90000000596,
+      "firstRowsPaintedMs": 9001.59999999404,
+      "elapsedMs": 12027.40000000596,
+      "paintedAtMs": 14782.200000017881,
+      "observationEndMs": 14874,
+      "rows": 30000,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true,
+      "startup": {
+        "primaryScreenReadyMs": 2357,
+        "startupReadyMs": 2370.7000000178814,
+        "startupCompleteMs": 2753.800000011921,
+        "continueAtMs": 2748.4000000059605,
+        "continueIntentAtMs": 2370.7000000178814,
+        "continueDispatchDelayMs": 377.69999998807907,
+        "userWaitMs": 0,
+        "systemStartupCompleteMs": 2753.800000011921,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 511.40000000596046,
+            "duration": 54
+          },
+          {
+            "startTime": 600.0999999940395,
+            "duration": 107
+          },
+          {
+            "startTime": 770.3000000119209,
+            "duration": 55
+          },
+          {
+            "startTime": 827.5,
+            "duration": 76
+          },
+          {
+            "startTime": 913.0999999940395,
+            "duration": 59
+          },
+          {
+            "startTime": 1208.7000000178814,
+            "duration": 153
+          },
+          {
+            "startTime": 1362.800000011921,
+            "duration": 76
+          },
+          {
+            "startTime": 1539.300000011921,
+            "duration": 158
+          },
+          {
+            "startTime": 1928,
+            "duration": 131
+          },
+          {
+            "startTime": 2068.7000000178814,
+            "duration": 166
+          },
+          {
+            "startTime": 2277,
+            "duration": 56
+          },
+          {
+            "startTime": 2353.5,
+            "duration": 50
+          },
+          {
+            "startTime": 2405.5999999940395,
+            "duration": 211
+          },
+          {
+            "startTime": 2617.5,
+            "duration": 64
+          },
+          {
+            "startTime": 2799.2000000178814,
+            "duration": 116
+          },
+          {
+            "startTime": 2916.5,
+            "duration": 303
+          },
+          {
+            "startTime": 3234.5999999940395,
+            "duration": 150
+          },
+          {
+            "startTime": 3767.300000011921,
+            "duration": 60
+          },
+          {
+            "startTime": 3902.300000011921,
+            "duration": 63
+          },
+          {
+            "startTime": 4229.9000000059605,
+            "duration": 82
+          },
+          {
+            "startTime": 4603.800000011921,
+            "duration": 149
+          },
+          {
+            "startTime": 4788.200000017881,
+            "duration": 73
+          },
+          {
+            "startTime": 5350.200000017881,
+            "duration": 647
+          },
+          {
+            "startTime": 5997.5,
+            "duration": 57
+          },
+          {
+            "startTime": 6067.200000017881,
+            "duration": 1747
+          },
+          {
+            "startTime": 7896.800000011921,
+            "duration": 469
+          },
+          {
+            "startTime": 8437.300000011921,
+            "duration": 537
+          },
+          {
+            "startTime": 8979.800000011921,
+            "duration": 1020.1999999880791
+          }
+        ]
+      },
+      "initialGeneration": null,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "projectionGenerations": [
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128",
+        "mw6vhoks-9100b15fc128"
+      ],
+      "errors": []
+    }
+  ],
+  "rendererErrors": [],
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw6vhoks-9100b15fc128",
+    "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "sourceRows": 30000,
+  "stalls": [],
+  "serverLog": "/tmp/buyerlog-first-transition-dqucXA/server.log",
+  "finishedAt": "2026-11-08T00:05:22.944Z"
+}

@@ -1,0 +1,42 @@
+{
+  "revision": "e42f24b6283d68f80dece1a5012f12055ecc3374",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "startedAt": "2026-11-08T00:08:45.854644+00:00",
+  "status": "failed",
+  "commands": [
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "first-transition",
+        "startup-benchmark",
+        "boot-thinking"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-first-transition-related-integrated-4q8icmv0",
+      "startedAt": "2026-11-08T00:08:45.857104+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:08:46.607966+00:00",
+      "logSha256": "4f54c5083caf6ce2b623d0e8968934ff47e21034ebe7e65c12acbb7ca2d4d909",
+      "gzipSha256": "efbc781af41c6dbe755f7777d7b2ff715ef10a3d79142b0e08e17fdcec87d475"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-first-transition-full-integrated-zj4n3k7v",
+      "startedAt": "2026-11-08T00:08:46.609891+00:00",
+      "returncode": 1,
+      "finishedAt": "2026-11-08T00:15:57.534201+00:00",
+      "logSha256": "611df8840cb5fa2866067c17b4e850c144cdf7f583f389b597eab5818fe19f41",
+      "gzipSha256": "ba5ea7c096a2ca83c8d8147823e5101191475345da42725fd5e06ac0bb61f61c"
+    }
+  ],
+  "error": "AssertionError('Failed full-integrated; see /workspace/buyerlog-analytics904/docs/performance-program/first-transition-visible-ready-20261108/validation/full-integrated.log')",
+  "finishedAt": "2026-11-08T00:15:57.589146+00:00"
+}

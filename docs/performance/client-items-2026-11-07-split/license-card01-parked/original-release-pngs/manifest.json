@@ -1,0 +1,32 @@
+[
+  {
+    "file": "manufacturer-separate-detail.png",
+    "originalPath": "resources/app/public/release-notes/next-assets/manufacturer-separate-detail.png",
+    "gitBlob": "c751787a6fcac269619324f7d0cad29fce26dd0f",
+    "sha256": "9e987d37d9f957a4e4da6f0552b4f08be01da5cb88c858d0d8b5438dcb871740"
+  },
+  {
+    "file": "email-directory-separate-detail.png",
+    "originalPath": "resources/app/public/release-notes/next-assets/email-directory-separate-detail.png",
+    "gitBlob": "75a49d86e3d5fd4a03b17116d09128f2a406672d",
+    "sha256": "b9acac3838a71297977fc1f2ee993ba772ebd69b993bca3e99cffd53fc8a21b8"
+  },
+  {
+    "file": "lcwai-active-stream.png",
+    "originalPath": "resources/app/public/release-notes/next-assets/lcwai-active-stream.png",
+    "gitBlob": "1a9d1752c8ef9e22a31cfc9a909de466aba68255",
+    "sha256": "9ac5a043c4bc2532dcd450f97a28b3bdc28e15c598e3cf84a49a3180d42dc5c3"
+  },
+  {
+    "file": "license-card-separate-detail.png",
+    "originalPath": "resources/app/public/release-notes/next-assets/license-card-separate-detail.png",
+    "gitBlob": "24e11f8799b26171694a1cbef1d890acf4d93a9b",
+    "sha256": "675060f01326886dfa364a5950b5e60fb8c0b9e685f70c91af01ac6cd391fb7e"
+  },
+  {
+    "file": "license-quick-fob-draft-close.png",
+    "originalPath": "resources/app/public/release-notes/next-assets/license-quick-fob-draft-close.png",
+    "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+    "sha256": "6997f3f668259d85215bcda61e293eb031bceec8bbc63690c0c01c8c1ae24697"
+  }
+]

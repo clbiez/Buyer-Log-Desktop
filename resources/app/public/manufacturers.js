@@ -335,21 +335,33 @@
     </article>`;
   }
 
+  let listView = null;
   function render() {
     const host = S.host; if (!host) return;
     if (!host.querySelector('.mfp')) host.innerHTML = shellHtml();
-    renderActions(); renderStats(); renderBar();
     const body = host.querySelector('[data-mfp-body]');
-    if (S.error) { body.innerHTML = `<div class="mfpEmpty"><strong>${esc(T('Üreticiler hazırlanamadı', 'Manufacturers could not be prepared'))}</strong><p>${esc(S.error)}</p></div>`; return; }
-    if (!S.result) { body.innerHTML = `<div class="mfpEmpty"><strong>${esc(T('Veriler hazırlanıyor…', 'Preparing data…'))}</strong></div>`; return; }
-    const list = visibleCards();
+    const key = JSON.stringify([S.search, S.status, S.country, S.area, S.sort, en(), canManage()]);
+    const changed = !listView || listView.body !== body || listView.result !== S.result || listView.directory !== S.directory || listView.key !== key;
+    if (changed) { renderActions(); renderStats(); renderBar(); }
+    if (S.error) { listView = null; body.innerHTML = `<div class="mfpEmpty"><strong>${esc(T('Üreticiler hazırlanamadı', 'Manufacturers could not be prepared'))}</strong><p>${esc(S.error)}</p></div>`; return; }
+    if (!S.result) { listView = null; body.innerHTML = `<div class="mfpEmpty"><strong>${esc(T('Veriler hazırlanıyor…', 'Preparing data…'))}</strong></div>`; return; }
+    const list = changed ? visibleCards() : listView.list;
     const total = S.result.cards.length;
     const count = host.querySelector('[data-mfp-count]');
     if (count) count.textContent = list.length === total ? T(`${nf(total)} kart`, `${nf(total)} cards`) : T(`${nf(list.length)} / ${nf(total)} kart`, `${nf(list.length)} / ${nf(total)} cards`);
-    if (!list.some(card => card.key === S.selectedKey)) S.selectedKey = list[0] ? list[0].key : '';
-    const selected = list.find(card => card.key === S.selectedKey) || null;
+    const byKey = changed ? new Map(list.map(card => [card.key, card])) : listView.byKey;
+    if (!byKey.has(S.selectedKey)) S.selectedKey = list[0] ? list[0].key : '';
+    const selected = byKey.get(S.selectedKey) || null;
     const scroll = body.querySelector('.mfpListScroll'); const top = scroll ? scroll.scrollTop : 0;
-    body.innerHTML = `<div class="mfpList"><div class="mfpListScroll">${list.length ? list.map(listRowHtml).join('') : `<div class="mfpEmpty">${esc(total ? T('Filtreye uyan üretici yok.', 'No manufacturer matches the filter.') : T('Sipariş verisinde üretici bulunamadı.', 'No manufacturer was found in the order data.'))}</div>`}</div></div><div class="mfpDetail">${detailHtml(selected)}</div>`;
+    if (!body.querySelector('.mfpListScroll')) body.innerHTML = '<div class="mfpList"><div class="mfpListScroll"></div></div><div class="mfpDetail"></div>';
+    if (changed) body.querySelector('.mfpListScroll').innerHTML = list.length ? list.map(listRowHtml).join('') : `<div class="mfpEmpty">${esc(total ? T('Filtreye uyan üretici yok.', 'No manufacturer matches the filter.') : T('Sipariş verisinde üretici bulunamadı.', 'No manufacturer was found in the order data.'))}</div>`;
+    else if (listView.selected !== selected) {
+      body.querySelector('.mfpRow.isSelected')?.classList.remove('isSelected');
+      if (selected) body.querySelector(`[data-mfp-select="${CSS.escape(selected.key)}"]`)?.classList.add('isSelected');
+    }
+    const detail = body.querySelector('.mfpDetail');
+    if (!listView || listView.detail !== detail || listView.selected !== selected || listView.lang !== en() || listView.manage !== canManage() || listView.directory !== S.directory) detail.innerHTML = detailHtml(selected);
+    listView = { body, result: S.result, directory: S.directory, key, list, byKey, detail, selected, lang: en(), manage: canManage() };
     const nextScroll = body.querySelector('.mfpListScroll'); if (nextScroll) nextScroll.scrollTop = top;
     if (S.loading) body.classList.add('isLoading'); else body.classList.remove('isLoading');
   }

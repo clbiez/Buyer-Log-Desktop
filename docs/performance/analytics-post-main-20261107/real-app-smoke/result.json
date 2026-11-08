@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "synthetic": true,
+  "sourceRoot": "/tmp/buyerlog-startup-analytics-smoke-main5b8-v2",
+  "scope": "30k real app functional smoke; no timings or A/B gain claim",
+  "workerResult": true,
+  "errors": [],
+  "screenshots": [
+    "analytics-lfl-sort.png",
+    "analytics-delivery-worker.png",
+    "analytics-transit-summary.png"
+  ]
+}
