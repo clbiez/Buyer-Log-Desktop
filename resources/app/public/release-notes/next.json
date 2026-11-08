@@ -1460,6 +1460,35 @@
           "en": "Actual post-change app in Turkish and light theme; CP rows shown after the first switch."
         }
       }
+    },
+    {
+      "id": "excel-import-acknowledged-outcome-safety",
+      "type": "fix",
+      "module": {
+        "tr": "Excel İçe Aktarma",
+        "en": "Excel Import"
+      },
+      "title": {
+        "tr": "Yenileme hatasında aktarılan veriler ve sütunlar korunur",
+        "en": "Imported values and columns survive refresh failures"
+      },
+      "body": {
+        "tr": "Sunucu satır yazımını onayladıktan sonra ekran yenilemesi başarısız olursa oluşturulan sütunlar geri alınmaz; bilinen aktarım sayıları korunur. Yanıt alınamayan yazımlar doğrulanmamış olarak belirtilir. Kapanan veya değişen kullanıcıya ait eski aktarım penceresi yeni pencereyi değiştiremez. Başlamadan duran aktarımda da eklenmiş sütunlar korunur; yeniden denemeden önce sunucu verisini kontrol edin.",
+        "en": "If the screen refresh fails after the server acknowledges row writes, created columns and known import counts are retained. Writes with no confirmed response are shown as unconfirmed. An old import for a closed wizard or changed user cannot modify a newly opened wizard. Added columns are also retained when row writing has not started; check server data before retrying."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-import-ack-retained-20261108.png",
+        "alt": {
+          "tr": "Demo CP aktarımında onaylanmış bir satır ve korunmuş bir sütun; yenileme hatası açıkça gösteriliyor",
+          "en": "Demo CP import with one acknowledged row and one retained column; the refresh failure is clearly shown"
+        },
+        "caption": {
+          "tr": "Gerçek demo sunucusunda satır yanıtından sonra yenileme hatası üretildi; sütun ve değer tam CP projeksiyonundan yeniden doğrulandı.",
+          "en": "A refresh failure was injected after the row response on the actual demo server; the column and value were verified from the full CP projection."
+        }
+      }
     }
   ]
 }

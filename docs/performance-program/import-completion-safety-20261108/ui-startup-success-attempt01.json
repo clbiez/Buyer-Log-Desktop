@@ -1,0 +1,1261 @@
+{
+  "schemaVersion": 3,
+  "synthetic": true,
+  "status": "passed",
+  "startedAt": "2026-11-08T11:32:42.198Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-import-safety-ui-success-20261108-01",
+  "requestedRows": 30,
+  "requestedModules": [
+    "cp"
+  ],
+  "rendererTimeoutMs": 60000,
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "sampling": {
+    "startMs": 0,
+    "endMs": 1000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [
+    {
+      "module": "cp",
+      "primaryScreenReadyMs": 4696.300000011921,
+      "startupReadyMs": 4716.300000011921,
+      "startupCompleteMs": 4821.0999999940395,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 97.2999999821186,
+      "systemStartupCompleteMs": 4821.0999999940395,
+      "primaryToGateMs": 20,
+      "initialGeneration": null,
+      "rows": 27,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 27,
+      "longTaskCount": 3,
+      "longTaskTotalMs": 312,
+      "maxLongTaskMs": 149,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 47.599999994039536,
+          "decodedBytes": 14468,
+          "encodedBytes": 4610
+        },
+        {
+          "path": "/api/page-projection/cp",
+          "ms": 41.5,
+          "decodedBytes": 65948,
+          "encodedBytes": 6460
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 210.7000000178814,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 210.90000000596046,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 211,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 215.80000001192093,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 323.59999999403954,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 380,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 394.80000001192093,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 1824.7000000178814,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 1824.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 2034.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 2900.7000000178814,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 2924.300000011921,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 2924.5,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 2925,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 3008.300000011921,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 3014.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 3080.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 3140,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 125.7999999821186
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 3140,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3145.5,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3148.9000000059605,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 3152,
+          "detail": {
+            "durationMs": 12
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 3152,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 3152.2000000178814,
+          "detail": {
+            "durationMs": 0.20000001788139343
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 3152.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 3152.2000000178814,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 3152.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 3152.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 3153.2000000178814,
+          "detail": {
+            "module": "cp",
+            "durationMs": 0.800000011920929
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 3153.2000000178814,
+          "detail": {
+            "module": "cp",
+            "durationMs": 0.800000011920929
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 3153.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3449.300000011921,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 3458.4000000059605,
+          "detail": {
+            "reason": "cp",
+            "rows": 27,
+            "revision": 4
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 3458.5999999940395,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3655.300000011921,
+          "detail": {
+            "reason": "decision-engine-ready",
+            "revision": 5
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 3656.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 3707.9000000059605,
+          "detail": {
+            "rows": 27,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 3894.0999999940395,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 4399.200000017881,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4598.200000017881,
+          "detail": {
+            "reason": "personal-decision-context",
+            "revision": 6
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 4598.5,
+          "detail": null
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 4613.300000011921,
+          "detail": {
+            "reason": "personal-decision-context"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 4621.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 4633.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 4667.0999999940395,
+          "detail": {
+            "rows": 27,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 5049.9000000059605,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 5748.5999999940395,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 5805.5,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 9
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 5805.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 5822.9000000059605,
+          "detail": {
+            "mode": "after-ui"
+          }
+        }
+      ],
+      "jsHeapUsedBytes": 17416488,
+      "dom": {
+        "documents": 4,
+        "nodes": 29268,
+        "jsEventListeners": 3895
+      },
+      "heapSampling": "uncollected",
+      "navigationStartedAtMs": 1794137570455,
+      "observedAtMs": 1794137576647,
+      "projectionGenerations": [
+        "mw7r6mfv-7bdaf436b74d"
+      ],
+      "elapsedMs": 6121.660671,
+      "rendererRssBytes": 461090816,
+      "errors": [],
+      "generation": "mw7r6mfv-7bdaf436b74d",
+      "sourceRevision": "8f269ea5233e9c069854f0a5d13cdf2f355a3b208e0a9a5e746431280f2eb4aa"
+    }
+  ],
+  "healthSamples": [
+    {
+      "ms": 21.14320600000019,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T11:32:44.649Z"
+    },
+    {
+      "ms": 42.797755999999936,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T11:32:44.649Z"
+    },
+    {
+      "ms": 17.918320000000676,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:45.214Z"
+    },
+    {
+      "ms": 9.895991999999751,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:45.214Z"
+    },
+    {
+      "ms": 11.977117000000362,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:45.743Z"
+    },
+    {
+      "ms": 8.958899000000201,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:45.743Z"
+    },
+    {
+      "ms": 32.2323920000008,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:46.264Z"
+    },
+    {
+      "ms": 5.704107999999906,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:46.264Z"
+    },
+    {
+      "ms": 16.561475999999857,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:46.805Z"
+    },
+    {
+      "ms": 4.798799999999574,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T11:32:46.805Z"
+    },
+    {
+      "ms": 30.505497999998624,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:49.566Z"
+    },
+    {
+      "ms": 6.551870000001145,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:49.566Z"
+    },
+    {
+      "ms": 14.207143999999971,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:50.104Z"
+    },
+    {
+      "ms": 4.603170000000318,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:50.104Z"
+    },
+    {
+      "ms": 24.496988999999303,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:50.623Z"
+    },
+    {
+      "ms": 14.55020599999989,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:50.623Z"
+    },
+    {
+      "ms": 4.015647999998691,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:51.162Z"
+    },
+    {
+      "ms": 3.598253999998633,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:51.162Z"
+    },
+    {
+      "ms": 4.221437000000151,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:51.671Z"
+    },
+    {
+      "ms": 5.302298999999039,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:51.671Z"
+    },
+    {
+      "ms": 6.430380000001605,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:52.180Z"
+    },
+    {
+      "ms": 3.9068800000004558,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:52.180Z"
+    },
+    {
+      "ms": 18.091674999999668,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:52.690Z"
+    },
+    {
+      "ms": 17.12099499999931,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:52.690Z"
+    },
+    {
+      "ms": 6.915182000000641,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:53.226Z"
+    },
+    {
+      "ms": 9.925995999999941,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:53.226Z"
+    },
+    {
+      "ms": 4.526917000001049,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:53.743Z"
+    },
+    {
+      "ms": 3.7445370000004914,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:53.743Z"
+    },
+    {
+      "ms": 7.512595000000147,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:54.251Z"
+    },
+    {
+      "ms": 4.53195500000038,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:54.251Z"
+    },
+    {
+      "ms": 4.802585999999792,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:54.763Z"
+    },
+    {
+      "ms": 3.017883000000438,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:54.763Z"
+    },
+    {
+      "ms": 5.86292400000093,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:55.271Z"
+    },
+    {
+      "ms": 2.194439999999304,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:55.271Z"
+    },
+    {
+      "ms": 4.128439000000071,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:55.779Z"
+    },
+    {
+      "ms": 3.307753999999477,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:55.779Z"
+    },
+    {
+      "ms": 4.951911000000109,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:56.288Z"
+    },
+    {
+      "ms": 3.24779800000033,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:56.288Z"
+    },
+    {
+      "ms": 7.2680509999991045,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:56.797Z"
+    },
+    {
+      "ms": 8.653098000000682,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:56.797Z"
+    },
+    {
+      "ms": 9.268737000002147,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:57.313Z"
+    },
+    {
+      "ms": 57.70222199999989,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:57.313Z"
+    },
+    {
+      "ms": 10.022681000002194,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:57.883Z"
+    },
+    {
+      "ms": 8.201855000002979,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:57.883Z"
+    },
+    {
+      "ms": 9.097080000003189,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:58.401Z"
+    },
+    {
+      "ms": 4.967533999999432,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:58.401Z"
+    },
+    {
+      "ms": 8.96944799999983,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:58.915Z"
+    },
+    {
+      "ms": 3.882082000000082,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:58.915Z"
+    },
+    {
+      "ms": 5.30517300000065,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:59.428Z"
+    },
+    {
+      "ms": 3.294433000002755,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:59.428Z"
+    },
+    {
+      "ms": 26.56663800000024,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:59.939Z"
+    },
+    {
+      "ms": 15.671938999999838,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:32:59.939Z"
+    },
+    {
+      "ms": 4.338112000001274,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:33:00.482Z"
+    },
+    {
+      "ms": 4.81968599999891,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:33:00.482Z"
+    },
+    {
+      "ms": 10.205735999999888,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:33:00.994Z"
+    },
+    {
+      "ms": 4.142971999997826,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T11:33:00.994Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "244085ecfece32f1c47c1e1699475f52a3109ae5",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "1600000 400000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "68d9848ed2d40159bc472d3c73580511ebf2142ad2b3aed6516e1d906c2a2335",
+      "Antrepo - Demo.xlsx": "5c7ba081a8871a29af430fa145255d246c093fc37fba875c365542badb836c22",
+      "LFL - Demo.xlsx": "e6e17d8c699442c37542a3591ab988600cb162871cc36e7d730293f30baee60d"
+    }
+  },
+  "fixtureConditions": {
+    "maintenanceState": "recent-weekly-check",
+    "stateFile": "/tmp/buyerlog-startup-import-safety-ui-success-20261108-01/local/data-cleanup-state.json"
+  },
+  "refresh": {
+    "jobId": "mw7r6kuu-v8ikncxb",
+    "serverInstanceId": "154aa7c7df51deb5",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-08T11:32:44.681Z",
+    "finishedAt": "2026-11-08T11:32:46.813Z",
+    "elapsedMs": 2119,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 30,
+      "newlyAppeared": 30,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 30,
+      "antrepoChangedOrders": 9,
+      "asasChangeCount": 30,
+      "antrepoChangeCount": 9,
+      "hasChanges": true,
+      "details": {
+        "count": 39
+      },
+      "historyItemId": "refresh_mw7r6mh6_qv8y3y"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:44.729Z",
+        "timestampMs": 1794137564729,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:44.730Z",
+        "timestampMs": 1794137564730,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:44.730Z",
+        "timestampMs": 1794137564730,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:45.833Z",
+        "timestampMs": 1794137565833,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 1103,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:45.844Z",
+        "timestampMs": 1794137565844,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:45.845Z",
+        "timestampMs": 1794137565845,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:45.846Z",
+        "timestampMs": 1794137565846,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:46.373Z",
+        "timestampMs": 1794137566373,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 527,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:46.438Z",
+        "timestampMs": 1794137566438,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:46.449Z",
+        "timestampMs": 1794137566449,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 11,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:46.452Z",
+        "timestampMs": 1794137566452,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:46.548Z",
+        "timestampMs": 1794137566548,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 96,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T11:32:46.548Z",
+        "timestampMs": 1794137566548,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T11:32:46.791Z",
+        "timestampMs": 1794137566791,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 243,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 0.5008589999999913,
+        "durationMs": 1070.3818899999999,
+        "executionMs": 936.3991660000002,
+        "overheadMs": 133.98272399999973,
+        "heapUsedBytes": 35777584,
+        "mainReceiveMs": 0.8119910000000345,
+        "workerPostMessageMs": 0.9611500000000888,
+        "resultTransport": "message-port"
+      },
+      "antrepo": {
+        "queueWaitMs": 0.0635229999998046,
+        "durationMs": 491.5303650000001,
+        "executionMs": 380.7642539999997,
+        "overheadMs": 110.76611100000036,
+        "heapUsedBytes": 29671752,
+        "mainReceiveMs": 2.326068000000305,
+        "workerPostMessageMs": 0.07910499999979947,
+        "resultTransport": "message-port"
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-08T11:32:44.721Z",
+        "ms": 8,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-08T11:32:44.729Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-08T11:32:44.730Z",
+        "ms": 1109,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-08T11:32:45.839Z",
+        "ms": 5,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-08T11:32:45.844Z",
+        "ms": 2,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-08T11:32:45.846Z",
+        "ms": 590,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-08T11:32:46.436Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-08T11:32:46.436Z",
+        "ms": 16,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-08T11:32:46.452Z",
+        "ms": 96,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-08T11:32:46.548Z",
+        "ms": 243,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-08T11:32:46.791Z",
+        "ms": 22,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-08T11:32:45.842Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 37,
+      "dashboard": null,
+      "totalMs": 2113
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 28,
+      "successful": 28,
+      "failed": 0,
+      "p50Ms": 8.96944799999983,
+      "p95Ms": 30.505497999998624,
+      "maxMs": 32.2323920000008
+    },
+    "refresh": {
+      "count": 4,
+      "successful": 4,
+      "failed": 0,
+      "p50Ms": 16.561475999999857,
+      "p95Ms": 32.2323920000008,
+      "maxMs": 32.2323920000008
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      200
+    ],
+    "endpointAvailable": true
+  },
+  "statusProbe": {
+    "endpoint": "/api/status",
+    "all": {
+      "count": 28,
+      "successful": 28,
+      "failed": 0,
+      "p50Ms": 4.81968599999891,
+      "p95Ms": 42.797755999999936,
+      "maxMs": 57.70222199999989
+    },
+    "refresh": {
+      "count": 4,
+      "successful": 4,
+      "failed": 0,
+      "p50Ms": 5.704107999999906,
+      "p95Ms": 9.895991999999751,
+      "maxMs": 9.895991999999751
+    }
+  },
+  "stalls": [],
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-import-safety-ui-success-20261108-01/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1",
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1"
+    ],
+    "stallProfiles": []
+  },
+  "refreshWallMs": 2211.4950489999997,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 27,
+      "orders": 30,
+      "overview": 30
+    },
+    "generation": "mw7r6mfv-7bdaf436b74d",
+    "sourceRevision": "8f269ea5233e9c069854f0a5d13cdf2f355a3b208e0a9a5e746431280f2eb4aa",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 2043.0872929999996,
+  "chromium": "154.0.8037.57",
+  "lifecycleEvents": [
+    {
+      "module": "cp",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 4696.300000011921
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 4716.300000011921
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 4821.0999999940395
+    }
+  ],
+  "limitations": [
+    "Linux headless Chromium; Windows/Electron, antivirus and cold OS disk cache are not measured.",
+    "Collection workspace is empty synthetic data. RSS sums include shared renderer pages, not unique physical memory.",
+    "Health probes are serial every 500 ms after completion; timeouts/errors are retained in quantiles, not discarded.",
+    "Long tasks use a fixed navigation window; startup events outside it remain separate timings."
+  ],
+  "finishedAt": "2026-11-08T11:33:01.661Z"
+}

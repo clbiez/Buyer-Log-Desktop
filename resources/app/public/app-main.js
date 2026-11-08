@@ -29886,11 +29886,11 @@ function importNormalizeText(value){
 // CP satırının içe aktarmanın DOKUNDUĞU alanlarının anlık parmak izi.
 // CP satırlarında satır revizyonu yoktur; plan kurulduktan sonra satırın
 // değişip değişmediği ancak içerikten anlaşılır (§13).
-function cpImportRowRevision(row){
+function cpImportRowRevision(row,noteDefinitions=CP_NOTE_COLUMN_DEFS){
   if(!row)return '';
   const parts=[lineKeyOfRow(row)];
   CP_IMPORT_WRITABLE_FIELDS.forEach(field=>parts.push(importNormalizeText(row[field.id])));
-  CP_NOTE_COLUMN_DEFS.forEach(def=>parts.push(importNormalizeText(row[def.id])));
+  noteDefinitions.forEach(def=>parts.push(importNormalizeText(row[def.id])));
   return window.BLExcelImportPlan?.hash?.(parts)||parts.join('|');
 }
 function cpImportFields(){
@@ -30067,6 +30067,7 @@ window.BLExcelImportBridge={
     return out;
   },
   get(moduleId){
+    const revisionNotes=moduleId==='cp'?CP_NOTE_COLUMN_DEFS.map(def=>({id:def.id})):null;
     if(moduleId==='cp')return {
       id:'cp',
       label:'CP Tracker',
@@ -30076,7 +30077,7 @@ window.BLExcelImportBridge={
       fields:cpImportFields,
       rows:()=>((state.cp&&state.cp.rows)||[]),
       revision:()=>Number(state.storeRevisions&&state.storeRevisions.orders)||0,
-      rowRevision:cpImportRowRevision,
+      rowRevision:row=>cpImportRowRevision(row,revisionNotes),
       rowLabel:cpImportRowLabel,
       readValue:cpImportReadValue,
       createCustomColumns:cpImportCreateCustomColumns,
@@ -30088,13 +30089,14 @@ window.BLExcelImportBridge={
         // Tek istek, tek revizyon kapısı: sunucu ya hepsini yazar ya hiçbirini.
         const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{
           method:'POST',headers:{'Content-Type':'application/json'},
+          expectedRevision:plan.revisionGuard.storeRevision,
           body:JSON.stringify({items}),
         });
         const skipped=Array.isArray(data.skipped)?data.skipped.length:0;
         if(typeof progress==='function')progress({stage:'importing',done:items.length,total:items.length});
         return {created:0,updated:Number(data.updated)||0,failed:skipped};
       },
-      async refresh(){ await loadFromServer(false); },
+      async refresh(){if(!await loadFromServer(false))throw Object.assign(new Error(appLang==='en'?'Server data could not be reloaded after import.':'İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.'),{code:'IMPORT_REFRESH_FAILED'});},
     };
     if(moduleId==='collection')return {
       id:'collection',

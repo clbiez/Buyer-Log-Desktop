@@ -1,0 +1,80 @@
+TAP version 13
+# Subtest: normal same-actor hydration performed by the actual app keeps successful import completion
+not ok 1 - normal same-actor hydration performed by the actual app keeps successful import completion
+  ---
+  duration_ms: 67.645766
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:73:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - 'success'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'success'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:78:23)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: actual CP revision witness survives its own new blank column while still rejecting original-field edits
+not ok 2 - actual CP revision witness survives its own new blank column while still rejecting original-field edits
+  ---
+  duration_ms: 85.723779
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:93:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    own schema addition must not change the old row witness
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:96:9)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: actual CP request carries the original plan revision through the mutation queue
+not ok 3 - actual CP request carries the original plan revision through the mutation queue
+  ---
+  duration_ms: 58.616489
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:99:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    undefined !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:101:79)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 346.40211

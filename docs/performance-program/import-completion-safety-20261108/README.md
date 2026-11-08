@@ -1,0 +1,58 @@
+# Import completion safety / İçe aktarma tamamlanma güvenliği
+
+## Değişti / Changed
+
+[Doğrulandı] Gerçek `runImport` kodunda satır ACK'sinden sonraki refresh hatası, oluşturulmuş sütunları rollback yoluna götürüyordu. Geç kalan işlem, global wizard `state` değiştiğinde yeni pencerenin alanlarını da temizleyebiliyordu. Bunlar kaynak/native hata senaryosudur; gerçek iş verisinde tarihsel kayıp kanıtı yoktur.
+
+Sahiplik state+host+actor/access değişim epoch'una bağlıdır. Aynı kullanıcı profilinin normal refresh'te yeni nesne olması iptal sayılmaz. Gözlenen kullanıcı/yetki değişimi ve ABA eski işi geçersiz kılar. Bu epoch bir yetki cache'i değildir; gerçek plan/revision/canEdit kontrolleri korunur. İsteği iptal ettiği iddia edilmez.
+
+Başarılı satır yanıtından sonra refresh hatası, bilinen created/updated/failed sayılarını korur. Kayıp yanıt `unknown` olarak ayrılır; sıfır yazım veya rollback güvenliği varsayılmaz. Oluşturulmuş sütunlar hata halinde otomatik silinmez. **Bilinçli ödünleşim:** satır yazımı başlamamış olsa dahi kullanılmayan yeni sütun kalabilir; kullanıcı yeniden denemeden önce sunucu verisini kontrol eder. Eşzamanlı yazılmış/ACK'si kayıp değer taşıyan alan silinmez.
+
+Gerçek CP adapter'ı başlangıçtaki note-field witness'ını sabitler: kendi eklediği boş alan eski row witness'ını bozmaz; eski alanın değişmesi hâlâ reddedilir. Orijinal plan revision'ı mevcut mutation kuyruğuna taşınır. Gerçek `loadFromServer(false)` false dönerse başarı gösterilmez; true yolun eski undefined sonucu korunur. Yeni sonuç açıklamaları ve uygulamanın sahip olduğu refresh hata ayrıntısı dil değişiminde TR/EN yeniden oluşturulur.
+
+EN: Keep acknowledged values and counts when a post-write screen refresh fails. Distinguish an unknown response from an unstarted write. Retain created columns even for pre-write failures rather than assume rollback is safe. Guard late completions by the owning wizard and an observed actor/access epoch, allowing normal same-actor profile replacement. Preserve the original plan revision in the existing CP queue and freeze the original note-field witness. Existing plan/access checks remain. This is a correctness fix, with no performance gain or server cancellation claim.
+
+## Native RED → GREEN
+
+- `red.log`: actual initial behavior, 2 PASS / 6 FAIL. `setup-*` failures are fixture/path setup failures, not behavior RED.
+- `review-findings.red.log`: 0 PASS / 3 FAIL in real hydration/CP-schema/original-queue-revision paths.
+- `revoked-after-create.red.log`, `cp-refresh-false.red.log`, `language.red.log`, `owned-detail-language.red.log`: separate retained RED evidence.
+- `owned-detail-final-green.log`: 21 native tests PASS, no skips/cancels. Uses actual nested wizard, real Plan and extracted actual CP adapter/hydration functions. Network/DOM boundaries in these tests are synthetic, not a whole browser acceptance claim.
+- `related-final.log`: initial 117 PASS / 2 FAIL source assertions. Production bridge literal shape was restored while retaining the new witness; old assertions were not changed. `related-green.log` records 119 PASS. Final current-tree package is recorded separately.
+
+## Gerçek tarayıcı / Actual browser
+
+Linux Chromium, fresh synthetic fixture of 30 source rows / 27 CP rows. Existing, unmodified `benchmark-startup-orders.js` starts the real demo server. A wrapper runs the functional probe after native measurements. Workbook setup uses the existing wizard `_state()` API and actual XLSX/Workbook/Plan code; file-picker/upload is not exercised. Actual Review/Import clicks issue real note-column PUT and override POST.
+
+`ui-attempt03/result.json`: after real row ACK, only GET `/api/data` is fault-injected with 503. Exactly one note-column PUT and one row POST, no rollback PUT. The server's full `/api/page-projection/cp` returns the written synthetic value and retained field. Wizard retains updated=1, customFieldsCreated=1, acknowledged status and a refresh warning. TR/EN PNGs were inspected; no image editing.
+
+`ui-success-attempt01/result.json`: no injected failure; real same-user refresh and new-note import complete successfully, updated=1, field=1, one row POST, retained value verified through full CP projection. TR/EN result is correct. No startup speed or 30k acceptance is claimed from these small functional probes.
+
+Failed probes are retained: `ui/result.json` was blocked by an actual late release-notes dialog; the next harness closes that dialog before clicks. `ui-attempt02/result.json` failed a probe assertion that incorrectly searched lean startup metadata for note values. The actual persisted value existed in demo overrides/WAL; the corrected probe reads the full CP projection. These failed results are not relabeled PASS. No refresh POST was retried.
+
+## Tek bağımsız P1 incelemesi / One independent P1 review
+
+Read-only gpt-6-astra review covers Main `1796193f0a57c7785e7bf9fdb3557e33c550b25e` through initial candidate `244085ecfece32f1c47c1e1699475f52a3109ae5`. One review round; it does not cover all subsequent fixes automatically.
+
+| Finding | Initial evidence | Closure in current tree |
+| --- | --- | --- |
+| R1 P1: profile object identity rejects ordinary CP hydration | Actual loader replaces BL_USER_CONTEXT even for the same actor; the wizard then fails ownership | Actor/access cancellation epoch; actual hydration, ABA and permission-change native tests; real successful CP import |
+| R2 P1: own blank note-column creation changes the global row witness | cpImportRowRevision previously enumerates mutable CP_NOTE_COLUMN_DEFS after creation | Original note definitions frozen per CP adapter; native own-field and original-field-edit assertions; real new-column success/failure imports |
+
+Additional root deltas after that review: original queued revision, explicit refresh-false propagation, dynamic outcome/owned-detail localization, extra negative tests and actual browser evidence. They are root-verified changes, not an independently re-reviewed second round. No new general review was started.
+
+## Sınırlar / Limits
+
+Production server, endpoints, timeout, pool, canonical bindings, #892 counter, and #916 checklist engines are unchanged. Existing test assertions/runner/validators/i18n baseline are not weakened. All 50 original Main release-note entries are preserved, with one own TR/EN entry and an inspected actual post-change PNG added.
+
+This narrow fix does not activate Phase 6a thin rows or Phase 6c. Final whole-suite/check results, exact commit and GitHub status belong in `validation.json`. No merge, TEST or STABLE publication is authorized by a local PASS. Previous 6a 9702 PASS belongs to a different tree and is not this fix's full regression result.
+
+## Tekrar çalıştırma / Reproduction
+
+Repo app dizininden native kontroller: `node --test tests/excel-import-completion-safety.test.js`, `npm test -- excel-import import-profiles private-order-notes note-columns`. Tüm koşular ortak `/tmp/buyerlog-performance-measurement.lock` ile seri çalıştırılır. Native süreç/browser için ortamın izin verdiği gerçek host execution kullanılır; sandbox EPERM bir uygulama hatası diye gizlenmez.
+
+Tarayıcı için `PLAYWRIGHT_MODULE` bu dizindeki `playwright-ui-wrapper.cjs` dosyasını; `BL_IMPORT_UI_OUT` yeni bir kanıt dizinini gösterir. `BL_IMPORT_UI_MODE=success` normal yolu, unset mod post-ACK refresh fault yolunu çalıştırır. Ortamdaki gerçek Playwright/Chromium yollarını doğrulayın; wrapper içindeki Playwright require yolu bu Cloud ortamına aittir. Değişmemiş betik: `node scripts/benchmark-startup-orders.js --rows 30 --module cp --skip-same-tab --sample-ms 1000 --renderer-timeout-ms 60000 --fixture-root <yeni-izole-demo-kökü> --out <yeni-json>`. Her koşu yeni kök/çıktı kullanır; eski başarısız kaydın üstüne yazmaz. Bu küçük işlev testi resmi Faz 0/30k üç çift ölçümünün yerine geçmez.
+
+## Son sabit kod doğrulaması / Final local validation
+
+Standart tam `npm test`: **1302 dosya; 10/10 batch tek invocation, concurrency=4; 8952 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 210,0 sn. Yeni native 21/21; ilgili import paketi 123 PASS; #916 hızlı paket 23/23. i18n yeni/baseline 0/0; 51 release-note kaydı geçerli, Main'in 50 kaydı korunur. Son testten sonra runtime/test kodu değiştirilmedi. Ayrı resmi 30k üç çift kampanya çalıştırılmadı; yerel GREEN, genel program/performans kabulü değildir. GitHub/merge/yayın durumu PR'da gerçek head ile ayrıca takip edilir.

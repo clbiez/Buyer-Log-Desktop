@@ -24,6 +24,21 @@
   var STEPS = ['file', 'sheet', 'columns', 'match', 'review', 'import'];
   var PAGE_SIZE = 50;
   var state = null, host = null, aiPanel = null;
+  // Cancellation identity, never a permission cache. Ordinary hydration may
+  // replace the same profile object; access/actor changes invalidate old jobs.
+  var importActorEpoch = 0, importActorSignature = importActorStamp();
+  function importActorStamp() {
+    var user = global.BL_USER_CONTEXT || null;
+    return JSON.stringify(user ? [String(user.id == null ? '' : user.id), user.systemRole,
+      user.accessAreas, user.permissions, user.capabilities, user.scopes] : null);
+  }
+  function syncImportActor() {
+    var stamp = importActorStamp();
+    if (stamp !== importActorSignature) { importActorSignature = stamp; importActorEpoch++; }
+    return importActorEpoch;
+  }
+  if (typeof global.addEventListener === 'function') global.addEventListener('bl:user-access-applied', syncImportActor);
+
 
   function en() { return (global.appLang || document.documentElement.lang) === 'en'; }
   function T(tr, enText) { return en() ? enText : tr; }
@@ -610,6 +625,22 @@
       + '</div></div>';
   }
 
+  function importResultMessage(result) {
+    if (!result.serverWrite) return result.message || '';
+    if (result.status === 'success') return result.failed
+      ? T('Aktarım tamamlandı ancak bazı satırlar sunucu tarafından reddedildi.', 'The import finished but some rows were rejected by the server.')
+      : T('Aktarım tamamlandı.', 'The import finished.');
+    var message = result.serverWrite === 'acknowledged'
+        ? T('Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. ', 'The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. ')
+        : result.serverWrite === 'unknown'
+          ? T('Aktarımın sunucu sonucu doğrulanamadı. Oluşturulan sütunlar korundu; yeniden denemeden önce sunucu verisini kontrol edin. ', 'The server outcome of the import could not be confirmed. Created columns were retained; check server data before retrying. ')
+          : T('Aktarım satır yazımı başlamadan durdu. Oluşturulan sütunlar varsa korundu. ', 'The import stopped before row writing started. Any created columns were retained. ');
+    var detail = result.errorCode === 'IMPORT_REFRESH_FAILED'
+      ? T('İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.', 'Server data could not be reloaded after import.')
+      : String(result.errorDetail || '');
+    return message + detail;
+  }
+
   function renderImportStep() {
     if (state.result) {
       var result = state.result;
@@ -620,7 +651,7 @@
         [T('Oluşturulan özel alan', 'Custom fields created'), result.customFieldsCreated]].map(function (card) {
           return '<div class="ximStat"><span>' + esc(card[0]) + '</span><strong>' + card[1] + '</strong></div>';
         }).join('') + '</div>'
-        + '<p class="ximNotice ' + (result.status === 'success' ? 'is-ok' : 'is-bad') + '">' + esc(result.message) + '</p></div>';
+        + '<p class="ximNotice ' + (result.status === 'success' ? 'is-ok' : 'is-bad') + '">' + esc(importResultMessage(result)) + '</p></div>';
     }
     var progress = state.progress;
     var stages = [
@@ -799,10 +830,11 @@
     if (!plan || !plan.executable) return;
     var profile = global.BL_USER_CONTEXT || null;
     var actorId = profile && profile.id != null ? String(profile.id) : '';
+    var actorEpoch = syncImportActor();
     function current() {
       var now = global.BL_USER_CONTEXT || null;
       return state === ownedState && host === ownedHost && ownedHost && ownedHost.isConnected !== false
-        && now === profile && (now && now.id != null ? String(now.id) : '') === actorId;
+        && syncImportActor() === actorEpoch && (now && now.id != null ? String(now.id) : '') === actorId;
     }
     function assertCurrent(completion) {
       if (!current()) throw new Error(T('İçe aktarma sırasında görünüm veya kullanıcı değişti. Pencereyi yeniden açın.', 'The view or user changed during import. Reopen the window.'));
@@ -870,19 +902,15 @@
         return;
       }
       var retained = columnResult ? (columnResult.created || []).length : 0;
-      var message = rowWriteAcknowledged
-        ? T('Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. ', 'The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. ')
-        : rowWriteStarted
-          ? T('Aktarımın sunucu sonucu doğrulanamadı. Oluşturulan sütunlar korundu; yeniden denemeden önce sunucu verisini kontrol edin. ', 'The server outcome of the import could not be confirmed. Created columns were retained; check server data before retrying. ')
-          : T('Aktarım satır yazımı başlamadan durdu. Oluşturulan sütunlar varsa korundu. ', 'The import stopped before row writing started. Any created columns were retained. ');
       state.result = {
         status: 'failed', created: created, updated: updated, skipped: plan.summary.skippedRows,
         failed: rowWriteAcknowledged ? acknowledgedFailed : (rowWriteStarted ? 0 : plan.operations.length),
         unconfirmed: rowWriteStarted && !rowWriteAcknowledged ? plan.operations.length : 0,
         warnings: plan.summary.warnings, conflictsResolved: 0, customFieldsCreated: retained,
         serverWrite: rowWriteAcknowledged ? 'acknowledged' : rowWriteStarted ? 'unknown' : 'not-started',
-        message: message + String(error && error.message || error),
+        errorCode: String(error && error.code || ''), errorDetail: String(error && error.message || error), message: '',
       };
+      state.result.message = importResultMessage(state.result);
       audit('failed', state.result);
     } finally {
       if (current()) { state.busy = false; state.progress = null; state.plan = null; render(); }

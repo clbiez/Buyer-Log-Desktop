@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+ok 1 - confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+  ---
+  duration_ms: 15.793299
+  type: 'test'
+  ...
+# Subtest: uncertain execute failure retains columns and labels server outcome unknown
+ok 2 - uncertain execute failure retains columns and labels server outcome unknown
+  ---
+  duration_ms: 2.713846
+  type: 'test'
+  ...
+# Subtest: actual plan is checked again after column creation before row mutation
+ok 3 - actual plan is checked again after column creation before row mutation
+  ---
+  duration_ms: 23.6199
+  type: 'test'
+  ...
+# Subtest: late primary completion cannot refresh audit or clear a newly opened wizard
+ok 4 - late primary completion cannot refresh audit or clear a newly opened wizard
+  ---
+  duration_ms: 3.599767
+  type: 'test'
+  ...
+# Subtest: closed or replaced wizard cannot continue from column ACK into row execution
+ok 5 - closed or replaced wizard cannot continue from column ACK into row execution
+  ---
+  duration_ms: 1.700247
+  type: 'test'
+  ...
+# Subtest: actor replacement and in-place actor-id drift block late work without targeting new owner
+ok 6 - actor replacement and in-place actor-id drift block late work without targeting new owner
+  ---
+  duration_ms: 1.819557
+  type: 'test'
+  ...
+# Subtest: successful current import preserves counts refresh ordering and feedback
+ok 7 - successful current import preserves counts refresh ordering and feedback
+  ---
+  duration_ms: 0.993351
+  type: 'test'
+  ...
+# Subtest: read-only denial starts no creation or row mutation
+ok 8 - read-only denial starts no creation or row mutation
+  ---
+  duration_ms: 0.520764
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 186.805975
