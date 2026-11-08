@@ -793,52 +793,99 @@
   }
 
   async function runImport() {
-    var plan = state.plan;
+    var ownedState = state, ownedHost = host;
+    if (!ownedState || ownedState.busy) return;
+    var plan = ownedState.plan, adapter = ownedState.adapter;
     if (!plan || !plan.executable) return;
-    state.step = 'import'; state.busy = true; state.error = ''; state.result = null; render();
-    var columnResult = null, created = 0, updated = 0;
-    try {
-      if (!state.adapter.canEdit()) throw new Error(T('Bu ekranı düzenleme yetkiniz yok.', 'You do not have permission to edit this screen.'));
-      // SON KONTROL: kullanıcı önizlemeye bakarken hedef değiştiyse yazma başlamaz.
-      var applicable = Plan.assertApplicable(plan, {
-        fingerprintSpec: planSpec(), revision: state.adapter.revision(),
-        rows: state.adapter.rows(), rowRevision: state.adapter.rowRevision,
-      });
-      if (!applicable.ok) {
-        throw new Error(applicable.code === 'PLAN_NOT_EXECUTABLE'
-          ? T('Plan uygulanabilir değil.', 'The plan is not executable.')
-          : T('Veriler siz inceleme yaparken değişti. Import planını yenileyin.', 'The data changed while you were reviewing. Rebuild the import plan.'));
+    var profile = global.BL_USER_CONTEXT || null;
+    var actorId = profile && profile.id != null ? String(profile.id) : '';
+    function current() {
+      var now = global.BL_USER_CONTEXT || null;
+      return state === ownedState && host === ownedHost && ownedHost && ownedHost.isConnected !== false
+        && now === profile && (now && now.id != null ? String(now.id) : '') === actorId;
+    }
+    function assertCurrent(completion) {
+      if (!current()) throw new Error(T('İçe aktarma sırasında görünüm veya kullanıcı değişti. Pencereyi yeniden açın.', 'The view or user changed during import. Reopen the window.'));
+      var guard = completion && typeof adapter.assertCompletion === 'function' ? adapter.assertCompletion : adapter.assertCurrent;
+      if (typeof guard === 'function') {
+        var asynchronous = guard.constructor && guard.constructor.name === 'AsyncFunction';
+        var checked = asynchronous ? false : guard.call(adapter);
+        if (checked && typeof checked.then === 'function') Promise.resolve(checked).catch(function () {});
+        if (checked === false || (checked && typeof checked.then === 'function'))
+          throw new Error(T('İçe aktarma kaynağı değişti. Planı yeniden oluşturun.', 'The import source changed. Rebuild the plan.'));
       }
+    }
+    function assertPlan() {
+      var applicable = Plan.assertApplicable(plan, {
+        fingerprintSpec: planSpec(), revision: adapter.revision(), rows: adapter.rows(), rowRevision: adapter.rowRevision,
+      });
+      if (!applicable.ok) throw new Error(applicable.code === 'PLAN_NOT_EXECUTABLE'
+        ? T('Plan uygulanabilir değil.', 'The plan is not executable.')
+        : T('Veriler siz inceleme yaparken değişti. Import planını yenileyin.', 'The data changed while you were reviewing. Rebuild the import plan.'));
+    }
+    state.step = 'import'; state.busy = true; state.error = ''; state.result = null; render();
+    var columnResult = null, created = 0, updated = 0, acknowledgedFailed = 0;
+    var rowWriteStarted = false, rowWriteAcknowledged = false;
+    try {
+      assertCurrent();
+      if (!adapter.canEdit()) throw new Error(T('Bu ekranı düzenleme yetkiniz yok.', 'You do not have permission to edit this screen.'));
+      assertPlan();
       var fieldIdMap = new Map();
       if (plan.newColumns.length) {
-        columnResult = await state.adapter.createCustomColumns(plan.newColumns);
+        columnResult = await adapter.createCustomColumns(plan.newColumns);
+        assertCurrent();
         (columnResult.created || []).forEach(function (item) { fieldIdMap.set(item.planFieldId, item.id); });
       }
-      var outcome = await state.adapter.execute(plan, fieldIdMap, function (progress) { state.progress = progress; render(); });
+      // Column creation awaits shared state; recheck the actual frozen plan.
+      assertCurrent(); assertPlan();
+      if (!adapter.canEdit()) throw new Error(T('Bu ekranı düzenleme yetkiniz yok.', 'You do not have permission to edit this screen.'));
+      rowWriteStarted = true;
+      var outcome = await adapter.execute(plan, fieldIdMap, function (progress) {
+        try { assertCurrent(); } catch (_) { return; }
+        state.progress = progress; render();
+      });
       created = outcome.created || 0; updated = outcome.updated || 0;
+      acknowledgedFailed = outcome.failed || 0; rowWriteAcknowledged = true;
+      assertCurrent();
       state.progress = { stage: 'verifying' }; render();
-      await state.adapter.refresh();
+      await adapter.refresh();
+      assertCurrent(true);
       state.result = {
         status: 'success', created: created, updated: updated,
-        skipped: plan.summary.skippedRows, failed: outcome.failed || 0,
+        skipped: plan.summary.skippedRows, failed: acknowledgedFailed,
         warnings: plan.summary.warnings,
         conflictsResolved: plan.conflicts.filter(function (item) { return item.resolved; }).length,
         customFieldsCreated: columnResult ? (columnResult.created || []).length : 0,
-        message: (outcome.failed ? T('Aktarım tamamlandı ancak bazı satırlar sunucu tarafından reddedildi.', 'The import finished but some rows were rejected by the server.')
+        serverWrite: 'acknowledged',
+        message: (acknowledgedFailed ? T('Aktarım tamamlandı ancak bazı satırlar sunucu tarafından reddedildi.', 'The import finished but some rows were rejected by the server.')
           : T('Aktarım tamamlandı.', 'The import finished.')),
       };
       audit('success', state.result);
     } catch (error) {
-      // BAŞARISIZ AKTARIM BAŞARILI GİBİ RAPORLANMAZ.
-      if (columnResult && typeof columnResult.rollback === 'function') { try { await columnResult.rollback(); } catch (_) { /* raporlanır */ } }
+      // A completed/unknown row write cannot certify that shared columns are
+      // unused. Retain them; deleting a whole old schema is not safe recovery.
+      // A late job must never publish feedback into another wizard/account.
+      if (!current()) {
+        if (state === ownedState && host === ownedHost) close();
+        return;
+      }
+      var retained = columnResult ? (columnResult.created || []).length : 0;
+      var message = rowWriteAcknowledged
+        ? T('Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. ', 'The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. ')
+        : rowWriteStarted
+          ? T('Aktarımın sunucu sonucu doğrulanamadı. Oluşturulan sütunlar korundu; yeniden denemeden önce sunucu verisini kontrol edin. ', 'The server outcome of the import could not be confirmed. Created columns were retained; check server data before retrying. ')
+          : T('Aktarım satır yazımı başlamadan durdu. Oluşturulan sütunlar varsa korundu. ', 'The import stopped before row writing started. Any created columns were retained. ');
       state.result = {
-        status: 'failed', created: 0, updated: 0, skipped: plan.summary.skippedRows,
-        failed: plan.operations.length, warnings: plan.summary.warnings, conflictsResolved: 0, customFieldsCreated: 0,
-        message: T('Aktarım başarısız: ', 'The import failed: ') + String(error && error.message || error),
+        status: 'failed', created: created, updated: updated, skipped: plan.summary.skippedRows,
+        failed: rowWriteAcknowledged ? acknowledgedFailed : (rowWriteStarted ? 0 : plan.operations.length),
+        unconfirmed: rowWriteStarted && !rowWriteAcknowledged ? plan.operations.length : 0,
+        warnings: plan.summary.warnings, conflictsResolved: 0, customFieldsCreated: retained,
+        serverWrite: rowWriteAcknowledged ? 'acknowledged' : rowWriteStarted ? 'unknown' : 'not-started',
+        message: message + String(error && error.message || error),
       };
       audit('failed', state.result);
     } finally {
-      state.busy = false; state.progress = null; state.plan = null; render();
+      if (current()) { state.busy = false; state.progress = null; state.plan = null; render(); }
     }
   }
 
