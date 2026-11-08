@@ -81,7 +81,7 @@ async function execute(task,data,transfer,sourceOverride){
     const {assertCollectionLflDescriptor}=require('../lib/compute-snapshot-descriptor');
     if(String(data.params.access?.userId)!==String(data.ownerId))throw Object.assign(Error('Source owner mismatch'),{code:'COMPUTE_SOURCE_OWNER_MISMATCH'});
     await assertCollectionLflDescriptor(data.source);
-    const lease=await sourceCache.acquire(data.source,data.ownerId);
+    const lease=sourceOverride!==undefined?{snapshot:sourceOverride,release(){}}:await sourceCache.acquire(data.source,data.ownerId);
     try{
       await assertCollectionLflDescriptor(data.source);
       const source=lease.snapshot,version=collectionLflSourceVersion(source);

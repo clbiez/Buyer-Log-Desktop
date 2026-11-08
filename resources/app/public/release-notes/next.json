@@ -12,6 +12,32 @@
   },
   "changes": [
     {
+      "id": "collection-lfl-refresh-capacity-recovery",
+      "type": "fix",
+      "module": { "tr": "Koleksiyon · LFL", "en": "Collection · LFL" },
+      "title": {
+        "tr": "LFL referans yenilemesi bellek sınırından sonra da tamamlanır",
+        "en": "LFL references refresh after worker memory admission is declined"
+      },
+      "body": {
+        "tr": "Hesaplama işçisinin bellek bütçesine sığmayan LFL referansları, aynı kullanıcı kapsamı ve kaynak sürümü kontrolleriyle yerel olarak hesaplanır. Başarılı yenilemeden sonra güncel sipariş detayları açılır; başarısız yenilemeler kayıtlı değerleri korur. Eksik kaynak, tamamlanmamış LFL filtresi, işlem sırasında değişen kaynak ve dolu kuyruk için ayrı açıklamalar gösterilir.",
+        "en": "When LFL references exceed the compute worker's admission budget, they are calculated locally with the same user scope and source-version checks. Current order details open after a successful refresh; failed refreshes preserve saved values. Missing sources, incomplete LFL filters, sources changed during refresh and a full queue each receive a specific explanation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-refresh-recovery-20261109.png",
+        "alt": {
+          "tr": "Bellek bütçesi sınırlı demo uygulamada yenilemeden sonra açılan güncel LFL sipariş detayı ve 20 USD FOB",
+          "en": "Current LFL order details with a 20 USD FOB after refreshing in the demo app with a constrained compute budget"
+        },
+        "caption": {
+          "tr": "Demo kaynak 10 USD'den 20 USD'ye değiştirildi; eski detay uyarısının ardından referanslar yenilenip güncel sipariş detayı açıldı.",
+          "en": "The demo source changed from 10 USD to 20 USD; after the stale-detail warning, references were refreshed and the current order details opened."
+        }
+      }
+    },
+    {
       "id": "excel-import-acknowledged-outcome-safety",
       "type": "fix",
       "module": {
