@@ -1,0 +1,38 @@
+✖ last release aborts a real fetch during body read and closes incomplete loopback HTTP (6.965702ms)
+✖ normal loopback completion matches an independent uncancelled full-response oracle (1.276861ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.759431
+
+✖ failing tests:
+
+test at resources/app/tests/ana12-request-lifecycle-loopback.test.js:6:1
+✖ last release aborts a real fetch during body read and closes incomplete loopback HTTP (6.965702ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2145:21)
+      at listenInCluster (node:net:2224:12)
+      at node:net:2448:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-loopback.test.js:35:1
+✖ normal loopback completion matches an independent uncancelled full-response oracle (1.276861ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2145:21)
+      at listenInCluster (node:net:2224:12)
+      at node:net:2448:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }

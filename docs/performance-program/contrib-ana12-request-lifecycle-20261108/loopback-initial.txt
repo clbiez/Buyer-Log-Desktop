@@ -1,0 +1,32 @@
+✖ last release aborts a real fetch during body read and closes incomplete loopback HTTP (0.873701ms)
+✖ normal loopback completion matches an independent uncancelled full-response oracle (0.253743ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.106442
+
+✖ failing tests:
+
+test at resources/app/tests/ana12-request-lifecycle-loopback.test.js:6:1
+✖ last release aborts a real fetch during body read and closes incomplete loopback HTTP (0.873701ms)
+  TypeError: t.setTimeout is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-loopback.test.js:7:5)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at resources/app/tests/ana12-request-lifecycle-loopback.test.js:36:1
+✖ normal loopback completion matches an independent uncancelled full-response oracle (0.253743ms)
+  TypeError: t.setTimeout is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-loopback.test.js:37:5)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)

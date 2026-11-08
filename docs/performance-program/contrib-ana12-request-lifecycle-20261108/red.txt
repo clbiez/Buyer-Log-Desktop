@@ -1,0 +1,21 @@
+✔ resources/app/tests/ana12-request-lifecycle-preparation.test.js (82.385245ms)
+✖ resources/app/tests/ana12-request-lifecycle-races.test.js (49.222509ms)
+✖ resources/app/tests/ana12-request-lifecycle-sharing.test.js (50.730089ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 191.58066
+
+✖ failing tests:
+
+test at resources/app/tests/ana12-request-lifecycle-races.test.js:1:1
+✖ resources/app/tests/ana12-request-lifecycle-races.test.js (49.222509ms)
+  'test failed'
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:1:1
+✖ resources/app/tests/ana12-request-lifecycle-sharing.test.js (50.730089ms)
+  'test failed'

@@ -1,0 +1,151 @@
+{
+  "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "branch": "contrib/ana12-request-lifecycle-20261108",
+  "preparation": {
+    "pr": 895,
+    "sha": "12d628ed9c07a7d964c3df00bd66f33009507d51"
+  },
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "lockFlags": [
+    "-n",
+    "-E",
+    "75"
+  ],
+  "node": "v24.19.0",
+  "validation": {
+    "native": {
+      "files": 15,
+      "tests": 134,
+      "pass": 134,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "newNativeTests": 33,
+    "i18nNewMissing": 0,
+    "i18nBaseline": 0,
+    "backendJobs": null,
+    "postCancellationCpu": null,
+    "fullRegression": "root responsibility; not run"
+  },
+  "readOnlyBaseEqualSha256": {
+    "resources/app/public/backlog-overview.js": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+    "resources/app/public/backlog-chart.js": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f",
+    "resources/app/public/backlog-delivery-analysis.js": "746b862cf40fe2ba93f030320d3647dd668ee662bb5b80601aa80e1a5ef8842c",
+    "resources/app/public/backlog-plan-actual.js": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+    "resources/app/public/app-main.js": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+    "resources/app/server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+    "resources/app/server/lib/compute-read-service.js": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+    "resources/app/server/lib/compute-response.js": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+    "resources/app/server/lib/compute-pool.js": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266"
+  },
+  "newFiles": [
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/README.md",
+      "sha256": "27485211a90d6e6313f753e7f7d6e3338df60655641a5f4dfbee3e62602e6210"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/adapter-contract.md",
+      "sha256": "8924a955dc52098f6944cb8f4ef74e0cf936647afa376513bc9da73e31fb4a55"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/green-initial.txt",
+      "sha256": "54ce2a16d2d184f1ba3d787dd6873d7faff8ea26e3101df14adaf5e29de477e4"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/i18n.txt",
+      "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/loopback-green.txt",
+      "sha256": "40bdd6c21dbb578ce17fd88fe60ee81afab353369dfbf806b87b41937a73df26"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/loopback-initial.txt",
+      "sha256": "e8e2455c10d21b4b8797e84ab9b04bea2aff41c32682f97b3ca9674f45a78333"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/loopback-sandbox-failure.txt",
+      "sha256": "d10b62375f5184144fb1707961df09e0dd94b60f33078ab40fb5f45a94cc42e4"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/native-before-terminal-fix-green.txt",
+      "sha256": "73f51d08d37e095f207ab4413ea20a2a50623be75446a8bc68c28d3eefc8d8e7"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/native-green.txt",
+      "sha256": "0ed944dcbcb0726775deff9a57e70eafba14a94b78de66eba71f80ada805b004"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/native-initial-green.txt",
+      "sha256": "ea78474ea0b059e9ef48339a35cddef9ce7de130d4ad1889d9ae3c231ad40ece"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/red-before-publish.txt.gz",
+      "sha256": "58106babc5a2d2c3631efe099f00765d253a8b7e06ffbe61959b4afa7d80f94d"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/red-direct.txt",
+      "sha256": "e38f64e89119f27ed834812d576815553501e2cff15f7c05e0d4b8a8b835a12d"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/red-tap.txt",
+      "sha256": "9dfdd073c4293c8cb66983a176bfae3f60ade6e7d89d54e52590ec1990a5d9f4"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/red-transport-rejection.txt.gz",
+      "sha256": "a353c295e86f21cca7ccc4e663c82205c0a06b0d35afbbdfd69eb43d2f508fe1"
+    },
+    {
+      "path": "docs/performance-program/contrib-ana12-request-lifecycle-20261108/red.txt",
+      "sha256": "8dc0e2bd1bc34f9a31e661071db0b4e5e51dcd20b4534777f9613003ff6bfb4d"
+    },
+    {
+      "path": "resources/app/public/backlog-request-lifecycle.js",
+      "sha256": "46defadfc0c315950b53ea2a8ef3a20183c763b502a703a40e0e2bef5ceca091"
+    },
+    {
+      "path": "resources/app/tests/ana12-request-lifecycle-loopback.test.js",
+      "sha256": "f3c9b7e43102a15ab62cf49443c9f5ee99cd0af4b9e9992616fe024b9b649525"
+    },
+    {
+      "path": "resources/app/tests/ana12-request-lifecycle-preparation.test.js",
+      "sha256": "98df4dfb9abea16b84ed7d8b1442e55d82f2e605f5d46eeffc453c06c9c27b4e"
+    },
+    {
+      "path": "resources/app/tests/ana12-request-lifecycle-races.test.js",
+      "sha256": "392a474cd3dee5fabf940910fcbcaee38aff333c83a7eb4e720abad66157c7b9"
+    },
+    {
+      "path": "resources/app/tests/ana12-request-lifecycle-sharing.test.js",
+      "sha256": "ad7aff131054863acac178570f9cc62e5d322e6edfa68ebbe0f0a8fda70ebc33"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs",
+      "sha256": "49bd4cbc4469ff4c2a07493bad68fb2908ee3defd435d2257bf0f0c86b892848"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/preparation/contracts.cjs",
+      "sha256": "30758d4f6f7d2ec0803df4c298c92715e231dc32ddcb90c888f950b4b32164b2"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/preparation/diagnose.cjs",
+      "sha256": "8a86292a4a2f35eb0b55e03bdbd79170a367cd7c554d9bcd06a1f61500053a16"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/preparation/diagnose.test.cjs",
+      "sha256": "e784663f4f89ee70612082ee79470c9ef1290ea00fa41d61d111bea08d7cac67"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/preparation/fixture.json",
+      "sha256": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3"
+    },
+    {
+      "path": "resources/app/tests/fixtures/ana12-request-lifecycle/preparation/provenance.json",
+      "sha256": "6d8e653678e853aaea14730d0f4f123a2eff7e8fd30d6616b35148ed82cf2a87"
+    }
+  ],
+  "self": "manifest.json omitted from own hashes; final commit SHA supplied with delivery",
+  "productionWiring": false,
+  "ana12Closed": false
+}

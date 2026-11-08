@@ -1,0 +1,51 @@
+✔ source extraction fails closed on missing or ambiguous anchors (1.305954ms)
+✔ shared rows preserve scope, generation and source detail variants; only grouping shares (2.806774ms)
+✔ baseline deduplicates pending consumers and invalidation leaves their transport alive (1.742154ms)
+✔ plan generation keeps final query while still parsing the older response (1.642804ms)
+✔ closing overview leaves a shared chart consumer alive on the exact current source (3.154529ms)
+✔ three per arm, same fixture/source, no overlap and exact final results are mandatory (1.354948ms)
+✔ future cancellation contract rejects the actual uncancellable baseline (5.029995ms)
+✔ current Main readiness gate precedes all shared fetches and preserves serial sharing (3.751241ms)
+✔ shared load propagates readiness rejection before starting a transport (1.531516ms)
+✔ inherited assertions and fixture remain byte-identical to pinned #895 inputs (0.679918ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28.56686
+✔ a cancelled flight cannot accept a new subscriber; late completion cannot delete its replacement (4.193871ms)
+✔ abort after body read began blocks JSON parsing even if body transport ignores abort (1.371454ms)
+✔ body completion queued immediately before release cannot publish or parse (0.912861ms)
+✔ late failure from a cancelled flight cannot delete a new same-key flight (1.053613ms)
+✔ live generation and session gates stop stale publication without cancelling another identity (3.767105ms)
+✔ stale identity before start prevents fetch and a stale admission never joins a current flight (0.444081ms)
+✔ transport, HTTP, JSON and publication failures release flight state and allow retry (1.707612ms)
+✔ dispose aborts each pending flight once, rejects all subscribers and prevents further subscriptions (0.430902ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18.708706
+✔ all five unchanged #895 client contracts pass through the standalone adapter (7.682445ms)
+✔ grouping consumers share one body read, complete object graph and one publication (0.858278ms)
+✔ closing one panel rejects only its subscription while the remaining panel completes (0.334275ms)
+✔ ten rapid panel queries release only that panel; another consumer retains the first flight (0.824547ms)
+✔ scope, user, session, generation, revision and source details never share (0.586887ms)
+✔ source details remain distinct even when an adapter key omits them (0.308697ms)
+✔ invalid or incomplete local identities fail before transport; identity types stay distinct (0.942645ms)
+✔ last subscriber leaving during preparation prevents transport; preparation rejection is shared (0.334676ms)
+✔ current rowsQueryKey retains its exact exclusions, order and detail variants (0.21786ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16.996838

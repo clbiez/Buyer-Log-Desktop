@@ -1,0 +1,12 @@
+{
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "pr": 895,
+  "sha": "12d628ed9c07a7d964c3df00bd66f33009507d51",
+  "originalSha256": {
+    "contracts.cjs": "30758d4f6f7d2ec0803df4c298c92715e231dc32ddcb90c888f950b4b32164b2",
+    "diagnose.test.cjs": "e784663f4f89ee70612082ee79470c9ef1290ea00fa41d61d111bea08d7cac67",
+    "fixture.json": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3",
+    "diagnose.cjs": "07a5bdd0de5de49537230b1872ee2cc4eccef3c48aed6c7adacf4188e6e1ef80"
+  },
+  "adaptation": "diagnose.cjs: portable repo root; retain extraction/client/summary/validation only; measurement CLI omitted. Other three files byte-identical."
+}

@@ -1,0 +1,179 @@
+✖ all five unchanged #895 client contracts pass through the standalone adapter (1.614671ms)
+✖ grouping consumers share one body read, complete object graph and one publication (0.311621ms)
+✖ closing one panel rejects only its subscription while the remaining panel completes (0.464973ms)
+✖ ten rapid panel queries release only that panel; another consumer retains the first flight (0.389669ms)
+✖ scope, user, session, generation, revision and source details never share (0.253474ms)
+✖ source details remain distinct even when an adapter key omits them (0.216708ms)
+✖ invalid or incomplete local identities fail before transport; identity types stay distinct (0.201875ms)
+✖ last subscriber leaving during preparation prevents transport; preparation rejection is shared (0.270358ms)
+✔ current rowsQueryKey retains its exact exclusions, order and detail variants (0.386605ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 1
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.021841
+
+✖ failing tests:
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:7:1
+✖ all five unchanged #895 client contracts pass through the standalone adapter (1.614671ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:9:13 {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:14:1
+✖ grouping consumers share one body read, complete object graph and one publication (0.311621ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:15:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:26:1
+✖ closing one panel rejects only its subscription while the remaining panel completes (0.464973ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:27:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:33:1
+✖ ten rapid panel queries release only that panel; another consumer retains the first flight (0.389669ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:34:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:45:1
+✖ scope, user, session, generation, revision and source details never share (0.253474ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:46:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:54:1
+✖ source details remain distinct even when an adapter key omits them (0.216708ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:55:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:58:1
+✖ invalid or incomplete local identities fail before transport; identity types stay distinct (0.201875ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:59:11) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
+
+test at resources/app/tests/ana12-request-lifecycle-sharing.test.js:67:1
+✖ last subscriber leaving during preparation prevents transport; preparation rejection is shared (0.270358ms)
+  Error: Cannot find module '../../../public/backlog-request-lifecycle.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at harness (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs:11:34)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js:68:27) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/ana12-request-lifecycle/controlled.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/ana12-request-lifecycle-sharing.test.js' ]
+  }
