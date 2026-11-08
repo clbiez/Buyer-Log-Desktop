@@ -1,0 +1,13 @@
+{
+  "oldApp": "d773c2a7abb9f2f198512df1b02d6c5e09332b1626b57cc9b96b9e70320376bc",
+  "newApp": "7d7e55ffed3dd023a9aaa0d5902561a62a9d79a21ab0d130a85e765eabe7d274",
+  "exactDelta": "app === reviewed counts recipe applied to frozen before source",
+  "unchangedFunctions": [
+    "syncCpModelColumns",
+    "ensureCpLoaded",
+    "switchTab",
+    "registerManagedGridClipboard",
+    "applyFormulaColumns"
+  ],
+  "scope": "Only whole-app pins and reviewed source-test pin updated; old pins preserved. No assertion changed."
+}

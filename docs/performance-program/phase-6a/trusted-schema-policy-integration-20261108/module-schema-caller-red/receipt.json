@@ -1,0 +1,17 @@
+{
+  "exitCode": 1,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/module-schema-caller.test.js",
+    "tests/module-schema-policy.test.js"
+  ],
+  "counts": {
+    "pass": 16,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "d123e576a9e377e409110403707115b8a16851ff8a9c633937b611868c34c667"
+}

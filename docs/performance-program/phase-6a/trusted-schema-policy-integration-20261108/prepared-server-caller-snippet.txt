@@ -1,0 +1,53 @@
+PREPARATION ONLY — NOT AN APPLIED server.js PATCH
+
+At actual server.js:8470 keep existing four-argument callers default OFF:
+
+function computeParamsFor(profile, descriptor, task, parts = {}, internal = {}) {
+  // Keep the existing early task branches and full data construction.
+  // Capture loadModelConnections() ONCE where cpModelColumns is currently built.
+  const connections = loadModelConnections();
+  const data = {
+    ...parts,
+    // ...all existing access/override/horizon/cpAllowed/summary/calendar fields...
+    cpModelColumns: connections.items.flatMap(item => (item.cpColumns || []).map(col => ({
+      ...col, role: item.role, connectionId: item.id,
+      connectionName: item.name || item.catalog || item.server
+    })))
+  };
+  const collect = internal.collectModuleSchemas === true && task === 'projections';
+  let schemaContext = { collect: false };
+  if (collect) try { schemaContext = {
+    collect: true, task,
+    // schema targets only; do not alter the actual worker data.modules array
+    modules: (Array.isArray(data.modules) ? data.modules : ['cp', 'orders'])
+      .filter(name => name === 'cp' || name === 'orders'),
+    profile, connections,
+    effectiveConnections: userPreferences.applyHorizonOverrides(
+      connections.items, sourceUserId(profile), ['cp', 'orders'], userAccess.roleWorkspaceEntries(profile)),
+    sourceModes: { asas: shared.asasSourceMode, antrepo: shared.antrepoSourceMode }
+  }; } catch (_) { /* Extra metadata preparation is unknown: leave schema work OFF. */ }
+  // LAST overrides: parts/HTTP booleans must NEVER activate metadata collection/grants.
+  Object.assign(data, moduleSchemaPolicy.moduleSchemaParams(schemaContext, {
+    hasArea: (liveProfile, area) => userAccess.hasArea(liveProfile, area),
+    modelRefresh, modelScopes
+  }));
+  // ...existing Backlog source revision fields and return data unchanged...
+}
+
+Trusted direct caller, with a literal fifth argument after the existing source/context guards:
+
+const params = computeParamsFor(currentUser, descriptor, 'projections', {
+  modules: ['orders']
+}, { collectModuleSchemas: true });
+// Existing serverCompute().run('projections', descriptor, params, ...) + lease/freshness/release.
+
+Real current direct call site is server.js:8174 (existing wanted-module projection publication).
+It can opt in with that fifth argument for a reviewed metadata collection slice.
+The computeReads service call at server.js:8548 passes only four paramsFor arguments
+(compute-read-service.js:23); it remains OFF. Do not encode private opt-in in
+options.payload/HTTP keyParts or change that service's shared-flight/cache key here.
+
+No runtime wiring is included. Root must consume lease.value.moduleSchemas and bind
+known schemas/null to the actual published generation/module-input/source-checksum
+manifest, not rebrand stale cached metadata as current. Default public CP/Orders
+payload stays full. Existing server guards before/after worker work are mandatory.

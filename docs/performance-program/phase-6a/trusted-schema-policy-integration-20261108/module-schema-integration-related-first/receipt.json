@@ -1,0 +1,27 @@
+{
+  "exitCode": 0,
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "module-schema",
+    "compute-module-schemas",
+    "compute-projection",
+    "compute-read-guard",
+    "compute-access-middleware",
+    "compute-compressed-publication",
+    "projection-reuse",
+    "page-projection",
+    "cp-decision-input-revision",
+    "checklist-components-row-cache",
+    "orders-config-barriers",
+    "profile-rejection"
+  ],
+  "counts": {
+    "pass": 159,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "555bede57be8bd0603af35966c8f12948d2df98c10f42a3ee69ce798ddceeb72"
+}

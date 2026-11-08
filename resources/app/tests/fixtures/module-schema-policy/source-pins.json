@@ -1,0 +1,150 @@
+{
+  "sourceCommit": "7f8adc97e1b26276cd849cdd34a6dada142779e9",
+  "appTree": "b6d4a17129c2e9ef6e4c67ce86f02a3b43319929",
+  "appRoot": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "actualSources": {
+    "server/lib/model-refresh.js": {
+      "sha256": "a12c5dc049e2532e72a4597b9777d6d134dae9e90db43e2db484b1383ae86d70",
+      "gitBlob": "3e541cbd45ac2c3dd0b79889be6d9b516a752ef1",
+      "bytes": 78357
+    },
+    "server/lib/model-scopes.js": {
+      "sha256": "7d4d7ec78c3f14f6ae1aa5eaaf0b27a60d86c3295e87064891ab9c7f45002503",
+      "gitBlob": "dbfd35cffad9e45189265fb0be3dbf0c3dc71fa8",
+      "bytes": 22300
+    },
+    "server/lib/compute-tasks.js": {
+      "sha256": "36b2d224bdc5ba78a6fab4722c629eb75e4f6a4bf701b46fc1849284f8957d4a",
+      "gitBlob": "fffa068554c68d3a12009ce3d5d1938ac289ae9f",
+      "bytes": 7767
+    },
+    "server/lib/compute-module-schemas.js": {
+      "sha256": "ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d",
+      "gitBlob": "1ea774b236b7d5adb41d914f8a612837adedf75f",
+      "bytes": 3321
+    },
+    "server/lib/parse.js": {
+      "sha256": "554c4a2360516955f0443bfa76efe43c85fd295182df39ccdb67c8d843e2d2d5",
+      "gitBlob": "bf50021755c1bb18783bddf940f844ff82838133",
+      "bytes": 199611
+    },
+    "server/lib/horizon-fields.js": {
+      "sha256": "8fa2241ba3fb16546059a6005dd6b5401da124913d026a5f46a991f78ebf4b0d",
+      "gitBlob": "8651a13c8c3a643fb401c83f4307809f14298cd8",
+      "bytes": 21758
+    },
+    "server/lib/compute-access.js": {
+      "sha256": "5bd06a034763838bf310f6d5ee23497e57848b87dd3c027668e5e01966863424",
+      "gitBlob": "a6394d9e645da5d13b76ac2c9b7f0d988ad69dea",
+      "bytes": 6492
+    },
+    "server/lib/json-dates.js": {
+      "sha256": "d312f88ce70b772a0f5676a149e8cab7dec21908aa923ab000d2691b21d6e070",
+      "gitBlob": "eb7823eeb32fe10bc98eeda09cebdada43600c32",
+      "bytes": 733
+    },
+    "server/lib/collection-catalog.js": {
+      "sha256": "9b06fd8d0735a90724e1d4c6b3af026f93ddc0ba4070bd6417fce13b4003219f",
+      "gitBlob": "8fc507259c99209fad8bdc26a81292416d1441d8",
+      "bytes": 2287
+    },
+    "server/lib/canonical-fields.js": {
+      "sha256": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+      "gitBlob": "34f954e0ab66948e23ae90825e85ca84fcd10004",
+      "bytes": 300
+    },
+    "public/canonical-fields.js": {
+      "sha256": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+      "gitBlob": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
+      "bytes": 35490
+    },
+    "public/canonical-module-bindings.js": {
+      "sha256": "c6a06f86dbc46614b7f7845b6092d186324ba80866e2385b584e4782d60a3b5f",
+      "gitBlob": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5",
+      "bytes": 4888
+    },
+    "public/module-projection-schema.js": {
+      "sha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+      "gitBlob": "7b8585c3f912c5cf3ee9bbc8f1f2afa9c5dd4926",
+      "bytes": 9192
+    }
+  },
+  "observedSourcesNotRuntimeLoaderAssertions": {
+    "server/server.js": {
+      "sha256": "3f1b7280b878ed69e6b1fc5727ac9f1b510455acd24953cfaffe8d445068cdb6",
+      "gitBlob": "ae1d59e4913a51ba2fc4272982fcf93cec1dd31f",
+      "bytes": 814597
+    },
+    "server/db.js": {
+      "sha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+      "gitBlob": "a796e731681efce8e635f8fa9553473585051b87",
+      "bytes": 131279
+    },
+    "server/lib/user-access.js": {
+      "sha256": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+      "gitBlob": "03718e2ebda5a64522b107ab2c7bec816c54f104",
+      "bytes": 188846
+    },
+    "server/lib/user-preferences.js": {
+      "sha256": "ecdbc753a96ec032252381e238e7331beb1bbbfb9540eaf53a9274f617ca5735",
+      "gitBlob": "2641108e34dbb7a73583d30c48c847c516c1ba1b",
+      "bytes": 47028
+    },
+    "server/lib/projection-runtime-meta.js": {
+      "sha256": "39ee26a7212452570c2db8b172cd42f59ae4ee78164296b99ad3dfdc4f7709f1",
+      "gitBlob": "52df3343ec498747ed02511e9d5ca844c4ee1d5e",
+      "bytes": 649
+    },
+    "server/workers/compute-worker.js": {
+      "sha256": "6cdbdf6f3e1e5c15a5d158d02b686d956ddb056c7935cf2831a71958f3932f37",
+      "gitBlob": "61373b02b1c6076a7fb1522f55df740659a25e63",
+      "bytes": 16973
+    },
+    "server/lib/compute-read-service.js": {
+      "sha256": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+      "gitBlob": "cc242a7efe9b5edfab3e2df1c0803d2024dbc160",
+      "bytes": 2978
+    }
+  },
+  "preservedExistingTestsAndFixtures": {
+    "tests/compute-module-schemas.test.js": {
+      "sha256": "88f7b49a0a4710828dd46076d3893406c4ce45153de90b84dbb6455896d49543",
+      "gitBlob": "047b908ee4d1a27b1fd6124a1e161b1cbfc6cd3b",
+      "bytes": 15979
+    },
+    "tests/fixtures/compute-module-schema/source-pins.json": {
+      "sha256": "d8081800cd0d031390cb3c41f5cd5213739c6438d15fc0e49f1fffccd8e68165",
+      "gitBlob": "72f60cb1fe076e375dc329d059867727497f6918",
+      "bytes": 1875
+    },
+    "tests/fixtures/compute-module-schema/source-pins-before-profile-rejection.json": {
+      "sha256": "48c9c48507aadfc9f3ced5318c9ca3e22cf835036f46a51460f4d2f37453040c",
+      "gitBlob": "e7887305fc4b0d3f4363085a4e761f52e8803530",
+      "bytes": 1875
+    },
+    "tests/fixtures/compute-module-schema/source-pins-before-config-barriers.json": {
+      "sha256": "3a4065ad6f6413ff025d692e8e4b3d62efdbc3d420f6053075f6ca9c5c64191b",
+      "gitBlob": "62375173487d933ebb9191a57caa5b6dd9a9f4a2",
+      "bytes": 1875
+    },
+    "tests/fixtures/compute-module-schema/compute-tasks-f076.js": {
+      "sha256": "1a9b0b2b934e15aa6d837f03944f54d6ea11919986f5a9a7d5130e6873893609",
+      "gitBlob": "6ede5dc0b8c69dad3c830543dfb07509f30eb713",
+      "bytes": 7501
+    }
+  },
+  "helper": {
+    "sha256": "31188da23b899549de41984370bcb039f3ea6759acb8a6d59e5a16ca79e283c4",
+    "gitBlob": "a004e248d5174662b9ead3d9154303d8ed67ac6f",
+    "bytes": 6914
+  },
+  "existingInventory": {
+    "pr": 891,
+    "head": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+    "required": 32,
+    "uncertain": 10,
+    "globallyRemovable": 0,
+    "regenerated": false
+  },
+  "execution": "NONE by preparing agent; hashes/source provenance only"
+}

@@ -8171,14 +8171,17 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
 async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,assertCurrent){
   const id=ctx.id;
   const descriptor=await computeSourceFor(currentUser||id);assertCurrent();
-  const params=computeParamsFor(currentUser,descriptor,'projections',{modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null});
+  const params=computeParamsFor(currentUser,descriptor,'projections',{modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null},{collectModuleSchemas:true});
   const lease=await serverCompute().run('projections',descriptor,params,{priority:'background'});
   try{
     assertCurrent();
     if(lease.value.sourceMeta)acceptComputedMetadata(currentUser||id,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
     const compressed={...reused.projections,...Object.fromEntries(Object.entries(lease.value.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
+    const sourceProjectionKeys=lease.value.sourceProjectionKeys||descriptor.projectionKeys;
+    const moduleSchemas=pageProjectionCache.prepareModuleSchemas({ownerId:String(id),contextHash:ctx.contextHash,sourceProjectionKeys,
+      moduleInputKeys:extra.moduleInputKeys,projections:compressed,moduleSchemas:lease.value.moduleSchemas});
     return await pageProjectionCache.writeCompressedGeneration(id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,assertCurrent,
-      extra:{...extra,sourceProjectionKeys:lease.value.sourceProjectionKeys||descriptor.projectionKeys,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
+      extra:{...extra,sourceProjectionKeys,moduleSchemas,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
   }finally{lease.release();}
 }
 
@@ -8467,17 +8470,26 @@ function computeReadContext(profile){
 }
 const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
   hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
-function computeParamsFor(profile,descriptor,task,parts={}){
+function computeParamsFor(profile,descriptor,task,parts={},internal={}){
   if(task==='source-info')return {};
   if(task==='projection-private-view'||task==='projection-private-details')return parts;
   if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
   if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
-  const shared=loadOverrides();
+  const shared=loadOverrides(),connections=loadModelConnections();
   const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
     mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
     cpAllowed:!profile||['overview','cp','orders','koleksiyon','shipping','source'].some(area=>userAccess.hasArea(profile,area)),summaryAllowed:!profile||['overview','backlog','source'].some(area=>userAccess.hasArea(profile,area)),
-    cpModelColumns:loadModelConnections().items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
+    cpModelColumns:connections.items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
     calendar:require('./lib/merch-calendar-store').publicProjection()};
+  // Schema collection is a server-only decision, independent of public parts.
+  let schemaContext={collect:false};
+  if(internal?.collectModuleSchemas===true&&task==='projections')try{
+    schemaContext={collect:true,task,modules:(Array.isArray(data.modules)?data.modules:['cp','orders']).filter(name=>name==='cp'||name==='orders'),
+      profile,connections,effectiveConnections:userPreferences.applyHorizonOverrides(connections.items,sourceUserId(profile),['cp','orders'],userAccess.roleWorkspaceEntries(profile)),
+      sourceModes:{asas:shared.asasSourceMode,antrepo:shared.antrepoSourceMode}};
+  }catch(_){/* Unknown optional metadata keeps the ordinary full representation. */}
+  Object.assign(data,require('./lib/compute-module-schema-policy').moduleSchemaParams(schemaContext,{
+    hasArea:(live,area)=>userAccess.hasArea(live,area),modelRefresh:require('./lib/model-refresh'),modelScopes:require('./lib/model-scopes')}));
   if(task.startsWith('backlog-')){
     data.headers=BACKLOG_TEMPLATE_HEADERS;
     data.sourceRevision=stableHashValue([descriptor.generation,computeReadContext(profile).contextHash]);
@@ -8485,7 +8497,8 @@ function computeParamsFor(profile,descriptor,task,parts={}){
   }
   return data;
 }
-const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
+const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,
+  paramsFor:(profile,descriptor,task,parts)=>computeParamsFor(profile,descriptor,task,parts,{collectModuleSchemas:task==='projections'})});
 async function prepareComputeBacklog(req){
   const lease=await computeReads.run(req,'backlog','source-info',{});let info;
   try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
@@ -8550,8 +8563,10 @@ async function ensureComputedProjection(req,module,{legacy=false}={}){
     lease.assertBuild();acceptComputedMetadata(captured.profile,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
     const active=cacheForUser(ctx.id),{backlog:backlogInputKey,...moduleInputKeys}=inputKeys;
     const projections=Object.fromEntries(Object.entries(lease.value.compressed).map(([name,entry])=>[name,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]));
+    const moduleSchemas=pageProjectionCache.prepareModuleSchemas({ownerId:String(ctx.id),contextHash:ctx.contextHash,sourceProjectionKeys:lease.value.sourceProjectionKeys,
+      moduleInputKeys,projections,moduleSchemas:lease.value.moduleSchemas});
     const manifest=await pageProjectionCache.writeCompressedGeneration(ctx.id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections,mergePrevious:true,assertCurrent:lease.assertBuild,
-      extra:{runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),sourceProjectionKeys:lease.value.sourceProjectionKeys,moduleInputKeys,backlogInputKey}});
+      extra:{runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),sourceProjectionKeys:lease.value.sourceProjectionKeys,moduleInputKeys,backlogInputKey,moduleSchemas}});
     lease.assertResponse();
     return {...lease,value:legacy?lease.value.response:lease.value.compressed[module],manifest,cacheState:'miss'};
   }catch(error){lease.release();throw error;}

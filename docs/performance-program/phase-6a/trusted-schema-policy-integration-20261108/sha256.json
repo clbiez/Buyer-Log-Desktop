@@ -1,0 +1,21 @@
+{
+  "README.md": "e799274e9bc4b311f502a17d7aab1537e2991d265a7ecac0b9ac06f135f7c13f",
+  "counts-source-pin-review.json": "7361f4aac9fede20cfd0943c7f0336067645c1f58273abfba36200560a4a6081",
+  "prepared-server-caller-snippet.txt": "6f1c768deb8b534abcf6ad86c309c62059e980131a6bfb8d99ab7a13465ef9e0",
+  "prepared-README.md": "a196123af58a932c16217e1aa482a558209235d5e832a86be8bc3a6bea4bfc4c",
+  "prepared-source-pins.json": "c6a4aeb1f5a127a89199b2d86c529c1fb20779102cc4499ca2623755c90823e1",
+  "module-schema-status-red/native.tap.gz": "59ee50302d678d9a3ef6efdc45f52937da2e8acbf3c0be0cce789523b28965f4",
+  "module-schema-status-red/receipt.json": "b69972f5df5a4abc24667aae24f450e05a9391cf5a80a72d6ac814259ee3887c",
+  "schema-policy-static-final/2.log.gz": "e3df2389d8fc09a12235237575729a7d8af658bd8c27da0dc4cba906485d0ec1",
+  "schema-policy-static-final/0.log.gz": "4f826e4f59663b42ba39ad95b88b182922586b5146a5966dd2f96659def67b2e",
+  "schema-policy-static-final/receipt.json": "105d0b05f5140d07c08920ceca01fcb35fce398dbe130b9da6f0f4d6284b6d40",
+  "schema-policy-static-final/1.log.gz": "0a4801ed2ad0a2c90f4e0a639d691069126f23ebb05ea9fdf13cd0ea6c36c784",
+  "module-schema-caller-red/native.tap.gz": "08f66eefb3e7da35a923c833344f9f313918372c357dd930dd0eda6cd6b6c6c2",
+  "module-schema-caller-red/receipt.json": "ac8183dd80f1e587a8a07bcfb3be1426609da56ba58a4841d4d8cf59e1f603ee",
+  "module-schema-integration-related-first/native.log.gz": "02dc55e89ec7b9ddfc4a0419d651ef25bbc6d47f48638842477084ef8be5061c",
+  "module-schema-integration-related-first/receipt.json": "c8f009961d71aea2888046e13db65bee9f9ccf885be2f5d56688f5605aa98c0b",
+  "module-schema-service-wiring-green/native.tap.gz": "2f323247a53eed538c80732e0b4400254b6b4bba2c82b882b824ebab874c82b0",
+  "module-schema-service-wiring-green/receipt.json": "cd21efbe3a155017f63b8d9ff4cbea10940b99d3dc966e3d0801c9f117c00fe9",
+  "module-schema-policy-green/native.tap.gz": "f404fadb243dba863c728ba8169341aac933431ce1ee56d90bc64968ebe4162e",
+  "module-schema-policy-green/receipt.json": "8ca5ceec484051651257042dbc345ef44ebfc1434a3f23016374230e435b4ea2"
+}

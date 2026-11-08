@@ -1,0 +1,29 @@
+[
+  {
+    "command": [
+      "node",
+      "--check",
+      "server/server.js"
+    ],
+    "exitCode": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "exitCode": 0,
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "release:notes:validate"
+    ],
+    "exitCode": 0,
+    "sha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  }
+]
