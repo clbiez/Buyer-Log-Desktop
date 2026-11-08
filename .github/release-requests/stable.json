@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.337",
-  "commit_sha": "d6c22e4175f412dc3fde096c366b837c2b4c8125",
-  "release_notes": "TR: Buyer Log STABLE 7.0.337 — CP, Siparişler ve Koleksiyon sütun dondurma düzeltmeleri; daraltılmış modellerde kumaş özeti; parsiyel sevkiyatlarda LCW AI belge kontrolü; PLM Sync tüm renkler ve kaldığı yerden yeniden deneme. Tam Windows regresyonundan geçen imzalı TEST paketi aynı baytlarla terfi ettirilir.\nEN: Buyer Log STABLE 7.0.337 — Freeze Columns fixes in CP, Orders and Collection; fabric summaries for collapsed models; LCW AI document review for partial shipments; all model colours and resumable PLM Sync retries. Promotes the signed TEST artifact that passed full Windows regression without rebuilding.",
-  "request_id": "7.0.337-verified-test-42026769265-stable-20261105"
+  "version": "7.0.342",
+  "commit_sha": "3a645dd581cfaff1ae06a1e23da32881738fa56f",
+  "release_notes": "TR: Buyer Log 7.0.342 — dondurulan performans ve güvenilirlik paketi: küçük oturum denetim kayıtları, dense Excel kaynak okuması, birincil ekran açılış kapısı, isteğe bağlı modül JS/CSS yüklemesi, CP checklist geçiş önbelleği, ortak sunucu worker havuzu, fiyatlama/analitik istemci hesapları, güncel yetki denetimleri, snapshot serileştirmesi, ortak görsel pack yayını ve parser önceliği. 6a/6c, INT-08 preview ve SHELL-06 polling entegrasyonu uygulanmamıştır; bilinen ödünleşimler 2026-11-08 final raporundadır. Yayın öncesi Windows tam regresyonu, imza ve byte doğrulaması zorunludur.\nEN: Buyer Log 7.0.342 — frozen performance and reliability package: compact session audits, dense Excel source reads, primary-screen startup gate, lazy module JS/CSS, CP checklist pass caching, shared server workers, pricing/analytics computation, current-authority checks, snapshot serialization, shared image-pack publication and parser priorities. 6a/6c, INT-08 previews and SHELL-06 polling integration are not implemented; known tradeoffs remain in the 2026-11-08 final report. Windows full regression, signing and byte verification are mandatory before publication.",
+  "request_id": "7.0.342-verified-test-42502899901-stable-20261108"
 }
