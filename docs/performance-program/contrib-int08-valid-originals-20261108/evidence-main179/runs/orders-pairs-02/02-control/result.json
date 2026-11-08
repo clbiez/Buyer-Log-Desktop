@@ -1,0 +1,1569 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "measurementModule": "orders",
+  "scope": "Main179 diagnostic; not post908 acceptance",
+  "scenario": "control",
+  "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "status": "baseline-captured-requires-analysis",
+  "node": "v24.19.0",
+  "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be",
+  "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+  "startedAt": "2026-11-08T14:27:09.865Z",
+  "sourcePins": {
+    "schemaVersion": 2,
+    "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+    "requiredAncestor": "0c85445f1989cafbae4f104c13ddf5d8f0b84c6c",
+    "ancestorVerified": true,
+    "files": {
+      "public/model-image-cache.js": {
+        "gitBlob": "b8e952b9181cb7ce20e6efe0949e83b1ee8b2d5e",
+        "sha256": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22"
+      },
+      "public/app-main.js": {
+        "gitBlob": "1311e659e818e8227840a6258498f98283897e91",
+        "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605"
+      },
+      "public/detail-drawer.js": {
+        "gitBlob": "6147788213dbd771d70b31f74f66a56d1dd4fd14",
+        "sha256": "7be31393af72adcfffe16a8670514a86b8fc04eb4f98862496816a13028218f3"
+      },
+      "public/perf-runtime.js": {
+        "gitBlob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+        "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
+      },
+      "public/vendor/exceljs.min.js": {
+        "gitBlob": "0b07c1ee50eefd56c0f363540750bbcc6225b75b",
+        "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9"
+      },
+      "server/user-data.js": {
+        "gitBlob": "94c18475fb731a29ca83515d88c1ecc17e6ab9c5",
+        "sha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+      },
+      "server/server.js": {
+        "gitBlob": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+        "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+      },
+      "server/routes/cp-image-routes.js": {
+        "gitBlob": "3e0daeffe3540ad0acaea99a58aca0ca058b2429",
+        "sha256": "559c2790b170dca20761e91c1cc643404262edd449dd7a23449e3d22a2082784"
+      },
+      "server/routes/collection-image-routes.js": {
+        "gitBlob": "c97ebdd2581f6ef958b4c277bbd7dfdc6a6c1350",
+        "sha256": "514c840c652f914f1aaeaec6c095895d3fd25ca694a8f0726ce7018359db08be"
+      }
+    },
+    "preservedCpGuards": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "reviewContextRevision": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+    "guardReference916": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "guardPathsChangedSince916": [],
+    "changedSinceHistoricalReviewContext": [],
+    "contract": {
+      "path": "docs/performance/2026-11-05-codex-review-findings.md",
+      "sha256": "0831abe5b699adda63cd6f582055bb6d89764f5ea821c4d494fdd33adfb185d0",
+      "gitBlob": "95b0fed2b815f56a3345f325de062449ea784e01"
+    },
+    "dependencies": {
+      "express": {
+        "version": "4.22.3",
+        "packageSha256": "0a1770344ae7215b2a8e4f31be9f08d726253d4ded2c8b820ec1db8c7c00d000"
+      },
+      "body-parser": {
+        "version": "1.20.9",
+        "packageSha256": "b08d6a1bdf0ac224323051934f5979935c711a1fa7422795a61a39cbbe74711f"
+      },
+      "bytes": {
+        "version": "3.1.2",
+        "packageSha256": "99b21c09ce812dc76a06cd87c4753247cb9615c6a8501c5a5a9d9caa22ea2d12"
+      },
+      "bodyParserJsonSha256": "3b19e93395f011b99a31e5c16086eeaa9e52acdc6a680191c1ceaeab31b15fc4"
+    }
+  },
+  "phases": [
+    {
+      "phase": "blank-before-navigation",
+      "at": "2026-11-08T14:27:15.506Z",
+      "processes": [
+        {
+          "pid": 8603,
+          "type": "browser",
+          "rssBytes": 135225344
+        },
+        {
+          "pid": 8693,
+          "type": "renderer",
+          "rssBytes": 35569664
+        },
+        {
+          "pid": 8696,
+          "type": "renderer",
+          "rssBytes": 52039680
+        },
+        {
+          "pid": 8686,
+          "type": "renderer",
+          "rssBytes": 62218240
+        },
+        {
+          "pid": 8640,
+          "type": "GPU",
+          "rssBytes": 45371392
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 710744,
+        "totalSize": 1835008,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 161
+      },
+      "jsHeapUsedBytes": 636480,
+      "jsHeapTotalBytes": 1310720,
+      "app": {},
+      "memoryDump": {
+        "dumpGuid": "0x2",
+        "success": true
+      }
+    },
+    {
+      "phase": "table-first-visible",
+      "at": "2026-11-08T14:27:20.201Z",
+      "processes": [
+        {
+          "pid": 8603,
+          "type": "browser",
+          "rssBytes": 150671360
+        },
+        {
+          "pid": 8693,
+          "type": "renderer",
+          "rssBytes": 36638720
+        },
+        {
+          "pid": 8696,
+          "type": "renderer",
+          "rssBytes": 492814336
+        },
+        {
+          "pid": 8686,
+          "type": "renderer",
+          "rssBytes": 96706560
+        },
+        {
+          "pid": 8640,
+          "type": "GPU",
+          "rssBytes": 96698368
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 88740904,
+        "totalSize": 185344000,
+        "embedderHeapUsedSize": 84263208,
+        "backingStorageSize": 7085646
+      },
+      "jsHeapUsedBytes": 120911056,
+      "jsHeapTotalBytes": 185843712,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 0,
+          "warm": 0,
+          "warmBytes": 0,
+          "known": 0,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x3",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-first-scroll",
+      "at": "2026-11-08T14:27:24.350Z",
+      "processes": [
+        {
+          "pid": 8603,
+          "type": "browser",
+          "rssBytes": 151564288
+        },
+        {
+          "pid": 8693,
+          "type": "renderer",
+          "rssBytes": 36675584
+        },
+        {
+          "pid": 8696,
+          "type": "renderer",
+          "rssBytes": 704200704
+        },
+        {
+          "pid": 8686,
+          "type": "renderer",
+          "rssBytes": 97251328
+        },
+        {
+          "pid": 8640,
+          "type": "GPU",
+          "rssBytes": 86822912
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 160919700,
+        "totalSize": 227917824,
+        "embedderHeapUsedSize": 103436216,
+        "backingStorageSize": 68876239
+      },
+      "jsHeapUsedBytes": 160908044,
+      "jsHeapTotalBytes": 227917824,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 0,
+          "warm": 0,
+          "warmBytes": 0,
+          "known": 0,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x4",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-repeat-scroll",
+      "at": "2026-11-08T14:27:28.658Z",
+      "processes": [
+        {
+          "pid": 8603,
+          "type": "browser",
+          "rssBytes": 148922368
+        },
+        {
+          "pid": 8693,
+          "type": "renderer",
+          "rssBytes": 36077568
+        },
+        {
+          "pid": 8696,
+          "type": "renderer",
+          "rssBytes": 734253056
+        },
+        {
+          "pid": 8686,
+          "type": "renderer",
+          "rssBytes": 95023104
+        },
+        {
+          "pid": 8640,
+          "type": "GPU",
+          "rssBytes": 86020096
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 163303592,
+        "totalSize": 243511296,
+        "embedderHeapUsedSize": 30406544,
+        "backingStorageSize": 8123883
+      },
+      "jsHeapUsedBytes": 162763392,
+      "jsHeapTotalBytes": 243511296,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 0,
+          "warm": 0,
+          "warmBytes": 0,
+          "known": 0,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x5",
+        "success": true
+      }
+    }
+  ],
+  "network": [],
+  "functional": {},
+  "limitations": [
+    "Prepared probe: first smoke and runtime validation remain required.",
+    "Synthetic size/codec strata do not establish the production image distribution.",
+    "Linux headless Chromium; Windows/Electron, GPU drivers, AV, cold OS disk and real workstation behavior are unmeasured.",
+    "RGBA pixel estimates, JS heap and renderer RSS are not decoded-image-memory measurements.",
+    "Tracing allocator candidates require attribution; absent/ambiguous image allocators leave that acceptance item open.",
+    "Tracing and small observers add overhead; all paired cases use the same instrumentation.",
+    "Placeholder and original cells can have different row geometry; scroll deltas alone do not isolate decode cost.",
+    "First image can load behind the startup curtain; navigation, load and post-Continue visibility are reported separately.",
+    "No preview optimization or 96/192/384 quality verdict is implemented by this baseline probe."
+  ],
+  "inputCache": {
+    "generation": "mw7v2fdd-85eede2a6408",
+    "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "modules": {
+      "cp": 24982,
+      "orders": 30000
+    }
+  },
+  "inputRevisions": {
+    "orders": 0,
+    "suppFob": 0
+  },
+  "initialDataAudit": {
+    "sourceFolder": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source",
+    "userScope": {
+      "id": "moderator",
+      "scopes": {
+        "mode": "ALL",
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      }
+    },
+    "sourceFilterStatus": {
+      "ready": true,
+      "required": false,
+      "requestedTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "missingTargets": [],
+      "filteredTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "hasActiveAsasConnection": false,
+      "targetState": {
+        "cp": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "orders": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "backlog": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        }
+      }
+    },
+    "pageCache": {
+      "hit": false,
+      "readMs": 0,
+      "generation": null
+    }
+  },
+  "preMeasurementWarmup": [
+    {
+      "pass": 0,
+      "module": "cp",
+      "generation": "mw7v2fdd-85eede2a6408"
+    },
+    {
+      "pass": 0,
+      "module": "orders",
+      "generation": "mw7v2fdd-85eede2a6408"
+    },
+    {
+      "pass": 0,
+      "module": "collection-catalog",
+      "generation": "mw7v2fdd-85eede2a6408"
+    },
+    {
+      "pass": 1,
+      "module": "cp",
+      "generation": "mw7v2fdd-85eede2a6408"
+    },
+    {
+      "pass": 1,
+      "module": "orders",
+      "generation": "mw7v2fdd-85eede2a6408"
+    },
+    {
+      "pass": 1,
+      "module": "collection-catalog",
+      "generation": "mw7v2fdd-85eede2a6408"
+    }
+  ],
+  "measurementRevisions": {
+    "orders": 0,
+    "suppFob": 0
+  },
+  "measurementCache": {
+    "generation": "mw7v2fdd-85eede2a6408",
+    "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "modules": {
+      "cp": {
+        "rows": 24982,
+        "checksum": "4366d70ccdf1f5dbac14c438dff5840b349c7f23fec53742fda1626d58cb4f4b"
+      },
+      "orders": {
+        "rows": 30000,
+        "checksum": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44"
+      }
+    }
+  },
+  "chromium": "154.0.8037.57",
+  "projectionGenerations": [
+    "mw7v2fdd-85eede2a6408",
+    "mw7v2fdd-85eede2a6408",
+    "mw7v2fdd-85eede2a6408"
+  ],
+  "continueIntentAtMs": 3353.2000000001863,
+  "dataset": {
+    "generation": null,
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    },
+    "cpRows": null,
+    "ordersRows": 30000,
+    "active": "orders",
+    "tableGeometry": {
+      "scrollHeight": 2205,
+      "clientHeight": 830,
+      "firstRowHeights": [
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42
+      ]
+    }
+  },
+  "scroll": [
+    {
+      "label": "first-scroll",
+      "startMs": 4894.299999999814,
+      "endMs": 8659.799999999814,
+      "longTasks": [
+        {
+          "startTime": 5466.799999999814,
+          "duration": 115,
+          "overlapMs": 115
+        },
+        {
+          "startTime": 5585.799999999814,
+          "duration": 276,
+          "overlapMs": 276
+        },
+        {
+          "startTime": 5905.9000000003725,
+          "duration": 330,
+          "overlapMs": 330
+        }
+      ],
+      "longTaskOverlapMs": 721,
+      "wallMs": 3765.5,
+      "rangePx": 1375,
+      "framesMs": [
+        -9.475999999814121,
+        16.676000000000386,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.599999999999454,
+        16.700000000000728,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.599999999999454,
+        16.700000000000728,
+        16.699999999999818,
+        16.599999999999454,
+        16.700000000000728,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.599999999999454,
+        33.5,
+        16.600000000000364,
+        16.699999999999818,
+        33.30000000000018,
+        33.30000000000018,
+        116.69999999999982,
+        299.89999999999964,
+        350,
+        33.30000000000018,
+        16.800000000000182,
+        16.599999999999454,
+        16.700000000000728,
+        16.599999999999454,
+        16.699999999999818,
+        16.700000000000728,
+        16.699999999999818,
+        16.599999999999454,
+        16.600000000000364,
+        16.800000000000182,
+        16.599999999999454,
+        16.700000000000728,
+        16.599999999999454,
+        16.699999999999818,
+        16.700000000000728,
+        16.699999999999818,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.800000000000182,
+        16.599999999999454,
+        16.700000000000728,
+        16.599999999999454,
+        16.699999999999818,
+        16.700000000000728,
+        16.599999999999454,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.800000000000182,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.700000000000728,
+        16.699999999999818,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.700000000000728,
+        16.599999999999454,
+        16.699999999999818,
+        16.700000000000728,
+        16.599999999999454,
+        16.600000000000364,
+        16.800000000000182,
+        16.699999999999818,
+        16.5,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.800000000000182,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.800000000000182,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.700000000000728,
+        16.599999999999454,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.80000000000109,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545
+      ],
+      "p50Ms": 16.699999999999818,
+      "p95Ms": 16.800000000000182,
+      "maxMs": 350,
+      "over16_7Ms": 40,
+      "over33_3Ms": 7,
+      "coverage": [
+        {
+          "frame": 0,
+          "scrollTop": 0,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 15,
+          "scrollTop": 230,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 30,
+          "scrollTop": 461,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 45,
+          "scrollTop": 691,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 60,
+          "scrollTop": 922,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 75,
+          "scrollTop": 1152,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 90,
+          "scrollTop": 1367,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 105,
+          "scrollTop": 1137,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 120,
+          "scrollTop": 906,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 135,
+          "scrollTop": 676,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 150,
+          "scrollTop": 446,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 165,
+          "scrollTop": 215,
+          "visibleOriginals": 0
+        }
+      ],
+      "uniqueOriginalsVisible": 0
+    },
+    {
+      "label": "repeat-scroll",
+      "startMs": 9058.700000000186,
+      "endMs": 12961.5,
+      "longTasks": [
+        {
+          "startTime": 9222.400000000373,
+          "duration": 74,
+          "overlapMs": 74
+        },
+        {
+          "startTime": 9752.200000000186,
+          "duration": 610,
+          "overlapMs": 610
+        },
+        {
+          "startTime": 11001.400000000373,
+          "duration": 72,
+          "overlapMs": 72
+        }
+      ],
+      "longTaskOverlapMs": 756,
+      "wallMs": 3902.7999999998137,
+      "rangePx": 1375,
+      "framesMs": [
+        -7.400000000186992,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        33.30000000000109,
+        16.69999999999891,
+        16.600000000000364,
+        33.399999999999636,
+        16.700000000000728,
+        100,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.69999999999891,
+        616.6000000000004,
+        33.399999999999636,
+        16.600000000000364,
+        33.399999999999636,
+        16.600000000000364,
+        16.700000000000728,
+        33.29999999999927,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.80000000000109,
+        16.600000000000364,
+        66.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.599999999998545,
+        16.80000000000109,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.600000000000364,
+        16.599999999998545,
+        16.700000000000728,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.80000000000109,
+        16.600000000000364,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        33.399999999999636,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.5,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.80000000000109,
+        16.600000000000364,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        33.399999999999636,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        50,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        50,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.799999999999272,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728
+      ],
+      "p50Ms": 16.69999999999891,
+      "p95Ms": 33.399999999999636,
+      "maxMs": 616.6000000000004,
+      "over16_7Ms": 81,
+      "over33_3Ms": 11,
+      "coverage": [
+        {
+          "frame": 0,
+          "scrollTop": 0,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 15,
+          "scrollTop": 230,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 30,
+          "scrollTop": 461,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 45,
+          "scrollTop": 691,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 60,
+          "scrollTop": 922,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 75,
+          "scrollTop": 1152,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 90,
+          "scrollTop": 1367,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 105,
+          "scrollTop": 1137,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 120,
+          "scrollTop": 906,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 135,
+          "scrollTop": 676,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 150,
+          "scrollTop": 446,
+          "visibleOriginals": 0
+        },
+        {
+          "frame": 165,
+          "scrollTop": 215,
+          "visibleOriginals": 0
+        }
+      ],
+      "uniqueOriginalsVisible": 0
+    }
+  ],
+  "browserObservations": {
+    "imageLoads": [],
+    "decodeCalls": [],
+    "longTasks": [
+      {
+        "startTime": 343.79999999981374,
+        "duration": 53
+      },
+      {
+        "startTime": 398.40000000037253,
+        "duration": 60
+      },
+      {
+        "startTime": 590.7000000001863,
+        "duration": 69
+      },
+      {
+        "startTime": 943,
+        "duration": 88
+      },
+      {
+        "startTime": 1116.5,
+        "duration": 76
+      },
+      {
+        "startTime": 1308.2000000001863,
+        "duration": 363
+      },
+      {
+        "startTime": 1677.7000000001863,
+        "duration": 1330
+      },
+      {
+        "startTime": 3008.7999999998137,
+        "duration": 219
+      },
+      {
+        "startTime": 3265.2000000001863,
+        "duration": 57
+      },
+      {
+        "startTime": 3541.0999999996275,
+        "duration": 93
+      },
+      {
+        "startTime": 3687.4000000003725,
+        "duration": 534
+      },
+      {
+        "startTime": 4221.5999999996275,
+        "duration": 220
+      },
+      {
+        "startTime": 5466.799999999814,
+        "duration": 115
+      },
+      {
+        "startTime": 5585.799999999814,
+        "duration": 276
+      },
+      {
+        "startTime": 5905.9000000003725,
+        "duration": 330
+      },
+      {
+        "startTime": 9222.400000000373,
+        "duration": 74
+      },
+      {
+        "startTime": 9752.200000000186,
+        "duration": 610
+      },
+      {
+        "startTime": 11001.400000000373,
+        "duration": 72
+      }
+    ],
+    "initialGeneration": null,
+    "resources": []
+  },
+  "trace": {
+    "file": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/chromium-trace.json",
+    "sha256": "ebf600e5e2cf0a5eb79ad535c5a053f505072b6c054abf9c02d3cebe3fa176ec",
+    "decodeCompleteEventCount": 2,
+    "decodeElapsedThreadSumMs": 0.346,
+    "decodeCpuMs": 0.345,
+    "decodeEventsWithThreadCpu": 2,
+    "decodeNames": [
+      "Decode Image"
+    ],
+    "decodeScope": "Complete X events only; dur is elapsed duration summed across threads, tdur is thread CPU when supplied; neither is UI latency.",
+    "decodedImageMemory": {
+      "status": "allocator-candidates-require-attribution",
+      "allocatorCandidates": [
+        {
+          "pid": 8640,
+          "ts": 4276368354,
+          "name": "discardable"
+        },
+        {
+          "pid": 8640,
+          "ts": 4276368354,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "620000"
+            }
+          }
+        },
+        {
+          "pid": 8686,
+          "ts": 4276368354,
+          "name": "discardable"
+        },
+        {
+          "pid": 8693,
+          "ts": 4276368354,
+          "name": "discardable"
+        },
+        {
+          "pid": 8696,
+          "ts": 4276368354,
+          "name": "discardable"
+        },
+        {
+          "pid": 8603,
+          "ts": 4281224153,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "2fda"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1dfda"
+            }
+          }
+        },
+        {
+          "pid": 8640,
+          "ts": 4281224153,
+          "name": "discardable"
+        },
+        {
+          "pid": 8640,
+          "ts": 4281224153,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "92c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "367a580"
+            }
+          }
+        },
+        {
+          "pid": 8686,
+          "ts": 4281224153,
+          "name": "discardable"
+        },
+        {
+          "pid": 8686,
+          "ts": 4281224153,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 8693,
+          "ts": 4281224153,
+          "name": "discardable"
+        },
+        {
+          "pid": 8696,
+          "ts": 4281224153,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4281224153,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1b000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4281224153,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            }
+          }
+        },
+        {
+          "pid": 8603,
+          "ts": 4285369472,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "2fda"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1dfda"
+            }
+          }
+        },
+        {
+          "pid": 8640,
+          "ts": 4285369472,
+          "name": "discardable"
+        },
+        {
+          "pid": 8640,
+          "ts": 4285369472,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "912c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "26f2580"
+            }
+          }
+        },
+        {
+          "pid": 8686,
+          "ts": 4285369472,
+          "name": "discardable"
+        },
+        {
+          "pid": 8686,
+          "ts": 4285369472,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 8693,
+          "ts": 4285369472,
+          "name": "discardable"
+        },
+        {
+          "pid": 8696,
+          "ts": 4285369472,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4285369472,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1b000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4285369472,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            }
+          }
+        },
+        {
+          "pid": 8603,
+          "ts": 4289613927,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "2fda"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1dfda"
+            }
+          }
+        },
+        {
+          "pid": 8640,
+          "ts": 4289613927,
+          "name": "discardable"
+        },
+        {
+          "pid": 8640,
+          "ts": 4289613927,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "92c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "23ee580"
+            }
+          }
+        },
+        {
+          "pid": 8686,
+          "ts": 4289613927,
+          "name": "discardable"
+        },
+        {
+          "pid": 8686,
+          "ts": 4289613927,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 8693,
+          "ts": 4289613927,
+          "name": "discardable"
+        },
+        {
+          "pid": 8696,
+          "ts": 4289613927,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4289613927,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1b000"
+            }
+          }
+        },
+        {
+          "pid": 8696,
+          "ts": 4289613927,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1542"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "networkGuardDeniedConnects": 0,
+  "immutableSourceWriteBlocks": 0,
+  "browserExitConfirmed": true,
+  "serverExitConfirmed": true,
+  "finishedAt": "2026-11-08T14:27:35.580Z"
+}

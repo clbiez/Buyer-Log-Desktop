@@ -1,0 +1,1207 @@
+{
+  "schemaVersion": 3,
+  "synthetic": true,
+  "status": "failed",
+  "startedAt": "2026-11-08T13:21:01.827Z",
+  "fixtureRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179",
+  "requestedRows": 30000,
+  "requestedModules": [
+    "cp"
+  ],
+  "rendererTimeoutMs": 900000,
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "sampling": {
+    "startMs": 0,
+    "endMs": 10000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [],
+  "healthSamples": [
+    {
+      "ms": 5.446915999999874,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T13:21:02.846Z"
+    },
+    {
+      "ms": 18.033323999999993,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T13:21:02.846Z"
+    },
+    {
+      "ms": 4.710700999999972,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:03.370Z"
+    },
+    {
+      "ms": 5.918097999999873,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:03.370Z"
+    },
+    {
+      "ms": 4.181562000000213,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:03.881Z"
+    },
+    {
+      "ms": 3.535095000000183,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:03.881Z"
+    },
+    {
+      "ms": 2.2341169999999693,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:04.389Z"
+    },
+    {
+      "ms": 2.3311539999999695,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:04.389Z"
+    },
+    {
+      "ms": 2.9379909999997835,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:04.894Z"
+    },
+    {
+      "ms": 2.795607000000018,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:04.894Z"
+    },
+    {
+      "ms": 4.124354999999923,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:05.400Z"
+    },
+    {
+      "ms": 2.238995000000159,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:05.400Z"
+    },
+    {
+      "ms": 5.430650000000242,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:05.908Z"
+    },
+    {
+      "ms": 2.055427999999665,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:05.908Z"
+    },
+    {
+      "ms": 8.596936999999343,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:06.417Z"
+    },
+    {
+      "ms": 2.8276450000003024,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:06.417Z"
+    },
+    {
+      "ms": 4.751672999999755,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:06.929Z"
+    },
+    {
+      "ms": 2.465476999999737,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:06.929Z"
+    },
+    {
+      "ms": 3.729878999999528,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:07.437Z"
+    },
+    {
+      "ms": 8.889565000000403,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:07.437Z"
+    },
+    {
+      "ms": 5.320083000000523,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:07.952Z"
+    },
+    {
+      "ms": 2.307969999999841,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:07.952Z"
+    },
+    {
+      "ms": 8.564868999999817,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:08.460Z"
+    },
+    {
+      "ms": 2.1562690000000657,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:08.460Z"
+    },
+    {
+      "ms": 4.130264999999781,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:08.971Z"
+    },
+    {
+      "ms": 2.2349190000004455,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:08.971Z"
+    },
+    {
+      "ms": 3.967547999999624,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:09.477Z"
+    },
+    {
+      "ms": 3.4318480000001728,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:09.477Z"
+    },
+    {
+      "ms": 3.312007000000449,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:09.984Z"
+    },
+    {
+      "ms": 4.035690999999133,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:09.984Z"
+    },
+    {
+      "ms": 3.3706659999988915,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:10.491Z"
+    },
+    {
+      "ms": 1.6923289999995177,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:10.491Z"
+    },
+    {
+      "ms": 136.35256299999855,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:10.997Z"
+    },
+    {
+      "ms": 97.44725400000061,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:10.997Z"
+    },
+    {
+      "ms": 2.8887570000006235,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:11.731Z"
+    },
+    {
+      "ms": 2.8331529999995837,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:11.731Z"
+    },
+    {
+      "ms": 719.6569380000001,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:12.237Z"
+    },
+    {
+      "ms": 4.112057000000277,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:12.237Z"
+    },
+    {
+      "ms": 21.70234100000016,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:13.461Z"
+    },
+    {
+      "ms": 23.338182999999844,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:13.461Z"
+    },
+    {
+      "ms": 1371.28571,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:14.007Z"
+    },
+    {
+      "ms": 2.2095750000007683,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:14.007Z"
+    },
+    {
+      "ms": 2.6659899999995105,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:15.881Z"
+    },
+    {
+      "ms": 5.53779299999951,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:15.881Z"
+    },
+    {
+      "ms": 2.06286800000089,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:16.389Z"
+    },
+    {
+      "ms": 1.9479449999998906,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:16.389Z"
+    },
+    {
+      "ms": 15.880578000000241,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:16.893Z"
+    },
+    {
+      "ms": 2.43669299999965,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:16.893Z"
+    },
+    {
+      "ms": 31.07052300000032,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:17.412Z"
+    },
+    {
+      "ms": 1.8853600000002189,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:17.412Z"
+    },
+    {
+      "ms": 2.673711999999796,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:17.945Z"
+    },
+    {
+      "ms": 2.660181000001103,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:17.945Z"
+    },
+    {
+      "ms": 4.237827999997535,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:18.451Z"
+    },
+    {
+      "ms": 2.78461999999854,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:18.451Z"
+    },
+    {
+      "ms": 4.468856000003143,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:18.957Z"
+    },
+    {
+      "ms": 2.1094990000019607,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:18.957Z"
+    },
+    {
+      "ms": 100.89431599999807,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:19.464Z"
+    },
+    {
+      "ms": 9.152999000001728,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:19.464Z"
+    },
+    {
+      "ms": 386.1172349999979,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:20.074Z"
+    },
+    {
+      "ms": 4.785553999998228,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:20.074Z"
+    },
+    {
+      "ms": 7.757268000001204,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:20.964Z"
+    },
+    {
+      "ms": 15.921149999998306,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:20.964Z"
+    },
+    {
+      "ms": 2.3163820000008855,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:21.489Z"
+    },
+    {
+      "ms": 3.365748000000167,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:21.489Z"
+    },
+    {
+      "ms": 3.5652010000012524,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:21.994Z"
+    },
+    {
+      "ms": 4.400722999998834,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:21.994Z"
+    },
+    {
+      "ms": 7.636606000000029,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:22.502Z"
+    },
+    {
+      "ms": 3.591519999998127,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:22.502Z"
+    },
+    {
+      "ms": 2.671029000000999,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:23.014Z"
+    },
+    {
+      "ms": 3.419789999999921,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:23.014Z"
+    },
+    {
+      "ms": 2.558006999999634,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:23.521Z"
+    },
+    {
+      "ms": 1.6377160000010917,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:23.521Z"
+    },
+    {
+      "ms": 3.610888999999588,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:24.026Z"
+    },
+    {
+      "ms": 3.1637039999986882,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:24.026Z"
+    },
+    {
+      "ms": 3.416705000003276,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:24.533Z"
+    },
+    {
+      "ms": 2.8873449999991863,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:24.533Z"
+    },
+    {
+      "ms": 3.395803999999771,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:25.039Z"
+    },
+    {
+      "ms": 10.667808000001969,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:25.039Z"
+    },
+    {
+      "ms": 2.4875110000029963,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:25.554Z"
+    },
+    {
+      "ms": 3.0821390000019164,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:25.554Z"
+    },
+    {
+      "ms": 2.1704109999991488,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:26.059Z"
+    },
+    {
+      "ms": 3.088309000002482,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:26.059Z"
+    },
+    {
+      "ms": 2.045161999998527,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:26.565Z"
+    },
+    {
+      "ms": 2.562824000000546,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:26.565Z"
+    },
+    {
+      "ms": 3.2871889999987616,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:27.069Z"
+    },
+    {
+      "ms": 2.46053000000029,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:27.069Z"
+    },
+    {
+      "ms": 4.842800999998872,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:27.574Z"
+    },
+    {
+      "ms": 7.3502430000007735,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:27.574Z"
+    },
+    {
+      "ms": 2.6459500000019034,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:28.086Z"
+    },
+    {
+      "ms": 2.6306379999987257,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:28.086Z"
+    },
+    {
+      "ms": 2.3514240000004065,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:28.592Z"
+    },
+    {
+      "ms": 3.4346519999999146,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:28.592Z"
+    },
+    {
+      "ms": 2.9899900000018533,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:29.097Z"
+    },
+    {
+      "ms": 2.7059399999998277,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:29.097Z"
+    },
+    {
+      "ms": 164.30027699999846,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:29.604Z"
+    },
+    {
+      "ms": 11.89389200000005,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T13:21:29.604Z"
+    },
+    {
+      "ms": 17.607100000001083,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T13:21:31.701Z"
+    },
+    {
+      "ms": 2.0867749999997613,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T13:21:31.701Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "d4565563bc21eabc06fdb66d6251475bed5078e8",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "fixtureConditions": {
+    "maintenanceState": "recent-weekly-check",
+    "stateFile": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/local/data-cleanup-state.json"
+  },
+  "refresh": {
+    "jobId": "mw7v1uve-w7rc3bwo",
+    "serverInstanceId": "47217e2d30243c0f",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-08T13:21:02.856Z",
+    "finishedAt": "2026-11-08T13:21:29.470Z",
+    "elapsedMs": 26612,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 30000,
+      "newlyAppeared": 30000,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 30000,
+      "antrepoChangedOrders": 12726,
+      "asasChangeCount": 30000,
+      "antrepoChangeCount": 12726,
+      "hasChanges": true,
+      "details": {
+        "count": 42726
+      },
+      "historyItemId": "refresh_mw7v2fe7_ve6nsg"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:02.867Z",
+        "timestampMs": 1794144062867,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:02.867Z",
+        "timestampMs": 1794144062867,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:02.867Z",
+        "timestampMs": 1794144062867,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:11.136Z",
+        "timestampMs": 1794144071136,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 8269,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:11.227Z",
+        "timestampMs": 1794144071227,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:11.227Z",
+        "timestampMs": 1794144071227,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:11.227Z",
+        "timestampMs": 1794144071227,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:12.031Z",
+        "timestampMs": 1794144072031,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 804,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:12.829Z",
+        "timestampMs": 1794144072829,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:13.559Z",
+        "timestampMs": 1794144073559,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 730,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:13.559Z",
+        "timestampMs": 1794144073559,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:19.418Z",
+        "timestampMs": 1794144079418,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 5859,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T13:21:19.418Z",
+        "timestampMs": 1794144079418,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T13:21:29.444Z",
+        "timestampMs": 1794144089444,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 10026,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 0.2985719999999219,
+        "durationMs": 8262.378983999999,
+        "executionMs": 6577.468605999999,
+        "overheadMs": 1684.9103779999996,
+        "heapUsedBytes": 397499888,
+        "mainReceiveMs": 531.6625179999992,
+        "workerPostMessageMs": 1046.6513280000008,
+        "resultTransport": "message-port"
+      },
+      "antrepo": {
+        "queueWaitMs": 0.058548000000882894,
+        "durationMs": 777.2891659999987,
+        "executionMs": 665.200245,
+        "overheadMs": 112.08892099999866,
+        "heapUsedBytes": 70067152,
+        "mainReceiveMs": 46.5213130000011,
+        "workerPostMessageMs": 27.96161299999949,
+        "resultTransport": "message-port"
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-08T13:21:02.865Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-08T13:21:02.866Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-08T13:21:02.867Z",
+        "ms": 8323,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-08T13:21:11.190Z",
+        "ms": 37,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-08T13:21:11.227Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-08T13:21:11.227Z",
+        "ms": 1602,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-08T13:21:12.829Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-08T13:21:12.829Z",
+        "ms": 730,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-08T13:21:13.559Z",
+        "ms": 5859,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-08T13:21:19.418Z",
+        "ms": 10026,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-08T13:21:29.444Z",
+        "ms": 26,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-08T13:21:11.226Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 3399,
+      "dashboard": null,
+      "totalMs": 26610
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 49,
+      "successful": 49,
+      "failed": 0,
+      "p50Ms": 4.124354999999923,
+      "p95Ms": 386.1172349999979,
+      "maxMs": 1371.28571
+    },
+    "refresh": {
+      "count": 47,
+      "successful": 47,
+      "failed": 0,
+      "p50Ms": 3.967547999999624,
+      "p95Ms": 386.1172349999979,
+      "maxMs": 1371.28571
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      200
+    ],
+    "endpointAvailable": true
+  },
+  "statusProbe": {
+    "endpoint": "/api/status",
+    "all": {
+      "count": 49,
+      "successful": 49,
+      "failed": 0,
+      "p50Ms": 2.8873449999991863,
+      "p95Ms": 18.033323999999993,
+      "maxMs": 97.44725400000061
+    },
+    "refresh": {
+      "count": 47,
+      "successful": 47,
+      "failed": 0,
+      "p50Ms": 2.8873449999991863,
+      "p95Ms": 15.921149999998306,
+      "maxMs": 97.44725400000061
+    }
+  },
+  "stalls": [],
+  "diagnostics": {
+    "serverLog": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1",
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1"
+    ],
+    "stallProfiles": []
+  },
+  "refreshWallMs": 27299.494484,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw7v2fdd-85eede2a6408",
+    "sourceRevision": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 574.9274919999989,
+  "error": {
+    "message": "browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /usr/bin/chromium --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --user-data-dir=/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/playwright_chromiumdev_profile-BLvdIY --remote-debugging-pipe --no-startup-window\n<launched> pid=1108\n[pid=1108][err] [1108:1108:1108/132131.910540:FATAL:chrome/browser/process_singleton_posix.cc:313] Socket path too long: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/org.chromium.Chromium.u1fuOi/SingletonSocket.\n[pid=1108][err] [1108/132131.915165:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[pid=1108][err] [1108/132131.915436:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\nCall log:\n  - <launching> /usr/bin/chromium --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --user-data-dir=/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/playwright_chromiumdev_profile-BLvdIY --remote-debugging-pipe --no-startup-window\n  - <launched> pid=1108\n  - [pid=1108][err] [1108:1108:1108/132131.910540:FATAL:chrome/browser/process_singleton_posix.cc:313] Socket path too long: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/org.chromium.Chromium.u1fuOi/SingletonSocket.\n  - [pid=1108][err] [1108/132131.915165:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n  - [pid=1108][err] [1108/132131.915436:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n  - [pid=1108] <gracefully close start>\n  - [pid=1108] <kill>\n  - [pid=1108] <will force kill>\n  - [pid=1108] <process did exit: exitCode=null, signal=SIGABRT>\n  - [pid=1108] starting temporary directories cleanup\n  - [pid=1108] finished temporary directories cleanup\n  - [pid=1108] <gracefully close end>\n",
+    "stack": "browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /usr/bin/chromium --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --user-data-dir=/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/playwright_chromiumdev_profile-BLvdIY --remote-debugging-pipe --no-startup-window\n<launched> pid=1108\n[pid=1108][err] [1108:1108:1108/132131.910540:FATAL:chrome/browser/process_singleton_posix.cc:313] Socket path too long: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/org.chromium.Chromium.u1fuOi/SingletonSocket.\n[pid=1108][err] [1108/132131.915165:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[pid=1108][err] [1108/132131.915436:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\nCall log:\n  - <launching> /usr/bin/chromium --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --user-data-dir=/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/playwright_chromiumdev_profile-BLvdIY --remote-debugging-pipe --no-startup-window\n  - <launched> pid=1108\n  - [pid=1108][err] [1108:1108:1108/132131.910540:FATAL:chrome/browser/process_singleton_posix.cc:313] Socket path too long: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/org.chromium.Chromium.u1fuOi/SingletonSocket.\n  - [pid=1108][err] [1108/132131.915165:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n  - [pid=1108][err] [1108/132131.915436:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n  - [pid=1108] <gracefully close start>\n  - [pid=1108] <kill>\n  - [pid=1108] <will force kill>\n  - [pid=1108] <process did exit: exitCode=null, signal=SIGABRT>\n  - [pid=1108] starting temporary directories cleanup\n  - [pid=1108] finished temporary directories cleanup\n  - [pid=1108] <gracefully close end>\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:227:28"
+  },
+  "finishedAt": "2026-11-08T13:21:32.239Z"
+}

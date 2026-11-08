@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "status": "prepared-not-executed",
+  "selectedRevision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "requiredAncestor": "0c85445f1989cafbae4f104c13ddf5d8f0b84c6c",
+  "ancestorVerified": true,
+  "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+  "appRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app",
+  "originalsEncodedBytes": 100905030,
+  "sourcePinsSha256": "966357e433b689f38058434833ba38dc4d4409f295e93c50a3c6aa9b945f615a",
+  "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816"
+}

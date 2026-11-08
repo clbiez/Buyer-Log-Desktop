@@ -1,0 +1,52 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +36ms
+[PERF] DELTA_STORE_MODE +56ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +127ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/config.json · port=37871 · host=127.0.0.1
+[PERF] SERVER_READY +182ms
+Buyer Log sunucusu çalışıyor: http://localhost:37871
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source
+[RUNTIME] heap-limit heapUsedMb=46 heapLimitMb=4288 rssMb=153
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +184ms
+[PERF] SHARED_SYNC_ROOT +184ms
+[PERF] SHARED_HUB_BOOTSTRAP +252ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +264ms
+[PERF] LOCAL_DB_READY +264ms
+[PERF] LOCAL_STATE_READY +264ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +295ms
+[2026-11-08T13:21:02.867Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-08T13:21:02.867Z] [ASAS Excel] [pivot-refresh] END duration=0ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-08T13:21:02.867Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4343ms
+[PERF] DELTA_STORE_HYDRATED +4345ms
+[2026-11-08T13:21:11.136Z] [ASAS Excel] [file-parse] END duration=8269ms category=wait
+[2026-11-08T13:21:11.227Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-08T13:21:11.227Z] [ANTREPO Excel] [pivot-refresh] END duration=0ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-08T13:21:11.227Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-08T13:21:12.031Z] [ANTREPO Excel] [file-parse] END duration=804ms category=wait
+[2026-11-08T13:21:12.829Z] [Refresh] [comparison] START category=wait
+[2026-11-08T13:21:13.559Z] [Refresh] [comparison] END duration=730ms category=wait
+[2026-11-08T13:21:13.559Z] [Local storage] [snapshot-save] START category=save
+[2026-11-08T13:21:19.418Z] [Local storage] [snapshot-save] END duration=5859ms category=save
+[2026-11-08T13:21:19.418Z] [Local storage] [page-cache-write] START category=cache
+[2026-11-08T13:21:29.444Z] [Local storage] [page-cache-write] END duration=10026ms category=cache
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +42ms
+[PERF] DELTA_STORE_MODE +69ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +177ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/config.json · port=37871 · host=127.0.0.1
+[PERF] SERVER_READY +231ms
+Buyer Log sunucusu çalışıyor: http://localhost:37871
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source
+[RUNTIME] heap-limit heapUsedMb=79 heapLimitMb=4288 rssMb=197
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +234ms
+[PERF] SHARED_SYNC_ROOT +234ms
+[PERF] SHARED_HUB_BOOTSTRAP +254ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +258ms
+[PERF] LOCAL_DB_READY +258ms
+[PERF] LOCAL_STATE_READY +258ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +283ms

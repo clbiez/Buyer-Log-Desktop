@@ -1,0 +1,342 @@
+{
+  "scope": "six representative native Image.decode microdiagnostic; one observation per case, not paired CP/Orders speed or thread CPU",
+  "chromium": "154.0.8037.57",
+  "results": [
+    {
+      "originalIndex": 0,
+      "edge": "original",
+      "encodedBytes": 1248305,
+      "decodePromiseElapsedMs": 21.799999999813735,
+      "width": 768,
+      "height": 1024,
+      "heapUsage": {
+        "usedSize": 4100200,
+        "totalSize": 4644864,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 1664445
+      }
+    },
+    {
+      "originalIndex": 0,
+      "edge": 96,
+      "encodedBytes": 7694,
+      "decodePromiseElapsedMs": 2.7999999998137355,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 791904,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 10297
+      }
+    },
+    {
+      "originalIndex": 0,
+      "edge": 192,
+      "encodedBytes": 28745,
+      "decodePromiseElapsedMs": 8.799999999813735,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 848040,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 38365
+      }
+    },
+    {
+      "originalIndex": 0,
+      "edge": 384,
+      "encodedBytes": 132434,
+      "decodePromiseElapsedMs": 3.7000000001862645,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 1124544,
+        "totalSize": 1671168,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 176617
+      }
+    },
+    {
+      "originalIndex": 1,
+      "edge": "original",
+      "encodedBytes": 1183373,
+      "decodePromiseElapsedMs": 46.5,
+      "width": 1536,
+      "height": 2048,
+      "heapUsage": {
+        "usedSize": 3927048,
+        "totalSize": 4472832,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 1577870
+      }
+    },
+    {
+      "originalIndex": 1,
+      "edge": 96,
+      "encodedBytes": 2503,
+      "decodePromiseElapsedMs": 2.099999999627471,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 778064,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 3378
+      }
+    },
+    {
+      "originalIndex": 1,
+      "edge": 192,
+      "encodedBytes": 5939,
+      "decodePromiseElapsedMs": 2.7000000001862645,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 787224,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 7958
+      }
+    },
+    {
+      "originalIndex": 1,
+      "edge": 384,
+      "encodedBytes": 20071,
+      "decodePromiseElapsedMs": 2.2999999998137355,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 824912,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 26802
+      }
+    },
+    {
+      "originalIndex": 2,
+      "edge": "original",
+      "encodedBytes": 4013377,
+      "decodePromiseElapsedMs": 110.5,
+      "width": 3072,
+      "height": 4096,
+      "heapUsage": {
+        "usedSize": 11473716,
+        "totalSize": 12017664,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 5351210
+      }
+    },
+    {
+      "originalIndex": 2,
+      "edge": 96,
+      "encodedBytes": 2257,
+      "decodePromiseElapsedMs": 3.5,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 777408,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 3050
+      }
+    },
+    {
+      "originalIndex": 2,
+      "edge": 192,
+      "encodedBytes": 5037,
+      "decodePromiseElapsedMs": 3.099999999627471,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 784816,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 6754
+      }
+    },
+    {
+      "originalIndex": 2,
+      "edge": 384,
+      "encodedBytes": 15252,
+      "decodePromiseElapsedMs": 3,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 812056,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 20374
+      }
+    },
+    {
+      "originalIndex": 3,
+      "edge": "original",
+      "encodedBytes": 347442,
+      "decodePromiseElapsedMs": 16.100000000558794,
+      "width": 768,
+      "height": 1024,
+      "heapUsage": {
+        "usedSize": 1697884,
+        "totalSize": 2244608,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 463294
+      }
+    },
+    {
+      "originalIndex": 3,
+      "edge": 96,
+      "encodedBytes": 2482,
+      "decodePromiseElapsedMs": 3.3999999994412065,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 778008,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 3350
+      }
+    },
+    {
+      "originalIndex": 3,
+      "edge": 192,
+      "encodedBytes": 6540,
+      "decodePromiseElapsedMs": 3.300000000745058,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 788812,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 8758
+      }
+    },
+    {
+      "originalIndex": 3,
+      "edge": 384,
+      "encodedBytes": 25766,
+      "decodePromiseElapsedMs": 3.099999999627471,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 840096,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 34394
+      }
+    },
+    {
+      "originalIndex": 4,
+      "edge": "original",
+      "encodedBytes": 4766628,
+      "decodePromiseElapsedMs": 69,
+      "width": 1536,
+      "height": 2048,
+      "heapUsage": {
+        "usedSize": 13481956,
+        "totalSize": 14024704,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 6355541
+      }
+    },
+    {
+      "originalIndex": 4,
+      "edge": 96,
+      "encodedBytes": 6753,
+      "decodePromiseElapsedMs": 2.099999999627471,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 789392,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 9041
+      }
+    },
+    {
+      "originalIndex": 4,
+      "edge": 192,
+      "encodedBytes": 26430,
+      "decodePromiseElapsedMs": 2.599999999627471,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 841864,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 35277
+      }
+    },
+    {
+      "originalIndex": 4,
+      "edge": 384,
+      "encodedBytes": 111576,
+      "decodePromiseElapsedMs": 6.6000000005587935,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 1068920,
+        "totalSize": 1613824,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 148805
+      }
+    },
+    {
+      "originalIndex": 8,
+      "edge": "original",
+      "encodedBytes": 18553201,
+      "decodePromiseElapsedMs": 246.79999999981374,
+      "width": 3072,
+      "height": 4096,
+      "heapUsage": {
+        "usedSize": 50246592,
+        "totalSize": 50790400,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 24737641
+      }
+    },
+    {
+      "originalIndex": 8,
+      "edge": 96,
+      "encodedBytes": 4882,
+      "decodePromiseElapsedMs": 4.1000000005587935,
+      "width": 72,
+      "height": 96,
+      "heapUsage": {
+        "usedSize": 784408,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 6549
+      }
+    },
+    {
+      "originalIndex": 8,
+      "edge": 192,
+      "encodedBytes": 22596,
+      "decodePromiseElapsedMs": 2.3999999994412065,
+      "width": 144,
+      "height": 192,
+      "heapUsage": {
+        "usedSize": 831640,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 30165
+      }
+    },
+    {
+      "originalIndex": 8,
+      "edge": 384,
+      "encodedBytes": 94106,
+      "decodePromiseElapsedMs": 5.800000000745058,
+      "width": 288,
+      "height": 384,
+      "heapUsage": {
+        "usedSize": 1022336,
+        "totalSize": 1310720,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 125513
+      }
+    }
+  ]
+}

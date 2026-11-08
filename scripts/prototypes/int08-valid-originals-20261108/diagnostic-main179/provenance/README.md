@@ -1,0 +1,1 @@
+Byte-exact recovery of the early pre-catalog measured probe. SHA-256 b7f1319420a7405bee15c249c3f3fb9cf5f8a3c1d5ac213b3475eeb943a1a680. Matches execution-files-sha.json and cp-pairs-01 results. Historical evidence only; final counted results use the parent probe.cjs and *-pairs-02.

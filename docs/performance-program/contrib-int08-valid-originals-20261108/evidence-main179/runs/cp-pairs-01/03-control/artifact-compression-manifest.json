@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "serverExitConfirmed": true,
+  "status": "packed",
+  "artifacts": [
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/chromium-trace.json",
+      "rawBytes": 130027711,
+      "rawSha256": "ccbc8c04815398d69d69a8b47e19787f36f5e66200500835972889746e2ba1af",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/chromium-trace.json.gz",
+      "gzipBytes": 11043370,
+      "gzipSha256": "41761388e1e9b858dc0e290aa53c3847555a2d039e9e0bb8f3e1e0459ba4ba94",
+      "roundTripVerified": true,
+      "rawReleased": true
+    },
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/fixture/data/user-access.json",
+      "rawBytes": 4446871,
+      "rawSha256": "460c39d350ba06e2e9f64c3a7e7184f6f2f9eb652d86795fd41677b7ab19f78b",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/fixture/data/user-access.json.gz",
+      "gzipBytes": 161303,
+      "gzipSha256": "b5ab089c02bf2d0d2e2e3ae8d831926954a0e8dc729e60c4b9ebe0472fbf4d28",
+      "roundTripVerified": true,
+      "rawReleased": true
+    }
+  ]
+}

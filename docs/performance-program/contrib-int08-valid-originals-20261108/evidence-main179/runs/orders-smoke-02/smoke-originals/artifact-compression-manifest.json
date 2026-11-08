@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "serverExitConfirmed": true,
+  "status": "packed",
+  "artifacts": [
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/chromium-trace.json",
+      "rawBytes": 144609748,
+      "rawSha256": "7874ceca781cf628982ca4502218cb493e6b82c8f8a79951376f4019120a394e",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/chromium-trace.json.gz",
+      "gzipBytes": 11785945,
+      "gzipSha256": "a44f384ad10318f2efcf9854ab84bcc2a35067c9e1f1290d914681ae40e79a18",
+      "roundTripVerified": true,
+      "rawReleased": true
+    },
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/fixture/data/user-access.json",
+      "rawBytes": 4446871,
+      "rawSha256": "460c39d350ba06e2e9f64c3a7e7184f6f2f9eb652d86795fd41677b7ab19f78b",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/fixture/data/user-access.json.gz",
+      "gzipBytes": 161303,
+      "gzipSha256": "b5ab089c02bf2d0d2e2e3ae8d831926954a0e8dc729e60c4b9ebe0472fbf4d28",
+      "roundTripVerified": true,
+      "rawReleased": true
+    }
+  ]
+}

@@ -1,0 +1,5067 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "measurementModule": "orders",
+  "scope": "Main179 diagnostic; not post908 acceptance",
+  "scenario": "originals",
+  "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "status": "baseline-captured-requires-analysis",
+  "node": "v24.19.0",
+  "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be",
+  "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+  "startedAt": "2026-11-08T14:02:54.707Z",
+  "sourcePins": {
+    "schemaVersion": 2,
+    "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+    "requiredAncestor": "0c85445f1989cafbae4f104c13ddf5d8f0b84c6c",
+    "ancestorVerified": true,
+    "files": {
+      "public/model-image-cache.js": {
+        "gitBlob": "b8e952b9181cb7ce20e6efe0949e83b1ee8b2d5e",
+        "sha256": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22"
+      },
+      "public/app-main.js": {
+        "gitBlob": "1311e659e818e8227840a6258498f98283897e91",
+        "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605"
+      },
+      "public/detail-drawer.js": {
+        "gitBlob": "6147788213dbd771d70b31f74f66a56d1dd4fd14",
+        "sha256": "7be31393af72adcfffe16a8670514a86b8fc04eb4f98862496816a13028218f3"
+      },
+      "public/perf-runtime.js": {
+        "gitBlob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+        "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
+      },
+      "public/vendor/exceljs.min.js": {
+        "gitBlob": "0b07c1ee50eefd56c0f363540750bbcc6225b75b",
+        "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9"
+      },
+      "server/user-data.js": {
+        "gitBlob": "94c18475fb731a29ca83515d88c1ecc17e6ab9c5",
+        "sha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+      },
+      "server/server.js": {
+        "gitBlob": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+        "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+      },
+      "server/routes/cp-image-routes.js": {
+        "gitBlob": "3e0daeffe3540ad0acaea99a58aca0ca058b2429",
+        "sha256": "559c2790b170dca20761e91c1cc643404262edd449dd7a23449e3d22a2082784"
+      },
+      "server/routes/collection-image-routes.js": {
+        "gitBlob": "c97ebdd2581f6ef958b4c277bbd7dfdc6a6c1350",
+        "sha256": "514c840c652f914f1aaeaec6c095895d3fd25ca694a8f0726ce7018359db08be"
+      }
+    },
+    "preservedCpGuards": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "reviewContextRevision": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+    "guardReference916": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "guardPathsChangedSince916": [],
+    "changedSinceHistoricalReviewContext": [],
+    "contract": {
+      "path": "docs/performance/2026-11-05-codex-review-findings.md",
+      "sha256": "0831abe5b699adda63cd6f582055bb6d89764f5ea821c4d494fdd33adfb185d0",
+      "gitBlob": "95b0fed2b815f56a3345f325de062449ea784e01"
+    },
+    "dependencies": {
+      "express": {
+        "version": "4.22.3",
+        "packageSha256": "0a1770344ae7215b2a8e4f31be9f08d726253d4ded2c8b820ec1db8c7c00d000"
+      },
+      "body-parser": {
+        "version": "1.20.9",
+        "packageSha256": "b08d6a1bdf0ac224323051934f5979935c711a1fa7422795a61a39cbbe74711f"
+      },
+      "bytes": {
+        "version": "3.1.2",
+        "packageSha256": "99b21c09ce812dc76a06cd87c4753247cb9615c6a8501c5a5a9d9caa22ea2d12"
+      },
+      "bodyParserJsonSha256": "3b19e93395f011b99a31e5c16086eeaa9e52acdc6a680191c1ceaeab31b15fc4"
+    }
+  },
+  "phases": [
+    {
+      "phase": "blank-before-navigation",
+      "at": "2026-11-08T14:06:16.947Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 133885952
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 35504128
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 51904512
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 66310144
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 44417024
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 710708,
+        "totalSize": 1835008,
+        "embedderHeapUsedSize": 1384360,
+        "backingStorageSize": 161
+      },
+      "jsHeapUsedBytes": 636480,
+      "jsHeapTotalBytes": 1310720,
+      "app": {},
+      "memoryDump": {
+        "dumpGuid": "0x2",
+        "success": true
+      }
+    },
+    {
+      "phase": "table-first-visible",
+      "at": "2026-11-08T14:06:23.950Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 145244160
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 36573184
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 1146720256
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 96972800
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 95465472
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 190926412,
+        "totalSize": 251174912,
+        "embedderHeapUsedSize": 159747032,
+        "backingStorageSize": 68923301
+      },
+      "jsHeapUsedBytes": 157692780,
+      "jsHeapTotalBytes": 208863232,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 17,
+          "warm": 17,
+          "warmBytes": 53302449,
+          "known": 17,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x3",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-first-scroll",
+      "at": "2026-11-08T14:06:28.778Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 147759104
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 35979264
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 1427406848
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 95293440
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 84209664
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 163811616,
+        "totalSize": 249524224,
+        "embedderHeapUsedSize": 49562208,
+        "backingStorageSize": 8130632
+      },
+      "jsHeapUsedBytes": 163277396,
+      "jsHeapTotalBytes": 249524224,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 32,
+          "warm": 32,
+          "warmBytes": 94590129,
+          "known": 32,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x4",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-repeat-scroll",
+      "at": "2026-11-08T14:06:34.193Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 148148224
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 36536320
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 1476075520
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 96763904
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 88621056
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 254541880,
+        "totalSize": 314138624,
+        "embedderHeapUsedSize": 68794976,
+        "backingStorageSize": 8130854
+      },
+      "jsHeapUsedBytes": 254529984,
+      "jsHeapTotalBytes": 314138624,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 0,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 32,
+          "warm": 32,
+          "warmBytes": 94590129,
+          "known": 32,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x5",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-original-hover",
+      "at": "2026-11-08T14:06:34.815Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 148443136
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 36536320
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 1479135232
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 96862208
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 84930560
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 255364988,
+        "totalSize": 314400768,
+        "embedderHeapUsedSize": 69542576,
+        "backingStorageSize": 8132392
+      },
+      "jsHeapUsedBytes": 255355064,
+      "jsHeapTotalBytes": 314400768,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 1,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 32,
+          "warm": 32,
+          "warmBytes": 94590129,
+          "known": 32,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x6",
+        "success": true
+      }
+    },
+    {
+      "phase": "after-original-drawer",
+      "at": "2026-11-08T14:06:35.574Z",
+      "processes": [
+        {
+          "pid": 6057,
+          "type": "browser",
+          "rssBytes": 149098496
+        },
+        {
+          "pid": 6148,
+          "type": "renderer",
+          "rssBytes": 36569088
+        },
+        {
+          "pid": 6149,
+          "type": "renderer",
+          "rssBytes": 1514655744
+        },
+        {
+          "pid": 6139,
+          "type": "renderer",
+          "rssBytes": 96841728
+        },
+        {
+          "pid": 6095,
+          "type": "GPU",
+          "rssBytes": 99012608
+        }
+      ],
+      "heapUsage": {
+        "usedSize": 257427740,
+        "totalSize": 318156800,
+        "embedderHeapUsedSize": 82770688,
+        "backingStorageSize": 8135176
+      },
+      "jsHeapUsedBytes": 257417684,
+      "jsHeapTotalBytes": 318156800,
+      "app": {
+        "cache": {
+          "thumbnailMemoryEntries": 0,
+          "originalMemoryEntries": 1,
+          "thumbnailInFlight": 0,
+          "originalInFlight": 0
+        },
+        "runtime": {
+          "loaded": 32,
+          "warm": 32,
+          "warmBytes": 94590129,
+          "known": 32,
+          "queued": 0,
+          "active": 0
+        }
+      },
+      "memoryDump": {
+        "dumpGuid": "0x7",
+        "success": true
+      }
+    }
+  ],
+  "network": [
+    {
+      "requestId": "6149.486",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.487",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.488",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.489",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.490",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.491",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.492",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.493",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.494",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.495",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.496",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.497",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.498",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.499",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.500",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.501",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.502",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.793",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146689086_9c3b596476c8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.794",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146693984_5ea7274784e8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.797",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.799",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146706850_403c19a434be",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.808",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146711188_99ebc26c8981",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.812",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146715656_851fa0827572",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.819",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.822",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.827",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146730085_e579cd382472",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.831",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146735427_fff9896c7b35",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.834",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146740095_b8a62a3dc663",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.836",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146745675_11ef4ad15299",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.837",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146750907_e217f7783755",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.839",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.842",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146760369_5e01c707ab8d",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.848",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.880",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.881",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.882",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.883",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.884",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.885",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.886",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.887",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.888",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.889",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.890",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.891",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.892",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.893",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.895",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.894",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.966",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.967",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.971",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.972",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.976",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.977",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.981",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.982",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.986",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.987",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.991",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.992",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.996",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.997",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1001",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1002",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1006",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1007",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1012",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1013",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1017",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1018",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1022",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1023",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1027",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1028",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1032",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1033",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1037",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1038",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1042",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1043",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1047",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1048",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1052",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146689086_9c3b596476c8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1053",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146689086_9c3b596476c8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1057",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146693984_5ea7274784e8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1058",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146693984_5ea7274784e8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1062",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1063",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1067",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146706850_403c19a434be",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1068",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146706850_403c19a434be",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1073",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146711188_99ebc26c8981",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1074",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146711188_99ebc26c8981",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1078",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146715656_851fa0827572",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1079",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146715656_851fa0827572",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1083",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1084",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1088",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1089",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1093",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146730085_e579cd382472",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1094",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146730085_e579cd382472",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1098",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146735427_fff9896c7b35",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1099",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146735427_fff9896c7b35",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1103",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146740095_b8a62a3dc663",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1104",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146740095_b8a62a3dc663",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1108",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146745675_11ef4ad15299",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1109",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146745675_11ef4ad15299",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/png"
+    },
+    {
+      "requestId": "6149.1113",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146750907_e217f7783755",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1114",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146750907_e217f7783755",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1118",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1119",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1123",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146760369_5e01c707ab8d",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    },
+    {
+      "requestId": "6149.1124",
+      "url": "http://127.0.0.1:40187/api/collection-images/ci_1794146760369_5e01c707ab8d",
+      "status": 200,
+      "fromDiskCache": false,
+      "fromServiceWorker": false,
+      "mimeType": "image/jpeg"
+    }
+  ],
+  "functional": {
+    "apiByteChecks": [
+      {
+        "index": 0,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1248305
+      },
+      {
+        "index": 0,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1248305
+      },
+      {
+        "index": 1,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1183373
+      },
+      {
+        "index": 1,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1183373
+      },
+      {
+        "index": 2,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4013377
+      },
+      {
+        "index": 2,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4013377
+      },
+      {
+        "index": 3,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 347442
+      },
+      {
+        "index": 3,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 347442
+      },
+      {
+        "index": 4,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4766628
+      },
+      {
+        "index": 4,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4766628
+      },
+      {
+        "index": 5,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4244875
+      },
+      {
+        "index": 5,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4244875
+      },
+      {
+        "index": 6,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 298260
+      },
+      {
+        "index": 6,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 298260
+      },
+      {
+        "index": 7,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1307627
+      },
+      {
+        "index": 7,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1307627
+      },
+      {
+        "index": 8,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 18553201
+      },
+      {
+        "index": 8,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 18553201
+      },
+      {
+        "index": 9,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 327036
+      },
+      {
+        "index": 9,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 327036
+      },
+      {
+        "index": 10,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1101284
+      },
+      {
+        "index": 10,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1101284
+      },
+      {
+        "index": 11,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4358488
+      },
+      {
+        "index": 11,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4358488
+      },
+      {
+        "index": 12,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1248333
+      },
+      {
+        "index": 12,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1248333
+      },
+      {
+        "index": 13,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1183824
+      },
+      {
+        "index": 13,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1183824
+      },
+      {
+        "index": 14,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4014243
+      },
+      {
+        "index": 14,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4014243
+      },
+      {
+        "index": 15,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 347572
+      },
+      {
+        "index": 15,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 347572
+      },
+      {
+        "index": 16,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4758581
+      },
+      {
+        "index": 16,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4758581
+      },
+      {
+        "index": 17,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4246006
+      },
+      {
+        "index": 17,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4246006
+      },
+      {
+        "index": 18,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 298506
+      },
+      {
+        "index": 18,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 298506
+      },
+      {
+        "index": 19,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1307323
+      },
+      {
+        "index": 19,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1307323
+      },
+      {
+        "index": 20,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 18552139
+      },
+      {
+        "index": 20,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 18552139
+      },
+      {
+        "index": 21,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 327057
+      },
+      {
+        "index": 21,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 327057
+      },
+      {
+        "index": 22,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1100930
+      },
+      {
+        "index": 22,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1100930
+      },
+      {
+        "index": 23,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4359682
+      },
+      {
+        "index": 23,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4359682
+      },
+      {
+        "index": 24,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1249569
+      },
+      {
+        "index": 24,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1249569
+      },
+      {
+        "index": 25,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1183711
+      },
+      {
+        "index": 25,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1183711
+      },
+      {
+        "index": 26,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4014179
+      },
+      {
+        "index": 26,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4014179
+      },
+      {
+        "index": 27,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 347374
+      },
+      {
+        "index": 27,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 347374
+      },
+      {
+        "index": 28,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4764521
+      },
+      {
+        "index": 28,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4764521
+      },
+      {
+        "index": 29,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 4245243
+      },
+      {
+        "index": 29,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 4245243
+      },
+      {
+        "index": 30,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 298550
+      },
+      {
+        "index": 30,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 298550
+      },
+      {
+        "index": 31,
+        "endpoint": "cp-images",
+        "bytesEqual": true,
+        "bytes": 1307791
+      },
+      {
+        "index": 31,
+        "endpoint": "collection-images",
+        "bytesEqual": true,
+        "bytes": 1307791
+      }
+    ],
+    "unauthenticatedOriginals": [
+      {
+        "endpoint": "cp-images",
+        "status": 401
+      },
+      {
+        "endpoint": "collection-images",
+        "status": 401
+      }
+    ],
+    "checks": [
+      {
+        "index": 0,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 1,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 2,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 3,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 4,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 5,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 6,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 7,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 8,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 9,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 10,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 11,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 12,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 13,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 14,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 15,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 16,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 17,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 18,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 19,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 20,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 21,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 22,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 23,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 24,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 25,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 26,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 27,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 28,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      },
+      {
+        "index": 29,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 3072,
+        "height": 4096
+      },
+      {
+        "index": 30,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "index": 31,
+        "clipboardBytesEqual": true,
+        "excelPreparedBytesEqual": true,
+        "width": 1536,
+        "height": 2048
+      }
+    ],
+    "workbookExpectedHashes": [
+      "859635ac957a55e6a0b152d2528f1307ab8580c25d917460a856c93bea664c62",
+      "6d301e660d3a5d111d6c9a19236a1fe14b257c8261f4e5db3fd0b3afe45d18eb",
+      "ffce574d5108034e7b931aaf0bb45b5e36bc60f3374dcdf61e1e45fbbb203b1a",
+      "fb4f29c6b3249e4d519ba0d9cb349eb4c7a7748321f1263b3547f79017b60815",
+      "82d0e993755d2832c4443a04bf665f87917207026f838da1fdefd6c855702176",
+      "c9cb25dc09f3f8614dbac78e50552a310e2ec01ec17520d63863f4022be36105"
+    ],
+    "xlsxEmbeddedMediaBytesEqual": true
+  },
+  "limitations": [
+    "Prepared probe: first smoke and runtime validation remain required.",
+    "Synthetic size/codec strata do not establish the production image distribution.",
+    "Linux headless Chromium; Windows/Electron, GPU drivers, AV, cold OS disk and real workstation behavior are unmeasured.",
+    "RGBA pixel estimates, JS heap and renderer RSS are not decoded-image-memory measurements.",
+    "Tracing allocator candidates require attribution; absent/ambiguous image allocators leave that acceptance item open.",
+    "Tracing and small observers add overhead; all paired cases use the same instrumentation.",
+    "Placeholder and original cells can have different row geometry; scroll deltas alone do not isolate decode cost.",
+    "First image can load behind the startup curtain; navigation, load and post-Continue visibility are reported separately.",
+    "No preview optimization or 96/192/384 quality verdict is implemented by this baseline probe."
+  ],
+  "inputCache": {
+    "generation": "mw7v2fdd-85eede2a6408",
+    "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "modules": {
+      "cp": 24982,
+      "orders": 30000
+    }
+  },
+  "inputRevisions": {
+    "orders": 0,
+    "suppFob": 0
+  },
+  "initialDataAudit": {
+    "sourceFolder": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source",
+    "userScope": {
+      "id": "moderator",
+      "scopes": {
+        "mode": "ALL",
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      }
+    },
+    "sourceFilterStatus": {
+      "ready": true,
+      "required": false,
+      "requestedTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "missingTargets": [],
+      "filteredTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "hasActiveAsasConnection": false,
+      "targetState": {
+        "cp": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "orders": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "backlog": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        }
+      }
+    },
+    "pageCache": {
+      "hit": false,
+      "readMs": 0,
+      "generation": null
+    }
+  },
+  "chromium": "154.0.8037.57",
+  "continueIntentAtMs": 3245.100000000093,
+  "preMeasurementWarmup": [
+    {
+      "pass": 0,
+      "module": "cp",
+      "generation": "mw7wnvl0-19790405b8ec"
+    },
+    {
+      "pass": 0,
+      "module": "orders",
+      "generation": "mw7wnyf5-04d90eaba5b3"
+    },
+    {
+      "pass": 0,
+      "module": "collection-catalog",
+      "generation": "mw7wnzbw-2be3ac9c9f32"
+    },
+    {
+      "pass": 1,
+      "module": "cp",
+      "generation": "mw7wnzbw-2be3ac9c9f32"
+    },
+    {
+      "pass": 1,
+      "module": "orders",
+      "generation": "mw7wnzbw-2be3ac9c9f32"
+    },
+    {
+      "pass": 1,
+      "module": "collection-catalog",
+      "generation": "mw7wnzbw-2be3ac9c9f32"
+    }
+  ],
+  "measurementRevisions": {
+    "orders": 32,
+    "suppFob": 0
+  },
+  "measurementCache": {
+    "generation": "mw7wnzbw-2be3ac9c9f32",
+    "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "modules": {
+      "cp": {
+        "rows": 24982,
+        "checksum": "bca494259fe74e237768f9050050e2d139589fc724c0935911799e59fe66b2de"
+      },
+      "orders": {
+        "rows": 30000,
+        "checksum": "5005db8cb9ec8782b75b2e874410624ed7f3b70405615405a61b0a558f3f4209"
+      }
+    }
+  },
+  "projectionGenerations": [
+    "mw7wnzbw-2be3ac9c9f32",
+    "mw7wnzbw-2be3ac9c9f32",
+    "mw7wnzbw-2be3ac9c9f32"
+  ],
+  "dataset": {
+    "generation": null,
+    "revisions": {
+      "orders": 32,
+      "suppFob": 0
+    },
+    "cpRows": null,
+    "ordersRows": 30000,
+    "active": "orders",
+    "tableGeometry": {
+      "scrollHeight": 2378,
+      "clientHeight": 830,
+      "firstRowHeights": [
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        42,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        42,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        47.390625,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42
+      ]
+    }
+  },
+  "firstVisibleOriginalObservedAtMs": 5944.800000000279,
+  "tableOriginals": [
+    {
+      "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "modelId": "880000",
+      "colourCode": "E03",
+      "canonicalKey": "plm:880000|colour:E03",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+      "modelId": "880007",
+      "colourCode": "B07",
+      "canonicalKey": "plm:880007|colour:B07",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+      "modelId": "880014",
+      "colourCode": "E03",
+      "canonicalKey": "plm:880014|colour:E03",
+      "width": 3072,
+      "height": 4096,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146614457_913dd39155bb",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+      "modelId": "880021",
+      "colourCode": "B07",
+      "canonicalKey": "plm:880021|colour:B07",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146620370_a50d673380b1",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+      "modelId": "880028",
+      "colourCode": "H04",
+      "canonicalKey": "plm:880028|colour:H04",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+      "modelId": "880035",
+      "colourCode": "H04",
+      "canonicalKey": "plm:880035|colour:H04",
+      "width": 3072,
+      "height": 4096,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+      "modelId": "880042",
+      "colourCode": "G05",
+      "canonicalKey": "plm:880042|colour:G05",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+      "modelId": "880049",
+      "colourCode": "M01",
+      "canonicalKey": "plm:880049|colour:M01",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146643563_913677c97151",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+      "modelId": "880063",
+      "colourCode": "E03",
+      "canonicalKey": "plm:880063|colour:E03",
+      "width": 3072,
+      "height": 4096,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+      "modelId": "880070",
+      "colourCode": "B07",
+      "canonicalKey": "plm:880070|colour:B07",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+      "modelId": "880077",
+      "colourCode": "E03",
+      "canonicalKey": "plm:880077|colour:E03",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+      "modelId": "880084",
+      "colourCode": "E03",
+      "canonicalKey": "plm:880084|colour:E03",
+      "width": 3072,
+      "height": 4096,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+      "modelId": "880091",
+      "colourCode": "M01",
+      "canonicalKey": "plm:880091|colour:M01",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146668470_fe953c28157c",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+      "modelId": "880098",
+      "colourCode": "H04",
+      "canonicalKey": "plm:880098|colour:H04",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+      "modelId": "880105",
+      "colourCode": "S01",
+      "canonicalKey": "plm:880105|colour:S01",
+      "width": 3072,
+      "height": 4096,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+      "modelId": "880112",
+      "colourCode": "K01",
+      "canonicalKey": "plm:880112|colour:K01",
+      "width": 768,
+      "height": 1024,
+      "cssWidth": 30,
+      "cssHeight": 40
+    },
+    {
+      "source": "/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "currentSrc": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+      "modelId": "880119",
+      "colourCode": "M01",
+      "canonicalKey": "plm:880119|colour:M01",
+      "width": 1536,
+      "height": 2048,
+      "cssWidth": 30,
+      "cssHeight": 40
+    }
+  ],
+  "scroll": [
+    {
+      "label": "first-scroll",
+      "startMs": 7346.600000000093,
+      "endMs": 11649.100000000093,
+      "longTasks": [
+        {
+          "startTime": 7543,
+          "duration": 55,
+          "overlapMs": 55
+        },
+        {
+          "startTime": 7635.600000000093,
+          "duration": 52,
+          "overlapMs": 52
+        },
+        {
+          "startTime": 7752.100000000093,
+          "duration": 625,
+          "overlapMs": 625
+        },
+        {
+          "startTime": 8498.399999999907,
+          "duration": 51,
+          "overlapMs": 51
+        },
+        {
+          "startTime": 8859.600000000093,
+          "duration": 59,
+          "overlapMs": 59
+        }
+      ],
+      "longTaskOverlapMs": 842,
+      "wallMs": 4302.5,
+      "rangePx": 1548,
+      "framesMs": [
+        -6.710000000092805,
+        16.609999999999673,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        16.699999999999818,
+        33.30000000000018,
+        16.699999999999818,
+        16.600000000000364,
+        50,
+        16.699999999999818,
+        16.600000000000364,
+        50.099999999999454,
+        33.30000000000018,
+        16.699999999999818,
+        16.600000000000364,
+        16.699999999999818,
+        650,
+        16.600000000000364,
+        16.69999999999891,
+        33.30000000000109,
+        66.69999999999891,
+        33.30000000000109,
+        33.399999999999636,
+        16.600000000000364,
+        33.29999999999927,
+        16.80000000000109,
+        16.599999999998545,
+        33.30000000000109,
+        16.69999999999891,
+        16.600000000000364,
+        33.399999999999636,
+        16.600000000000364,
+        16.700000000000728,
+        33.399999999999636,
+        50,
+        33.29999999999927,
+        33.30000000000109,
+        16.69999999999891,
+        33.30000000000109,
+        16.69999999999891,
+        33.30000000000109,
+        50,
+        16.69999999999891,
+        33.30000000000109,
+        16.600000000000364,
+        16.69999999999891,
+        33.399999999999636,
+        16.600000000000364,
+        33.30000000000109,
+        33.399999999999636,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        33.30000000000109,
+        33.29999999999927,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        33.30000000000109,
+        33.399999999999636,
+        33.29999999999927,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.700000000000728,
+        16.600000000000364,
+        33.29999999999927,
+        16.700000000000728,
+        33.29999999999927,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.80000000000109,
+        16.600000000000364,
+        33.399999999999636,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        33.30000000000109,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        33.30000000000109,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.599999999998545,
+        16.80000000000109,
+        33.19999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        33.29999999999927,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        33.399999999999636,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728
+      ],
+      "p50Ms": 16.699999999999818,
+      "p95Ms": 33.399999999999636,
+      "maxMs": 650,
+      "over16_7Ms": 83,
+      "over33_3Ms": 28,
+      "coverage": [
+        {
+          "frame": 0,
+          "scrollTop": 0,
+          "visibleOriginals": 16
+        },
+        {
+          "frame": 15,
+          "scrollTop": 259,
+          "visibleOriginals": 16
+        },
+        {
+          "frame": 30,
+          "scrollTop": 519,
+          "visibleOriginals": 16
+        },
+        {
+          "frame": 45,
+          "scrollTop": 778,
+          "visibleOriginals": 17
+        },
+        {
+          "frame": 60,
+          "scrollTop": 1038,
+          "visibleOriginals": 14
+        },
+        {
+          "frame": 75,
+          "scrollTop": 1297,
+          "visibleOriginals": 8
+        },
+        {
+          "frame": 90,
+          "scrollTop": 1539,
+          "visibleOriginals": 3
+        },
+        {
+          "frame": 105,
+          "scrollTop": 1280,
+          "visibleOriginals": 8
+        },
+        {
+          "frame": 120,
+          "scrollTop": 1020,
+          "visibleOriginals": 14
+        },
+        {
+          "frame": 135,
+          "scrollTop": 761,
+          "visibleOriginals": 18
+        },
+        {
+          "frame": 150,
+          "scrollTop": 502,
+          "visibleOriginals": 17
+        },
+        {
+          "frame": 165,
+          "scrollTop": 242,
+          "visibleOriginals": 17
+        }
+      ],
+      "uniqueOriginalsVisible": 32
+    },
+    {
+      "label": "repeat-scroll",
+      "startMs": 12072.80000000028,
+      "endMs": 17064,
+      "longTasks": [
+        {
+          "startTime": 12185.100000000093,
+          "duration": 1976,
+          "overlapMs": 1976
+        }
+      ],
+      "longTaskOverlapMs": 1976,
+      "wallMs": 4991.199999999721,
+      "rangePx": 1548,
+      "framesMs": [
+        0.19999999972060323,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        1983.2999999999993,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        33.30000000000109,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.80000000000109,
+        16.600000000000364,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.80000000000109,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.600000000000364,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.69999999999891,
+        16.600000000000364,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.799999999999272,
+        16.600000000000364,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000000364,
+        16.69999999999891,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.600000000002183,
+        16.69999999999709,
+        16.700000000000728,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000002183,
+        16.69999999999709,
+        16.700000000000728,
+        16.600000000002183,
+        16.69999999999709,
+        16.700000000000728,
+        16.600000000002183,
+        16.799999999999272,
+        16.5,
+        16.700000000000728,
+        16.69999999999709,
+        16.700000000000728,
+        16.700000000000728,
+        16.599999999998545,
+        16.700000000000728,
+        16.600000000002183,
+        16.69999999999709,
+        16.700000000000728,
+        16.700000000000728
+      ],
+      "p50Ms": 16.69999999999891,
+      "p95Ms": 16.799999999999272,
+      "maxMs": 1983.2999999999993,
+      "over16_7Ms": 80,
+      "over33_3Ms": 2,
+      "coverage": [
+        {
+          "frame": 0,
+          "scrollTop": 0,
+          "visibleOriginals": 16
+        },
+        {
+          "frame": 15,
+          "scrollTop": 259,
+          "visibleOriginals": 16
+        },
+        {
+          "frame": 30,
+          "scrollTop": 519,
+          "visibleOriginals": 18
+        },
+        {
+          "frame": 45,
+          "scrollTop": 778,
+          "visibleOriginals": 17
+        },
+        {
+          "frame": 60,
+          "scrollTop": 1038,
+          "visibleOriginals": 14
+        },
+        {
+          "frame": 75,
+          "scrollTop": 1297,
+          "visibleOriginals": 8
+        },
+        {
+          "frame": 90,
+          "scrollTop": 1539,
+          "visibleOriginals": 3
+        },
+        {
+          "frame": 105,
+          "scrollTop": 1280,
+          "visibleOriginals": 8
+        },
+        {
+          "frame": 120,
+          "scrollTop": 1020,
+          "visibleOriginals": 14
+        },
+        {
+          "frame": 135,
+          "scrollTop": 761,
+          "visibleOriginals": 18
+        },
+        {
+          "frame": 150,
+          "scrollTop": 502,
+          "visibleOriginals": 17
+        },
+        {
+          "frame": 165,
+          "scrollTop": 242,
+          "visibleOriginals": 17
+        }
+      ],
+      "uniqueOriginalsVisible": 32
+    }
+  ],
+  "hover": {
+    "elapsedMs": 197.12347099999897,
+    "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+    "width": 768,
+    "height": 1024
+  },
+  "drawer": [
+    {
+      "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146689086_9c3b596476c8",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146693984_5ea7274784e8",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146706850_403c19a434be",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146711188_99ebc26c8981",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146715656_851fa0827572",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146730085_e579cd382472",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146735427_fff9896c7b35",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146740095_b8a62a3dc663",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146745675_11ef4ad15299",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146760369_5e01c707ab8d",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146735427_fff9896c7b35",
+      "width": 3072,
+      "height": 4096
+    },
+    {
+      "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146745675_11ef4ad15299",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146760369_5e01c707ab8d",
+      "width": 1536,
+      "height": 2048
+    },
+    {
+      "source": "/api/collection-images/ci_1794146693984_5ea7274784e8",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "source": "/api/collection-images/ci_1794146706850_403c19a434be",
+      "width": 3072,
+      "height": 4096
+    }
+  ],
+  "browserObservations": {
+    "imageLoads": [
+      {
+        "at": 3292.8000000002794,
+        "source": "/api/collection-images/ci_1794146614457_913dd39155bb",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3371.399999999907,
+        "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3372,
+        "source": "/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3372.100000000093,
+        "source": "/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3372.899999999907,
+        "source": "/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3428.899999999907,
+        "source": "/api/collection-images/ci_1794146635162_35f9ac96c335",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3429.3000000002794,
+        "source": "/api/collection-images/ci_1794146620370_a50d673380b1",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3429.7000000001863,
+        "source": "/api/collection-images/ci_1794146648370_b3016bf4b389",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3430.899999999907,
+        "source": "/api/collection-images/ci_1794146653243_8398e0f86b06",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3431.100000000093,
+        "source": "/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3431.7000000001863,
+        "source": "/api/collection-images/ci_1794146663614_9ca33e391c93",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3431.899999999907,
+        "source": "/api/collection-images/ci_1794146668470_fe953c28157c",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3433.2000000001863,
+        "source": "/api/collection-images/ci_1794146678501_8d4de51569a3",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3489.2000000001863,
+        "source": "/api/collection-images/ci_1794146658916_9b04922c6a31",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3489.5,
+        "source": "/api/collection-images/ci_1794146673767_04228f0dc01c",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3489.899999999907,
+        "source": "/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 3578.2000000001863,
+        "source": "/api/collection-images/ci_1794146643563_913677c97151",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": true
+      },
+      {
+        "at": 7607.5,
+        "source": "/api/collection-images/ci_1794146689086_9c3b596476c8",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 7610.899999999907,
+        "source": "/api/collection-images/ci_1794146693984_5ea7274784e8",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 7704.600000000093,
+        "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8491.5,
+        "source": "/api/collection-images/ci_1794146711188_99ebc26c8981",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8552.200000000186,
+        "source": "/api/collection-images/ci_1794146706850_403c19a434be",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8587.30000000028,
+        "source": "/api/collection-images/ci_1794146715656_851fa0827572",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8665.600000000093,
+        "source": "/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8744,
+        "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8805.899999999907,
+        "source": "/api/collection-images/ci_1794146730085_e579cd382472",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8807.899999999907,
+        "source": "/api/collection-images/ci_1794146735427_fff9896c7b35",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 8851.600000000093,
+        "source": "/api/collection-images/ci_1794146740095_b8a62a3dc663",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 9093.700000000186,
+        "source": "/api/collection-images/ci_1794146745675_11ef4ad15299",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 9124.899999999907,
+        "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+        "width": 3072,
+        "height": 4096,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 9144.600000000093,
+        "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+        "width": 768,
+        "height": 1024,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 9261.899999999907,
+        "source": "/api/collection-images/ci_1794146760369_5e01c707ab8d",
+        "width": 1536,
+        "height": 2048,
+        "table": "ordersTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 17703.399999999907,
+        "source": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+        "width": 768,
+        "height": 1024,
+        "table": null,
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.700000000186,
+        "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.80000000028,
+        "source": "/api/collection-images/ci_1794146689086_9c3b596476c8",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.80000000028,
+        "source": "/api/collection-images/ci_1794146693984_5ea7274784e8",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.80000000028,
+        "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.80000000028,
+        "source": "/api/collection-images/ci_1794146706850_403c19a434be",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146711188_99ebc26c8981",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146715656_851fa0827572",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146720712_db1e81e6a7cf",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146730085_e579cd382472",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146735427_fff9896c7b35",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18433.899999999907,
+        "source": "/api/collection-images/ci_1794146740095_b8a62a3dc663",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434,
+        "source": "/api/collection-images/ci_1794146745675_11ef4ad15299",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434,
+        "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434,
+        "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434,
+        "source": "/api/collection-images/ci_1794146760369_5e01c707ab8d",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434,
+        "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.100000000093,
+        "source": "/api/collection-images/ci_1794146750907_e217f7783755",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.100000000093,
+        "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.100000000093,
+        "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.30000000028,
+        "source": "/api/collection-images/ci_1794146735427_fff9896c7b35",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.30000000028,
+        "source": "/api/collection-images/ci_1794146725564_45fd5ebc3fc8",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.30000000028,
+        "source": "/api/collection-images/ci_1794146745675_11ef4ad15299",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.30000000028,
+        "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.30000000028,
+        "source": "/api/collection-images/ci_1794146699385_a271f3da3ba7",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.399999999907,
+        "source": "/api/collection-images/ci_1794146755590_92fe95af20d5",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.399999999907,
+        "source": "/api/collection-images/ci_1794146760369_5e01c707ab8d",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.399999999907,
+        "source": "/api/collection-images/ci_1794146693984_5ea7274784e8",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18434.399999999907,
+        "source": "/api/collection-images/ci_1794146706850_403c19a434be",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18475,
+        "source": "/api/collection-images/ci_1794146614457_913dd39155bb",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18482.100000000093,
+        "source": "/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18707.80000000028,
+        "source": "/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18812.100000000093,
+        "source": "/api/collection-images/ci_1794146648370_b3016bf4b389",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18812.200000000186,
+        "source": "/api/collection-images/ci_1794146635162_35f9ac96c335",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18812.200000000186,
+        "source": "/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18812.200000000186,
+        "source": "/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18812.200000000186,
+        "source": "/api/collection-images/ci_1794146653243_8398e0f86b06",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18813.5,
+        "source": "/api/collection-images/ci_1794146620370_a50d673380b1",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18813.80000000028,
+        "source": "/api/collection-images/ci_1794146663614_9ca33e391c93",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18813.899999999907,
+        "source": "/api/collection-images/ci_1794146668470_fe953c28157c",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18814.30000000028,
+        "source": "/api/collection-images/ci_1794146658916_9b04922c6a31",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18814.30000000028,
+        "source": "/api/collection-images/ci_1794146678501_8d4de51569a3",
+        "width": 768,
+        "height": 1024,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18899,
+        "source": "/api/collection-images/ci_1794146673767_04228f0dc01c",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 18899.100000000093,
+        "source": "/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+        "width": 1536,
+        "height": 2048,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      },
+      {
+        "at": 19044.899999999907,
+        "source": "/api/collection-images/ci_1794146643563_913677c97151",
+        "width": 3072,
+        "height": 4096,
+        "table": "blDetailTable",
+        "behindCurtain": false
+      }
+    ],
+    "decodeCalls": [
+      {
+        "source": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+        "startMs": 17693.600000000093,
+        "elapsedMs": 7.7000000001862645,
+        "ok": true
+      }
+    ],
+    "longTasks": [
+      {
+        "startTime": 263.39999999990687,
+        "duration": 77
+      },
+      {
+        "startTime": 444.89999999990687,
+        "duration": 79
+      },
+      {
+        "startTime": 1106.3999999999069,
+        "duration": 225
+      },
+      {
+        "startTime": 1335.3000000002794,
+        "duration": 329
+      },
+      {
+        "startTime": 1670.3000000002794,
+        "duration": 1239
+      },
+      {
+        "startTime": 2909.8000000002794,
+        "duration": 214
+      },
+      {
+        "startTime": 3675.5,
+        "duration": 56
+      },
+      {
+        "startTime": 3828.8000000002794,
+        "duration": 463
+      },
+      {
+        "startTime": 4292.700000000186,
+        "duration": 209
+      },
+      {
+        "startTime": 4503.899999999907,
+        "duration": 1180
+      },
+      {
+        "startTime": 5684.600000000093,
+        "duration": 195
+      },
+      {
+        "startTime": 5951.700000000186,
+        "duration": 286
+      },
+      {
+        "startTime": 6238.800000000279,
+        "duration": 247
+      },
+      {
+        "startTime": 6487.5,
+        "duration": 334
+      },
+      {
+        "startTime": 6976.899999999907,
+        "duration": 56
+      },
+      {
+        "startTime": 7543,
+        "duration": 55
+      },
+      {
+        "startTime": 7635.600000000093,
+        "duration": 52
+      },
+      {
+        "startTime": 7752.100000000093,
+        "duration": 625
+      },
+      {
+        "startTime": 8498.399999999907,
+        "duration": 51
+      },
+      {
+        "startTime": 8859.600000000093,
+        "duration": 59
+      },
+      {
+        "startTime": 12185.100000000093,
+        "duration": 1976
+      },
+      {
+        "startTime": 17039.80000000028,
+        "duration": 54
+      },
+      {
+        "startTime": 18113.700000000186,
+        "duration": 268
+      },
+      {
+        "startTime": 18382.30000000028,
+        "duration": 50
+      },
+      {
+        "startTime": 18814.80000000028,
+        "duration": 83
+      },
+      {
+        "startTime": 18899.399999999907,
+        "duration": 130
+      }
+    ],
+    "initialGeneration": null,
+    "firstVisibleOriginal": {
+      "atMs": 3773.3000000002794,
+      "source": "/api/collection-images/ci_1794146599372_b8b509b5bd17",
+      "width": 768,
+      "height": 1024,
+      "table": "ordersTable",
+      "curtainAbsent": true,
+      "viewportIntersection": true
+    },
+    "resources": [
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146599372_b8b509b5bd17",
+        "entryType": "resource",
+        "startTime": 3207.5,
+        "duration": 36.5,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/png",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.5,
+        "domainLookupStart": 3207.5,
+        "domainLookupEnd": 3207.5,
+        "connectStart": 3207.5,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.5,
+        "requestStart": 3219.7000000001863,
+        "responseStart": 3228.8000000002794,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3228.8000000002794,
+        "responseEnd": 3244,
+        "transferSize": 1248605,
+        "encodedBodySize": 1248305,
+        "decodedBodySize": 1248305,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146604845_f1bac9bb76fa",
+        "entryType": "resource",
+        "startTime": 3207.7000000001863,
+        "duration": 38,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.7000000001863,
+        "domainLookupStart": 3207.7000000001863,
+        "domainLookupEnd": 3207.7000000001863,
+        "connectStart": 3207.7000000001863,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.7000000001863,
+        "requestStart": 3219.7000000001863,
+        "responseStart": 3228.899999999907,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3228.899999999907,
+        "responseEnd": 3245.7000000001863,
+        "transferSize": 1183673,
+        "encodedBodySize": 1183373,
+        "decodedBodySize": 1183373,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146609841_2fea5fa99a5a",
+        "entryType": "resource",
+        "startTime": 3207.7000000001863,
+        "duration": 97.1999999997206,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.7000000001863,
+        "domainLookupStart": 3207.7000000001863,
+        "domainLookupEnd": 3207.7000000001863,
+        "connectStart": 3207.7000000001863,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.7000000001863,
+        "requestStart": 3219.7000000001863,
+        "responseStart": 3228.899999999907,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3228.899999999907,
+        "responseEnd": 3304.899999999907,
+        "transferSize": 4013677,
+        "encodedBodySize": 4013377,
+        "decodedBodySize": 4013377,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146614457_913dd39155bb",
+        "entryType": "resource",
+        "startTime": 3207.8000000002794,
+        "duration": 28.299999999813735,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.8000000002794,
+        "domainLookupStart": 3207.8000000002794,
+        "domainLookupEnd": 3207.8000000002794,
+        "connectStart": 3207.8000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.8000000002794,
+        "requestStart": 3225,
+        "responseStart": 3229.5,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3229.5,
+        "responseEnd": 3236.100000000093,
+        "transferSize": 347742,
+        "encodedBodySize": 347442,
+        "decodedBodySize": 347442,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146620370_a50d673380b1",
+        "entryType": "resource",
+        "startTime": 3207.8000000002794,
+        "duration": 116.89999999990687,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/png",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.8000000002794,
+        "domainLookupStart": 3207.8000000002794,
+        "domainLookupEnd": 3207.8000000002794,
+        "connectStart": 3207.8000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.8000000002794,
+        "requestStart": 3226,
+        "responseStart": 3229.5,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3229.5,
+        "responseEnd": 3324.7000000001863,
+        "transferSize": 4766928,
+        "encodedBodySize": 4766628,
+        "decodedBodySize": 4766628,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146625876_b36a70e1d8bc",
+        "entryType": "resource",
+        "startTime": 3207.8000000002794,
+        "duration": 145.1999999997206,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.8000000002794,
+        "domainLookupStart": 3207.8000000002794,
+        "domainLookupEnd": 3207.8000000002794,
+        "connectStart": 3207.8000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.8000000002794,
+        "requestStart": 3257.600000000093,
+        "responseStart": 3272.899999999907,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3272.899999999907,
+        "responseEnd": 3353,
+        "transferSize": 4245175,
+        "encodedBodySize": 4244875,
+        "decodedBodySize": 4244875,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146630450_b5fe1ab99c50",
+        "entryType": "resource",
+        "startTime": 3207.899999999907,
+        "duration": 69.3000000002794,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3207.899999999907,
+        "domainLookupStart": 3207.899999999907,
+        "domainLookupEnd": 3207.899999999907,
+        "connectStart": 3207.899999999907,
+        "secureConnectionStart": 0,
+        "connectEnd": 3207.899999999907,
+        "requestStart": 3257.7000000001863,
+        "responseStart": 3273,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3273,
+        "responseEnd": 3277.2000000001863,
+        "transferSize": 298560,
+        "encodedBodySize": 298260,
+        "decodedBodySize": 298260,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146635162_35f9ac96c335",
+        "entryType": "resource",
+        "startTime": 3208,
+        "duration": 110.89999999990687,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208,
+        "domainLookupStart": 3208,
+        "domainLookupEnd": 3208,
+        "connectStart": 3208,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208,
+        "requestStart": 3276.3000000002794,
+        "responseStart": 3279.100000000093,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3279.100000000093,
+        "responseEnd": 3318.899999999907,
+        "transferSize": 1307927,
+        "encodedBodySize": 1307627,
+        "decodedBodySize": 1307627,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146648370_b3016bf4b389",
+        "entryType": "resource",
+        "startTime": 3208,
+        "duration": 116.3000000002794,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208,
+        "domainLookupStart": 3208,
+        "domainLookupEnd": 3208,
+        "connectStart": 3208,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208,
+        "requestStart": 3317.3000000002794,
+        "responseStart": 3320.399999999907,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3320.399999999907,
+        "responseEnd": 3324.3000000002794,
+        "transferSize": 327336,
+        "encodedBodySize": 327036,
+        "decodedBodySize": 327036,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146643563_913677c97151",
+        "entryType": "resource",
+        "startTime": 3208,
+        "duration": 289.60000000009313,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/png",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208,
+        "domainLookupStart": 3208,
+        "domainLookupEnd": 3208,
+        "connectStart": 3208,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208,
+        "requestStart": 3281.100000000093,
+        "responseStart": 3284.600000000093,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3284.600000000093,
+        "responseEnd": 3497.600000000093,
+        "transferSize": 18553501,
+        "encodedBodySize": 18553201,
+        "decodedBodySize": 18553201,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146653243_8398e0f86b06",
+        "entryType": "resource",
+        "startTime": 3208.100000000093,
+        "duration": 125.60000000009313,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.100000000093,
+        "domainLookupStart": 3208.100000000093,
+        "domainLookupEnd": 3208.100000000093,
+        "connectStart": 3208.100000000093,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.100000000093,
+        "requestStart": 3320.8000000002794,
+        "responseStart": 3323.5,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3323.5,
+        "responseEnd": 3333.7000000001863,
+        "transferSize": 1101584,
+        "encodedBodySize": 1101284,
+        "decodedBodySize": 1101284,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146658916_9b04922c6a31",
+        "entryType": "resource",
+        "startTime": 3208.100000000093,
+        "duration": 172.89999999990687,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.100000000093,
+        "domainLookupStart": 3208.100000000093,
+        "domainLookupEnd": 3208.100000000093,
+        "connectStart": 3208.100000000093,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.100000000093,
+        "requestStart": 3328.399999999907,
+        "responseStart": 3331.100000000093,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3331.100000000093,
+        "responseEnd": 3381,
+        "transferSize": 4358788,
+        "encodedBodySize": 4358488,
+        "decodedBodySize": 4358488,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146663614_9ca33e391c93",
+        "entryType": "resource",
+        "startTime": 3208.2000000001863,
+        "duration": 132.39999999990687,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/png",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.2000000001863,
+        "domainLookupStart": 3208.2000000001863,
+        "domainLookupEnd": 3208.2000000001863,
+        "connectStart": 3208.2000000001863,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.2000000001863,
+        "requestStart": 3328.600000000093,
+        "responseStart": 3331.2000000001863,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3331.2000000001863,
+        "responseEnd": 3340.600000000093,
+        "transferSize": 1248633,
+        "encodedBodySize": 1248333,
+        "decodedBodySize": 1248333,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146668470_fe953c28157c",
+        "entryType": "resource",
+        "startTime": 3208.2000000001863,
+        "duration": 138.6999999997206,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.2000000001863,
+        "domainLookupStart": 3208.2000000001863,
+        "domainLookupEnd": 3208.2000000001863,
+        "connectStart": 3208.2000000001863,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.2000000001863,
+        "requestStart": 3335.5,
+        "responseStart": 3337.7000000001863,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3337.7000000001863,
+        "responseEnd": 3346.899999999907,
+        "transferSize": 1184124,
+        "encodedBodySize": 1183824,
+        "decodedBodySize": 1183824,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146678501_8d4de51569a3",
+        "entryType": "resource",
+        "startTime": 3208.3000000002794,
+        "duration": 157.1999999997206,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.3000000002794,
+        "domainLookupStart": 3208.3000000002794,
+        "domainLookupEnd": 3208.3000000002794,
+        "connectStart": 3208.3000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.3000000002794,
+        "requestStart": 3352.7000000001863,
+        "responseStart": 3360.3000000002794,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3360.3000000002794,
+        "responseEnd": 3365.5,
+        "transferSize": 347872,
+        "encodedBodySize": 347572,
+        "decodedBodySize": 347572,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146673767_04228f0dc01c",
+        "entryType": "resource",
+        "startTime": 3208.3000000002794,
+        "duration": 176.6999999997206,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/jpeg",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.3000000002794,
+        "domainLookupStart": 3208.3000000002794,
+        "domainLookupEnd": 3208.3000000002794,
+        "connectStart": 3208.3000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.3000000002794,
+        "requestStart": 3342.600000000093,
+        "responseStart": 3346.8000000002794,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3346.8000000002794,
+        "responseEnd": 3385,
+        "transferSize": 4014543,
+        "encodedBodySize": 4014243,
+        "decodedBodySize": 4014243,
+        "responseStatus": 200,
+        "serverTiming": []
+      },
+      {
+        "name": "http://127.0.0.1:40187/api/collection-images/ci_1794146683790_87e3b2ab5ed8",
+        "entryType": "resource",
+        "startTime": 3208.3000000002794,
+        "duration": 229.29999999981374,
+        "navigationId": 7477,
+        "initiatorType": "img",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "image/png",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 3208.3000000002794,
+        "domainLookupStart": 3208.3000000002794,
+        "domainLookupEnd": 3208.3000000002794,
+        "connectStart": 3208.3000000002794,
+        "secureConnectionStart": 0,
+        "connectEnd": 3208.3000000002794,
+        "requestStart": 3363,
+        "responseStart": 3370.399999999907,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 3370.399999999907,
+        "responseEnd": 3437.600000000093,
+        "transferSize": 4758881,
+        "encodedBodySize": 4758581,
+        "decodedBodySize": 4758581,
+        "responseStatus": 200,
+        "serverTiming": []
+      }
+    ]
+  },
+  "trace": {
+    "file": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/chromium-trace.json",
+    "sha256": "7874ceca781cf628982ca4502218cb493e6b82c8f8a79951376f4019120a394e",
+    "decodeCompleteEventCount": 44,
+    "decodeElapsedThreadSumMs": 2051.462,
+    "decodeCpuMs": 1853.43,
+    "decodeEventsWithThreadCpu": 44,
+    "decodeNames": [
+      "Decode Image"
+    ],
+    "decodeScope": "Complete X events only; dur is elapsed duration summed across threads, tdur is thread CPU when supplied; neither is UI latency.",
+    "decodedImageMemory": {
+      "status": "allocator-candidates-require-attribution",
+      "allocatorCandidates": [
+        {
+          "pid": 6095,
+          "ts": 3017794112,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3017794112,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "464000"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3017794112,
+          "name": "discardable"
+        },
+        {
+          "pid": 6148,
+          "ts": 3017794112,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3017794112,
+          "name": "discardable"
+        },
+        {
+          "pid": 6057,
+          "ts": 3025089957,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "2fda"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "15f64fda"
+            }
+          }
+        },
+        {
+          "pid": 6095,
+          "ts": 3025089957,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3025089957,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "912c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "311a580"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3025089957,
+          "name": "discardable"
+        },
+        {
+          "pid": 6139,
+          "ts": 3025089957,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 6148,
+          "ts": 3025089957,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3025089957,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14a49000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "14a49000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3025089957,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1118000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "15f62000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3025089957,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "32ea297"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "32ea297"
+            }
+          }
+        },
+        {
+          "pid": 6057,
+          "ts": 3029817626,
+          "name": "discardable",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e096000"
+            }
+          }
+        },
+        {
+          "pid": 6095,
+          "ts": 3029817626,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3029817626,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "92c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "226a580"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3029817626,
+          "name": "discardable"
+        },
+        {
+          "pid": 6139,
+          "ts": 3029817626,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 6148,
+          "ts": 3029817626,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3029817626,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cb76000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cb76000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3029817626,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "111f000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e096000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3029817626,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6061208"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6061208"
+            }
+          }
+        },
+        {
+          "pid": 6057,
+          "ts": 3035245925,
+          "name": "discardable",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e096000"
+            }
+          }
+        },
+        {
+          "pid": 6095,
+          "ts": 3035245925,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3035245925,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "3892c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "25aa580"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3035245925,
+          "name": "discardable"
+        },
+        {
+          "pid": 6139,
+          "ts": 3035245925,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 6148,
+          "ts": 3035245925,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3035245925,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cb76000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cb76000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3035245925,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "111f000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e096000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3035245925,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6061208"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6061208"
+            }
+          }
+        },
+        {
+          "pid": 6057,
+          "ts": 3035861067,
+          "name": "discardable",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e46b000"
+            }
+          }
+        },
+        {
+          "pid": 6095,
+          "ts": 3035861067,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3035861067,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "92c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "222a580"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3035861067,
+          "name": "discardable"
+        },
+        {
+          "pid": 6139,
+          "ts": 3035861067,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 6148,
+          "ts": 3035861067,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3035861067,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cf36000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1cf36000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3035861067,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1521000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e46b000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3035861067,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "619309d"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "619309d"
+            }
+          }
+        },
+        {
+          "pid": 6057,
+          "ts": 3036877020,
+          "name": "discardable",
+          "attrs": {
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1e855000"
+            }
+          }
+        },
+        {
+          "pid": 6095,
+          "ts": 3036877020,
+          "name": "discardable"
+        },
+        {
+          "pid": 6095,
+          "ts": 3036877020,
+          "name": "gpu/shared_images",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "92c0"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "326a580"
+            }
+          }
+        },
+        {
+          "pid": 6139,
+          "ts": 3036877020,
+          "name": "discardable"
+        },
+        {
+          "pid": 6139,
+          "ts": 3036877020,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "16be7"
+            }
+          }
+        },
+        {
+          "pid": 6148,
+          "ts": 3036877020,
+          "name": "discardable"
+        },
+        {
+          "pid": 6149,
+          "ts": 3036877020,
+          "name": "cc/image_memory",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1db3c000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1db3c000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3036877020,
+          "name": "discardable",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1160000"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "1f0b1000"
+            }
+          }
+        },
+        {
+          "pid": 6149,
+          "ts": 3036877020,
+          "name": "web_cache/Image_resources",
+          "attrs": {
+            "effective_size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6927117"
+            },
+            "size": {
+              "type": "scalar",
+              "units": "bytes",
+              "value": "6927117"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "networkGuardDeniedConnects": 0,
+  "immutableSourceWriteBlocks": 0,
+  "browserExitConfirmed": true,
+  "serverExitConfirmed": true,
+  "finishedAt": "2026-11-08T14:07:03.351Z"
+}

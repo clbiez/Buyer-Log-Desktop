@@ -1,0 +1,57 @@
+{
+  "phase": "case-before-private-copy",
+  "requiredFreeBytes": 1015331039,
+  "availableFreeBytes": 30092636160,
+  "sufficient": true,
+  "details": {
+    "dispatcherArguments": [
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/run-cohort.py",
+      "--stage-root",
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+      "--source-cache",
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179",
+      "--work-root",
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work",
+      "--playwright-module",
+      "/opt/codex/cua_node/lib/node_modules/playwright",
+      "--chromium",
+      "/usr/bin/chromium",
+      "--module",
+      "cp",
+      "--smoke",
+      "--label",
+      "cp-smoke-08",
+      "--budget-from-smoke",
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals"
+    ],
+    "dispatcherSha256": "c4b796b4e5720a83eec93ed79bc2b537e6fc94d2138f0b3577dbb92d44c3dbcf",
+    "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+    "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+    "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816",
+    "measurementModule": "cp",
+    "scope": "Main179 diagnostic; not post908 acceptance",
+    "fixedPlans": [
+      [
+        "smoke-originals",
+        "originals"
+      ]
+    ],
+    "mutableBaseCopyBytes": 29603043,
+    "immutableWorkbookCopyBytes": 0,
+    "all32OriginalBytes": 100905030,
+    "sixRepresentativeWorkbookEstimateBytes": 34306630,
+    "retainedEvidenceEstimateBytes": 222799347,
+    "budget": {
+      "rawTraceBytes": 307770658,
+      "retainedTraceBytes": 24430212,
+      "runtimeTemporaryBytes": 67108864,
+      "logGrowthBytes": 16777216,
+      "safetyFreeBytes": 134217728,
+      "mutableGrowthBytes": 16777216,
+      "smokeEvidence": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals",
+      "estimateRule": "twice actual losslessly verified trace/memory bytes; raw64MiB/gzip8MiB floors; not an event/output cap"
+    },
+    "estimateOnly": "No trace cap, sample count, frame count, timeout, image recipe or assertion is changed."
+  }
+}

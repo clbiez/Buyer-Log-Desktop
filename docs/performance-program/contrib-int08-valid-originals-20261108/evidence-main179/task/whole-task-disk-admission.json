@@ -1,0 +1,14 @@
+{
+  "phase": "whole-task-phase0-two-smokes-twelve-counted",
+  "requiredFreeBytes": 8194049960,
+  "availableFreeBytes": 31651573760,
+  "sufficient": true,
+  "details": {
+    "imagesBytes": 100905030,
+    "runs": 14,
+    "phase0BudgetBytes": 1073741824,
+    "perRunMutableBytes": 134217728,
+    "perRunEvidenceBytes": 134217728,
+    "runtimeAndGzipReserveBytes": 536870912
+  }
+}

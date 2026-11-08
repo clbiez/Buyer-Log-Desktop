@@ -1,0 +1,2708 @@
+{
+  "scope": "Main179 diagnostic; not post908 acceptance",
+  "fileCount": 450,
+  "files": [
+    {
+      "path": "task/evidence-collection-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/evidence-collection-launch.log",
+      "bytes": 110,
+      "sha256": "7c73f64beeadac12f0b15f0c00705006bda6ad80fc9ebf99537ddb85786d7fdd"
+    },
+    {
+      "path": "task/final-validation-tests-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/final-validation-tests-launch.log",
+      "bytes": 672,
+      "sha256": "004f2e3f05cd14805c8ae4fd601b3f672a072f5e057f243aadea56c04c0bff32"
+    },
+    {
+      "path": "task/admission-revised-whole-task.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/admission-revised-whole-task.json",
+      "bytes": 436,
+      "sha256": "f35342b1ce5f450fe316b0406ec0c0f3aae1d4aa5c798f2e1905baa79221e89a"
+    },
+    {
+      "path": "task/counted-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/counted-launch.log",
+      "bytes": 295,
+      "sha256": "66af5f28471a9ac3f1007869621eb353e176461de4e5e2a51cede2f6d2ad5fc6"
+    },
+    {
+      "path": "task/phase0-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/phase0-launch.log",
+      "bytes": 5529,
+      "sha256": "848081357d372c294bd8ddf29b5bd323df8c42b2902fa82db5d1ce72e2bae2a2"
+    },
+    {
+      "path": "task/fixture-extraction.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/fixture-extraction.json",
+      "bytes": 617,
+      "sha256": "0489b3e4f7859ea0a9a1c8a74845df948f20875b006e10535e2e3de786a3199e"
+    },
+    {
+      "path": "task/admission-whole-task.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/admission-whole-task.json",
+      "bytes": 428,
+      "sha256": "6ae7a2bfb60c5d1a8342735af116744c4786769fdd236d62111df619db606025"
+    },
+    {
+      "path": "task/catalog-fixed-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/catalog-fixed-launch.log",
+      "bytes": 488,
+      "sha256": "808a8b705f30f7712af11c19cde159cec7453bbf72ace42aeced536e6e0c124e"
+    },
+    {
+      "path": "task/revised-whole-task-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/revised-whole-task-admission.json",
+      "bytes": 781,
+      "sha256": "5dea698361d50712ad1a778e96fc94601f347ff2a2cd0a14925e3cba7a77e805"
+    },
+    {
+      "path": "task/analysis-validation-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/analysis-validation-launch.log",
+      "bytes": 805,
+      "sha256": "abb79735eaf9c93faf900e6eed5a205055b027221c8af39b98c95b0b0651f0a2"
+    },
+    {
+      "path": "task/execution-files-sha-v2.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/execution-files-sha-v2.json",
+      "bytes": 1074,
+      "sha256": "a595c5b88a5e94d5ed3e7b33164b9e9d2a35ff83148854cb452e9ff2299df184"
+    },
+    {
+      "path": "task/admission-catalog-fix-whole-task.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/admission-catalog-fix-whole-task.json",
+      "bytes": 441,
+      "sha256": "ebf93f73231ad372db5d1e75ead5b3714ea8b30317abd2573b23665e76978eaf"
+    },
+    {
+      "path": "task/final-validation-tests-launch-02.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/final-validation-tests-launch-02.log",
+      "bytes": 410,
+      "sha256": "f12f35f6e3854dffb1537477f44a5e177a9f471bedf5d9de38813f48b90ef8e6"
+    },
+    {
+      "path": "task/isolated-tests-launch.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/isolated-tests-launch.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task/final-validation-tests-launch-03.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/final-validation-tests-launch-03.log",
+      "bytes": 152,
+      "sha256": "70d5a82f44ce66f894106495d35fd256df722847897997b0363784e0b52838e7"
+    },
+    {
+      "path": "task/admission-prepare.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/admission-prepare.json",
+      "bytes": 425,
+      "sha256": "7a57d5cead764afc9f0cefd3097dd046dd691eb2b195b950cd51488edc9160fb"
+    },
+    {
+      "path": "task/phase0.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/phase0.json",
+      "bytes": 40678,
+      "sha256": "b2a6199c499be5bd79eab3a21889be848388eb75e1d226967c7051e796947f3c"
+    },
+    {
+      "path": "task/phase0-invocation.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/phase0-invocation.json",
+      "bytes": 195,
+      "sha256": "d5366bd35186d56d3c2123720b6dfe61d8d739049b00e50b4ae81a8c9b213bfc"
+    },
+    {
+      "path": "task/phase0.json.partial",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/phase0.json.partial",
+      "bytes": 40678,
+      "sha256": "b2a6199c499be5bd79eab3a21889be848388eb75e1d226967c7051e796947f3c"
+    },
+    {
+      "path": "task/execution-files-sha.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/execution-files-sha.json",
+      "bytes": 982,
+      "sha256": "33d1e348bf1b7d3507c220750e88ee33ad2fade3ff005b72d57708e61e5a032f"
+    },
+    {
+      "path": "task/whole-task-disk-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/whole-task-disk-admission.json",
+      "bytes": 377,
+      "sha256": "f2f5855f6bca2a0b3ce41706169b13e1dd828de1c64f0e09569294b02d7deec5"
+    },
+    {
+      "path": "task/catalog-fix-whole-task-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/catalog-fix-whole-task-admission.json",
+      "bytes": 249,
+      "sha256": "3f76ac1ad1e9a7064043eae9001d5d212b76519252e517e30b911ab99deb21f3"
+    },
+    {
+      "path": "stage/INT-08-authoritative-source.md",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/INT-08-authoritative-source.md",
+      "bytes": 79861,
+      "sha256": "0831abe5b699adda63cd6f582055bb6d89764f5ea821c4d494fdd33adfb185d0"
+    },
+    {
+      "path": "stage/preparation-status.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/preparation-status.json",
+      "bytes": 891,
+      "sha256": "0d33cae100a5d3332cc39cb16d5df6863d5e30f02af04c246b3397c6d85f79c8"
+    },
+    {
+      "path": "stage/source-pins.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/source-pins.json",
+      "bytes": 4485,
+      "sha256": "966357e433b689f38058434833ba38dc4d4409f295e93c50a3c6aa9b945f615a"
+    },
+    {
+      "path": "stage/disk-stage-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/disk-stage-admission.json",
+      "bytes": 264,
+      "sha256": "4b407a55c47fc7f68573583b981e39c73fe2d03bafd4d30f4749195e6cf524ee"
+    },
+    {
+      "path": "stage/fixture-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/fixture-manifest.json",
+      "bytes": 14393,
+      "sha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816"
+    },
+    {
+      "path": "originals/seed7-22-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-22-medium.jpg",
+      "bytes": 1100930,
+      "sha256": "f16f212d3b33d76212cf9a11700d99b93a2e3247407612d0bcb86e3bec2a9bc7"
+    },
+    {
+      "path": "originals/seed7-29-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-29-large.jpg",
+      "bytes": 4245243,
+      "sha256": "d4c57d4abd62dab4e81f834a790c34ec40f022d93623424f247b5f5e72ec3982"
+    },
+    {
+      "path": "originals/seed7-10-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-10-medium.jpg",
+      "bytes": 1101284,
+      "sha256": "27230a4de18b9f3d86e43ac95f10a9c25bdfa2ebb12038a1a1e4e9368aeec636"
+    },
+    {
+      "path": "originals/seed7-24-small.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-24-small.png",
+      "bytes": 1249569,
+      "sha256": "2f799d7cfb0a0b82c52c29375d8195720ffb1e89440e71f95439edd1639e6a78"
+    },
+    {
+      "path": "originals/seed7-06-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-06-small.jpg",
+      "bytes": 298260,
+      "sha256": "b13a7652b4e052480f85d348051cfa2d2ebc7e88f1cfaa2cdb697dda38a05fe4"
+    },
+    {
+      "path": "originals/seed7-20-large.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-20-large.png",
+      "bytes": 18552139,
+      "sha256": "8a71e6d5a05a167b5363a36d9c5f2923e5ae47654505989ca2db3b2e141ed8c6"
+    },
+    {
+      "path": "originals/seed7-30-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-30-small.jpg",
+      "bytes": 298550,
+      "sha256": "174becaec74ee71aa2416977c94d192966a2827438affd4ee5e389cd93fa97d1"
+    },
+    {
+      "path": "originals/seed7-13-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-13-medium.jpg",
+      "bytes": 1183824,
+      "sha256": "1d5d91cdf03f092aabf95c961d9c29d82aee5012a741144c2ac08c257cbeed9e"
+    },
+    {
+      "path": "originals/seed7-03-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-03-small.jpg",
+      "bytes": 347442,
+      "sha256": "fb4f29c6b3249e4d519ba0d9cb349eb4c7a7748321f1263b3547f79017b60815"
+    },
+    {
+      "path": "originals/seed7-26-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-26-large.jpg",
+      "bytes": 4014179,
+      "sha256": "ef0a61035926c60785be782bcf80e4b49a634c848a4ec263a5f481af51f0b977"
+    },
+    {
+      "path": "originals/seed7-23-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-23-large.jpg",
+      "bytes": 4359682,
+      "sha256": "742f279eb38562a005f783c884fd24322573edf7bcd349b7ebc4772cd30653e6"
+    },
+    {
+      "path": "originals/seed7-01-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-01-medium.jpg",
+      "bytes": 1183373,
+      "sha256": "6d301e660d3a5d111d6c9a19236a1fe14b257c8261f4e5db3fd0b3afe45d18eb"
+    },
+    {
+      "path": "originals/seed7-25-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-25-medium.jpg",
+      "bytes": 1183711,
+      "sha256": "46f37c0c0b572c398d3e9510c5d774ad9a56246489adf650056eccf3cf31c622"
+    },
+    {
+      "path": "originals/seed7-18-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-18-small.jpg",
+      "bytes": 298506,
+      "sha256": "9791528180866fffe57499d5707969635e4df57e9f6cd9294d511166f15b6d07"
+    },
+    {
+      "path": "originals/seed7-07-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-07-medium.jpg",
+      "bytes": 1307627,
+      "sha256": "6900980c01ff25caac0c8e63263c8d31aa8fb71cbccde186942c63b29f1ef7bc"
+    },
+    {
+      "path": "originals/seed7-11-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-11-large.jpg",
+      "bytes": 4358488,
+      "sha256": "ebd63d1bcfb21628d8516de4f952f9d267afad458762bcfaaeaa4bca1fffbfea"
+    },
+    {
+      "path": "originals/seed7-04-medium.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-04-medium.png",
+      "bytes": 4766628,
+      "sha256": "82d0e993755d2832c4443a04bf665f87917207026f838da1fdefd6c855702176"
+    },
+    {
+      "path": "originals/seed7-31-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-31-medium.jpg",
+      "bytes": 1307791,
+      "sha256": "db9af5157bc06f3a2b8f6cc4930df18f2ce412248e0beb04cc33bc9aadb4e527"
+    },
+    {
+      "path": "originals/seed7-19-medium.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-19-medium.jpg",
+      "bytes": 1307323,
+      "sha256": "80d24d699efc1ae30e43d5cf94ecd3f8e3d4043bf213f886140b72832908b703"
+    },
+    {
+      "path": "originals/seed7-16-medium.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-16-medium.png",
+      "bytes": 4758581,
+      "sha256": "7eaf701ed3968e0021e1386534ca1276835fb79e48db146f289d89fef5304f61"
+    },
+    {
+      "path": "originals/seed7-08-large.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-08-large.png",
+      "bytes": 18553201,
+      "sha256": "c9cb25dc09f3f8614dbac78e50552a310e2ec01ec17520d63863f4022be36105"
+    },
+    {
+      "path": "originals/seed7-12-small.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-12-small.png",
+      "bytes": 1248333,
+      "sha256": "a4cc5f90e41e81625a7e40610cc9cf1191501a95a4a3c340b5b0354a96dadf0b"
+    },
+    {
+      "path": "originals/seed7-05-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-05-large.jpg",
+      "bytes": 4244875,
+      "sha256": "bed7d7deb3c55dee7453ddda93addde7c4ed8b4dda3fc2f4d0d67a4f2696b82c"
+    },
+    {
+      "path": "originals/seed7-09-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-09-small.jpg",
+      "bytes": 327036,
+      "sha256": "d4286f368ad24d34d1dbc5840ae9ef0978f603adf1a16c7ef8ae736d77aa3472"
+    },
+    {
+      "path": "originals/seed7-14-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-14-large.jpg",
+      "bytes": 4014243,
+      "sha256": "001c4498402fee5e0a38668d194f7a28f19f72b770c1c2cdebf685e6858e96ea"
+    },
+    {
+      "path": "originals/seed7-00-small.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-00-small.png",
+      "bytes": 1248305,
+      "sha256": "859635ac957a55e6a0b152d2528f1307ab8580c25d917460a856c93bea664c62"
+    },
+    {
+      "path": "originals/seed7-17-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-17-large.jpg",
+      "bytes": 4246006,
+      "sha256": "6c60dc3852cdb5dc6c43fdd8860933323b91531a53210cd4a97a1c5280e61247"
+    },
+    {
+      "path": "originals/seed7-21-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-21-small.jpg",
+      "bytes": 327057,
+      "sha256": "40b6dab19bb0f1ac589d3dc732ec267e2df3a81f24d71667329d217bf93c84ed"
+    },
+    {
+      "path": "originals/seed7-28-medium.png",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-28-medium.png",
+      "bytes": 4764521,
+      "sha256": "1e9d3f8d0515cded6e241b642413c80fddd19ae13c7a031545facd289a1b0746"
+    },
+    {
+      "path": "originals/seed7-02-large.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-02-large.jpg",
+      "bytes": 4013377,
+      "sha256": "ffce574d5108034e7b931aaf0bb45b5e36bc60f3374dcdf61e1e45fbbb203b1a"
+    },
+    {
+      "path": "originals/seed7-27-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-27-small.jpg",
+      "bytes": 347374,
+      "sha256": "1cb08cf73e282847cee3f8d1031695155a086ea751a19ba194f93b638444fe7a"
+    },
+    {
+      "path": "originals/seed7-15-small.jpg",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/originals/seed7-15-small.jpg",
+      "bytes": 347572,
+      "sha256": "bfb197dd1ff09991076480ac2562f15d4fdd2f4bc1bac475855982d05ae94931"
+    },
+    {
+      "path": "runs/cp-pairs-01/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "ee8ed6368ea3a501d03a070921d534b2f2e0c4fa8bb11ac34bdcec906723dea0"
+    },
+    {
+      "path": "runs/cp-pairs-01/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/cohort.json",
+      "bytes": 13149,
+      "sha256": "e8738a6518126362850c69551bb5d9982636dec96c5e94db24641c74fbb71cd8"
+    },
+    {
+      "path": "runs/cp-pairs-01/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/disk-cohort-admission.json",
+      "bytes": 3047,
+      "sha256": "c7f1e0bc9f48a5f22adfb156025240da1e01b8d4601aa35d926fd9e5a49187d1"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/server.log",
+      "bytes": 3892,
+      "sha256": "dee7e0d9b42b0ff331ee00e837b25a71b5d6eb32094e8da1793690192969b965"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/chromium-trace.json.gz",
+      "bytes": 11400382,
+      "sha256": "0e28ff9dc6eab40c1d0fe059890a70adc0399c737756a7c9508a0e4fbf6bf17a"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "7bef3d008f0773f76f461d47ead25f2bd680dc05abf65979556d29bb18e47e7f"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "d398d48cb96b5930ab0583ea5ab3d8f8457f952a901ede18964718fa5801334c"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "d6641ef2cfccc55d4152109303d17f6c025746adddf370b3b26ae6813ba2f03d"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/result.json",
+      "bytes": 39890,
+      "sha256": "fdd6fad21c7e38e34559967ab5e271746c3a239266c5b9ab62b1963ae6df1b28"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "44fa2c273539d0ee34ef60f80fb08e3d720441c023dbdf9c03ad5c1d7e12379f"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "1330fef0e26339f04bd3f02adcff4b90763c251937a2ae5e4b974c2c99cfac1d"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/server.log",
+      "bytes": 6659,
+      "sha256": "430bd495f1d4c48c4f0bab26f78f2fb13bad64a8472ba9c8cd0190581ad3f9c5"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/chromium-trace.json.gz",
+      "bytes": 12394565,
+      "sha256": "e8aa56a91c7c3d8742957b182149b959fa22e72dc39730e5d98a85ff11c28f4d"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "8e41bca7313c491ec06bce86a1940703f8929b01bb646834beb9263860ff79eb"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "6c72311dc7d1a4f99bc9de7a38529f7a119cbbfb9d3f5912a6ec7a6a42746bec"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "92c819c92a17469e3dc9e021485683e724046bb4f85bce4cad68105d5031276a"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/result.json",
+      "bytes": 139539,
+      "sha256": "a32245a008875e6cd20aa1ea75c41800c05967a167ff265a9de8640c89d15467"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "7ad289e65b98211ca8a582321b25a99450b7d0b7c6a9b95987f9aac060283279"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "202c6f2b920db25804cf3c50ed5f1642fac22b3c5a93499fc40208440eafe96c"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "f81fea89739e68843c835dae0e264d7466deab8bc6df1206d3a250974ab43f71"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/server.log",
+      "bytes": 3892,
+      "sha256": "a4090acca76c2dafbc14588055b275f3575fbc5da76581227f7c0a4f7a5e5afe"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/chromium-trace.json.gz",
+      "bytes": 11043370,
+      "sha256": "41761388e1e9b858dc0e290aa53c3847555a2d039e9e0bb8f3e1e0459ba4ba94"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "45f067825e88dae90e574f2d03990298beb66bae4097d2b742044155b560e11f"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "5b8e3783b664c2c63cb48123fa0666819c0ff7423f43d0d04a1f0e15ea6364b7"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "425f22fd653ae6f4e6b181ac0b93f40741eed3ebd7d3f1c27f84c71773ab53a3"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/result.json",
+      "bytes": 40122,
+      "sha256": "38721a2b04b9923135ecdf0d6a12fafdcf47a60b0a1508396be4dfb1a674c348"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "ee6b7ccc6e3711450995c98490b870a026f64eb698800a1dc5de3c3b41d273cc"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "b1a6bba045c78e6dfc58be9b3dd3d59a6d0d96aaa23131d6ffbe55c68a1237b2"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/server.log",
+      "bytes": 6656,
+      "sha256": "93f3022c136945e74cad9415b3988e235aaadc428df8c1804aeb0a80d0b7ad22"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/chromium-trace.json.gz",
+      "bytes": 12333986,
+      "sha256": "bd0771267141fecfaaa384fa43d22729e36bf8d87b5212b3bb2603f528cd36e4"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "9f2635e289f337504d97bb26869331eedc15c0a4349fb7baf9951f71ab2c0516"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "a79612f48e18461623a744b2decac0da9d5f93eb9123639b45592e93d48443ff"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "045f32826848e1284dbad7e060379eb9f04a9fffbd2816d35374eb806101c099"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/result.json",
+      "bytes": 141920,
+      "sha256": "3668096a52205eb9623239e1863427a658f65bdf439074ad0561f87530802559"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "99d846b2b49b8fa3f0e63546daee58e76f5c1f9802e2bac01f2cfe24566f9156"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "46ae458ccfd7b70d66f92789b3053bfd352e18868a641ade0609f773c26286be"
+    },
+    {
+      "path": "runs/cp-pairs-01/03-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/03-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "8b76a85a9d58e48ad00823c983b26625b677d1e65b581aa6d9e36bdac1f0ebb7"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "fdb2f2a7f11a9c97186066f71545c604f4da9feaa66407b552c2788cfcb35a0d"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/server.log",
+      "bytes": 6656,
+      "sha256": "d4a9501473d6aaaba1ea793837448b75b4c464ab91f1c1b0dafadc134481c089"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/chromium-trace.json.gz",
+      "bytes": 12516075,
+      "sha256": "bd1777400dc5eace4d9f74795e5566753623163c4a3b15c3fee96ef95f3c2aef"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "c4c27183007bc9b4bad746ad4b984fb7b094283bacc745204010ca02b214e615"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "925c563c4f9d058e31b0be1a9f4bd2f203153c23471efdda4131706db17a3481"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "f99566f6de26a1d473d16f6253a22a19ef565dd3f72a9460c66ab0d3112884f1"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/result.json",
+      "bytes": 137434,
+      "sha256": "9e1a53dbd1742196a5800b33aee0e960e6836e26be5f01571b79fe8a77c4ea32"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "7b06171b2efe51ebaf70b98c12107ca042fe2dfdc05ad47df47b485bd5a3c09a"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "a51a14b70a0023bd50d0ff4ab63aa3efc2056c18e8ab34d9afbd9a1b9c839666"
+    },
+    {
+      "path": "runs/cp-pairs-01/01-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/01-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "cbbf663d90f1efde8a29263537925ee08a685acfafc557172942498ba1e798df"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/server.log",
+      "bytes": 3892,
+      "sha256": "df4a5f1c09df22c5f6f54b96d8cba6e0ad2c0ffd88b281f71480e4ffe0ab31ed"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/chromium-trace.json.gz",
+      "bytes": 11190148,
+      "sha256": "74a6a06ee1fbd5cc4679496fcff79278de66bcba9b208009136eb436ef600f5f"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "5b1f01bfc6baf294ab3328a6a35feb1368f0f80d1f9c507cec8ac97c17cb9613"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "953f9f5200ddddafa3fcaa47a48016b41d308959cb4bae7f97c145e07564b75a"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "3b61219889b7942ddcbf4759f61cfe736a92b4bbc40fbc626e87d076575e1776"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/result.json",
+      "bytes": 41085,
+      "sha256": "0e1ebf2ffa412d7f1e3c64020a0116ee126720ed93025832f76a3ca1de92aaff"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "10a6be71d42a520497273e2bcd8e9fe5dbcc0be221461211151d6d6594224d46"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-01/02-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-01/02-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/orders-pairs-01/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "d26150189d95d056deef440b4c06a9eb11057b73f4a94cd8bfeb77c1e8f0a3f9"
+    },
+    {
+      "path": "runs/orders-pairs-01/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/cohort.json",
+      "bytes": 6426,
+      "sha256": "5f125f0bd97dac4decd1c7d01e24648c065cc32f82366e77670ded55ed3c3e33"
+    },
+    {
+      "path": "runs/orders-pairs-01/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/disk-cohort-admission.json",
+      "bytes": 3067,
+      "sha256": "77ac1e9109b8f2db6cb41bb285eed31a511d0b268210b38732e82949c686e103"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/server.log",
+      "bytes": 3863,
+      "sha256": "4dc56125ac7a9af07bfabbe076e89ae7578c4e441b4dd02dde2a341ce9a86c97"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/chromium-trace.json.gz",
+      "bytes": 8997815,
+      "sha256": "5f08f19c95e909bdacad647ca433931d01fd27446b676f4d41b3f292dea90f60"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "031c372153cbe199beb034dd3da56085d144b705a3d7fd36b55ba1da2de6040e"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/artifact-compression-manifest.json",
+      "bytes": 1432,
+      "sha256": "1583b8eb9e30b72122d07babd3a60812ca70d191f1dff2b818ad91f9f8ee4ee6"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "569764e7348c4ed1a0ac7c4528df6477cd004ed3c685f8ccab16037baffa8528"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/result.json",
+      "bytes": 40197,
+      "sha256": "6b0e1875cb4e5afae1f4397ac953f497595d9ae5cf037157ef7b8198a573239a"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "76fa883574daa8cf92f263eb178e920f59b08eb93f4a7fc559cad6230fb4ef68"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/server.log",
+      "bytes": 6690,
+      "sha256": "7b335dbb9df5a0ebdfa77142b226440691ab13b38101644f552dffcacd7265b3"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/chromium-trace.json.gz",
+      "bytes": 3427851,
+      "sha256": "e413171af875b32ff33fae495792f2a09e42741f12c3bd21a2158b69f95790f0"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "498a71c2a05ef76d3dfa4387f615b18b169fe85482a41a03f7221c90f8b83311"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/artifact-compression-manifest.json",
+      "bytes": 1439,
+      "sha256": "bb182a4860c6a3db1ea3dcd24172ee30633882aea284b544ce04318bfd456ec2"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "7bd893debb30243eef6170ef578959671af8b791bd7d6e3f1726ec1b45508f80"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/result.json",
+      "bytes": 29567,
+      "sha256": "61c56fa1ebd5a0103d5bb26124583e0e73057e368171e870dda597d9f6c0692b"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "488328f9131e59627b4084b429e0cf9596334bd9246a5da16cd46b043ce607a9"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "b4d37e40d7284abefdbeabff6999e9c7015b0928c9e01356257ebd1fe3810402"
+    },
+    {
+      "path": "runs/orders-pairs-01/01-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-01/01-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "bb53bb9be21b181f5281744f1c60fdf4c3bc9e7e28c2adb96c602cc4e6726382"
+    },
+    {
+      "path": "runs/cp-smoke-01/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-01/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "a914bdecd0fa34c4850ef1bbf66edaa6fdd1cefa18f59c25e1ee450e0a37f5fa"
+    },
+    {
+      "path": "runs/cp-smoke-01/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-01/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "5497b3b41be12c44b1a07726f9f594c58af96b5eae91048dc0c16cfecdc5d4ca"
+    },
+    {
+      "path": "runs/cp-smoke-01/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-01/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "aaf6dd94f74d207ca96f1d1e687acad97cbe00aff28e66714fb2d465719f36ca"
+    },
+    {
+      "path": "runs/cp-smoke-06/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "7d66bee01865e176fe4433eae908a90758e665a208feff4d12893483bd05fa57"
+    },
+    {
+      "path": "runs/cp-smoke-06/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/cohort.json",
+      "bytes": 1937,
+      "sha256": "daa7c67e8000b2c96a7d34cf63bab035b45aa81af4f592b86930dfe71c27974c"
+    },
+    {
+      "path": "runs/cp-smoke-06/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "c9b08375236c35416976163ced3ba470b57e23ccfd44a3d087f4a6de5d4535c5"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "f6f328a3e95e150934d007b22d615be8a59e781cb073d84ab026f4ebf81a9890"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/result.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/result.json.gz",
+      "bytes": 164131,
+      "sha256": "14db0e7cb8d887aae3746f4dfff086f2734300dbb5609d9822fa815d5737b5e6"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/server.log",
+      "bytes": 6657,
+      "sha256": "0af5697d6b0c8b4e88d6b2e383c5df8ad6fa62f4e009e9eb037498335f14b3e3"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/chromium-trace.json.gz",
+      "bytes": 12128373,
+      "sha256": "65f7b60b35a00c9d36fba639e1124c64e955282eadc61afddad67f6a98294a0a"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/app-start-admission.json",
+      "bytes": 1445,
+      "sha256": "750fcd97e01e7d4364fab3f2abe427d4d6c99626a3b9fbbe30f6ec695e8426ae"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 2078,
+      "sha256": "7af6c6849a91ba52b3ae51b2fdac26b5d1422499d4b59bb4fc4bcdba11b57cbd"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "9a58a0b4255e01c760a850f21e1f2b95cb20698825770c22f31a0af4ff850e9f"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "c9c5b3bfe523b49a5e165370f015f02077f1d4b8418aa31c2c550c6726d8ea41"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "941863e044217ee7e66d860c6f2587083b0380b2c6b7b0f9fb78e5753baa6172"
+    },
+    {
+      "path": "runs/cp-smoke-06/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "7b56bb331cfea59e1bb5d599c51add62273515f22614d717a0306b3e061e2851"
+    },
+    {
+      "path": "runs/cp-smoke-04/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "e0ecb63b094cf94925dc189c587c3891950bd95e14f3c341a4beede7f1c39c57"
+    },
+    {
+      "path": "runs/cp-smoke-04/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/cohort.json",
+      "bytes": 1872,
+      "sha256": "e9a9cb0d4a38f2008c99b185bae965b310b14a1cf4476d2d181b6185c03e2965"
+    },
+    {
+      "path": "runs/cp-smoke-04/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "0662d2f44122fd20c8c073d0f6b8bbef304c2904d041d6d2443a8ca0c6c7a110"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/server.log",
+      "bytes": 1046,
+      "sha256": "4f900a36ef0ee73a4b4de1e2e66bfb9d3e3f24b42931927b47443ad20ce42983"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/app-start-admission.json",
+      "bytes": 1445,
+      "sha256": "6dc010d717c9582ccb2b822eb13a6ea6123da3bcb282b4a96bede3b40c554dfd"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 776,
+      "sha256": "b9071e6d1f468d57e2eb35a0d9dd1c0e182a9cc197f75fd9865aabbd2fc100ac"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "8b5432740419c46f816037b8eda078fd8a649df8f5c251c8a5b0bfde901f8551"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/result.json",
+      "bytes": 12078,
+      "sha256": "18f8e50fc410d5f54c569b59652ef26ed968e7a4b5ac48b6eaffeeb6a135f3d1"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "afa31a7262329112fc5a4fa988f0f00bdb1339cc403a394ac6a595ef02980803"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-04/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-04/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-smoke-08/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "30544a5620ea4c3af66ca161661503d2b1ab9bff8859525e3cd888503d8d7b21"
+    },
+    {
+      "path": "runs/cp-smoke-08/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/cohort.json",
+      "bytes": 4378,
+      "sha256": "426affd7b7227dd8eb8642fc29c9949259ef0f84df5a5542fd1a0dc0d5c1a9ae"
+    },
+    {
+      "path": "runs/cp-smoke-08/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/disk-cohort-admission.json",
+      "bytes": 2744,
+      "sha256": "2c9986351d628f4ea63add43f1297749155de5941a8d3adb08c149a6dc098e6a"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "0e0dee903d22a43996d4012cdcf32248e3d80f919a161592d9b62525b6a8ea76"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/server.log",
+      "bytes": 6652,
+      "sha256": "c6e716e9804a0d2d7903f7df95354b04c8a07204e0ab58ea2dd0d13318239894"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/chromium-trace.json.gz",
+      "bytes": 12312663,
+      "sha256": "0d255a7bc1c2b86564f9258ba6e4f243bf0ce84c4190c5b448abda61e4645f14"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/app-start-admission.json",
+      "bytes": 2872,
+      "sha256": "e1d0bc9e8c82702cdc6801e235e4f03328075ec5d68d0cf5f54c48d343d2aa37"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 1437,
+      "sha256": "d021e570bcc650ac55d6acfe3bf3c22c5a45fed62e09087c4524887e90386078"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "d88b593fa2f6a500537fd4e8c38e0bebf75340245587c158d9a5ebe46875972f"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/result.json",
+      "bytes": 140804,
+      "sha256": "8aaefd256a241b5da588b5fa35e73e8431151d76e6a979a992d6ae820132a28c"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/disk-copy-admission.json",
+      "bytes": 2735,
+      "sha256": "8eb39c02603f1b33b2e779273955d8069b158ad1c8f4b9c20dc2c8d574e85cb9"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "1bdd536e7979c1ff32d2b0ae72a81c7b9ea437b05417b5c0f2da62fe2b7af0fe"
+    },
+    {
+      "path": "runs/cp-smoke-08/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-08/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "9644bde16750e6b0296d8b3f66d5e24de9417d373ad9fd47405bd12a97fe67ed"
+    },
+    {
+      "path": "runs/orders-smoke-02/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "52e4fea4f6c10e0f76a28560352acdb2d594302739a39544660e22f79392234a"
+    },
+    {
+      "path": "runs/orders-smoke-02/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/cohort.json",
+      "bytes": 4410,
+      "sha256": "833c87acd60812e4102db3e3d858f05ef97747ca745109363fd43877522cb33d"
+    },
+    {
+      "path": "runs/orders-smoke-02/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/disk-cohort-admission.json",
+      "bytes": 2763,
+      "sha256": "1bd6307548dfdc45003fa930a8a6ced9c814f23947dc60433ff48788a17f4bdd"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "c115a82744469ac8f76f590f0b161e265679d2f1ce8a46388c1085fa68bd9e13"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/server.log",
+      "bytes": 9097,
+      "sha256": "f87b8a56ed18dca09da802f62a640193db604138d52e9f237277e7ff01c935b5"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/chromium-trace.json.gz",
+      "bytes": 11785945,
+      "sha256": "a44f384ad10318f2efcf9854ab84bcc2a35067c9e1f1290d914681ae40e79a18"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/app-start-admission.json",
+      "bytes": 2892,
+      "sha256": "a89a60be15d68a48b8cd9c6dca8dfbd8688fac1963a42b97fd22c90d4eae7c21"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 1453,
+      "sha256": "ec69a2cd431c51c67087b92fdf90baef676913fe420c4ba097ba64753782df5e"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "0670fdc2243e548bc19d5a8f33a4d832afd0ce87f3617e0657355b12f1083427"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/result.json",
+      "bytes": 143369,
+      "sha256": "34cab0deea6de4f8b7436d25874126a7e95e2d939e4d93dd00ec2ed7c2dcd395"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/disk-copy-admission.json",
+      "bytes": 2754,
+      "sha256": "aab362a6a92cbf8b3c4e272c2bbf5976022b1c506084c0b3af34e7a0eefd7e32"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "c3000954cd4d70e8cc48d6cc1390c6b61765a5b5c229fe42378783b3194d1dfd"
+    },
+    {
+      "path": "runs/orders-smoke-02/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-02/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "c60897ded1ad09782e1e30553c919270d622b4e586c670992d4665687143c9d3"
+    },
+    {
+      "path": "runs/cp-smoke-05/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "e9ad928d04c00545d9e5c2792bb6ca64fd0bdad6ba44db4ad0868b8257d8a5d1"
+    },
+    {
+      "path": "runs/cp-smoke-05/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/cohort.json",
+      "bytes": 1872,
+      "sha256": "091e6c2db0cd5d7f07601b965d22802ba989f0f463a49f8bf941c92d9107e775"
+    },
+    {
+      "path": "runs/cp-smoke-05/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "f01ee9ac5abc723fecea954ee3c17bf5ad8982237ed62a611fe29f6a7a08a254"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/server.log",
+      "bytes": 8527,
+      "sha256": "256ed434536168363fe86c050e42c5edb22fc01e22da29518825bfced22c9759"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/chromium-trace.json.gz",
+      "bytes": 5018153,
+      "sha256": "530b8209917d81d71ab4668116f8ac67b33854892f90d6609f5eaa4eae152015"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/app-start-admission.json",
+      "bytes": 1445,
+      "sha256": "2c7db653b982186536bc6e24ae8366612dd3934ed0c455e202e0f43b24152a5d"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 1435,
+      "sha256": "0612bbae9275a724a6f40df59b375b74b568b7c654329c9442bcc7613e80c2bd"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "182033a60a8564d65307c148fed4aef95a75b3e6f6ba7fa9e6dacc3f6a1ef7db"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/result.json",
+      "bytes": 124951,
+      "sha256": "19e87955f619bf095c0844777163c973ef3cd32d19b8bdeb6290089bec13949c"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "1ec6fa06cdd48bb11acde3fa68137d152291199dd810616c131abc4c530b541f"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/attached-images.json",
+      "bytes": 19047,
+      "sha256": "0a41e55f241a5dab8e6105ebbd35cbd2d31bd2338dc7b6598bff7b955845f677"
+    },
+    {
+      "path": "runs/cp-smoke-05/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15004,
+      "sha256": "e5d6b5f5039640e024508419ef374b0169dd710a888c6036eb0e42707587563f"
+    },
+    {
+      "path": "runs/orders-pairs-02/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "f84f84176819f278b822b802a1b90ecb8829ed45e4d236cc980aec45f726f5c8"
+    },
+    {
+      "path": "runs/orders-pairs-02/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/cohort.json",
+      "bytes": 13241,
+      "sha256": "2352e61d35fac19143171c421e4ca3b9d8383d9fedecfe4e3363a49586a455a7"
+    },
+    {
+      "path": "runs/orders-pairs-02/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/disk-cohort-admission.json",
+      "bytes": 3067,
+      "sha256": "25ec4a53c5bcc25e12f1fe75bde07e9fb343c17e8b0305d493be78bd7a007ded"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/server.log",
+      "bytes": 3865,
+      "sha256": "a55022d7a0c6c88bdd0f3f90594f9635b227f37d8f6a207ea4386b9d1ce6269a"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/chromium-trace.json.gz",
+      "bytes": 9021038,
+      "sha256": "4b188cf60a845f0164d8bc63c03cd780684401ff475b5d87701ee4f37ce8f04a"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "11f768f0ba8e27188c819b3a40ac0ac66a8d53cf15020dbf4269ad3539ea86f3"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/artifact-compression-manifest.json",
+      "bytes": 1432,
+      "sha256": "3a8ac316a80a3d952bfa3d5ed5b797cb6d1dae209b0bb67dc413c1855cc4d024"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "c1b1fa61319afb48ae123b0641601045dd9544e8321973d330ffd0bbe9600b34"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/result.json",
+      "bytes": 40575,
+      "sha256": "5e4ffd0c485a4a1d556dd0dd814ffd3fe09cbe0eb671b844d670a589bde8a20a"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "c8c3b9e7ffa6efcb03995f8153f6206161bb93325b51bc50ada14053b3bd8e41"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "e93c65c265d28c3858d801c376b7eb70bc67f8f43d86a84d7352658dd11d5006"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/server.log",
+      "bytes": 6691,
+      "sha256": "6d443280c7a8ac3f9267f376d6407b64d255556754db0890657a72cb356a85ce"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/chromium-trace.json.gz",
+      "bytes": 11671248,
+      "sha256": "05f58c405c567e2537a11e8ee05664cf2e906f79d131edea42708b94c1fc77db"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "b008c5a6182bd8d5efd1b1622b12b1772084788153032dfd63ea81fe8a13d0ef"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/artifact-compression-manifest.json",
+      "bytes": 1441,
+      "sha256": "ddb9f602a0810b919be25a6901ac2041a0c5b970f0d551b1aa1738aa4258bcb7"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "8f8a63d413b4056d4dab133a605679650eaedbe4d5950281fd063956a39dfbfe"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/result.json",
+      "bytes": 142849,
+      "sha256": "f92b2ed6c5930ed49162c45254ce87a1fc466bb99fb1857ce03975cb9cf9cc62"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "b6b8780e5cb0f130cfce515c8b214394cc34c43cdb0cc2c10cd3e5596d727001"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "b9345596da1bd4ac52e5d7e0f9a9b6891b115e34cd0a13e1f53e319b9764e0d7"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "f9c41724272ee9ec1e2765986b7804f8ae8d76f9c1423507f0cfbd8bf3425079"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/server.log",
+      "bytes": 3866,
+      "sha256": "158576f071931939bdf951e0bf965e66f1a0489a3e5ee5645322a6c5afaf1344"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/chromium-trace.json.gz",
+      "bytes": 9235484,
+      "sha256": "9ed72d97ce5b4c910a86001b58cc7086cd2504a234b6a1b1953e49ee5f23acff"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "90118f4e3bf83f18969927a28b86e84e14a6e546d6c8d9a4bc4e9409da2fb4f7"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/artifact-compression-manifest.json",
+      "bytes": 1432,
+      "sha256": "6bac16e60999af52db5a493f2c1e73019a7c90462919e0a26ecf5bf86e91e816"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "78b830328e9944ddefd1bb534f14de32ebfe49d8109ece2a1450e65c9b51eedf"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/result.json",
+      "bytes": 40736,
+      "sha256": "ca9226731d7ed3024d110b58cac0cdac9c31d8cb27b01ff61f637bbfa2bfd87f"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "d1c1fc525a446de409d62acc3af2c1c730972b22857a335cb19e382b582e35cf"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "3626b08f65c619cce6786901d0bdf4b911068b9d20ee0a579430dff059e274e0"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/server.log",
+      "bytes": 6746,
+      "sha256": "f3808882173df6454d4c6eb539f2ed7914576544301065a8eeef1bf96e9c1301"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/chromium-trace.json.gz",
+      "bytes": 11945949,
+      "sha256": "9ebae8289aa36c4aec24a3d42b679f65c6986e428d683bef702cf341ce07f299"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "d2832a6f990c55c93820871e7388fb84c81aa3f5d52eed135d59ddaad648a838"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/artifact-compression-manifest.json",
+      "bytes": 1441,
+      "sha256": "be2d9f58f74ca2df62f154ac4af79c795b2b10cf47e1a3b1c8147a9a0e8d7645"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "0968e9a956e74291a2c2fe023f3cef4a316423e465c1bbe445cb7a1a9f3e66c8"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/result.json",
+      "bytes": 156802,
+      "sha256": "f1675d4f9ec2e1d507a94ad30c413add35c5a4cee394b5bb6f8dc326e89b0616"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "9b1e335b6af4910e7f38601d0388bfca64cf1376d3a96b9e4d507fe35cdc7313"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "22f43feb883b423bb1be5b6ce0bc38dfcd1d586f621c0b38113ec635519dbc63"
+    },
+    {
+      "path": "runs/orders-pairs-02/03-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/03-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "666dc616ca3ee58a10d329414a552bfa1b8cec54784c79a4c05dd1ee9851e738"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "0e8dd1ec8b52656fa98912852363e4404f19bd9e07c83d39e25498d750a9138c"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/server.log",
+      "bytes": 6684,
+      "sha256": "e3e36ce161a30dd5baf9d53c443a9ca221fdcf886676f67df5f3933524c7993e"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/chromium-trace.json.gz",
+      "bytes": 11933802,
+      "sha256": "69999779f811629141e28ac4129d5095b86db2c2adce7e03c4cf54488acda166"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "2de32c66bf154e9629c5fca04dd606df373ddd1bd2db9067593c3f9025be2661"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/artifact-compression-manifest.json",
+      "bytes": 1441,
+      "sha256": "df6ff40f0bc425670e312d97a86e9d6c36739e5a2dac7bab7842b9b8fb62778f"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "7d2b864c9eb757c09a1be7f1afa4d52b614f2eb7fdbc0cf06c51c4a9eea8e0d0"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/result.json",
+      "bytes": 156633,
+      "sha256": "f2767b10ae628fe3edf1c4e53f9c7932e420ed4ab115fd1e09d4c256caa1bf9f"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "c5b84ac34968c56cc2be85ff68a785f1c056465076d5aa9b12fb734c8e068098"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "fe1296822e3563ff3cfa86413338f022b79100c53f2ead6c03211b4066d516b9"
+    },
+    {
+      "path": "runs/orders-pairs-02/01-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/01-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "f5ee6f3b2409926f16efb47dc01a4d9232df8fc81f6e9edf76e4f7fa121fcee1"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/server.log",
+      "bytes": 3922,
+      "sha256": "0a577e156352f3699f26e81586240908b66c32eb8b248c434f04bcc3f571dcad"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/chromium-trace.json.gz",
+      "bytes": 9491663,
+      "sha256": "e0991719f9ddca113433b0effc0f5ba589e7bc3f9a4b8e8a8a463321ab58a6df"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/app-start-admission.json",
+      "bytes": 3195,
+      "sha256": "7972e3ca652257d1b135a2a0ad65d2ddcd9df86c2d59cb763988e0b4ca811b9c"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/artifact-compression-manifest.json",
+      "bytes": 1432,
+      "sha256": "e45d3ee112158aedaf8e8c91f3096ed5bcd5decb02670099195584f84acf1b15"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "e24a24b694797124842a6d5df1bce46d30d98d7266a4730544adc96b22dc3fd0"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/result.json",
+      "bytes": 40781,
+      "sha256": "140164886967c8523b4b247ab83b3e3641168cb6e3cf41f0dd1c3cfa8db4b432"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/disk-copy-admission.json",
+      "bytes": 3057,
+      "sha256": "56ccc0e502bc2cf60bea5f61513dd957c9b1f856046bfdefb5caa6d58ae4c24c"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-pairs-02/02-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-pairs-02/02-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-smoke-03/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "945264732b759d6a5de32f08511e46770dcbe0b6f41b744277d453587c050658"
+    },
+    {
+      "path": "runs/cp-smoke-03/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/cohort.json",
+      "bytes": 1872,
+      "sha256": "77abd386009eb09db976b064a845a82011f9e8a2eb7ae1e078ae9866acdf9732"
+    },
+    {
+      "path": "runs/cp-smoke-03/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "61bb61d777b5856e16199b6c0fa48ecd81f7ccab7b96cb6227c19e58ef5ae30e"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/server.log",
+      "bytes": 1046,
+      "sha256": "51f018009fc497c17935589c212c6111f5fa636d0fe6d36fe1b5ce176a35e0d6"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/app-start-admission.json",
+      "bytes": 1445,
+      "sha256": "edf3e82ab345cf6eaae18052ddd09b6dddbf6fe587415b24708a03c032422f9f"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 776,
+      "sha256": "21dbc6cba0431ebb4cc0678fc5ddc71c2ed8774dd11e807f289f46fae8ea821e"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "f32a3b26ae98c7c06a633a73114c151f6ea65ffdd04c49b9d275979edeb31cf4"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/result.json",
+      "bytes": 7338,
+      "sha256": "03260f5f161408fea87e5e571effe53449f3efee0f842788ca31f9c87b6eee34"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "2b6559b7931832ec6106f74e9e2676c6e2f7c7b96716e625dcc0ae7383f5b64f"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-03/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-03/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/orders-smoke-01/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "90473ed435c1af746433b6b7a300d62b2e013ecb5414355e34ff0d404f4f4bf6"
+    },
+    {
+      "path": "runs/orders-smoke-01/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/cohort.json",
+      "bytes": 4373,
+      "sha256": "ace01330e818c2bf8399801170fc6c958fa3d2af47134935402e5ce3fe8f6d88"
+    },
+    {
+      "path": "runs/orders-smoke-01/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/disk-cohort-admission.json",
+      "bytes": 2727,
+      "sha256": "9ba9f9fe66f9b5e82cdba87b1e9ae834d7414189e095b5993c1f1e812a5566e0"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "5b9f07fa2336be28fc75394fb360e6725808d607667147194f3d26858e68aef6"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/server.log",
+      "bytes": 6694,
+      "sha256": "f0464cb73b291d6e56672fc359446d634add7e75cd279f524a3b537812a883bc"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/chromium-trace.json.gz",
+      "bytes": 11964638,
+      "sha256": "564eb748171ab74135435434d522803786265ab36e8b7ef4eb616d1e5d53179d"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/app-start-admission.json",
+      "bytes": 2855,
+      "sha256": "0dc5e812298aa17b602c396a874a5ca1ba6f1e78704ce91d003d6ccbe4ab86fd"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 1453,
+      "sha256": "7f1ededc2dcd767b6b8f92b9f8990bb546155baf910ca632fb3980e59846ffbd"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "ddee67a671b85d9d7b36fecc734794b480cc6989fe76ed62ae54f6a90395aa7e"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/result.json",
+      "bytes": 151161,
+      "sha256": "a7e035a55cd63e708aba1cf8cc09ec14237749364e192cd0355cbd2e1f6cea74"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/disk-copy-admission.json",
+      "bytes": 2718,
+      "sha256": "cd78c9914779a78bfb6aba1725ed99b70e67053acf0ac91bb92aaa404d7e2c51"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/attached-images.json",
+      "bytes": 20489,
+      "sha256": "2ab251c4bd2c72653ddf04f8aa5bcc5359dd65c143e05f99eebf76404d8f181f"
+    },
+    {
+      "path": "runs/orders-smoke-01/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/orders-smoke-01/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "08b578511aa657d39f7356a08d847b1d2026b3147be67ccc455877ec44a7545f"
+    },
+    {
+      "path": "runs/cp-smoke-02/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "d50063a79513550baed3f4da5d416cf9cf3eddec2bc26aa1081e5eeaeb2a6fcd"
+    },
+    {
+      "path": "runs/cp-smoke-02/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/cohort.json",
+      "bytes": 1872,
+      "sha256": "4962fdcdfaf8b8c378d85744669c86be2dd727b5b8ea6f495daa9eb56eac92be"
+    },
+    {
+      "path": "runs/cp-smoke-02/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/disk-cohort-admission.json",
+      "bytes": 1316,
+      "sha256": "a6c125d739982ef16049d8586fb951600767f3c1dd511958a32c00ad3dc23f76"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/server.log",
+      "bytes": 1057,
+      "sha256": "f8d8d2d09233eede13fe022e5cc4ced24b07a7c6e18f10b756ae27624af77186"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/app-start-admission.json",
+      "bytes": 1445,
+      "sha256": "6e91e7655098f57034806398371182e5601a37f19da129c7c8df00ef868e4a72"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 776,
+      "sha256": "307bb0307c5165e6120ee2c075c8bc18f367b3c4e05957e5f8ac39051fa086a7"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "697a22a4c49d303609e62b01d5574f1ae2e23c71f0c3b7de1011943b152d2ae8"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/result.json",
+      "bytes": 7338,
+      "sha256": "0865cc8061a44d1c4219f1e3e8f823296cbd506e715946a1b56b213fd35d4e4a"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/disk-copy-admission.json",
+      "bytes": 1307,
+      "sha256": "e275d7b225f5dd4c773919423f61a7b3420eb731ee556c11c56ffd1801b25837"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-02/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-pairs-02/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 452,
+      "sha256": "810485d8fcf70364029ed2334cd40e6f5b0a69faad7fa01f65f2334dafed1529"
+    },
+    {
+      "path": "runs/cp-pairs-02/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/cohort.json",
+      "bytes": 13149,
+      "sha256": "1264233c223c93bfa31738ab537c3d132d4454c55ea157caeb199dbf103e4d7b"
+    },
+    {
+      "path": "runs/cp-pairs-02/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/disk-cohort-admission.json",
+      "bytes": 3047,
+      "sha256": "40af334f8c1e6dfcda1e80882f1c0606b7db72099985adea1ee08b7b121b9787"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/server.log",
+      "bytes": 3892,
+      "sha256": "a3da1e3677c046173cc624d19e35c2ea5aec9d2c2cf107c816c7493b53f59a86"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/chromium-trace.json.gz",
+      "bytes": 11267973,
+      "sha256": "ab752e29ee8f2f5111d23f7f644d485c3dea29b7a78882bf1a09ee889a1f078f"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "86bfb23d84c2a4bcb9beceeb2c82776a89d7a2b128493712ea0a62e06b025e14"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "ea874af56b63185085add4995fac3f8bad7db4206617e73cf407a2acecc67a1d"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "5e9fa4237fbd44a5698484fe4a2c99e6cd8842ddf167735d1c4fe1562902a06c"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/result.json",
+      "bytes": 40823,
+      "sha256": "9c3a2a59c83972e37be95be2f6b593daaa53fd6540521bf8588d5d9f0bf044f4"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "7d76491986b24152d69836e341816f4b64e8c4233228029aa223a7c64ab7f29c"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "b212652b1256a18ec8cc0b47668c40c35428d94c8b28329bd107e2cf4b96b7a2"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/server.log",
+      "bytes": 6710,
+      "sha256": "c1f32f335e18a6b999e09aa9d39eb703c58ee846fef7bd2ce7a3354d9d8283eb"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/chromium-trace.json.gz",
+      "bytes": 12337599,
+      "sha256": "c6863c3fe64a7c83430b06a13fa3b1550cee0938bd5a9b8aebac3d6f42cc0d5a"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "792e74db5d7bf97200863b91ded9422f60fbbf1519217afd37b92d3d069b9544"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "cc71ec68d8eb695d9a41fd289e8a498641e4ed4cb2a26ca518f65d4e3dd5b506"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "07bbf9da197dfe41fac71afd209f3974a38a7c13402b911577b267066b52ec37"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/result.json",
+      "bytes": 141141,
+      "sha256": "1cf6667f50a2d7919a968931e763bb0c8e97cb45b917cf6364b2b68ffe59f56f"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "52abdd3775346ce8cdf233a1089023b8dadd588bc150c9857b8f170dac761fa8"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "4b73547c80b3b42f20a53183c5be019a14845575570471e19a4a926c5bab11cd"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "ee0dd49288d0e17867b227840c4726deb4f0427d6de488163919c0b82fad12e0"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/server.log",
+      "bytes": 3891,
+      "sha256": "5f2a3271d49f78dbbb8401c04c574af9941e51486382c6a8b809a947e9f8d6e6"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/chromium-trace.json.gz",
+      "bytes": 11022111,
+      "sha256": "fae7a6d3fff601d0034b6691e32274a9f2b1d11de8af42884bc1e4a0d6295a71"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "2e3e275269ad4fe03aa48b26ee365f25707209f53130deae2d6c289eecc44956"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "1b223334c7ae72eb3fe9ffefbecfc0c95d8af31a0ab5401baa0a3c842d08ff0d"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "39add712b9665e148d7300ee4fabd8017c61bc37ddc7ad5f9cca24bb014db89f"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/result.json",
+      "bytes": 40882,
+      "sha256": "53c4559d40c6b642c4728426f2de1e019e57622705f911f84e3a4c5a5a669e3a"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "caab3129a02808e90be5b22ce16fe5c2740eafacc7c5e0476a5a89bb476cdc3f"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "f6548f3f8b1d8150e76bd6600c54f7de62433b8af77e05a8f2a53bb9a9839337"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/server.log",
+      "bytes": 6654,
+      "sha256": "fa159c6043a3ec843b024cb970e47cc9dc27f6574898b389ae89d9992e636b43"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/chromium-trace.json.gz",
+      "bytes": 12425544,
+      "sha256": "2941c22568e1291f31a21cfcac9f2fde551cba092d937af268a1999fc80abe16"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "c7767f6c46811d4bacd5507b5512ad967f174f8762000253aa75c2ee767f86c8"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "3b3ee38668298d5c75276e0036a9208467890c120ca68063157f493f3e246ec5"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "a324ef28c8aa2a73607625be0db172f35b5e8dbf88fccc2d7e4d80aed7e9e8da"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/result.json",
+      "bytes": 141868,
+      "sha256": "ea6104e07de4189061a70407767c64b8d1af9f64326b826960068db924f5b2e4"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "26de177427b3f2ae33aa1b1caffcc42592563756199b3c3f4e6011ae03e37c4d"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "0c6a73d0377004a608721f21b4c467c17ced5430fe3d55695a0d2518eac435c7"
+    },
+    {
+      "path": "runs/cp-pairs-02/03-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/03-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "5413e9ffb5b5450e3167f547515823ac25f00d8285a7c988d77fdd9e9a4f9dc6"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/original-export.xlsx",
+      "bytes": 29380734,
+      "sha256": "0e7001437ef00e395d54de57401aa45019a9a731b09b6623bc84c8bf951446c1"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/server.log",
+      "bytes": 6650,
+      "sha256": "476b49ce60a6a7b4c561528955948ff1b12e3876a9631a6acb886ccc36e97c56"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/chromium-trace.json.gz",
+      "bytes": 12777397,
+      "sha256": "aa252bc02ef78ce16372885829e61c49e10a70b887921dc0a9456384ffc7ed29"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "fd512281811d8260603ad14f4045ce388bee50e071179cd4e9aa96cacaa568f5"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/artifact-compression-manifest.json",
+      "bytes": 1425,
+      "sha256": "1d646c231d006dbbc15993753a37f213a83c768c1cf67296853a63ae6bf17d1e"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "a61907ff207f15ef315456556a2f78bd339e846e8f9833c380347db7790471ab"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/result.json",
+      "bytes": 142933,
+      "sha256": "1ba60a40891a22e9b2539e699195f2061747a3711570547ddefdaab4df3708bd"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/disk-copy-admission.json",
+      "bytes": 3038,
+      "sha256": "bf6c54af69cb6c53a4b7cf47eb96bc9e18a4967b3b3bfaaf9b70586799d8e44d"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "15333e8297fc33cbf4bd4790912fe89a633ca93a118e06fae797bccc3a126787"
+    },
+    {
+      "path": "runs/cp-pairs-02/01-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/01-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "b2c3596f37fa92e7b73304bc682fa2e8c3a5f915033c6efe354b78e1f5de38de"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/server.log",
+      "bytes": 3892,
+      "sha256": "0dd614c9f78d5c73755491fac20c23ed82bab8e6f0cd508a8418d7eb070ca707"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/chromium-trace.json.gz",
+      "bytes": 11434825,
+      "sha256": "bd84cacf6be88d201957467c314933415426a4b9e5f6dacb30208e398c17cc80"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/app-start-admission.json",
+      "bytes": 3175,
+      "sha256": "c180dd46de4031c37d04b4fadb5d5775303bdbb278b7b8c9fe1aa56641a279cd"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/artifact-compression-manifest.json",
+      "bytes": 1417,
+      "sha256": "83e2ab49a773c5830efa55892530e01b46e46a240bf2c2c153e6d52dee489ec9"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/process-lifecycle.json",
+      "bytes": 156,
+      "sha256": "b726f2d5fc2f1ee895db60b6ebc96328216490489ea68383ed387ac5a475f3da"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/result.json",
+      "bytes": 40701,
+      "sha256": "463ed7af713ffd4d9220088f0834ab9934c87715c40ce71a6cb4f4c9080ccf18"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/disk-copy-admission.json",
+      "bytes": 3037,
+      "sha256": "fa4780142570bc6dbae7510d58945b8e07a01386f108d4228a34a1ad4a7f770f"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-pairs-02/02-control/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-pairs-02/02-control/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    },
+    {
+      "path": "runs/cp-smoke-07/admission-whole-fixed-cohort-before-any-app.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/admission-whole-fixed-cohort-before-any-app.json",
+      "bytes": 451,
+      "sha256": "6c7688a41af0a1aac81bf36b2f97f8f11ddee4a7894df7d07d1fddc1a7cbf930"
+    },
+    {
+      "path": "runs/cp-smoke-07/cohort.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/cohort.json",
+      "bytes": 2127,
+      "sha256": "6ebbd021ab95f88aec0c09219b5c5bac173a7fce148a4ceb7c97701d0b28ab19"
+    },
+    {
+      "path": "runs/cp-smoke-07/disk-cohort-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/disk-cohort-admission.json",
+      "bytes": 1607,
+      "sha256": "9c7b2cdbbf0484d9238b6f933076ec0d5ab609877dad76aa1e4228b8f915f8e5"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/original-export.xlsx",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/original-export.xlsx",
+      "bytes": 29380735,
+      "sha256": "24938f8a6084f0479a5dd69bee073074db0d9a9790c4cc27355755a6299e5c26"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/immutable-source-after.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/immutable-source-after.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/server.log",
+      "bytes": 6658,
+      "sha256": "11ce89bd682bce1ced3a2ee9e7c184e6d0816e2de5459a4e6289f8ea46439c03"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/chromium-trace.json.gz",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/chromium-trace.json.gz",
+      "bytes": 12215106,
+      "sha256": "24d47cadd11125168b75d02c2a509e708a54a9c8604ff3e2b69711440bab71d2"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/app-start-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/app-start-admission.json",
+      "bytes": 1735,
+      "sha256": "0102e36006f65f8d4443ea6de1f169c4238ebea9760cfa557efa766480cc0783"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/artifact-compression-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/artifact-compression-manifest.json",
+      "bytes": 1437,
+      "sha256": "682e49abe3780efd83a60b0dc18d7fc46e75f5f2206e13a75b0c1e143c8e035d"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/process-lifecycle.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/process-lifecycle.json",
+      "bytes": 155,
+      "sha256": "7cf0ae9fdca126b2337bf4697485cbe181e542b100bb472c2559100bbf205b00"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/result.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/result.json",
+      "bytes": 140503,
+      "sha256": "fdcc42f48710cef7caf573fb4b48dab2609fd2d09edac4eae4d28f66802557f1"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/disk-copy-admission.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/disk-copy-admission.json",
+      "bytes": 1598,
+      "sha256": "3089cb41138776d8b7b7e703b7e321db0a3a1c47eebe522e8ee227a3d4970073"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/probe.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/immutable-source-before.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/immutable-source-before.json",
+      "bytes": 607,
+      "sha256": "9a48c7cd7e0b63883fd076ab73bda1c7e46f59d16fa4563f595cee62ef41e8bc"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/attached-images.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/attached-images.json",
+      "bytes": 20487,
+      "sha256": "e7e21ecc36e135fed9d822b70c159b0f0332d7973f72f74d59e805db2006ecbe"
+    },
+    {
+      "path": "runs/cp-smoke-07/smoke-originals/measurement-cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/fixture/local/page-cache/moderator/manifest.json",
+      "bytes": 15346,
+      "sha256": "522b8d0bac36857f6f9d3205e5c7b0ac971edd38aa57ee877fd6708cecb10b13"
+    },
+    {
+      "path": "phase0/server.log",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/server.log",
+      "bytes": 3545,
+      "sha256": "beac64a3ddc59647355481b32173389c60c88b8ff7f9dee2cb1d426eee336fdc"
+    },
+    {
+      "path": "phase0/benchmark-fixture.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source/benchmark-fixture.json",
+      "bytes": 349,
+      "sha256": "f101c73ae5eddd490097e217931ac2239f32d8f860e17a12845c8df1ee49768d"
+    },
+    {
+      "path": "phase0/cache-manifest.json",
+      "sourcePath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/local/page-cache/moderator/manifest.json",
+      "bytes": 16079,
+      "sha256": "0129a33423ab8960a97bb2fff29fb065fc2fb7a61cb12312376fd04d02c12d2f"
+    }
+  ],
+  "localRetention": "All original work roots, partial/failed attempts, mutable fixture JSON, caches, original XLSX and source hardlinks remain in work/. Portable copies retain top-level raw evidence, source audits, full lossless traces, original rasters and exports; private mutable fixture/auth state is not republished.",
+  "compression": "Original compression manifests are unchanged; they also describe retained local mutable fixture artifacts. Every gzip artifact was independently reverified locally before copying."
+}

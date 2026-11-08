@@ -1,0 +1,82 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +49ms
+[PERF] DELTA_STORE_MODE +70ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +221ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-07/smoke-originals/fixture/config.json · port=34757 · host=127.0.0.1
+[PERF] SERVER_READY +281ms
+Buyer Log sunucusu çalışıyor: http://localhost:34757
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source
+[RUNTIME] heap-limit heapUsedMb=77 heapLimitMb=4288 rssMb=194
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +283ms
+[PERF] SHARED_SYNC_ROOT +283ms
+[PERF] SHARED_HUB_BOOTSTRAP +286ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +289ms
+[PERF] LOCAL_DB_READY +289ms
+[PERF] LOCAL_STATE_READY +289ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +310ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4311ms
+[PERF] DELTA_STORE_HYDRATED +4312ms
+[PERF] APP_BOOT_START · server received +12275ms · client +12ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +12275ms · client +13ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +12275ms · client +13ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +12275ms · client +26ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +12275ms · client +108ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +12275ms · client +128ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +12275ms · client +132ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +12275ms · client +359ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +12275ms · client +368ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +12275ms · client +545ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +12275ms · client +550ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +12275ms · client +550ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +12275ms · client +550ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +12275ms · client +588ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +12275ms · client +590ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +12275ms · client +644ms · duration 54ms
+[PERF] DATASOURCE_PREPARATION_START · server received +12275ms · client +644ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +12275ms · client +650ms · duration 6ms
+[PERF] FILTER_PIVOT_INIT_START · server received +12275ms · client +650ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +12275ms · client +650ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +12275ms · client +650ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +12275ms · client +650ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +12275ms · client +650ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +12275ms · client +650ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +12275ms · client +650ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +12275ms · client +651ms · duration 1ms
+[PERF] UI_FIRST_RENDER · server received +12275ms · client +651ms · duration 0ms
+[PERF] UI_READY · server received +12275ms · client +10889ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +12275ms
+[PERF] BACKGROUND_SYNC_START +14776ms
+[PERF] SYNC_COMPLETE +14805ms · duration 6ms
+[PERF] APP_BOOT_START · server received +86737ms · client +14ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +86737ms · client +14ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +86737ms · client +14ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +86737ms · client +15ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +86737ms · client +96ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +86737ms · client +122ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +86737ms · client +129ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +86737ms · client +405ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +86737ms · client +406ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +86737ms · client +598ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +86737ms · client +624ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +86737ms · client +624ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +86737ms · client +624ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +86737ms · client +670ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +86737ms · client +673ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +86737ms · client +726ms · duration 54ms
+[PERF] DATASOURCE_PREPARATION_START · server received +86737ms · client +727ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +86737ms · client +733ms · duration 6ms
+[PERF] FILTER_PIVOT_INIT_START · server received +86737ms · client +733ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +86737ms · client +733ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +86737ms · client +733ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +86737ms · client +733ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +86737ms · client +733ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +86737ms · client +733ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +86737ms · client +733ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +86737ms · client +733ms · duration 1ms
+[PERF] UI_FIRST_RENDER · server received +86737ms · client +733ms · duration 0ms
+[PERF] UI_READY · server received +86737ms · client +7688ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +86737ms
+[PERF] BACKGROUND_SYNC_START +89240ms
+[PERF] SYNC_COMPLETE +89268ms · duration 15ms

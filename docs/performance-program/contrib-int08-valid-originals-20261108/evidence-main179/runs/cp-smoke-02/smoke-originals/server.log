@@ -1,0 +1,18 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +46ms
+[PERF] DELTA_STORE_MODE +76ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +173ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/fixture/config.json · port=43677 · host=127.0.0.1
+[PERF] SERVER_READY +223ms
+Buyer Log sunucusu çalışıyor: http://localhost:43677
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-02/smoke-originals/fixture/source
+[RUNTIME] heap-limit heapUsedMb=61 heapLimitMb=4288 rssMb=178
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +225ms
+[PERF] SHARED_SYNC_ROOT +225ms
+[PERF] SHARED_HUB_BOOTSTRAP +238ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +241ms
+[PERF] LOCAL_DB_READY +241ms
+[PERF] LOCAL_STATE_READY +241ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +262ms

@@ -1,0 +1,31 @@
+✔ a batch saves every answer but announces one decision change (10.360674ms)
+✔ a failing batch keeps applied answers and still announces once (2.540831ms)
+✔ outside a batch every answer is announced immediately, and nested batches announce once (2.268841ms)
+✔ applicable checklist items are evaluated once per row, not per row × item (11.503447ms)
+✔ row-level reuse keeps every cell identical to per-item evaluation (1.21024ms)
+✔ an already applied decision is not rewritten by the assistant view refresh (10.333352ms)
+✔ a new decision still triggers a full pass (1.73324ms)
+✔ unchanged rows keep their cells; a changed answer rewrites only its row (6.495611ms)
+✔ a new analysis object or a changed global input rewrites rows (2.228038ms)
+✔ count reads the row description once, not again through isSet (1.541731ms)
+✔ set identity results are unchanged (0.735171ms)
+✔ inside one pass a row is read once and results equal the uncached ones (2.454571ms)
+✔ outside a pass a changed row is read again; passes nest and end cleanly (0.439434ms)
+✔ the CP decision and checklist column passes run inside one row cache (2.057671ms)
+✔ identical shared answers are not rewritten and do not recompute CP decisions (29.219417ms)
+✔ a newer shared answer is still merged, persisted and announced (3.66405ms)
+✔ an unreadable local record is still recovered even when shared content matches (3.817411ms)
+✔ cached and uncached summaries are identical (3.969341ms)
+✔ dropping a contribution recomputes that order with the current answers (1.069367ms)
+✔ one changed answer re-evaluates only its order and matches a full recomputation (43.965571ms)
+✔ an option-scoped approval re-evaluates every order of that option (14.854788ms)
+✔ a change consumed by a subset computation is still applied to the full list (9.895621ms)
+✔ a non-answer change recomputes every order (6.473888ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 268.090045

@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "copiedFilesVerified": 450,
+  "copiedGzipRoundTripsVerified": 27,
+  "privateMutableArtifactsRetainedOnlyLocally": 29,
+  "manifestSha256": "e55588ff55edc836059a7ff42100851aca8ad136d7079f1512186ff8632a9827",
+  "noHistoricalFilesystemDependency": true,
+  "note": "Private fixture/auth state is intentionally not republished. All performance traces, top-level results, byte checks, source audits, original rasters and XLSX evidence are delivered. Original compression manifests remain unchanged."
+}

@@ -1,0 +1,11 @@
+{
+  "phase": "stage-app-and-one-original-workspace",
+  "requiredFreeBytes": 399627552,
+  "availableFreeBytes": 31958618112,
+  "sufficient": true,
+  "details": {
+    "appLogicalBytes": 198300960,
+    "dependencyCopyBytes": 0,
+    "sourceWorkbookCopyBytes": 0
+  }
+}

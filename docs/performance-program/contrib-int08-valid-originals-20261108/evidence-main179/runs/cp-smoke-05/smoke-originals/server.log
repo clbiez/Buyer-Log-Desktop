@@ -1,0 +1,92 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +42ms
+[PERF] DELTA_STORE_MODE +63ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +159ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-05/smoke-originals/fixture/config.json · port=44003 · host=127.0.0.1
+[PERF] SERVER_READY +214ms
+Buyer Log sunucusu çalışıyor: http://localhost:44003
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source
+[RUNTIME] heap-limit heapUsedMb=80 heapLimitMb=4288 rssMb=198
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +217ms
+[PERF] SHARED_SYNC_ROOT +217ms
+[PERF] SHARED_HUB_BOOTSTRAP +226ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +229ms
+[PERF] LOCAL_DB_READY +229ms
+[PERF] LOCAL_STATE_READY +229ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +247ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4258ms
+[PERF] DELTA_STORE_HYDRATED +4260ms
+[PERF] APP_BOOT_START · server received +12772ms · client +9ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +12772ms · client +9ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +12772ms · client +9ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +12772ms · client +9ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +12772ms · client +73ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +12772ms · client +106ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +12772ms · client +120ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +12772ms · client +396ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +12772ms · client +396ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +12772ms · client +577ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +12772ms · client +582ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +12772ms · client +582ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +12772ms · client +582ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +12772ms · client +630ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +12772ms · client +632ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +12772ms · client +690ms · duration 57ms
+[PERF] DATASOURCE_PREPARATION_START · server received +12772ms · client +690ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +12772ms · client +695ms · duration 6ms
+[PERF] FILTER_PIVOT_INIT_START · server received +12772ms · client +695ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +12772ms · client +695ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +12773ms · client +695ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +12773ms · client +695ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +12773ms · client +695ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +12773ms · client +695ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +12773ms · client +696ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +12773ms · client +696ms · duration 0ms
+[PERF] UI_FIRST_RENDER · server received +12773ms · client +696ms · duration 0ms
+[PERF] UI_READY · server received +12773ms · client +11664ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +12773ms
+[PERF] BACKGROUND_SYNC_START +15274ms
+[PERF] SYNC_COMPLETE +15293ms · duration 6ms
+[PERF] APP_BOOT_START · server received +88140ms · client +11ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +88140ms · client +12ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +88140ms · client +12ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +88140ms · client +14ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +88140ms · client +64ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +88140ms · client +87ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +88140ms · client +97ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +88140ms · client +335ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +88140ms · client +335ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +88140ms · client +565ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +88140ms · client +571ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +88140ms · client +571ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +88140ms · client +571ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +88140ms · client +614ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +88140ms · client +617ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +88140ms · client +676ms · duration 59ms
+[PERF] DATASOURCE_PREPARATION_START · server received +88140ms · client +676ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +88140ms · client +683ms · duration 7ms
+[PERF] FILTER_PIVOT_INIT_START · server received +88140ms · client +683ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +88140ms · client +683ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +88140ms · client +683ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +88140ms · client +683ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +88140ms · client +683ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +88140ms · client +683ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +88140ms · client +683ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +88140ms · client +683ms · duration 1ms
+[PERF] UI_FIRST_RENDER · server received +88140ms · client +683ms · duration 0ms
+[PERF] UI_READY · server received +88140ms · client +11162ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +88140ms
+[PERF] BACKGROUND_SYNC_START +90641ms
+[PERF] SYNC_COMPLETE +90668ms · duration 13ms
+[2026-11-08T13:26:48.489Z] apiError: Error: Hesaplama havuzu kapalı. / Compute pool is closed.
+    at failure (/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-pool.js:23:85)
+    at /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-pool.js:190:72
+    at Array.map (<anonymous>)
+    at Object.close (/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-pool.js:190:41)
+    at /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-service.js:192:35
+    at Object.close (/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-service.js:192:278)
+    at closeComputeService (/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/lib/compute-runtime.js:12:63)
+    at /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/server/server.js:12940:45
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

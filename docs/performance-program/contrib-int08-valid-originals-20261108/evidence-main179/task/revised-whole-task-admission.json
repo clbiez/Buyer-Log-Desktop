@@ -1,0 +1,20 @@
+{
+  "phase": "revised-whole-task-after-observed-smoke",
+  "requiredFreeBytes": 11362369000,
+  "availableFreeBytes": 31248252928,
+  "sufficient": true,
+  "details": {
+    "budget": {
+      "rawTraceBytes": 312475380,
+      "retainedTraceBytes": 24585008,
+      "runtimeTemporaryBytes": 67108864,
+      "logGrowthBytes": 16777216,
+      "safetyFreeBytes": 134217728,
+      "mutableGrowthBytes": 16777216,
+      "smokeEvidence": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals",
+      "estimateRule": "twice actual losslessly verified trace/memory bytes; raw64MiB/gzip8MiB floors; not an event/output cap"
+    },
+    "remainingRuns": 14,
+    "conservativeRetainedBudgetBytes": 10737418240
+  }
+}

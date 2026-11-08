@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "serverExitConfirmed": true,
+  "status": "packed",
+  "artifacts": [
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/chromium-trace.json",
+      "rawBytes": 151260889,
+      "rawSha256": "578812f75bff48cdca51121f51c3fccd3db9c8c9432c4f10f23f599e35e89d2f",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/chromium-trace.json.gz",
+      "gzipBytes": 12128373,
+      "gzipSha256": "65f7b60b35a00c9d36fba639e1124c64e955282eadc61afddad67f6a98294a0a",
+      "roundTripVerified": true,
+      "rawReleased": true
+    },
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/result.json",
+      "rawBytes": 4976801,
+      "rawSha256": "24a5984c4e57483d76cb5a279bdeee052192cc500f05a31cdd88427e744f18f8",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/result.json.gz",
+      "gzipBytes": 164131,
+      "gzipSha256": "14db0e7cb8d887aae3746f4dfff086f2734300dbb5609d9822fa815d5737b5e6",
+      "roundTripVerified": true,
+      "rawReleased": true
+    },
+    {
+      "rawPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/fixture/data/user-access.json",
+      "rawBytes": 4446871,
+      "rawSha256": "460c39d350ba06e2e9f64c3a7e7184f6f2f9eb652d86795fd41677b7ab19f78b",
+      "gzipPath": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/runs/cp-smoke-06/smoke-originals/fixture/data/user-access.json.gz",
+      "gzipBytes": 161303,
+      "gzipSha256": "b5ab089c02bf2d0d2e2e3ae8d831926954a0e8dc729e60c4b9ebe0472fbf4d28",
+      "roundTripVerified": true,
+      "rawReleased": true
+    }
+  ]
+}

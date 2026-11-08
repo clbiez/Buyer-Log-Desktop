@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "comparedRuns": 12,
+  "allNumericAndFunctionalAnalysisFieldsEqual": true,
+  "historicalWorkRootOpenBlockedByPythonAuditHook": true,
+  "transportOnlyDifferences": [
+    "run path",
+    "number of private fixture/auth gzip artifacts reverified locally"
+  ]
+}

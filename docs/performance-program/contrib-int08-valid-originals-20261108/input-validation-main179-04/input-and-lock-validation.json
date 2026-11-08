@@ -1,0 +1,111 @@
+{
+  "status": "passed",
+  "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "checkedApplicationBlobsInBothTrees": 3303,
+  "declaredCheckoutEolNormalization": [
+    {
+      "root": "/workspace/Buyer-Log-Desktop",
+      "path": "resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd",
+      "rawBlobSha1": "f9db006dd5eca622cc886c23da9e0cf10c4e7709",
+      "normalizedBlobSha1": "93f3b62b092163aab952b22f6b5f45277d43377e",
+      "attributes": "resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: text: set\nresources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned",
+      "path": "resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd",
+      "rawBlobSha1": "f9db006dd5eca622cc886c23da9e0cf10c4e7709",
+      "normalizedBlobSha1": "93f3b62b092163aab952b22f6b5f45277d43377e",
+      "attributes": "resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: text: set\nresources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop",
+      "path": "resources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd",
+      "rawBlobSha1": "f68da32af963c74951c7076a5d3405b14470ae14",
+      "normalizedBlobSha1": "04e89c4f108a9e6b0d1568d144776489f58ee9bf",
+      "attributes": "resources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: text: set\nresources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned",
+      "path": "resources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd",
+      "rawBlobSha1": "f68da32af963c74951c7076a5d3405b14470ae14",
+      "normalizedBlobSha1": "04e89c4f108a9e6b0d1568d144776489f58ee9bf",
+      "attributes": "resources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: text: set\nresources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Guncelleme-Kaynagini-Onar.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop",
+      "path": "resources/app/scripts/BuyerLog-Imza-Kurulumu.cmd",
+      "rawBlobSha1": "1083f91ec63f2932b2e27eef4192be26735298d1",
+      "normalizedBlobSha1": "004c34bc114ffd86c3899e0add301b17aed4bbfa",
+      "attributes": "resources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: text: set\nresources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned",
+      "path": "resources/app/scripts/BuyerLog-Imza-Kurulumu.cmd",
+      "rawBlobSha1": "1083f91ec63f2932b2e27eef4192be26735298d1",
+      "normalizedBlobSha1": "004c34bc114ffd86c3899e0add301b17aed4bbfa",
+      "attributes": "resources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: text: set\nresources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Imza-Kurulumu.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop",
+      "path": "resources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd",
+      "rawBlobSha1": "e79b5e2936c88ebfb451ffa4d48c25bcc68112fd",
+      "normalizedBlobSha1": "5bcd05b2f298555f426fec4573dbc905c2d04b90",
+      "attributes": "resources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: text: set\nresources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned",
+      "path": "resources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd",
+      "rawBlobSha1": "e79b5e2936c88ebfb451ffa4d48c25bcc68112fd",
+      "normalizedBlobSha1": "5bcd05b2f298555f426fec4573dbc905c2d04b90",
+      "attributes": "resources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: text: set\nresources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Kullanici-Kurtarma.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop",
+      "path": "resources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd",
+      "rawBlobSha1": "338870d605a024d7d21da5aa9ed4167e3dae594f",
+      "normalizedBlobSha1": "7c50f57ee370126ebfc7cb1a4b9cd6ce6b078262",
+      "attributes": "resources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: text: set\nresources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: filter: unspecified\n"
+    },
+    {
+      "root": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned",
+      "path": "resources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd",
+      "rawBlobSha1": "338870d605a024d7d21da5aa9ed4167e3dae594f",
+      "normalizedBlobSha1": "7c50f57ee370126ebfc7cb1a4b9cd6ce6b078262",
+      "attributes": "resources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: text: set\nresources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: eol: crlf\nresources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd: filter: unspecified\n"
+    }
+  ],
+  "portableV2FilesVerified": 12,
+  "i18nBaselineEntries": 0,
+  "verifiedSourceWorkbooks": [
+    {
+      "name": "ASAS - Demo.xlsx",
+      "sha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "bytes": 41177225,
+      "device": 27,
+      "inode": 786717,
+      "mode": 384
+    },
+    {
+      "name": "Antrepo - Demo.xlsx",
+      "sha256": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "bytes": 4925283,
+      "device": 27,
+      "inode": 786718,
+      "mode": 384
+    },
+    {
+      "name": "LFL - Demo.xlsx",
+      "sha256": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f",
+      "bytes": 27735800,
+      "device": 27,
+      "inode": 786719,
+      "mode": 384
+    }
+  ],
+  "verifiedSourceRunAudits": 29,
+  "canonicalOriginalMappingsVerified": 192,
+  "sourceWriteGuardNegativeChecks": 4,
+  "nestedLockExitCode": 75,
+  "sourceWriteGuardScope": "Separate validation only; no source writes, chmod or content changes; counted runs still require zero attempted writes."
+}

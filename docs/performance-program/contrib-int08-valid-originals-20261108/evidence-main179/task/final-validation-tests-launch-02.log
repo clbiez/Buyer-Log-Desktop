@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 134, in <module>
+    main()
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 66, in main
+    assert len(baseline)==0
+           ^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,10 @@
+{
+  "phase": "remaining-two-smokes-twelve-pairs-after-catalog-fix",
+  "requiredFreeBytes": 12884901888,
+  "availableFreeBytes": 30092664832,
+  "sufficient": true,
+  "details": {
+    "remainingRuns": 14,
+    "allPreviousEvidenceRetained": true
+  }
+}

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 134, in <module>
+    main()
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 58, in main
+    assert actual==digest.decode(),str(root/relative)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01/pinned/resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd

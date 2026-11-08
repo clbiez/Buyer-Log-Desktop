@@ -1,0 +1,9 @@
+/workspace/Buyer-Log-Desktop/docs/performance-program/contrib-int08-valid-originals-20261108/analysis-main179/recomputed-analysis.json
+/workspace/Buyer-Log-Desktop/docs/performance-program/contrib-int08-valid-originals-20261108/quality-main179
+Traceback (most recent call last):
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 121, in <module>
+    main()
+  File "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/validate-inputs.py", line 46, in main
+    assert blob_sha(root/relative)==digest.decode(),str(root/relative)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: /workspace/Buyer-Log-Desktop/resources/app/scripts/BuyerLog-Eski-Veri-Kurtarma.cmd

@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "measurementModule": "cp",
+  "scope": "Main179 diagnostic; not post908 acceptance",
+  "scenario": "originals",
+  "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "status": "failed",
+  "node": "v24.19.0",
+  "probeSha256": "4c52c8e22d1dc41271eebc565498136e9c7bbece0867274671cfb1d472cfbac9",
+  "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+  "startedAt": "2026-11-08T13:24:40.728Z",
+  "sourcePins": {
+    "schemaVersion": 2,
+    "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+    "requiredAncestor": "0c85445f1989cafbae4f104c13ddf5d8f0b84c6c",
+    "ancestorVerified": true,
+    "files": {
+      "public/model-image-cache.js": {
+        "gitBlob": "b8e952b9181cb7ce20e6efe0949e83b1ee8b2d5e",
+        "sha256": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22"
+      },
+      "public/app-main.js": {
+        "gitBlob": "1311e659e818e8227840a6258498f98283897e91",
+        "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605"
+      },
+      "public/detail-drawer.js": {
+        "gitBlob": "6147788213dbd771d70b31f74f66a56d1dd4fd14",
+        "sha256": "7be31393af72adcfffe16a8670514a86b8fc04eb4f98862496816a13028218f3"
+      },
+      "public/perf-runtime.js": {
+        "gitBlob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+        "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
+      },
+      "public/vendor/exceljs.min.js": {
+        "gitBlob": "0b07c1ee50eefd56c0f363540750bbcc6225b75b",
+        "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9"
+      },
+      "server/user-data.js": {
+        "gitBlob": "94c18475fb731a29ca83515d88c1ecc17e6ab9c5",
+        "sha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+      },
+      "server/server.js": {
+        "gitBlob": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+        "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+      },
+      "server/routes/cp-image-routes.js": {
+        "gitBlob": "3e0daeffe3540ad0acaea99a58aca0ca058b2429",
+        "sha256": "559c2790b170dca20761e91c1cc643404262edd449dd7a23449e3d22a2082784"
+      },
+      "server/routes/collection-image-routes.js": {
+        "gitBlob": "c97ebdd2581f6ef958b4c277bbd7dfdc6a6c1350",
+        "sha256": "514c840c652f914f1aaeaec6c095895d3fd25ca694a8f0726ce7018359db08be"
+      }
+    },
+    "preservedCpGuards": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "reviewContextRevision": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+    "guardReference916": {
+      "public/checklist-components-engine.js": {
+        "gitBlob": "75daa45d8eca02942c085d89bed254894637c76c",
+        "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216"
+      },
+      "public/cp-overview-assistant.js": {
+        "gitBlob": "f0c7ac831ef42ee41edf8cea4053bb4e60f0e3a6",
+        "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e"
+      },
+      "public/checklist-supplier-sync.js": {
+        "gitBlob": "c3767b0c3575756bc8fd477b88447efb09fbc3f5",
+        "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc"
+      },
+      "tests/checklist-components-row-cache.test.js": {
+        "gitBlob": "953ba3bd65d0e9a760d457cca5acb47749b3fa9e",
+        "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e"
+      }
+    },
+    "guardPathsChangedSince916": [],
+    "changedSinceHistoricalReviewContext": [],
+    "contract": {
+      "path": "docs/performance/2026-11-05-codex-review-findings.md",
+      "sha256": "0831abe5b699adda63cd6f582055bb6d89764f5ea821c4d494fdd33adfb185d0",
+      "gitBlob": "95b0fed2b815f56a3345f325de062449ea784e01"
+    },
+    "dependencies": {
+      "express": {
+        "version": "4.22.3",
+        "packageSha256": "0a1770344ae7215b2a8e4f31be9f08d726253d4ded2c8b820ec1db8c7c00d000"
+      },
+      "body-parser": {
+        "version": "1.20.9",
+        "packageSha256": "b08d6a1bdf0ac224323051934f5979935c711a1fa7422795a61a39cbbe74711f"
+      },
+      "bytes": {
+        "version": "3.1.2",
+        "packageSha256": "99b21c09ce812dc76a06cd87c4753247cb9615c6a8501c5a5a9d9caa22ea2d12"
+      },
+      "bodyParserJsonSha256": "3b19e93395f011b99a31e5c16086eeaa9e52acdc6a680191c1ceaeab31b15fc4"
+    }
+  },
+  "phases": [],
+  "network": [],
+  "functional": {},
+  "limitations": [
+    "Prepared probe: first smoke and runtime validation remain required.",
+    "Synthetic size/codec strata do not establish the production image distribution.",
+    "Linux headless Chromium; Windows/Electron, GPU drivers, AV, cold OS disk and real workstation behavior are unmeasured.",
+    "RGBA pixel estimates, JS heap and renderer RSS are not decoded-image-memory measurements.",
+    "Tracing allocator candidates require attribution; absent/ambiguous image allocators leave that acceptance item open.",
+    "Tracing and small observers add overhead; all paired cases use the same instrumentation.",
+    "Placeholder and original cells can have different row geometry; scroll deltas alone do not isolate decode cost.",
+    "First image can load behind the startup curtain; navigation, load and post-Continue visibility are reported separately.",
+    "No preview optimization or 96/192/384 quality verdict is implemented by this baseline probe."
+  ],
+  "inputCache": {
+    "generation": "mw7v2fdd-85eede2a6408",
+    "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+    "modules": {
+      "cp": 24982,
+      "orders": 30000
+    }
+  },
+  "inputRevisions": {
+    "orders": 0,
+    "suppFob": 0
+  },
+  "initialDataAudit": {
+    "sourceFolder": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/temp/buyerlog-startup-main179/source",
+    "currentUser": {
+      "id": "moderator",
+      "role": "moderator",
+      "roleLabel": "Moderatör",
+      "systemRole": "moderator",
+      "systemRoleLabel": "Moderatör",
+      "centralIamEnabled": false,
+      "iamRevision": 2,
+      "orgLevel": "manager",
+      "orgLevelLabel": "Yönetici",
+      "status": "ACTIVE",
+      "username": "Gökberk",
+      "displayName": "Gökberk",
+      "title": "Moderatör",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [],
+      "mmygs": [],
+      "buyingGroups": [],
+      "enabled": true,
+      "passwordRequired": true,
+      "pinRequired": true,
+      "needsPasswordSetup": false,
+      "needsPinSetup": false,
+      "supervisorId": null,
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "ALL",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "ALL",
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "permissions": {
+        "manageBackup": true,
+        "manageBusinessRules": true,
+        "manageModelConnections": true,
+        "manageAllOrders": true,
+        "manageCollections": true
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": true,
+        "backlog": true,
+        "shipping": true,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "OVERVIEW.VIEW",
+        "OVERVIEW.EXPORT",
+        "CP.VIEW",
+        "CP.CREATE",
+        "CP.EDIT",
+        "CP.DELETE",
+        "CP.EXPORT",
+        "ORDERS.VIEW",
+        "ORDERS.CREATE",
+        "ORDERS.EDIT",
+        "ORDERS.DELETE",
+        "ORDERS.APPROVE",
+        "ORDERS.EXPORT",
+        "ORDERS.MANAGE",
+        "COLLECTIONS.VIEW",
+        "COLLECTIONS.CREATE",
+        "COLLECTIONS.EDIT",
+        "COLLECTIONS.DELETE",
+        "COLLECTIONS.APPROVE",
+        "COLLECTIONS.EXPORT",
+        "COLLECTIONS.MANAGE",
+        "BACKLOG.VIEW",
+        "BACKLOG.EXPORT",
+        "OAB.VIEW",
+        "OAB.CREATE",
+        "OAB.EDIT",
+        "OAB.DELETE",
+        "OAB.EXPORT",
+        "OAB.MANAGE",
+        "QUOTATIONS.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "QUOTATIONS.DELETE",
+        "QUOTATIONS.APPROVE",
+        "QUOTATIONS.EXPORT",
+        "ANALYSIS.VIEW",
+        "ANALYSIS.EXPORT",
+        "OPEN_COSTING.VIEW",
+        "OPEN_COSTING.CREATE",
+        "OPEN_COSTING.EDIT",
+        "OPEN_COSTING.DELETE",
+        "OPEN_COSTING.EXPORT",
+        "SHIPPING.VIEW",
+        "SHIPPING.CREATE",
+        "SHIPPING.EDIT",
+        "SHIPPING.DELETE",
+        "SHIPPING.EXPORT",
+        "AUTOMATIONS.VIEW",
+        "AUTOMATIONS.CREATE",
+        "AUTOMATIONS.EDIT",
+        "AUTOMATIONS.DELETE",
+        "AUTOMATIONS.APPROVE",
+        "AUTOMATIONS.MANAGE",
+        "SOURCE_DATA.VIEW",
+        "SOURCE_DATA.CREATE",
+        "SOURCE_DATA.EDIT",
+        "SOURCE_DATA.DELETE",
+        "SOURCE_DATA.EXPORT",
+        "SOURCE_DATA.MANAGE",
+        "USER.VIEW",
+        "USER.CREATE",
+        "USER.EDIT",
+        "USER.MANAGE",
+        "USER.GRANT",
+        "USER.PROFILE_COPY",
+        "ROLE.VIEW",
+        "ROLE.MANAGE",
+        "PERMISSION.VIEW",
+        "PERMISSION.MANAGE",
+        "PERMISSION.GRANT",
+        "SYSTEM.VIEW",
+        "SYSTEM.MANAGE",
+        "SECURITY.VIEW",
+        "SECURITY.MANAGE",
+        "AUDIT.VIEW",
+        "AUDIT.EXPORT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "moderator",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [],
+      "canManageUsers": true
+    },
+    "sourceFilterStatus": {
+      "ready": true,
+      "required": false,
+      "requestedTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "missingTargets": [],
+      "filteredTargets": [
+        "cp",
+        "orders",
+        "backlog"
+      ],
+      "hasActiveAsasConnection": false,
+      "targetState": {
+        "cp": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "orders": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        },
+        "backlog": {
+          "covered": true,
+          "filtered": true,
+          "connectionIds": []
+        }
+      }
+    },
+    "pageCache": {
+      "hit": false,
+      "readMs": 0,
+      "generation": null
+    }
+  },
+  "error": {
+    "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ null\n- 'mw7v2fdd-85eede2a6408'\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ null\n- 'mw7v2fdd-85eede2a6408'\n\n    at /workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/probe.cjs:199:10\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  },
+  "browserExitConfirmed": true,
+  "serverExitConfirmed": true,
+  "finishedAt": "2026-11-08T13:24:42.470Z"
+}

@@ -1,0 +1,36 @@
+{
+  "phase": "last-app-start-check",
+  "requiredFreeBytes": 638569168,
+  "availableFreeBytes": 31540789248,
+  "sufficient": true,
+  "details": {
+    "revision": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+    "stageRoot": "/workspace/Buyer-Log-Desktop/scripts/prototypes/int08-valid-originals-20261108/diagnostic-main179/work/stages/1796193f0a57c7785e7bf9fdb3557e33c550b25e-main179-diag-01",
+    "fixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816",
+    "measurementModule": "cp",
+    "scope": "Main179 diagnostic; not post908 acceptance",
+    "fixedPlans": [
+      [
+        "smoke-originals",
+        "originals"
+      ]
+    ],
+    "mutableBaseCopyBytes": 29603043,
+    "immutableWorkbookCopyBytes": 0,
+    "all32OriginalBytes": 100905030,
+    "sixRepresentativeWorkbookEstimateBytes": 34306630,
+    "retainedEvidenceEstimateBytes": 231923567,
+    "budget": {
+      "rawTraceBytes": 134217728,
+      "retainedTraceBytes": 33554432,
+      "runtimeTemporaryBytes": 67108864,
+      "logGrowthBytes": 16777216,
+      "safetyFreeBytes": 134217728,
+      "mutableGrowthBytes": 16777216
+    },
+    "estimateOnly": "No trace cap, sample count, frame count, timeout, image recipe or assertion is changed."
+  },
+  "appStartRequiredFreeBytes": 638569168,
+  "stageFixtureManifestSha256": "4122c2f04c1826cd99adfcf528f04d0a95f6bc7ce8141ed8c1a98695ed390816"
+}

@@ -1,0 +1,128 @@
+{
+  "status": "passed",
+  "sourceAfterTests": [
+    {
+      "name": "ASAS - Demo.xlsx",
+      "sha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "bytes": 41177225,
+      "device": 27,
+      "inode": 786717,
+      "mode": 384
+    },
+    {
+      "name": "Antrepo - Demo.xlsx",
+      "sha256": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "bytes": 4925283,
+      "device": 27,
+      "inode": 786718,
+      "mode": 384
+    },
+    {
+      "name": "LFL - Demo.xlsx",
+      "sha256": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f",
+      "bytes": 27735800,
+      "device": 27,
+      "inode": 786719,
+      "mode": 384
+    }
+  ],
+  "sourceMatchesOriginalStage": true,
+  "productionDiffFiles": [],
+  "originalPacketDiffFiles": [],
+  "allFinalRuns": [
+    {
+      "label": "cp-pairs-02",
+      "case": "01-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "cp-pairs-02",
+      "case": "01-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "cp-pairs-02",
+      "case": "02-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "cp-pairs-02",
+      "case": "02-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "cp-pairs-02",
+      "case": "03-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "cp-pairs-02",
+      "case": "03-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "01-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "01-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "02-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "02-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "03-control",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    },
+    {
+      "label": "orders-pairs-02",
+      "case": "03-originals",
+      "sourceWriteBlocks": 0,
+      "nonlocalConnectionsBlocked": 0,
+      "probeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be"
+    }
+  ],
+  "finalProbeSha256": "badbbe190cece2241b02c5a175fc65d81a7d35282f24674c9c41034afe3269be",
+  "portableArchiveValidation": {
+    "status": "passed",
+    "copiedFilesVerified": 450,
+    "copiedGzipRoundTripsVerified": 27,
+    "privateMutableArtifactsRetainedOnlyLocally": 29,
+    "manifestSha256": "e55588ff55edc836059a7ff42100851aca8ad136d7079f1512186ff8632a9827",
+    "noHistoricalFilesystemDependency": true,
+    "note": "Private fixture/auth state is intentionally not republished. All performance traces, top-level results, byte checks, source audits, original rasters and XLSX evidence are delivered. Original compression manifests remain unchanged."
+  }
+}

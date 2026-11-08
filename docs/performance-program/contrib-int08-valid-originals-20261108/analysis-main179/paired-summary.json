@@ -1,0 +1,421 @@
+{
+  "scope": "Main179 diagnostic; paired original minus control; N=3 per module",
+  "rows": [
+    {
+      "module": "cp",
+      "metric": "tableDecodeCpuMs",
+      "control": [
+        0.412,
+        0.252,
+        0.34
+      ],
+      "originals": [
+        1549.938,
+        1443.996,
+        1748.552
+      ],
+      "pairedDelta": [
+        1549.526,
+        1443.7440000000001,
+        1748.212
+      ],
+      "controlMedian": 0.34,
+      "originalMedian": 1549.938,
+      "pairedDeltaMedian": 1549.526,
+      "pairedDeltaRange": [
+        1443.7440000000001,
+        1748.212
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "decodedImageMiB",
+      "control": [
+        0.078125,
+        0.078125,
+        0.078125
+      ],
+      "originals": [
+        459.453125,
+        444.48046875,
+        459.4765625
+      ],
+      "pairedDelta": [
+        459.375,
+        444.40234375,
+        459.3984375
+      ],
+      "controlMedian": 0.078125,
+      "originalMedian": 459.453125,
+      "pairedDeltaMedian": 459.375,
+      "pairedDeltaRange": [
+        444.40234375,
+        459.3984375
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "rendererRssMiB",
+      "control": [
+        1061.6875,
+        1146.46875,
+        1058.08203125
+      ],
+      "originals": [
+        1701.625,
+        1518.34375,
+        1674.75390625
+      ],
+      "pairedDelta": [
+        639.9375,
+        371.875,
+        616.671875
+      ],
+      "controlMedian": 1061.6875,
+      "originalMedian": 1674.75390625,
+      "pairedDeltaMedian": 616.671875,
+      "pairedDeltaRange": [
+        371.875,
+        639.9375
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "firstScrollP95Ms",
+      "control": [
+        33.39999999999782,
+        33.29999999999927,
+        33.400000000001455
+      ],
+      "originals": [
+        33.400000000001455,
+        33.400000000001455,
+        33.39999999999782
+      ],
+      "pairedDelta": [
+        3.637978807091713e-12,
+        0.10000000000218279,
+        -3.637978807091713e-12
+      ],
+      "controlMedian": 33.39999999999782,
+      "originalMedian": 33.400000000001455,
+      "pairedDeltaMedian": 3.637978807091713e-12,
+      "pairedDeltaRange": [
+        -3.637978807091713e-12,
+        0.10000000000218279
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "repeatScrollP95Ms",
+      "control": [
+        33.39999999999782,
+        33.29999999999927,
+        16.700000000000728
+      ],
+      "originals": [
+        33.29999999999927,
+        33.29999999999927,
+        33.29999999999927
+      ],
+      "pairedDelta": [
+        -0.09999999999854481,
+        0.0,
+        16.599999999998545
+      ],
+      "controlMedian": 33.29999999999927,
+      "originalMedian": 33.29999999999927,
+      "pairedDeltaMedian": 0.0,
+      "pairedDeltaRange": [
+        -0.09999999999854481,
+        16.599999999998545
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "firstScrollLongTaskPercent",
+      "control": [
+        32.322932983360985,
+        34.80807446919778,
+        32.31288858292408
+      ],
+      "originals": [
+        31.01369408937473,
+        26.99973206372554,
+        33.67680832469692
+      ],
+      "pairedDelta": [
+        -1.3092388939862545,
+        -7.808342405472239,
+        1.3639197417728397
+      ],
+      "controlMedian": 32.322932983360985,
+      "originalMedian": 31.01369408937473,
+      "pairedDeltaMedian": -1.3092388939862545,
+      "pairedDeltaRange": [
+        -7.808342405472239,
+        1.3639197417728397
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "repeatScrollLongTaskPercent",
+      "control": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "originals": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pairedDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "controlMedian": 0.0,
+      "originalMedian": 0.0,
+      "pairedDeltaMedian": 0.0,
+      "pairedDeltaRange": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module": "cp",
+      "metric": "backingStorageMiB",
+      "control": [
+        7.752251625061035,
+        76.86827754974365,
+        7.752413749694824
+      ],
+      "originals": [
+        76.8850154876709,
+        7.755117416381836,
+        76.74628067016602
+      ],
+      "pairedDelta": [
+        69.13276386260986,
+        -69.11316013336182,
+        68.99386692047119
+      ],
+      "controlMedian": 7.752413749694824,
+      "originalMedian": 76.74628067016602,
+      "pairedDeltaMedian": 68.99386692047119,
+      "pairedDeltaRange": [
+        -69.11316013336182,
+        69.13276386260986
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "tableDecodeCpuMs",
+      "control": [
+        0.406,
+        0.345,
+        0.372
+      ],
+      "originals": [
+        1498.78,
+        1375.371,
+        1283.094
+      ],
+      "pairedDelta": [
+        1498.374,
+        1375.026,
+        1282.722
+      ],
+      "controlMedian": 0.372,
+      "originalMedian": 1375.371,
+      "pairedDeltaMedian": 1375.026,
+      "pairedDeltaRange": [
+        1282.722,
+        1498.374
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "decodedImageMiB",
+      "control": [
+        0.078125,
+        0.078125,
+        0.078125
+      ],
+      "originals": [
+        459.46484375,
+        459.46484375,
+        459.46484375
+      ],
+      "pairedDelta": [
+        459.38671875,
+        459.38671875,
+        459.38671875
+      ],
+      "controlMedian": 0.078125,
+      "originalMedian": 459.46484375,
+      "pairedDeltaMedian": 459.38671875,
+      "pairedDeltaRange": [
+        459.38671875,
+        459.38671875
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "rendererRssMiB",
+      "control": [
+        960.90234375,
+        825.265625,
+        878.34765625
+      ],
+      "originals": [
+        1735.23046875,
+        1625.828125,
+        1569.82421875
+      ],
+      "pairedDelta": [
+        774.328125,
+        800.5625,
+        691.4765625
+      ],
+      "controlMedian": 878.34765625,
+      "originalMedian": 1625.828125,
+      "pairedDeltaMedian": 774.328125,
+      "pairedDeltaRange": [
+        691.4765625,
+        800.5625
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "firstScrollP95Ms",
+      "control": [
+        16.800000000000182,
+        16.800000000000182,
+        33.30000000000018
+      ],
+      "originals": [
+        50,
+        33.399999999999636,
+        33.399999999999636
+      ],
+      "pairedDelta": [
+        33.19999999999982,
+        16.599999999999454,
+        0.0999999999994543
+      ],
+      "controlMedian": 16.800000000000182,
+      "originalMedian": 33.399999999999636,
+      "pairedDeltaMedian": 16.599999999999454,
+      "pairedDeltaRange": [
+        0.0999999999994543,
+        33.19999999999982
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "repeatScrollP95Ms",
+      "control": [
+        33.29999999999927,
+        33.399999999999636,
+        33.30000000000109
+      ],
+      "originals": [
+        16.799999999999272,
+        16.799999999999272,
+        16.799999999999272
+      ],
+      "pairedDelta": [
+        -16.5,
+        -16.600000000000364,
+        -16.50000000000182
+      ],
+      "controlMedian": 33.30000000000109,
+      "originalMedian": 16.799999999999272,
+      "pairedDeltaMedian": -16.50000000000182,
+      "pairedDeltaRange": [
+        -16.600000000000364,
+        -16.5
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "firstScrollLongTaskPercent",
+      "control": [
+        22.876221095585507,
+        19.147523569247113,
+        20.269393475385417
+      ],
+      "originals": [
+        28.81820786769658,
+        18.627995077577268,
+        29.986544499259573
+      ],
+      "pairedDelta": [
+        5.941986772111072,
+        -0.5195284916698455,
+        9.717151023874155
+      ],
+      "controlMedian": 20.269393475385417,
+      "originalMedian": 28.81820786769658,
+      "pairedDeltaMedian": 5.941986772111072,
+      "pairedDeltaRange": [
+        -0.5195284916698455,
+        9.717151023874155
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "repeatScrollLongTaskPercent",
+      "control": [
+        18.102881199842127,
+        19.370708209491546,
+        17.777082681679016
+      ],
+      "originals": [
+        37.926177554995455,
+        0.0,
+        39.333143808637175
+      ],
+      "pairedDelta": [
+        19.823296355153328,
+        -19.370708209491546,
+        21.55606112695816
+      ],
+      "controlMedian": 18.102881199842127,
+      "originalMedian": 37.926177554995455,
+      "pairedDeltaMedian": 19.823296355153328,
+      "pairedDeltaRange": [
+        -19.370708209491546,
+        21.55606112695816
+      ]
+    },
+    {
+      "module": "orders",
+      "metric": "backingStorageMiB",
+      "control": [
+        7.747411727905273,
+        7.7475385665893555,
+        8.166790962219238
+      ],
+      "originals": [
+        8.20759391784668,
+        66.54992485046387,
+        8.207524299621582
+      ],
+      "pairedDelta": [
+        0.46018218994140625,
+        58.80238628387451,
+        0.04073333740234375
+      ],
+      "controlMedian": 7.7475385665893555,
+      "originalMedian": 8.20759391784668,
+      "pairedDeltaMedian": 0.46018218994140625,
+      "pairedDeltaRange": [
+        0.04073333740234375,
+        58.80238628387451
+      ]
+    }
+  ]
+}

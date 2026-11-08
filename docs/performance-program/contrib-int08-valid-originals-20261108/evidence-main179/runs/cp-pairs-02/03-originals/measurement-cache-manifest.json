@@ -1,0 +1,535 @@
+{
+  "schemaVersion": 2,
+  "activeGeneration": "mw7x15pc-c45b8cf2cda1",
+  "previousGeneration": "mw7x14s7-1129bab3452c",
+  "contextHash": "cc2125653b6d173594e3c7af846d861422d7534523533d7a19f28aaff3b4fdbf",
+  "sourceLoadedAt": "2026-11-08T13:21:11.226Z",
+  "createdAt": "2026-11-08T14:16:29.477Z",
+  "modules": {
+    "cp": {
+      "bytes": 4647139,
+      "uncompressedBytes": 61864321,
+      "checksum": "bd3ba01849612177f6f1b5543c4c24c62be3313969b45941c970b66e7aa087a1"
+    },
+    "orders": {
+      "bytes": 5678867,
+      "uncompressedBytes": 73150638,
+      "checksum": "107086503dabaab280588b399f5d5decf1ef25ee4aaa97e62b508bc7e6a9147a"
+    },
+    "collection-catalog": {
+      "bytes": 684,
+      "uncompressedBytes": 1619,
+      "checksum": "c46e17276cc9b3cd047f203a80f6fa855a5d1654a83bf0368777a2f3a03a781d"
+    }
+  },
+  "backlogVariants": {},
+  "runtimeMeta": {
+    "loadedAt": "2026-11-08T13:21:11.226Z",
+    "sources": {
+      "asas": "Excel: ASAS - Demo.xlsx",
+      "antrepo": "Excel: Antrepo - Demo.xlsx",
+      "lfl": "Excel: ASAS - Demo.xlsx",
+      "cpupdate": null
+    },
+    "cpupdateInfo": null,
+    "cpupdateOverrides": {
+      "submap": {},
+      "suppfobmap": {},
+      "suppfobmetamap": {}
+    },
+    "fabricHeaderInfo": {
+      "source": "ASAS",
+      "matchingRule": "Sipariş Kod + Model Adı + Renk Kod; yalnız Ana Kumaş Mı = 1",
+      "mainFlagHeader": "Ana Kumaş Mı",
+      "mainRowCount": 30000,
+      "ignoredNonMainRows": 0,
+      "duplicateMainRows": 0,
+      "duplicateMainSourceRows": 0,
+      "sourceRowCount": 30000,
+      "orderIdentityCount": 30000,
+      "rowsPerOrderIdentity": 1,
+      "resolvedHeaders": {
+        "main": "Ana Kumaş Mı",
+        "fabricCategory": "Kumaş Kategorisi",
+        "fabricSupplierCountry": "Kumaşçı Ülkesi",
+        "fabricSupplier": "Kumaşçı",
+        "kumasTipi": "Kumaş Tipi",
+        "iplikNo": "İplik No",
+        "fabricWeight": "Gramaj",
+        "karisim": "Karışım"
+      },
+      "warnings": [],
+      "warningDetails": []
+    },
+    "antrepoHeaderInfo": {
+      "ok": true,
+      "rowCount": 12726,
+      "dataRows": 12726,
+      "keyCount": 12726,
+      "blankStatus": 0,
+      "blankLoadedQty": 0,
+      "blankIasOrderQty": 0,
+      "iasOrderQtyColumnPresent": true,
+      "lineKeyRows": 12726,
+      "matchableRows": 12726,
+      "pivotIdentityFillCount": 0,
+      "partialIdentityRows": 0,
+      "blankPartialIdentity": 12726,
+      "warningDetailRows": {
+        "blankLoadedQty": [],
+        "blankIasOrderQty": [],
+        "limit": 5000
+      },
+      "statusCounts": [
+        [
+          "Depoda",
+          7727
+        ],
+        [
+          "Üretimde",
+          2331
+        ],
+        [
+          "Yolda",
+          1935
+        ],
+        [
+          "Yüklemede",
+          733
+        ]
+      ],
+      "columns": [
+        "Sipariş Kod",
+        "Model Adı",
+        "Renk Kod",
+        "Renk Tanım",
+        "Supplier Portal Statü",
+        "Tahmini Antrepo Giriş Tarihi",
+        "Vasita Tanim",
+        "HANDOVER Tarihi",
+        "Yükleme Toplam Adet",
+        "Net Alım Sipariş Miktarı"
+      ],
+      "resolved": {
+        "ocode": "Sipariş Kod",
+        "model": "Model Adı",
+        "ccode": "Renk Kod",
+        "colour": "Renk Tanım",
+        "statu": "Supplier Portal Statü",
+        "arr": "Tahmini Antrepo Giriş Tarihi",
+        "handover": "HANDOVER Tarihi",
+        "vasita": "Vasita Tanim",
+        "loadedQty": "Yükleme Toplam Adet",
+        "iasOrderQty": "Net Alım Sipariş Miktarı"
+      },
+      "missing": [],
+      "reason": ""
+    },
+    "lflMeta": {
+      "sheets": [
+        {
+          "name": "ASAS",
+          "headerRow": 2,
+          "score": 26,
+          "mappedHeaders": {
+            "orderCode": "Sipariş Kod",
+            "modelName": "Model Adı",
+            "plmId": "Plm Kod",
+            "productDescription": "Ürün Ana Tanım",
+            "colourCode": "Renk Kod",
+            "mag": "Merch Alt Grup Kod",
+            "mmyg": "Merch Marka Yaş Grup Kod",
+            "classification": "Ürün Klasman",
+            "season": "Sezon",
+            "inStore": "Model Bütçe Tarih Yıl Ay Gün",
+            "opd": "Sipariş Yerleştirme MerchTarih",
+            "retailDate": "Retail Depo Tarih Yıl Ay Gün",
+            "exFactory": "Orijinal Exfactory Merch Tarih",
+            "fob": "FOB Fiyatı",
+            "quantity": "Net Alım Sipariş Miktarı",
+            "manufacturer": "Üretici",
+            "country": "Siparişin Üretildiği Ülke",
+            "buyer": "Buyer",
+            "buyingGroup": "Buyer Grup (TR)",
+            "license": "Lisans",
+            "licensor": "Lisans",
+            "line": "Line",
+            "mainFabric": "Ana Kumaş Mı",
+            "fabricCategory": "Kumaş Kategorisi",
+            "fabricSupplierCountry": "Kumaşçı Ülkesi",
+            "fabricSupplier": "Kumaşçı",
+            "kumasTipi": "Kumaş Tipi",
+            "iplikNo": "İplik No",
+            "fabricWeight": "Gramaj",
+            "karisim": "Karışım"
+          },
+          "rows": 30000
+        }
+      ],
+      "rowCount": 30000,
+      "rawValidRows": 30000,
+      "duplicateRowsRemoved": 0,
+      "skippedMissingPrice": 0,
+      "skippedMissingQuantity": 0,
+      "skippedEmpty": 0,
+      "skippedMissingDimensions": 0,
+      "missingDimensionCounts": {
+        "mag": 0,
+        "mmyg": 0,
+        "classification": 0,
+        "season": 0,
+        "periodDate": 0,
+        "manufacturer": 0,
+        "country": 0,
+        "buyingGroup": 0,
+        "buyer": 0
+      },
+      "mainFabricRows": 30000,
+      "ignoredNonMainFabricRows": 0,
+      "missingMainFabricSheets": 0,
+      "warnings": [],
+      "dimensions": {
+        "seasons": [
+          "6S27",
+          "6W26"
+        ],
+        "mags": [
+          "A1",
+          "A3",
+          "B2",
+          "C1",
+          "D4"
+        ],
+        "mmygs": [
+          "KB",
+          "KG",
+          "MN",
+          "TN",
+          "WM"
+        ],
+        "brandDirectorates": [],
+        "classifications": [
+          "HIRKA",
+          "KAZAK",
+          "PIJAMA",
+          "SWEATSHIRT",
+          "T-SHIRT"
+        ],
+        "productDescriptions": [
+          "HIRKA BARBIE",
+          "HIRKA DISNEY",
+          "HIRKA FCB",
+          "HIRKA HARRY POTTER",
+          "HIRKA LOONEY TUNES",
+          "HIRKA MARVEL",
+          "HIRKA NASA",
+          "HIRKA POKEMON",
+          "HIRKA STAR WARS",
+          "KAZAK BARBIE",
+          "KAZAK DISNEY",
+          "KAZAK FCB",
+          "KAZAK HARRY POTTER",
+          "KAZAK LOONEY TUNES",
+          "KAZAK MARVEL",
+          "KAZAK NASA",
+          "KAZAK POKEMON",
+          "KAZAK STAR WARS",
+          "PIJAMA BARBIE",
+          "PIJAMA DISNEY",
+          "PIJAMA FCB",
+          "PIJAMA HARRY POTTER",
+          "PIJAMA LOONEY TUNES",
+          "PIJAMA MARVEL",
+          "PIJAMA NASA",
+          "PIJAMA POKEMON",
+          "PIJAMA STAR WARS",
+          "SWEATSHIRT BARBIE",
+          "SWEATSHIRT DISNEY",
+          "SWEATSHIRT FCB",
+          "SWEATSHIRT HARRY POTTER",
+          "SWEATSHIRT LOONEY TUNES",
+          "SWEATSHIRT MARVEL",
+          "SWEATSHIRT NASA",
+          "SWEATSHIRT POKEMON",
+          "SWEATSHIRT STAR WARS",
+          "T-SHIRT BARBIE",
+          "T-SHIRT DISNEY",
+          "T-SHIRT FCB",
+          "T-SHIRT HARRY POTTER",
+          "T-SHIRT LOONEY TUNES",
+          "T-SHIRT MARVEL",
+          "T-SHIRT NASA",
+          "T-SHIRT POKEMON",
+          "T-SHIRT STAR WARS"
+        ],
+        "manufacturers": [
+          "ANADOLU TRIKO",
+          "ATLAS KNIT",
+          "CHITTAGONG KNIT",
+          "DELTA TEXTILE",
+          "DHAKA APPAREL",
+          "EGE ORME",
+          "KUTAISI TEXTILE",
+          "MARMARA KNIT",
+          "NILE KNIT",
+          "NINGBO KNITWEAR"
+        ],
+        "countries": [
+          "BANGLADES",
+          "CIN",
+          "FAS",
+          "Georgia",
+          "MISIR",
+          "TURKIYE"
+        ],
+        "buyers": [
+          "Ayşe K.",
+          "Burak E.",
+          "Can D.",
+          "Deniz A.",
+          "Ece B.",
+          "Emre S.",
+          "Mert Y.",
+          "Selin T."
+        ],
+        "buyingGroups": [
+          "KIDS BOY",
+          "KIDS GIRL",
+          "MEN",
+          "TEEN",
+          "WOMEN"
+        ],
+        "licenses": [
+          "BARBIE",
+          "DISNEY",
+          "FCB",
+          "HARRY POTTER",
+          "LOONEY TUNES",
+          "MARVEL",
+          "NASA",
+          "POKEMON",
+          "STAR WARS"
+        ],
+        "licensors": [
+          "BARBIE",
+          "DISNEY",
+          "FCB",
+          "HARRY POTTER",
+          "LOONEY TUNES",
+          "MARVEL",
+          "NASA",
+          "POKEMON",
+          "STAR WARS"
+        ],
+        "dtrTypes": [
+          "NON-DTR"
+        ],
+        "lines": [
+          "Kids Boy Knit",
+          "Kids Girl Knit",
+          "Men Licence",
+          "Teen Knit",
+          "Women Licence"
+        ],
+        "fabricCategories": [
+          "Örme"
+        ],
+        "fabricSupplierCountries": [
+          "Türkiye"
+        ],
+        "fabricSuppliers": [
+          "DEMO KUMAŞ A.Ş."
+        ],
+        "fabricTypes": [
+          "İki İplik",
+          "Ribana",
+          "Süprem",
+          "Triko"
+        ],
+        "yarnCounts": [
+          "2/28",
+          "20/1",
+          "24/1",
+          "30/1"
+        ],
+        "fabricWeights": [
+          "180",
+          "220",
+          "280",
+          "320"
+        ],
+        "fabricBlends": [
+          "%50 YÜN %50 AKRİLİK",
+          "%80 PAMUK %20 POLYESTER",
+          "%100 PAMUK"
+        ],
+        "inStoreMonths": [
+          "2026-10",
+          "2026-11",
+          "2026-12",
+          "2027-01",
+          "2027-02",
+          "2027-03",
+          "2027-04",
+          "2027-05"
+        ],
+        "opdMonths": [
+          "2026-04",
+          "2026-05",
+          "2026-06",
+          "2026-07",
+          "2026-08",
+          "2026-09",
+          "2026-10",
+          "2026-11",
+          "2026-12"
+        ],
+        "retailDateMonths": [
+          "2026-10",
+          "2026-11",
+          "2026-12",
+          "2027-01",
+          "2027-02",
+          "2027-03",
+          "2027-04"
+        ]
+      }
+    },
+    "refreshWarnings": [
+      "ASAS Excel pivot tabloları yenilenemedi; veri sunucudan güncellenmedi, \"ASAS - Demo.xlsx\" dosyasının son kaydedilmiş hali kullanıldı. ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.",
+      "Antrepo Excel (Antrepo - Demo.xlsx): 12.726 ASAS satırı Sipariş Kod + Model Adı/Ürün Ad + Renk Kod ile birebir eşleşti.",
+      "Antrepo (EXCEL): 12726 IAS satırında İthalat Dosya No boş geldi. Fact satırları yine ayrı parsiyel olarak korunmuştur; kaynak veri kalitesi için dosya numarasını kontrol edin.",
+      "Antrepo Excel pivot tabloları yenilenemedi; veri sunucudan güncellenmedi, \"Antrepo - Demo.xlsx\" dosyasının son kaydedilmiş hali kullanıldı. Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+    ],
+    "refreshWarningDetails": [],
+    "modelRefresh": {
+      "at": "2026-11-08T13:21:11.226Z",
+      "antrepoSourceMode": "excel",
+      "antrepoLiveAt": null,
+      "antrepoFallback": null,
+      "dashboard": null,
+      "asasSourceMode": "excel",
+      "lflSourceMode": "excel",
+      "scopes": [],
+      "appliedHorizons": {},
+      "connections": [],
+      "queryMetrics": {
+        "actualRequests": 0,
+        "reusedRequests": 0,
+        "retained": 0
+      },
+      "sourceGenerationId": "2026-11-08T13:21:11.226Z",
+      "moduleProjectionTargets": [
+        "cp",
+        "orders",
+        "backlog",
+        "lfl",
+        "priceanalysis"
+      ]
+    },
+    "lastRefreshResult": {
+      "at": "2026-11-08T13:21:13.559Z",
+      "targets": [
+        "cp",
+        "orders",
+        "backlog",
+        "lfl",
+        "priceanalysis"
+      ],
+      "skippedTargets": [],
+      "cpCoverage": null,
+      "hasChanges": true,
+      "totalChanges": 42726,
+      "asasChangeCount": 30000,
+      "antrepoChangeCount": 12726,
+      "newlyAppeared": 30000,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "historyItemId": null,
+      "notes": [
+        {
+          "source": "ASAS",
+          "ocode": "4100000",
+          "modelName": "DISNEY Classic Pijama",
+          "colour": "EKRU",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 4100"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100001",
+          "modelName": "DISNEY Glitter Pijama",
+          "colour": "BORDO",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 0"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100002",
+          "modelName": "HARRY Crew Kazak",
+          "colour": "EKRU",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 5100"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100003",
+          "modelName": "BARBIE Glitter Kazak",
+          "colour": "BORDO",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 3600"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100004",
+          "modelName": "DISNEY Crew T-shirt",
+          "colour": "HAKI",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 5000"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100005",
+          "modelName": "FCB Crew Pijama",
+          "colour": "HAKI",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 4900"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100006",
+          "modelName": "BARBIE Logo Pijama",
+          "colour": "GRI MELANJ",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 2500"
+        },
+        {
+          "source": "ASAS",
+          "ocode": "4100007",
+          "modelName": "LOONEY Varsity Hirka",
+          "colour": "MAVI",
+          "changeType": "Yeni görünen",
+          "detail": "Kalan: 2800"
+        }
+      ]
+    }
+  },
+  "sourceRevisionKey": "2cc308f66e057e86b79721bb33ceef6e8995fbe43afac348e1a2d040924a780c",
+  "sourceProjectionKeys": {
+    "cp": "1ad804531e8cc02ecc7dfa24a9bf6e7c6a9210d9db68f769036b158c371420a0",
+    "overview": "1ad804531e8cc02ecc7dfa24a9bf6e7c6a9210d9db68f769036b158c371420a0",
+    "orders": "1ad804531e8cc02ecc7dfa24a9bf6e7c6a9210d9db68f769036b158c371420a0",
+    "order-summary": "1ad804531e8cc02ecc7dfa24a9bf6e7c6a9210d9db68f769036b158c371420a0",
+    "collection-catalog": "666f4f4741d8971d59c98db176fa3bb0b3aa3ffda510dcaa9ac9d023069d4452",
+    "backlog": "1ad804531e8cc02ecc7dfa24a9bf6e7c6a9210d9db68f769036b158c371420a0"
+  },
+  "moduleInputKeys": {
+    "cp": "69b9af4c29f4f6a163aeeacafc2f314bde1a68afcf68917b0d73c51bb4322263",
+    "overview": "69b9af4c29f4f6a163aeeacafc2f314bde1a68afcf68917b0d73c51bb4322263",
+    "orders": "69b9af4c29f4f6a163aeeacafc2f314bde1a68afcf68917b0d73c51bb4322263",
+    "order-summary": "69b9af4c29f4f6a163aeeacafc2f314bde1a68afcf68917b0d73c51bb4322263",
+    "collection-catalog": "c286a530f64abaea7ba755189ab1044cca8fdcc259605a0dd90aef831bc7a261"
+  },
+  "backlogInputKey": "69b9af4c29f4f6a163aeeacafc2f314bde1a68afcf68917b0d73c51bb4322263"
+}

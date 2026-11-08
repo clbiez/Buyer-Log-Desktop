@@ -1,0 +1,12 @@
+{
+  "phase": "whole-task",
+  "requiredMemoryBytes": 9663676416,
+  "availableMemoryBytes": 16623198208,
+  "memoryLimitBytes": "17179869184",
+  "memoryCurrentBytes": 556670976,
+  "availableInodes": 2093424,
+  "requiredInodes": 20000,
+  "cpuQuota": "400000 100000",
+  "estimate": "9 GiB sequential peak: server 2 GiB, renderer 4 GiB, image/encoded/export/trace 2 GiB, reserve 1 GiB; no workload reductions",
+  "sufficient": true
+}

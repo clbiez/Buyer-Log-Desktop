@@ -1,0 +1,12 @@
+{
+  "phase": "whole-fixed-cohort-before-any-app",
+  "requiredMemoryBytes": 9663676416,
+  "availableMemoryBytes": 15178567680,
+  "memoryLimitBytes": "17179869184",
+  "memoryCurrentBytes": 2001301504,
+  "availableInodes": 2092069,
+  "requiredInodes": 20000,
+  "cpuQuota": "400000 100000",
+  "estimate": "9 GiB sequential peak: server 2 GiB, renderer 4 GiB, image/encoded/export/trace 2 GiB, reserve 1 GiB; no workload reductions",
+  "sufficient": true
+}
