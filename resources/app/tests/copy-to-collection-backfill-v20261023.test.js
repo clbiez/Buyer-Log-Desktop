@@ -4,8 +4,10 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const {extractFunction}=require('./helpers/app-main-functions');
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
+const FULL_GATE_SOURCE=['ordersProjectionIsThin','ordersFullActionError','ensureOrdersFullForAction'].map(name=>extractFunction(APP,name)).join('\n');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const UI=fs.readFileSync(path.join(ROOT,'public','table-toolbar-action-cleanup.js'),'utf8');
 function segment(start,end){
@@ -106,7 +108,7 @@ test('source identity distinguishes colors and models sharing one order code',()
 async function transferAction(selected,existing=[],options={}){
   const events={},toasts=[];
   const scope={
-    appLang:'en',document:{body:{dataset:{activeTab:'orders'}},
+    appLang:'en',state:{orders:{rows:selected}},document:{body:{dataset:{activeTab:'orders'}},
       getElementById:()=>({addEventListener:(type,listener)=>{events[type]=listener;}})},
     window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}},BLCollectionModelGroups:options.groups?require('../public/collection-model-groups'):undefined},
     kolNormalizeModelGroups:rows=>require('../public/collection-model-groups').normalizeRows(rows).rows,
@@ -132,9 +134,11 @@ async function transferAction(selected,existing=[],options={}){
     showToast:message=>toasts.push(message),
   };
   const engine=require('../public/collection-order-backfill');
+  if(options.sourceDenied)scope.window.BLCanAccessArea=()=>false;
   scope.cpKolBackfillPlan=rows=>engine.plan(rows.map(row=>({key:scope.cpKolSourceIdentity(row,true),row:{...row,id:null,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']}})),scope.kolRows,scope.kolRows.map(row=>scope.cpKolSourceIdentity(row)));
-  vm.runInNewContext(segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
+  vm.runInNewContext('const _ordersFullViewControllers=new WeakMap();\n'+FULL_GATE_SOURCE+'\n'+segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
   await events.click({currentTarget:{}});
+  assert.doesNotMatch(toasts.join(' '),/not defined|not a function/,'fixture must provide the real full-data gate dependencies');
   return {scope,toasts};
 }
 test('copy inserts all models of one order but skips only exact imported duplicates',async()=>{
@@ -156,6 +160,13 @@ test('copy does not overwrite existing model or create changes in view-only work
   assert.equal(denied.scope.kolRows.length,0);
   const remote=await transferAction([a],[],{own:false});
   assert.equal(remote.scope.kolRows.length,0);
+});
+test('Orders permission loss blocks Collection backfill before IDs, edits and undo are allocated',async()=>{
+  const {scope,toasts}=await transferAction([{'Order Code':'A','PLM ID':'100','C.Code':'RED'}],[],{sourceDenied:true});
+  assert.equal(scope.kolRows.length,0);
+  assert.equal(scope.kolNextId,99);
+  assert.equal(scope.kolUndoStack.length,1);
+  assert.match(toasts.join(' '),/Access to Orders is no longer available/);
 });
 test('failed local save rolls back new rows, IDs and the complete undo/redo history',async()=>{
   const source={'Order Code':'B','PLM ID':'123','C.Code':'BLACK'};

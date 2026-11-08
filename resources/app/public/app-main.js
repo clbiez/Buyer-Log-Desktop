@@ -30411,8 +30411,9 @@ window.BLPriceSupplierAnalysisBridge={
       return {source:selected,scope,priceType:chosen,priceTypes,observations,rawCount:rows.length,version:`horizon:${data.loadedAt||''}:${rows.length}`};
     }
     if(selected==='cp')await ensureCpLoaded();
-    else if(selected==='orders'){await ensureOrdersLoaded();await ensureOrdersFullForAction('price-analysis.rows');}
+    else if(selected==='orders')await ensureOrdersLoaded();
     else await ensureCollectionCatalogLoaded();
+    if(selected==='orders')await ensureOrdersFullForAction('price-analysis.rows');
     let rows=[];
     if(selected==='cp')rows=scope==='filtered'?filteredCP():((state.cp&&state.cp.rows)||[]);
     else if(selected==='orders')rows=scope==='filtered'?filteredOrders():((state.orders&&state.orders.rows)||[]);

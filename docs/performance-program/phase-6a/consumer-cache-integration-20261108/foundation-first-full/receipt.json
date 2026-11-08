@@ -1,0 +1,22 @@
+{
+  "source": "9a294b09f40c542b869e5996296393b6978e9f16",
+  "scope": "consumer/schema/ready-cache foundation; defaultthin/HTTP-worker/public adoption not complete",
+  "startedAt": "2026-11-08T04:11:11.196200+00:00",
+  "commands": [
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "tmpdir": "/tmp/bl6a-foundation-4oxv4lm2",
+      "startedAt": "2026-11-08T04:11:11.196554+00:00",
+      "exitCode": 1,
+      "finishedAt": "2026-11-08T04:12:28.452959+00:00",
+      "rawSha256": "d4adc3981089551cb17b47a81027a859e4eeee29768733f9fa5c3832743eee77"
+    }
+  ],
+  "status": "failed",
+  "appUnchangedAfterRun": true,
+  "finishedAt": "2026-11-08T04:12:28.523220+00:00"
+}

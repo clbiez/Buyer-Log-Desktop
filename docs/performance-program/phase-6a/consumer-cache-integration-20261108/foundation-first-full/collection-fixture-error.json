@@ -1,0 +1,8 @@
+{
+  "scope": "unchanged actual failing fixture function extracted, actual production handler; diagnostic only",
+  "toasts": [
+    "ensureOrdersFullForAction is not defined"
+  ],
+  "rows": 0,
+  "nextId": 99
+}

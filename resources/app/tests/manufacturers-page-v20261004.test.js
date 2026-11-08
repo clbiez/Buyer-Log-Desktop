@@ -11,6 +11,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
+const { extractFunction } = require('./helpers/app-main-functions');
 
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const INDEX = read('public/index.html');
@@ -40,10 +42,40 @@ test('page access follows the Orders area whose data it reads', () => {
 });
 
 test('analysis reads the shared Orders projection through one bridge', () => {
-  assert.match(APP, /window\.BLManufacturerDataBridge=\{\s*async rows\(\)\{await ensureOrdersLoaded\(\);return \(state\.orders&&state\.orders\.rows\)\|\|\[\];\}/);
+  assert.match(APP, /window\.BLManufacturerDataBridge=\{\s*async rows\(\)\{await ensureOrdersLoaded\(\);await ensureOrdersFullForAction\('manufacturers\.rows'\);return \(state\.orders&&state\.orders\.rows\)\|\|\[\];\}/);
   assert.match(PAGE, /window\.BLManufacturerDataBridge/);
   assert.match(PAGE, /E\.buildCards\(S\.rows, S\.directory\.records/);
   assert.doesNotMatch(PAGE, /<section class=|<\/section>/, 'global section{display:none} tuzağı');
+});
+
+test('shared bridge waits for the real full-data gate and returns its exact published Orders array', async () => {
+  const beforeRows = [{ _id: 99, 'Order Code': 'DUPLICATE' }];
+  const completeRows = [{ _id: 99, 'Order Code': 'DUPLICATE', __CPX_HIDDEN: false }];
+  const state = { orders: { projectionProfile: 'thin', rows: beforeRows } };
+  const controllers = new WeakMap();
+  let release, loads = 0, settled = false;
+  const gate = new Promise(resolve => { release = resolve; });
+  controllers.set(state.orders, { ensure: async () => {
+    await gate;
+    state.orders = { rows: completeRows };
+    return { rows: completeRows, assertCurrent() { assert.equal(state.orders.rows, completeRows); } };
+  } });
+  const window = {};
+  const context = vm.createContext({ state, window, appLang: 'en', _ordersFullViewControllers: controllers,
+    ensureOrdersLoaded: async () => { loads++; }, fetch() { throw Error('A second Orders source must not be fetched'); } });
+  const start = APP.indexOf('window.BLManufacturerDataBridge={');
+  const end = APP.indexOf('\n};', start) + 4;
+  assert.ok(start >= 0 && end > start);
+  vm.runInContext(['ordersProjectionIsThin', 'ordersFullActionError', 'ensureOrdersFullForAction']
+    .map(name => extractFunction(APP, name)).join('\n') + '\n' + APP.slice(start, end), context);
+  const pending = window.BLManufacturerDataBridge.rows().then(rows => { settled = true; return rows; });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(loads, 1);
+  assert.equal(settled, false);
+  assert.equal(state.orders.rows, beforeRows);
+  release();
+  assert.equal(await pending, completeRows);
+  assert.equal(Object.hasOwn(beforeRows[0], '__CPX_HIDDEN'), false);
 });
 
 test('cards are built from the shared directory, never a second list', () => {
