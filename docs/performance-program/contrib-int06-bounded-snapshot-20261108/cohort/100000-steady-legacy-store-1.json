@@ -1,0 +1,73 @@
+{
+  "stage": "isolated-checkpoint-replay",
+  "productionGainAccepted": false,
+  "parity": true,
+  "config": {
+    "arm": "legacy-store",
+    "orders": 100000,
+    "scenario": "steady",
+    "batchSize": 250,
+    "output": "/workspace/Buyer-Log-Desktop/docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-1.json"
+  },
+  "traceBatches": 400,
+  "transport": {
+    "queries": 400,
+    "splitRejections": 0,
+    "transientFailures": 0,
+    "terminalFailures": 0
+  },
+  "traceSha256": "27d5d251218d188018124d7a2117875fd7af721810143a075c16aee02b39bfef",
+  "fixtureSha256": "ec444e07a3ced97eac68cd2aa63821ecff4ef7050da13288403f4f327adfac56",
+  "outputSha256": "98264b7df975ab65f90badaa6b2347f2a614ae95731da5ced9ed68bacd2ef34f",
+  "finalManifestSha256": "6976f5eb913623f9ad066c91906fc42e65fcf6c047f36882d5e83f32fd34da88",
+  "finalRowsSha256": "4eb05c2154a465f4c81a60b7be8c81274a7024898e7b591e6c6e259740eafab6",
+  "finalOrderStatesSha256": "4ae90273ad355c0e7c76c944b98d1d89cb85a9e65686a37078ca8edd7d93d76f",
+  "metrics": {
+    "checkpointBytes": 6777574427,
+    "payloadWriteCalls": 400,
+    "checkpointWallMs": 55049.47712199993,
+    "checkpointCpuMs": 55570.34099999999,
+    "peakRssBytes": 576233472,
+    "committedBatches": 400,
+    "totalReplayWallMs": 56826.632175,
+    "totalReplayCpuMs": 57428.867,
+    "boundaryMax": {
+      "rss": 505290752,
+      "heapUsed": 358731680,
+      "heapTotal": 498663424,
+      "external": 2282152,
+      "arrayBuffers": 143627
+    },
+    "boundaryMemory": {
+      "rss": 372932608,
+      "heapTotal": 362049536,
+      "heapUsed": 213170776,
+      "external": 2279627,
+      "arrayBuffers": 143627
+    },
+    "descriptorWriteCalls": 0
+  },
+  "source": {
+    "revision": "4e66c955e51e01ac84a0e799d5e1c491008f6393",
+    "journalSha256": "b534cffb9a4ccd7e6cb312c36494ddfaef087ab86ba953cbc76920fdad8d3180",
+    "productionSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+    "harnessSha256": "730e18141ef064b632af30de366f191b05da5debaae84c8ddb3479c593e79aa1",
+    "metricsSha256": "004a4f51ccd2ac6db2604e7f6b332a52320816b0a870edbaa18215a0c4fb6268",
+    "inheritedHarnessSha256": "523265979266ee9625ca4478a13afd9f99d53a0eb1e51664b2773fdf21a544df"
+  },
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "limitations": [
+    "Synthetic fixture/mock transport; no real Power BI, credentials, Windows, Electron or SMB.",
+    "Checkpoint-only trace replay. No total refresh timing and no production integration gain.",
+    "Legacy input counters/compatibility sets prepared incrementally outside timer; current production full state rescans/normalization excluded.",
+    "Legacy copy/compatibility-list/store path versus journal initialization/commit/final compaction, not durability-equivalent: legacy has no fsync.",
+    "Logical successful payload bytes (descriptor-aware observer); not physical I/O, metadata or device writes.",
+    "Total replay timers include fixture/trace preparation and checkpoints; exclude load/oracle/assertions. Not total connector refresh.",
+    "External and heap maxima sampled after checkpoint calls, not continuous peaks; synchronous internal transients may be missed.",
+    "OS process-lifetime maxRSS before load/oracle, including trace generation; no forced GC/cold-cache claim."
+  ]
+}

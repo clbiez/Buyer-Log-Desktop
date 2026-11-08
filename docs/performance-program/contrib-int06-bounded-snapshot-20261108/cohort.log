@@ -1,0 +1,6 @@
+100000-steady-legacy-store-1: 400 batches, 55049.5 ms
+100000-steady-journal-1: 400 batches, 5658.6 ms
+100000-steady-journal-2: 400 batches, 5864.3 ms
+100000-steady-legacy-store-2: 400 batches, 56352.3 ms
+100000-steady-legacy-store-3: 400 batches, 57275.1 ms
+100000-steady-journal-3: 400 batches, 5658.8 ms

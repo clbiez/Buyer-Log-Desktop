@@ -1,0 +1,385 @@
+TAP version 13
+# Subtest: async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+ok 1 - async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+  ---
+  duration_ms: 21.050509
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+ok 2 - async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 8.360152
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+ok 3 - async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 5.289899
+  type: 'test'
+  ...
+# Subtest: async prior-intent conflict preserves the external target and quarantines recovery evidence
+ok 4 - async prior-intent conflict preserves the external target and quarantines recovery evidence
+  ---
+  duration_ms: 7.747275
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder
+ok 5 - i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder
+  ---
+  duration_ms: 45.779402
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok
+ok 6 - i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok
+  ---
+  duration_ms: 986.092536
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli)
+ok 7 - i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli)
+  ---
+  duration_ms: 1006.582749
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez
+ok 8 - i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez
+  ---
+  duration_ms: 0.350901
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde
+ok 9 - i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde
+  ---
+  duration_ms: 0.46284
+  type: 'test'
+  ...
+# Subtest: INT-06 bounded snapshot is byte-identical to v2 pack, including Unicode, escapes and every terminal state
+ok 10 - INT-06 bounded snapshot is byte-identical to v2 pack, including Unicode, escapes and every terminal state
+  ---
+  duration_ms: 42.753997
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot never serializes a full envelope or writes a full UTF-8 envelope buffer
+ok 11 - INT-06 snapshot never serializes a full envelope or writes a full UTF-8 envelope buffer
+  ---
+  duration_ms: 151.354059
+  type: 'test'
+  ...
+# Subtest: INT-06 payload surrogate pair across chunk boundary preserves exact v2 UTF-8 bytes
+ok 12 - INT-06 payload surrogate pair across chunk boundary preserves exact v2 UTF-8 bytes
+  ---
+  duration_ms: 8.436336
+  type: 'test'
+  ...
+# Subtest: INT-06 bounded snapshot retries short writes before fsync and ACK
+ok 13 - INT-06 bounded snapshot retries short writes before fsync and ACK
+  ---
+  duration_ms: 5.149186
+  type: 'test'
+  ...
+# Subtest: INT-06 mid-snapshot EIO: no ACK, no replacement, poison then disk-only replay
+ok 14 - INT-06 mid-snapshot EIO: no ACK, no replacement, poison then disk-only replay
+  ---
+  duration_ms: 6.387118
+  type: 'test'
+  ...
+# Subtest: INT-06 mid-snapshot zero: no ACK, no replacement, poison then disk-only replay
+ok 15 - INT-06 mid-snapshot zero: no ACK, no replacement, poison then disk-only replay
+  ---
+  duration_ms: 7.366479
+  type: 'test'
+  ...
+# Subtest: INT-06 real SIGKILL in a partially written snapshot body preserves manifest, receipts and journal
+ok 16 - INT-06 real SIGKILL in a partially written snapshot body preserves manifest, receipts and journal
+  ---
+  duration_ms: 63.164449
+  type: 'test'
+  ...
+# TAP version 13
+# \# Subtest: INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+# ok 1 - INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+#   ---
+#   duration_ms: 4.066209
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+# ok 2 - INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+#   ---
+#   duration_ms: 0.946361
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark transport uses connector attempt metadata without retaining query history
+# ok 3 - INT-06 benchmark transport uses connector attempt metadata without retaining query history
+#   ---
+#   duration_ms: 0.55571
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+# ok 4 - INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+#   ---
+#   duration_ms: 136.59444
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 failed benchmark preserves structured failure evidence
+# ok 5 - INT-06 failed benchmark preserves structured failure evidence
+#   ---
+#   duration_ms: 40.332797
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 paired preparation reports enforce source/fixture parity and use three medians
+# ok 6 - INT-06 paired preparation reports enforce source/fixture parity and use three medians
+#   ---
+#   duration_ms: 4.580877
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+# ok 7 - INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+#   ---
+#   duration_ms: 36.753113
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+# ok 8 - INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+#   ---
+#   duration_ms: 91.473124
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+# ok 9 - INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+#   ---
+#   duration_ms: 893.161077
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 repeated batch/state transitions never double count terminal orders
+# ok 10 - INT-06 repeated batch/state transitions never double count terminal orders
+#   ---
+#   duration_ms: 8.439441
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+# ok 11 - INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 677.907858
+#   type: 'test'
+#   ...
+# \# steady: SIGKILL/resume checked at all 3 committed boundaries
+# \# Subtest: INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+# ok 12 - INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 271.001025
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+# ok 13 - INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 1297.224911
+#   type: 'test'
+#   ...
+# \# split-retry: SIGKILL/resume checked at all 7 committed boundaries
+# \# Subtest: INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+# ok 14 - INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 451.979429
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation before query and between split batches persists then resumes identically
+# ok 15 - INT-06 cancellation before query and between split batches persists then resumes identically
+#   ---
+#   duration_ms: 500.725984
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation inside query/retry never marks unfinished orders terminal
+# ok 16 - INT-06 cancellation inside query/retry never marks unfinished orders terminal
+#   ---
+#   duration_ms: 248.327726
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+# ok 17 - INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+#   ---
+#   duration_ms: 61.529023
+#   type: 'test'
+#   ...
+# 1..17
+# \# tests 17
+# \# suites 0
+# \# pass 17
+# \# fail 0
+# \# cancelled 0
+# \# skipped 0
+# \# todo 0
+# \# duration_ms 4743.636067
+# Subtest: INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+ok 17 - INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+  ---
+  duration_ms: 4779.202655
+  type: 'test'
+  ...
+# Subtest: INT-06 checkpoint-only replay preserves the \#890 oracle and reports separate checkpoint costs
+ok 18 - INT-06 checkpoint-only replay preserves the \#890 oracle and reports separate checkpoint costs
+  ---
+  duration_ms: 86.665769
+  type: 'test'
+  ...
+# Subtest: INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 19 - INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 757.014798
+  type: 'test'
+  ...
+# Subtest: INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 20 - INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 1472.071208
+  type: 'test'
+  ...
+# Subtest: INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+ok 21 - INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+  ---
+  duration_ms: 1520.448729
+  type: 'test'
+  ...
+# SIGKILL/resume journal:written: complete oracle parity
+# SIGKILL/resume journal:durable: complete oracle parity
+# SIGKILL/resume commit:applied: complete oracle parity
+# SIGKILL/resume snapshot:written: complete oracle parity
+# SIGKILL/resume snapshot:synced: complete oracle parity
+# SIGKILL/resume snapshot:renamed: complete oracle parity
+# SIGKILL/resume snapshot:durable: complete oracle parity
+# SIGKILL/resume retirement:written: complete oracle parity
+# SIGKILL/resume retirement:synced: complete oracle parity
+# SIGKILL/resume retirement:renamed: complete oracle parity
+# SIGKILL/resume retirement:durable: complete oracle parity
+# Subtest: INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+ok 22 - INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+  ---
+  duration_ms: 332.173221
+  type: 'test'
+  ...
+# Subtest: INT-06 incremental counters, transitions, replay and owned delta copies
+ok 23 - INT-06 incremental counters, transitions, replay and owned delta copies
+  ---
+  duration_ms: 7.571879
+  type: 'test'
+  ...
+# Subtest: INT-06 partial tail is truncated before another append; complete corruption fails closed
+ok 24 - INT-06 partial tail is truncated before another append; complete corruption fails closed
+  ---
+  duration_ms: 2.004681
+  type: 'test'
+  ...
+# Subtest: INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+ok 25 - INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+  ---
+  duration_ms: 1.40254
+  type: 'test'
+  ...
+# Subtest: INT-06 periodic snapshot only, no growing graph serialization per commit
+ok 26 - INT-06 periodic snapshot only, no growing graph serialization per commit
+  ---
+  duration_ms: 1.294908
+  type: 'test'
+  ...
+# Subtest: INT-06 unknown orders/states and invalid sequence cannot mutate disk
+ok 27 - INT-06 unknown orders/states and invalid sequence cannot mutate disk
+  ---
+  duration_ms: 0.988885
+  type: 'test'
+  ...
+# Subtest: INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+ok 28 - INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+  ---
+  duration_ms: 2.293517
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot and retirement I/O errors preserve all durable batches
+ok 29 - INT-06 snapshot and retirement I/O errors preserve all durable batches
+  ---
+  duration_ms: 5.179541
+  type: 'test'
+  ...
+# Subtest: INT-06 growing prior rows and states are never visited by the commit hot path
+ok 30 - INT-06 growing prior rows and states are never visited by the commit hot path
+  ---
+  duration_ms: 10.564774
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshots serialize owned state without parsing a second full graph; public copies stay isolated
+ok 31 - INT-06 snapshots serialize owned state without parsing a second full graph; public copies stay isolated
+  ---
+  duration_ms: 30.147914
+  type: 'test'
+  ...
+# node:fs:1411
+#   const result = binding.mkdir(
+#                          ^
+# Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+#     at Object.mkdirSync (node:fs:1411:26)
+#     at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+#     at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+#     at Module._compile (node:internal/modules/cjs/loader:1872:14)
+#     at Object..js (node:internal/modules/cjs/loader:2003:10)
+#     at Module.load (node:internal/modules/cjs/loader:1594:32)
+#     at Module._load (node:internal/modules/cjs/loader:1396:12)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+#     at Module.require (node:internal/modules/cjs/loader:1617:12)
+#     at require (node:internal/modules/helpers:153:16) {
+#   errno: -2,
+#   code: 'ENOENT',
+#   syscall: 'mkdir',
+#   path: '/home/agent/.buyer-log/write-recovery'
+# }
+# Node.js v24.19.0
+# Subtest: resources/app/tests/power-bi-import-dashboard.test.js
+not ok 8 - resources/app/tests/power-bi-import-dashboard.test.js
+  ---
+  duration_ms: 45.789504
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/power-bi-import-dashboard.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# node:fs:1411
+#   const result = binding.mkdir(
+#                          ^
+# Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+#     at Object.mkdirSync (node:fs:1411:26)
+#     at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+#     at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+#     at Module._compile (node:internal/modules/cjs/loader:1872:14)
+#     at Object..js (node:internal/modules/cjs/loader:2003:10)
+#     at Module.load (node:internal/modules/cjs/loader:1594:32)
+#     at Module._load (node:internal/modules/cjs/loader:1396:12)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+#     at Module.require (node:internal/modules/cjs/loader:1617:12)
+#     at require (node:internal/modules/helpers:153:16) {
+#   errno: -2,
+#   code: 'ENOENT',
+#   syscall: 'mkdir',
+#   path: '/home/agent/.buyer-log/write-recovery'
+# }
+# Node.js v24.19.0
+# Subtest: resources/app/tests/powerbi-dashboard-schema-wait-v912.test.js
+not ok 9 - resources/app/tests/powerbi-dashboard-schema-wait-v912.test.js
+  ---
+  duration_ms: 44.352952
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/powerbi-dashboard-schema-wait-v912.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 31
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11804.486723

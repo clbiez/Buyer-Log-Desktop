@@ -1,0 +1,546 @@
+{
+  "delivery": "392cc5574464690423e6e9cf6f9031549bae6188",
+  "mainAtStart": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "files": [
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/README.md",
+      "sha256": "d5c1632c3871999c34e0135f6eae10c21a27f8c03858d2b343088d69dec449d8"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/adapter-contract.md",
+      "sha256": "1d71b51a6cc1f1ba36e9c366723b9b5f0f03b5d60587c410926761a0165704d1"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/environment.json",
+      "sha256": "edf84316b5cc649ca0c98bcecfe6bd78b5071c2ac5c8a094b32f94bda1b3bbe5"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/evidence-manifest.json",
+      "sha256": "615152993515e6bce78543c9a429350d78ad57dcb5b6128b3384686ce28196be"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/file-list.txt",
+      "sha256": "13f8839001d196116f0d93527236cb021c89b062b96db823c84d913d0b39927e"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/green-expanded.tap",
+      "sha256": "69b3a3beea5560a9299a85d8d5e20caf386ae6c021cc4755b9119b6dfa825714"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/green-initial.tap.gz",
+      "sha256": "63ac85e185cfdc6205a2dc836297eb39e0e9def15dc05759a61b8d03dba69403"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/green-unit.tap",
+      "sha256": "5a9438a3e4e7ccf8555a81970cbc2a55bb0f1b00bafff394305154917c4ff3ba"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/green-unsandboxed.tap",
+      "sha256": "b72c0bef14c0cdfd7ba802595402cb32b02ba24fc9413df30fa8f4341b02b078"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/i18n.log",
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measure-steady.sh",
+      "sha256": "dd1b1b1f7da08136b9d0a84f88c3691d0da45e0419b7f34c351a70ba7fa63e57"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-1.json",
+      "sha256": "222752be04829a1db48d3f4da1f4f429b68fa0dd429683da7b57c5eeaa603d0d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-2.json",
+      "sha256": "7031871bd57348eb76c603d35317b9b1cee1524438beb0afc3dbceefac621651"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-3.json",
+      "sha256": "ad70929cb512dd9973d4d001d91946935d2cbc72559ad7ea8b4b75f0b77fc5f9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-journal-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-1.json",
+      "sha256": "8f0aeb12546782b836924db834b73faf1cdff470eb471857c6d607fc2d9c65be"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-2.json",
+      "sha256": "1e2569f8abbcf18c22a7f6acdc29524b5b62fa94a34c69dec2e131486f30fc7f"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-3.json",
+      "sha256": "bf0765340e647fc66fe53f6f2a273ac4dc25c6c4241fa170de27848b0d41ca15"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-legacy-store-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/100000-steady-summary.json",
+      "sha256": "1e6a23b6a5d01fb6ed3dee3a2507443b26d68fb70025352d41c2680386b5eabe"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-1.json",
+      "sha256": "7f90ea889f5ecb62f24dd13173f7f7ec74cf6874bdcd1091727e411bc30a7a79"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-2.json",
+      "sha256": "ebdc9aef26ea09401610f44784ab8e22e884348d0bf98fb367563933981b21a6"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-3.json",
+      "sha256": "4d56594e2545bcabd9310739049585ad67d9d1c2335f397d9d319fc86e5f6d6d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-journal-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-1.json",
+      "sha256": "8456549f0fcf44c3a21254df9cc2cdc7de9fcf4b3310c780595a5245375f217d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-2.json",
+      "sha256": "20be3fbef3877d797750630ec78589e9c25120bcb24dc421cb31e67c773897e5"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-3.json",
+      "sha256": "a8e4ceac252d50ef406a9a24e5211496f6bc6a28257fe6b0f64370343cdfa654"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-legacy-store-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/measurements/30000-steady-summary.json",
+      "sha256": "95ce1fdf3567124cde372bfa06fa0f71439340f89bd1ac81b40b03a83df5d1a0"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/native.tap",
+      "sha256": "45ee51387b75184da5ae310d6488dee07801ef3fe9fd019d625fe2bf208a90ae"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-1.json",
+      "sha256": "b4aeb710765031ca7b5f8e9277bee021b3e3ec183613e09663f3f5494cf154b5"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-2.json",
+      "sha256": "4429b5a39cce4a904e4a6b7b19a10a1c150f9045ef3e2d8b805c4a94f206a31f"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-3.json",
+      "sha256": "1a9014e00a76374715520b6c44f7719b817210af4f652caa220ffbce0fcc6a29"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-journal-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-1.json",
+      "sha256": "0ee4aaa56f21b166ee667811cdd517866a972147413026ba3be2f54a9ef88e82"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-2.json",
+      "sha256": "a1b614d81f3e18d6b4198c320cd852d77cb535b45a07233120ef287205f54cdb"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-3.json",
+      "sha256": "eccb138f4e5ddfe0671278c84e674f1aa95263ff29f554e8cec81df2d4a20238"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-legacy-store-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-split-retry-summary.json",
+      "sha256": "bfbe4891e6021da87dc2349d98b758671cd769d2058994f1e874617cada21ecb"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-1.json",
+      "sha256": "8ed59c0311f97383b7fcd056b1122f3f3d426ea8850aff226388e4e70e89b023"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-2.json",
+      "sha256": "e351e4fe2687fdaa0d49e157490acee35a0a8b7851dca1fa5c1f16b7d5793bd9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-3.json",
+      "sha256": "d987cca676a34343ac6b9e7602b1e5929ced036e1a74383accdb1146c5df19f6"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-journal-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-1.json",
+      "sha256": "001abbf5ba9a4a4d8b237d601f7a1af26a32c153a048a30b2d0bc27ecaf48b96"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-2.json",
+      "sha256": "44512cf75f792ce9a10e7dea59fcf3e8fcded402a41870d62f2c3621044d50b9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-3.json",
+      "sha256": "9abf7146d403bba471f382c0f737f99da053acfb78c902c4e8cdbc73f4ae64bc"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-legacy-store-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/pilot/3000-steady-summary.json",
+      "sha256": "7cf09fe1e90adf4e9d54949cf6833a1c964475684ffc772b70f67f4b4591c072"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/protected-source-audit.json",
+      "sha256": "451050d0309864cba1beee6d96b8e3e3c6e3f0000fb72a62942bb723cfad531f"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/red.tap",
+      "sha256": "0887f24ce05470c4c619e031c9f180dd7e7f5f55afb6895106f2003694c90710"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/results.md",
+      "sha256": "637e053d48e9d6b195c36b322abc266375c1e3207656add51f4fa8fd643a770f"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/README.md",
+      "sha256": "1d41db4450f49ff45713e675211c73b31c2fbc3c6e4121079ed01c9423265a73"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance-verification.json",
+      "sha256": "85232c25436d7e853814ab339d5677d3b2fbcf5e8ff6126be88e30b0617b8e33"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-1.json",
+      "sha256": "63dd3b7dadd81c7ca58df3788b26c179d11850beefccb31bb7b4518277ca699e"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-2.json",
+      "sha256": "3e9c78b0981f74bc4e34d01ce2d86230c798645f4482db50fa990a8446365bfb"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-3.json",
+      "sha256": "edcfa8563b408571880e0e4a6de7a98af7d84ec13147720ebfc113a2fa4b6402"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-journal-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-1.json",
+      "sha256": "0def86ff1fa32fa995d1ec90a759cadee1775dc1319c94fb35d0a225e6878a11"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-2.json",
+      "sha256": "424b6b944847956a4091af45d344e01aab922538bbdf966e9b527035c865e1e2"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-3.json",
+      "sha256": "f386e0297a56a2d21941929f47b3fd3efe456b034dc8de45bea11d446b5d6621"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-legacy-store-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/acceptance/100000-steady-summary.json",
+      "sha256": "2ce2055585f229c1f868ce424356a009f03774c4de1aab84e9361ee6f99622e1"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/audit.py",
+      "sha256": "2f71b59cb99ca925896a5563050cc85bbec8840a31aaa60ba3621493323d28bc"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/cohort.log",
+      "sha256": "3cff07e3ae8bcc6b1a9356d4ba96ab971475ea97351e1170bdb845c92c9750a4"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostic-summary.json",
+      "sha256": "93fd2085e5a51f1d65b85ecfb2f424c8d74ee8ce6f31ef8301ed8f849e67b1f4"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling-measure.json",
+      "sha256": "577cf2eab6dd0a59126f8566d2aebd65e0227f5248f728ba007750beb2d5b4d7"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling.json",
+      "sha256": "35433c7004da7f9dd976c2b4797030c08ae23b8441b92541d6bbf9d71280dcf2"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling.json.after-final.heap-sampling.json",
+      "sha256": "fe6e30fb2b1207798687c40e284f52c223623e3aa225640a191df8a975b38681"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling.json.before-final.heap-sampling.json",
+      "sha256": "a1ad72174909fb688282c8dd2b6704d98482ca81775f9680b043ff0d7192544a"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling.json.trace.heap-sampling.json",
+      "sha256": "f351b4e6d36d33ccbf52becaa996f98c1bedb81e2771d38ead04c1079535778d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-gc-sampling.log",
+      "sha256": "b9898f54a984894763113b80854d09747b8a5bf4c6161987e80d960ca965227d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-phase-measure.json",
+      "sha256": "38e6af4982b3e79415217643ae49c01e12860362f389bf101a9fa727ddbc19ef"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-phase.json",
+      "sha256": "104b62047bc33bf2e981ae90ebe670a41afb1defdca0444d3859b794e7a18e3b"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/after-phase.log",
+      "sha256": "a835ec59fcafccfdce7a02b70fc38fe9b23beec98d1fd7c6a1b2d4240f2f3359"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling-measure.json",
+      "sha256": "83279542e16c32cf976b77a7f4c23d69ab73cb5d74b0e8576a325bfbeca682df"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling.json",
+      "sha256": "0c7f47791463876712d311701c1af34d27e93814dc026ed2fdfc5e0a2979053a"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling.json.after-final.heap-sampling.json",
+      "sha256": "62b417374c4331aeab08e23b6ecd19eaad6531942bcd85f6892194ffc9de1242"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling.json.before-final.heap-sampling.json",
+      "sha256": "e27f7104fc3519f2dda48676a6e61d3a380d7e4914d31be3fffbbe115b03d3b8"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling.json.trace.heap-sampling.json",
+      "sha256": "2c9ac390243276fe3444edb20bc9931230b3f4e7f90dc2c16eba63a0b4fdf331"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-gc-sampling.log",
+      "sha256": "a86f44ce09b6866150e43bce447992591a6af6a86470c1961fa29678f27f63e8"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-measure.json",
+      "sha256": "a43878d5332d14fa2f9ebdd4854d07805143f90475839f4bd1894544403829f0"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed-measure.json",
+      "sha256": "cd0ab2b74d2f28fc373818f5254d9125764afb117261cb5d071ead5f859ae586"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed.json",
+      "sha256": "aae6fdb27f92b707cb9da4c218b072fdeee1556d8f79840ecd4a93721f2998cf"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed.json.after-final.heap-sampling.json",
+      "sha256": "9d0011bf14414ebedd525ac97c7b1f07ec2fb633446d02eea2d90190631218bb"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed.json.before-final.heap-sampling.json",
+      "sha256": "a1790b2630d3b36c0713b5de19cba1220c2ff7968766e60b5fe9b1afef0eb1b5"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed.json.trace.heap-sampling.json",
+      "sha256": "6833c2855f66f1ad078983dfd328bd1846a272f8906cbd2a231c762e340d960f"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural.json",
+      "sha256": "a1a91d1a26d5f0a5cc3fb93ab84ec307dcba0a608ca860914106fd05c72776ea"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural.json.after-final.heap-sampling.json",
+      "sha256": "25eb82873d64e2cec1eb7b900b2dbe87102db75fd26ff34b4e5b2536f60d8607"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural.json.before-final.heap-sampling.json",
+      "sha256": "32e0e6ee5f1f74502062dcbdc8aebf49a9aa4a55c70c9b7f7aa7150b3705c98d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural.json.trace.heap-sampling.json",
+      "sha256": "f3c5441d4f364e880dd98021ea5764e0a7e170e3b8e7de922db1d0406e1cbac3"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural.log",
+      "sha256": "e87052d5904180cf66b981b03ab77aa1ccb54ffa4e8214732213f7bb4d529460"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-phase-measure.json",
+      "sha256": "1d36295593a1c02756c8c5ac75f3a140c5c41f7b3f6e40cc6527ff6362af1eb1"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-phase.json",
+      "sha256": "1fbb798f78bfb9e90a14f965768300f1917769345c273074f270a50e38f43b3c"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-phase.log",
+      "sha256": "4b9bd999ce3825fee30fb91cc1fe2f25e163731d1374953a90d28d76c4cd390a"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/profile-v1.cjs",
+      "sha256": "c65c7c27d1160265e1af0757a00ac466759c6f8a1c45e41c1df78b7eedef867a"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/evidence-manifest.json",
+      "sha256": "d332baf9df47f630ca780c366fd3ddce37f8608314198cf3044878c87023a9bb"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/file-list.txt",
+      "sha256": "c3dbc85263deac924e7f19863d747d704927fda294d0ecbfa868c8725571e0b6"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/green-unit.tap",
+      "sha256": "9f21e7d552b0dcf7a5a80be99dfb9e8f6ab31d91cbd03b625e91ce57c4a9a5f6"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/i18n.log",
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/native.tap",
+      "sha256": "a252eb2010fcf3f26a1b1c1fc34998f24f403224d403f036c78e8f5d8db94d41"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/preservation-audit.json",
+      "sha256": "9adb4aac44f95332a671fa1197cdb1518f4cb12ae227381a3d9ae7b0ffc743b1"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/red-snapshot-copy.tap",
+      "sha256": "cd8e872a77d772f64c770a442e307d0121d6f610f7bf7a8266ab761b1fec3040"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/summarize.py",
+      "sha256": "f30c29468dd472d840754946f223da9f9d1e824ac0c13be0ba7816ed21852a90"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/validate.sh",
+      "sha256": "87e7ad1dcae24ff08d26e213641df8e618d10ec0347b19d3500afd75a7cbfb91"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/validate.sh",
+      "sha256": "68d97e43c14e7ea60d88bda1846d0ebfb32ef407e53eb5dbd93ede08f487c160"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/scripts/benchmark-powerbi-checkpoint-cohort.js.source",
+      "sha256": "e295aee98e9fedb6f671595944386f0c1ddd14d06c87761fd420138ac7038e54"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/scripts/benchmark-powerbi-checkpoint.js.source",
+      "sha256": "a87da8cf38c426dd382ebaa9c83dda972b7824e9f0b5fa5596f2272afbce28b6"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/scripts/lib/powerbi-checkpoint-fixture.js.source",
+      "sha256": "1397ee3ad40330b0fbe70293e64d416d89cb153d42f22a108829afeb40acea44"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/scripts/lib/powerbi-checkpoint-metrics.js.source",
+      "sha256": "e465b6ad96ad483f544cb6d4089265a72f5e738889a0413040df4b5954c4e5e9"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/scripts/lib/powerbi-checkpoint-provenance.js.source",
+      "sha256": "aba406684fcc6aad051ca91c6b8e99becf786c298c4529dc489f5a1af02d142e"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/tests/fixtures/powerbi-checkpoint-v1.json.source",
+      "sha256": "8cb6fc65977e761d6ba75c3f7958dfa22d59ef8bab2fe16690e5c1b58a2c4840"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/tests/helpers/powerbi-checkpoint-process.cjs.source",
+      "sha256": "465657ab47df941229422aad87aef81864124a548bff3d3a885eac7222bac90d"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/tests/powerbi-checkpoint-preparation.test.js.source",
+      "sha256": "2fc6d0b3b07f28029cdb3a5be779071ed231a04cb28b3d72c93d4cd9f9795528"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/inherited/resources/app/tests/powerbi-checkpoint-resume.test.js.source",
+      "sha256": "17fb45ab1d58c214ba9e1408b90d49939e36d4ba067d5bbb572a10d898f8a412"
+    }
+  ]
+}

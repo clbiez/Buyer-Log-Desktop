@@ -1,0 +1,28 @@
+2026-11-08T12:04:59Z
+Filesystem     Type    1K-blocks  Used Available Use% Mounted on
+overlay        overlay  32978704  6952  31277648   1% /workspace
+none           tmpfs     9220048  2232   9217816   1% /tmp
+               total        used        free      shared  buff/cache   available
+Mem:           18007         682       17473           2          87       17325
+Swap:              0           0           0
+17179869184
+109494272
+400000 100000
+    PID COMMAND           RSS %CPU
+    530 codex           36788  0.0
+    207 dockerd         35504  0.0
+    259 containerd      21196  0.0
+   3212 codex-linux-san 15192 33.3
+   3215 codex           14616  0.0
+   3220 ps               2468  0.0
+      2 cloud-agent-log  1788  0.0
+   3219 bash             1676  0.0
+   3214 bwrap             924  0.0
+      1 tail              880  0.0
+   3216 flock             872  0.0
+      3 caas-prefix-tra   268  0.0
+    675 git                 0  0.0
+    677 git                 0  0.0
+    747 git                 0  0.0
+    763 git                 0  0.0
+   3210 git                 0  0.0

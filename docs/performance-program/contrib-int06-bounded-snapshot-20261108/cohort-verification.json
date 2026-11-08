@@ -1,0 +1,27 @@
+{
+  "samples": 6,
+  "order": [
+    "legacy-store",
+    "journal",
+    "journal",
+    "legacy-store",
+    "legacy-store",
+    "journal"
+  ],
+  "sameFixtureTraceOutputAsHistorical": true,
+  "fullManifestRowsStatesHashesEqual": true,
+  "sameFormatByteTotals": true,
+  "allSummaryMetricsRecomputed": true,
+  "committedMeasurementSourcesVerified": true,
+  "rssMedianDeltaPercent": 5.850784037758916,
+  "rssRegressionAccepted": false,
+  "storage": "/tmp tmpfs; no disk/SMB or production acceptance",
+  "source": {
+    "revision": "4e66c955e51e01ac84a0e799d5e1c491008f6393",
+    "journalSha256": "b534cffb9a4ccd7e6cb312c36494ddfaef087ab86ba953cbc76920fdad8d3180",
+    "productionSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+    "harnessSha256": "730e18141ef064b632af30de366f191b05da5debaae84c8ddb3479c593e79aa1",
+    "metricsSha256": "004a4f51ccd2ac6db2604e7f6b332a52320816b0a870edbaa18215a0c4fb6268",
+    "inheritedHarnessSha256": "523265979266ee9625ca4478a13afd9f99d53a0eb1e51664b2773fdf21a544df"
+  }
+}

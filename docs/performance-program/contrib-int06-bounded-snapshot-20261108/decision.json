@@ -1,0 +1,9 @@
+{
+  "candidateSource": "4e66c955e51e01ac84a0e799d5e1c491008f6393",
+  "rssTargetMet": false,
+  "rssRegressionAccepted": false,
+  "int06Complete": false,
+  "productionIntegrated": false,
+  "rssMedianDeltaPercent": 5.850784037758916,
+  "blocker": "Full JSON payload and compatibility view remain O(n); bounded writes do not bound GC-pending aggregate allocations. Same-cohort RSS median remains above legacy. No second candidate tested."
+}

@@ -1,0 +1,141 @@
+{
+  "stage": "isolated-checkpoint-replay",
+  "productionGainAccepted": false,
+  "orders": 100000,
+  "scenario": "steady",
+  "order": [
+    "legacy-store",
+    "journal",
+    "journal",
+    "legacy-store",
+    "legacy-store",
+    "journal"
+  ],
+  "arms": {
+    "legacy-store": {
+      "checkpointBytes": {
+        "median": 6777574427,
+        "min": 6777574427,
+        "max": 6777574427
+      },
+      "checkpointWallMs": {
+        "median": 56352.33560000001,
+        "min": 55049.47712199993,
+        "max": 57275.08591999999
+      },
+      "checkpointCpuMs": {
+        "median": 56878.66300000002,
+        "min": 55570.34099999999,
+        "max": 57805.454000000005
+      },
+      "peakRssBytes": {
+        "median": 576233472,
+        "min": 480460800,
+        "max": 578224128
+      },
+      "totalReplayCpuMs": {
+        "median": 58796.752,
+        "min": 57428.867,
+        "max": 59575.517
+      },
+      "totalReplayWallMs": {
+        "median": 58197.981176999994,
+        "min": 56826.632175,
+        "max": 58969.954069
+      },
+      "boundaryMax.external": {
+        "median": 2282152,
+        "min": 2282152,
+        "max": 2282152
+      },
+      "boundaryMax.heapUsed": {
+        "median": 358731680,
+        "min": 257076408,
+        "max": 358993704
+      },
+      "boundaryMax.heapTotal": {
+        "median": 495808512,
+        "min": 396361728,
+        "max": 498663424
+      },
+      "boundaryMax.arrayBuffers": {
+        "median": 143627,
+        "min": 143627,
+        "max": 143627
+      },
+      "boundaryMax.rss": {
+        "median": 505290752,
+        "min": 406646784,
+        "max": 507273216
+      }
+    },
+    "journal": {
+      "checkpointBytes": {
+        "median": 193920022,
+        "min": 193920022,
+        "max": 193920022
+      },
+      "checkpointWallMs": {
+        "median": 5658.801020000011,
+        "min": 5658.571024999996,
+        "max": 5864.289709000006
+      },
+      "checkpointCpuMs": {
+        "median": 5854.159999999999,
+        "min": 5823.754999999999,
+        "max": 6095.279000000001
+      },
+      "peakRssBytes": {
+        "median": 609947648,
+        "min": 607563776,
+        "max": 637345792
+      },
+      "totalReplayCpuMs": {
+        "median": 7265.991,
+        "min": 7254.613,
+        "max": 7556.245
+      },
+      "totalReplayWallMs": {
+        "median": 7024.532077,
+        "min": 6998.209044,
+        "max": 7246.019122
+      },
+      "boundaryMax.external": {
+        "median": 24742395,
+        "min": 24742395,
+        "max": 24742395
+      },
+      "boundaryMax.heapUsed": {
+        "median": 374634032,
+        "min": 363226592,
+        "max": 377605544
+      },
+      "boundaryMax.heapTotal": {
+        "median": 511152128,
+        "min": 495661056,
+        "max": 513249280
+      },
+      "boundaryMax.arrayBuffers": {
+        "median": 22603870,
+        "min": 22603870,
+        "max": 22603870
+      },
+      "boundaryMax.rss": {
+        "median": 549957632,
+        "min": 549658624,
+        "max": 552554496
+      }
+    }
+  },
+  "traceSha256": "27d5d251218d188018124d7a2117875fd7af721810143a075c16aee02b39bfef",
+  "outputSha256": "98264b7df975ab65f90badaa6b2347f2a614ae95731da5ced9ed68bacd2ef34f",
+  "fixtureSha256": "ec444e07a3ced97eac68cd2aa63821ecff4ef7050da13288403f4f327adfac56",
+  "finalManifestSha256": "6976f5eb913623f9ad066c91906fc42e65fcf6c047f36882d5e83f32fd34da88",
+  "finalRowsSha256": "4eb05c2154a465f4c81a60b7be8c81274a7024898e7b591e6c6e259740eafab6",
+  "finalOrderStatesSha256": "4ae90273ad355c0e7c76c944b98d1d89cb85a9e65686a37078ca8edd7d93d76f",
+  "rssMedianDeltaPercent": 5.850784037758916,
+  "rssRegressionAccepted": false,
+  "productionIntegrated": false,
+  "memorySampling": "heap/external maxima at checkpoint return boundaries; kernel process high-water RSS before load/oracle",
+  "storage": "/tmp tmpfs; no disk/SMB or production acceptance"
+}

@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: INT-06 bounded snapshot is byte-identical to v2 pack, including Unicode, escapes and every terminal state
+ok 1 - INT-06 bounded snapshot is byte-identical to v2 pack, including Unicode, escapes and every terminal state
+  ---
+  duration_ms: 38.395794
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot never serializes a full envelope or writes a full UTF-8 envelope buffer
+ok 2 - INT-06 snapshot never serializes a full envelope or writes a full UTF-8 envelope buffer
+  ---
+  duration_ms: 136.061704
+  type: 'test'
+  ...
+# Subtest: INT-06 payload surrogate pair across chunk boundary preserves exact v2 UTF-8 bytes
+ok 3 - INT-06 payload surrogate pair across chunk boundary preserves exact v2 UTF-8 bytes
+  ---
+  duration_ms: 7.921297
+  type: 'test'
+  ...
+# Subtest: INT-06 bounded snapshot retries short writes before fsync and ACK
+ok 4 - INT-06 bounded snapshot retries short writes before fsync and ACK
+  ---
+  duration_ms: 5.975004
+  type: 'test'
+  ...
+# Subtest: INT-06 mid-snapshot EIO: no ACK, no replacement, poison then disk-only replay
+ok 5 - INT-06 mid-snapshot EIO: no ACK, no replacement, poison then disk-only replay
+  ---
+  duration_ms: 6.226644
+  type: 'test'
+  ...
+# Subtest: INT-06 mid-snapshot zero: no ACK, no replacement, poison then disk-only replay
+ok 6 - INT-06 mid-snapshot zero: no ACK, no replacement, poison then disk-only replay
+  ---
+  duration_ms: 6.731407
+  type: 'test'
+  ...
+# Subtest: INT-06 real SIGKILL in a partially written snapshot body preserves manifest, receipts and journal
+ok 7 - INT-06 real SIGKILL in a partially written snapshot body preserves manifest, receipts and journal
+  ---
+  duration_ms: 60.778537
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 317.598883
