@@ -1460,6 +1460,35 @@
           "en": "Actual post-change app in Turkish and light theme; CP rows shown after the first switch."
         }
       }
+    },
+    {
+      "id": "phase7-snapshot-common-pool",
+      "type": "improvement",
+      "module": {
+        "tr": "Yerel kayıt",
+        "en": "Local storage"
+      },
+      "title": {
+        "tr": "Büyük kayıt kontrol noktaları arka planda hazırlanır",
+        "en": "Large storage checkpoints prepare in the background"
+      },
+      "body": {
+        "tr": "Büyük yerel kayıt kontrol noktalarının JSON hazırlığı ortak hesaplama havuzunda yürütülür. Ölçülen sunucu duraklaması azalırken toplam kayıt süresi ve bellek artmıştır. Havuz kullanılamazsa mevcut kayıt kapasitesini koruyan yerel yol sürer.",
+        "en": "Large local checkpoints prepare their JSON in the shared compute pool. The measured server pause decreases while total checkpoint time and memory increase. If the pool cannot serve the job, the existing local path preserves write capacity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase7-snapshot-common-pool.png",
+        "alt": {
+          "tr": "Arka plan kayıt yolu etkinken gerçek demo Buyer Log Koleksiyon ekranı",
+          "en": "Actual demo Buyer Log Collection with the background storage path active"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik veri. Bu görüntü arka plan süre veya dayanıklılık kanıtı değildir; bunlar ayrı ölçüm ve regresyonlarla doğrulanır.",
+          "en": "Actual application with synthetic data. This capture does not prove background timing or durability; separate measurements and regressions provide that evidence."
+        }
+      }
     }
   ]
 }

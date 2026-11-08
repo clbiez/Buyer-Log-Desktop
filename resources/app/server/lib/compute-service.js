@@ -129,6 +129,28 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       {ownerKey:'output:'+String(ownerId),generation:'1',priority:'interactive',...options,estimatedBytes,inputBytes,transferList:[encoded]});
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
+  async function encodeLocalDbSnapshot(state){
+    const started=performance.now();
+    const local=fallbackReason=>({value:{buffer:require('./large-json').jsonToBuffer(state),revision:state.revision},
+      metrics:{threadId:0,paramsSerializeMs:performance.now()-started,...(fallbackReason?{fallbackReason}:{})},release(){}});
+    // The shared pool is an optimization, not a new prerequisite for durable
+    // writes. Retain large-json capacity and JSON-compatible toJSON behavior.
+    if(closed)return local('COMPUTE_POOL_CLOSED');
+    let snapshotBytes;
+    try{snapshotBytes=serializeForTransfer(state);}catch{return local('COMPUTE_INPUT_ENCODING');}
+    const inputBytes=snapshotBytes.byteLength+1024;
+    // Small checkpoints do not justify worker scheduling. Keep their old bytes.
+    if(snapshotBytes.byteLength<256*1024)return local();
+    const paramsSerializeMs=performance.now()-started,estimatedBytes=96*MiB+inputBytes*8;
+    try{
+      const lease=await pool.run('local-db-snapshot',{snapshotBytes,maxOutputBytes:estimatedBytes},
+        {ownerKey:'local-db-snapshot',generation:'1',priority:'background',estimatedBytes,inputBytes,transferList:[snapshotBytes]});
+      return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
+    }catch(error){
+      if(!['COMPUTE_JOB_TOO_LARGE','COMPUTE_QUEUE_BUSY','COMPUTE_POOL_CLOSED','COMPUTE_TIMEOUT','COMPUTE_WORKER_FAILED','COMPUTE_ESTIMATE_EXCEEDED'].includes(error?.code))throw error;
+      snapshotBytes=null;return local(error.code);
+    }
+  }
   async function runEndeksmatikStatus(ownerId,descriptor){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const engine=require('./endeksmatik');
@@ -191,6 +213,6 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};

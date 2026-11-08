@@ -1,0 +1,27 @@
+{
+  "testedRevision": "2c6e346bcd7dc022363a5de3aca5314f15947f86",
+  "appTree": "3a7267a1a9c7d6800c97efccc0f9efdb1450b7b5",
+  "counts": {
+    "pass": 8907,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "files": 1297,
+  "related": 226,
+  "notes": 44,
+  "Main": "6b8362ad059fcf830dabd14330fa813888ec9f5c",
+  "reviewedBlobsExact": {
+    "resources/app/server/lib/compute-service.js": "8de564444f2be3181a7859b36fbf3e347881881d",
+    "resources/app/server/lib/local-db.js": "424e643c1cb570c605f957b6a3f3d90faefbfb09",
+    "resources/app/server/server.js": "132676bf3bd34c90c3610cf2e15f600f01b27a29",
+    "resources/app/server/workers/compute-worker.js": "a0c5b6354f1a96503133dd6c2f59fc68d928cad7",
+    "resources/app/tests/phase7-snapshot-compute.test.js": "5a8602cb8b72fa7529c893bcfbe02cadcca1e199",
+    "resources/app/tests/phase7-snapshot-durability.test.js": "cf614e174ee17f9c26705db75d9f8f376abf2a22"
+  },
+  "newGeneralReview": false,
+  "newPerformanceRun": false,
+  "historicalMeasurement": "F5-after Linux local-disk, original reviewed runtime blobs identical",
+  "fallbackTradeoff": "existing main-thread cost retained on worker failure/admission fallback",
+  "releaseNoteIntegration": "Previously server-only handoff kept note under docs due file locks; root integration adds only its own TR/EN record and inspected original actual post-change PNG."
+}
