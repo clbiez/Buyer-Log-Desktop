@@ -1,0 +1,84 @@
+{
+  "scope": "configuration writer integration targeted only; final full/browser/firstCP acceptance pending",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "orders-owned-json",
+        "orders-ready-http",
+        "orders-projection-client",
+        "orders-full-promotion",
+        "orders-finite-closure",
+        "orders-finite-schema",
+        "projection-ready-json"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 199,
+        "pass": 199,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-me997bvu",
+      "rawSha256": "359884472001a65dfde87fb760621e02b8ce500bcda0de3025bea70a3eff0b95"
+    },
+    {
+      "name": "syntax",
+      "command": [
+        "node",
+        "--check",
+        "public/orders-owned-json.js"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-ai33wseb",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-768pwd3l",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-bsxqolas",
+      "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "beforeRouterSha256": "21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e",
+  "afterRouterSha256": "a9aae9dfb2ab5288562aca96d8c61d1237f0f4797ed964499e8b5a5d05fca3a9",
+  "exactReverseEquality": true,
+  "delta": "Only two exact decoded-length header entries from the same already-validated compressed lease metadata; no new gzip, schema, worker, cache or source read.",
+  "header": "X-Orders-View-Json-Bytes",
+  "fullPromotionReaderUnchanged": true,
+  "allPreviousHttpAssertionBodiesUnchanged": true,
+  "httpFixtureDelta": "Existing request helper delegates the same native fetch to a new rawRequest seam; exact reverse equality preserved.",
+  "parserSourceSha256": "336d3ba22413a3aa11aeb231b9509974010be0ebd300e3b4777b6dcd13b71eff",
+  "defaultClientActivation": false
+}

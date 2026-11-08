@@ -196,7 +196,7 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
     if(!full)throw failure('ORDERS_FULL_REQUIRED',409,'Tam sipariş görünümünü yeniden yükleyin.','Reload the ordinary full Orders projection.');
     current(req,captured,context,full);
     parent?.assertResponse();
-    const headers={...parent?.headers,...responseIdentityHeaders(state),'X-Orders-View-Mode':'full','X-Orders-Request-Nonce':nonce};
+    const headers={...parent?.headers,...responseIdentityHeaders(state),'X-Orders-View-Mode':'full','X-Orders-View-Json-Bytes':String(full.meta.uncompressedBytes),'X-Orders-Request-Nonce':nonce};
     if(prepare)res.once('finish',()=>background(req,state,...prepare)); // No worker/serialization in the response path.
     return send(req,res,{value:{buffer:full.buffer,uncompressedBytes:full.meta.uncompressedBytes},
       assertResponse:()=>{current(req,captured,context,full);parent?.assertResponse();},release(){}},
@@ -241,7 +241,7 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
       check();const hit=await cache.readViewCompressed(token.ownerId,'orders',pin,{requireInfo:true});check();
       if(hit&&sidecarValid(hit,{guardStamp,planHash:body.planHash,binding,token,keys:body.omittedModelKeys})){
         return send(req,res,{value:{buffer:hit.buffer,uncompressedBytes:hit.meta.uncompressedBytes},assertResponse:check,release(){}},
-          {headers:{...responseIdentityHeaders(state),'X-Orders-View-Mode':'ready','X-Orders-Request-Nonce':body.requestNonce,'X-Orders-Plan-Hash':body.planHash}});
+          {headers:{...responseIdentityHeaders(state),'X-Orders-View-Mode':'ready','X-Orders-View-Json-Bytes':String(hit.meta.uncompressedBytes),'X-Orders-Request-Nonce':body.requestNonce,'X-Orders-Plan-Hash':body.planHash}});
       }
       return sendFull(req,res,state,body.requestNonce,[body,binding,token,guardStamp,pin]);
     }catch(error){return apiError(res,error,'Sipariş görünümü okunamadı.');}

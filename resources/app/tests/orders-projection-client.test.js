@@ -94,7 +94,7 @@ test('actual full promotion helper accepts sparse full rows with empty proven re
 test('full-parent adapter uses actual additional header producer, exact DTO and owned decoded-byte hash; identity is never echoed',async()=>{
  const f=await fixture();await f.initialize();const wire=await f.ready();await f.client.accept(wire.request,wire);
  const router=fs.readFileSync(path.join(APP,'server/lib/orders-ready-http.js'),'utf8');
- assert.equal(hash(router),'21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e');
+ assert.equal(hash(router),'a9aae9dfb2ab5288562aca96d8c61d1237f0f4797ed964499e8b5a5d05fca3a9');
  const extra=hostFunction('fullParentHeaders',{Buffer,stale:()=>Object.assign(Error('stale'),{code:'PROJECTION_VIEW_STALE'})},router)(f.metadata.token,
   {pin:{uncompressedBytes:Buffer.byteLength(f.rawText)},schema:{rowCount:f.metadata.schema.rowCount}});
  const live={token:f.metadata.token,fullGzipChecksum:f.h['X-Orders-Full-Gzip-Sha256'],guardStamp:f.metadata.guardStamp,

@@ -125,9 +125,12 @@ async function fixture(t,{canonicalDefinition=false,ordinaryGet=false,ordinaryWo
   const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
   f.router=router;
   t.after(async()=>{f.beforeRun?.resolve();f.beforeSource?.resolve();await router.readyBackground.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await service.close();cache.invalidate(owner);});
-  f.request=async(method,suffix,body,session='first',encoding='gzip')=>{
-    const response=await fetch(`http://127.0.0.1:${server.address().port}/api/page-projection/${suffix}`,{method,
+  f.rawRequest=async(method,suffix,body,session='first',encoding='gzip')=>{
+    return fetch(`http://127.0.0.1:${server.address().port}/api/page-projection/${suffix}`,{method,
       headers:{'x-session':session,'Accept-Encoding':encoding,...(body===undefined?{}:{'Content-Type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  };
+  f.request=async(method,suffix,body,session='first',encoding='gzip')=>{
+    const response=await f.rawRequest(method,suffix,body,session,encoding);
     const text=await response.text();let parsed;try{parsed=JSON.parse(text);}catch(_){parsed=null;}
     return {status:response.status,headers:response.headers,text,body:parsed};
   };
@@ -154,6 +157,36 @@ test('cold POST returns ordinary full before actual background job is allowed to
   assert.equal(f.jobs[0].payload.projectionPin.contextHash,f.context.contextHash);assert.equal(f.jobs[0].payload.token.contextHash,f.context.contextHash);
   assert.equal(Object.hasOwn(f.jobs[0].payload.viewInfo,'fullJsonSha256'),false);assert.equal(Object.hasOwn(f.jobs[0].payload.viewInfo,'requestNonce'),false);
   assert.equal(f.jobReleases,1);assert.equal(f.pool.stats().leasedOutputBytes,0);assert.equal(f.router.readyBackground.stats().published,1);
+});
+test('ready and cold-full responses declare their own exact decoded JSON length independently of gzip Content-Length',async t=>{
+  const f=await fixture(t),metadata=(await f.get()).body;
+  const full=await f.post(f.body(metadata));await f.idle();
+  const ready=await f.post(f.body(metadata,'decoded_gzip'));
+  const identity=await f.post(f.body(metadata,'decoded_identity'),'first','identity');
+  for(const response of [full,ready,identity]){
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('x-orders-view-json-bytes'),String(Buffer.byteLength(response.text)));
+  }
+  assert.equal(full.headers.get('x-orders-view-mode'),'full');
+  assert.equal(ready.headers.get('x-orders-view-mode'),'ready');
+  assert.equal(identity.text,ready.text);
+  assert.notEqual(ready.headers.get('content-length'),ready.headers.get('x-orders-view-json-bytes'));
+  assert.equal(identity.headers.get('content-length'),identity.headers.get('x-orders-view-json-bytes'));
+});
+test('actual cold-full and ready gzip HTTP streams pass the sole owned JSON boundary with independent raw hashes',async t=>{
+  const f=await fixture(t),metadata=(await f.get()).body;
+  const parser=require('../public/orders-owned-json').create({promotionApi:require('../public/orders-full-promotion'),sha256Bytes:async bytes=>sha(bytes)});
+  const first=await f.rawRequest('POST','orders/ready',f.body(metadata,'owned_full'));
+  assert.equal(first.headers.get('content-encoding'),'gzip');
+  const full=await parser.read(first,{current:()=>true});await f.idle();
+  assert.equal(full.mode,'full');assert.equal(Object.hasOwn(full.payload.rows[0],KEY),true);assert.equal(parser.owns(full),true);
+  const hit=await f.rawRequest('POST','orders/ready',f.body(metadata,'owned_ready'));
+  assert.equal(hit.headers.get('content-encoding'),'gzip');
+  const ready=await parser.read(hit,{current:()=>true});
+  assert.equal(ready.mode,'ready');assert.equal(Object.hasOwn(ready.payload.rows[0],KEY),false);assert.equal(parser.owns(ready),true);
+  assert.equal(full.rawSha256,sha(full.rawText));assert.equal(ready.rawSha256,sha(ready.rawText));
+  assert.notEqual(full.rawSha256,ready.rawSha256);assert.equal(full.rawSha256,ready.payload.projection.viewInfo.fullJsonSha256);
+  assert.equal(full.decodedBytes,ready.payload.projection.viewInfo.fullJsonBytes);assert.equal(f.jobs.length,1);
 });
 test('ready cache hits require info, preserve stable body across nonces and do not start another worker',async t=>{
   const f=await fixture(t),metadata=(await f.get()).body,full=await f.post(f.body(metadata));await f.idle();

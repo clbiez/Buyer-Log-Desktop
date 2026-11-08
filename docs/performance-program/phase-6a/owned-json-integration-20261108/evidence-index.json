@@ -1,0 +1,55 @@
+[
+  {
+    "path": "buyerlog-phase6a-ready-decoded-length-red.log.gz",
+    "rawSha256": "abf1c9a15b9876df2907af05ecc6eb44a64c09b890ebf6b3e6fd22f48f860b8b",
+    "counts": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-red.log.gz",
+    "rawSha256": "bdf4acbba115c09c23fcab4edee3554b548f570491eea861d66acea4576bc5a2",
+    "counts": {
+      "tests": 3,
+      "pass": 0,
+      "fail": 3,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-native-first.log.gz",
+    "rawSha256": "75783d1b2ccc39f64d2fab6c2cdba84ccbdcba1c2bdfc9feb602422e29346560",
+    "counts": {
+      "tests": 59,
+      "pass": 59,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-related-green/release.log.gz",
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-related-green/i18n.log.gz",
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-related-green/syntax.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-related-green/receipt.json",
+    "rawSha256": "8e6bd18bdd7057f1e3371aca4c1214b2b4e8e87c29bd8f781fcec76d381f27d2"
+  },
+  {
+    "path": "buyerlog-phase6a-owned-json-related-green/related.log.gz",
+    "rawSha256": "359884472001a65dfde87fb760621e02b8ce500bcda0de3025bea70a3eff0b95"
+  }
+]
