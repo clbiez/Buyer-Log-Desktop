@@ -32,7 +32,7 @@ saymadık, kaldırmadık ve istek kanıtından gizlemedik.
 
 ## Kanıt
 
-- [red.log](red.log): Main warmup kodunda yeni altı testin 5'i FAIL, 1'i PASS.
+- [red.log.gz](red.log.gz): Main warmup kodunda yeni altı testin 5'i FAIL, 1'i PASS.
   Boş belleğe sahip üç scheduler fixture'ı önce 9, sonra 3 modül yüklemesi yapar.
 - [green.log](green.log): yeni yedi test ve mevcut startup/workspace testleri;
   **48 PASS, 0 FAIL/SKIP/CANCEL**. Yetki, kaynak filtresi, bellek sınırı,
