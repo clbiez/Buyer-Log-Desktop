@@ -1,0 +1,28 @@
+✔ shared total admits only fitting requests and release wakes a waiter (3.327651ms)
+✔ FIFO prevents a small newcomer from bypassing an older large waiter (0.373534ms)
+✔ double release cannot refund somebody else’s active bytes (0.222706ms)
+✔ oversized requests fail immediately even when other work is active (0.488359ms)
+✔ invalid byte counts and invalid signals never mutate the budget (0.415068ms)
+✔ already cancelled work never receives admission (0.252552ms)
+✔ cancelling the head waiter unblocks a fitting follower without a release (0.296138ms)
+✔ cancelling a non-head waiter leaves the other waiter intact (0.318792ms)
+✔ abort after admission does not refund buffers that are still live (0.236628ms)
+✔ abort listeners are removed on grant and cancellation (0.309799ms)
+✔ release/abort races settle each waiter once without leaking reservations (0.328066ms)
+✔ known length includes chunks/concat plus explicit validation and commit copies (0.210458ms)
+✔ missing length reserves the whole per-image cap, including concat headroom (0.1387ms)
+✔ malformed, empty and excessive Content-Length fail closed (0.35043ms)
+✔ invalid headroom and unsafe reservation arithmetic are rejected (0.236177ms)
+✔ image larger than the whole budget is rejected including all copies (0.211009ms)
+✔ body guards reject false lengths and unknown-length overflow before retaining a chunk (0.259362ms)
+✔ withImage releases after success, synchronous throw and asynchronous failure (0.391632ms)
+✔ withImage suppresses dispatch if cancelled between grant and callback (0.202106ms)
+✔ snapshot and permits cannot be used to change accounting (0.163127ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.988951

@@ -1,0 +1,18 @@
+✔ INT-03 collector accounts for bytes and the first durable canonical link (164.310281ms)
+✔ real ingest preserves manual ownership, URL/content dedup and no-op revision (129.789696ms)
+✔ partial failure and cancellation only link completed valid downloads (230.848787ms)
+✔ dropOldFiles keeps an aliased old ref and the false option keeps all old files (268.253747ms)
+✔ failed canonical link commit rolls back newly created files and preserves revision (120.43351ms)
+✔ variable-sized fixtures are deterministic, structurally valid PNGs with a real pixel (23.83676ms)
+✔ comparison requires three equivalent runs per arm and computes a median (0.898889ms)
+✔ comparison rejects fixture, #892, environment, harness and protected-source drift (0.448969ms)
+✔ an unchanged source or a missing after arm cannot masquerade as an optimization (0.30431ms)
+✔ all rotated trace segments survive lossless compression; missing traces fail closed (1.82554ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 946.65284

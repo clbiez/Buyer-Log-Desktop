@@ -1,0 +1,77 @@
+{
+  "baseCommit": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "preparationCommit": "b2a4a579c5369f59e5cfb9181140a00176d944ef",
+  "preparationFilesModified": false,
+  "inheritedFixtureSha256": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87",
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "lockFlags": "-n -E 75",
+  "productionIntegrated": false,
+  "fullRegressionRun": false,
+  "checks": [
+    {
+      "command": [
+        "node",
+        "tests/int03-byte-budget-unit.test.js"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "log": "unit-green.txt",
+      "exitCode": 0,
+      "elapsedSeconds": 0.051
+    },
+    {
+      "command": [
+        "node",
+        "tests/int03-byte-budget-pipeline.test.js"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "log": "pipeline-green.txt",
+      "exitCode": 0,
+      "elapsedSeconds": 4.255
+    },
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "plm-image",
+        "plm-sync-image-override",
+        "plm-main-option-image",
+        "plm-option-image",
+        "plm-colour-image",
+        "plm-stale-image",
+        "canonical-fields",
+        "compute-image-registry-params",
+        "global-model-image-registry",
+        "model-image-registry-index",
+        "plm-sync-two-phase",
+        "plm-sync-colours-retry",
+        "int03-byte-budget"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "log": "native-tests.txt",
+      "exitCode": 0,
+      "elapsedSeconds": 4.847
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "log": "i18n.txt",
+      "exitCode": 0,
+      "elapsedSeconds": 1.235
+    },
+    {
+      "command": [
+        "node",
+        "/tmp/int03-validation-y4z5ls6j/preparation/resources/app/tests/plm-image-memory-preparation.test.js"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "log": "preparation-tests.txt",
+      "exitCode": 0,
+      "elapsedSeconds": 0.989
+    }
+  ]
+}

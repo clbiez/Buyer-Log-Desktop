@@ -1,0 +1,12 @@
+The first attempt ran inside the command sandbox. Node spawnSync returned:
+{"status":0,"signal":null,"error":{"errno":-1,"code":"EPERM","syscall":"spawnSync /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node"},"stdoutLength":0,"stderr":""}
+
+The unchanged preparation test checks child.status but not child.error, then
+parses stdout. This produced five Unexpected end of JSON input failures.
+The sandbox native runner printed a file-level PASS summary without exposing
+the actual individual tests. That summary is not accepted validation evidence.
+
+No tests, assertions, validators or preparation sources were changed. The same
+checks were rerun outside the sandbox on the same VM, under the same required
+flock -n -E 75 /tmp/buyerlog-performance-measurement.lock. The final native log
+contains 185 individual passing tests, the final preparation log contains 10.

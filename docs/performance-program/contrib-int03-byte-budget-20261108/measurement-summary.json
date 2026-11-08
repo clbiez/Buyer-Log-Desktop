@@ -1,0 +1,23 @@
+{
+  "kind": "isolated-helper-only",
+  "productionAcceptance": false,
+  "sourceCommit": "09975e4976d441da43967b38234d05461a966784",
+  "sourceSha256": {
+    "resources/app/server/lib/plm-image-byte-budget.js": "43436c7da0b4e4ce5cfd54f32b8bd0ce9f92876e65f51c7c4091454786252bb9",
+    "resources/app/tests/fixtures/int03-byte-budget/measure.js": "31efff90a41c69361e438f56c70ec89d9a1038189ce8145a96cf74292c9263f7",
+    "resources/app/tests/fixtures/int03-byte-budget/mock-pipeline.js": "d92e9bb24564756e5122660861ee9d7b8082491891f5721f370bed2685ecc5e1",
+    "resources/app/tests/fixtures/int03-byte-budget/plm-image-memory-fixture.js": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87"
+  },
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "lockFlags": "-n -E 75",
+  "runs": 3,
+  "allOracleMatches": true,
+  "median": {
+    "osPeakRssBytes": 130641920,
+    "sampledPeakRssBytes": 130641920,
+    "sampledPeakExternalBytes": 79995851,
+    "sampledPeakArrayBuffersBytes": 77106831,
+    "firstMockCompletionMs": 10.075934000000004,
+    "totalMs": 3029.2999480000003
+  }
+}

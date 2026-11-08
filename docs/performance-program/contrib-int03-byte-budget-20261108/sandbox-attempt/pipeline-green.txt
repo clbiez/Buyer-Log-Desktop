@@ -1,0 +1,17 @@
+✔ slow commit retains its permit and backpressures the next download (4.373142ms)
+✔ download, validation, queued commit and commit all stay charged until buffers drop (0.373655ms)
+✔ partial failure at each stage leaves successful siblings and no leaked permit (1.48123ms)
+✔ cancelling a queued sync does not dispatch its transport or affect another sync (0.883426ms)
+✔ abort during a non-interruptible commit waits for quiescence before release (0.408798ms)
+✔ abort before commit releases only after active callback stops using buffers (0.369548ms)
+✔ two concurrent sync jobs share one total and both make progress (33.421899ms)
+✔ false Content-Length and unknown overflow release their full reservation (0.333985ms)
+✔ 2048 inherited variable-size PNGs leave only metadata in bounded queue results (4082.780229ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4131.991999

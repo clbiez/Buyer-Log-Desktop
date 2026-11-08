@@ -1,0 +1,10 @@
+✔ resources/app/tests/int03-byte-budget-pipeline.test.js (4240.191501ms)
+✔ resources/app/tests/int03-byte-budget-unit.test.js (63.068129ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4248.685232

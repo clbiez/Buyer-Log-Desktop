@@ -1,0 +1,31 @@
+{
+  "kind": "isolated-helper-only",
+  "productionAcceptance": false,
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "kernel": "6.18.57",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "fixtureCount": 2048,
+  "fixtureDescriptorSha256": "3777e69f44a79aaac8f0bf204dfdabde6ccc258cc4a1da7e7e5d52b449a4e07d",
+  "fixtureTotalBytes": 356515840,
+  "concurrentSyncJobs": 2,
+  "downloadConcurrencyPerJob": 4,
+  "mockedCommitDelayMs": 1,
+  "unknownLengthCount": 1024,
+  "completed": 2048,
+  "firstMockCompletionMs": 11.379435,
+  "sampledPeakRssBytes": 130134016,
+  "sampledPeakExternalBytes": 79307875,
+  "sampledPeakArrayBuffersBytes": 76451623,
+  "totalMs": 3058.278757,
+  "osPeakRssBytes": 130134016,
+  "reservation": {
+    "limitBytes": 4194304,
+    "reservedBytes": 0,
+    "peakReservedBytes": 3735552,
+    "activePermits": 0,
+    "waitingCount": 0
+  },
+  "oracleMatches": true
+}

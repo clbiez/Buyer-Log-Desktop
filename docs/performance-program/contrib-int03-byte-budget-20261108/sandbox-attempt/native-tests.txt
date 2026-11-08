@@ -1,0 +1,40 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js plm-image plm-sync-image-override plm-main-option-image plm-option-image plm-colour-image plm-stale-image canonical-fields compute-image-registry-params global-model-image-registry model-image-registry-index plm-sync-two-phase plm-sync-colours-retry int03-byte-budget
+
+[Buyer Log tests] 22 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (22 dosya)
+✔ tests/canonical-fields-v765.test.js (81.352221ms)
+✔ tests/collection-plm-images-persistence-export-20261026.test.js (91.903163ms)
+✔ tests/compute-image-registry-params.test.js (67.948969ms)
+✔ tests/global-model-image-registry-v1013.test.js (132.840464ms)
+✔ tests/int03-byte-budget-pipeline.test.js (4338.824459ms)
+✔ tests/int03-byte-budget-unit.test.js (72.159344ms)
+✔ tests/model-image-registry-index.test.js (102.301424ms)
+✔ tests/plm-colour-image-sync-v1012.test.js (120.806014ms)
+✔ tests/plm-image-canonical-resolution-v1100.test.js (128.963071ms)
+✔ tests/plm-image-fetch-command-v640.test.js (136.928494ms)
+✔ tests/plm-image-package-import-v1100.test.js (111.05339ms)
+✔ tests/plm-image-package-path-input-v1101.test.js (120.012065ms)
+✔ tests/plm-image-pipeline-v1100.test.js (173.471378ms)
+✔ tests/plm-image-refetch-v638.test.js (122.603282ms)
+✔ tests/plm-image-refresh-safe-replacement-v966.test.js (143.264474ms)
+✔ tests/plm-image-routes-and-ui-v1100.test.js (72.316361ms)
+✔ tests/plm-main-option-image-role-v70115.test.js (80.702409ms)
+✔ tests/plm-option-image-capture-v1056.test.js (52.618962ms)
+✔ tests/plm-stale-image-reference-v1055.test.js (92.005098ms)
+✔ tests/plm-sync-colours-retry.test.js (314.077564ms)
+✔ tests/plm-sync-image-override-preservation-v20260928.test.js (55.974685ms)
+✔ tests/plm-sync-two-phase.test.js (556.080049ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4425.027736
+[Buyer Log tests] Batch 1/1 süresi: 4.5s.
+
+[Buyer Log tests] PASS — 22 test dosyası (4.5s).

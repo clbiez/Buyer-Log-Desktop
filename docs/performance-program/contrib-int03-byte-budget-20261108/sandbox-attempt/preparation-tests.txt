@@ -1,0 +1,83 @@
+✖ INT-03 collector accounts for bytes and the first durable canonical link (173.845621ms)
+✖ real ingest preserves manual ownership, URL/content dedup and no-op revision (135.606818ms)
+✖ partial failure and cancellation only link completed valid downloads (166.259862ms)
+✖ dropOldFiles keeps an aliased old ref and the false option keeps all old files (146.507484ms)
+✖ failed canonical link commit rolls back newly created files and preserves revision (114.001725ms)
+✔ variable-sized fixtures are deterministic, structurally valid PNGs with a real pixel (26.714409ms)
+✔ comparison requires three equivalent runs per arm and computes a median (1.301448ms)
+✔ comparison rejects fixture, #892, environment, harness and protected-source drift (0.572385ms)
+✔ an unchanged source or a missing after arm cannot masquerade as an optimization (0.321546ms)
+✔ all rotated trace segments survive lossless compression; missing traces fail closed (3.735763ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 5
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 775.199786
+
+✖ failing tests:
+
+test at ../../../../tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:20:1
+✖ INT-03 collector accounts for bytes and the first durable canonical link (173.845621ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at run (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:17:15)
+      at TestContext.<anonymous> (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:21:13)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at ../../../../tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:35:1
+✖ real ingest preserves manual ownership, URL/content dedup and no-op revision (135.606818ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at run (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:17:15)
+      at TestContext.<anonymous> (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:36:13)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at ../../../../tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:48:1
+✖ partial failure and cancellation only link completed valid downloads (166.259862ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at run (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:17:15)
+      at TestContext.<anonymous> (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:50:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../../../../tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:58:1
+✖ dropOldFiles keeps an aliased old ref and the false option keeps all old files (146.507484ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at run (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:17:15)
+      at TestContext.<anonymous> (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:59:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../../../../tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:69:1
+✖ failed canonical link commit rolls back newly created files and preserves revision (114.001725ms)
+  SyntaxError: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at run (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:17:15)
+      at TestContext.<anonymous> (/tmp/int03-validation-gaj4mtd4/preparation/resources/app/tests/plm-image-memory-preparation.test.js:70:13)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
