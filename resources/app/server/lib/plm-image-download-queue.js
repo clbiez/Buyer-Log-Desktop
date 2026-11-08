@@ -16,9 +16,9 @@
  * 5.000 görselde tek başına dakikalar ekler. Tek paylaşılan keepAlive Agent
  * tutulur.
  *
- * BELLEK: aynı anda en çok `concurrency` kadar görsel gövdesi bellektedir.
- * Kuyruk hiçbir zaman bütün görselleri biriktirmez; her görsel tamamlanınca
- * çağıranın onWritten geri çağrısına verilir ve bırakılır.
+ * BELLEK: runBounded sonuç değerlerini saklar. Canlı sync çağıranı ortak
+ * byte permit'i indirme/geçici dosya yazımı boyunca tutar ve kuyruğa yalnız
+ * dosya tanımını döndürür; sonuç Buffer'larını burada biriktirmez.
  */
 
 const https = require('https');
@@ -67,7 +67,18 @@ function destroyImageAgent() {
   if (sharedAgent) { try { sharedAgent.destroy(); } catch (_) {} sharedAgent = null; }
 }
 
-function sleep(ms) { return new Promise(resolve => setTimeout(resolve, Math.max(0, ms))); }
+function sleep(ms, isCancelled) {
+  return new Promise((resolve, reject) => {
+    let cancelTimer = null;
+    const timer = setTimeout(() => { clearInterval(cancelTimer); resolve(); }, Math.max(0, ms));
+    if (typeof isCancelled === 'function') cancelTimer = setInterval(() => {
+      if (!isCancelled()) return;
+      clearTimeout(timer);
+      clearInterval(cancelTimer);
+      reject(downloadError('PLM görsel işlemi durduruldu. / PLM image operation cancelled.', 'PLM_JOB_CANCELLED'));
+    }, 25);
+  });
+}
 
 function downloadError(message, code, extra = {}) {
   const error = new Error(message);
@@ -141,8 +152,17 @@ function httpGetImage(url, options = {}) {
   const maxBytes = Math.max(1024, Number(options.maxBytes) || MAX_IMAGE_BYTES);
   return new Promise((resolve, reject) => {
     let request = null;
+    let responseBody = null;
+    let cancelTimer = null;
+    const chunks = [];
     let settled = false;
-    const finish = (fn, value) => { if (settled) return; settled = true; fn(value); };
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(cancelTimer);
+      chunks.length = 0;
+      fn(value);
+    };
     try {
       const parsed = new URL(url);
       request = https.get({
@@ -153,6 +173,7 @@ function httpGetImage(url, options = {}) {
         agent: options.agent || imageAgent(),
         headers: { Accept: 'image/*', 'Accept-Encoding': 'identity', 'User-Agent': 'BuyerLog-PLM-Image/1' },
       }, response => {
+        responseBody = response;
         const status = Number(response.statusCode) || 0;
         const headers = response.headers || {};
         if (status < 200 || status >= 300) {
@@ -169,24 +190,41 @@ function httpGetImage(url, options = {}) {
           response.destroy();
           return finish(reject, downloadError(`PLM görseli boyut tavanını aştı (${declaredLength} bayt).`, 'PLM_IMAGE_TOO_LARGE', { status, size: declaredLength }));
         }
-        const chunks = [];
         let size = 0;
         response.on('data', chunk => {
+          if (settled) return;
           size += chunk.length;
           if (size > maxBytes) {
-            response.destroy();
             finish(reject, downloadError(`PLM görseli boyut tavanını aştı (${size} bayt).`, 'PLM_IMAGE_TOO_LARGE', { status, size }));
+            response.destroy();
             return;
           }
           chunks.push(chunk);
         });
-        response.on('end', () => finish(resolve, { status, contentType: String(headers['content-type'] || ''), buffer: Buffer.concat(chunks, size), headers }));
+        response.on('end', () => {
+          if (settled) return;
+          const buffer = Buffer.concat(chunks, size);
+          chunks.length = 0;
+          finish(resolve, { status, contentType: String(headers['content-type'] || ''), buffer, headers });
+        });
         response.on('error', error => finish(reject, error));
+        response.on('aborted', () => finish(reject, downloadError('PLM görsel yanıtı kesildi. / PLM image response aborted.', 'ECONNRESET')));
       });
       request.setTimeout(timeoutMs, () => {
-        request.destroy(downloadError('PLM görsel indirmesi zaman aşımına uğradı.', 'PLM_IMAGE_TIMEOUT'));
+        const error = downloadError('PLM görsel indirmesi zaman aşımına uğradı.', 'PLM_IMAGE_TIMEOUT');
+        finish(reject, error);
+        request.destroy(error);
       });
       request.on('error', error => finish(reject, error && error.code ? error : downloadError(String(error && error.message || error), 'ECONNRESET')));
+      if (!settled && typeof options.isCancelled === 'function') {
+        cancelTimer = setInterval(() => {
+          if (!options.isCancelled()) return;
+          const error = downloadError('PLM görsel işlemi durduruldu. / PLM image operation cancelled.', 'PLM_JOB_CANCELLED');
+          finish(reject, error);
+          if (responseBody) responseBody.destroy();
+          request.destroy(error);
+        }, 25);
+      }
     } catch (error) {
       finish(reject, downloadError(String(error && error.message || error), 'PLM_IMAGE_URL_INVALID'));
     }
@@ -201,7 +239,7 @@ async function downloadImage(url, options = {}) {
   if (!safeUrl) throw downloadError('CoreNectum Attachment adresi geçersiz.', 'PLM_IMAGE_URL_INVALID');
   const maxAttempts = Math.max(1, Math.trunc(Number(options.maxAttempts)) || DEFAULT_MAX_ATTEMPTS);
   const request = typeof options.request === 'function' ? options.request : httpGetImage;
-  const wait = typeof options.sleep === 'function' ? options.sleep : sleep;
+  const wait = typeof options.sleep === 'function' ? options.sleep : ms => sleep(ms, options.isCancelled);
   let lastError = null;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -212,6 +250,9 @@ async function downloadImage(url, options = {}) {
       const response = await request(safeUrl, options);
       const buffer = Buffer.isBuffer(response && response.buffer) ? response.buffer : Buffer.alloc(0);
       if (!buffer.length) throw downloadError('PLM görsel yanıtı boş.', 'PLM_IMAGE_EMPTY');
+      if (buffer.length > (Math.max(1024, Number(options.maxBytes) || MAX_IMAGE_BYTES))) {
+        throw downloadError('PLM görseli boyut sınırını aşıyor. / PLM image exceeds the byte limit.', 'PLM_IMAGE_TOO_LARGE', { size: buffer.length });
+      }
       const mimeType = sniffImageMime(buffer, response && response.contentType);
       if (!mimeType) throw downloadError('PLM görsel yanıtı geçerli bir raster görsel değil.', 'PLM_IMAGE_INVALID_TYPE', { declared: String((response && response.contentType) || '') });
       return { url: safeUrl, mimeType, buffer, size: buffer.length, attempts: attempt };

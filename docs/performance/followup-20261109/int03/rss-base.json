@@ -1,0 +1,43 @@
+{
+  "mode": "base-main",
+  "node": "v24.19.0",
+  "platform": "linux/x64",
+  "synthetic": true,
+  "serviceSha256": "a732ddae05e8bca1b052a8be2be594335f9be587f121930495cf53b20c8a466e",
+  "jobs": 2,
+  "imagesPerJob": 40,
+  "sizesMiB": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "bytesDownloaded": 251658240,
+  "outcomes": 80,
+  "contentHashesSha256": "1e685fc22e0ab535dc72aea2134d1f08e987f86c48634b5e3f939960cd808b85",
+  "before": {
+    "rss": 45551616,
+    "heapTotal": 12185600,
+    "heapUsed": 8970160,
+    "external": 2720922,
+    "arrayBuffers": 162315
+  },
+  "sampledPeak": {
+    "rss": 398073856,
+    "arrayBuffers": 314931867,
+    "external": 346850654
+  },
+  "maxEagerBufferRootsAtCommit": 125829120,
+  "reservation": {
+    "limit": 268435456,
+    "used": 0,
+    "peak": 0,
+    "waiting": 0
+  },
+  "reservationIsRss": false,
+  "statuses": [
+    "completed",
+    "completed"
+  ]
+}

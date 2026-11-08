@@ -27,6 +27,7 @@ const api = require('./corenectum-style-api');
 const jobStore = require('./plm-image-job-store');
 const { runBounded } = require('./plm-image-download-queue');
 const ingestLib = require('./plm-image-ingest');
+const { imageByteBudget, createImageStaging, DOWNLOAD_BYTES, COMMIT_BYTES } = require('./plm-image-byte-budget-int03');
 
 const AUTH_CODES = new Set(['CORENECTUM_LOGIN_REQUIRED', 'PLM_IMAGE_AUTH', 'CORENECTUM_AUTH_REQUIRED', 'CORENECTUM_API_TOKEN_REQUIRED', 'CORENECTUM_API_TOKEN_INVALID']);
 /* API token hatası (409) da yetki hatasıdır. Özgün kod korunur: istemcideki
@@ -330,62 +331,75 @@ async function runPlmImageSync(input = {}) {
   const uniqueUrls = [...byUrl.values()];
   let downloaded = 0;
 
-  const run = await runBounded(uniqueUrls, async task => {
-    assertNotCancelled(isCancelled);
-    const image = await downloadImage(task.url, { isCancelled });
-    downloaded += 1;
-    counts.downloadsCompleted = downloaded;
-    counts.bytesDownloaded += Number(image.size) || 0;
-    onProgress({ phase: 'Görseller indiriliyor', current: downloaded, total: uniqueUrls.length, model: task.items[0] && task.items[0].plmId, stage: 'downloading' });
-    if (checkpoint) checkpoint.set({ downloadsCompleted: counts.downloadsCompleted, bytesDownloaded: counts.bytesDownloaded });
-    return image;
-  }, { concurrency: api.boundedConcurrency(input.downloadConcurrency, api.IMAGE_DOWNLOAD_CONCURRENCY), isCancelled });
+  const staging = await createImageStaging();
+  try {
+    const run = await runBounded(uniqueUrls, async task => {
+      assertNotCancelled(isCancelled);
+      const permit = await imageByteBudget.acquire(DOWNLOAD_BYTES, isCancelled);
+      try {
+        const image = await downloadImage(task.url, { isCancelled });
+        const staged = await staging.write(image);
+        downloaded += 1;
+        counts.downloadsCompleted = downloaded;
+        counts.bytesDownloaded += Number(image.size) || 0;
+        onProgress({ phase: 'Görseller indiriliyor', current: downloaded, total: uniqueUrls.length, model: task.items[0] && task.items[0].plmId, stage: 'downloading' });
+        if (checkpoint) checkpoint.set({ downloadsCompleted: counts.downloadsCompleted, bytesDownloaded: counts.bytesDownloaded });
+        return staged;
+      } finally { permit.release(); }
+    }, { concurrency: api.boundedConcurrency(input.downloadConcurrency, api.IMAGE_DOWNLOAD_CONCURRENCY), isCancelled });
 
-  for (let index = 0; index < uniqueUrls.length; index += 1) {
-    const result = run.results[index];
-    const task = uniqueUrls[index];
-    if (!result || result.cancelled) continue;
-    if (!result.ok) {
-      // TEK bir görselin başarısızlığı işi düşürmez.
-      for (const item of task.items) fail({ ...item, code: clean(result.error && result.error.code, 60) || 'PLM_IMAGE_DOWNLOAD_FAILED', error: clean(result.error && result.error.message, 300) });
-      continue;
+    for (let index = 0; index < uniqueUrls.length; index += 1) {
+      const result = run.results[index];
+      const task = uniqueUrls[index];
+      if (!result || result.cancelled) continue;
+      if (!result.ok) {
+        if (isCancellation(result.error)) continue;
+        // TEK bir görselin başarısızlığı işi düşürmez.
+        for (const item of task.items) fail({ ...item, code: clean(result.error && result.error.code, 60) || 'PLM_IMAGE_DOWNLOAD_FAILED', error: clean(result.error && result.error.message, 300) });
+        continue;
+      }
+      for (const item of task.items) {
+        ready.push(staging.entry(item, result.value));
+      }
     }
-    for (const item of task.items) {
-      ready.push({ ...item, buffer: result.value.buffer, mimeType: result.value.mimeType });
+
+    // 5) Kanonik yazma
+    let commit = { outcomes: [], linksUpdated: 0, counts: {}, overrides: { imagemap }, store, removedFiles: 0 };
+    if (ready.length) {
+      // İptal edilen iş, önceki gibi başarıyla indirilen alt kümeyi yazar.
+      // Bu rezervasyonu iptal ederek başarılı sonuçları kaybetme.
+      const permit = await imageByteBudget.acquire(COMMIT_BYTES);
+      try {
+        commit = await ingest.commit(ready, { store, imagemap, overwriteManual, dropOldFiles: input.dropOldFiles === true });
+      } finally { permit.release(); }
+      for (const outcome of commit.outcomes) {
+        if (outcome.status === ingestLib.COMMIT_FAILED) fail({ ...outcome, error: outcome.error, code: outcome.code });
+        else if (checkpoint) checkpoint.complete(outcome);
+      }
+      counts.manualPreserved += (commit.counts.manualPreserved || 0);
     }
-  }
 
-  // 5) Kanonik yazma
-  let commit = { outcomes: [], linksUpdated: 0, counts: {}, overrides: { imagemap }, store, removedFiles: 0 };
-  if (ready.length) {
-    commit = ingest.commit(ready, { store, imagemap, overwriteManual, dropOldFiles: input.dropOldFiles === true });
-    for (const outcome of commit.outcomes) {
-      if (outcome.status === ingestLib.COMMIT_FAILED) fail({ ...outcome, error: outcome.error, code: outcome.code });
-      else if (checkpoint) checkpoint.complete(outcome);
-    }
-    counts.manualPreserved += (commit.counts.manualPreserved || 0);
-  }
+    const cancelled = isCancelled() || run.cancelled;
+    const status = cancelled ? jobStore.STATUS_CANCELLED
+      : failures.length ? jobStore.STATUS_PARTIAL
+        : jobStore.STATUS_COMPLETED;
+    phase(status, '');
 
-  const cancelled = isCancelled() || run.cancelled;
-  const status = cancelled ? jobStore.STATUS_CANCELLED
-    : failures.length ? jobStore.STATUS_PARTIAL
-      : jobStore.STATUS_COMPLETED;
-  phase(status, '');
-
-  return {
-    status,
-    counts,
-    failures,
-    skipped,
-    outcomes: commit.outcomes,
-    linksUpdated: commit.linksUpdated,
-    overrides: commit.overrides,
-    store: commit.store || store,
-    removedFiles: commit.removedFiles || 0,
-    resolution: { batchLog: resolution.batchLog, ambiguous: resolution.ambiguous },
-    metadataCalls: meta.calls,
-    uniqueDownloads: uniqueUrls.length,
-  };
+    return {
+      status,
+      counts,
+      failures,
+      skipped,
+      outcomes: commit.outcomes,
+      linksUpdated: commit.linksUpdated,
+      overrides: commit.overrides,
+      store: commit.store || store,
+      removedFiles: commit.removedFiles || 0,
+      resolution: { batchLog: resolution.batchLog, ambiguous: resolution.ambiguous },
+      metadataCalls: meta.calls,
+      uniqueDownloads: uniqueUrls.length,
+    };
+  } finally { await staging.close(); }
 }
 
 /* HAZIR PAKET AKIŞI — canlı senkronla AYNI kanonik alım yolunu kullanır.

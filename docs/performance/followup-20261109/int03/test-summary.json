@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "command": "npm test",
+  "runner": "tests/run-tests.js",
+  "files": 1315,
+  "batches": 10,
+  "concurrency": 4,
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "elapsedSeconds": 191.9,
+  "totals": {
+    "tests": 9097,
+    "pass": 9032,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "rawLog": "full-test.log",
+  "earlierFailedRun": "full-test-initial-env-failed.log",
+  "earlierFailureReason": "Harness TEMP/AUTH overrides conflicted with per-test temp fixtures; corrected environment, no application/test guard changes; full suite restarted from batch 1.",
+  "targeted": {
+    "files": 13,
+    "tests": 109,
+    "pass": 109,
+    "fail": 0,
+    "skip": 0,
+    "cancel": 0
+  },
+  "newInt03Tests": 11
+}

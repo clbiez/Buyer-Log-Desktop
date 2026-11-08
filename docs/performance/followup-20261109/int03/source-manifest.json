@@ -1,0 +1,15 @@
+{
+  "baseMainSha": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "node": "v24.19.0",
+  "os": "linux/x64",
+  "existingReleaseNotesByteIdentical": true,
+  "concurrency": 4,
+  "files": {
+    "resources/app/server/lib/plm-image-download-queue.js": "3358ed769bf2f6f400088d2b54c3ddc90f37c4520004bbd4d15af810c532df20",
+    "resources/app/server/lib/plm-image-sync-service.js": "16fcbcadd88922ddd47812dee811a4211b99a6c9cbe9d270ecb97640dd7ec269",
+    "resources/app/server/lib/plm-image-byte-budget-int03.js": "67a82b24d33c4985fd34200a15064f63abe099b399199861096294f860f3ac77",
+    "resources/app/tests/plm-image-byte-budget-int03.test.js": "f2c11c100e334f0e2039c852e3f213d27cb26ba78c168670c3eb61e94221306f",
+    "resources/app/public/release-notes/next.json": "0d841817a1003c1029120a5b0eb8240cc3743c951e309dd7dba3fe8af24c8d1a",
+    "resources/app/public/release-notes/next-assets/int03-shared-image-byte-budget-20261109.png": "0b4a1063a9e989198f65227c1a961a0dc91a49ceeda90a84455c59f7b6d45c7f"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "upstream": "loopback metadata and real HTTP stream; actual queue/ingest/server/auth/UI",
+  "status": "passed",
+  "acceptance": {
+    "generatedRows": 24,
+    "requested": 21,
+    "downloaded": 21,
+    "bytes": 13911438,
+    "exactHttpContents": true,
+    "cacheHits": 21,
+    "attempts": 21,
+    "unknown": 11,
+    "budget": {
+      "limit": 268435456,
+      "used": 0,
+      "peak": 251658240,
+      "waiting": 0
+    }
+  },
+  "loadedUiImages": 16,
+  "screenshot": "public/release-notes/next-assets/int03-shared-image-byte-budget-20261109.png"
+}
