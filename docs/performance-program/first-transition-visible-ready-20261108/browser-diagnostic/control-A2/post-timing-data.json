@@ -1,0 +1,6311 @@
+[
+  {
+    "module": "cp",
+    "rows": 24982,
+    "normalizedRowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+    "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+    "visibleCellsSha256": "d991c092fadd3b5d20f52e84b5dc66b1f288bb3e193ee4edd7e2d14030b9f4da",
+    "visibleRows": 50,
+    "unobscured": true,
+    "cover": null,
+    "timezone": "Europe/Istanbul",
+    "localDay": "2026-11-08",
+    "fields": {
+      "_id": {
+        "sha256": "7bb59cf19f0a4f8fbcb74c0c0a8153441e14b7bf7fa21e49a7fb513b618895b0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 2
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 100
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 24981
+          }
+        ]
+      },
+      "_matchOcode": {
+        "sha256": "227ed8efe111d3aafb4a27acd348115e133a2ecac2ad4ce1c003e623c1f0a964",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "4100000"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "4100002"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "4100003"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "4100115"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "4129999"
+          }
+        ]
+      },
+      "_isActive": {
+        "sha256": "4c762ce0963b2f9b9fa944794244fb1fe606162a28d7a20436787ffc22e44d54",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "Active/Inactive": {
+        "sha256": "3cc32534aa41c83a0dd0ebd3a0a742eb55b3d3545ae174580b91ffcf12b796ed",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Active"
+          }
+        ]
+      },
+      "_imageKey": {
+        "sha256": "3ef527cd89dc77e90ebbf793b1167dc6173b183d631fc7b839d13e593b63bd62",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "plm:880000|colour:E03"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "plm:880014|colour:E03"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "plm:880021|colour:B07"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "plm:880798|colour:L02"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "plm:880273|colour:H04"
+          }
+        ]
+      },
+      "_imageRef": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_imageUrl": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Priority": {
+        "sha256": "b76b6dbacc4f81b372b337bb185499fc44797aa39ba264afa44fd6d73e360373",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "ON_TRACK"
+          }
+        ]
+      },
+      "Season": {
+        "sha256": "c9383008ca5f30f3e485628be3fedd866f9d107f3b0d2d489e618064b88e7c95",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "6W26"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "6S27"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "6S27"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "6W26"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "6W26"
+          }
+        ]
+      },
+      "Country": {
+        "sha256": "9d670119e6da7548bbb46d68c7d16ac7554f11f925dd76c08fe7e82805c772e4",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Turkey"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Egypt"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Bangladesh"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Turkey"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Bangladesh"
+          }
+        ]
+      },
+      "Manufacturer": {
+        "sha256": "5ff40deab2c19b44294de090a2db706d4ae6c5423c3e42be1d5ed9dc1f2bf821",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EGE ORME"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "ANADOLU TRIKO"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          }
+        ]
+      },
+      "Sub-Manufacturer": {
+        "sha256": "5ff40deab2c19b44294de090a2db706d4ae6c5423c3e42be1d5ed9dc1f2bf821",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EGE ORME"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "ANADOLU TRIKO"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          }
+        ]
+      },
+      "Licensor": {
+        "sha256": "d5bd5e801a0378a43500264490f6651c9db1ea67aa250a49769239c5aaee45f0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "DTR"
+          }
+        ]
+      },
+      "License": {
+        "sha256": "13e0681d143927929e9fb358ecc23a0c966e56d1041e1a0e4fe2aae75c3d3ef0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DISNEY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "HARRY POTTER"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "BARBIE"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "LOONEY TUNES"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "LOONEY TUNES"
+          }
+        ]
+      },
+      "Category": {
+        "sha256": "2265f084c5a2a5d102e64e524a7f38ac9ef036d8c353cc0baab6294303250648",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "PIJAMA"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "KAZAK"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "KAZAK"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "HIRKA"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "KAZAK"
+          }
+        ]
+      },
+      "Special Code": {
+        "sha256": "7a4b9dafdc0fb77b5b6a409c8b32029587e7fad4e95ddb978b9719d5103aeaa0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "PLM ID": {
+        "sha256": "a537440a54722b7e162d858a07bbe7d5cc4c323239898762f8f885df5440120f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 880000
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 880014
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 880021
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 880798
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 880273
+          }
+        ]
+      },
+      "Model Name": {
+        "sha256": "a3e68f395a58cab8a666f063b9015acb97dca2c3e553a6325d6b1d68aa22b939",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DISNEY Classic Pijama"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "HARRY Crew Kazak"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "BARBIE Glitter Kazak"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "LOONEY Stripe Hirka"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "LOONEY Varsity Kazak"
+          }
+        ]
+      },
+      "Ürün Tanım": {
+        "sha256": "a6379832954b77db3b1b3bce714b7eb994f9909afdc8b7bec73a99a74328fccd",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "PIJAMA DISNEY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "KAZAK HARRY POTTER"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "KAZAK BARBIE"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "HIRKA LOONEY TUNES"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "KAZAK LOONEY TUNES"
+          }
+        ]
+      },
+      "C.Code": {
+        "sha256": "8843032556674dfb629ccdaa823ad3ecd9ab8f03d4fdcd803f8a8d8f3bbc451d",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "E03"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "E03"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "B07"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "L02"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "H04"
+          }
+        ]
+      },
+      "Colour": {
+        "sha256": "d31865037971e8ea0a06cf2b0baf9a06b74433d752f66926233cbc99816a436f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EKRU"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "EKRU"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "BORDO"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "LACIVERT"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "HAKI"
+          }
+        ]
+      },
+      "Order Code": {
+        "sha256": "1d60e6fe55cb7db27517308bacf6815692acbc363f73e8c44205a12eee9c62b6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4100000
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 4100002
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 4100003
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 4100115
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 4129999
+          }
+        ]
+      },
+      "FOB ($)": {
+        "sha256": "8e770016955b6fef0a2c53e2bb262c2669ebc0243b727c9a842ad8931f6fa8c3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 8.97
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 7.42
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 7.46
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 7.78
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 11.06
+          }
+        ]
+      },
+      "Supp. FOB": {
+        "sha256": "8e770016955b6fef0a2c53e2bb262c2669ebc0243b727c9a842ad8931f6fa8c3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 8.97
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 7.42
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 7.46
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 7.78
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 11.06
+          }
+        ]
+      },
+      "_suppFobManual": {
+        "sha256": "71531f895251cd4ec697b0532accdf9b591559c225c32fce398f7f11d751e52a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_suppFobRule": {
+        "sha256": "8cb56d6a859bdefedce38faa3541098d328f808eada1f8ee32e526062a865a5a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobMeta": {
+        "sha256": "8cb56d6a859bdefedce38faa3541098d328f808eada1f8ee32e526062a865a5a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobImported": {
+        "sha256": "8cb56d6a859bdefedce38faa3541098d328f808eada1f8ee32e526062a865a5a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobOverride": {
+        "sha256": "71531f895251cd4ec697b0532accdf9b591559c225c32fce398f7f11d751e52a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_licensorManual": {
+        "sha256": "71531f895251cd4ec697b0532accdf9b591559c225c32fce398f7f11d751e52a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_licensorSource": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_nonDtrManufacturerRule": {
+        "sha256": "71531f895251cd4ec697b0532accdf9b591559c225c32fce398f7f11d751e52a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "OPD": {
+        "sha256": "3111b5ccb985553e3db0237523eee4630cc0fe0c7fc1dbe4f80159032d3a89ed",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-07-16T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-08-18T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2026-11-05T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-09-27T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-05-20T21:00:00.000Z"
+          }
+        ]
+      },
+      "Original Ex-factory": {
+        "sha256": "8580e00eb90e7ed078a7553778c3cd840b85ce74f51a7e2b0c2b88b8afc176ef",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-10-25T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-12-28T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-01-24T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-08T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-09-15T21:00:00.000Z"
+          }
+        ]
+      },
+      "Ex-factory": {
+        "sha256": "9e7947603a7de3d544ae24c9c13e44ce34f1a060ccc6e7ed66fe6a452fc984d2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-01-06T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-02-03T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-09-24T21:00:00.000Z"
+          }
+        ]
+      },
+      "_asasExFactory": {
+        "sha256": "9e7947603a7de3d544ae24c9c13e44ce34f1a060ccc6e7ed66fe6a452fc984d2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-01-06T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-02-03T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-09-24T21:00:00.000Z"
+          }
+        ]
+      },
+      "_exFactoryRevision": {
+        "sha256": "8cb56d6a859bdefedce38faa3541098d328f808eada1f8ee32e526062a865a5a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_asasRetailDate": {
+        "sha256": "eb90c674647cc0d62fa418e1b5d1b7c7b3679a7899682c7bc0f6a9778ed7082f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-27T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-01T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-03-24T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-10-27T21:00:00.000Z"
+          }
+        ]
+      },
+      "_asasInStore": {
+        "sha256": "d33f9072e201ddbd6cc80ed79d9dc7a8f2d93301af3177755d5f85c962767ba7",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-12-19T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-03-06T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-16T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-04-12T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-10-31T21:00:00.000Z"
+          }
+        ]
+      },
+      "HANDOVER Tarihi": {
+        "sha256": "34e8bc441e9b05e2348df59ed39b825be79836fbc2203e5467621e4e191c5ed8",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-09-28T21:00:00.000Z"
+          }
+        ]
+      },
+      "Retail Date": {
+        "sha256": "eb90c674647cc0d62fa418e1b5d1b7c7b3679a7899682c7bc0f6a9778ed7082f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-27T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-01T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-03-24T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-10-27T21:00:00.000Z"
+          }
+        ]
+      },
+      "Ex→Retail": {
+        "sha256": "0fb3beac24cbacee64a21c5bd6314bf963d6606deb3449f4151aa08cd268e2b3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 26
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 38
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 26
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 39
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 33
+          }
+        ]
+      },
+      "Buying Son Onay Tarihi": {
+        "sha256": "4b0b0d793d60d294eafb0532aefc3e2e34c8103fdc35c7f5ea505fe9aaa85083",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-09-17T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-12-02T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-01-14T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-01-13T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-08-29T21:00:00.000Z"
+          }
+        ]
+      },
+      "In-Store (Model Budget)": {
+        "sha256": "d33f9072e201ddbd6cc80ed79d9dc7a8f2d93301af3177755d5f85c962767ba7",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-12-19T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-03-06T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-16T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-04-12T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-10-31T21:00:00.000Z"
+          }
+        ]
+      },
+      "_initialInspection": {
+        "sha256": "873767691cd2915f30b3b37a91669715ece8620f3fdfdbbebb855d1632d25e1c",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-10-26"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-12-29"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-01-25"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-09"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-09-16"
+          }
+        ]
+      },
+      "Order Quantity": {
+        "sha256": "4e012de628069bbc0ef4e3a37d9397ed988d8b820eab0e22cb2136b43c3140ad",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 3600
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 2900
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 2100
+          }
+        ]
+      },
+      "Shipment Quantity": {
+        "sha256": "b6b04167373179cdf904fcada6eeab035f90bdd3aa18b1366fc1124f122df79f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 1260
+          }
+        ]
+      },
+      "Remaining Units": {
+        "sha256": "4cad90a9b2f44f5a0441e761b5f4eab2af6165db04c9b797782782ae71ef93b3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 3600
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 2900
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "%": {
+        "sha256": "135cd6b6ac1e1392a999caf4b0c15b73d3f36fa916e99bd3fa5577bea90e36dd",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 0.6
+          }
+        ]
+      },
+      "STATUS": {
+        "sha256": "b770937522814e6380a8c4a52b2466ae6d9baf44450ba271af7e73e416cecfbc",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Depoda"
+          }
+        ]
+      },
+      "Ant. Arrival": {
+        "sha256": "242d4414128d4c089e00079cd56da1e7fa55d404334b38c2c9dc5785f32db54f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-14T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2027-03-17T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-04-14T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-04-24T21:00:00.000Z"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "2026-10-19T21:00:00.000Z"
+          }
+        ]
+      },
+      "Del. Type": {
+        "sha256": "f7938c2625292b6c402b7f3129c1d33fd307f7889910f2f209dfa9064802d036",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Uçak"
+          }
+        ]
+      },
+      "_logisticSegments": {
+        "sha256": "3b7af84eeb4651a314f7aeb7480d6c0a07d6c4a227bd91f2ecd98d955bb0d036",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              {
+                "id": "partial-0",
+                "kind": "partial",
+                "partialNo": 1,
+                "synthetic": "",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 0,
+                "status": "Üretimde",
+                "arrival": "2026-11-14T21:00:00.000Z",
+                "delType": "GEMI",
+                "handover": null,
+                "sourceRow": 1,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              },
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 4600,
+                "status": "Üretimde",
+                "arrival": "2027-01-10T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 5100,
+                "status": "Üretimde",
+                "arrival": "2027-03-17T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 3600,
+                "status": "Üretimde",
+                "arrival": "2027-04-14T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 2900,
+                "status": "Üretimde",
+                "arrival": "2027-04-24T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 840,
+                "status": "Üretimde",
+                "arrival": "2026-12-03T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              },
+              {
+                "id": "partial-0",
+                "kind": "partial",
+                "partialNo": 1,
+                "synthetic": "",
+                "userShortage": false,
+                "priority": 3,
+                "quantity": 1260,
+                "status": "Depoda",
+                "arrival": "2026-10-19T21:00:00.000Z",
+                "delType": "UCAK",
+                "handover": "2026-09-28T21:00:00.000Z",
+                "sourceRow": 12726,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          }
+        ]
+      },
+      "_logisticStatusValues": {
+        "sha256": "cb013324d6def347e63a0912312eef89f45f92ef70fccf0c301f5eda5fc04c4c",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": [
+              "Depoda"
+            ]
+          }
+        ]
+      },
+      "_logisticDelTypeValues": {
+        "sha256": "b1f3cf64c3b06a06aa6f03dadf26e2ffbe82975cfb0c2cc666f1c647860f0056",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": [
+              "Gemi",
+              "Uçak"
+            ]
+          }
+        ]
+      },
+      "_logisticArrivalValues": {
+        "sha256": "87e959311faef8b6b6560aba75ee3805a27395d0b7f40ceef9ec492729aed4fa",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "2026-11-14T21:00:00.000Z",
+              "2027-01-10T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "2027-03-17T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "2027-04-14T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "2027-04-24T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": [
+              "2026-12-03T21:00:00.000Z",
+              "2026-10-19T21:00:00.000Z"
+            ]
+          }
+        ]
+      },
+      "_logisticProductionQty": {
+        "sha256": "6e223ab14c9d5e95edeae7b594180024e500a22131454623cf3b7c7e6ca62778",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 3600
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 2900
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "_logisticShortageQty": {
+        "sha256": "e150f72d14101ee3980e942ba57ddaf8264c9939f945157c1a7b32d8dc9aebe0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 0
+          }
+        ]
+      },
+      "_logisticRemainingQty": {
+        "sha256": "4cad90a9b2f44f5a0441e761b5f4eab2af6165db04c9b797782782ae71ef93b3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 3600
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 2900
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "_logisticLoadedQty": {
+        "sha256": "b6b04167373179cdf904fcada6eeab035f90bdd3aa18b1366fc1124f122df79f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 1260
+          }
+        ]
+      },
+      "_logisticPartialCount": {
+        "sha256": "b142d4cb62e188ddf82ac6ab5be858f792f347829be1fb6810edd67915b0f72e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 1
+          }
+        ]
+      },
+      "_logisticAllPartialsInWarehouse": {
+        "sha256": "b06480055f89d193d762be92e9fdde9f4b9b72f0682919b31563ee659f790274",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "_logisticTotalQty": {
+        "sha256": "4e012de628069bbc0ef4e3a37d9397ed988d8b820eab0e22cb2136b43c3140ad",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 3600
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 2900
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 2100
+          }
+        ]
+      },
+      "Notes": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Ek Not": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "NotesHtml": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Ek NotHtml": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesAt": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotAt": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesBy": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesByName": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotBy": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotByName": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Merch Marka Yaş Grup Kod": {
+        "sha256": "9cf32d2c4cf0fb234ba62fdda5805180ad6bb49168c0c4b8e144e706ee897824",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "KB"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "WM"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "TN"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "MN"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "TN"
+          }
+        ]
+      },
+      "Merch Alt Grup Kod": {
+        "sha256": "dbeed26025d077139d3f5a5034c37ce84c57ea6cd2af5af1cf1a7b2b64c1fd25",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "D4"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "A1"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "A1"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "A3"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "A1"
+          }
+        ]
+      },
+      "Buyer": {
+        "sha256": "43a867bba7b37111003f4e667527d18095267343350e5164bc609f43f12226c9",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Mert Y."
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Ece B."
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Burak E."
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Can D."
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Burak E."
+          }
+        ]
+      },
+      "Buyer Grup (TR)": {
+        "sha256": "f9c868b17e70ef8373762b5d4bf925150db214aef69bdbd029586a3cd41de1f8",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "KIDS BOY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "WOMEN"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "TEEN"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "MEN"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "TEEN"
+          }
+        ]
+      },
+      "Line": {
+        "sha256": "768665da652c8fb8a9c32b3af665879500539e90c06aba826235a56c5e8ecf3c",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Kids Boy Knit"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Women Licence"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Teen Knit"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Men Licence"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Teen Knit"
+          }
+        ]
+      },
+      "Kumaş Kategorisi": {
+        "sha256": "75ed364a7e9360443876e80181d1fc561a91e38a28fa2f8617329adeb686f533",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Örme"
+          }
+        ]
+      },
+      "Kumaşçı Ülkesi": {
+        "sha256": "4e5a8b62f1f0a40f1ad88458123e735d4b95e01f632a685e93593306e6c311cb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Türkiye"
+          }
+        ]
+      },
+      "Kumaşçı": {
+        "sha256": "fa08052d27310571e51b4d03143fd7fb860b7690140665be8201cfdb566956dd",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          }
+        ]
+      },
+      "Kumaş Tipi": {
+        "sha256": "229389d68d48516f7c3ff187a42be6dfb79a72f7c38d019af686321ffef15a05",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Ribana"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Ribana"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "İki İplik"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Ribana"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Ribana"
+          }
+        ]
+      },
+      "İplik No": {
+        "sha256": "fda3f682f359025df12add7bc288d91a0539107a9d7a73599a2072bde0e204c9",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "24/1"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "24/1"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "20/1"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "24/1"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "24/1"
+          }
+        ]
+      },
+      "Gramaj": {
+        "sha256": "b46cd7b6d285018e7bd60ce26beb5da81e0001b35366eb4f2468c44218181a4f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "220"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "220"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "280"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "220"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "220"
+          }
+        ]
+      },
+      "Karışım": {
+        "sha256": "0890abbc43c92a483c46aa5c38f0fc4d2dff4fb16bf081ba1261e40b0053983e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "%100 PAMUK"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "%100 PAMUK"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "%80 PAMUK %20 POLYESTER"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "%100 PAMUK"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "%100 PAMUK"
+          }
+        ]
+      },
+      "Importance": {
+        "sha256": "2bc7bb0038c9a7e8f4fe481b6ca96c695af263ca1443f8d46e51f954b4baf389",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "Regular"
+          }
+        ]
+      },
+      "_importanceId": {
+        "sha256": "8ccc3fdfac7edfceef42cdaa0bd41975d0daa3c5220626427f198e6cec26a798",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "regular"
+          }
+        ]
+      },
+      "_importanceSource": {
+        "sha256": "fa62ac89fafc31256747ecd6bca235f4ca870af067876cbdafd379ca206fe375",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "default"
+          }
+        ]
+      },
+      "LT": {
+        "sha256": "fc2bc9df53db05175233e19ff3e500fc0cc70d9dd7bda01e7749185a2eb171ee",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 108
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 141
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 90
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 139
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": 127
+          }
+        ]
+      },
+      "_canEdit": {
+        "sha256": "4c762ce0963b2f9b9fa944794244fb1fe606162a28d7a20436787ffc22e44d54",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "_canEditShared": {
+        "sha256": "4c762ce0963b2f9b9fa944794244fb1fe606162a28d7a20436787ffc22e44d54",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "__checklist__pps": {
+        "sha256": "e1854a05eafbe125720361d206b762f874504852390f43a77e30e4ad7358bdb5",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__soff": {
+        "sha256": "e1854a05eafbe125720361d206b762f874504852390f43a77e30e4ad7358bdb5",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__artwork": {
+        "sha256": "9575e77e2aeab49ab7b1deef6e296091c233cb7c99b1099e8e29604a65e273f4",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__tests": {
+        "sha256": "0ffd578bf547f22127ca04477b79f32fbda0afefbba4d8550ef46ce405813974",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__fabric": {
+        "sha256": "ca899ca1233d8f8a6ebdca6741d0cbd747899366ecc2dce8d78e6348cc7f9de9",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__accessories": {
+        "sha256": "0ffd578bf547f22127ca04477b79f32fbda0afefbba4d8550ef46ce405813974",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "__checklist__supplierConfirmation": {
+        "sha256": "787d6c1e30a3c438a01a5b0e7eae6661acde0b31f7f338d32b731d7074fce625",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Bekliyor"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_calculationStatus": {
+        "sha256": "622372d01a3f64e1749150c9a0771b1686d2e84e6b0f0f1918b8ba996058cf10",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "UNKNOWN"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "UNKNOWN"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "UNKNOWN"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "UNKNOWN"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "KNOWN"
+          }
+        ]
+      },
+      "_trackingTags": {
+        "sha256": "09a44990777fedfe6e25eb8b3e4a99645fab6bda6f4e7a8d47d5daa6c5bfa2f5",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": []
+          }
+        ]
+      },
+      "_actionPriorityReasons": {
+        "sha256": "09a44990777fedfe6e25eb8b3e4a99645fab6bda6f4e7a8d47d5daa6c5bfa2f5",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": []
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": []
+          }
+        ]
+      },
+      "_actionPrioritySignals": {
+        "sha256": "083f881ba8120e48af31ca3cd245abb4d259bbf0be1f3e0502082232d4f0c58e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              {
+                "code": "DELIVERY_DELAY",
+                "source": "business_rules"
+              },
+              {
+                "code": "MODEL_BUDGET_DELAY",
+                "source": "business_rules"
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              {
+                "code": "DELIVERY_DELAY",
+                "source": "business_rules"
+              },
+              {
+                "code": "MODEL_BUDGET_DELAY",
+                "source": "business_rules"
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              {
+                "code": "DELIVERY_DELAY",
+                "source": "business_rules"
+              },
+              {
+                "code": "MODEL_BUDGET_DELAY",
+                "source": "business_rules"
+              }
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              {
+                "code": "DELIVERY_DELAY",
+                "source": "business_rules"
+              },
+              {
+                "code": "MODEL_BUDGET_DELAY",
+                "source": "business_rules"
+              }
+            ]
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": [
+              {
+                "code": "MODEL_BUDGET_DELAY",
+                "source": "business_rules"
+              }
+            ]
+          }
+        ]
+      },
+      "_unifiedBasePriority": {
+        "sha256": "b76b6dbacc4f81b372b337bb185499fc44797aa39ba264afa44fd6d73e360373",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "ON_TRACK"
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": "ON_TRACK"
+          }
+        ]
+      },
+      "Artwork Detail": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Fabric (PLM)": {
+        "sha256": "a578f869b07fa523450173aefcd7a5eb71b3e52103e0779f12b75df74975cefb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 24981,
+            "present": true,
+            "value": ""
+          }
+        ]
+      }
+    },
+    "probe": {
+      "module": "cp",
+      "status": "passed",
+      "intentAtMs": 4873,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 4,
+      "maxPollGapMs": 11770.300000011921,
+      "dispatchAtMs": 4908.4000000059605,
+      "dispatchDelayMs": 35.400000005960464,
+      "dataReadyMs": 23309.70000001788,
+      "firstRowsPaintedMs": 23514.80000001192,
+      "elapsedMs": 32167.20000001788,
+      "paintedAtMs": 37040.20000001788,
+      "observationEndMs": 33590.09999999404,
+      "rows": 24982,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true
+    }
+  },
+  {
+    "module": "orders",
+    "rows": 30000,
+    "normalizedRowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+    "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+    "visibleCellsSha256": "de378cdec53e573ba35abd87afc8575a2c0587bbd367fb744200fb790a5e5a9b",
+    "visibleRows": 50,
+    "unobscured": true,
+    "cover": "cpPictureCell groupBoundary",
+    "timezone": "Europe/Istanbul",
+    "localDay": "2026-11-08",
+    "fields": {
+      "_id": {
+        "sha256": "d66f852d887ac3f42ba68d5775fde33200ce90bf71ce4ebabfd0e31af3d4a2a2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 2
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 100
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 29999
+          }
+        ]
+      },
+      "_matchOcode": {
+        "sha256": "44d89085f99b772925e24e6be82c441155ac9b6b120869be9da1f34b153350f5",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "4100000"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "4100001"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "4100002"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "4100100"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "4129999"
+          }
+        ]
+      },
+      "_isActive": {
+        "sha256": "b5ef2aa455cb36790188342f4370f2ec452dd63c7c29494f78ec5aba3f5f5828",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "Active/Inactive": {
+        "sha256": "1beb0e70d6cb5941c3675e42fee51163817b9b1ac62ab9046812e0bb70e454af",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Inactive"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Active"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Active"
+          }
+        ]
+      },
+      "_imageKey": {
+        "sha256": "38c1db9cd645108090702dc15bdf2d220f1cfaddf65bb75cde3a9574f834ba5e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "plm:880000|colour:E03"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "plm:880007|colour:B07"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "plm:880014|colour:E03"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "plm:880700|colour:L02"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "plm:880273|colour:H04"
+          }
+        ]
+      },
+      "_imageRef": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_imageUrl": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Season": {
+        "sha256": "e6938c32da34517d10031c3a15e75e8b668634aa45be35f961b69c06805046cd",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "6W26"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "6W26"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "6S27"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "6S27"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "6W26"
+          }
+        ]
+      },
+      "Country": {
+        "sha256": "dacccc83fd2e203e0b43b96f6d7beea3642d0f873ec2b2758913c843a174d8a6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Turkey"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Bangladesh"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Egypt"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Egypt"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Bangladesh"
+          }
+        ]
+      },
+      "Manufacturer": {
+        "sha256": "91b4c16c86a5c982ede1903bfaf3f7ab337328ee5b9217d61ab9db3eb5a3d7d1",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EGE ORME"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          }
+        ]
+      },
+      "Sub-Manufacturer": {
+        "sha256": "91b4c16c86a5c982ede1903bfaf3f7ab337328ee5b9217d61ab9db3eb5a3d7d1",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EGE ORME"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DELTA TEXTILE"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "CHITTAGONG KNIT"
+          }
+        ]
+      },
+      "Licensor": {
+        "sha256": "7632324fb058b4d4bd9509fced9b6a1f7bc6f739ff1a164a1653c178745b3bf6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DTR"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "DTR"
+          }
+        ]
+      },
+      "License": {
+        "sha256": "94522a95da752b6f9b02ffd5e41f18bb37d9764bb55476e9445444d621cdbd6b",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DISNEY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DISNEY"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "HARRY POTTER"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "STAR WARS"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "LOONEY TUNES"
+          }
+        ]
+      },
+      "Category": {
+        "sha256": "bc6faa80ee05329370a9d3777da22e5c907d0ffd993f0e89300fa839b3990a54",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "PIJAMA"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "PIJAMA"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "KAZAK"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "HIRKA"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "KAZAK"
+          }
+        ]
+      },
+      "Special Code": {
+        "sha256": "307a5832cbc50ec6b4f2eee3f8598dd778edff5ec7633675d0260c59342e98b1",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "ECO"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "PLM ID": {
+        "sha256": "fdacfd9a549654765c74befc477b4598094c38ddb7e93b14369b29e117d61b65",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 880000
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 880007
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 880014
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 880700
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 880273
+          }
+        ]
+      },
+      "Model Name": {
+        "sha256": "5c157bc798309d1248e352d55e73cbddc237c140f1213852b5e6df438ee2ef9e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DISNEY Classic Pijama"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DISNEY Glitter Pijama"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "HARRY Crew Kazak"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "STAR Logo Hirka"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "LOONEY Varsity Kazak"
+          }
+        ]
+      },
+      "Ürün Tanım": {
+        "sha256": "d4ca45356d8f7db69519631cbeb0f0349eceaf6ad575b49c7de74e96bc5f40b6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "PIJAMA DISNEY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "PIJAMA DISNEY"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "KAZAK HARRY POTTER"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "HIRKA STAR WARS"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "KAZAK LOONEY TUNES"
+          }
+        ]
+      },
+      "C.Code": {
+        "sha256": "8698352a116837812c2122e26cf7ebe89fb979cc830622ec0891dd84632d8461",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "E03"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "B07"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "E03"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "L02"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "H04"
+          }
+        ]
+      },
+      "Colour": {
+        "sha256": "de0cf5ec8c216bd06616d0fa2aae6d7083c70acb4b8a9661c46e021ba59915eb",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "EKRU"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "BORDO"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "EKRU"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "LACIVERT"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "HAKI"
+          }
+        ]
+      },
+      "Order Code": {
+        "sha256": "8db667635f2ffeecb660893ae5601450a5eb4f1001d8aea08e362fea8f042a85",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4100000
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 4100001
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 4100002
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 4100100
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 4129999
+          }
+        ]
+      },
+      "FOB ($)": {
+        "sha256": "231861b6ef10e432088a117299c96f065fc4dbfbc2d04b9624ee0b9b4da82f23",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 8.97
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 9.82
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 7.42
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 7.33
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 11.06
+          }
+        ]
+      },
+      "Supp. FOB": {
+        "sha256": "231861b6ef10e432088a117299c96f065fc4dbfbc2d04b9624ee0b9b4da82f23",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 8.97
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 9.82
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 7.42
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 7.33
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 11.06
+          }
+        ]
+      },
+      "_suppFobManual": {
+        "sha256": "5744fc0f89a3ecc8ba7dad1ed3eb8d8c7c451a048868a24c5825fedf3145d2b2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_suppFobRule": {
+        "sha256": "3db6cbf81a117c0a3b8b5afd57bb178937ba95eb0aa6759500933038e69fea73",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobMeta": {
+        "sha256": "3db6cbf81a117c0a3b8b5afd57bb178937ba95eb0aa6759500933038e69fea73",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobImported": {
+        "sha256": "3db6cbf81a117c0a3b8b5afd57bb178937ba95eb0aa6759500933038e69fea73",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_suppFobOverride": {
+        "sha256": "5744fc0f89a3ecc8ba7dad1ed3eb8d8c7c451a048868a24c5825fedf3145d2b2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_licensorManual": {
+        "sha256": "5744fc0f89a3ecc8ba7dad1ed3eb8d8c7c451a048868a24c5825fedf3145d2b2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "_licensorSource": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_nonDtrManufacturerRule": {
+        "sha256": "5744fc0f89a3ecc8ba7dad1ed3eb8d8c7c451a048868a24c5825fedf3145d2b2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "OPD": {
+        "sha256": "fe0f5cc4e3446f7110a17bdf9238895e07c75bdd49b771d5f5618352bc006a4c",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-07-16T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-06-02T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2026-08-18T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-08-10T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-05-20T21:00:00.000Z"
+          }
+        ]
+      },
+      "Original Ex-factory": {
+        "sha256": "f33d0b5a911a6b2ad190c07c247f5d66e67a5ab9e6fdfb0ccac091102ab48e48",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-10-25T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-09-18T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2026-12-28T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-12-17T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-09-15T21:00:00.000Z"
+          }
+        ]
+      },
+      "Ex-factory": {
+        "sha256": "6641c1345e3946db05a49d65e746e40606f10cd961d14e49b1c7227bd0831b83",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-09-26T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-01-06T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-12-25T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-09-24T21:00:00.000Z"
+          }
+        ]
+      },
+      "_asasExFactory": {
+        "sha256": "6641c1345e3946db05a49d65e746e40606f10cd961d14e49b1c7227bd0831b83",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-09-26T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-01-06T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-12-25T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-09-24T21:00:00.000Z"
+          }
+        ]
+      },
+      "_exFactoryRevision": {
+        "sha256": "3db6cbf81a117c0a3b8b5afd57bb178937ba95eb0aa6759500933038e69fea73",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": null
+          }
+        ]
+      },
+      "_asasRetailDate": {
+        "sha256": "6bb6e3c3fe2c7b4579c8bfe2a18effa11ef2cda02af9e1e5e85703da5fa37324",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-27T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-01-31T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-10-27T21:00:00.000Z"
+          }
+        ]
+      },
+      "_asasInStore": {
+        "sha256": "116b3e159cde02d460b713b4312fa9bdc3954c09e8b0b3ad5c9ca5827fa5d9b0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-12-19T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-11-09T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-06T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-07T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-10-31T21:00:00.000Z"
+          }
+        ]
+      },
+      "HANDOVER Tarihi": {
+        "sha256": "e82045866fe629f6cf05d7e9b3405db13ef77acab84839edaf527e5b62095c35",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-10-01T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": null
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-09-28T21:00:00.000Z"
+          }
+        ]
+      },
+      "Retail Date": {
+        "sha256": "6bb6e3c3fe2c7b4579c8bfe2a18effa11ef2cda02af9e1e5e85703da5fa37324",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-27T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-11-01T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-02-13T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-01-31T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-10-27T21:00:00.000Z"
+          }
+        ]
+      },
+      "Ex→Retail": {
+        "sha256": "fc472631f7c7e46f333ece7e899dc1008d6abb0647bce0f3dd242284d7e37482",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 26
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 36
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 38
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 37
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 33
+          }
+        ]
+      },
+      "Buying Son Onay Tarihi": {
+        "sha256": "71cea4c136506aec4582a95e97594f88204a60776bf0eb8b3ba05ce64fb64194",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-09-17T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-08-25T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2026-12-02T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-11-19T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-08-29T21:00:00.000Z"
+          }
+        ]
+      },
+      "In-Store (Model Budget)": {
+        "sha256": "116b3e159cde02d460b713b4312fa9bdc3954c09e8b0b3ad5c9ca5827fa5d9b0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-12-19T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-11-09T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-06T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-02-07T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-10-31T21:00:00.000Z"
+          }
+        ]
+      },
+      "_initialInspection": {
+        "sha256": "987c9bb6398b69fab8fce2ddbf50b109aded9cbe5f6fbf4189f7b94dbd9f27ad",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-10-26"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-09-19"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2026-12-29"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2026-12-18"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-09-16"
+          }
+        ]
+      },
+      "Order Quantity": {
+        "sha256": "c8e05ae201b618c1087c2848c181385738a61b13c76d5c235c10de7a68e5b8d4",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 1500
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 2100
+          }
+        ]
+      },
+      "Shipment Quantity": {
+        "sha256": "0383a68da6230c3279657008426e15cf9b46a9b9bf5f8c05ea8271e95f4a1cb6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 1260
+          }
+        ]
+      },
+      "Remaining Units": {
+        "sha256": "492990de40bc84a2359c1f1ea870e4c166c3d3935c778c2dcc3fd09ce38652a1",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 1500
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "%": {
+        "sha256": "884afdf549f6db122663e2073fd66f1d26e1a28d7e527d76675a0b6389e82ba9",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 0.6
+          }
+        ]
+      },
+      "STATUS": {
+        "sha256": "c7be67917f74302bc4fb0138301fb73d473dcdddb0308fd23c3102687ebd4125",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Depoda"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Üretimde"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Depoda"
+          }
+        ]
+      },
+      "Ant. Arrival": {
+        "sha256": "fc0ebacbcc7ea11a49afb34b75f7a44d5a4076ea8c218329e33b0cec8c634d59",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "2026-11-14T21:00:00.000Z"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "2026-10-19T21:00:00.000Z"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "2027-03-17T21:00:00.000Z"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2027-03-05T21:00:00.000Z"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "2026-10-19T21:00:00.000Z"
+          }
+        ]
+      },
+      "Del. Type": {
+        "sha256": "4abe1153c0b4e86e4628eb2104f5bb0f8a376a7186448293fa5438ec73e7268d",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Uçak"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Gemi"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Uçak"
+          }
+        ]
+      },
+      "_logisticSegments": {
+        "sha256": "b628d1ebd474ac5c7ddaa6824d717240321168ad8be35c3394d5e1b00a3e4d6f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              {
+                "id": "partial-0",
+                "kind": "partial",
+                "partialNo": 1,
+                "synthetic": "",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 0,
+                "status": "Üretimde",
+                "arrival": "2026-11-14T21:00:00.000Z",
+                "delType": "GEMI",
+                "handover": null,
+                "sourceRow": 1,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              },
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 4600,
+                "status": "Üretimde",
+                "arrival": "2027-01-10T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              {
+                "id": "partial-0",
+                "kind": "partial",
+                "partialNo": 1,
+                "synthetic": "",
+                "userShortage": false,
+                "priority": 3,
+                "quantity": 5100,
+                "status": "Depoda",
+                "arrival": "2026-10-19T21:00:00.000Z",
+                "delType": "UCAK",
+                "handover": "2026-10-01T21:00:00.000Z",
+                "sourceRow": 2,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 5100,
+                "status": "Üretimde",
+                "arrival": "2027-03-17T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 1500,
+                "status": "Üretimde",
+                "arrival": "2027-03-05T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": [
+              {
+                "id": "production-0",
+                "kind": "production",
+                "partialNo": null,
+                "synthetic": "production",
+                "userShortage": false,
+                "priority": 1,
+                "quantity": 840,
+                "status": "Üretimde",
+                "arrival": "2026-12-03T21:00:00.000Z",
+                "delType": "Gemi",
+                "handover": null,
+                "sourceRow": null,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              },
+              {
+                "id": "partial-0",
+                "kind": "partial",
+                "partialNo": 1,
+                "synthetic": "",
+                "userShortage": false,
+                "priority": 3,
+                "quantity": 1260,
+                "status": "Depoda",
+                "arrival": "2026-10-19T21:00:00.000Z",
+                "delType": "UCAK",
+                "handover": "2026-09-28T21:00:00.000Z",
+                "sourceRow": 12726,
+                "importFile": "",
+                "containerNo": "",
+                "vesselName": ""
+              }
+            ]
+          }
+        ]
+      },
+      "_logisticStatusValues": {
+        "sha256": "64bce1bc0ac3d7e6aac7ae18f7876e643ad7a03009ea789bf7ea1114ba6a50fd",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "Depoda"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "Üretimde"
+            ]
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": [
+              "Depoda"
+            ]
+          }
+        ]
+      },
+      "_logisticDelTypeValues": {
+        "sha256": "bd8400ffaa4365d5192fb6c6f78152ffcbeb65f442d8ec0fc6b058669f016e80",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "Uçak"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "Gemi"
+            ]
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": [
+              "Gemi",
+              "Uçak"
+            ]
+          }
+        ]
+      },
+      "_logisticArrivalValues": {
+        "sha256": "02981d4b74ec6d42c0f4645a6348963b6bfa3e2ae2d3f9ad38b49800f4204fe9",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": [
+              "2026-11-14T21:00:00.000Z",
+              "2027-01-10T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": [
+              "2026-10-19T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": [
+              "2027-03-17T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": [
+              "2027-03-05T21:00:00.000Z"
+            ]
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": [
+              "2026-12-03T21:00:00.000Z",
+              "2026-10-19T21:00:00.000Z"
+            ]
+          }
+        ]
+      },
+      "_logisticProductionQty": {
+        "sha256": "81d83afcc67d06754907729ead118c2346a5fac4d1b53e60907de29a10a9d25e",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 1500
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "_logisticShortageQty": {
+        "sha256": "8eba9bb84bea2d50bc6b3eb464cada93b560964f0add15792ad82997e64b028b",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 0
+          }
+        ]
+      },
+      "_logisticRemainingQty": {
+        "sha256": "492990de40bc84a2359c1f1ea870e4c166c3d3935c778c2dcc3fd09ce38652a1",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 1500
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 840
+          }
+        ]
+      },
+      "_logisticLoadedQty": {
+        "sha256": "0383a68da6230c3279657008426e15cf9b46a9b9bf5f8c05ea8271e95f4a1cb6",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 1260
+          }
+        ]
+      },
+      "_logisticPartialCount": {
+        "sha256": "1f6ab104b68e7173e1b354896b5826561f3f124fdc7d449c2262c38018266311",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 1
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 0
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 1
+          }
+        ]
+      },
+      "_logisticAllPartialsInWarehouse": {
+        "sha256": "a3b80956bc3f8389a05b557cf6bef04c4e3efc358a5ecf91833dd129ab6af88a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": true
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": true
+          }
+        ]
+      },
+      "_logisticTotalQty": {
+        "sha256": "c8e05ae201b618c1087c2848c181385738a61b13c76d5c235c10de7a68e5b8d4",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 4600
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 5100
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 1500
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 2100
+          }
+        ]
+      },
+      "Notes": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Ek Not": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "NotesHtml": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Ek NotHtml": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesAt": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotAt": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesBy": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_notesByName": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotBy": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "_ekNotByName": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Merch Marka Yaş Grup Kod": {
+        "sha256": "ee4617a24cc518472a1daa6d4415987971258d903428fcaae628114a7605f73b",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "KB"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "MN"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "WM"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "TN"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "TN"
+          }
+        ]
+      },
+      "Merch Alt Grup Kod": {
+        "sha256": "71dbfabc416a3e32f31758514bde72fb3244bfcd8149a9bf3e2a000d97e419d0",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "D4"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "D4"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "A1"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "A3"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "A1"
+          }
+        ]
+      },
+      "Buyer": {
+        "sha256": "19a5e9a785f64052dff9112299eb43396341013ad69b4e2b50832a53bd2ef202",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Mert Y."
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Can D."
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Ece B."
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Burak E."
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Burak E."
+          }
+        ]
+      },
+      "Buyer Grup (TR)": {
+        "sha256": "7d599f5acdadafebbaf1baadbe8de7b68450ac6276d5036b609b045feb8b5b25",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "KIDS BOY"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "MEN"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "WOMEN"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "TEEN"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "TEEN"
+          }
+        ]
+      },
+      "Line": {
+        "sha256": "954278289a38f1e0cd2c5c481ce13dc1f983c7a0403f483911920a41a1912b54",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Kids Boy Knit"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Men Licence"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Women Licence"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Teen Knit"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Teen Knit"
+          }
+        ]
+      },
+      "Kumaş Kategorisi": {
+        "sha256": "22d8e1a5a71f524a8646d4550a0ce5de5e9bb061f69f130b5fba0035d52da65a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Örme"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Örme"
+          }
+        ]
+      },
+      "Kumaşçı Ülkesi": {
+        "sha256": "0d20784f78fa12e50f0f279fc2414f9a11901654dcd9119e8cf66c795da4823f",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Türkiye"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Türkiye"
+          }
+        ]
+      },
+      "Kumaşçı": {
+        "sha256": "9ded58506d9a782d58ca0bef1aba4bb3c765f08625d56c34493cdf5549988236",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "DEMO KUMAŞ A.Ş."
+          }
+        ]
+      },
+      "Kumaş Tipi": {
+        "sha256": "ae6187385f583e671e270a8d197a699118277622f5ed8bade7cd5fc531925e81",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Ribana"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "İki İplik"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Ribana"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Triko"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Ribana"
+          }
+        ]
+      },
+      "İplik No": {
+        "sha256": "7fa712e885adea343478e96722c6b9fb0321473c9bb0038d0e2170fb1670b405",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "24/1"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "20/1"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "24/1"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "2/28"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "24/1"
+          }
+        ]
+      },
+      "Gramaj": {
+        "sha256": "805df40004c574846d54cc6f6a08097fef435560e142908dd30fa886a839a9c3",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "220"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "280"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "220"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "320"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "220"
+          }
+        ]
+      },
+      "Karışım": {
+        "sha256": "1dbd11af772d577bad249bf240d20996745aff6344eb618bab86cf632d05dcce",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "%100 PAMUK"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "%80 PAMUK %20 POLYESTER"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "%100 PAMUK"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "%50 YÜN %50 AKRİLİK"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "%100 PAMUK"
+          }
+        ]
+      },
+      "Importance": {
+        "sha256": "96d73aa81e3ecfe6b031dc15117ce8d902b3008cbafaaa2ab72f1a9245dc16a7",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "Regular"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "Regular"
+          }
+        ]
+      },
+      "_importanceId": {
+        "sha256": "7ae3e62a2fe22005314bcfd394a9c93f2707c6c3db0f16c4aa2fc7a8dfd1fd5a",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "regular"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "regular"
+          }
+        ]
+      },
+      "_importanceSource": {
+        "sha256": "4f800335b66aadc85000f6bb42653b1e0d78f4da0b3cd9729a8f2aa909015abc",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": "default"
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": "default"
+          }
+        ]
+      },
+      "LT": {
+        "sha256": "25bb5b8c3ae9fa75f8a76793202b1cb6a26b7aeeba1a22ec129ada352bb173af",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": 108
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": 116
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": 141
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": 137
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": 127
+          }
+        ]
+      },
+      "_canEdit": {
+        "sha256": "5744fc0f89a3ecc8ba7dad1ed3eb8d8c7c451a048868a24c5825fedf3145d2b2",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": false
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": false
+          }
+        ]
+      },
+      "Artwork Detail": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      },
+      "Fabric (PLM)": {
+        "sha256": "b9d008c459475ab31f2a98c191d866f6c8e896943b10c147ba2d501800438f03",
+        "samples": [
+          {
+            "index": 0,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 1,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 2,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 100,
+            "present": true,
+            "value": ""
+          },
+          {
+            "index": 29999,
+            "present": true,
+            "value": ""
+          }
+        ]
+      }
+    },
+    "probe": {
+      "module": "orders",
+      "status": "passed",
+      "intentAtMs": 2423,
+      "startedWithRows": null,
+      "moduleContinueCount": 1,
+      "stabilityObservationMs": 1000,
+      "visibilityProbeVersion": 2,
+      "maxStablePollGapMs": 100,
+      "observationRestarts": 7,
+      "maxPollGapMs": 2997.699999988079,
+      "dispatchAtMs": 2457.7000000178814,
+      "dispatchDelayMs": 34.70000001788139,
+      "dataReadyMs": 5033,
+      "firstRowsPaintedMs": 5129.200000017881,
+      "elapsedMs": 8498.300000011921,
+      "paintedAtMs": 10921.300000011921,
+      "observationEndMs": 12462.40000000596,
+      "rows": 30000,
+      "domRows": 50,
+      "canAccess": true,
+      "rowVisibilityVerified": true
+    }
+  }
+]

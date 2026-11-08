@@ -1,0 +1,14 @@
+✔ first intent includes handler dispatch delay and waits for actual visible rows and paint (5.726392ms)
+✔ row DOM behind an overlay cannot satisfy first visible paint (3.557481ms)
+✔ a blocked timer turn cannot skip late trivia settlement and certify the covered screen (3.733469ms)
+✔ a denied first transition fails instead of reporting a ready previous screen (2.216112ms)
+✔ an unready first transition has a bounded failure with partial evidence (3.218867ms)
+✔ metadata-only startup is compared with its envelope while actual projection identity remains mandatory (5.004492ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 184.252646
