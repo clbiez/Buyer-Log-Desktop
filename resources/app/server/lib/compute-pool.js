@@ -18,6 +18,9 @@ const messages={
   COMPUTE_SOURCE_CORRUPT:['Kaynak kopyası doğrulanamadı.','Source replica could not be verified.',409],
   COMPUTE_SOURCE_TOO_LARGE:['Kaynak bellek bütçesine sığmıyor.','Source exceeds the memory budget.',413],
   COMPUTE_SOURCE_BUSY:['Kaynak önbelleği kullanımda.','Source cache is busy.',503],
+  PROJECTION_VIEW_INVALID:['Geçersiz ekran detayı isteği.','Invalid view detail request.',400],
+  PROJECTION_VIEW_STALE:['Ekran verisi değişti. Ekranı yeniden yükleyin.','View data changed. Reload the screen.',409],
+  PROJECTION_VIEW_TOO_LARGE:['Ekran detayı bayt sınırını aşıyor.','View detail exceeds the byte limit.',413],
   BACKLOG_FILTER_FIELD_INVALID:['Bilinmeyen Backlog filtre alanı.','Unknown Backlog filter field.',400],
 };
 function failure(code){const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});}

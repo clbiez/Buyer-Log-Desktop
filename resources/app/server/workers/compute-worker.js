@@ -47,6 +47,26 @@ async function execute(task,data,transfer){
     const authority=data.authorityBytes?require('../lib/compute-authority-codec').decodeAuthority(data.authorityBytes):data.params;
     return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex')};
   }
+  if(task==='projection-private-view'||task==='projection-private-details'){
+    const p=data.params,fail=code=>Object.assign(Error(code),{code});
+    if(String(p.token?.ownerId)!==String(data.ownerId))throw fail('COMPUTE_SOURCE_OWNER_MISMATCH');
+    if(!Number.isSafeInteger(p.projectionBytes)||p.projectionBytes<1||p.projectionBytes>128*MiB
+      ||typeof p.projectionChecksum!=='string'||!/^[a-f0-9]{64}$/.test(p.projectionChecksum)
+      ||!(Buffer.isBuffer(p.projectionBuffer)||p.projectionBuffer instanceof ArrayBuffer||ArrayBuffer.isView(p.projectionBuffer)))throw fail('PROJECTION_VIEW_INVALID');
+    const bytes=Buffer.isBuffer(p.projectionBuffer)?p.projectionBuffer:Buffer.from(p.projectionBuffer);
+    if(bytes.byteLength>64*MiB||require('node:crypto').createHash('sha256').update(bytes).digest('hex')!==p.projectionChecksum)throw fail('PROJECTION_VIEW_STALE');
+    let raw,envelope;
+    try{raw=await promisify(zlib.gunzip)(bytes,{maxOutputLength:p.projectionBytes});
+      if(raw.length!==p.projectionBytes)throw fail('PROJECTION_VIEW_STALE');
+      envelope=JSON.parse(raw.toString('utf8'));
+    }catch(error){throw ['PROJECTION_VIEW_STALE','PROJECTION_VIEW_INVALID'].includes(error.code)?error:fail('PROJECTION_VIEW_STALE');}
+    raw=null;
+    const core=require('../lib/projection-view-core');
+    const value=task==='projection-private-view'
+      ?core.buildView(envelope,p.token,core.fullShadowPlan(envelope,p.token),p.secret)
+      :core.resolveDetails(envelope,{token:p.token,records:p.records,maxBytes:p.maxBytes},p.token,p.secret);
+    return compress(value,'projection',transfer);
+  }
   if(task==='cp-shared-edit-codes')return compress({ok:true,denied:access.sharedEditDeniedCodes(data.params.access,data.params.codes)},'api',transfer);
   if(task==='endeksmatik-legacy-status')return {status:require('../lib/endeksmatik').readLegacyStatusFile(data.params.descriptor,data.params.maxOutputLength)};
   if(task==='office-render'){

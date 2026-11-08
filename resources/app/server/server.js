@@ -6178,6 +6178,8 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
   } catch (error) { return fullRestoreApiError(res, error, 'Full System Backup incelenemedi.'); }
   finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
 });
+// Detail DTOs must be bounded before the broad import parser allocates them.
+app.use('/api/page-projection', express.json({ limit: '64kb' }));
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {
   if (!err) return next();
@@ -8467,6 +8469,7 @@ const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.se
   hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
 function computeParamsFor(profile,descriptor,task,parts={}){
   if(task==='source-info')return {};
+  if(task==='projection-private-view'||task==='projection-private-details')return parts;
   if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
   if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
   const shared=loadOverrides();
@@ -8577,6 +8580,31 @@ app.get('/api/page-projection/:module', async (req, res) => {
     return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
   } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
 });
+
+// Explicit private full/full reads validate the lazy-detail contract. Ordinary
+// public CP/Orders loads keep their existing full representation and behavior.
+const projectionShadowSecret=crypto.randomBytes(32);
+app.use('/api/page-projection',require('./lib/projection-shadow-http').createProjectionShadowRouter({
+  express,guard:computeReadGuard,secret:projectionShadowSecret,assertSourceFilters,contextFor:pageProjectionContext,
+  projectionFor:async(req,module,{build})=>{
+    if(build)return ensureComputedProjection(req,module);
+    const captured=computeReadGuard.capture(req,module),context=pageProjectionContext(captured.profile);
+    const cached=await pageProjectionCache.readProjectionCompressed(context.id,module,context.contextHash);captured.assertResponse();
+    if(!cached||!pageProjectionMatchesRuntime(cached.manifest,cacheForUser(context.id),module))return null;
+    return {value:{buffer:cached.buffer,uncompressedBytes:cached.meta.uncompressedBytes},manifest:cached.manifest,assertResponse:captured.assertResponse,release(){}};
+  },
+  assertProjectionCurrent:(owner,module,pinned)=>{
+    const current=pageProjectionCache.loadManifest(owner);
+    if(!current||current.activeGeneration!==pinned.activeGeneration||current.contextHash!==pinned.contextHash
+      ||current.modules?.[module]?.checksum!==pinned.modules?.[module]?.checksum
+      ||current.moduleInputKeys?.[module]!==pinned.moduleInputKeys?.[module]
+      ||current.sourceProjectionKeys?.[module]!==pinned.sourceProjectionKeys?.[module]
+      ||!pageProjectionMatchesRuntime(current,cacheForUser(owner),module))
+      throw Object.assign(new Error('Ekran verisi değişti. / View data changed.'),{code:'PROJECTION_VIEW_STALE',statusCode:409,errorEn:'View data changed.'});
+  },
+  runTask:(req,module,task,key,payload)=>computeReads.run(req,module,task,key,{payload,cache:false}),
+  send:sendComputedResponse,apiError,
+}));
 
 // Hazır CP önbelleğiyle gelen satırlar için paylaşılan alan düzenleme yetkisi
 // (/api/data/cp'deki sharedAccessRows ile aynı karar). Yazma uçları yetkiyi

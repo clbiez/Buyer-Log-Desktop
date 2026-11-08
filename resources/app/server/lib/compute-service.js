@@ -84,9 +84,12 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
+      const projectionOnly=task==='projection-private-view'||task==='projection-private-details';
+      if(projectionOnly&&(!Number.isSafeInteger(params.projectionBytes)||params.projectionBytes<1||params.projectionBytes>128*MiB))throw failure('COMPUTE_JOB_INVALID');
       const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
       const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
-      const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
+      const estimate=projectionOnly?96*MiB+params.projectionBytes*6+inputBytes*3
+        :task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
       const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
         ...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
       if(current.get(owner)!==version||record.retired){lease.release();throw failure('COMPUTE_STALE_GENERATION');}

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-shadow-hydration"
+  ],
+  "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "exitCode": 1,
+  "privateTmp": "/tmp/buyerlog-6a-hydration-red-n1niggc9",
+  "candidate": "frozen v1",
+  "originalAssertionsPreserved": true
+}

@@ -1,0 +1,15 @@
+{
+  "original": "/tmp/buyerlog-phase6a-projection-core-candidate/projection-view-core.test.cjs",
+  "originalSha256": "181715fdf1092c2181e99615b059bf02024703961ca83637877ff6e336f2a690",
+  "destination": "/workspace/buyerlog-post-main-acceptance/resources/app/tests/projection-view-core.test.js",
+  "destinationSha256": "41341bc5fd968d48b185fdd0342334413acc509195805eb03c869aeef98bfc76",
+  "testCases": 19,
+  "adaptations": [
+    "require actual current production core",
+    "require actual current production projection serializer",
+    "actual current normalizer fixture replaces historical pinned loader/hash gate; original capture/assertion remain frozen in evidence",
+    "require actual current production hydration helper"
+  ],
+  "businessAssertionsRemoved": false,
+  "frozenHistoricalSourcePreserved": true
+}

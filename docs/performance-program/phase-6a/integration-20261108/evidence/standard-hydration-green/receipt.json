@@ -1,0 +1,35 @@
+{
+  "records": [
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "projection-shadow-hydration"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "checklist-components-row-cache",
+        "cp-decision-input-revision",
+        "orders-hydration-cp"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "privateTmp": "/tmp/buyerlog-6a-hydration-green-73wr1ypa",
+  "sourceMain": "1796193f",
+  "allPassed": true
+}

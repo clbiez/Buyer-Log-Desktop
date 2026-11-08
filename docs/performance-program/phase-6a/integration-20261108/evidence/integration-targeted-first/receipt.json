@@ -1,0 +1,36 @@
+{
+  "records": [
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "projection",
+        "compute-read",
+        "server-compute-pool",
+        "cp-decision-input-revision",
+        "checklist-components-row-cache",
+        "canonical"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "privateTmp": "/tmp/buyerlog-6a-targeted-ymf3h_cg",
+  "allPassed": true
+}
