@@ -147,7 +147,13 @@ test('actual linked-order dispatcher waits for target Orders full before synchro
 test('public synchronous screen getters, CP loader and native clipboard source are unchanged',()=>{
   const baseline=fs.readFileSync(path.join(baselineRoot,'app-main.js'),'utf8');
   for(const name of ['ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(app,name),extractFunction(baseline,name));
-  assert.equal(between(app,'window.BLAIScreenData = {','\n};'),between(baseline,'window.BLAIScreenData = {','\n};'));
+  // The new metadata-only method adds no row provider. Keep the entire old
+  // synchronous provider object byte-exact after removing that one reviewed
+  // addition; its real behavior has separate native table-summary regressions.
+  const {summary}=require('./fixtures/orders-table-summary/patch-recipe.cjs');
+  const providers=between(app,'window.BLAIScreenData = {','\n};');
+  assert.equal(providers.split(summary).length,2,'exactly one reviewed count-only method');
+  assert.equal(providers.replace(summary,''),between(baseline,'window.BLAIScreenData = {','\n};'));
   const native=source=>between(source,"document.addEventListener('copy', e=>{",'\n});');
   assert.equal(native(app),native(baseline));assert.doesNotMatch(native(app),/await ensureOrdersFullForAction/);
 });

@@ -1,0 +1,13 @@
+{
+  "README.md": "6222363a21a95b71755a24f9e4af715f4c1e5915d282460fd8178e26daf99ef6",
+  "table-summary-red/native.log.gz": "649d6c5590636a74dec950dd6e0c6b6d603370a63efb1576aa2cca624ca6a16b",
+  "table-summary-red/receipt.json": "cda1845d51bcfaed7e2911821e5c22b171a60da4a4bd7128ace940fdd09336af",
+  "table-summary-red/official-native.tap.gz": "2b7ea2ca2c50e8da47bed1772d663c47503ca44a37f6aad09374289765360142",
+  "table-summary-green/native.tap.gz": "88515a9ab0dd4ce4d24bbdc47adf5931be8ff5f3d11dc2f34794f11e6b285df4",
+  "table-summary-green/receipt.json": "6f55665c5e36b0911acdaca3f2fdb60aae87ffda774989c96e41dcc8c816c7e1",
+  "summary-related-first/0.log.gz": "ea7b6f2dadbd49ebd638f74760220716399822c01ce48b0f992a622ea7fd6708",
+  "summary-related-first/receipt.json": "544e543a4c13274c5ad34752687b962be4bc7051acdba715cb4729acdf79804a",
+  "summary-source-contract-green/0.log.gz": "149c64f43371cd5ffeea0c7a0e666bd3c9c85adfa870e3964b7dfd39c5285c05",
+  "summary-source-contract-green/receipt.json": "bbf630d550a22f917e5b8b6680822876f9c9c111193531171a829c9cd620f5a6",
+  "summary-source-contract-green/1.log.gz": "0592444cf5f0375d507bd9822d43b864b26d3b02610e040f4ee2c24b0d968ded"
+}

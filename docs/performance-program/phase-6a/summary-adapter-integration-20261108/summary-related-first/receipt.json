@@ -1,0 +1,15 @@
+[
+  {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "orders-table-summary",
+      "lcwai",
+      "orders-full"
+    ],
+    "exitCode": 1,
+    "counts": {},
+    "sha256": "3c31fb84768320a40f51cc05a315d3b2b93947b10ed5b91e3652e236a4bfd311"
+  }
+]

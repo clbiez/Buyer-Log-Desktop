@@ -1,0 +1,16 @@
+{
+  "exitCode": 0,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/orders-table-summary.test.js"
+  ],
+  "counts": {
+    "pass": 21,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "4724bd09b8daf8a4923a07fd4cd89e00c7ef3cf23cb9995fcf3205be32c2874b"
+}

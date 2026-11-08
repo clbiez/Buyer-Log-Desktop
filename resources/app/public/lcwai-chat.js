@@ -147,6 +147,16 @@
       api.registerContextProvider({
         id: tab, screen: tab, label,
         getOptions() {
+          if (tab === 'orders' && typeof window.BLAIScreenData?.tableSummary === 'function') {
+            const summary = window.BLAIScreenData.tableSummary(tab);
+            if (!summary) return [];
+            const full = summary.full, data = summary.visible;
+            const options = [{ id: 'all', label: { tr: `Tüm kayıtlar (${full.rowCount})`, en: `All records (${full.rowCount})` }, detail: { tr: `Sayfa filtreleri olmadan, ${full.columnCount} sütun · CSV dosyası olarak`, en: `Without page filters, ${full.columnCount} columns · as a CSV file` } }];
+            if (data && data.rowCount !== full.rowCount) options.push({ id: 'visible', label: { tr: `Yalnız filtrelenmiş kayıtlar (${data.rowCount})`, en: `Filtered records only (${data.rowCount})` }, detail: { tr: 'Sayfadaki filtreler uygulanmış', en: 'Page filters applied' } });
+            if (data && data.selectedCount) options.push({ id: 'selected', label: { tr: `Seçili kayıtlar (${data.selectedCount})`, en: `Selected records (${data.selectedCount})` } });
+            if (data) options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
+            return options;
+          }
           // Varsayılan: sayfa filtrelerinden bağımsız TÜM kayıtlar.
           const full = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: true });
           if (!full) return [];

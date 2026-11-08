@@ -1,0 +1,17 @@
+{
+  "source": "7f8adc97-app-same-at-doc-head0f2a01b8",
+  "command": [
+    "node",
+    "--test",
+    "/tmp/buyerlog-phase6a-orders-table-summary-preparation/table-summary.test.cjs"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "pass": 2,
+    "fail": 19,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "6af886dbfb6a5b30892487683e3ec6b34cdcc1d0fe47452bab3ce66992b2bd78",
+  "countsParserNote": "Node selected spec reporter; parsed actual final spec counters, raw log unchanged."
+}

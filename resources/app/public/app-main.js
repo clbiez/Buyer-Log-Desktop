@@ -13513,6 +13513,25 @@ window.COLS_BY_TABLE = COLS_BY_TABLE;
    lastTab: kullanıcının LCW AI'a geçmeden önceki çalışma ekranı. */
 window.BLAIScreenData = {
   lastTab: () => window.BL_LCWAI_LAST_TAB || 'overview',
+  tableSummary(tab) {
+    if (tab !== 'orders') return undefined;
+    const fullRows = state.orders && state.orders.rows;
+    if (!Array.isArray(fullRows) || !fullRows.length) return null;
+    let info = null;
+    try { info = tableInfoForTab(tab); } catch (_) { return null; }
+    if (!info) return null;
+    const metadata = this.table(tab, { all: true, columnsOnly: true });
+    if (!metadata) return null;
+    let visible = null;
+    try {
+      const rows = info.rowsFn();
+      if (Array.isArray(rows) && rows.length) visible = {
+        rowCount: rows.length,
+        selectedCount: Array.isArray(metadata.selectedIds) ? metadata.selectedIds.length : 0,
+      };
+    } catch (_) { /* Existing empty/failed filtered table has no visible options. */ }
+    return { full: { rowCount: fullRows.length, columnCount: metadata.columns.length }, visible };
+  },
   /* LCW AI bağlamı. { all:true } → sayfa filtrelerinden BAĞIMSIZ tüm kayıtlar
      ve tüm sütunlar (kullanıcının yetki kapsamı veri yüklenirken zaten
      uygulanmıştır). Varsayılan (all yok) → ekranda görünen filtreli kayıtlar. */

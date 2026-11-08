@@ -1,0 +1,29 @@
+[
+  {
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "tests/orders-full-consumer-gates.test.js",
+      "tests/orders-table-summary.test.js"
+    ],
+    "exitCode": 0,
+    "counts": {
+      "pass": 42,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sha256": "ef25029fa6daa6e84e2d3e6f45a132597f03b5e7c57c31acad2be2219ecd57af"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "i18n:check"
+    ],
+    "exitCode": 0,
+    "counts": {},
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  }
+]
