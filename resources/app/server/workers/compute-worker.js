@@ -33,7 +33,7 @@ function legacyValue(module,values,params,source={}){
   }
   return values[module];
 }
-async function execute(task,data,transfer){
+async function execute(task,data,transfer,sourceOverride){
   if(task==='health')return {ok:true};
   if(task==='local-db-snapshot'){
     const state=v8.deserialize(Buffer.from(data.snapshotBytes));data.snapshotBytes=null;
@@ -90,7 +90,9 @@ async function execute(task,data,transfer){
       const result=await compress({references},'api',transfer);await assertCollectionLflDescriptor(data.source);return result;
     }finally{lease.release();}
   }
-  const lease=await sourceCache.acquire(data.source,data.ownerId);
+  const lease=sourceOverride
+    ?{snapshot:sourceOverride,release(){}}
+    :await sourceCache.acquire(data.source,data.ownerId);
   try{
     const source=lease.snapshot||{asasOrders:[],antrepoMap:{}},params=data.params||{};
     if(task==='projection-plan')return {sourceMeta:projectionRuntimeMeta(source),sourceProjectionKeys:projectionSourceKeys(source),inputKeys:require('../lib/derived-input-keys').keys(source,params.projectionContextHash,tasks.withSourceOverrides(source,params).overrides,{version:params.appVersion})};
@@ -115,7 +117,7 @@ async function execute(task,data,transfer){
   }finally{lease.release();}
 }
 let busy=false;
-parentPort.on('message',async message=>{
+if(parentPort)parentPort.on('message',async message=>{
   if(message?.type!=='run')return;
   if(busy){parentPort.postMessage({type:'result',id:message.id,ok:false});return;}
   busy=true;const start=performance.now(),transfer=[];
@@ -129,3 +131,6 @@ parentPort.on('message',async message=>{
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
   finally{busy=false;}
 });
+// The capacity fallback reuses the exact task dispatcher and engines without
+// creating a second raw-source copy or raising the worker pool's byte limits.
+module.exports={execute,projectionSourceKeys};

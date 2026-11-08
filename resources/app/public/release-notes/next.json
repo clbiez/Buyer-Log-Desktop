@@ -97,6 +97,35 @@
           "en": "Demo Backlog details: existing cells, row heights and selection behavior are preserved."
         }
       }
+    },
+    {
+      "id": "compute-capacity-refresh-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Veri yenileme",
+        "en": "Data refresh"
+      },
+      "title": {
+        "tr": "Büyük veride yenileme ve sayfa açılışı korunur",
+        "en": "Refresh and page loading remain available for large datasets"
+      },
+      "body": {
+        "tr": "Hesaplama havuzunun bellek sınırına takılan kaynak kopyası hazırlığı artık yenilemeyi durdurmaz. CP, Siparişler ve Backlog aynı doğrulanmış veriyi, kullanıcı kapsamını ve hesaplama kurallarını koruyarak sırayla hazırlanır. Büyük veri yüklenirken ekran kısa süre bekleyebilir; son veriler boş veya eski veriyle değiştirilmez.",
+        "en": "Source-copy preparation that exceeds the compute pool memory limit no longer stops refresh. CP, Orders and Backlog are prepared sequentially from the same verified data, preserving user scope and calculation rules. The interface may briefly wait while a large dataset is processed; current data is not replaced with empty or stale data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "compute-capacity-refresh-recovery.png",
+        "alt": {
+          "tr": "Düşük hesaplama belleği sınırında yenileme sonrası güncel 24 demo sipariş",
+          "en": "24 current demo orders after refresh under a low compute memory limit"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; 112 MiB hesaplama havuzunda yenileme, CP, Siparişler ve Backlog okumaları doğrulandı. Sentetik veri kullanıldı.",
+          "en": "Actual Buyer Log UI; refresh and CP, Orders and Backlog reads verified with a 112 MiB compute pool. Synthetic data only."
+        }
+      }
     }
   ]
 }

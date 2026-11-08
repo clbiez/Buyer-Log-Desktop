@@ -8401,15 +8401,15 @@ function computeSourceBase(id){
 }
 function computeSourceToken(id){
   const base=computeSourceBase(id),known=publishedComputeSources.get(id);
-  const sameCold=known&&!known.descriptor.replicaFile&&!base.active?.loadedAt
+  const sameCold=known&&!known.descriptor.replicaFile&&!known.descriptor.inlineSource&&!base.active?.loadedAt
     &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
-  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile?known.descriptor.capability:known.guardToken||'disk:'+base.key;
+  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile||known.descriptor.inlineSource?known.descriptor.capability:known.guardToken||'disk:'+base.key;
   return 'disk:'+base.key;
 }
 function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
 function acceptComputedMetadata(profile,metadata,projectionKeys){
   if(!metadata?.loadedAt)return;
-  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
+  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile||known.descriptor.inlineSource)return;
   const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt,projectionKeys),active=cacheForUser(id);
   if(!active.loadedAt)Object.assign(active,metadata);
   Object.defineProperty(active,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
@@ -8431,7 +8431,7 @@ async function computeSourceFor(profile){
   if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
   if(coldComputeSourcesInFlight.has(id))return coldComputeSourcesInFlight.get(id);
   const base=computeSourceBase(id),known=publishedComputeSources.get(id);
-  const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
+  const sameCold=known&&!known.descriptor.replicaFile&&!known.descriptor.inlineSource&&!base.active.loadedAt
     &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
   if(known&&(known.key===base.key||sameCold))return known.descriptor;
   const expected=computeSourceToken(id);

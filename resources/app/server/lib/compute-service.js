@@ -7,7 +7,7 @@ const {accessForTask}=require('./compute-task-access');
 const {serializeForTransfer}=require('./compute-ipc');
 const MiB=1024*1024;
 function failure(code){
-  const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400]};
+    const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400],COMPUTE_ABORTED:['Hesaplama iptal edildi.','Compute operation cancelled.',499],COMPUTE_TIMEOUT:['Hesaplama zaman aşımına uğradı.','Compute operation timed out.',504],COMPUTE_QUEUE_BUSY:['Hesaplama kuyruğu dolu; tekrar deneyin.','Compute queue is full; retry later.',503]};
   const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
 function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
@@ -17,6 +17,43 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   fs.chmodSync(privateRoot,0o700);
   const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
   const lflDescriptors=new WeakSet(),lflAdmissions=new Map();
+  let localTail=Promise.resolve(),localPending=0;
+  // A rejected worker admission has allocated no worker input. The source is
+  // already resident in the server (or can be read from its verified personal
+  // snapshot), so retain the pre-pool capacity without another structured clone.
+  // Only this specific admission failure takes the serialized compatibility path.
+  function locally(operation){
+    if(localPending>=64)return Promise.reject(failure('COMPUTE_QUEUE_BUSY'));
+    localPending++;
+    const pending=localTail.then(async()=>{await new Promise(setImmediate);if(closed)throw failure('COMPUTE_POOL_CLOSED');return operation();}).finally(()=>{localPending--;});
+    localTail=pending.then(()=>{},()=>{});return pending;
+  }
+  async function runLocal(task,record,params,options={}){
+    const queuedAt=performance.now(),deadline=queuedAt+(options.timeoutMs??600000);
+    const assertCurrent=()=>{
+      if(closed)throw failure('COMPUTE_POOL_CLOSED');
+      if(record.retired||current.get(record.owner)!==record.generation)throw failure('COMPUTE_STALE_GENERATION');
+      if(options.signal?.aborted)throw failure('COMPUTE_ABORTED');
+      if(performance.now()>deadline)throw failure('COMPUTE_TIMEOUT');
+    };
+    return locally(async()=>{
+      assertCurrent();const started=performance.now(),transfer=[];
+      const sourceIndependent=['projection-envelope','cp-image-registry','cp-shared-edit-codes'].includes(task);
+      let source=record.liveSource;
+      if(!source&&!sourceIndependent&&record.descriptor.replicaFile){
+        source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);
+      }else if(!source&&!sourceIndependent){
+        source=await require('./model-snapshot').loadModelSnapshotAsync(record.owner);
+      }
+      assertCurrent();
+      if(!sourceIndependent&&record.descriptor.loadedAt!=null&&String(source?.loadedAt||source?.savedAt||'')!==String(record.descriptor.loadedAt))throw failure('COMPUTE_STALE_GENERATION');
+      const value=await require('../workers/compute-worker').execute(task,{ownerId:record.owner,source:record.descriptor,params:{...params}},transfer,source||{asasOrders:[],antrepoMap:{}});
+      assertCurrent();
+      const metadata=value.sourceMeta||value.runtimeMeta;
+      return {value,metrics:{threadId:0,fallbackReason:'COMPUTE_JOB_TOO_LARGE',queueWaitMs:started-queuedAt,durationMs:performance.now()-started,
+        outputBytes:transfer.reduce((sum,buffer)=>sum+buffer.byteLength,0)+(metadata?require('node:v8').serialize(metadata).byteLength*4:0)+1024},release(){}};
+    });
+  }
   const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
   async function discard(record){
     if(record.removing||record.pins||!record.retired)return;
@@ -24,6 +61,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     try{
       if(record.descriptor.replicaFile)await fs.promises.rm(record.descriptor.replicaFile,{force:true,maxRetries:3,retryDelay:50});
       if(records.get(record.key)===record)records.delete(record.key);reservedDiskBytes-=record.diskBytes;record.diskBytes=0;
+      record.liveSource=null;
     }catch{record.removing=false;/* Windows: açık native okuma bitene kadar baytlar ücretli kalır. */}
   }
   function advance(owner,generation){
@@ -39,14 +77,25 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(!Number.isSafeInteger(diskBytes)||reservedDiskBytes+diskBytes>diskBudgetBytes)throw failure('COMPUTE_SOURCE_TOO_LARGE');
     const replicaFile=path.join(privateRoot,crypto.randomBytes(24).toString('hex')+'.v8');
     const descriptor={ownerId:owner,generation:version,loadedAt:source.loadedAt||null,replicaFile,capability:crypto.randomBytes(24).toString('hex'),bytes:Math.max(64*MiB,uncompressedBytes*4)};
-    const record={key:id,owner,generation:version,descriptor,diskBytes,pins:1,retired:false};
+    const record={key:id,owner,generation:version,descriptor,diskBytes,pins:1,retired:false,liveSource:source};
     reservedDiskBytes+=diskBytes;records.set(id,record);preparing.set(owner,version);
     const preparationOwner='prepare:'+owner;pool.setGeneration(preparationOwner,version);
     record.ready=(async()=>{
       let lease;
       try{
-        lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
-          {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*12,inputBytes:uncompressedBytes*2});
+        try{
+          lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
+            {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*12,inputBytes:uncompressedBytes*2});
+        }catch(error){
+          if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          await locally(()=>{
+            if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
+            delete descriptor.replicaFile;descriptor.inlineSource=true;
+            descriptor.projectionKeys=Object.freeze({...require('../workers/compute-worker').projectionSourceKeys(source)});
+            reservedDiskBytes-=record.diskBytes;record.diskBytes=0;
+          });
+          Object.freeze(descriptor);if(publish)advance(owner,version);return descriptor;
+        }
         if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
         descriptor.checksum=lease.value.checksum;descriptor.loadedAt=lease.value.loadedAt;
         descriptor.projectionKeys=Object.freeze({...lease.value.projectionKeys});
@@ -84,11 +133,20 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
-      const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
-      const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
-      const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
-      const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
-        ...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
+      let lease,paramsSerializeMs=0,inputBytes=1024;
+      if(record.descriptor.inlineSource)lease=await runLocal(task,record,jobParams,options);
+      else{
+        const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
+        paramsSerializeMs=performance.now()-encodeStarted;inputBytes=paramsBytes.byteLength+1024;
+        const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
+        try{
+          lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
+            ...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
+        }catch(error){
+          if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          lease=await runLocal(task,record,jobParams,options);
+        }
+      }
       if(current.get(owner)!==version||record.retired){lease.release();throw failure('COMPUTE_STALE_GENERATION');}
       let released=false;return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024},release(){if(released)return;released=true;lease.release();record.pins--;void discard(record);}};
     }catch(error){record.pins--;void discard(record);throw error;}
@@ -204,14 +262,23 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     const assertCurrent=()=>{if(closed)throw failure('COMPUTE_POOL_CLOSED');if(String(authorityGeneration)!==generation)throw failure('COMPUTE_STALE_GENERATION');};
     const {bytes:encoded,...encodeMetrics}=await require('./compute-authority-codec').encodeAuthority(authority,{assertCurrent});
     assertCurrent();const inputBytes=encoded.byteLength+1024;
-    const lease=await pool.run('access-authority-hash',{authorityBytes:encoded},{ownerKey:'access-authority',generation,priority:'interactive',estimatedBytes:96*MiB+inputBytes*8,inputBytes,transferList:[encoded]});
+    let lease;
+    try{
+      lease=await pool.run('access-authority-hash',{authorityBytes:encoded},{ownerKey:'access-authority',generation,priority:'interactive',estimatedBytes:96*MiB+inputBytes*8,inputBytes,transferList:[encoded]});
+    }catch(error){
+      if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+      lease=await locally(async()=>{
+        assertCurrent();const value=await require('../workers/compute-worker').execute('access-authority-hash',{params:authority},[]);assertCurrent();
+        return {value,metrics:{threadId:0,fallbackReason:'COMPUTE_JOB_TOO_LARGE'},release(){}};
+      });
+    }
     try{try{onMetrics?.({...lease.metrics,...encodeMetrics,paramsBytes:inputBytes-1024});}catch{}return lease.value.authorityHash;}
     finally{lease.release();}
   }
   function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
   function close(){
     if(closing)return closing;closed=true;
-    closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
+    closing=(async()=>{await pool.close();await localTail;await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
   return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
