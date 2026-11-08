@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "exclusiveExecutionConfirmed": true,
+  "sourcePins": {
+    "A": {
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6"
+    },
+    "B": {
+      "head": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+      "appTree": "feeddb6c9d7e470fe4a1ad5e047cbcfd3ae58b8c"
+    }
+  },
+  "fullSuite": {
+    "status": "passed",
+    "candidateHead": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+    "evidencePath": "/tmp/buyerlog-phase6a-foundation-full-b6c8504a/full.log",
+    "evidenceSha256": "d278d9ee97edbada0941ebcf2db29d245fd8555efa15edaf5820fc9489aaa4bb",
+    "batches": [
+      {
+        "batch": 1,
+        "status": "passed"
+      },
+      {
+        "batch": 2,
+        "status": "passed"
+      },
+      {
+        "batch": 3,
+        "status": "passed"
+      },
+      {
+        "batch": 4,
+        "status": "passed"
+      },
+      {
+        "batch": 5,
+        "status": "passed"
+      },
+      {
+        "batch": 6,
+        "status": "passed"
+      },
+      {
+        "batch": 7,
+        "status": "passed"
+      },
+      {
+        "batch": 8,
+        "status": "passed"
+      },
+      {
+        "batch": 9,
+        "status": "passed"
+      },
+      {
+        "batch": 10,
+        "status": "passed"
+      }
+    ]
+  },
+  "completedAnchor": {
+    "path": "/tmp/buyerlog-first-transition-Hxb1BB",
+    "receiptPath": "/tmp/buyerlog-phase6a-shadow-live-smoke/first/receipt.json",
+    "receiptSha256": "d8acc4251b2be248700508be8bff9c0d93df40a485bae4a67f85b103fb6ba277",
+    "childrenExited": true,
+    "liveAfterExit": []
+  },
+  "nativeFullReceipt": "/tmp/buyerlog-phase6a-foundation-full-b6c8504a/receipt.json",
+  "nativeFullReceiptSha256": "e99d05ff790c37a68a39924ab27fc720713846a8281e4bae31c7a7277baec01b"
+}

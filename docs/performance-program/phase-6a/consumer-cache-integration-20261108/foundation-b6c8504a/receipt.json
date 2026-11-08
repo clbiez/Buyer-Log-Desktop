@@ -1,0 +1,101 @@
+{
+  "source": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+  "appTree": "feeddb6c9d7e470fe4a1ad5e047cbcfd3ae58b8c",
+  "scope": "current full-data gates/schema/ready-cache foundation; defaultthin still disabled",
+  "startedAt": "2026-11-08T04:30:18.978963+00:00",
+  "commands": [
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "tmpdir": "/tmp/bl6-full-6y5e9kia",
+      "startedAt": "2026-11-08T04:30:18.979706+00:00",
+      "exitCode": 0,
+      "finishedAt": "2026-11-08T04:33:40.826445+00:00",
+      "rawLog": "/tmp/buyerlog-phase6a-foundation-full-b6c8504a/full.log",
+      "rawSha256": "d278d9ee97edbada0941ebcf2db29d245fd8555efa15edaf5820fc9489aaa4bb",
+      "batchTimers": [
+        [
+          "1",
+          "10"
+        ],
+        [
+          "2",
+          "10"
+        ],
+        [
+          "3",
+          "10"
+        ],
+        [
+          "4",
+          "10"
+        ],
+        [
+          "5",
+          "10"
+        ],
+        [
+          "6",
+          "10"
+        ],
+        [
+          "7",
+          "10"
+        ],
+        [
+          "8",
+          "10"
+        ],
+        [
+          "9",
+          "10"
+        ],
+        [
+          "10",
+          "10"
+        ]
+      ],
+      "counts": {
+        "tests": 9193,
+        "pass": 9128,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 65
+      }
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "tmpdir": "/tmp/bl6-full-lavdo3j6",
+      "startedAt": "2026-11-08T04:33:40.866065+00:00",
+      "exitCode": 0,
+      "finishedAt": "2026-11-08T04:33:43.711640+00:00",
+      "rawLog": "/tmp/buyerlog-phase6a-foundation-full-b6c8504a/i18n.log",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "tmpdir": "/tmp/bl6-full-jwj8ht7m",
+      "startedAt": "2026-11-08T04:33:43.712334+00:00",
+      "exitCode": 0,
+      "finishedAt": "2026-11-08T04:33:44.812738+00:00",
+      "rawLog": "/tmp/buyerlog-phase6a-foundation-full-b6c8504a/release.log",
+      "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+    }
+  ],
+  "status": "passed",
+  "appUnchangedAfterRun": true,
+  "finishedAt": "2026-11-08T04:33:44.826522+00:00"
+}

@@ -1,0 +1,294 @@
+{
+  "status": "failed",
+  "formalAcceptance": false,
+  "startedAt": "2026-11-08T04:34:23.452554+00:00",
+  "order": [
+    [
+      1,
+      "A"
+    ],
+    [
+      1,
+      "B"
+    ],
+    [
+      2,
+      "B"
+    ],
+    [
+      2,
+      "A"
+    ],
+    [
+      3,
+      "A"
+    ],
+    [
+      3,
+      "B"
+    ]
+  ],
+  "rootReceipt": "/tmp/bl6cp1/root-green-b6c8504a.json",
+  "rootReceiptSha256": "b0f6930f7af662a2e5e8270a2142f4ed4abbbc2060cf6ebbe464f83a6534b7fa",
+  "sourcePins": {
+    "A": {
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6"
+    },
+    "B": {
+      "head": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+      "appTree": "feeddb6c9d7e470fe4a1ad5e047cbcfd3ae58b8c"
+    }
+  },
+  "nativePins": {
+    "scripts/benchmark-first-transitions.js": "bd746f1a38b692223b8f62b88aa4e3355932714e01fde4ca8fbd4f41d0025cd1",
+    "scripts/lib/first-transition-probe.js": "403fd707ded5af40409e64baeae4f6b10d4fbd9c1f35dad82e9a76beb6b607cb",
+    "scripts/lib/startup-benchmark.js": "fefbd5ec7ca9cef7769d0695348461c145fc0eb37292eea976f4fe6fd12d1ca7"
+  },
+  "observerSha256": "1b0301d765ae8970917430c95dabe113749b76815bc2d115a5e59a273f2fe451",
+  "contractSha256": "0b67cf8b9f0fa02c7a1f5ab7b379803899e1cf8795fa5958124f31f955c9f3f9",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "inputSha256": "932e3e2e2c75d1b780f654ce4d13d7725a51ed35a78c949357a9e7e3a5a540b3",
+  "sourceMetadata": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "anchor": {
+    "path": "/tmp/buyerlog-first-transition-Hxb1BB",
+    "receiptPath": "/tmp/buyerlog-phase6a-shadow-live-smoke/first/receipt.json",
+    "receiptSha256": "d8acc4251b2be248700508be8bff9c0d93df40a485bae4a67f85b103fb6ba277",
+    "childrenExited": true,
+    "liveAfterExit": []
+  },
+  "timezone": "Europe/Istanbul",
+  "chromium": "/usr/bin/chromium",
+  "playwrightActual": "/opt/codex/cua_node/lib/node_modules/playwright",
+  "playwrightModule": "/tmp/buyerlog-908-firstcp-final-after917/observer.cjs",
+  "copyAllocatedEstimateBytes": 106958848,
+  "admissionBytes": 201326592,
+  "emergencyFreeBytes": 100663296,
+  "timeoutSecondsPerArm": 2400,
+  "pollSeconds": 0.1,
+  "processAccounting": "PID+startTicks; recursive /proc tasks, session/group scan and child subreaper; observed lifetimes retained. Polling cannot enumerate a grandchild born and reaped entirely between scans.",
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "A",
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "status": "passed",
+      "startedAt": "2026-11-08T04:34:23.703680+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/buyerlog-analytics904/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/buyerlog-analytics904/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/bl6cp1/runs/p1A/measurement.json"
+      ],
+      "output": "/tmp/bl6cp1/runs/p1A",
+      "freeBeforeBytes": 361037824,
+      "launcherPid": 651493,
+      "returncode": 0,
+      "minimumFreeBytes": 236888064,
+      "childrenExitedBeforeArtifactMutation": true,
+      "fixtureRoot": "/tmp/buyerlog-first-transition-WYj8qB",
+      "metrics": {
+        "cp": {
+          "elapsedMs": 28309.5,
+          "firstRowsPaintedMs": 24113.600000023842,
+          "dataReadyMs": 23838.70000001788,
+          "observationEndMs": 34160.20000001788,
+          "maxPollGapMs": 12792.40000000596,
+          "startupReadyMs": 3812.0999999940395,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 32211.69999998808
+        },
+        "orders": {
+          "elapsedMs": 11261.800000011921,
+          "firstRowsPaintedMs": 8266.40000000596,
+          "dataReadyMs": 8180.5999999940395,
+          "observationEndMs": 13907.59999999404,
+          "maxPollGapMs": 3856.7999999821186,
+          "startupReadyMs": 2370,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 13723.300000011921
+        }
+      },
+      "schemaVariants": {
+        "cp": 61,
+        "orders": 60
+      },
+      "dataEq": "passed",
+      "finishedAt": "2026-11-08T04:36:00.122153+00:00",
+      "freeAfterBytes": 311795712
+    },
+    {
+      "pair": 1,
+      "arm": "B",
+      "head": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+      "status": "passed",
+      "startedAt": "2026-11-08T04:36:00.375747+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/buyerlog-post-main-acceptance/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/buyerlog-post-main-acceptance/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/bl6cp1/runs/p1B/measurement.json"
+      ],
+      "output": "/tmp/bl6cp1/runs/p1B",
+      "freeBeforeBytes": 311791616,
+      "launcherPid": 651971,
+      "returncode": 0,
+      "minimumFreeBytes": 187265024,
+      "childrenExitedBeforeArtifactMutation": true,
+      "fixtureRoot": "/tmp/buyerlog-first-transition-7nqXEN",
+      "metrics": {
+        "cp": {
+          "elapsedMs": 28896.69999998808,
+          "firstRowsPaintedMs": 21161.5,
+          "dataReadyMs": 21058.90000000596,
+          "observationEndMs": 35209.40000000596,
+          "maxPollGapMs": 12167.90000000596,
+          "startupReadyMs": 3820.2999999821186,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 32770.29999998212
+        },
+        "orders": {
+          "elapsedMs": 11364.299999982119,
+          "firstRowsPaintedMs": 8486.199999988079,
+          "dataReadyMs": 8323.90000000596,
+          "observationEndMs": 14151.5,
+          "maxPollGapMs": 3613.300000011921,
+          "startupReadyMs": 4095.7000000178814,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 15579
+        }
+      },
+      "schemaVariants": {
+        "cp": 61,
+        "orders": 60
+      },
+      "dataEq": "passed",
+      "finishedAt": "2026-11-08T04:37:44.845266+00:00",
+      "freeAfterBytes": 262111232
+    },
+    {
+      "pair": 2,
+      "arm": "B",
+      "head": "b6c8504ae418ebe731af7000f33e0eb1aa2f9f17",
+      "status": "passed",
+      "startedAt": "2026-11-08T04:37:45.172231+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/buyerlog-post-main-acceptance/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/buyerlog-post-main-acceptance/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/bl6cp1/runs/p2B/measurement.json"
+      ],
+      "output": "/tmp/bl6cp1/runs/p2B",
+      "freeBeforeBytes": 262111232,
+      "launcherPid": 652337,
+      "returncode": 0,
+      "minimumFreeBytes": 137908224,
+      "childrenExitedBeforeArtifactMutation": true,
+      "fixtureRoot": "/tmp/buyerlog-first-transition-O7IFim",
+      "metrics": {
+        "cp": {
+          "elapsedMs": 26104.30000001192,
+          "firstRowsPaintedMs": 20753.40000000596,
+          "dataReadyMs": 20671,
+          "observationEndMs": 29092.09999999404,
+          "maxPollGapMs": 10129.699999988079,
+          "startupReadyMs": 3571,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 29744.5
+        },
+        "orders": {
+          "elapsedMs": 10388.90000000596,
+          "firstRowsPaintedMs": 7289.5,
+          "dataReadyMs": 7191.4000000059605,
+          "observationEndMs": 13335.09999999404,
+          "maxPollGapMs": 3124.800000011921,
+          "startupReadyMs": 2160.800000011921,
+          "startupUserWaitMs": 0,
+          "systemToStablePaintMs": 12629.300000011921
+        }
+      },
+      "schemaVariants": {
+        "cp": 61,
+        "orders": 60
+      },
+      "dataEq": "passed",
+      "finishedAt": "2026-11-08T04:39:15.953360+00:00",
+      "freeAfterBytes": 212754432
+    },
+    {
+      "pair": 2,
+      "arm": "A",
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "status": "failed",
+      "startedAt": "2026-11-08T04:39:16.224152+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/workspace/buyerlog-analytics904/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/buyerlog-analytics904/resources/app",
+        "--measurement",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+        "--out",
+        "/tmp/bl6cp1/runs/p2A/measurement.json"
+      ],
+      "output": "/tmp/bl6cp1/runs/p2A",
+      "freeBeforeBytes": 212750336,
+      "launcherPid": 652751,
+      "error": "RuntimeError('DISK: below 96 MiB; emergency stop, retain failed artifacts')",
+      "finishedAt": "2026-11-08T04:40:14.173453+00:00"
+    }
+  ],
+  "admissions": [
+    {
+      "pair": 1,
+      "arm": "A",
+      "at": "2026-11-08T04:34:23.703245+00:00",
+      "freeBytes": 361037824,
+      "requiredBytes": 201326592
+    },
+    {
+      "pair": 1,
+      "arm": "B",
+      "at": "2026-11-08T04:36:00.375348+00:00",
+      "freeBytes": 311791616,
+      "requiredBytes": 201326592
+    },
+    {
+      "pair": 2,
+      "arm": "B",
+      "at": "2026-11-08T04:37:45.171749+00:00",
+      "freeBytes": 262111232,
+      "requiredBytes": 201326592
+    },
+    {
+      "pair": 2,
+      "arm": "A",
+      "at": "2026-11-08T04:39:16.223372+00:00",
+      "freeBytes": 212750336,
+      "requiredBytes": 201326592
+    }
+  ],
+  "error": "RuntimeError('DISK: below 96 MiB; emergency stop, retain failed artifacts')",
+  "finishedAt": "2026-11-08T04:40:17.774324+00:00"
+}

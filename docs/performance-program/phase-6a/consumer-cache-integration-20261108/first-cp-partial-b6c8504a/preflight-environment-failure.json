@@ -1,0 +1,7 @@
+{
+  "status": "preflight-failed",
+  "recordedAt": "2026-11-08T04:34:22.741094+00:00",
+  "error": "Ambient overrides present (names only): NODE_PATH",
+  "nativeArmsStarted": 0,
+  "adaptation": "Unset inherited NODE_PATH; keep all preflight assertions and native scripts unchanged."
+}
