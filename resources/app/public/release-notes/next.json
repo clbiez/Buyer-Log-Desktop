@@ -39,6 +39,35 @@
           "en": "Actual post-change application with synthetic demo data. Memory, decoding and output equivalence are verified separately by measurements and tests."
         }
       }
+    },
+    {
+      "id": "ana10-bulk-row-refresh-index",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Toplu satır yenilemeleri daha hızlı",
+        "en": "Faster bulk row refreshes"
+      },
+      "body": {
+        "tr": "Çok sayıda sipariş yenilenirken CP satırları tek geçişte bulunur. Öncelik kararları, değişiklik işaretleri, seçim ve satır sırası korunur.",
+        "en": "When many orders refresh, CP rows are located in one pass. Priority decisions, dirty markers, selection and row order are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana10-bulk-row-refresh.png",
+        "alt": {
+          "tr": "Demo siparişlerle toplu yenileme sonrası gerçek CP Tracker tablosu",
+          "en": "Actual CP Tracker table after a bulk refresh of demo orders"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, değişiklik sonrası demo veri; güncellenen satırlar ve öncelikler korunur.",
+          "en": "Actual post-change application with demo data; refreshed rows and priorities are preserved."
+        }
+      }
     }
   ]
 }
