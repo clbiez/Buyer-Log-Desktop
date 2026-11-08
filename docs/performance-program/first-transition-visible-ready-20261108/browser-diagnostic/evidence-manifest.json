@@ -1,0 +1,105 @@
+{
+  "scope": "diagnostic A/A+B, not a formal3pair acceptance or gain",
+  "files": [
+    {
+      "path": "browser-diagnostic/control-A1/measurement.json",
+      "sha256": "6daa4618cddda0021077fd6e25c485d64e381c1b0b85adeb70425affc1f4a950"
+    },
+    {
+      "path": "browser-diagnostic/control-A1/benchmark.log",
+      "sha256": "9a8313da5c7f606a41fcc426571a887c6de7344b85f67af7a3cd400a7faa27b8",
+      "repositoryRepresentation": "browser-diagnostic/control-A1/benchmark.log.gz",
+      "gzipSha256": "514aa17f9839d6be192ee22bd43395e16c0df9d1172c4dba166df901df13fdd8"
+    },
+    {
+      "path": "browser-diagnostic/control-A1/post-timing-data.json",
+      "sha256": "9bc9bdfe5a1aefb8c999ddbf85d7aa2c3fd93a9961f0b194083073897440fd7a"
+    },
+    {
+      "path": "browser-diagnostic/control-A1/cp-visible-cells.json",
+      "sha256": "151ffb007b3f72ad0539c8fc7a866b9ec06379ebe8159a3e5cdcd6703a91b954"
+    },
+    {
+      "path": "browser-diagnostic/control-A1/orders-visible-cells.json",
+      "sha256": "7fe44776b2094ac4d02112f8dc86e2b4cfd07780c098dbae14c16f6dba96e312"
+    },
+    {
+      "path": "browser-diagnostic/control-A2/measurement.json",
+      "sha256": "cb9758e14f3253bed30bc3b260ae3599ec00be2cd14052dc9d35ac8ba50eb88f"
+    },
+    {
+      "path": "browser-diagnostic/control-A2/benchmark.log",
+      "sha256": "c10ecd7e54462b6fc933739db93561b487ccd3421e7aa0be6c56e67b3c9e71d0",
+      "repositoryRepresentation": "browser-diagnostic/control-A2/benchmark.log.gz",
+      "gzipSha256": "2251e6695277daf9747fda3011ef43c488d9aec7cc92d7ff2a676c9cfca90fea"
+    },
+    {
+      "path": "browser-diagnostic/control-A2/post-timing-data.json",
+      "sha256": "6300c9211a5bca8d284d22af5ac17920c6ce0c55e5ec977cab3b14b50b8e8867"
+    },
+    {
+      "path": "browser-diagnostic/control-A2/cp-visible-cells.json",
+      "sha256": "151ffb007b3f72ad0539c8fc7a866b9ec06379ebe8159a3e5cdcd6703a91b954"
+    },
+    {
+      "path": "browser-diagnostic/control-A2/orders-visible-cells.json",
+      "sha256": "9299f4d2706a1355dfe71c908d5e200c52fa1172cff4b725a7129a5f418f7bc2"
+    },
+    {
+      "path": "browser-diagnostic/candidate-B/measurement.json",
+      "sha256": "6d24bb77b195dd7e4e4b879f9baf8a575f28f14692d8dc9366121babe4419b14"
+    },
+    {
+      "path": "browser-diagnostic/candidate-B/benchmark.log",
+      "sha256": "bb068ced130b12e8a6f853e6acee53acc26afa7e059225c8fc420b944e92f7c7",
+      "repositoryRepresentation": "browser-diagnostic/candidate-B/benchmark.log.gz",
+      "gzipSha256": "0f09bbebd4e203d898efa7ba38ca3f66cea50380c3d87828bf4ff1a83384876e"
+    },
+    {
+      "path": "browser-diagnostic/candidate-B/post-timing-data.json",
+      "sha256": "6031099e317a635d340e7b41395bff643b457c61cd0b1902a0a5e7cf8efda302"
+    },
+    {
+      "path": "browser-diagnostic/candidate-B/cp-visible-cells.json",
+      "sha256": "151ffb007b3f72ad0539c8fc7a866b9ec06379ebe8159a3e5cdcd6703a91b954"
+    },
+    {
+      "path": "browser-diagnostic/candidate-B/orders-visible-cells.json",
+      "sha256": "7fe44776b2094ac4d02112f8dc86e2b4cfd07780c098dbae14c16f6dba96e312"
+    },
+    {
+      "path": "browser-diagnostic/old-baseline-late-hold.png",
+      "sha256": "ec683eef67cca888da3eb3c4f540bd5b24688c8bad6ac9e9d840df91fa30ab9e"
+    },
+    {
+      "path": "browser-diagnostic/old-candidate-unobscured.png",
+      "sha256": "6099b6ee13330205613d1c65fe2d5bcf62bea91895e4a46cff57c75851bb529f"
+    }
+  ],
+  "fullRowArtifactsRetainedAtOriginalPaths": [
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/control-A1/cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/control-A1/orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/control-A2/cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/control-A2/orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/candidate-B/cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-after916-diagnostic/candidate-B/orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    }
+  ]
+}

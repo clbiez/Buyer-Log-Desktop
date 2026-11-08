@@ -1,0 +1,27 @@
+✔ first intent includes handler dispatch delay and waits for actual visible rows and paint (6.095838ms)
+✔ row DOM behind an overlay cannot satisfy first visible paint (4.128673ms)
+✖ a blocked timer turn cannot skip late trivia settlement and certify the covered screen (3.081165ms)
+✔ a denied first transition fails instead of reporting a ready previous screen (2.196086ms)
+✔ an unready first transition has a bounded failure with partial evidence (2.06542ms)
+✔ metadata-only startup is compared with its envelope while actual projection identity remains mandatory (6.22158ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 162.027422
+
+✖ failing tests:
+
+test at tests/first-transition-benchmark.test.js:36:1
+✖ a blocked timer turn cannot skip late trivia settlement and certify the covered screen (3.081165ms)
+  TypeError: h.timers.shift(...) is not a function
+      at TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/first-transition-benchmark.test.js:48:66)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
