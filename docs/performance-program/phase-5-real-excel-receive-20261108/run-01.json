@@ -1,0 +1,206 @@
+{
+  "status": "passed",
+  "scope": "actual native receiveMessageOnPort around genuine 30k Excel result; isolated idle-main diagnosis, not server throughput or gain",
+  "startedAt": "2026-11-08T09:25:11.079Z",
+  "node": {
+    "version": "v24.19.0",
+    "execPath": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "availableParallelism": 4
+  },
+  "referenceHead": "a31f8360ecb4ca39fe98a6fb2f0949e4806104ce",
+  "referenceAppTree": "2587b657702510fe7e32726f2eb334a8e8492047",
+  "appRoot": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+  "syntheticRows": 30000,
+  "seed": 7,
+  "profileEnabled": false,
+  "main": {
+    "submitNs": "215044550171031",
+    "workerConstructorEnterNs": "215044551146448",
+    "workerConstructorExitNs": "215044554928059",
+    "jobPostEnterNs": "215044558301265",
+    "jobPostExitNs": "215044558335242",
+    "workerOnlineNs": "215044601839761",
+    "controlCallbackEntryNs": "215055033403399",
+    "cpuBefore": {
+      "user": 246042,
+      "system": 760250
+    },
+    "nativeReceiveEnterNs": "215055033960285",
+    "nativeReceiveExitNs": "215056168967291",
+    "cpuAfter": {
+      "user": 826116,
+      "system": 1288259
+    },
+    "nativeEnvelopeId": 1,
+    "nativeReceiveCalls": 1,
+    "metricsCallbackNs": "215056170022773",
+    "workerTerminateEnterNs": "215056170066635",
+    "workerExitNs": "215056226047193",
+    "workerTerminateExitNs": "215056229708437",
+    "promiseResolvedNs": "215056229758354"
+  },
+  "sourceMetrics": {
+    "queueWaitMs": 0.6647729999999683,
+    "durationMs": 11618.87572,
+    "executionMs": 8997.367366,
+    "overheadMs": 2621.5083539999996,
+    "heapUsedBytes": 452117384,
+    "mainReceiveMs": 1135.398548000001,
+    "workerPostMessageMs": 1415.85167,
+    "resultTransport": "message-port"
+  },
+  "limitations": [
+    "No pure V8 deserialization/sender serialization/IPC queue/scheduling split is inferred.",
+    "One real parseAsasFile via current production client, not full refresh or a busy server.",
+    "Linux/Node only; Windows/Electron/source-service/cold OS disk behavior unmeasured."
+  ],
+  "diskAdmission": {
+    "freeBytes": 727027712,
+    "requiredBytes": 176443529,
+    "admitted": true
+  },
+  "launchHead": "b1bd1ffc5d832ce297271b108c9e7f47f4fdab22",
+  "heartbeat": {
+    "periodMs": 10,
+    "count": 1034,
+    "totalGapMs": 11726.049083999978,
+    "maxGapMs": 1144.422283,
+    "topGaps": [
+      {
+        "startNs": "215055026430447",
+        "endNs": "215056170852730",
+        "gapMs": 1144.422283
+      },
+      {
+        "startNs": "215056232088541",
+        "endNs": "215056255007787",
+        "gapMs": 22.919246
+      },
+      {
+        "startNs": "215045654394945",
+        "endNs": "215045675552085",
+        "gapMs": 21.15714
+      },
+      {
+        "startNs": "215044539605670",
+        "endNs": "215044558639161",
+        "gapMs": 19.033491
+      },
+      {
+        "startNs": "215047195158894",
+        "endNs": "215047209975026",
+        "gapMs": 14.816132
+      },
+      {
+        "startNs": "215045940902093",
+        "endNs": "215045955052820",
+        "gapMs": 14.150727
+      },
+      {
+        "startNs": "215045627750136",
+        "endNs": "215045641771835",
+        "gapMs": 14.021699
+      },
+      {
+        "startNs": "215054669288623",
+        "endNs": "215054683260917",
+        "gapMs": 13.972294
+      }
+    ],
+    "receiveOverlaps": [
+      {
+        "startNs": "215055026430447",
+        "endNs": "215056170852730",
+        "gapMs": 1144.422283
+      }
+    ]
+  },
+  "workerThreadId": 1,
+  "workerExitCode": 1,
+  "eventLoopUtilization": {
+    "idle": 10396.954086,
+    "active": 1282.672263002123,
+    "utilization": 0.10982134399459714
+  },
+  "resultShape": {
+    "asasRows": 30000,
+    "lflRows": 30000,
+    "resultKeys": [
+      "parsedAsas",
+      "parsedLfl",
+      "lflError"
+    ]
+  },
+  "inputBytesPreserved": true,
+  "telemetry": [
+    "1",
+    "1",
+    "215053613509724",
+    "215055028591693",
+    "215055028989284",
+    "215055029031552",
+    "7207377",
+    "7892536",
+    "1718049",
+    "2445234",
+    "1",
+    "1",
+    "1",
+    "1",
+    "0",
+    "0"
+  ],
+  "observables": {
+    "senderPostMessageWallMs": 1415.081969,
+    "senderThreadCpu": {
+      "userUs": 685159,
+      "systemUs": 727185
+    },
+    "nativeReceiveWallMs": 1135.007006,
+    "mainReceiveThreadCpu": {
+      "userUs": 580074,
+      "systemUs": 528009,
+      "totalUs": 1108083
+    },
+    "sourceMainReceiveMs": 1135.398548000001,
+    "sourceWorkerPostMessageMs": 1415.85167,
+    "postReturnToControlCallbackCombinedMs": 4.811706,
+    "controlSendEnterToCallbackCombinedMs": 4.414115,
+    "callbackEntryToNativeReceiveEnterMs": 0.556886,
+    "nativeReceiveExitToMetricsCallbackMs": 1.055482,
+    "controlPostReturnMayOverlapCallback": false,
+    "causalOrderValid": true,
+    "pureDeserializationMs": null,
+    "pureSenderSerializationMs": null,
+    "ipcQueueOnlyMs": null,
+    "mainSchedulingOnlyMs": null,
+    "interpretation": "Native result-port receive wall/thread-CPU are actual combined dequeue/materialization/native-call observables. Control arrival gap combines sender control work, IPC queue/transport, main scheduling and small-control decode; public API does not identify their separate durations."
+  },
+  "finalClientStats": {
+    "queued": 1,
+    "completed": 1,
+    "failed": 0,
+    "rejected": 0,
+    "active": false,
+    "lastTask": "parseAsasFile",
+    "lastDurationMs": 11618.87572,
+    "lastQueueWaitMs": 0.6647729999999683,
+    "lastExecutionMs": 8997.367366,
+    "lastOverheadMs": 2621.5083539999996,
+    "maxQueueWaitMs": 0.6647729999999683,
+    "lastMainReceiveMs": 1135.398548000001,
+    "lastWorkerPostMessageMs": 1415.85167,
+    "totalQueueWaitMs": 0.6647729999999683,
+    "totalExecutionMs": 8997.367366,
+    "peakActiveWorkers": 1,
+    "peakWorkerHeapMiB": 431.17273712158203,
+    "pending": 0,
+    "activeWorkers": 0,
+    "maxWorkers": 1,
+    "memoryBudgetMiB": 256,
+    "estimatedActiveMiB": 0,
+    "retainedPayloadMiB": 0
+  },
+  "finishedAt": "2026-11-08T09:25:23.875Z"
+}

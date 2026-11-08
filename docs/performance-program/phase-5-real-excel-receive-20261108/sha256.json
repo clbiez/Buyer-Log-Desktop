@@ -1,0 +1,15 @@
+{
+  "scripts/prototypes/excel-real-receive-20261108/observables.test.cjs": "fce00bf1a546eeb4c424e03f1bb2de2035384bf3084bb007c6973b2afbb6b3e1",
+  "scripts/prototypes/excel-real-receive-20261108/source-pins.json": "1d0c1849f38d69acd3bdff3d595325e5f0d82e5d1a890a15465cfb0999207d7b",
+  "scripts/prototypes/excel-real-receive-20261108/preparation-manifest.json": "b77070893396ad0a67f0507a2cc87ede20c01c2521a0d7ac28d6bf9334aa3ba7",
+  "scripts/prototypes/excel-real-receive-20261108/worker-preload.cjs": "fb270f93bdeb9431b787ebe2e7846eb8efa5a0d5c12a23b3822035e30aa5aea6",
+  "scripts/prototypes/excel-real-receive-20261108/observables.cjs": "999c069212eb130e19c7ec6b6fc605263dbaa716eedda40076a886ad90b85035",
+  "scripts/prototypes/excel-real-receive-20261108/run-prepared.sh": "801f67fafe689a57a43259b7343117608e7561634caba14f89df897575332108",
+  "scripts/prototypes/excel-real-receive-20261108/probe.cjs": "d94b2568bd95ef48df5c9447adf90c7d63142dd2b0100a5b1d47db9ff21b2d0b",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/run-03.json": "316429fcb0a38362b407b17b619360f560495adc1ff69cc8d7ac8336dfc6a5ae",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/README.md": "662ef10057abffff10fd94747abee1844d75978a9df8c5f32cbff8f05c72ef0a",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/run-01.json": "261c478042029f8051f1760a851a007f173bdae68d2c1c5c8ce668579bd98ed7",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/run-02.json": "6062627b5479d1444f6dc25c8682aaca28893c380b1494d5750529ccb9d2116a",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/native-unit.log": "6332fab42820d5c285cc32af3fb21ff3634b0440c9b4394a064dd38fa36049b4",
+  "docs/performance-program/phase-5-real-excel-receive-20261108/summary.json": "69ef5435d4a3e34f127343e16573348c15557d1ae3f58b24f064de00398ed288"
+}

@@ -1,0 +1,14 @@
+✔ actual native bracket arithmetic is distinct from sender post and arrival gap (1.610265ms)
+✔ no pure deserialization/serialization/IPC/scheduling metric is fabricated (0.493558ms)
+✔ missing timestamps/CPU remain unavailable; zero is not an invented duration (0.223994ms)
+✔ control post may return after callback on the other thread; no queue split inferred (0.202163ms)
+✔ negative causal spans are not silently clamped into plausible measurements (0.293683ms)
+✔ pinned actual execution files are checked without importing app/worker/benchmark (14.470858ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 174.392412

@@ -1,0 +1,185 @@
+{
+  "preparedOnly": true,
+  "preparedAt": "2026-11-08T09:10:07.087362+00:00",
+  "referenceCheckout": "/workspace/buyerlog-post-main-acceptance",
+  "referenceHead": "a31f8360ecb4ca39fe98a6fb2f0949e4806104ce",
+  "referenceAppTree": "2587b657702510fe7e32726f2eb334a8e8492047",
+  "files": {
+    "server/workers/excel-worker.js": {
+      "sha256": "81940ef7ea4da5a82b7e96d2ec05777e12745156e4e2fd3d59107000b3e49509",
+      "bytes": 16310,
+      "blobAtHead": "869f57abc00ae51e32787de59c7f4fb10aa5773d",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/excel-worker-client.js": {
+      "sha256": "ae9ec7e3706ba0852641d6f778f3bff05cea2490be749051742c624230b45f1a",
+      "bytes": 9620,
+      "blobAtHead": "dbaf7cfb518001feb5c5c0476f34fae48f36a439",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/lib/lease-worker-registry.js": {
+      "sha256": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+      "bytes": 6031,
+      "blobAtHead": "377b3984ddf0172090807092a48e2336905867af",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/lib/workbook-parser-guards.js": {
+      "sha256": "6debb498773b842ce8ed386f71330784b0132c1ef1eb910752a2b844d1afb265",
+      "bytes": 909,
+      "blobAtHead": "d369106399d4b3fa6235e1da5455cacad984b7a7",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/lib/parse.js": {
+      "sha256": "554c4a2360516955f0443bfa76efe43c85fd295182df39ccdb67c8d843e2d2d5",
+      "bytes": 199611,
+      "blobAtHead": "bf50021755c1bb18783bddf940f844ff82838133",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/lib/lfl.js": {
+      "sha256": "5bd0c5685c51c934a19432225e53c5c84b8b8b167684a48f66b75cf3d49b3d33",
+      "bytes": 25585,
+      "blobAtHead": "b7bac137221e98f362da89d1ab19fc2cf9c25159",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/backlog-excel-formulas.js": {
+      "sha256": "6b686d8b0acd5d522374031c1c1a86d0083d938797d650e39130b5114845a247",
+      "bytes": 24449,
+      "blobAtHead": "30f7f8f71cfb86883d6017405bd4caf21137e062",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/excel-workbook-guards.js": {
+      "sha256": "33aa27b1c12e9e660f521fb430be03a7815ed6cdbf6bef74b51912566b15f41e",
+      "bytes": 29531,
+      "blobAtHead": "453b52cec89d092c7f271553dc66b9cf7b2073aa",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/excel-date-utils.js": {
+      "sha256": "3c1195dbf3b4eab58f5546112da1a44a61cc035798eb8943b2c94d9e0acae39d",
+      "bytes": 17419,
+      "blobAtHead": "a8b595165e3fecf9fa834b85a9f888f89a1a2494",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/vendor/jszip.min.js": {
+      "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+      "bytes": 97630,
+      "blobAtHead": "ff4cfd5e8fdc49176c2d1d409afa897f40be01f4",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/date-dimension.js": {
+      "sha256": "de49767201e345baf0c0fca04716d8f3955a5d25375dba234329f900b26592c3",
+      "bytes": 13418,
+      "blobAtHead": "30d0ba8ea830a6c2bbea5561bcd66a1240fdabce",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/business-rules.js": {
+      "sha256": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+      "bytes": 51395,
+      "blobAtHead": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/order-importance.js": {
+      "sha256": "538fdd02ebfe97039aedb9d903bcbda73b6934d8fd6401af9a83e66421d6a08e",
+      "bytes": 9557,
+      "blobAtHead": "952ecde6e1179663351ccee5b564acc29c4237ae",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/lib/canonical-fields.js": {
+      "sha256": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+      "bytes": 300,
+      "blobAtHead": "34f954e0ab66948e23ae90825e85ca84fcd10004",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "public/cp-readiness-engine.js": {
+      "sha256": "08d5f0f3981889682e10f791244a929ebf5d2d88319445a9d7dedf502ce352f8",
+      "bytes": 34402,
+      "blobAtHead": "6bb1778b921c1b41b2f210f9c66444ca27a4baa5",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": true
+    },
+    "server/server.js": {
+      "sha256": "564f4cbab52c96c9f85051d9e0090a6734186ca1a640bd6b307bdf868d659b16",
+      "bytes": 819354,
+      "blobAtHead": "d46e70d7237b1b703700881b22682885000e97a5",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "server/routes/asas-source-routes.js": {
+      "sha256": "340544d82edfb33c40aa8aa35f412771c55c86baf4badd838643efa1c1461d84",
+      "bytes": 8993,
+      "blobAtHead": "d3ee879c41ea516502e75a4205ee3228791b166e",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "scripts/benchmark-excel-worker-receive.js": {
+      "sha256": "ec3c3163483a3e254afa0821af2e9e37d5bdc85bc726e4f7dc60a4cceb7a39fb",
+      "bytes": 1931,
+      "blobAtHead": "fb24d50755fb828b0be0994bf929d746114fc880",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "scripts/benchmark-startup-orders.js": {
+      "sha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+      "bytes": 21751,
+      "blobAtHead": "dfa5d8efade04a72dae80d8dd8374b431339aae1",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "scripts/lib/startup-benchmark.js": {
+      "sha256": "fefbd5ec7ca9cef7769d0695348461c145fc0eb37292eea976f4fe6fd12d1ca7",
+      "bytes": 6495,
+      "blobAtHead": "b98f99ec787fe937e82fdd1b715804517a922dbf",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "tests/excel-worker-queue.test.js": {
+      "sha256": "4aef55bf9eec0955a1427c59f9da6af34fed1e2a919f915ed7815197d82c8436",
+      "bytes": 7698,
+      "blobAtHead": "7d3268ccb6403b3e28158848ecde7ea697476741",
+      "workingBytesMatchHead": true,
+      "requiredOnLaunch": false
+    },
+    "node_modules/xlsx/package.json": {
+      "sha256": "bb9458277a69b41a304a89e45f19173ac0d23f2fc296091db49dba3c8b61c546",
+      "bytes": 4168,
+      "requiredOnLaunch": true
+    },
+    "node_modules/xlsx/xlsx.js": {
+      "sha256": "fd159f1e2d694e12cd0709c1ec1b63c6e1f045d2c4ce857a346f9b965798cbfa",
+      "bytes": 975564,
+      "requiredOnLaunch": true
+    }
+  },
+  "source": {
+    "directory": "/tmp/buyerlog-startup-auth-20261107T211313-before-1/source",
+    "markerSha256": "f101c73ae5eddd490097e217931ac2239f32d8f860e17a12845c8df1ee49768d",
+    "marker": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "file": "ASAS - Demo.xlsx",
+    "fileBytes": 41177225,
+    "sha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99"
+  },
+  "runtime": "Node v24.19.0; required actual file pins; no environment dump",
+  "noExecution": true
+}

@@ -1,0 +1,33 @@
+{
+  "scope": "three fresh actual native worker receive samples; no before/after gain, no pure V8 attribution",
+  "runs": [
+    {
+      "path": "/tmp/buyerlog-excel-real-receive-preparation/runs/actual-native-receive-root-01/report.json",
+      "source": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "nativeReceiveMs": 1135.007006,
+      "senderPostMessageMs": 1415.081969,
+      "mainReceiveThreadCpuMs": 1108.083
+    },
+    {
+      "path": "/tmp/buyerlog-excel-real-receive-preparation/runs/actual-native-receive-root-02/report.json",
+      "source": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "nativeReceiveMs": 553.29756,
+      "senderPostMessageMs": 1314.571054,
+      "mainReceiveThreadCpuMs": 539.465
+    },
+    {
+      "path": "/tmp/buyerlog-excel-real-receive-preparation/runs/actual-native-receive-root-03/report.json",
+      "source": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "nativeReceiveMs": 619.906192,
+      "senderPostMessageMs": 1146.664169,
+      "mainReceiveThreadCpuMs": 599.87
+    }
+  ],
+  "medians": {
+    "nativeReceiveMs": 619.906192,
+    "senderPostMessageMs": 1314.571054,
+    "mainReceiveThreadCpuMs": 599.87
+  },
+  "pureDeserializationMs": null,
+  "phase5No200msStallAccepted": false
+}

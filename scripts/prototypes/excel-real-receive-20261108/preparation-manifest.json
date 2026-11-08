@@ -1,0 +1,39 @@
+{
+  "preparedOnly": true,
+  "preparedAt": "2026-11-08T09:16:56.150494+00:00",
+  "appOrProbeImportedByPreparationAgent": false,
+  "executed": false,
+  "syntaxChecked": false,
+  "unitTestsRun": false,
+  "workerRun": false,
+  "profileRun": false,
+  "worktreeEdited": false,
+  "existingHelpersOrBenchmarksEdited": false,
+  "referenceHead": "a31f8360ecb4ca39fe98a6fb2f0949e4806104ce",
+  "referenceCheckout": "/workspace/buyerlog-post-main-acceptance",
+  "workerGitBlob": "869f57abc00ae51e32787de59c7f4fb10aa5773d",
+  "clientGitBlob": "dbaf7cfb518001feb5c5c0476f34fae48f36a439",
+  "mechanism": "one actual production Worker created via existing WorkerClass injection, same real resultPort and native receiveMessageOnPort; probe-only preload/SAB numeric telemetry, no payload rewrite/clone/new worker framework",
+  "observedMetricsPrepared": [
+    "actual sender native post wall + worker-thread CPU if supported",
+    "actual main control callback entry",
+    "actual native receive call wall + main-thread CPU if supported",
+    "source existing mainReceiveMs and workerPostMessageMs",
+    "bounded aggregate main heartbeat + actual native-overlap gap",
+    "optional main1ms inspector profile"
+  ],
+  "metricsDeliberatelyUnknown": [
+    "pure V8 deserialization",
+    "pure sender serialization",
+    "IPC queue-only duration",
+    "main scheduling-only duration"
+  ],
+  "sample": "private copy of pinned synthetic seed7 30k ASAS workbook; no services or real data",
+  "sourceBytes": 41177225,
+  "futureRootCommands": [
+    "bash /tmp/buyerlog-excel-real-receive-preparation/run-prepared.sh unit",
+    "bash /tmp/buyerlog-excel-real-receive-preparation/run-prepared.sh probe --app-root /workspace/buyerlog-post-main-acceptance/resources/app --label actual-native-receive-01",
+    "bash /tmp/buyerlog-excel-real-receive-preparation/run-prepared.sh probe --app-root /workspace/buyerlog-post-main-acceptance/resources/app --label actual-native-receive-profile-01 --profile"
+  ],
+  "status": "unexecuted; actual public API hook behavior, telemetry causality, wall/CPU/native profiling and obligation closure remain for root serial execution"
+}
