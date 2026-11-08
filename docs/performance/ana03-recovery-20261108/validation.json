@@ -1,0 +1,226 @@
+{
+  "sourcePullRequest": 923,
+  "recoveryPullRequest": 927,
+  "testedHead": "dc85080408f9a9a6eae8867fc4a697efb4c9d8cc",
+  "mergedMain": "6a5b353a9877958b86c56a661ed7e5ad70dbecc5",
+  "normalMerge": true,
+  "productionDiff": "renderBacklogFlatRows: flat.map -> flat.filter(r=>r.visible).map",
+  "ana04ProductionChanges": false,
+  "npmTest": {
+    "command": "npm test",
+    "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+    "repositoryOutsideTmp": true,
+    "environmentOverrides": {},
+    "runnerUnchanged": true,
+    "concurrency": 4,
+    "node": "v24.19.0",
+    "files": 1306,
+    "completedBatches": 10,
+    "exitCode": 0,
+    "seconds": 100.5,
+    "counts": {
+      "tests": 9028,
+      "pass": 8963,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 65
+    },
+    "batches": [
+      {
+        "batch": 1,
+        "files": 300,
+        "counts": {
+          "tests": 1800,
+          "pass": 1740,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 60
+        },
+        "seconds": 20.5
+      },
+      {
+        "batch": 2,
+        "files": 300,
+        "counts": {
+          "tests": 2328,
+          "pass": 2325,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 3
+        },
+        "seconds": 19.7
+      },
+      {
+        "batch": 3,
+        "files": 300,
+        "counts": {
+          "tests": 2066,
+          "pass": 2066,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 18.8
+      },
+      {
+        "batch": 4,
+        "files": 300,
+        "counts": {
+          "tests": 2020,
+          "pass": 2019,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 1
+        },
+        "seconds": 21.8
+      },
+      {
+        "batch": 5,
+        "files": 101,
+        "counts": {
+          "tests": 767,
+          "pass": 767,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 8.8
+      },
+      {
+        "batch": 6,
+        "files": 1,
+        "counts": {
+          "tests": 4,
+          "pass": 4,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 0.1
+      },
+      {
+        "batch": 7,
+        "files": 1,
+        "counts": {
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 1.4
+      },
+      {
+        "batch": 8,
+        "files": 1,
+        "counts": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 0.1
+      },
+      {
+        "batch": 9,
+        "files": 1,
+        "counts": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "seconds": 3.5
+      },
+      {
+        "batch": 10,
+        "files": 1,
+        "counts": {
+          "tests": 15,
+          "pass": 14,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 1
+        },
+        "seconds": 5.9
+      }
+    ]
+  },
+  "iam": {
+    "previousFailingCases": [
+      "inactive user can be created, assigned a password and activated by Moderator",
+      "direct permissions and MAG/MMYG scope can be copied to multiple users atomically"
+    ],
+    "result": "PASS in full suite",
+    "mainComparison": "not triggered because IAM did not fail"
+  },
+  "environmentPreparation": "Created missing default /home/agent/.buyer-log and granted sandbox filesystem write access; no environment override. An earlier targeted attempt failed ENOENT before this preparation.",
+  "related": {
+    "command": "npm test -- backlog",
+    "files": 59,
+    "pass": 394,
+    "fail": 0
+  },
+  "i18n": {
+    "command": "npm run i18n:check",
+    "newMissing": 0,
+    "baselineMissing": 0,
+    "exitCode": 0
+  },
+  "releaseNotes": {
+    "command": "npm run release:notes:validate",
+    "changes": 56,
+    "exitCode": 0,
+    "png": "../../../resources/app/public/release-notes/next-assets/ana03-backlog-on-demand.png",
+    "pngSha256": "4fecb6cc7179c7ddb639969f39c65d3150b0d3876a272ebf1389353c6ea09f0b",
+    "source": "retained unchanged from #923",
+    "visuallyReviewed": true
+  },
+  "isolatedRendererBrowserAcceptance": {
+    "pass": true,
+    "scope": "isolated browser execution of unchanged main and candidate renderer functions",
+    "baselineDomRows": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "candidateDomRows": [
+      2,
+      4,
+      5,
+      5,
+      2,
+      5
+    ],
+    "visibleHtmlFlatTreeAndStateParity": true,
+    "keyboardEnterSpace": true,
+    "detailPayload": true,
+    "nestedReopen": true
+  },
+  "temporaryAcceptanceScriptSha256": "d84516963ea4ccead8bc997396d8ee19e34e131303cc3d148551c0af14efbe00",
+  "branchProtectionObserved": false,
+  "logs": [
+    {
+      "path": "full-npm-test.log.gz",
+      "sha256": "6a15f5e38d2cbb2176e3b6a5e3c0eec518e051111f784864a615b838f72ef875",
+      "rawSha256": "7bab2cde5a0458b0c1bac8320007b352bbca0138f1aee16805500c90bf4e6408"
+    },
+    {
+      "path": "related-backlog.log.gz",
+      "sha256": "95515faeae658b39d1b7fc9137fa897bb96b3c9936bd258000df215c03dc8526",
+      "rawSha256": "5aed5af85e480aa7b6aca32b2e1b566716bee0eb3354e858b5a1d947bbc63f1f"
+    }
+  ],
+  "productionHeadPrChecks": {
+    "runId": 42504483384,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/42504483384",
+    "conclusion": "success",
+    "head": "dc85080408f9a9a6eae8867fc4a697efb4c9d8cc",
+    "finalDocumentationHeadChecks": "required separately on final PR head before merge"
+  }
+}
