@@ -1,0 +1,135 @@
+{
+  "status": "passed",
+  "classification": "functional native browser full/full shadow, NOT formal A/B/performance acceptance",
+  "startedAt": "2026-11-08T02:36:06.768573+00:00",
+  "diskAdmission": {
+    "freeBytes": 489861120,
+    "requiredBytes": 335544320
+  },
+  "head": "f0766e544bec6a2a578f0a64adf1d70a8ce0c01d",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/workspace/buyerlog-post-main-acceptance/resources/app/scripts/benchmark-first-transitions.js",
+    "--app-root",
+    "/workspace/buyerlog-post-main-acceptance/resources/app",
+    "--measurement",
+    "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+    "--out",
+    "/tmp/buyerlog-phase6a-shadow-live-smoke/first/measurement.json"
+  ],
+  "refreshPostRetry": false,
+  "sourcePins": {
+    "resources/app/server/server.js": "3f1b7280b878ed69e6b1fc5727ac9f1b510455acd24953cfaffe8d445068cdb6",
+    "resources/app/server/lib/compute-service.js": "4ea7073a6354cf1e8dea05df9d4c38da1092b30152601ddfcd261c0c553ed773",
+    "resources/app/server/lib/compute-pool.js": "104c377bf98bc229a8320f1e7b275619a96878fc2b20981cd98e6ef340cc12e4",
+    "resources/app/server/workers/compute-worker.js": "2e55e7a09cfc5dec5655320cb612c33297aac99e2fa17f98e564a80900b50b25",
+    "resources/app/server/lib/projection-shadow-http.js": "900880f52fb2e14497d8b81b732cc34c3613eb8601d6526816a6cb6b80227d76",
+    "resources/app/server/lib/projection-view-core.js": "4eae98d0c2f4926f7404f61d50e51b3e1edcfd01fba4ca43e8f758f4f03bb835",
+    "resources/app/public/projection-shadow-hydration.js": "517ff3092575fd0c3b9e3b39954b85d075ce6b39685c618ae52a258ce59b90e7",
+    "resources/app/public/projection-detail-transport.js": "7c9def945bb8317f2acdab64c3cf7499ef188774d94c7bdbbe149e0561a51395"
+  },
+  "launcherPid": 608311,
+  "exitCode": 0,
+  "nativeStatus": "passed",
+  "shadowResults": {
+    "cp": {
+      "status": "passed",
+      "module": "cp",
+      "startedAt": "2026-11-08T02:36:48.183Z",
+      "sourceRows": 24982,
+      "classification": "functional full/full private shadow; no thin-field/default-speed acceptance",
+      "cpDependency": {
+        "ready": true,
+        "rows": 24982
+      },
+      "finishedAt": "2026-11-08T02:37:09.726Z",
+      "result": {
+        "module": "cp",
+        "rows": 24982,
+        "generation": "mw6vhoks-9100b15fc128",
+        "fullRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c",
+        "shadowRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c",
+        "ordinals": [
+          0,
+          1,
+          12491,
+          24980,
+          24981
+        ],
+        "normalizedFullSha256": "61366967f785a5adcfd904b36bb3067eb8ef8dd526b3dca5ed8c86d0056cd3c8",
+        "normalizedDetailsSha256": "61366967f785a5adcfd904b36bb3067eb8ef8dd526b3dca5ed8c86d0056cd3c8",
+        "duplicateRequestedOrdinalIdentity": true,
+        "publicRowIdentityUnchanged": true,
+        "cpInputRevisionUnchanged": true,
+        "tokenFields": [
+          "ownerId",
+          "actorId",
+          "module",
+          "sourceGeneration",
+          "sourceRevision",
+          "moduleInputKey",
+          "sourceProjectionKey",
+          "accessHash",
+          "contextHash",
+          "planRevision",
+          "requestGeneration"
+        ],
+        "sidecarRows": 24982,
+        "allFieldsRetained": true,
+        "downstreamPricingRulesNotInvoked": true,
+        "timezone": "Europe/Istanbul"
+      }
+    },
+    "orders": {
+      "status": "passed",
+      "module": "orders",
+      "startedAt": "2026-11-08T02:37:24.732Z",
+      "sourceRows": 30000,
+      "classification": "functional full/full private shadow; no thin-field/default-speed acceptance",
+      "cpDependency": {
+        "ready": true,
+        "rows": 24982
+      },
+      "finishedAt": "2026-11-08T02:37:45.484Z",
+      "result": {
+        "module": "orders",
+        "rows": 30000,
+        "generation": "mw6vhoks-9100b15fc128",
+        "fullRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+        "shadowRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+        "ordinals": [
+          0,
+          1,
+          15000,
+          29998,
+          29999
+        ],
+        "normalizedFullSha256": "c189ec38d6bf669d1f288a25a270c8b9ddbc03e6f23323db4a5a824b724deca1",
+        "normalizedDetailsSha256": "c189ec38d6bf669d1f288a25a270c8b9ddbc03e6f23323db4a5a824b724deca1",
+        "duplicateRequestedOrdinalIdentity": true,
+        "publicRowIdentityUnchanged": true,
+        "cpInputRevisionUnchanged": true,
+        "tokenFields": [
+          "ownerId",
+          "actorId",
+          "module",
+          "sourceGeneration",
+          "sourceRevision",
+          "moduleInputKey",
+          "sourceProjectionKey",
+          "accessHash",
+          "contextHash",
+          "planRevision",
+          "requestGeneration"
+        ],
+        "sidecarRows": 30000,
+        "allFieldsRetained": true,
+        "downstreamPricingRulesNotInvoked": true,
+        "timezone": "Europe/Istanbul"
+      }
+    }
+  },
+  "children": [],
+  "liveChildrenAfterExit": [],
+  "finishedAt": "2026-11-08T02:37:55.943649+00:00"
+}

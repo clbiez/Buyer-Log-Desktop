@@ -1,0 +1,54 @@
+{
+  "source": "f0766e544bec6a2a578f0a64adf1d70a8ce0c01d",
+  "classification": "local guarded full/full shadow foundation; phase6a defaultthin still pending",
+  "status": "passed",
+  "startedAt": "2026-11-08T02:43:28.531942+00:00",
+  "commands": [
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-6a-full-lne8z3lf",
+      "startedAt": "2026-11-08T02:43:28.567800+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T02:47:18.606595+00:00",
+      "rawSha256": "29a16ccc23184a18bbe5ce4a81c394500ba2d4c2c34dd7f151d78ac96d877d06",
+      "gzipSha256": "6b2ed8f1c9f69cddcbaacd0d785b49d1cfebe1108ba47c456ba81b985d2b8cd5"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-6a-i18n-0z08cg9z",
+      "startedAt": "2026-11-08T02:47:18.613385+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T02:47:21.487522+00:00",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-6a-release-k1b1agfs",
+      "startedAt": "2026-11-08T02:47:21.487890+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T02:47:22.644483+00:00",
+      "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e",
+      "gzipSha256": "b79625e3d624368357064d9d686a918be8defa6da7d53b7dc3c8dd4fc93a21c5"
+    }
+  ],
+  "appTree": "a75f0967b4f4f7e89e8044a442e951d57e2eb909",
+  "finishedAt": "2026-11-08T02:47:22.644780+00:00"
+}

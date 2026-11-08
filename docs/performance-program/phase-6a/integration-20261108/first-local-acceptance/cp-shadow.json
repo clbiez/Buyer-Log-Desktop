@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "module": "cp",
+  "startedAt": "2026-11-08T02:36:48.183Z",
+  "sourceRows": 24982,
+  "classification": "functional full/full private shadow; no thin-field/default-speed acceptance",
+  "cpDependency": {
+    "ready": true,
+    "rows": 24982
+  },
+  "finishedAt": "2026-11-08T02:37:09.726Z",
+  "result": {
+    "module": "cp",
+    "rows": 24982,
+    "generation": "mw6vhoks-9100b15fc128",
+    "fullRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c",
+    "shadowRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c",
+    "ordinals": [
+      0,
+      1,
+      12491,
+      24980,
+      24981
+    ],
+    "normalizedFullSha256": "61366967f785a5adcfd904b36bb3067eb8ef8dd526b3dca5ed8c86d0056cd3c8",
+    "normalizedDetailsSha256": "61366967f785a5adcfd904b36bb3067eb8ef8dd526b3dca5ed8c86d0056cd3c8",
+    "duplicateRequestedOrdinalIdentity": true,
+    "publicRowIdentityUnchanged": true,
+    "cpInputRevisionUnchanged": true,
+    "tokenFields": [
+      "ownerId",
+      "actorId",
+      "module",
+      "sourceGeneration",
+      "sourceRevision",
+      "moduleInputKey",
+      "sourceProjectionKey",
+      "accessHash",
+      "contextHash",
+      "planRevision",
+      "requestGeneration"
+    ],
+    "sidecarRows": 24982,
+    "allFieldsRetained": true,
+    "downstreamPricingRulesNotInvoked": true,
+    "timezone": "Europe/Istanbul"
+  }
+}

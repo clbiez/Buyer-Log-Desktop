@@ -17,3 +17,12 @@ Validation so far: coordinator20PASS/7 behavioralFAIL→27PASS; bounded transpor
 Actual30k browser/API full/full smoke is prepared, not yet executed at this checkpoint. It runs only after the native first-transition measurement and screenshot; normal CP dependency is then settled before shadow assertions. It is functional validation, not a formal before/after speed comparison.
 
 GitHub: local work only, not pushed and not merged. The server/common files overlap ready P1#909, so no second overlapping open implementation PR is created. Full suite, exact-head CI, independent review, safe actual thin-consumer closure, byte/parse/heap and first-CP acceptance remain gates. TEST not published; STABLE not published.
+
+
+## Subsequent actual local acceptance — f0766e54
+
+TR: Yukarıdaki bekliyor ifadesi önceki checkpoint'e aittir. Aynı f0766e54 uygulama ağacında varsayılan `npm test` tek çağrıda bütün 10 batch'i geçti: 1.306 dosya, **8.996 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**. Ardından i18n 0/0 ve 50 sürüm notu doğrulandı. Gerçek Buyer Log sunucusu ve Chromium'da CP 24.982 / Orders 30.000 sıralı satır SHA'ları tam/tam shadow ile eşit; gerçek tarih normalizer'ı ile seçilen ayrıntılar eşit. Genel satır nesnesi kimliği ve CP girdisi revizyonu korunuyor. Native geçiş betiği değiştirilmedi. Bu tek işlevsel 30k koşusu formal A/B, ince veri kabulü veya hızlanma değildir. Güncel SHA CI ve bağımsız P1 incelemesi henüz yapılmadı.
+
+EN: The pending statement above describes the earlier checkpoint. On the same f0766e54 application tree the default `npm test` completed all ten batches in one invocation: 1,306 files, **8,996 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**. i18n is 0/0 and all 50 release notes validate. Actual Buyer Log/Chromium ordered row SHA equality passes for 24,982 CP and 30,000 Orders rows; selected details match through the actual date normalizer. Public row identity and CP input revision stay unchanged. The native transition script is unchanged. This one functional 30k run is neither formal A/B nor thin-data acceptance or a speed claim. Exact-head CI and independent P1 review remain pending.
+
+Receipts and compressed actual logs are in `first-local-acceptance/`. Product source has not changed after that full run. TEST and STABLE remain unpublished.
