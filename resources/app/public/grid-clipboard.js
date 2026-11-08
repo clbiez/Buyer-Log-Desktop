@@ -78,6 +78,62 @@
     return Boolean(target?.closest?.('input,textarea,select,[contenteditable="true"],[role="textbox"]'));
   }
 
+  // A virtual body may be completed for native copy/selection. DOM Ranges
+  // cannot survive replaceChildren; retain logical rows and paths inside each
+  // unchanged row, including reverse selections and partial text offsets.
+  function withNativeSelection(table,update){
+    const body=table?.tBodies?.[0],doc=table?.ownerDocument,selection=doc?.defaultView?.getSelection?.();
+    if(!body)return false;
+    if(table.getClientRects&&!table.getClientRects().length)return false;
+    const focused=body.contains(doc.activeElement)?doc.activeElement:null;
+    const selected=selection?.rangeCount===1&&!selection.isCollapsed&&selection.getRangeAt(0).intersectsNode(body);
+    if(!selected&&!focused)return false;
+    function point(node,offset){
+      if(node===body){
+        if(offset===0)return {edge:'start'};
+        if(offset===body.childNodes.length)return {edge:'end'};
+        const next=body.childNodes[offset],index=next?.dataset?.blVirtualIndex;
+        if(index!=null)return {before:index};
+      }
+      const element=node?.nodeType===1?node:node?.parentNode,row=element?.closest?.('tr');
+      if(row&&body.contains(row)&&row.dataset.blVirtualIndex!=null){
+        const path=[];for(let child=node;child!==row;child=child.parentNode)path.unshift(Array.prototype.indexOf.call(child.parentNode.childNodes,child));
+        return {row:row.dataset.blVirtualIndex,path,offset};
+      }
+      return {node,offset};
+    }
+    function resolve(saved){
+      if(saved.edge)return [body,saved.edge==='start'?0:body.childNodes.length];
+      const index=saved.row??saved.before;
+      if(index!=null){
+        let node=body.querySelector('tr[data-bl-virtual-index="'+index+'"]');
+        if(!node)return null;
+        if(saved.before!=null)return [body,Array.prototype.indexOf.call(body.childNodes,node)];
+        for(const child of saved.path)node=node?.childNodes[child];
+        return node?[node,saved.offset]:null;
+      }
+      return [saved.node,saved.offset];
+    }
+    const anchor=selected?point(selection.anchorNode,selection.anchorOffset):null;
+    const focus=selected?point(selection.focusNode,selection.focusOffset):null;
+    const original=selected?selection.getRangeAt(0):null;
+    const forward=selected&&selection.anchorNode===original.startContainer&&selection.anchorOffset===original.startOffset;
+    const active=focused?point(focused,0):null;
+    if(selected)selection.removeAllRanges();
+    try{update();}finally{
+      const target=active&&resolve(active);target?.[0]?.focus?.({preventScroll:true});
+      if(selected){
+        const a=resolve(anchor),b=resolve(focus);
+        if(a&&b){
+          if(forward&&doc.createRange){
+            const range=doc.createRange();range.setStart(a[0],a[1]);range.setEnd(b[0],b[1]);selection.addRange(range);
+          }else selection.setBaseAndExtent(a[0],a[1],b[0],b[1]);
+        }
+      }
+    }
+    return true;
+  }
+
   function cellIdentity(td){
     const tr=td?.closest?.('tbody tr[data-id]');
     const columnId=td?.dataset?.key;
@@ -145,6 +201,7 @@
     if(!extend||!entry.state.selectionAnchor)entry.state.selectionAnchor=cell;
     entry.state.activeCell=cell;
     entry.state.selectionFocus=cell;
+    if(focus)entry.config.ensureVisible?.(cell);
     paint(entry);
     if(focus)root.document?.getElementById?.(entry.tableId)?.focus?.({preventScroll:true});
     return true;
@@ -443,5 +500,5 @@
     return setFocus(entry,cell,{focus:false});
   }
 
-  return {resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
+  return {resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,withNativeSelection,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
 });

@@ -396,6 +396,12 @@
     const signature = intakeTableSignature();
     if (!options.force && signature === state.tableSignature && table.firstChild) return;
     state.tableSignature = signature;
+    const previousBody = table.tBodies[0];
+    if (previousBody) {
+      previousBody._virtualState = null;
+      if (typeof _pendingTableRenders !== 'undefined') _pendingTableRenders.delete(previousBody);
+    }
+    table._blFinishNative = null;
     const fields = activeColumns();
     if (!fields.length) {
       window.BLOverviewPremium?.renderMetricChart('intake',{raw:true});
@@ -421,11 +427,35 @@
     }).join('');
     renderOverviewChart(sorted,fields);
     const viewRows = intakeDisplayRows(sorted);
-    const rows = viewRows.map(item => {
-      const cls = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
-      return `<tr class="${cls}">${fields.map(field => intakeCellHtml(item, field)).join('')}</tr>`;
-    }).join('');
+    const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
+    const rowCells = item => fields.map(field => intakeCellHtml(item, field)).join('');
+    const rowHtml = (item, index) => `<tr class="${rowClass(item)}" data-bl-virtual-index="${index}">${rowCells(item)}</tr>`;
+    const virtualize = viewRows.length > 300 && typeof window.setupVirtualizedBody === 'function' && window.BLGridClipboard?.withNativeSelection;
+    const rows = virtualize ? '' : viewRows.map(rowHtml).join('');
     table.innerHTML = `<thead><tr>${header}</tr></thead><tbody>${rows || `<tr><td class="intakeEmpty" colspan="${fields.length}">${esc(text('Veri yok.', 'No data.'))}</td></tr>`}</tbody>`;
+    if (virtualize) {
+      const tbody = table.tBodies[0], cache = new Map();
+      window.setupVirtualizedBody(tbody, table, viewRows, (item, index) => {
+        if (cache.has(index)) return cache.get(index);
+        const tr = document.createElement('tr');
+        tr.className = rowClass(item);tr.dataset.blVirtualIndex = String(index);tr.innerHTML = rowCells(item);
+        cache.set(index, tr);return tr;
+      }, fields.length);
+      const virtual = tbody._virtualState, paint = virtual.paint;
+      const finish = () => {
+        if (tbody._virtualState !== virtual) return;
+        tbody._virtualState = null;
+        if (typeof _pendingTableRenders !== 'undefined') _pendingTableRenders.delete(tbody);
+        tbody.innerHTML = viewRows.map(rowHtml).join('');cache.clear();
+      };
+      table._blFinishNative = () => tbody._virtualState === virtual && window.BLGridClipboard.withNativeSelection(table, finish);
+      if (typeof _pendingTableRenders !== 'undefined') _pendingTableRenders.set(tbody, () => { if (!table._blFinishNative?.()) finish(); });
+      virtual.paint = (...args) => {
+        if (table._blFinishNative()) return;
+        paint(...args);
+        for (const index of cache.keys()) if (index < virtual.renderedStart - 15 || index >= virtual.renderedEnd + 15) cache.delete(index);
+      };
+    }
     attachColumnResize(table, fields);
   }
 
@@ -1170,6 +1200,19 @@
       void saveView(next);
     });
     byId('intakeTable')?.addEventListener('dblclick', event => { const header = event.target.closest('[data-intake-rename]'); if (header) renameHeader(header); });
+    byId('intakeTable')?.addEventListener('keydown', event => {
+      if (event.key === 'Tab') byId('intakeTable')?._blFinishNative?.();
+    });
+    document.addEventListener('copy', event => {
+      if (event.defaultPrevented || window.BLGridClipboard?.nativeEditingTarget(event.target)) return;
+      const table = byId('intakeTable'), selection = window.getSelection();
+      const rowOf = node => (node?.nodeType === 1 ? node : node?.parentElement)?.closest?.('tr[data-bl-virtual-index]');
+      // A text range inside real rows already has its complete native payload.
+      // Completing the body is only needed for a body/page-wide selection.
+      const anchor = rowOf(selection?.anchorNode), focus = rowOf(selection?.focusNode);
+      if (anchor?.parentElement === table?.tBodies[0] && focus?.parentElement === table?.tBodies[0]) return;
+      table?._blFinishNative?.();
+    }, true);
     document.addEventListener('click', event => {
       if (state.popover && !state.popover.contains(event.target) && !event.target.closest('[data-intake-filter],[data-intake-add-filter]')) closePopover();
       const panel = byId('intakeFilterPanel');

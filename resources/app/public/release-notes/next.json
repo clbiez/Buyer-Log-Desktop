@@ -39,6 +39,35 @@
           "en": "Actual post-change application with synthetic demo data. Memory, decoding and output equivalence are verified separately by measurements and tests."
         }
       }
+    },
+    {
+      "id": "ana04-windowed-details-intake",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog ve Intake",
+        "en": "Backlog and Intake"
+      },
+      "title": {
+        "tr": "Büyük detay tabloları daha hızlı açılır",
+        "en": "Large detail tables open faster"
+      },
+      "body": {
+        "tr": "Büyük Backlog detayları ve Intake tabloları daha hızlı açılır. Tam ve kısmi kopyalama, klavye ile gezinme, Daha fazla göster ve Excel çıktısı korunur.",
+        "en": "Large Backlog details and Intake tables open faster. Full and partial copying, keyboard navigation, Show more and Excel output are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana04-windowed-details-intake.png",
+        "alt": {
+          "tr": "30.000 sentetik siparişle gerçek Buyer Log Backlog detay tablosu",
+          "en": "Actual Buyer Log Backlog detail table with 30,000 synthetic orders"
+        },
+        "caption": {
+          "tr": "Demo Backlog detayları: mevcut hücreler, satır yükseklikleri ve seçim davranışı korunur.",
+          "en": "Demo Backlog details: existing cells, row heights and selection behavior are preserved."
+        }
+      }
     }
   ]
 }
