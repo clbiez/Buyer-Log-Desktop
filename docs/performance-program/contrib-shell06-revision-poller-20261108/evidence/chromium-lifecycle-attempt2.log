@@ -1,0 +1,12 @@
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+19 !== 18
+
+    at main (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/lifecycle.cjs:92:125) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 19,
+  expected: 18,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

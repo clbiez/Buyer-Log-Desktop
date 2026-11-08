@@ -1,0 +1,369 @@
+{
+  "label": "cost-A-3",
+  "mode": "A",
+  "count": 3,
+  "windowMs": 31500,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4024
+    },
+    {
+      "revision": 2,
+      "at": 20026
+    }
+  ],
+  "requests": [
+    {
+      "at": 2337,
+      "id": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2362
+    },
+    {
+      "at": 2409,
+      "id": 2,
+      "revision": 0,
+      "status": "completed",
+      "end": 2434
+    },
+    {
+      "at": 2482,
+      "id": 3,
+      "revision": 0,
+      "status": "completed",
+      "end": 2508
+    },
+    {
+      "at": 9338,
+      "id": 4,
+      "revision": 1,
+      "status": "completed",
+      "end": 17339
+    },
+    {
+      "at": 9410,
+      "id": 5,
+      "revision": 1,
+      "status": "completed",
+      "end": 17410
+    },
+    {
+      "at": 9483,
+      "id": 6,
+      "revision": 1,
+      "status": "completed",
+      "end": 17484
+    },
+    {
+      "at": 16338,
+      "id": 7,
+      "revision": 1,
+      "status": "completed",
+      "end": 16363
+    },
+    {
+      "at": 16410,
+      "id": 8,
+      "revision": 1,
+      "status": "completed",
+      "end": 16435
+    },
+    {
+      "at": 16483,
+      "id": 9,
+      "revision": 1,
+      "status": "completed",
+      "end": 16508
+    },
+    {
+      "at": 23338,
+      "id": 10,
+      "revision": 2,
+      "status": "completed",
+      "end": 23363
+    },
+    {
+      "at": 23409,
+      "id": 11,
+      "revision": 2,
+      "status": "completed",
+      "end": 23434
+    },
+    {
+      "at": 23483,
+      "id": 12,
+      "revision": 2,
+      "status": "completed",
+      "end": 23508
+    },
+    {
+      "at": 30338,
+      "id": 13,
+      "revision": 2,
+      "status": "completed",
+      "end": 30363
+    },
+    {
+      "at": 30410,
+      "id": 14,
+      "revision": 2,
+      "status": "completed",
+      "end": 30435
+    },
+    {
+      "at": 30483,
+      "id": 15,
+      "revision": 2,
+      "status": "completed",
+      "end": 30508
+    }
+  ],
+  "maxOverlap": 4,
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2511.5,
+          "status": "completed",
+          "end": 2542.6999999999825
+        },
+        {
+          "at": 9512.399999999994,
+          "status": "completed",
+          "end": 17517.100000000006
+        },
+        {
+          "at": 16512.399999999994,
+          "status": "completed",
+          "end": 16540.699999999983
+        },
+        {
+          "at": 23513,
+          "status": "completed",
+          "end": 23540.100000000006
+        },
+        {
+          "at": 30512.399999999994,
+          "status": "completed",
+          "end": 30540.29999999999
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31521.29999999999
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2521.7000000000116,
+          "status": "completed",
+          "end": 2549.3000000000175
+        },
+        {
+          "at": 9522.899999999994,
+          "status": "completed",
+          "end": 17526.600000000006
+        },
+        {
+          "at": 16522.899999999994,
+          "status": "completed",
+          "end": 16550.800000000017
+        },
+        {
+          "at": 23522.899999999994,
+          "status": "completed",
+          "end": 23550.800000000017
+        },
+        {
+          "at": 30522.899999999994,
+          "status": "completed",
+          "end": 30550.600000000006
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31510.800000000017
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2526.5999999999767,
+          "status": "completed",
+          "end": 2555.6999999999825
+        },
+        {
+          "at": 9527.5,
+          "status": "completed",
+          "end": 17530.899999999994
+        },
+        {
+          "at": 16527.399999999994,
+          "status": "completed",
+          "end": 16554.79999999999
+        },
+        {
+          "at": 23527.399999999994,
+          "status": "completed",
+          "end": 23557.899999999994
+        },
+        {
+          "at": 30527.399999999994,
+          "status": "completed",
+          "end": 30554.199999999983
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31511.399999999994
+    }
+  ],
+  "sseConnections": 1,
+  "browser": "154.0.8037.57"
+}

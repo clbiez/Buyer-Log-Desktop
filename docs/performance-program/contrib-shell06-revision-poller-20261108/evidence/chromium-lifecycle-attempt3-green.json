@@ -1,0 +1,372 @@
+{
+  "browser": "154.0.8037.57",
+  "requests": [
+    {
+      "id": 1,
+      "at": 1794144729288,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144729288
+    },
+    {
+      "id": 2,
+      "at": 1794144729405,
+      "status": "aborted",
+      "end": 1794144729461
+    },
+    {
+      "id": 3,
+      "at": 1794144729461,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144729461
+    },
+    {
+      "id": 4,
+      "at": 1794144729472,
+      "status": "aborted",
+      "end": 1794144729548
+    },
+    {
+      "id": 5,
+      "at": 1794144729552,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144729552
+    },
+    {
+      "id": 6,
+      "at": 1794144729559,
+      "status": "aborted",
+      "end": 1794144729619
+    },
+    {
+      "id": 7,
+      "at": 1794144729619,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144729619
+    },
+    {
+      "id": 8,
+      "at": 1794144729638,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144729638
+    },
+    {
+      "id": 9,
+      "at": 1794144729670,
+      "status": "aborted",
+      "end": 1794144729698
+    },
+    {
+      "id": 10,
+      "at": 1794144729702,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144729702
+    },
+    {
+      "id": 11,
+      "at": 1794144729706,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144729706
+    },
+    {
+      "id": 12,
+      "at": 1794144729729,
+      "status": "aborted",
+      "end": 1794144729756
+    },
+    {
+      "id": 13,
+      "at": 1794144729760,
+      "status": "completed",
+      "revision": 2,
+      "end": 1794144729760
+    },
+    {
+      "id": 14,
+      "at": 1794144729769,
+      "status": "http-503",
+      "end": 1794144729769
+    },
+    {
+      "id": 15,
+      "at": 1794144730771,
+      "status": "completed",
+      "revision": 3,
+      "end": 1794144730772
+    },
+    {
+      "id": 16,
+      "at": 1794144733797,
+      "status": "completed",
+      "revision": 4,
+      "end": 1794144733797
+    },
+    {
+      "id": 17,
+      "at": 1794144733823,
+      "status": "completed",
+      "revision": 5,
+      "end": 1794144733823
+    },
+    {
+      "id": 18,
+      "at": 1794144733958,
+      "status": "completed",
+      "revision": 5,
+      "end": 1794144733958
+    }
+  ],
+  "steps": [
+    "three Chromium pages: existing Web Lock, one SSE source",
+    "actor change aborts pending JSON and catches up",
+    "source change aborts pending JSON and catches up",
+    "authority change aborts pending JSON and catches up",
+    "closing real leader releases the existing Web Lock; successor catches up",
+    "Chromium offline/online abort and revision 2 recovery",
+    "HTTP 503 backoff recovers without a refresh POST",
+    "real EventSource reconnect catches up revision 4",
+    "synthetic native activity callback requests catch-up",
+    "grant expiry rejects channel hints with unchanged store revision; renewal catches up",
+    "explicit teardown leaves no SSE, timer GET or queued lock holder"
+  ],
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 3
+              },
+              "pricingRules": {
+                "revision": 3
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "entities": {
+              "quotation": {
+                "revision": 4
+              },
+              "pricingRules": {
+                "revision": 4
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 5,
+            "entities": {
+              "quotation": {
+                "revision": 5
+              },
+              "pricingRules": {
+                "revision": 5
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ]
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 3
+              },
+              "pricingRules": {
+                "revision": 3
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "entities": {
+              "quotation": {
+                "revision": 4
+              },
+              "pricingRules": {
+                "revision": 4
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 5,
+            "entities": {
+              "quotation": {
+                "revision": 5
+              },
+              "pricingRules": {
+                "revision": 5
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ]
+    }
+  ],
+  "ok": true,
+  "counts": {
+    "started": 18,
+    "completed": 12,
+    "aborted": 5,
+    "http503": 1
+  }
+}

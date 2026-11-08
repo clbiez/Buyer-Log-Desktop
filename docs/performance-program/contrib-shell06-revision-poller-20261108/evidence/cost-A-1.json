@@ -1,0 +1,139 @@
+{
+  "label": "cost-A-1",
+  "mode": "A",
+  "count": 1,
+  "windowMs": 31500,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4002
+    },
+    {
+      "revision": 2,
+      "at": 20003
+    }
+  ],
+  "requests": [
+    {
+      "at": 2479,
+      "id": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2505
+    },
+    {
+      "at": 9480,
+      "id": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 17481
+    },
+    {
+      "at": 16480,
+      "id": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 16505
+    },
+    {
+      "at": 23480,
+      "id": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 23505
+    },
+    {
+      "at": 30480,
+      "id": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 30505
+    }
+  ],
+  "maxOverlap": 2,
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2527.899999999994,
+          "status": "completed",
+          "end": 2558.1999999999825
+        },
+        {
+          "at": 9529.100000000006,
+          "status": "completed",
+          "end": 17533.29999999999
+        },
+        {
+          "at": 16529.29999999999,
+          "status": "completed",
+          "end": 16558
+        },
+        {
+          "at": 23529.199999999983,
+          "status": "completed",
+          "end": 23557.600000000006
+        },
+        {
+          "at": 30529.199999999983,
+          "status": "completed",
+          "end": 30557.699999999983
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31502.199999999983
+    }
+  ],
+  "sseConnections": 1,
+  "browser": "154.0.8037.57"
+}

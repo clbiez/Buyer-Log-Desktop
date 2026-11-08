@@ -1,0 +1,134 @@
+{
+  "equivalence": "all 21 runs, every page: complete expected revision events, consumer outputs and final revision 2 equal; all source hashes current",
+  "groups": [
+    {
+      "pages": 1,
+      "A": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          2,
+          2,
+          2
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2509,
+        "latencyMedianMs": 8027.5,
+        "latencyMaxMs": 12530,
+        "revision1MedianMs": 12528,
+        "revision2MedianMs": 3526
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 15,
+        "latencyMedianMs": 5522.5,
+        "latencyMaxMs": 10011,
+        "revision1MedianMs": 10008,
+        "revision2MedianMs": 1037
+      }
+    },
+    {
+      "pages": 3,
+      "A": {
+        "startedMedian": 15,
+        "completedMedian": 15,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          5,
+          5,
+          5
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2513,
+        "latencyMedianMs": 8020,
+        "latencyMaxMs": 12547,
+        "revision1MedianMs": 12521,
+        "revision2MedianMs": 3520
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 15,
+        "latencyMedianMs": 5522.5,
+        "latencyMaxMs": 10014,
+        "revision1MedianMs": 10009,
+        "revision2MedianMs": 1040
+      }
+    },
+    {
+      "pages": 5,
+      "A": {
+        "startedMedian": 25,
+        "completedMedian": 25,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          5,
+          5,
+          5
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2511,
+        "latencyMedianMs": 8506,
+        "latencyMaxMs": 13503,
+        "revision1MedianMs": 13492,
+        "revision2MedianMs": 3515
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 17,
+        "latencyMedianMs": 5527,
+        "latencyMaxMs": 10017,
+        "revision1MedianMs": 10013,
+        "revision2MedianMs": 1039
+      }
+    }
+  ]
+}

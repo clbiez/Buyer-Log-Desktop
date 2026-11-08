@@ -1,0 +1,3 @@
+Error: deadline: revision 1
+    at until (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/lifecycle.cjs:49:130)
+    at async main (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/lifecycle.cjs:67:30)

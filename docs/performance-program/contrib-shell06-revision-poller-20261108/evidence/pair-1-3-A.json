@@ -1,0 +1,429 @@
+{
+  "label": "pair-1-3-A",
+  "mode": "A",
+  "count": 3,
+  "windowMs": 31500,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4019
+    },
+    {
+      "revision": 2,
+      "at": 20020
+    }
+  ],
+  "requests": [
+    {
+      "at": 2511,
+      "id": 1,
+      "tab": "?tab=0",
+      "ordinal": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2536
+    },
+    {
+      "at": 2514,
+      "id": 2,
+      "tab": "?tab=1",
+      "ordinal": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2540
+    },
+    {
+      "at": 2518,
+      "id": 3,
+      "tab": "?tab=2",
+      "ordinal": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2544
+    },
+    {
+      "at": 9511,
+      "id": 4,
+      "tab": "?tab=0",
+      "ordinal": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 17516
+    },
+    {
+      "at": 9515,
+      "id": 5,
+      "tab": "?tab=1",
+      "ordinal": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 17516
+    },
+    {
+      "at": 9519,
+      "id": 6,
+      "tab": "?tab=2",
+      "ordinal": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 17521
+    },
+    {
+      "at": 16511,
+      "id": 7,
+      "tab": "?tab=0",
+      "ordinal": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 16537
+    },
+    {
+      "at": 16515,
+      "id": 8,
+      "tab": "?tab=1",
+      "ordinal": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 16539
+    },
+    {
+      "at": 16539,
+      "id": 9,
+      "tab": "?tab=2",
+      "ordinal": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 16564
+    },
+    {
+      "at": 23513,
+      "id": 10,
+      "tab": "?tab=0",
+      "ordinal": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 23539
+    },
+    {
+      "at": 23515,
+      "id": 11,
+      "tab": "?tab=1",
+      "ordinal": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 23541
+    },
+    {
+      "at": 23519,
+      "id": 12,
+      "tab": "?tab=2",
+      "ordinal": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 23545
+    },
+    {
+      "at": 30518,
+      "id": 13,
+      "tab": "?tab=0",
+      "ordinal": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 30544
+    },
+    {
+      "at": 30519,
+      "id": 14,
+      "tab": "?tab=1",
+      "ordinal": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 30544
+    },
+    {
+      "at": 30519,
+      "id": 15,
+      "tab": "?tab=2",
+      "ordinal": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 30544
+    }
+  ],
+  "maxOverlap": 5,
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 16532.20000000007,
+          "revision": 1
+        },
+        {
+          "at": 23533.300000000047,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2675.3000000000466,
+          "status": "completed",
+          "end": 2704.70000000007
+        },
+        {
+          "at": 9676.5,
+          "status": "completed",
+          "end": 17684.300000000047
+        },
+        {
+          "at": 16676.400000000023,
+          "status": "completed",
+          "end": 16706.400000000023
+        },
+        {
+          "at": 23676.5,
+          "status": "completed",
+          "end": 23707.600000000093
+        },
+        {
+          "at": 30676.600000000093,
+          "status": "completed",
+          "end": 30713.70000000007
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31515.600000000093
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 16528.900000000023,
+          "revision": 1
+        },
+        {
+          "at": 23529.900000000023,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2620.79999999993,
+          "status": "completed",
+          "end": 2649.4000000000233
+        },
+        {
+          "at": 9621.900000000023,
+          "status": "completed",
+          "end": 17625.79999999993
+        },
+        {
+          "at": 16621.900000000023,
+          "status": "completed",
+          "end": 16648.79999999993
+        },
+        {
+          "at": 23621.900000000023,
+          "status": "completed",
+          "end": 23649.900000000023
+        },
+        {
+          "at": 30621.900000000023,
+          "status": "completed",
+          "end": 30660.099999999977
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31515.800000000047
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 16549,
+          "revision": 1
+        },
+        {
+          "at": 23529.5,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2551.399999999907,
+          "status": "completed",
+          "end": 2579.399999999907
+        },
+        {
+          "at": 9552.599999999977,
+          "status": "completed",
+          "end": 17556.899999999907
+        },
+        {
+          "at": 16552.29999999993,
+          "status": "completed",
+          "end": 16599.599999999977
+        },
+        {
+          "at": 23552.399999999907,
+          "status": "completed",
+          "end": 23580.29999999993
+        },
+        {
+          "at": 30552.399999999907,
+          "status": "completed",
+          "end": 30586.899999999907
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31516.599999999977
+    }
+  ],
+  "sseConnections": 1,
+  "browser": "154.0.8037.57"
+}

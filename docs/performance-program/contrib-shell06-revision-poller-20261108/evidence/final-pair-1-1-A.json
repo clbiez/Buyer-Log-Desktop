@@ -1,0 +1,165 @@
+{
+  "label": "final-pair-1-1-A",
+  "mode": "A",
+  "count": 1,
+  "hashes": {
+    "resources/app/public/app-main.js": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+    "resources/app/public/shared-revision-poller.js": "3d7030f2a79183eccefe8353b016440d9e2e19c90c4011f35f78357a4c0b6d6a",
+    "scripts/prototypes/shell06-revision-poller-20261108/recipe.cjs": "cba8be38986ae90d4795264915e81b058cdd849db3083236edbbcaedef85dcd6",
+    "scripts/prototypes/shell06-revision-poller-20261108/measure.cjs": "89b09a5a35e5ed7cf3868264d58600695150a37d7acba0669b79a780f32647b4"
+  },
+  "windowMs": 31500,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4014
+    },
+    {
+      "revision": 2,
+      "at": 20016
+    }
+  ],
+  "requests": [
+    {
+      "at": 2514,
+      "id": 1,
+      "tab": "?tab=0",
+      "ordinal": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 2540
+    },
+    {
+      "at": 9515,
+      "id": 2,
+      "tab": "?tab=0",
+      "ordinal": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 17516
+    },
+    {
+      "at": 16514,
+      "id": 3,
+      "tab": "?tab=0",
+      "ordinal": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 16540
+    },
+    {
+      "at": 23514,
+      "id": 4,
+      "tab": "?tab=0",
+      "ordinal": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 23540
+    },
+    {
+      "at": 30515,
+      "id": 5,
+      "tab": "?tab=0",
+      "ordinal": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 30540
+    }
+  ],
+  "maxOverlap": 2,
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 16530.899999999907,
+          "revision": 1
+        },
+        {
+          "at": 23530.300000000047,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 2534.5,
+          "status": "completed",
+          "end": 2564.5999999998603
+        },
+        {
+          "at": 9535.800000000047,
+          "status": "completed",
+          "end": 17540.899999999907
+        },
+        {
+          "at": 16535.800000000047,
+          "status": "completed",
+          "end": 16564.300000000047
+        },
+        {
+          "at": 23535.699999999953,
+          "status": "completed",
+          "end": 23563.899999999907
+        },
+        {
+          "at": 30535.699999999953,
+          "status": "completed",
+          "end": 30564.199999999953
+        }
+      ],
+      "lastRevision": 2,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31506
+    }
+  ],
+  "sseConnections": 1,
+  "browser": "154.0.8037.57"
+}

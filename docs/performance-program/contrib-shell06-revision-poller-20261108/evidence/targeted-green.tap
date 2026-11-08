@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: exact recipe has two anchored edits and keeps actual revision consumer
+ok 1 - exact recipe has two anchored edits and keeps actual revision consumer
+  ---
+  duration_ms: 4.513994
+  type: 'test'
+  ...
+# Subtest: actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events
+ok 2 - actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events
+  ---
+  duration_ms: 12.472878
+  type: 'test'
+  ...
+# Subtest: actual coordinator releases existing lock, aborts old GET and catches up on successor
+ok 3 - actual coordinator releases existing lock, aborts old GET and catches up on successor
+  ---
+  duration_ms: 3.74391
+  type: 'test'
+  ...
+# Subtest: actual SSE error/open gap catches up; teardown cancels SSE retry
+ok 4 - actual SSE error/open gap catches up; teardown cancels SSE retry
+  ---
+  duration_ms: 2.464906
+  type: 'test'
+  ...
+# Subtest: missing browser APIs retain explicit per-page fallback {"channel":false}
+ok 5 - missing browser APIs retain explicit per-page fallback {"channel":false}
+  ---
+  duration_ms: 2.760834
+  type: 'test'
+  ...
+# Subtest: missing browser APIs retain explicit per-page fallback {"locks":false}
+ok 6 - missing browser APIs retain explicit per-page fallback {"locks":false}
+  ---
+  duration_ms: 2.986816
+  type: 'test'
+  ...
+# Subtest: missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false}
+ok 7 - missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false}
+  ---
+  duration_ms: 1.79272
+  type: 'test'
+  ...
+# Subtest: actual context subscription and pagehide/BFCache lifecycle reject late JSON
+ok 8 - actual context subscription and pagehide/BFCache lifecycle reject late JSON
+  ---
+  duration_ms: 1.267356
+  type: 'test'
+  ...
+# Subtest: cold start preserves 2500ms and serial cadence never overlaps a slow GET
+ok 9 - cold start preserves 2500ms and serial cadence never overlaps a slow GET
+  ---
+  duration_ms: 6.267366
+  type: 'test'
+  ...
+# Subtest: stop aborts late JSON, a new lease catches up only after old work settles
+ok 10 - stop aborts late JSON, a new lease catches up only after old work settles
+  ---
+  duration_ms: 0.827301
+  type: 'test'
+  ...
+# Subtest: actor transition aborts, clears the comparison baseline and rejects stale results
+ok 11 - actor transition aborts, clears the comparison baseline and rejects stale results
+  ---
+  duration_ms: 1.384563
+  type: 'test'
+  ...
+# Subtest: source transition aborts, clears the comparison baseline and rejects stale results
+ok 12 - source transition aborts, clears the comparison baseline and rejects stale results
+  ---
+  duration_ms: 0.584353
+  type: 'test'
+  ...
+# Subtest: authority transition aborts, clears the comparison baseline and rejects stale results
+ok 13 - authority transition aborts, clears the comparison baseline and rejects stale results
+  ---
+  duration_ms: 0.434026
+  type: 'test'
+  ...
+# Subtest: context changed without notification is still checked after JSON and before publication
+ok 14 - context changed without notification is still checked after JSON and before publication
+  ---
+  duration_ms: 0.23808
+  type: 'test'
+  ...
+# Subtest: offline abort, reconnect and foreground/native activity request immediate serialized catch-up
+ok 15 - offline abort, reconnect and foreground/native activity request immediate serialized catch-up
+  ---
+  duration_ms: 1.277802
+  type: 'test'
+  ...
+# Subtest: error backoff resets on recovery; idle backoff caps at the existing 7 seconds
+ok 16 - error backoff resets on recovery; idle backoff caps at the existing 7 seconds
+  ---
+  duration_ms: 0.822844
+  type: 'test'
+  ...
+# Subtest: timeout aborts an outstanding request, dispose is terminal and idempotent
+ok 17 - timeout aborts an outstanding request, dispose is terminal and idempotent
+  ---
+  duration_ms: 0.359704
+  type: 'test'
+  ...
+# Subtest: only revision scalars cross the channel; replay and decreasing snapshots do not dispatch
+ok 18 - only revision scalars cross the channel; replay and decreasing snapshots do not dispatch
+  ---
+  duration_ms: 0.732738
+  type: 'test'
+  ...
+# Subtest: malformed metadata cannot smuggle data or prototype keys into an event
+ok 19 - malformed metadata cannot smuggle data or prototype keys into an event
+  ---
+  duration_ms: 0.320214
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 146.272396

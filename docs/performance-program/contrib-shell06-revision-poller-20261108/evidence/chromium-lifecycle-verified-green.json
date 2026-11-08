@@ -1,0 +1,365 @@
+{
+  "browser": "154.0.8037.57",
+  "requests": [
+    {
+      "id": 1,
+      "at": 1794144985687,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144985687
+    },
+    {
+      "id": 2,
+      "at": 1794144985811,
+      "status": "aborted",
+      "end": 1794144985868
+    },
+    {
+      "id": 3,
+      "at": 1794144985869,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144985869
+    },
+    {
+      "id": 4,
+      "at": 1794144985878,
+      "status": "aborted",
+      "end": 1794144985932
+    },
+    {
+      "id": 5,
+      "at": 1794144985932,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144985933
+    },
+    {
+      "id": 6,
+      "at": 1794144985942,
+      "status": "aborted",
+      "end": 1794144986027
+    },
+    {
+      "id": 7,
+      "at": 1794144986032,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144986032
+    },
+    {
+      "id": 8,
+      "at": 1794144986045,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144986045
+    },
+    {
+      "id": 9,
+      "at": 1794144986076,
+      "status": "aborted",
+      "end": 1794144986103
+    },
+    {
+      "id": 10,
+      "at": 1794144986106,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144986106
+    },
+    {
+      "id": 11,
+      "at": 1794144986117,
+      "status": "aborted",
+      "end": 1794144986120
+    },
+    {
+      "id": 12,
+      "at": 1794144986126,
+      "status": "completed",
+      "revision": 2,
+      "end": 1794144986126
+    },
+    {
+      "id": 13,
+      "at": 1794144986156,
+      "status": "http-503",
+      "end": 1794144986156
+    },
+    {
+      "id": 14,
+      "at": 1794144987158,
+      "status": "completed",
+      "revision": 3,
+      "end": 1794144987158
+    },
+    {
+      "id": 15,
+      "at": 1794144990186,
+      "status": "completed",
+      "revision": 4,
+      "end": 1794144990186
+    },
+    {
+      "id": 16,
+      "at": 1794144990191,
+      "status": "completed",
+      "revision": 5,
+      "end": 1794144990192
+    },
+    {
+      "id": 17,
+      "at": 1794144990302,
+      "status": "completed",
+      "revision": 5,
+      "end": 1794144990302
+    }
+  ],
+  "steps": [
+    "three Chromium pages: existing Web Lock, one SSE source",
+    "actor change aborts pending JSON and catches up",
+    "source change aborts pending JSON and catches up",
+    "authority change aborts pending JSON and catches up",
+    "closing real leader releases the existing Web Lock; successor catches up",
+    "Chromium offline/online abort and revision 2 recovery",
+    "HTTP 503 backoff recovers without a refresh POST",
+    "real EventSource reconnect catches up revision 4",
+    "synthetic native activity callback requests catch-up",
+    "grant expiry rejects channel hints with unchanged store revision; renewal catches up",
+    "explicit teardown leaves no SSE, timer GET or queued lock holder"
+  ],
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 3
+              },
+              "pricingRules": {
+                "revision": 3
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "entities": {
+              "quotation": {
+                "revision": 4
+              },
+              "pricingRules": {
+                "revision": 4
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 5,
+            "entities": {
+              "quotation": {
+                "revision": 5
+              },
+              "pricingRules": {
+                "revision": 5
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ]
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 3
+              },
+              "pricingRules": {
+                "revision": 3
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "entities": {
+              "quotation": {
+                "revision": 4
+              },
+              "pricingRules": {
+                "revision": 4
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 5,
+            "entities": {
+              "quotation": {
+                "revision": 5
+              },
+              "pricingRules": {
+                "revision": 5
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards",
+        "pricing",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ]
+    }
+  ],
+  "ok": true,
+  "counts": {
+    "started": 17,
+    "completed": 11,
+    "aborted": 5,
+    "http503": 1
+  }
+}

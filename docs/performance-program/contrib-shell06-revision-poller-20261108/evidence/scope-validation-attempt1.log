@@ -1,0 +1,1 @@
+Scope checker failed before assertions completed: child_process.execFileSync git show app-main.js hit default stdout buffer (ENOBUFS). No production file was written. Tool-only buffer increased to 16 MiB; all file equality assertions remain unchanged. The empty stdout JSON is retained.

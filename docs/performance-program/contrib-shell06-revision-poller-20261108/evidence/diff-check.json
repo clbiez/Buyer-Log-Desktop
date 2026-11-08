@@ -1,0 +1,6 @@
+{
+  "exitCode": 2,
+  "reason": "Byte-preserved RED output whitespace and one whitespace-only blank line in the measured harness. No assertion or validator setting changed.",
+  "raw": "diff-check.raw.log.gz",
+  "measuredHarnessLine": 67
+}

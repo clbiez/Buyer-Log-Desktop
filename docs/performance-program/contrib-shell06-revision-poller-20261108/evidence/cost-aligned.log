@@ -1,0 +1,3 @@
+{"label":"cost-aligned-A-1","mode":"A","count":1,"requests":5,"maxOverlap":2,"completed":5,"aborted":0}
+{"label":"cost-aligned-A-3","mode":"A","count":3,"requests":15,"maxOverlap":5,"completed":15,"aborted":0}
+{"label":"cost-aligned-A-5","mode":"A","count":5,"requests":25,"maxOverlap":5,"completed":25,"aborted":0}

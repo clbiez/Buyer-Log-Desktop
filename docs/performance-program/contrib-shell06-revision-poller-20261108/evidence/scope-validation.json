@@ -1,0 +1,26 @@
+{
+  "newFiles": 87,
+  "modifiedExisting": [],
+  "readonly": [
+    {
+      "file": "resources/app/public/app-main.js",
+      "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605"
+    },
+    {
+      "file": "resources/app/server/server.js",
+      "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+    },
+    {
+      "file": "resources/app/public/index.html",
+      "sha256": "54d2947a42dccd16d045d8482f8bd850058f1b82c3cbf07e37cb9cf2ea35553d"
+    },
+    {
+      "file": "resources/app/public/perf-runtime.js",
+      "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
+    },
+    {
+      "file": "resources/app/tests/fixtures/i18n-coverage-baseline.json",
+      "sha256": "20a8ac09f090a7e86be2d626769455a17b636e8822ef0db9967b38a9e151978d"
+    }
+  ]
+}

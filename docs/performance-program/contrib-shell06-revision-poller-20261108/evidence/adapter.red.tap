@@ -1,0 +1,117 @@
+✔ exact recipe has two anchored edits and keeps actual revision consumer (3.402384ms)
+✖ actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events (8.020666ms)
+✖ actual coordinator releases existing lock, aborts old GET and catches up on successor (1.947014ms)
+✖ actual SSE error/open gap catches up; teardown cancels SSE retry (1.370772ms)
+✖ missing browser APIs retain explicit per-page fallback {"channel":false} (6.212302ms)
+✖ missing browser APIs retain explicit per-page fallback {"locks":false} (1.849246ms)
+✖ missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false} (1.767082ms)
+✖ actual context subscription and pagehide/BFCache lifecycle reject late JSON (1.001474ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 1
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 96.124199
+
+✖ failing tests:
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:8:1
+✖ actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events (8.020666ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  3 !== 1
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:10:42)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:13:1
+✖ actual coordinator releases existing lock, aborts old GET and catches up on successor (1.947014ms)
+  TypeError: Cannot read properties of undefined (reading 'aborted')
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:15:40)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:18:1
+✖ actual SSE error/open gap catches up; teardown cancels SSE retry (1.370772ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:20:44)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:23:81
+✖ missing browser APIs retain explicit per-page fallback {"channel":false} (6.212302ms)
+  AssertionError [ERR_ASSERTION]: fallback is still serial within each page
+  
+  4 !== 2
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:24:166)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:23:81
+✖ missing browser APIs retain explicit per-page fallback {"locks":false} (1.849246ms)
+  AssertionError [ERR_ASSERTION]: fallback is still serial within each page
+  
+  4 !== 2
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:24:166)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:23:81
+✖ missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false} (1.767082ms)
+  AssertionError [ERR_ASSERTION]: fallback is still serial within each page
+  
+  4 !== 2
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:24:166)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/shared-revision-poller-adapter.test.js:26:1
+✖ actual context subscription and pagehide/BFCache lifecycle reject late JSON (1.001474ms)
+  TypeError: Cannot read properties of undefined (reading 'aborted')
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-adapter.test.js:27:142)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

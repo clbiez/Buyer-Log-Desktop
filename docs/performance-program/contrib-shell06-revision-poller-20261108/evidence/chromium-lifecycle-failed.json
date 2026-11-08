@@ -1,0 +1,78 @@
+{
+  "browser": "154.0.8037.57",
+  "requests": [
+    {
+      "id": 1,
+      "at": 1794144582457,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144582457
+    },
+    {
+      "id": 2,
+      "at": 1794144582648,
+      "status": "aborted",
+      "end": 1794144582706
+    },
+    {
+      "id": 3,
+      "at": 1794144582707,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144582708
+    },
+    {
+      "id": 4,
+      "at": 1794144582718,
+      "status": "aborted",
+      "end": 1794144582796
+    },
+    {
+      "id": 5,
+      "at": 1794144582798,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144582798
+    },
+    {
+      "id": 6,
+      "at": 1794144582805,
+      "status": "aborted",
+      "end": 1794144582904
+    },
+    {
+      "id": 7,
+      "at": 1794144582906,
+      "status": "completed",
+      "revision": 0,
+      "end": 1794144582907
+    },
+    {
+      "id": 8,
+      "at": 1794144582934,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144582934
+    },
+    {
+      "id": 9,
+      "at": 1794144586431,
+      "status": "completed",
+      "revision": 1,
+      "end": 1794144586431
+    }
+  ],
+  "steps": [
+    "three Chromium pages: existing Web Lock, one SSE source",
+    "actor change aborts pending JSON and catches up",
+    "source change aborts pending JSON and catches up",
+    "authority change aborts pending JSON and catches up"
+  ],
+  "errors": [],
+  "counts": {
+    "started": 9,
+    "completed": 6,
+    "aborted": 3,
+    "http503": 0
+  }
+}

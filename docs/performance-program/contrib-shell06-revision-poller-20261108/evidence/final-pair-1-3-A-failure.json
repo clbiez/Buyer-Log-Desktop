@@ -1,0 +1,19 @@
+{
+  "label": "final-pair-1-3-A",
+  "mode": "A",
+  "count": 3,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4036
+    },
+    {
+      "revision": 2,
+      "at": 20036
+    }
+  ],
+  "requests": [],
+  "maxOverlap": 0,
+  "errors": [],
+  "error": "page.evaluate: Target page, context or browser has been closed\n    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:75:55)\n    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:90:159"
+}

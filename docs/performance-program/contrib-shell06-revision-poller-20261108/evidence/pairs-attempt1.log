@@ -1,0 +1,11 @@
+{"label":"pair-1-1-A","mode":"A","count":1,"requests":5,"maxOverlap":2,"completed":5,"aborted":0}
+{"label":"pair-1-1-B","mode":"B","count":1,"requests":5,"maxOverlap":1,"completed":5,"aborted":0}
+{"label":"pair-1-3-A","mode":"A","count":3,"requests":15,"maxOverlap":5,"completed":15,"aborted":0}
+page.evaluate: ReferenceError: lastRevision is not defined
+    at eval (eval at evaluate (:311:30), <anonymous>:1:38)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:73:55)
+    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:87:159 {
+  log: []
+}

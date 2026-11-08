@@ -1,0 +1,7 @@
+{"label":"final-pair-1-1-A","mode":"A","count":1,"requests":5,"maxOverlap":2,"completed":5,"aborted":0}
+{"label":"final-pair-1-1-B","mode":"B","count":1,"requests":5,"maxOverlap":1,"completed":5,"aborted":0}
+page.evaluate: Target page, context or browser has been closed
+    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:75:55)
+    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/shell06-revision-poller-20261108/measure.cjs:90:159 {
+  log: []
+}

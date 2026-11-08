@@ -1,0 +1,954 @@
+{
+  "tag": "verified",
+  "windowMs": 31500,
+  "pairOrder": [
+    "A/B",
+    "B/A",
+    "A/B"
+  ],
+  "environment": {
+    "node": "v24.19.0",
+    "chromium": "154.0.8037.57",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "memoryBytes": 18882662400
+  },
+  "hashes": {
+    "resources/app/public/app-main.js": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+    "resources/app/public/shared-revision-poller.js": "a9d1701f4e66fc6c0fe75300a5142a4849c85d880da5b768555b1d2c2fffc74f",
+    "scripts/prototypes/shell06-revision-poller-20261108/recipe.cjs": "cba8be38986ae90d4795264915e81b058cdd849db3083236edbbcaedef85dcd6",
+    "scripts/prototypes/shell06-revision-poller-20261108/measure.cjs": "3fd44d47aa443937b9a1ce56eb93436d6b5ea5a78a5e5bf7e366acb94fa344fe"
+  },
+  "costs": [
+    {
+      "label": "verified-cost-A-1",
+      "started": 5,
+      "completed": 5,
+      "aborted": 0,
+      "serverMaxOverlap": 2,
+      "pageMaxOverlap": 2,
+      "firstGetMs": 2513,
+      "delaysMs": [
+        12526,
+        3523
+      ],
+      "delaysByRevisionMs": {
+        "1": [
+          12526
+        ],
+        "2": [
+          3523
+        ]
+      },
+      "armOffsetsMs": [
+        9
+      ],
+      "outsideWindowStarts": []
+    },
+    {
+      "label": "verified-cost-A-3",
+      "started": 15,
+      "completed": 15,
+      "aborted": 0,
+      "serverMaxOverlap": 5,
+      "pageMaxOverlap": 2,
+      "firstGetMs": 2513,
+      "delaysMs": [
+        12509,
+        3508,
+        12514,
+        3513,
+        12535,
+        3526
+      ],
+      "delaysByRevisionMs": {
+        "1": [
+          12509,
+          12514,
+          12535
+        ],
+        "2": [
+          3508,
+          3513,
+          3526
+        ]
+      },
+      "armOffsetsMs": [
+        10,
+        15,
+        28
+      ],
+      "outsideWindowStarts": []
+    },
+    {
+      "label": "verified-cost-A-5",
+      "started": 25,
+      "completed": 25,
+      "aborted": 0,
+      "serverMaxOverlap": 5,
+      "pageMaxOverlap": 2,
+      "firstGetMs": 2508,
+      "delaysMs": [
+        13478,
+        3499,
+        13485,
+        3507,
+        13489,
+        3511,
+        13496,
+        3518,
+        13502,
+        3524
+      ],
+      "delaysByRevisionMs": {
+        "1": [
+          13478,
+          13485,
+          13489,
+          13496,
+          13502
+        ],
+        "2": [
+          3499,
+          3507,
+          3511,
+          3518,
+          3524
+        ]
+      },
+      "armOffsetsMs": [
+        5,
+        13,
+        18,
+        25,
+        31
+      ],
+      "outsideWindowStarts": []
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "pages": 1,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-1-1-A",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 2,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2514,
+        "delaysMs": [
+          12528,
+          3525
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12528
+          ],
+          "2": [
+            3525
+          ]
+        },
+        "armOffsetsMs": [
+          10
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-1-1-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 15,
+        "delaysMs": [
+          10008,
+          1037
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10008
+          ],
+          "2": [
+            1037
+          ]
+        },
+        "armOffsetsMs": [
+          6
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 1,
+      "pages": 3,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-1-3-A",
+        "started": 15,
+        "completed": 15,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2514,
+        "delaysMs": [
+          12521,
+          3518,
+          12524,
+          3521,
+          12547,
+          3524
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12521,
+            12524,
+            12547
+          ],
+          "2": [
+            3518,
+            3521,
+            3524
+          ]
+        },
+        "armOffsetsMs": [
+          10,
+          14,
+          18
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-1-3-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 15,
+        "delaysMs": [
+          10008,
+          1040,
+          10009,
+          1040,
+          10009,
+          1040
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10008,
+            10009,
+            10009
+          ],
+          "2": [
+            1040,
+            1040,
+            1040
+          ]
+        },
+        "armOffsetsMs": [
+          5,
+          13,
+          20
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 1,
+      "pages": 5,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-1-5-A",
+        "started": 25,
+        "completed": 25,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2511,
+        "delaysMs": [
+          13489,
+          3511,
+          13488,
+          3512,
+          13492,
+          3515,
+          13498,
+          3520,
+          13503,
+          3525
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            13489,
+            13488,
+            13492,
+            13498,
+            13503
+          ],
+          "2": [
+            3511,
+            3512,
+            3515,
+            3520,
+            3525
+          ]
+        },
+        "armOffsetsMs": [
+          7,
+          11,
+          16,
+          21,
+          25
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-1-5-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 12,
+        "delaysMs": [
+          10008,
+          1038,
+          10009,
+          1039,
+          10010,
+          1039,
+          10009,
+          1039,
+          10010,
+          1039
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10008,
+            10009,
+            10010,
+            10009,
+            10010
+          ],
+          "2": [
+            1038,
+            1039,
+            1039,
+            1039,
+            1039
+          ]
+        },
+        "armOffsetsMs": [
+          6,
+          10,
+          14,
+          18,
+          22
+        ],
+        "outsideWindowStarts": [
+          {
+            "at": 31537,
+            "id": 6,
+            "tab": "?tab=0",
+            "ordinal": 6
+          }
+        ]
+      }
+    },
+    {
+      "pair": 2,
+      "pages": 1,
+      "order": "B/A",
+      "A": {
+        "label": "verified-pair-2-1-A",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 2,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2508,
+        "delaysMs": [
+          12530,
+          3526
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12530
+          ],
+          "2": [
+            3526
+          ]
+        },
+        "armOffsetsMs": [
+          5
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-2-1-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 18,
+        "delaysMs": [
+          10007,
+          1031
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10007
+          ],
+          "2": [
+            1031
+          ]
+        },
+        "armOffsetsMs": [
+          6
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 2,
+      "pages": 3,
+      "order": "B/A",
+      "A": {
+        "label": "verified-pair-2-3-A",
+        "started": 15,
+        "completed": 15,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2513,
+        "delaysMs": [
+          12515,
+          3514,
+          12521,
+          3520,
+          12541,
+          3525
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12515,
+            12521,
+            12541
+          ],
+          "2": [
+            3514,
+            3520,
+            3525
+          ]
+        },
+        "armOffsetsMs": [
+          11,
+          18,
+          23
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-2-3-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 17,
+        "delaysMs": [
+          10005,
+          1031,
+          10007,
+          1031,
+          10007,
+          1031
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10005,
+            10007,
+            10007
+          ],
+          "2": [
+            1031,
+            1031,
+            1031
+          ]
+        },
+        "armOffsetsMs": [
+          7,
+          15,
+          21
+        ],
+        "outsideWindowStarts": [
+          {
+            "at": 31537,
+            "id": 6,
+            "tab": "?tab=0",
+            "ordinal": 6
+          }
+        ]
+      }
+    },
+    {
+      "pair": 2,
+      "pages": 5,
+      "order": "B/A",
+      "A": {
+        "label": "verified-pair-2-5-A",
+        "started": 25,
+        "completed": 25,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2511,
+        "delaysMs": [
+          13487,
+          3507,
+          13490,
+          3513,
+          13494,
+          3517,
+          13498,
+          3521,
+          13502,
+          3523
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            13487,
+            13490,
+            13494,
+            13498,
+            13502
+          ],
+          "2": [
+            3507,
+            3513,
+            3517,
+            3521,
+            3523
+          ]
+        },
+        "armOffsetsMs": [
+          9,
+          15,
+          19,
+          23,
+          27
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-2-5-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 19,
+        "delaysMs": [
+          10012,
+          1045,
+          10017,
+          1045,
+          10017,
+          1046,
+          10014,
+          1045,
+          10015,
+          1045
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10012,
+            10017,
+            10017,
+            10014,
+            10015
+          ],
+          "2": [
+            1045,
+            1045,
+            1046,
+            1045,
+            1045
+          ]
+        },
+        "armOffsetsMs": [
+          8,
+          14,
+          24,
+          31,
+          41
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 3,
+      "pages": 1,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-3-1-A",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 2,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2509,
+        "delaysMs": [
+          12528,
+          3527
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12528
+          ],
+          "2": [
+            3527
+          ]
+        },
+        "armOffsetsMs": [
+          6
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-3-1-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 14,
+        "delaysMs": [
+          10011,
+          1038
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10011
+          ],
+          "2": [
+            1038
+          ]
+        },
+        "armOffsetsMs": [
+          6
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 3,
+      "pages": 3,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-3-3-A",
+        "started": 15,
+        "completed": 15,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2508,
+        "delaysMs": [
+          12520,
+          3518,
+          12521,
+          3520,
+          12546,
+          3525
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            12520,
+            12521,
+            12546
+          ],
+          "2": [
+            3518,
+            3520,
+            3525
+          ]
+        },
+        "armOffsetsMs": [
+          5,
+          8,
+          12
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-3-3-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 14,
+        "delaysMs": [
+          10013,
+          1039,
+          10014,
+          1040,
+          10014,
+          1040
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10013,
+            10014,
+            10014
+          ],
+          "2": [
+            1039,
+            1040,
+            1040
+          ]
+        },
+        "armOffsetsMs": [
+          7,
+          16,
+          21
+        ],
+        "outsideWindowStarts": []
+      }
+    },
+    {
+      "pair": 3,
+      "pages": 5,
+      "order": "A/B",
+      "A": {
+        "label": "verified-pair-3-5-A",
+        "started": 25,
+        "completed": 25,
+        "aborted": 0,
+        "serverMaxOverlap": 5,
+        "pageMaxOverlap": 2,
+        "firstGetMs": 2508,
+        "delaysMs": [
+          13486,
+          3508,
+          13488,
+          3512,
+          13490,
+          3515,
+          13497,
+          3522,
+          13501,
+          3526
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            13486,
+            13488,
+            13490,
+            13497,
+            13501
+          ],
+          "2": [
+            3508,
+            3512,
+            3515,
+            3522,
+            3526
+          ]
+        },
+        "armOffsetsMs": [
+          4,
+          9,
+          13,
+          19,
+          23
+        ],
+        "outsideWindowStarts": []
+      },
+      "B": {
+        "label": "verified-pair-3-5-B",
+        "started": 5,
+        "completed": 5,
+        "aborted": 0,
+        "serverMaxOverlap": 1,
+        "pageMaxOverlap": 1,
+        "firstGetMs": 17,
+        "delaysMs": [
+          10012,
+          1038,
+          10014,
+          1039,
+          10013,
+          1039,
+          10014,
+          1039,
+          10013,
+          1039
+        ],
+        "delaysByRevisionMs": {
+          "1": [
+            10012,
+            10014,
+            10013,
+            10014,
+            10013
+          ],
+          "2": [
+            1038,
+            1039,
+            1039,
+            1039,
+            1039
+          ]
+        },
+        "armOffsetsMs": [
+          10,
+          14,
+          20,
+          26,
+          30
+        ],
+        "outsideWindowStarts": []
+      }
+    }
+  ],
+  "groups": [
+    {
+      "pages": 1,
+      "A": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          2,
+          2,
+          2
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2509,
+        "latencyMedianMs": 8027.5,
+        "latencyMaxMs": 12530,
+        "revision1MedianMs": 12528,
+        "revision2MedianMs": 3526
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 15,
+        "latencyMedianMs": 5522.5,
+        "latencyMaxMs": 10011,
+        "revision1MedianMs": 10008,
+        "revision2MedianMs": 1037
+      }
+    },
+    {
+      "pages": 3,
+      "A": {
+        "startedMedian": 15,
+        "completedMedian": 15,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          5,
+          5,
+          5
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2513,
+        "latencyMedianMs": 8020,
+        "latencyMaxMs": 12547,
+        "revision1MedianMs": 12521,
+        "revision2MedianMs": 3520
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 15,
+        "latencyMedianMs": 5522.5,
+        "latencyMaxMs": 10014,
+        "revision1MedianMs": 10009,
+        "revision2MedianMs": 1040
+      }
+    },
+    {
+      "pages": 5,
+      "A": {
+        "startedMedian": 25,
+        "completedMedian": 25,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          5,
+          5,
+          5
+        ],
+        "pageOverlap": [
+          2,
+          2,
+          2
+        ],
+        "firstGetMedianMs": 2511,
+        "latencyMedianMs": 8506,
+        "latencyMaxMs": 13503,
+        "revision1MedianMs": 13492,
+        "revision2MedianMs": 3515
+      },
+      "B": {
+        "startedMedian": 5,
+        "completedMedian": 5,
+        "abortedMedian": 0,
+        "serverOverlap": [
+          1,
+          1,
+          1
+        ],
+        "pageOverlap": [
+          1,
+          1,
+          1
+        ],
+        "firstGetMedianMs": 17,
+        "latencyMedianMs": 5527,
+        "latencyMaxMs": 10017,
+        "revision1MedianMs": 10013,
+        "revision2MedianMs": 1039
+      }
+    }
+  ],
+  "equivalence": "all 21 runs, every page: complete expected revision events, consumer outputs and final revision 2 equal; all source hashes current"
+}

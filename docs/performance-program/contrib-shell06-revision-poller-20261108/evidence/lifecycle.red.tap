@@ -1,0 +1,241 @@
+✖ cold start preserves 2500ms and serial cadence never overlaps a slow GET (1.487258ms)
+✖ stop aborts late JSON, a new lease catches up only after old work settles (0.307074ms)
+✖ actor transition aborts, clears the comparison baseline and rejects stale results (0.33056ms)
+✖ source transition aborts, clears the comparison baseline and rejects stale results (0.289177ms)
+✖ authority transition aborts, clears the comparison baseline and rejects stale results (0.910156ms)
+✖ context changed without notification is still checked after JSON and before publication (0.248425ms)
+✖ offline abort, reconnect and foreground/native activity request immediate serialized catch-up (0.307655ms)
+✖ error backoff resets on recovery; idle backoff caps at the existing 7 seconds (0.231389ms)
+✖ timeout aborts an outstanding request, dispose is terminal and idempotent (0.274184ms)
+✖ only revision scalars cross the channel; replay and decreasing snapshots do not dispatch (0.433566ms)
+✖ malformed metadata cannot smuggle data or prototype keys into an event (0.218991ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 0
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.667227
+
+✖ failing tests:
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:5:1
+✖ cold start preserves 2500ms and serial cadence never overlaps a slow GET (1.487258ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:6:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:10:1
+✖ stop aborts late JSON, a new lease catches up only after old work settles (0.307074ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:11:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:16:51
+✖ actor transition aborts, clears the comparison baseline and rejects stale results (0.33056ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:17:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:16:51
+✖ source transition aborts, clears the comparison baseline and rejects stale results (0.289177ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:17:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:16:51
+✖ authority transition aborts, clears the comparison baseline and rejects stale results (0.910156ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:17:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:21:1
+✖ context changed without notification is still checked after JSON and before publication (0.248425ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:22:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:25:1
+✖ offline abort, reconnect and foreground/native activity request immediate serialized catch-up (0.307655ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:26:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:31:1
+✖ error backoff resets on recovery; idle backoff caps at the existing 7 seconds (0.231389ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:32:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:36:1
+✖ timeout aborts an outstanding request, dispose is terminal and idempotent (0.274184ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:37:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:40:1
+✖ only revision scalars cross the channel; replay and decreasing snapshots do not dispatch (0.433566ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:41:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/shared-revision-poller-lifecycle.test.js:48:1
+✖ malformed metadata cannot smuggle data or prototype keys into an event (0.218991ms)
+  Error: Cannot find module '../../../public/shared-revision-poller.js'
+  Require stack:
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs
+  - /workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at fixture (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs:9:13)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js:49:10) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/shared-revision-poller/clock.cjs', '/workspace/Buyer-Log-Desktop/resources/app/tests/shared-revision-poller-lifecycle.test.js' ]
+  }

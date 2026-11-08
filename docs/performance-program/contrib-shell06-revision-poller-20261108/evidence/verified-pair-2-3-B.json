@@ -1,0 +1,302 @@
+{
+  "label": "verified-pair-2-3-B",
+  "mode": "B",
+  "count": 3,
+  "hashes": {
+    "resources/app/public/app-main.js": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+    "resources/app/public/shared-revision-poller.js": "a9d1701f4e66fc6c0fe75300a5142a4849c85d880da5b768555b1d2c2fffc74f",
+    "scripts/prototypes/shell06-revision-poller-20261108/recipe.cjs": "cba8be38986ae90d4795264915e81b058cdd849db3083236edbbcaedef85dcd6",
+    "scripts/prototypes/shell06-revision-poller-20261108/measure.cjs": "3fd44d47aa443937b9a1ce56eb93436d6b5ea5a78a5e5bf7e366acb94fa344fe"
+  },
+  "windowMs": 31500,
+  "changes": [
+    {
+      "revision": 1,
+      "at": 4028
+    },
+    {
+      "revision": 2,
+      "at": 20030
+    }
+  ],
+  "requests": [
+    {
+      "at": 17,
+      "id": 1,
+      "tab": "?tab=0",
+      "ordinal": 1,
+      "revision": 0,
+      "status": "completed",
+      "end": 42
+    },
+    {
+      "at": 6029,
+      "id": 2,
+      "tab": "?tab=0",
+      "ordinal": 2,
+      "revision": 1,
+      "status": "completed",
+      "end": 14031
+    },
+    {
+      "at": 14034,
+      "id": 3,
+      "tab": "?tab=0",
+      "ordinal": 3,
+      "revision": 1,
+      "status": "completed",
+      "end": 14060
+    },
+    {
+      "at": 21035,
+      "id": 4,
+      "tab": "?tab=0",
+      "ordinal": 4,
+      "revision": 2,
+      "status": "completed",
+      "end": 21059
+    },
+    {
+      "at": 24535,
+      "id": 5,
+      "tab": "?tab=0",
+      "ordinal": 5,
+      "revision": 2,
+      "status": "completed",
+      "end": 24560
+    },
+    {
+      "at": 31537,
+      "id": 6,
+      "tab": "?tab=0",
+      "ordinal": 6
+    }
+  ],
+  "maxOverlap": 1,
+  "errors": [],
+  "snapshots": [
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 14033,
+          "revision": 1
+        },
+        {
+          "at": 21061,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [
+        {
+          "at": 7.100000000093132,
+          "status": "completed",
+          "end": 38.199999999953434
+        },
+        {
+          "at": 6020.199999999953,
+          "status": "completed",
+          "end": 14025.5
+        },
+        {
+          "at": 14026.100000000093,
+          "status": "completed",
+          "end": 14054.399999999907
+        },
+        {
+          "at": 21026,
+          "status": "completed",
+          "end": 21053.5
+        },
+        {
+          "at": 24526.100000000093,
+          "status": "completed",
+          "end": 24554.800000000047
+        }
+      ],
+      "lastRevision": 2,
+      "armOffset": 7,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31523.899999999907
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 14035,
+          "revision": 1
+        },
+        {
+          "at": 21061,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [],
+      "lastRevision": 2,
+      "armOffset": 15,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31520.90000000014
+    },
+    {
+      "events": [
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 1,
+            "entities": {
+              "quotation": {
+                "revision": 1
+              },
+              "pricingRules": {
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "changed": [
+            "quotation",
+            "pricingRules"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "entities": {
+              "quotation": {
+                "revision": 2
+              },
+              "pricingRules": {
+                "revision": 2
+              }
+            }
+          }
+        }
+      ],
+      "eventTimes": [
+        {
+          "at": 14035,
+          "revision": 1
+        },
+        {
+          "at": 21061,
+          "revision": 2
+        }
+      ],
+      "outputs": [
+        "iam",
+        "quotation",
+        "licenseCards",
+        "quotation",
+        "licenseCards"
+      ],
+      "gets": [],
+      "lastRevision": 2,
+      "armOffset": 21,
+      "context": {
+        "webLocks": true,
+        "channel": true
+      },
+      "elapsed": 31518.09999999986
+    }
+  ],
+  "sseConnections": 1,
+  "browser": "154.0.8037.57"
+}

@@ -1,0 +1,97 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js shared-revision-poller multi-tab-live-sync live-sync-v644 shared-revision-store-eperm i18n-coverage-guard
+
+[Buyer Log tests] 6 test dosyası, 1 batch, concurrency=1.
+
+[Buyer Log tests] Batch 1/1 (6 dosya)
+✔ i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder (49.678148ms)
+✔ i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok (1075.881007ms)
+✔ i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli) (1020.033357ms)
+✔ i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez (0.294896ms)
+✔ i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde (0.653488ms)
+✔ v6.44 hızlı ardışık değişiklikler tek olayda birleşiyor (2703.968474ms)
+✔ v6.44 farklı kaynaklardan birleşen olayda origin null olur (2702.16759ms)
+✔ v6.44 collection alanı ownerId bazında ayrı kanallarda birikiyor (2702.002956ms)
+✔ v6.44 kaldırılan istemciye olay gönderilmiyor (2703.058005ms)
+✔ v6.44 write hata verirse süreç çökmüyor (2703.472454ms)
+✔ v6.44 SSE ucu doğru başlıklarla akış açıyor (1.727292ms)
+✔ v6.44 üç override ucu da değişikliği yayınlıyor (0.394556ms)
+✔ v6.44 Koleksiyon workspace kaydı ownerId ile birlikte yayınlıyor (0.146221ms)
+✔ v6.44 clientId istekten X-Client-Id başlığıyla okunuyor (0.3507ms)
+✔ v6.44 her sekme kendi kimliğini window üzerinden paylaşıyor (0.176487ms)
+✔ v6.44 override yazmaları kendi kimliğini taşıyor (0.151429ms)
+✔ v6.44 Koleksiyon kaydı da kendi kimliğini taşıyor (0.378823ms)
+✔ v6.44 orders olayı veri kaybettirmeyen yoldan geçiyor (2.40731ms)
+✔ v6.44 kendi yazdığın değişiklik kendine yenileme tetiklemiyor (1.496282ms)
+✔ v6.44 Koleksiyon uzak değişikliği kullanıcının yazdığını kaybettirmiyor (5.489389ms)
+✔ v6.44 Koleksiyon uzak değişikliği yalnız açık workspace eşleşirse çalışıyor (1.44196ms)
+✔ v6.44 Koleksiyon bekleyen debounce kaydı ATLANMADAN önce zorla bitiriliyor (0.665396ms)
+✔ v7.21 Koleksiyon uzak değişikliği ekranı KİLİTLEMİYOR (2.00443ms)
+✔ v6.44 ASAS/IAS kaynak yenilemesi (performRefresh) canlı senkrona bağlanmıyor (0.650784ms)
+✔ sekmeler tek canlı bağlantıyı paylaşır; olay her sekmeye ulaşır, kendi yazdığı hariç (36.697342ms)
+✔ lider sekme kapanınca başka sekme bağlantıyı devralır ve kaçırılanları yeniden okur (27.052119ms)
+✔ kalıcı kapanan bağlantı (401/sunucu yeniden başladı) yeniden kurulur ve boşluk sonrası tüm sekmeler yeniden okur (27.034523ms)
+✔ BroadcastChannel/Web Locks yoksa sekme kendi bağlantısıyla eski davranışı sürdürür (8.754906ms)
+✔ boşluk sonrası yeniden okuma açık verileri hafif yoldan tazeler (3.169993ms)
+✔ koleksiyon satır karşılaştırması iç nesneleri içerikle karşılaştırır (normalleştirme tüm satırları değiştirmez) (4.25936ms)
+✔ modül sekmesi Genel Bakış’ı ve onun CP bağımlılığını açılışta yüklemez; Genel Bakış ilk girişte yüklenir (2.669315ms)
+✔ koleksiyon kaydı canlı olayı paylaşım yayınını beklemeden gönderir (0.342719ms)
+✔ exact recipe has two anchored edits and keeps actual revision consumer (3.175461ms)
+✔ actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events (13.498969ms)
+✔ actual coordinator releases existing lock, aborts old GET and catches up on successor (3.278526ms)
+✔ actual SSE error/open gap catches up; teardown cancels SSE retry (2.236551ms)
+✔ missing browser APIs retain explicit per-page fallback {"channel":false} (1.842776ms)
+✔ missing browser APIs retain explicit per-page fallback {"locks":false} (2.411676ms)
+✔ missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false} (1.594992ms)
+✔ actual context subscription and pagehide/BFCache lifecycle reject late JSON (1.324112ms)
+✔ a follower context change requests a fresh baseline from the existing SSE leader (2.679772ms)
+✔ late old SSE callbacks after stop cannot announce or update consumers (1.750356ms)
+✔ missing helper asset explicitly preserves the legacy per-page timer (1.842245ms)
+✔ per-page API fallback also works without crypto.randomUUID (1.609623ms)
+✔ cold start preserves 2500ms and serial cadence never overlaps a slow GET (4.533724ms)
+✔ stop aborts late JSON, a new lease catches up only after old work settles (2.676877ms)
+✔ actor transition aborts, clears the comparison baseline and rejects stale results (0.607349ms)
+✔ source transition aborts, clears the comparison baseline and rejects stale results (0.700299ms)
+✔ authority transition aborts, clears the comparison baseline and rejects stale results (0.400956ms)
+✔ context changed without notification is still checked after JSON and before publication (0.245321ms)
+✔ offline abort, reconnect and foreground/native activity request immediate serialized catch-up (0.767731ms)
+✔ error backoff resets on recovery; idle backoff caps at the existing 7 seconds (0.888142ms)
+✔ timeout aborts an outstanding request, dispose is terminal and idempotent (0.429359ms)
+✔ only revision scalars cross the channel; replay and decreasing snapshots do not dispatch (1.477924ms)
+✔ malformed metadata cannot smuggle data or prototype keys into an event (0.269388ms)
+✔ grant expiry is checked for every hint even when authority and revision have not changed (0.123056ms)
+✔ malformed JSON and unsupported endpoint recover without POST or a fabricated revision (0.446395ms)
+✔ reentrant authority change during dispatch prevents publication of that old result (0.415418ms)
+✔ a context change discovered by share re-arms leader catch-up (0.28486ms)
+✔ a context change discovered by receive re-arms leader catch-up (0.166091ms)
+✔ geçici EPERM rename kilidini retry ederek tamamlar, revizyon ilerler (64.100403ms)
+✔ kalıcı EPERM hatayı çağırana döner, eski revizyonu korur, temp dosyasını temizler (479.830799ms)
+✔ EBUSY de retryable kabul edilir (20.405181ms)
+✔ ENOSPC gibi kalıcı bir hata hiç retry edilmeden fırlatılır (5.213672ms)
+✔ diagnostics: retry ve başarı olayları pid/instanceId taşır, iş verisi taşımaz (20.061501ms)
+✔ diagnostics: kalıcı başarısızlıkta WRITE_FAILED denenen sayıyı ve hata kodunu taşır (474.017208ms)
+✔ tek süreçte eşzamanlı update() çağrıları kayıp güncelleme üretmez (71.436594ms)
+✔ farklı entity anahtarları birbirini beklemek zorunda değil ama ikisi de doğru sonuçlanır (28.278684ms)
+✔ iki ayrı süreç aynı dosyaya yazınca revizyon kaybolmadan toplanır (lost-update koruması) (117.187904ms)
+[LEASE] stale:recovered instanceId=a2890e3c-4e97-49b6-a28c-7aa746bf89b8 pid=4953 resource=/tmp/buyerlog-shared-revision-crash-hIW2jg/shared-revisions.json currentOwner=5cbc9f1a-7d83-4579-872e-f8081c11550c leaseAgeMs=3 reason=dead-pid
+✔ yazma sırasında process kill edilirse hedef dosya BOZULMAZ (kısmi JSON kalmaz) (70.169748ms)
+✔ okuma yazma ile aynı anda çalışabilir ve her zaman tam bir JSON görür (37.522415ms)
+✔ sunucu ateşle-unut çağrıları hâlâ tek argümanla kurulabilir (geriye dönük uyumlu) (0.213403ms)
+✔ server.js hâlâ tek argümanlı kurucuyu kullanıyor ve her update() void+catch ile ateşle-unut çağrılıyor (3.464748ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17568.524586
+[Buyer Log tests] Batch 1/1 süresi: 17.6s.
+
+[Buyer Log tests] PASS — 6 test dosyası (17.6s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

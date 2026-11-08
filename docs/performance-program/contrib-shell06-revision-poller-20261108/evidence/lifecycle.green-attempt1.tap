@@ -1,0 +1,19 @@
+✔ cold start preserves 2500ms and serial cadence never overlaps a slow GET (4.825816ms)
+✔ stop aborts late JSON, a new lease catches up only after old work settles (0.800551ms)
+✔ actor transition aborts, clears the comparison baseline and rejects stale results (1.133473ms)
+✔ source transition aborts, clears the comparison baseline and rejects stale results (0.605586ms)
+✔ authority transition aborts, clears the comparison baseline and rejects stale results (0.397081ms)
+✔ context changed without notification is still checked after JSON and before publication (0.262597ms)
+✔ offline abort, reconnect and foreground/native activity request immediate serialized catch-up (1.149918ms)
+✔ error backoff resets on recovery; idle backoff caps at the existing 7 seconds (1.115055ms)
+✔ timeout aborts an outstanding request, dispose is terminal and idempotent (0.397521ms)
+✔ only revision scalars cross the channel; replay and decreasing snapshots do not dispatch (0.674239ms)
+✔ malformed metadata cannot smuggle data or prototype keys into an event (0.261635ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.050925

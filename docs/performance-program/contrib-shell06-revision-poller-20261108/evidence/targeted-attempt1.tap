@@ -1,0 +1,27 @@
+✔ exact recipe has two anchored edits and keeps actual revision consumer (4.131876ms)
+✔ actual poll/SSE blocks: one leader polls and every consumer gets equal revision-only events (15.195682ms)
+✔ actual coordinator releases existing lock, aborts old GET and catches up on successor (3.051283ms)
+✔ actual SSE error/open gap catches up; teardown cancels SSE retry (2.058261ms)
+✔ missing browser APIs retain explicit per-page fallback {"channel":false} (1.992111ms)
+✔ missing browser APIs retain explicit per-page fallback {"locks":false} (2.696947ms)
+✔ missing browser APIs retain explicit per-page fallback {"channel":false,"locks":false} (1.748313ms)
+✔ actual context subscription and pagehide/BFCache lifecycle reject late JSON (1.341308ms)
+✔ cold start preserves 2500ms and serial cadence never overlaps a slow GET (5.340633ms)
+✔ stop aborts late JSON, a new lease catches up only after old work settles (1.102907ms)
+✔ actor transition aborts, clears the comparison baseline and rejects stale results (1.406446ms)
+✔ source transition aborts, clears the comparison baseline and rejects stale results (0.956906ms)
+✔ authority transition aborts, clears the comparison baseline and rejects stale results (0.498013ms)
+✔ context changed without notification is still checked after JSON and before publication (0.279012ms)
+✔ offline abort, reconnect and foreground/native activity request immediate serialized catch-up (1.115747ms)
+✔ error backoff resets on recovery; idle backoff caps at the existing 7 seconds (0.868322ms)
+✔ timeout aborts an outstanding request, dispose is terminal and idempotent (0.45001ms)
+✔ only revision scalars cross the channel; replay and decreasing snapshots do not dispatch (0.745457ms)
+✔ malformed metadata cannot smuggle data or prototype keys into an event (0.291941ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.394094
