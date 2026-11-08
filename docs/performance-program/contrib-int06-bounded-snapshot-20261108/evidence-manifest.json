@@ -1,0 +1,266 @@
+{
+  "delivery": "392cc5574464690423e6e9cf6f9031549bae6188",
+  "measuredCodeCommit": "4e66c955e51e01ac84a0e799d5e1c491008f6393",
+  "mainAtStart": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "manifestExcludesItself": true,
+  "files": [
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/README.md",
+      "bytes": 10371,
+      "sha256": "902e3d522700bc3d0f4264ccb9f84be4bb05e8f2e5af557aba770af017fa90d4"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/after-diagnostic-replay.json",
+      "bytes": 2175,
+      "sha256": "68af921be9fc478a8cfe757845a00bcb88bb8d000a17ff1aa014dac243ba80b2"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/after-diagnostic.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/after-lifecycle.json",
+      "bytes": 46119,
+      "sha256": "982cae0024a4977600e9d86fe114ff36f869513b7283969934c9dd6982ba93ae"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/after-lifecycle.json.writes.json",
+      "bytes": 5135,
+      "sha256": "746d12afff6de8c7c363b2e986dfa01958012436ce86bee2dd045ac0630ce8d9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/before-diagnostic-replay.json",
+      "bytes": 2178,
+      "sha256": "b149a3364a7338b85db69b10aaf1a6922974db21366d071272404fc1d87515ea"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/before-diagnostic.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/before-lifecycle.json",
+      "bytes": 65510,
+      "sha256": "c3fc98bc476300794a603056aef7a43f847fb56d758886aa0807b723b690b264"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/capacity-before.txt",
+      "bytes": 1250,
+      "sha256": "f8b511d33ce03bb375929f57a518100161d09d2c1bc12c4a0ef402661475cd12"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/capacity-cohort.txt",
+      "bytes": 1083,
+      "sha256": "350e87b725635b2f77596cb1cf71efbe31dcf5f4fa0dc79e58cdaff8e3ee8d03"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort-verification.json",
+      "bytes": 1030,
+      "sha256": "d964cbef966bfc1d5f8847dd6784c009bcd6c2b9fd15d4d40828ff7b0dcfd6d9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort.log",
+      "bytes": 306,
+      "sha256": "5329a50e25b280ad93e2eac7b56afd3ee2dfc2c7ecc6a0d6552d00b8996a15c5"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-1.json",
+      "bytes": 3383,
+      "sha256": "78aae583e5d857070a896204f75f6aefc6c03c1a5da3cbe761012b01c7d76d3d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-2.json",
+      "bytes": 3383,
+      "sha256": "e53f176dc35ab59296f30107835b6cb78f493046710722107233241872ad7998"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-3.json",
+      "bytes": 3383,
+      "sha256": "9dabaaff766a6387bb88816c54942aa14ed0d56ec9826dfa7a6387efba63cea3"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-journal-3.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-1.json",
+      "bytes": 3386,
+      "sha256": "79531d69255fcc94fac824842a950c97625ef179c927ddfbc55640c83c80236d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-2.json",
+      "bytes": 3392,
+      "sha256": "c92e27346db55950709ec587e32712b4c7ed61d7756e585b63b5fdfad0c362e9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-3.json",
+      "bytes": 3387,
+      "sha256": "dbee2aec3408bbfeee28cf1b482781c2091066ff8b1d4c73eda37767cc2ef8fc"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-legacy-store-3.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/cohort/100000-steady-summary.json",
+      "bytes": 3853,
+      "sha256": "e28408d9cfe281e6bc572da6c5ab2becd115f76c5ed08d14b46ada7b89d885fa"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/decision.json",
+      "bytes": 437,
+      "sha256": "b079f03d27a73739b7faf3ad4ef53a5e7927e881a65af666c5475b4c0aba17f9"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/file-list-preflight.txt",
+      "bytes": 4137,
+      "sha256": "1ea22dbc73abf30ddc833f3464db5a3a47f905c1840f6d14c4c7dec1812e9537"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/file-list.txt",
+      "bytes": 4417,
+      "sha256": "65cbab639eb246b94df95bf4dcffd2f29420c08c34d47078d7c73368d291e3cf"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/green-bounded.tap",
+      "bytes": 1802,
+      "sha256": "55dbd41eb4f0b6ab16dbc9c39e29f546044617197cc2aa3a5d034bb5a9ddaf2d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/green-native.tap",
+      "bytes": 15692,
+      "sha256": "071128219942ae3a74c7da4aa7b400736d2292078e55909271e94fedb49e8683"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/handoff.md",
+      "bytes": 4136,
+      "sha256": "1d814ededfc3fb27d835fd8162a5b0a1a69bc2db4110452f09cbab19adef5639"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/i18n.log",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/lifecycle-summary.json",
+      "bytes": 13553,
+      "sha256": "345e1b6b34431ed93d0e2de3243a55974d3a370bc9a05ceac434086020e7120d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/native.tap",
+      "bytes": 30627,
+      "sha256": "4fa7534a171893ac8a1bc0263d751d8b4055cec899fd73fa6896b7e0101e1e37"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/preservation-audit-preflight.json",
+      "bytes": 4637,
+      "sha256": "5d37f2b90e4143577e466561f7b053c4dd7d219855148520ed48b0d52c517d8d"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/preservation-audit.json",
+      "bytes": 4938,
+      "sha256": "a96d9ee08f42e257f1cdd242f5581d162b59b4f91158e1b25899a74ace890cef"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/preserved-inputs.json",
+      "bytes": 30338,
+      "sha256": "5b5807bbf0da98fe0fc7994f10d4fd4fab6fff49d4964050fe3f03117b903914"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/red-bounded.tap.gz",
+      "bytes": 1118,
+      "sha256": "0916d8a75435588be57e466da9b8e6181f78c0d36bd706192cec2bc46a5781a8"
+    },
+    {
+      "path": "docs/performance-program/contrib-int06-bounded-snapshot-20261108/red-evidence-sha256.txt",
+      "bytes": 103,
+      "sha256": "8733087ad513fa8ed75e907f6b1b289bf3862fe19de7569533908b3db6f01e08"
+    },
+    {
+      "path": "resources/app/server/lib/power-bi-checkpoint-journal.js",
+      "bytes": 12315,
+      "sha256": "b534cffb9a4ccd7e6cb312c36494ddfaef087ab86ba953cbc76920fdad8d3180"
+    },
+    {
+      "path": "resources/app/tests/fixtures/int06-checkpoint-journal/bounded-crash.cjs",
+      "bytes": 558,
+      "sha256": "be1993ec80f3481d569e7de44958ef8983890f3b2934278768c41c50fc8d8112"
+    },
+    {
+      "path": "resources/app/tests/int06-checkpoint-journal-bounded-metrics.test.js",
+      "bytes": 2696,
+      "sha256": "caf2ffbb11282a1e7ba31586dbeeb9aafb69f8f04ea4513e96c29f12cd109bec"
+    },
+    {
+      "path": "resources/app/tests/int06-checkpoint-journal-bounded.test.js",
+      "bytes": 9819,
+      "sha256": "6d5479b1a2fef760f4897f5c6492dae76197844d53aa418de22dd3db00b8f7b0"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/audit.py",
+      "bytes": 3171,
+      "sha256": "0c1e8d8dd71cfcfe666b5bc229a37de6ca27eba967e375288a0ff93775aa1483"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/cohort.cjs",
+      "bytes": 3802,
+      "sha256": "26d0832d13b6eeddd3ee9a0ef758917bab89b622c74959b37e77930c70e0980b"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/helper-only.patch",
+      "bytes": 2777,
+      "sha256": "d1b0d41e57bbe5dff0724e37a322224426fcc74d4a2fbdcc0ec4f6a1c0fdb6cd"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/measure.cjs",
+      "bytes": 9276,
+      "sha256": "730e18141ef064b632af30de366f191b05da5debaae84c8ddb3479c593e79aa1"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/metrics.cjs",
+      "bytes": 2074,
+      "sha256": "004a4f51ccd2ac6db2604e7f6b332a52320816b0a870edbaa18215a0c4fb6268"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/profile-writes.cjs",
+      "bytes": 1992,
+      "sha256": "c64b1368a5759fcaebdbe269a70bed91582e33a370309ce8067b5b19284147ea"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/validate.sh",
+      "bytes": 934,
+      "sha256": "e29a6a5334b0db1aece24d30ef6c1966d8ab3ac7acd41c4ed8968577711b39fe"
+    },
+    {
+      "path": "scripts/prototypes/int06-bounded-snapshot-20261108/verify-cohort.py",
+      "bytes": 3657,
+      "sha256": "5e87154efdec678f1206c7f45bbc0d181aa3442e215d27d30b91b825e57a6f54"
+    }
+  ],
+  "rssRegressionAccepted": false,
+  "int06Complete": false,
+  "productionIntegrated": false
+}
