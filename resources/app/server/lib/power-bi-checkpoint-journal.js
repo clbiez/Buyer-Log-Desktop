@@ -103,15 +103,18 @@ function openCheckpointJournal({ root, initial, legacyFile, snapshotEvery = 64, 
   }
   function assertOpen() { check(!poisoned, 'CHECKPOINT_REOPEN_REQUIRED'); }
   function progress() { assertOpen(); return { seq, ...counts, retryPending: base.retryPending }; }
-  function materialize() {
+  // Yalnız senkron iç serialization kullanır; dışarıya referans verilmez.
+  // Snapshot öncesi JSON roundtrip ikinci bir tam rows/state grafiği üretirdi.
+  function manifestView() {
     assertOpen();
     const rows = [];
     for (const chunk of chunks) for (const row of chunk) rows.push(row);
-    return clone({ ...base, ...counts, allOrderCodes: codes, _allOrderCodes: codes,
+    return { ...base, ...counts, allOrderCodes: codes, _allOrderCodes: codes,
       orderStates: states, rows,
       remainingOrders: codes.filter(code => !Object.hasOwn(states, identity(code))),
-      failedOrderCodes: Object.entries(states).filter(([, state]) => state === 'FAILED').map(([code]) => code) });
+      failedOrderCodes: Object.entries(states).filter(([, state]) => state === 'FAILED').map(([code]) => code) };
   }
+  function materialize() { return clone(manifestView()); }
   function validateDelta(d) {
     check(d && d.format === FORMAT && d.type === 'batch' && d.refreshId === base.refreshId);
     check(Number.isSafeInteger(d.seq) && d.seq > 0, 'CHECKPOINT_SEQUENCE');
@@ -133,7 +136,7 @@ function openCheckpointJournal({ root, initial, legacyFile, snapshotEvery = 64, 
     seq = d.seq; receipts.set(seq, digest);
   }
   function snapshot() {
-    const bytes = pack({ format: FORMAT, type: 'snapshot', seq, receipts: [...receipts], manifest: materialize() });
+    const bytes = pack({ format: FORMAT, type: 'snapshot', seq, receipts: [...receipts], manifest: manifestView() });
     atomicReplace(snapshotFile, bytes, 'snapshot', onPhase);
     snapshotSeq = seq;
   }

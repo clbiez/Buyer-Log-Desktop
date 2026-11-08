@@ -135,3 +135,24 @@ test('INT-06 growing prior rows and states are never visited by the commit hot p
   finally { JSON.stringify = original; }
   assert.ok(maxBytes < 700, `delta-only serialization: ${maxBytes}`);
 });
+
+test('INT-06 snapshots serialize owned state without parsing a second full graph; public copies stay isolated', t => {
+  const { journal, open } = setup(t, { snapshotEvery: 2 });
+  journal.commit(delta(1, { A: 'SUCCESS' }, [{ blob: 'x'.repeat(1024 * 1024), nested: { n: 1 } }]));
+  const original = JSON.parse;
+  let fullGraphParses = 0;
+  JSON.parse = function(text, ...args) {
+    if (typeof text === 'string' && text.length > 1024 * 1024) fullGraphParses += 1;
+    return original(text, ...args);
+  };
+  try {
+    journal.commit(delta(2, { B: 'NOT_FOUND' }, [])); // periodic snapshot
+    journal.compact(); // explicit snapshot
+  } finally { JSON.parse = original; }
+  assert.equal(fullGraphParses, 0, 'snapshot must not allocate a JSON-parsed duplicate manifest');
+  const expected = journal.materialize(), copy = journal.materialize();
+  copy.rows[0].nested.n = 99; copy.orderStates.A = 'FAILED';
+  copy.allOrderCodes.push('X'); copy.lastBatch.orderCodes.push('X');
+  assert.deepEqual(journal.materialize(), expected, 'public materialization remains a deep owned copy');
+  assert.deepEqual(open().materialize(), expected, 'snapshot format/reopen preserves the full manifest');
+});
