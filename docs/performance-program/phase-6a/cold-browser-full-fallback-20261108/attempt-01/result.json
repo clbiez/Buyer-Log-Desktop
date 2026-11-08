@@ -1,0 +1,17 @@
+{
+  "status": "failed",
+  "sourceCommit": "5e012c1cf4d77f56f975c6256943608d8273a057",
+  "synthetic": true,
+  "rows": 30,
+  "thinProductionEnabled": false,
+  "testOnlyFlag": true,
+  "classification": "real server/parser/projection and browser, isolated augmented 30-row functional scenario, not performance acceptance",
+  "events": [],
+  "errors": [],
+  "originalAsasSha256": "68d9848ed2d40159bc472d3c73580511ebf2142ad2b3aed6516e1d906c2a2335",
+  "augmentedAsasSha256": "430d74b211e8fe396ed9675fa8d32e1083fb5c5cf69a8b154533509339dcb634",
+  "error": {
+    "message": "The expression evaluated to a falsy value:\n\n  assert.ok(saved.items.some(i=>i.id===metadata.id&&i.refreshEnabled===false))\n",
+    "stack": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(saved.items.some(i=>i.id===metadata.id&&i.refreshEnabled===false))\n\n    at /tmp/buyerlog-import-completion-safety/cold-ready-smoke.cjs:20:184\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "revision": "2ce7eda8 plus reviewed profile/storage gate delta",
   "files": {
-    "public/app-main.js": "bf1d1c2556afaf948ec35a50c77e632e6ad748916a90e2fe5578e04c37f8b29a",
+    "public/app-main.js": "373b06add9656c7614a239b2637f7554e68e83cf86dbad5a81e919244d98812a",
     "public/formula-columns.js": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
     "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
     "public/user-storage.js": "b924316165494261b584b967c983ebcb238869a00274880cc92261783c6e90ee",

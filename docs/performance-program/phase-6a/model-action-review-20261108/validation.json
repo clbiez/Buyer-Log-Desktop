@@ -1,0 +1,40 @@
+{
+  "reviewSha": "5e012c1cf4d77f56f975c6256943608d8273a057",
+  "reviewPasses": 1,
+  "reviewExecution": "read-only, no executable module imports/tests/benchmarks",
+  "findings": [
+    "P1 own model SSE continuation",
+    "P2 unrelated Orders access in full CP"
+  ],
+  "rootDisposition": "both reproduced and fixed; second review round not run",
+  "correctedAppSha256": "373b06add9656c7614a239b2637f7554e68e83cf86dbad5a81e919244d98812a",
+  "targetedPass": 208,
+  "fullCorrectedTree": {
+    "files": 1353,
+    "counts": {
+      "tests": 9975,
+      "pass": 9910,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 65
+    },
+    "seconds": 240.7,
+    "runner": "default concurrency=4, all10 batches, one invocation",
+    "command": "npm --prefix resources/app test",
+    "rawLogSha256": "10e6c496541c4479aa6ff07e741cfe861128f81a30cfc723ed17194814e7a932"
+  },
+  "thinEnabled": false,
+  "TEST": false,
+  "STABLE": false,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 52,
+  "protected916": {
+    "pass": 23,
+    "byteEqualMain179": true
+  },
+  "phase6aAcceptance": "still pending supported thin browser/shadow and 30k cohorts; not activation acceptance",
+  "GitHub": "new corrected delta not yet pushed"
+}

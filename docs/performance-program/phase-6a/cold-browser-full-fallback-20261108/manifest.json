@@ -1,0 +1,19 @@
+{
+  "README.md": "a13210669f2cf9b135eb94ad27be1c5dbcab1cc2d6825be0de56068aa3dc32e3",
+  "attempt-01/attempt.cjs": "837f1d73d340da1ff1fcd3d6aaea0eed6b340cf92259e30f94c2791d1c2a3cf1",
+  "attempt-01/result.json": "c74a358a160ec81381c5203ebfecbbbc7e6ad8aed4bde56e15454d4d7c072247",
+  "attempt-01/runner.log.gz": "71e9784141567006f9dfd7cdb8222f06223afc101a903994048dda88be06a3f7",
+  "attempt-01/server.log.gz": "455778471c49fd50883a0784f886185cc3ac9c0a36bef40ee2f0ca49c0daf55b",
+  "attempt-02/attempt.cjs": "64cd64d752db0bd48527d0ea6c8ff9af887eb4ce1b0bfa55cddfacaa823ef2cd",
+  "attempt-02/orders.png": "7c26b768ca328061363339541eb528d1aebaf4a3583304fc8ecefe7b418dd1c4",
+  "attempt-02/result.json": "865655893cb1e5d3e45fad2d2c69aaf2ac38a070d7fffeb36710841b9a312b2b",
+  "attempt-02/runner.log.gz": "2b4e775b11ebfaebf887e33646e1959def58bdfad1a1de332f1e4f911684a8f9",
+  "attempt-02/server.log.gz": "7d238733b206913bb8dbf4e3d7eb0db152165f5f4d8e91b61f089405c5970c88",
+  "attempt-03/attempt.cjs": "ddf7217f5172801956f52a9c1b9038d45c6990d863a3666c3d332208a9e63d05",
+  "attempt-03/orders.png": "7c26b768ca328061363339541eb528d1aebaf4a3583304fc8ecefe7b418dd1c4",
+  "attempt-03/result.json": "a8d574f2db4235dd65beb55ce79a9f434f586ad21742985b6b3ce0d4171758a3",
+  "attempt-03/runner.log.gz": "ad1ed9966a2bb7426ac9a0f8f821738598997aac9822c6d9f1c600adf8f3d043",
+  "attempt-03/server.log.gz": "3ae78a9592f939166161b7a74b7096bdd06a58e6758a3ebda6a5ea7a696642eb",
+  "cold-fixture-30-baseline.json.gz": "0f60babb524c081aa6603cd857f5183a5e45b6f859e26a3cba1b0b7a027b97c3",
+  "cold-fixture-30-baseline.log.gz": "9d2a2e4bfc2c6f3591d9cd463d4fc265c49e5a32a1ce4ee2b3a44e47e985546b"
+}

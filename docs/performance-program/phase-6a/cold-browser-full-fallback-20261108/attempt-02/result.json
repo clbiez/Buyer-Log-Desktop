@@ -1,0 +1,41 @@
+{
+  "status": "observed",
+  "sourceCommit": "5e012c1cf4d77f56f975c6256943608d8273a057",
+  "synthetic": true,
+  "rows": 30,
+  "thinProductionEnabled": false,
+  "testOnlyFlag": true,
+  "classification": "real server/parser/projection and browser, isolated augmented 30-row functional scenario, not performance acceptance",
+  "events": [
+    {
+      "path": "/api/page-projection/orders",
+      "method": "GET"
+    }
+  ],
+  "errors": [],
+  "originalAsasSha256": "68d9848ed2d40159bc472d3c73580511ebf2142ad2b3aed6516e1d906c2a2335",
+  "augmentedAsasSha256": "430d74b211e8fe396ed9675fa8d32e1083fb5c5cf69a8b154533509339dcb634",
+  "refreshPostAttempts": 1,
+  "full": {
+    "rows": 30,
+    "ownsExtra": 0,
+    "extraValues": [
+      null,
+      null
+    ]
+  },
+  "schema": {},
+  "productionAppSha256": "bf1d1c2556afaf948ec35a50c77e632e6ad748916a90e2fe5578e04c37f8b29a",
+  "testAppSha256": "88d2c1bbd591b22f464808e563c1ce8c2ca1cdc0adc6e0e0b01c1b17a09ca220",
+  "ui": {
+    "rows": 30,
+    "thin": false,
+    "hasPotential": false,
+    "definitions": [],
+    "hidden": [],
+    "ownedExtra": false,
+    "runtimeOpened": false,
+    "coldClosed": false,
+    "depth": 0
+  }
+}

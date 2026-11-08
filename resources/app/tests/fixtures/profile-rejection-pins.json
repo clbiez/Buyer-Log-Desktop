@@ -1,11 +1,11 @@
 {
   "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
   "files": {
-    "public/app-main.js": "bf1d1c2556afaf948ec35a50c77e632e6ad748916a90e2fe5578e04c37f8b29a",
+    "public/app-main.js": "373b06add9656c7614a239b2637f7554e68e83cf86dbad5a81e919244d98812a",
     "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1"
   },
   "baselineSwitchSha256": "487734b754aea980a95a1b785c7b1fb3176cd656f8933f39667dbf78ef1269df",
-  "outsideSwitchSha256": "d989dbec96abfe28725af056cd1fd84827a4b2e4297012195e407cd917160eae",
+  "outsideSwitchSha256": "1a868074720b5098a5030f3be92605d87af1f3106f8ab41db0db6c658c1b7309",
   "beforeAppSha256": "148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c",
   "currentSwitchSha256": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2",
   "lifecycleDeltaProof": "docs/performance-program/phase-6a/source-retirement-integration-20261108/source-pin-review.json",

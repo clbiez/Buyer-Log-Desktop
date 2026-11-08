@@ -1,0 +1,7 @@
+Reviewed frozen SHA `5e012c1cf4d77f56f975c6256943608d8273a057`.
+
+- **P1 — Model writes can cancel themselves through SSE.** `app-main.js:6404` omits `X-Client-Id`. The server publishes `modelConnections` after committing; its 300 ms notification therefore reaches the originating window and starts an unguarded `modelConnLoad()` followed by `loadFromServer()` (lines 39984–39986). If the PATCH response or subsequent continuation remains pending, that refresh changes the configuration/epoch checked by the new action guard. A committed save reports failure; a source move can stop after adding the destination column, leaving both copies. Carry the existing client identity on this PATCH, as the note writer now does. The native model fixture does not simulate SSE.
+
+- **P2 — CP model actions now require unrelated Orders access.** `app-main.js:6337` rejects every model action when `BLCanAccessArea('orders')` is false, including ordinary full CP actions. A profile with `cp=true`, `source=true`, `orders=false` and `manageModelConnections=true` can access the existing CP controls and satisfies the schema/PATCH endpoints' authorization, but now fails before opening or removing a column. Preserve CP authorization when invoked from CP. The model fixture uses one access boolean for every area, missing this case.
+
+Static source review only: no tests, executable module imports, browser probes, or benchmarks were run. These findings are not Phase 6a activation acceptance.

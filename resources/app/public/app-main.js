@@ -6334,7 +6334,7 @@ function captureCpModelAction(valid=()=>true){
       ||currentActiveTab()!==tab||_ordersUiSessionEpoch!==session||_ordersProjectionSourceEpoch!==wantedEpoch
       ||ordersConfigurationLifecycleInvolved()!==finite||CP_MODEL_COLUMN_DEFS!==definitionSet||JSON.stringify(CP_MODEL_COLUMN_DEFS)!==definitions
       ||cpModelActionConfiguration()!==wantedConfiguration||valid()!==true)throw ordersFullActionError('ORDERS_FULL_STALE');
-    if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+    if(['cp','orders'].includes(tab)&&window.BLCanAccessArea?.(tab)===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
     _ordersRequireFullSynchronousRead();
   };
   const action={
@@ -6400,8 +6400,10 @@ async function writeCpModelColumn(sourceId, cpColumn, action=null){
   assertCommand();
   const source=(modelConnState.items||[]).find(item=>item&&item.id===sourceId);
   if(!source)throw new Error(appLang==='en'?'Connection not found':'Bağlantı bulunamadı');
+  const headers={'Content-Type':'application/json'};
+  if(window.BL_CLIENT_ID)headers['X-Client-Id']=window.BL_CLIENT_ID;
   const res=await fetch(`/api/data-management/source/${encodeURIComponent(sourceId)}`,{
-    method:'PATCH',headers:{'Content-Type':'application/json'},
+    method:'PATCH',headers,
     body:JSON.stringify({cpColumn:JSON.parse(command),expectedSourceRevision:source.configRevision||''})});
   assertCommand();
   const data=await res.json().catch(()=>({}));
