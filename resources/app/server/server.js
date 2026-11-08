@@ -6976,7 +6976,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
     if (!parsed.found) { folderFxSyncStatus = null; return parsed; }
-    if (!parsed.updated && parsed.reason !== 'parse-failed') return parsed;
+    if (!parsed.updated && parsed.reason !== 'parse-failed') { folderFxSyncStatus = null; return parsed; }
     for (let attempt = 0; attempt < 2; attempt += 1) {
       let decision = decideFolderKurApply(current, parsed);
       const reason = decision.reason || 'apply';
@@ -6993,10 +6993,13 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       }
     }
   } catch (err) {
+    // Ayrıştırma hatasını worker sonuç olarak döndürür. Kuyruğa kabul edilmeyen
+    // veya tamamlanamayan iş dosyanın bozuk olduğunu göstermez; kimlik kaydetme.
+    const reason = err.code === 'EXCEL_WORKER_BUSY' ? 'worker-busy' : 'sync-failed';
+    if (err.code !== 'REVISION_CONFLICT') remember({}, reason);
     if (explicit || err.code === 'REVISION_CONFLICT') throw err;
-    remember({}, 'parse-failed');
-    logRuntimeFailure('fxWorkbookRead', err);
-    return { found: false, updated: false, reason: 'parse-failed' };
+    if (reason !== 'worker-busy') logRuntimeFailure('fxWorkbookRead', err);
+    return { found: false, updated: false, reason };
   }
 }
 

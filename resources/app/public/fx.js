@@ -170,6 +170,8 @@ function folderSyncText(){
   const file=sync.file||'KUR.xlsx',month=sync.reportMonth?` (${monthLabel(sync.reportMonth,typeof appLang!=='undefined'&&appLang==='en')})`:'';
   if(sync.reason==='older-report')return L(`Klasördeki ${file}${month} mevcut kurlardan eski; uygulanmadı.`,`Folder ${file}${month} is older than the current rates; not applied.`);
   if(sync.reason==='current-newer')return L(`Mevcut kurlar klasördeki ${file}${month} dosyasından daha yeni; uygulanmadı.`,`Current rates are newer than folder ${file}${month}; not applied.`);
+  if(sync.reason==='worker-busy')return L(`Excel işlem kuyruğu dolu; klasördeki ${file} işlenemedi. Mevcut kurlar korundu. Daha sonra tekrar deneyin.`,`The Excel processing queue is full; folder ${file} could not be processed. Current rates were preserved. Try again later.`);
+  if(sync.reason==='sync-failed')return L(`Klasördeki ${file} için kur güncellemesi tamamlanamadı; mevcut kurlar korundu. Daha sonra tekrar deneyin.`,`The rate update from folder ${file} could not be completed; current rates were preserved. Try again later.`);
   if(sync.reason==='parse-failed')return L(`Klasördeki ${file} okunamadı; mevcut kurlar korundu.`,`Folder ${file} could not be read; current rates were preserved.`);
   return '';
 }
@@ -177,7 +179,14 @@ async function applySourceKur(){
   const sync=store.folderSync;if(!sync?.fingerprint)return false;
   if(!window.confirm(L('Klasördeki dosya mevcut kurların üzerine uygulanacak. Onaylıyor musunuz?','The folder file will replace covered current rates. Apply?')))return false;
   const res=await fetch('/api/fx/apply-source-kur',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:sync.fingerprint,expectedRevision:store._revision})});
-  if(!res.ok)throw new Error(L('Dosya veya kurlar değişti. Yenileyip tekrar deneyin.','The file or rates changed. Refresh and try again.'));
+  if(!res.ok){
+    const out=await res.json().catch(()=>({}));
+    if(['EXCEL_WORKER_BUSY','EXCEL_WORKER_TIMEOUT','EXCEL_WORKER_ERROR','REFRESH_CANCELLED'].includes(out.code)){
+      await load(true);
+      throw new Error(folderSyncText()||L('Kur güncellemesi tamamlanamadı. Daha sonra tekrar deneyin.','The rate update could not be completed. Try again later.'));
+    }
+    throw new Error(L('Dosya veya kurlar değişti. Yenileyip tekrar deneyin.','The file or rates changed. Refresh and try again.'));
+  }
   await load(true);return true;
 }
 function renderFolderSync(host){
@@ -189,7 +198,7 @@ function renderFolderSync(host){
   }
   if(['older-report','current-newer'].includes(store.folderSync.reason)){
     const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=L('Yine de uygula','Apply anyway');
-    button.onclick=async()=>{try{await applySourceKur();renderFolderSync(host);}catch(error){window.showToast?.(error.message);}};host.append(' ',button);
+    button.onclick=async()=>{try{await applySourceKur();renderFolderSync(host);}catch(error){renderFolderSync(host);window.showToast?.(error.message);}};host.append(' ',button);
   }
 }
 const html=value=>String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -271,6 +280,7 @@ function showImportRecovery(error){
   renderRecovery();host.querySelector('[role=dialog]').focus();return true;
 }
 async function openFolderRecovery(){
+  if(store.folderSync?.reason!=='parse-failed')return false;
   const response=await fetch('/api/fx/source-kur-preview',{cache:'no-store'});
   if(!response.ok)throw new Error(L('Klasör dosyası okunamadı.','Could not read the folder file.'));
   showImportRecovery({fxRecovery:await response.json()});

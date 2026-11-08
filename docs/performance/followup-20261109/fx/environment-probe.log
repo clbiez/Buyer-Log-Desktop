@@ -1,0 +1,14 @@
+✔ v5.54 browser allowlist settings normalize URLs, casing and duplicates (2.266399ms)
+✔ v5.54 recorder preserves repeated clicks, collapses field edits, and converts double-click correctly (1.27754ms)
+✔ v5.54 recorder refuses sensitive password/OTP/token/PIN/CVV fields (0.397092ms)
+✔ v5.54 batch browser replay supports item fields with spaces and index placeholders (0.461723ms)
+✔ v5.54 server and the automation UI expose allowlist, recorder and same-window browser routes (0.612435ms)
+✔ v5.54 old Agent Center stays removed while the new connector uses only the generic portable engine (1.028654ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 153.475142
