@@ -73,7 +73,11 @@ function capture(tasks, source, input) {
   return { output, schemas };
 }
 function legacyRegistration(defs) {
-  const source = fs.readFileSync(path.join(APP, 'public/app-main.js'), 'utf8');
+  const reviewed = require('./fixtures/orders-ready-integration/source.cjs');
+  const source = reviewed.base('public/app-main.js');
+  const extract = require('./helpers/app-main-functions.js').extractFunction;
+  const guarded = extract(reviewed.current('public/app-main.js'), 'syncCpModelColumns');
+  assert.equal(guarded.replace('\n  _ordersRequireFullSynchronousRead();', ''), extract(source, 'syncCpModelColumns'), 'only reviewed first-statement guard precedes exact legacy registration');
   const match = source.match(/function syncCpModelColumns\(defs\)\{\s*const clean=([^;\n]+);/);
   assert.ok(match, 'actual legacy registration expression must remain identifiable');
   return Function('defs', 'return (' + match[1] + ');')(defs);

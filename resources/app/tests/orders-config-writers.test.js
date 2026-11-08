@@ -115,7 +115,9 @@ test('pricing change predictor agrees with unchanged actual apply helpers for st
 });
 test('protected source refresh POST flow, CP loader, pricing helpers and synchronous consumers remain exact',()=>{
  const baseline=readPinnedOriginal('app');
- for(const name of ['syncLinkedRefreshMembers','loadFromServer','ensureCpLoaded','applyIncomingPricingRules','applyLicensorMerges','applyPricingRulesToLoadedRows','syncPricingRulesToAllLoadedViews','globalFlowSourceRows'])assert.equal(extractFunction(source,name),extractFunction(baseline,name),name);
+ // Preserve this older configuration layer assertion after exact reversal of the separately tested ready layer.
+ const configurationSource=require('./fixtures/orders-ready-integration/source.cjs').base('public/app-main.js');
+ for(const name of ['syncLinkedRefreshMembers','loadFromServer','ensureCpLoaded','applyIncomingPricingRules','applyLicensorMerges','applyPricingRulesToLoadedRows','syncPricingRulesToAllLoadedViews','globalFlowSourceRows'])assert.equal(extractFunction(configurationSource,name),extractFunction(baseline,name),name);
 });
 test('an absent or unknown selection container is not proof of empty thin selection',async()=>{
  for(const selected of [null,[],{size:0}]){

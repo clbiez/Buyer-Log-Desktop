@@ -1,0 +1,13 @@
+resources/app/tests/column-display-names-v70175.test.js
+resources/app/tests/column-group-v742.test.js
+resources/app/tests/cp-startup-image-registry-v20261012.test.js
+resources/app/tests/dynamic-column-order-persistence.test.js
+resources/app/tests/excel-import-profiles-wiring-v1060.test.js
+resources/app/tests/formula-columns-v728.test.js
+resources/app/tests/formula-source-columns-v734.test.js
+resources/app/tests/license-cards-royalty-hydration.test.js
+resources/app/tests/note-columns-v1084.test.js
+resources/app/tests/orders-add-column-v1083.test.js
+resources/app/tests/page-thinking-loader-v20261002.test.js
+resources/app/tests/private-order-notes-v20261026.test.js
+resources/app/tests/v714-performance-hardening.test.js

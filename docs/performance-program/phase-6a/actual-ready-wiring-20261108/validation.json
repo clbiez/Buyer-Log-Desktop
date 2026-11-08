@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "runner": "npm test, default concurrency 4, one invocation, all 10 batches",
+  "files": 1347,
+  "elapsedSeconds": 243.9,
+  "counts": {
+    "tests": 9767,
+    "pass": 9702,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "appSha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+  "fullLogSha256": "9a7d32c76d35fa0f27be60487890cb8d1df5c8aef35ad6aa81b62741c255638f",
+  "protected916BytesEqualMain": [
+    "resources/app/public/checklist-components-engine.js",
+    "resources/app/public/cp-overview-assistant.js",
+    "resources/app/public/checklist-supplier-sync.js",
+    "resources/app/tests/checklist-components-row-cache.test.js",
+    ".github/workflows/buyerlog-pr-fast-checks.yml"
+  ],
+  "activation": false,
+  "notPhaseCompletion": true,
+  "relatedPass": 904,
+  "affectedCallerPass": 177,
+  "protected916Pass": 23,
+  "i18nNew": 0,
+  "i18nBaseline": 0,
+  "releaseNotes": 51,
+  "gitHubChecks": "not run; local increment only",
+  "productionDefaultThin": "disabled",
+  "postFullChanges": "TR/EN release-note wording narrowed to note columns; runtime/test code unchanged; release validator rerun"
+}

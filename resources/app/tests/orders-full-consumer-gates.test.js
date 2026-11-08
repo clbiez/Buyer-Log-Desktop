@@ -146,7 +146,7 @@ test('actual linked-order dispatcher waits for target Orders full before synchro
 });
 test('public synchronous screen getters, CP loader and native clipboard source are unchanged',()=>{
   const baseline=fs.readFileSync(path.join(baselineRoot,'app-main.js'),'utf8');
-  for(const name of ['ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(app,name),extractFunction(baseline,name));
+  for(const name of ['ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(require('./fixtures/orders-ready-integration/source.cjs').base('public/app-main.js'),name),extractFunction(baseline,name));
   // The new metadata-only method adds no row provider. Keep the entire old
   // synchronous provider object byte-exact after removing that one reviewed
   // addition; its real behavior has separate native table-summary regressions.

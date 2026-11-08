@@ -1,0 +1,17 @@
+{
+  "revision": "2ce7eda8 plus reviewed profile/storage gate delta",
+  "files": {
+    "public/app-main.js": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+    "public/formula-columns.js": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
+    "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+    "public/user-storage.js": "b924316165494261b584b967c983ebcb238869a00274880cc92261783c6e90ee",
+    "public/preset-store.js": "06ec4dc511c2b29ecf5c1d61b43ecc859904ef15b9b817fce23444d0f0a92ff9",
+    "public/preset-share.js": "afe65bb80084da510c98883c322a48806180e441372fe101de610ca464a63742",
+    "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+    "tests/orders-full-consumer-gates.test.js": "91097e57d1e464bd72f0b430bb36d85bb054d2db1775d671e342b41e1e7b9900",
+    "tests/formula-columns-rename-assistant-v7175.test.js": "8b47d52103e57d57ab119fb4ddb3d7be685bb31e509feea0ccad572f76dc4c6d",
+    "tests/user-storage-isolation.test.js": "0db954dbaa89623162ca6113671bbbd15c5181cbd11eb3276d19869507f3d60c"
+  },
+  "protectedBaselineSha256": "3201e3e29bbd6f0c139931f6df6fb379dd645dcfb641138ee1fbd87fc73695ab",
+  "baselineSource": "7db9cbce871ebf6202e3584b82548a7c21492a82bc3fca2f77d1904557500f6f"
+}

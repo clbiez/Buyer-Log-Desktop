@@ -1,0 +1,145 @@
+{
+  "tests/contracts/source-pins.json": {
+    "target": "reviewed 8af8e44069324189b04e12abf58c6b9a20628eb6",
+    "providerProof": "docs/performance-program/phase-6a/sync-provider-integration-20261108/source-pin-review.json",
+    "inventory": {
+      "pr": 891,
+      "head": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+      "sha256": "9ddb58477db99ce381dd57f311eced5e09c3b2176f3b9b58349456a92b6cb352"
+    },
+    "captures": {
+      "app-main.js": {
+        "path": "public/app-main.js",
+        "sha256": "cda42945e7ef61aed6290bf4beff16fdd3643141bc57e2c6578c3da7087673ee",
+        "gitBlob": "4c16e77fd8f16e7a43b86b1137a7b31a8589af54"
+      },
+      "business-rules.js": {
+        "path": "public/business-rules.js",
+        "sha256": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+        "gitBlob": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e"
+      },
+      "canonical-fields.js": {
+        "path": "public/canonical-fields.js",
+        "sha256": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+        "gitBlob": "790b20613f6ce92a8ab223c9f5000e1326de1c52"
+      },
+      "canonical-module-bindings.js": {
+        "path": "public/canonical-module-bindings.js",
+        "sha256": "c6a06f86dbc46614b7f7845b6092d186324ba80866e2385b584e4782d60a3b5f",
+        "gitBlob": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5"
+      },
+      "chronological-values.js": {
+        "path": "public/chronological-values.js",
+        "sha256": "7ff17b9410c8d779c2d634ccb8563e16c28b3f40f8415279dfa6b0f64e439194",
+        "gitBlob": "db6eacd41c5cecd81c3adbee9384a28750baba08"
+      },
+      "compute-tasks.js": {
+        "path": "server/lib/compute-tasks.js",
+        "sha256": "36b2d224bdc5ba78a6fab4722c629eb75e4f6a4bf701b46fc1849284f8957d4a",
+        "gitBlob": "fffa068554c68d3a12009ce3d5d1938ac289ae9f"
+      },
+      "dependency-plan.js": {
+        "path": "public/projection-dependency-plan.js",
+        "sha256": "f393d36583d1d0d0b86b50a8c01e59bacdec7b836ad6dd9658313ebdb38ad428",
+        "gitBlob": "3315d1cdfb015c93db7e20eb02e1ed41937b693b",
+        "previousSha256": "0e58a3c0abacbfb0b542014ed574feb33d37d9df163f64fadde6d80b7953f368",
+        "previousGitBlob": "811c2236c17cc5caf2b535dd74bfe6685797f0c3",
+        "delta": "Two exact trailing i18n-ignore comments on opaque original #891 data classifications; all algorithm bytes otherwise equal frozen predecessor."
+      },
+      "formula-columns.js": {
+        "path": "public/formula-columns.js",
+        "sha256": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
+        "gitBlob": "d357c208a70b6a936540f19b51608bee6bf49f32"
+      },
+      "formula-engine.js": {
+        "path": "public/formula-engine.js",
+        "sha256": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+        "gitBlob": "6111a8ba5bf0e4dc4659132c0a091f045b5d535c"
+      },
+      "function-extractor.cjs": {
+        "path": "tests/helpers/app-main-functions.js",
+        "sha256": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+        "gitBlob": "fb1d0779e464787ddd02100c0e867102c2ecd25d"
+      },
+      "json-dates.cjs": {
+        "path": "server/lib/json-dates.js",
+        "sha256": "d312f88ce70b772a0f5676a149e8cab7dec21908aa923ab000d2691b21d6e070",
+        "gitBlob": "eb7823eeb32fe10bc98eeda09cebdada43600c32"
+      },
+      "projection-view-core.js": {
+        "path": "server/lib/projection-view-core.js",
+        "sha256": "4eae98d0c2f4926f7404f61d50e51b3e1edcfd01fba4ca43e8f758f4f03bb835",
+        "gitBlob": "e678fc64f39d455ed68b9bdca4d84e86fe186a21"
+      }
+    },
+    "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+  },
+  "tests/fixtures/orders-config-barriers-pins.json": {
+    "revision": "2ce7eda8 plus reviewed profile/storage gate delta",
+    "files": {
+      "public/app-main.js": "cda42945e7ef61aed6290bf4beff16fdd3643141bc57e2c6578c3da7087673ee",
+      "public/formula-columns.js": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
+      "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
+      "public/user-storage.js": "b924316165494261b584b967c983ebcb238869a00274880cc92261783c6e90ee",
+      "public/preset-store.js": "06ec4dc511c2b29ecf5c1d61b43ecc859904ef15b9b817fce23444d0f0a92ff9",
+      "public/preset-share.js": "afe65bb80084da510c98883c322a48806180e441372fe101de610ca464a63742",
+      "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1",
+      "tests/orders-full-consumer-gates.test.js": "91097e57d1e464bd72f0b430bb36d85bb054d2db1775d671e342b41e1e7b9900",
+      "tests/formula-columns-rename-assistant-v7175.test.js": "8b47d52103e57d57ab119fb4ddb3d7be685bb31e509feea0ccad572f76dc4c6d",
+      "tests/user-storage-isolation.test.js": "0db954dbaa89623162ca6113671bbbd15c5181cbd11eb3276d19869507f3d60c"
+    },
+    "protectedBaselineSha256": "3201e3e29bbd6f0c139931f6df6fb379dd645dcfb641138ee1fbd87fc73695ab",
+    "baselineSource": "7db9cbce871ebf6202e3584b82548a7c21492a82bc3fca2f77d1904557500f6f",
+    "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+  },
+  "tests/fixtures/profile-rejection-pins.json": {
+    "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
+    "files": {
+      "public/app-main.js": "cda42945e7ef61aed6290bf4beff16fdd3643141bc57e2c6578c3da7087673ee",
+      "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1"
+    },
+    "baselineSwitchSha256": "487734b754aea980a95a1b785c7b1fb3176cd656f8933f39667dbf78ef1269df",
+    "outsideSwitchSha256": "0ff6edb6f88caf7001a74a96ac8af657f56d1afc1a4b30e9032ad6b676822d57",
+    "beforeAppSha256": "148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c",
+    "currentSwitchSha256": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2",
+    "lifecycleDeltaProof": "docs/performance-program/phase-6a/source-retirement-integration-20261108/source-pin-review.json",
+    "configurationDeltaProof": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/source-pin-review.json",
+    "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+  },
+  "tests/fixtures/compute-module-schema/source-pins.json": {
+    "status": "local-adopted-tests-not-final-acceptance",
+    "sourceCommit": "f0766e544bec6a2a578f0a64adf1d70a8ce0c01d",
+    "sourceRepository": "/workspace/buyerlog-post-main-acceptance",
+    "runtimeAppRoot": "resources/app",
+    "computeOriginalBlob": "6ede5dc0b8c69dad3c830543dfb07509f30eb713",
+    "frozenSchemaSource": "/tmp/buyerlog-phase6a-own-module-schema/candidate-v1/frozen/module-projection-schema.js",
+    "frozenSchemaSha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+    "runtimeBlobs": {
+      "server/lib/compute-tasks.js": "fffa068554c68d3a12009ce3d5d1938ac289ae9f",
+      "server/lib/parse.js": "bf50021755c1bb18783bddf940f844ff82838133",
+      "server/lib/compute-access.js": "a6394d9e645da5d13b76ac2c9b7f0d988ad69dea",
+      "server/lib/horizon-fields.js": "8651a13c8c3a643fb401c83f4307809f14298cd8",
+      "server/lib/collection-catalog.js": "8fc507259c99209fad8bdc26a81292416d1441d8",
+      "server/lib/json-dates.js": "eb7823eeb32fe10bc98eeda09cebdada43600c32",
+      "server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
+      "public/canonical-fields.js": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
+      "public/canonical-module-bindings.js": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5",
+      "public/app-main.js": "4c16e77fd8f16e7a43b86b1137a7b31a8589af54"
+    },
+    "nativeCasesPrepared": 18,
+    "executedByPreparingAgent": {
+      "tests": false,
+      "syntax": false,
+      "moduleLoad": false,
+      "browser": false,
+      "benchmark": false
+    },
+    "productionWrites": false,
+    "workerServerCacheClientWiring": false,
+    "adoptionNote": "Only compute optional callback added; app-main differences are full-before-use gates. Actual syncCpModelColumns must remain exact f076; root extraction proof archived separately. Price-source loader stays in its existing branch, followed by the new full barrier; real behavioral tests retained.",
+    "runtimeSchemaSha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390",
+    "frozenSchemaFixture": "tests/fixtures/compute-module-schema/module-projection-schema-before-wire.js",
+    "appSourceDeltaProof": "docs/performance-program/phase-6a/foundation-regression-a31f8360-20261108/schema-app-source-proof.json",
+    "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
+  }
+}

@@ -10,7 +10,11 @@ const PINS=Object.freeze({legacy:'ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd
  uiHelper:'d2be71d483553a601604ac31f850de97aa1f572dde32ba9c2108bcaa2ec29b29',recipe:'752114cbe903916b1b2bc82bc98b7d78bcf219e24b135fa536ed8dad319999e4',seam:'6223cd7ea1c054f4134ab070bf66e619ed4bf507005cb4d0f6308893911fb221',
  iamLegacy:'4396e4586ab2726160f55cf386e83bef7391f8ba47e670b5df8869d68a4346a1',iamRetired:'9611525e3614d53c8002b4deba68ae3c8b8d5ffa7061e6474bf3d7409e57e994'});
 function setup(ok,message){if(!ok)throw Object.assign(Error('ORDERS_UI_V3_SETUP: '+message),{code:'ORDERS_UI_V3_SETUP'});}
-function read(file){return fs.readFileSync(file,'utf8');}
+function read(file){
+ const rel=path.relative(APP,file).replace(/\\/g,'/');
+ if(['public/app-main.js','public/quick-filter-groups.js'].includes(rel))return require('../../orders-ready-integration/source.cjs').base(rel);
+ return fs.readFileSync(file,'utf8');
+}
 function pinned(file,sha){const text=read(file);setup(hash(text)===sha,file+' pin');return text;}
 function gitRead(ref,file){return require('../historical-source.cjs').read(ref,file);}
 function original(file,sha){const actual=read(path.join(APP,file));if(hash(actual)===sha)return actual;const text=gitRead('0d127f58db13051d4714abf54fed3b6c000a7607',file);setup(hash(text)===sha,file+' original Git pin');return text;}

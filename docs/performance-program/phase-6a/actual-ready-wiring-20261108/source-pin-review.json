@@ -1,0 +1,26 @@
+{
+  "baseSha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+  "actualSha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+  "baseBlob": "3bc34eca6187d13f712d09df693fa5d80d18310a",
+  "actualBlob": "9947d0934ce52427d3554ffad9310b13875744e1",
+  "completeReverse": true,
+  "protectedFunctionBodiesUnchanged": [
+    "switchTab",
+    "loadFromServer",
+    "applyLicensorMerges",
+    "applyPricingRulesToLoadedRows",
+    "syncPricingRulesToAllLoadedViews",
+    "cpEvaluateAll",
+    "syncUnifiedPrioritiesForTable",
+    "normalizeCPDates",
+    "filteredOrders",
+    "renderOrdersNow"
+  ],
+  "activation": false,
+  "recipe": "resources/app/tests/fixtures/orders-ready-integration/integration-edits.json",
+  "oldUiAssertionPolicy": "exact reverse later integration layer before original UI component assertions; new actual whole-loader and consumer tests execute current functions",
+  "initialCandidateSha256": "cda42945e7ef61aed6290bf4beff16fdd3643141bc57e2c6578c3da7087673ee",
+  "bootstrapLeaseBeforePublishingRuntime": true,
+  "beforeRetryGuardSha256": "8325c7ecb2fcaed21e66eeda4cc077a486a08fd89696bdff2259231fa65a4da6",
+  "failedPrivatePreparationClosesFurtherFiniteAttempts": true
+}

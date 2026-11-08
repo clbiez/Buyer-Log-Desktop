@@ -80,7 +80,18 @@
       };
     } catch (_) { return { hidden: [], extra: [] }; }
   }
+  function requireFullOrdersConfig(moduleKey) {
+    if(moduleKey!=='orders')return;
+    const guard=window.BLOrdersRequireFullSynchronousRead;
+    if(typeof guard==='function'){guard();return;}
+    // These flags only deny use when the real root capability is missing.
+    // They never authorize promotion, access, or a cached parent.
+    if(window.BLOrdersFiniteLifecycleRequired===true||
+        (typeof state!=='undefined'&&state.orders&&state.orders.projectionProfile==='thin'))
+      throw Object.assign(new Error(T('Sipariş verisi veya seçim değişti. İşlemi tekrar deneyin.','Orders data or selection changed. Try the action again.')),{code:'ORDERS_FULL_STALE'});
+  }
   function saveConfig(moduleKey, next) {
+    requireFullOrdersConfig(moduleKey);
     const value = JSON.stringify({ hidden: next.hidden || [], extra: (next.extra || []).slice(0, MAX_EXTRA) });
     try {
       if (window.BLStorage) BLStorage.setItem(storageKey(moduleKey), value);
@@ -213,6 +224,18 @@
   function onKey(event) { if (event.key === 'Escape') { event.preventDefault(); close(); } }
 
   function open(moduleKey, rerender) {
+    if(!MODULES[moduleKey])return;
+    try{requireFullOrdersConfig(moduleKey);}
+    catch(error){
+      if(error?.code!=='ORDERS_FULL_REQUIRED')throw error;
+      if(typeof window.BLOrdersUiChange!=='function')throw error;
+      return window.BLOrdersUiChange('orders','orders.quick.config.open','orders.quick.config.open',
+        ()=>{const before=modal;return ()=>modal===before;},
+        ()=>{requireFullOrdersConfig(moduleKey);return openFull(moduleKey,rerender);});
+    }
+    return openFull(moduleKey,rerender);
+  }
+  function openFull(moduleKey, rerender) {
     if (!MODULES[moduleKey]) return;
     close();
     const cfg = config(moduleKey);

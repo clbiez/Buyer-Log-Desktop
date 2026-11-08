@@ -1,0 +1,57 @@
+{
+  "productionAdopted": false,
+  "results": [
+    {
+      "mode": "note-baseline",
+      "exitCode": 1,
+      "signal": null,
+      "summary": [
+        "# tests 1",
+        "# pass 0",
+        "# fail 1",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "6677c2f6af03ab680e2bf70e981afab9f4e21a2c23d7af9d34b9b5da69d5cce7"
+    },
+    {
+      "mode": "note-candidate",
+      "exitCode": 0,
+      "signal": null,
+      "summary": [
+        "# tests 11",
+        "# pass 11",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "681b35371e35acf5046b3affb39a63254cc6b0850d40cbf86a7add9d55f3622d"
+    },
+    {
+      "mode": "source-baseline",
+      "exitCode": 1,
+      "signal": null,
+      "summary": [
+        "# tests 1",
+        "# pass 0",
+        "# fail 1",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "63c55c2b29260847a57877a497ec9d19f9f3cfa2a58bfeb2856103a418203781"
+    },
+    {
+      "mode": "source-candidate",
+      "exitCode": 0,
+      "signal": null,
+      "summary": [
+        "# tests 2",
+        "# pass 2",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "94612ada872684d3766e02be0e4c2dfa0013a62ff3c808e4ad9a62e1cfc6d525"
+    }
+  ]
+}

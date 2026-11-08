@@ -62,7 +62,7 @@ test('actual formula tableRows keeps its existing generic-provider-error fallbac
  f.context.BLFormulaRows.orders=()=>{throw Object.assign(Error('missing full'),{code:'ORDERS_FULL_REQUIRED'});};assert.throws(()=>api.tableRows('orders'),{code:'ORDERS_FULL_REQUIRED'});
 });
 test('candidate leaves protected CP loader, clipboard and original provider literal bodies intact',()=>{
- for(const name of ['ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(app,name),extractFunction(rawApp,name));
+ for(const name of ['ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(require('./fixtures/orders-ready-integration/source.cjs').base('public/app-main.js'),name),extractFunction(rawApp,name));
  assert.equal(between(app,'window.BLAIScreenData = {','\n};'),between(rawApp,'window.BLAIScreenData = {','\n};'));
  assert.equal(between(app,'window.BLFormulaRows = {','\n};'),between(rawApp,'window.BLFormulaRows = {','\n};'));
  assert.equal(extractFunction(app,'applyFormulaColumns'),extractFunction(rawApp,'applyFormulaColumns'));

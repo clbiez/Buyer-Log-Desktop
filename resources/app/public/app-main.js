@@ -2180,8 +2180,260 @@ async function fetchProjectionWithFallback(module,fallbackUrl){
   if(res.status===404)res=await fetch(fallbackUrl,{cache:'no-store'});
   return parseProjectionResponse(module,generation,res);
 }
+// Public activation remains OFF until model/import action closure and final native/browser acceptance.
+const ORDERS_FINITE_READY_ENABLED=false;
+let _ordersReadyProjectionLoader=null,_ordersReadyRuntime=null,_ordersReadyFeaturePromise=null;
+function ordersReadyNonce(){return crypto.randomUUID();}
+async function ordersReadySha256Bytes(bytes){
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  return [...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join('');
+}
+async function ensureOrdersReadyProjectionRuntime(lease){
+  if(!ORDERS_FINITE_READY_ENABLED)return null;
+  if(_ordersReadyRuntime)return _ordersReadyRuntime;
+  if(!_ordersReadyFeaturePromise)_ordersReadyFeaturePromise=(async()=>{
+    await window.BLPerf.ensureFeature('ordersProjection');
+    if(!ordersReadyLoadLeaseCurrent(lease))throw ordersFullActionError('ORDERS_FULL_STALE');
+    const inventory=window.BLProjectionInventoryContract;
+    const compiler=window.BLOrdersFiniteClosure.createOrdersFiniteClosure({canonical:window.BLCanonicalFields,
+      formulaEngine:window.BLFormulaEngine,formulaColumns:window.BLFormulaColumns,
+      dependencyPlan:window.BLProjectionDependencyPlan,inventory,inventoryRef:inventory.ref});
+    const client=window.BLOrdersProjectionClient.create({finiteApi:window.BLOrdersFiniteClosure,compiler,
+      schemaApi:window.BLModuleProjectionSchema,formulaColumns:window.BLFormulaColumns,readCurrent:captureOrdersReadyInputs,
+      captureCold:captureOrdersColdEligibility,waitCold:waitOrdersColdEligibility,
+      settleOnFull:async()=>{throw ordersFullActionError('ORDERS_FULL_STALE');},
+      sha256:value=>ordersReadySha256Bytes(new TextEncoder().encode(value))});
+    const ownedJson=window.BLOrdersOwnedJson.create({promotionApi:window.BLOrdersFullPromotion,sha256Bytes:ordersReadySha256Bytes});
+    const runtime=Object.freeze({client,ownedJson,readMetadata:(...args)=>ownedJson.readSchema(...args)});
+    const loader=window.BLOrdersReadyLoad.create({eligible:ordersReadyFirstSliceEligible,captureLease:captureOrdersReadyLoadLease,
+      isLeaseCurrent:ordersReadyLoadLeaseCurrent,runtime:async()=>runtime,fetch:(...args)=>fetch(...args),nonce:ordersReadyNonce});
+    // Install the real lifecycle capability before any prospective view. This
+    // deny marker never replaces server authority or owned receipt validation.
+    window.BLOrdersFiniteLifecycleRequired=true;_ordersProjectionClient=client;
+    _ordersReadyProjectionLoader=loader;_ordersReadyRuntime=runtime;return runtime;
+  })().catch(error=>{_ordersReadyFeaturePromise=null;throw error;});
+  return _ordersReadyFeaturePromise;
+}
+function captureOrdersFiniteInputs(){
+  const fail=()=>{throw Object.assign(Error('UNREADY_CLIENT'),{code:'UNREADY_CLIENT'});};
+  const actor=state.currentUser&&state.currentUser.id,other=window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id;
+  if(actor==null||String(actor)!==String(other)||window.BLCanAccessArea?.('orders')!==true
+    ||window.BL_CP_SOURCE_FILTER_REQUIRED!==false||window.BL_HAS_CACHED_MODEL_DATA!==true||!coreFilterAutoReady)fail();
+  // No row reads, inferred horizons, sample rows, labels-as-scope or CP build.
+  // The actual sourceUserId(profile) and guard.stamp(profile) both use profile.id.
+  const field=(value,key)=>{
+    if(!value||![Object.prototype,null].includes(Object.getPrototypeOf(value)))fail();
+    const d=Object.getOwnPropertyDescriptor(value,key);if(!d||!Object.prototype.hasOwnProperty.call(d,'value'))fail();return d.value;
+  };
+  const data=(value,seen=new WeakSet(),depth=0)=>{
+    if(depth>16)fail();
+    if(value===null||typeof value==='string'||typeof value==='boolean'||(typeof value==='number'&&Number.isFinite(value)))return value;
+    if(!value||typeof value!=='object'||seen.has(value))fail();seen.add(value);
+    try{
+      if(value instanceof Set){if(value.size>4096)fail();return [...value].map(v=>data(v,seen,depth+1));}
+      if(Array.isArray(value)){
+        if(value.length>4096||Reflect.ownKeys(value).length!==value.length+1)fail();
+        const out=[];for(let i=0;i<value.length;i++){
+          const d=Object.getOwnPropertyDescriptor(value,String(i));if(!d||!d.enumerable||!Object.prototype.hasOwnProperty.call(d,'value'))fail();
+          out.push(data(d.value,seen,depth+1));}return out;
+      }
+      if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))fail();
+      const out={};for(const key of Reflect.ownKeys(value)){if(typeof key!=='string')fail();const d=Object.getOwnPropertyDescriptor(value,key);
+        if(!d.enumerable||!Object.prototype.hasOwnProperty.call(d,'value'))fail();
+        Object.defineProperty(out,key,{value:data(d.value,seen,depth+1),enumerable:true});}return out;
+    }finally{seen.delete(value);}
+  };
+  const controls={};
+  for(const id of ['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason']){
+    const el=document.getElementById(id);if(!el||typeof el.value!=='string')fail();controls[id]=el.value;
+  }
+  if(!Array.isArray(ORDERS_COLS)||!Array.isArray(CP_MODEL_COLUMN_DEFS)||!(colmgr.orders.hidden instanceof Set))fail();
+  const columns=ORDERS_COLS.map(c=>{
+    const k=field(c,'k'),label=field(c,'label'),out={k,label};
+    if(Object.prototype.hasOwnProperty.call(c,'modelCustom')&&field(c,'modelCustom')===true){out.modelCustom=true;out.modelColumnId=field(c,'modelColumnId');}
+    return out;
+  });
+  const bucket=state.colFilters.orders;if(!bucket||![Object.prototype,null].includes(Object.getPrototypeOf(bucket)))fail();
+  const filterKeys=[...new Set([...Object.keys(bucket),...CP_SEARCH_KEYS,...ORDERS_MIRROR_COLS,
+    ...Object.values(ORDERS_DIM_META).map(meta=>meta.col),'Country','License','Active/Inactive','_id'])];
+  const bindings=Object.keys(window.BLCanonicalFields.fields).map(id=>{
+    const b=window.BLCanonicalFields.bindingFor('orders',id);return b?{id,semantic:b.semantic,keys:[...b.keys]}:{id};
+  });
+  return {actorId:String(actor),ownerId:String(actor),allowed:true,hydrated:true,columns,
+    modelDefinitions:data(CP_MODEL_COLUMN_DEFS),hiddenKeys:[...colmgr.orders.hidden],filterKeys,
+    sortKeys:state.ordersSort.key==null?[]:[state.ordersSort.key],
+    // Current pricing/transit/normalizer consumers use native/canonical keys.
+    // The compiler keeps ALL unknown/native keys independently of these lists.
+    ruleKeys:['OPD','Country','Season','Licensor','License','FOB ($)','Supp. FOB'],operationKeys:[],
+    settings:data({controls,filters:bucket,sort:state.ordersSort,check:state.checkFilter.orders,quickActive:state.ordersQuickActive,
+      quickExf:state.ordersQuickExf,dims:ordersDimFilters,dimMeta:ORDERS_DIM_META,searchKeys:CP_SEARCH_KEYS,mirrorKeys:ORDERS_MIRROR_COLS,
+      selection:state.ordersSelected,order:colmgr.orders.order,partial:partialViewEnabled('orders'),bindings,
+      pricing:state.overrides.pricingRules,transit:state.overrides.transitRules,nonDtr:state.overrides.nonDtrManufacturers,
+      multipliers:state.overrides.landedMultipliers,freight:state.overrides.freightRates||null,
+      modelScopes:state.modelScopes,modelHorizons:state.modelHorizons,storeRevisions:state.storeRevisions,
+      sourceFilterStatus:window.BL_CP_SOURCE_FILTER_STATUS||null}),
+    // Do not call definitions() alone: it converts unknown storage to [].
+    formulaStorage:BLStorage.getItem('bl.formulaColumns.orders.v1')};
+}
+function captureOrdersColdEligibility(){
+  // Actual user-storage migration namespaces, not another formula registry.
+  // Scope/audit only the current account, its supported Moderator aliases and
+  // the old device-wide Orders key. Other accounts are neither read nor copied.
+  const fail=()=>{throw Object.assign(Error('UNKNOWN_FORMULA_STORAGE'),{code:'UNKNOWN_FORMULA_STORAGE'});};
+  const storage=window.BLStorage,native=storage&&storage.native,formula=window.BLFormulaColumns;
+  if(!storage||!native||typeof storage.actualKey!=='function'||!formula||typeof formula.storageKey!=='function'
+    ||formula.storageKey('orders')!=='bl.formulaColumns.orders.v1'||typeof native.getItem!=='function'||typeof native.key!=='function')fail();
+  if(!['interactive','complete'].includes(document.readyState))fail();
+  if(document.getElementById('_formulaColumnModal')||document.getElementById('_cpModelColumnModal')||cpLoadPromise)fail();
+  const id=String(state.currentUser&&state.currentUser.id||''),uid=id.replace(/[^A-Za-z0-9_-]/g,'_');if(!id||uid==='anonymous')fail();
+  const logical='bl.formulaColumns.orders.v1',scoped='bl.user.'+uid+'.';
+  if(storage.actualKey(logical)!==scoped+logical)fail();
+  const roots=['',scoped];if(uid==='moderator')roots.push('bl.user.gokberk.','bl.user.Gokberk.','bl.user.g_kberk.','bl.user.G_kberk.');
+  const belongs=key=>roots.some(root=>key===root+'bl.formulaColumns.orders'||key.startsWith(root+'bl.formulaColumns.orders.'));
+  if(!Number.isSafeInteger(native.length)||native.length<0||native.length>4096)fail();
+  const names=new Set([logical,scoped+logical]);for(const root of roots)names.add(root+logical);
+  for(let i=0;i<native.length;i++){const key=native.key(i);if(typeof key!=='string')fail();if(belongs(key))names.add(key);}
+  const reads=[{source:'effective-current',key:logical,raw:storage.getItem(logical)}];
+  for(const key of [...names].sort())reads.push({source:'native-current-or-legacy',key,raw:native.getItem(key)});
+  // getItem includes inherited in-memory defaults. Check the persisted raw
+  // defaults too: a parse failure in user-storage must not look like absence.
+  const roleKey=scoped+'__roleWorkspaceDefaults.v1',raw=native.getItem(roleKey);
+  if(raw!==null){const value=JSON.parse(raw);if(!value||Array.isArray(value)||typeof value!=='object')fail();
+    for(const key of Object.keys(value))if(key==='bl.formulaColumns.orders'||key.startsWith('bl.formulaColumns.orders.')){
+      const entry=value[key];if(!entry||typeof entry!=='object'||Array.isArray(entry)||!Object.prototype.hasOwnProperty.call(entry,'value'))fail();
+      reads.push({source:'role-default-current-or-legacy',key,raw:entry.value});
+    }
+  }
+  return {reads};
+}
+async function waitOrdersColdEligibility(){
+  // This awaits the real current hydration, not a caller boolean. Existing
+  // BLStorage's beforeApply full barrier still governs any later hydration.
+  if(!authHydrationPromise)throw Object.assign(Error('UNREADY_CLIENT'),{code:'UNREADY_CLIENT'});
+  const result=await authHydrationPromise;
+  if(!result||cpLoadPromise)throw Object.assign(Error('UNREADY_CLIENT'),{code:'UNREADY_CLIENT'});
+}
+function ordersHasPotentialReadyModelKey(){
+  // App-local cheap decline; no finite script import, schema request, row scan
+  // or #891 inventory read. Passing is NOT a producer-schema/authority proof.
+  try{
+    if(!Array.isArray(ORDERS_COLS)||!Array.isArray(CP_MODEL_COLUMN_DEFS)||!(colmgr.orders.hidden instanceof Set))return false;
+    const value=(object,key)=>{const d=object&&Object.getOwnPropertyDescriptor(object,key);return d&&Object.prototype.hasOwnProperty.call(d,'value')?d.value:undefined;};
+    return ORDERS_COLS.some(column=>{
+      const key=value(column,'k'),id=value(column,'modelColumnId');
+      return value(column,'modelCustom')===true&&typeof key==='string'&&key.startsWith('__CPX_')&&colmgr.orders.hidden.has(key)
+        &&CP_MODEL_COLUMN_DEFS.some(def=>value(def,'header')===key&&value(def,'id')===id);
+    });
+  }catch(_){return false;}
+}
+function captureOrdersQuickFilterEvidence(){
+  const fail=()=>{throw Object.assign(Error('UNKNOWN_ORDERS_QFG'),{code:'UNKNOWN_ORDERS_QFG'});};
+  const storage=window.BLStorage,native=storage&&storage.native,qfg=window.BLQuickFilterGroups;
+  if(!storage||!native||typeof storage.actualKey!=='function'||typeof native.getItem!=='function'
+    ||typeof native.key!=='function'||typeof qfg?.config!=='function')fail();
+  const id=String(state.currentUser&&state.currentUser.id||''),uid=id.replace(/[^A-Za-z0-9_-]/g,'_');
+  if(!id||uid==='anonymous')fail();
+  const logical='bl.quickFilterGroups.orders.v1',scoped='bl.user.'+uid+'.';
+  if(storage.actualKey(logical)!==scoped+logical)fail();
+  const roots=['',scoped];if(uid==='moderator')roots.push('bl.user.gokberk.','bl.user.Gokberk.','bl.user.g_kberk.','bl.user.G_kberk.');
+  const belongs=key=>roots.some(root=>key===root+'bl.quickFilterGroups.orders'||key.startsWith(root+'bl.quickFilterGroups.orders.'));
+  if(!Number.isSafeInteger(native.length)||native.length<0||native.length>4096)fail();
+  const names=new Set(roots.map(root=>root+logical));
+  for(let i=0;i<native.length;i++){const key=native.key(i);if(typeof key!=='string')fail();if(belongs(key))names.add(key);}
+  const reads=[{source:'effective-current',key:logical,raw:storage.getItem(logical)}];
+  for(const key of [...names].sort())reads.push({source:'native-current-or-legacy',key,raw:native.getItem(key)});
+  const defaults=native.getItem(scoped+'__roleWorkspaceDefaults.v1');
+  if(defaults!==null){
+    if(typeof defaults!=='string'||defaults.length>65536)fail();
+    const parsed=JSON.parse(defaults);if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')fail();
+    for(const key of Object.keys(parsed))if(key==='bl.quickFilterGroups.orders'||key.startsWith('bl.quickFilterGroups.orders.')){
+      const entry=parsed[key];if(!entry||Array.isArray(entry)||typeof entry!=='object'||!Object.prototype.hasOwnProperty.call(entry,'value'))fail();
+      reads.push({source:'role-default-current-or-legacy',key,raw:entry.value});
+    }
+  }
+  for(const item of reads){
+    if(item.raw===null)continue; // Exact real QFG absence means its empty default.
+    if(typeof item.raw!=='string'||item.raw.length>65536)fail();
+    const parsed=JSON.parse(item.raw);
+    // Unlike QFG config(), malformed/missing extra never becomes a silent [].
+    if(!parsed||Array.isArray(parsed)||typeof parsed!=='object'||!Array.isArray(parsed.extra)||parsed.extra.length!==0
+      ||!Array.isArray(parsed.hidden)||parsed.hidden.some(value=>typeof value!=='string')
+      ||Object.keys(parsed).some(key=>key!=='hidden'&&key!=='extra'))fail();
+  }
+  const config=qfg.config('orders');
+  if(!config||!Array.isArray(config.extra)||config.extra.length!==0||!Array.isArray(config.hidden)
+    ||config.hidden.some(value=>typeof value!=='string'))fail();
+  const result={config,reads};if(JSON.stringify(result).length>65536)fail();return result;
+}
+function captureOrdersReadyInputs(){
+  const captured=captureOrdersFiniteInputs(),qfg=captureOrdersQuickFilterEvidence();
+  captured.operationKeys=[...qfg.config.extra]; // First scope requires exactly [].
+  captured.settings.quickFilterGroups=qfg;
+  captured.settings.lifecycle={sourceEpoch:_ordersProjectionSourceEpoch,sessionEpoch:_ordersUiSessionEpoch,page:activeProfilePage()};
+  return captured;
+}
+function ordersReadyFirstSliceEligible(){
+  try{
+    if(state.orders||currentActiveTab()!=='orders'||ordersProjectionMustLoadFull()||!ordersHasPotentialReadyModelKey())return false;
+    if(['_quickFilterGroups','_columnNameModal','_cpModelColumnModal','_formulaColumnModal'].some(id=>document.getElementById(id)))return false;
+    if(ORDERS_COLS.some(column=>column.noteCustom||column.personalNote||column.checklistSupplierColumn||column.formulaCustom))return false;
+    const input=captureOrdersReadyInputs(),s=input.settings;
+    return state.ordersSelected instanceof Set&&state.ordersSelected.size===0&&s.partial===false
+      &&Object.values(s.controls).every(value=>value==='')&&Object.keys(s.filters).length===0
+      &&s.sort.key==null&&s.check===''&&s.quickActive.length===0&&s.quickExf===''
+      &&Object.keys(s.dims).length===0;
+  }catch(_){return false;}
+}
+function captureOrdersReadyLoadLease(){
+  const flight=_ordersLoadFlight;
+  if(!flight||!ordersLoadFlightCurrent(flight)||window.BLCanAccessArea?.('orders')!==true)throw ordersFullActionError('ORDERS_FULL_STALE');
+  return {flight,actorId:String(state.currentUser?.id),contextId:String(window.BL_USER_CONTEXT?.id),page:activeProfilePage()};
+}
+function ordersReadyLoadLeaseCurrent(lease){
+  return Boolean(lease&&ordersLoadFlightCurrent(lease.flight)&&lease.actorId===String(state.currentUser?.id)
+    &&lease.contextId===String(window.BL_USER_CONTEXT?.id)&&lease.page===activeProfilePage()&&window.BLCanAccessArea?.('orders')===true);
+}
+function captureOrdersReadySource(accepted){
+  const profile=state.currentUser,userContext=window.BL_USER_CONTEXT;
+  const epoch=_ordersProjectionSourceEpoch,sessionEpoch=_ordersUiSessionEpoch,parent=accepted.parent;
+  const stable=()=>{
+    const input=captureOrdersReadyInputs(),s={...input.settings};
+    if(s.lifecycle){s.lifecycle={...s.lifecycle};delete s.lifecycle.page;}
+    for(const key of ['controls','filters','sort','check','quickActive','quickExf','dims','selection','partial'])delete s[key];
+    return JSON.stringify({columns:input.columns,modelDefinitions:input.modelDefinitions,hiddenKeys:input.hiddenKeys,
+      ruleKeys:input.ruleKeys,operationKeys:input.operationKeys,formulaStorage:input.formulaStorage,settings:s});
+  };
+  const config=stable();
+  return ()=>{
+    if(!parent||epoch!==_ordersProjectionSourceEpoch||sessionEpoch!==_ordersUiSessionEpoch
+      ||profile!==state.currentUser||userContext!==window.BL_USER_CONTEXT
+      ||String(state.currentUser?.id)!==parent.token.actorId||String(window.BL_USER_CONTEXT?.id)!==parent.token.actorId
+      ||window.BLCanAccessArea?.('orders')!==true||stable()!==config)throw ordersFullActionError('ORDERS_FULL_STALE');
+    return Object.freeze({allowed:true,actorId:parent.token.actorId,ownerId:parent.token.ownerId,sourceEpoch:epoch,sessionEpoch,
+      sourceId:parent.token.sourceProjectionKey,generation:parent.token.sourceGeneration,sourceRevision:parent.token.sourceRevision,
+      moduleInputKey:parent.token.moduleInputKey,accessHash:parent.token.accessHash,guardStamp:parent.guardStamp,
+      fullGzipChecksum:parent.fullGzipChecksum,rawJsonSha256:parent.fullJsonSha256,planHash:parent.planHash});
+  };
+}
 async function fetchOrdersProjection(options={}){
   const generation=++projectionRequestGeneration.orders;
+  if(typeof ORDERS_FINITE_READY_ENABLED!=='undefined'&&ORDERS_FINITE_READY_ENABLED&&options.fullOnly!==true
+      &&!ordersProjectionMustLoadFull()&&ordersReadyFirstSliceEligible()){
+    const lease=captureOrdersReadyLoadLease();
+    try{await ensureOrdersReadyProjectionRuntime(lease);}
+    catch(error){if(!ordersReadyLoadLeaseCurrent(lease))return {cancelled:true};}
+    if(!ordersReadyLoadLeaseCurrent(lease)||generation!==projectionRequestGeneration.orders)return {cancelled:true};
+    if(_ordersReadyProjectionLoader){
+      const ordinary=async()=>{
+  let res=await fetch('/api/page-projection/orders',{cache:'no-store',signal:options.signal});
+  if(res.status===404)res=await fetch('/api/data/orders',{cache:'no-store',signal:options.signal});
+  return parseProjectionResponse('orders',generation,res);
+};
+      const result=await _ordersReadyProjectionLoader.load(options,ordinary);
+      if(generation!==projectionRequestGeneration.orders)return {cancelled:true};
+      return result.cancelled?result:{...result,generation};
+    }
+  }
   let res=await fetch('/api/page-projection/orders',{cache:'no-store',signal:options.signal});
   if(res.status===404)res=await fetch('/api/data/orders',{cache:'no-store',signal:options.signal});
   return parseProjectionResponse('orders',generation,res);
@@ -2250,10 +2502,12 @@ async function applyCpSharedEditAccess(rows){
     return true;
   }catch(error){console.warn('CP shared edit access:',error);return false;}
 }
-async function refreshCpStartupImageRegistry(rows){
+async function refreshCpStartupImageRegistry(rows,assertCurrent){
   const response=await fetch('/api/model-images/registry/cp',{cache:'no-store'});
   if(!response.ok)throw new Error(`CP model image registry HTTP ${response.status}`);
-  return applyCpStartupImageRegistry(await response.json(),rows);
+  const payload=await response.json();
+  if(assertCurrent)assertCurrent();
+  return applyCpStartupImageRegistry(payload,rows);
 }
 
 async function ensureCpLoaded(options={}){
@@ -2262,14 +2516,27 @@ async function ensureCpLoaded(options={}){
   window.BLModulePreparation?.setStatus('cp','loading');
   if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
-  cpLoadPromise=(async()=>{
+  const intent=captureOrdersConfigurationIntent();
+  let cpGeneration=null;
+  const flight=(async()=>{
     try{
-      const result=await fetchProjectionWithFallback('cp','/api/data/cp');if(result.cancelled){window.BLModulePreparation?.setStatus('cp','pending');return false;}
+      const result=await fetchProjectionWithFallback('cp','/api/data/cp');
+      cpGeneration=result.generation;if(result.cancelled){window.BLModulePreparation?.setStatus('cp','pending');return false;}
+      const assertCurrent=()=>{
+        assertOrdersConfigurationIntent(intent);
+        if(ordersConfigurationIntentInvolved(intent)&&cpGeneration!==projectionRequestGeneration.cp)throw ordersFullActionError('ORDERS_FULL_STALE');
+      };
+      assertCurrent();
+      if(ordersProjectionIsThin())await ensureOrdersFullForAction('orders.cp-schema-load');
+      assertCurrent();
+      _ordersRequireFullSynchronousRead();
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:[];
       reviveServerDates(rows);
       // Görünür CP satırları çizilmeden güncel yerel görsel registry'sini ve (hazır
       // önbellekten geldiyse) paylaşılan alan yetkisini paralel eşle.
-      const [registry]=await Promise.allSettled([refreshCpStartupImageRegistry(rows),applyCpSharedEditAccess(rows)]);
+      const [registry]=await Promise.allSettled([refreshCpStartupImageRegistry(rows,assertCurrent),applyCpSharedEditAccess(rows)]);
+      assertCurrent();
+      _ordersRequireFullSynchronousRead();
       if(registry.status==='rejected'){console.warn('CP model image registry:',registry.reason);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
       applyPricingRulesToLoadedRows({render:false});
@@ -2283,15 +2550,16 @@ async function ensureCpLoaded(options={}){
       scheduleOverviewRender('cp-ready');
       return true;
     }catch(err){
+      if(!ordersConfigurationIntentCurrent(intent)||(ordersConfigurationIntentInvolved(intent)&&cpGeneration!==null&&cpGeneration!==projectionRequestGeneration.cp))return false;
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
       window.BLModulePreparation?.setStatus('cp','error','CP_LOAD_FAILED');
       if(options.reason==='overview'||currentActiveTab()==='overview'){
         overviewCpLoadState='error';overviewCpLoadError=message;scheduleOverviewRender('cp-load-error');
       }
       showToast(message);return false;
-    }finally{cpLoadPromise=null;}
+    }finally{if(cpLoadPromise===flight)cpLoadPromise=null;}
   })();
-  return cpLoadPromise;
+  cpLoadPromise=flight;return flight;
 }
 async function ensureCollectionCatalogLoaded(options={}){
   if(!options.force&&collectionCatalogsReady(state.collectionCatalogs)){window.BLModulePreparation?.setStatus('koleksiyon','ready');return true;}
@@ -2336,17 +2604,36 @@ async function ensureOrdersLoaded(options={}){
   _ordersLoadFlight=flight;_ordersFiniteLoadAbort=flight.abort;
   window.BLModulePreparation?.setStatus('orders','loading');
   if(currentActiveTab()==='orders')setOrdersLoadingState(true);
+  let readyView=null,readyAttempt=false;
   flight.promise=Promise.resolve().then(async()=>{
     try{
       if(!ordersLoadFlightCurrent(flight))return false;
       const result=await fetchOrdersProjection({signal:flight.abort.signal,fullOnly:options.fullOnly===true||ordersProjectionMustLoadFull()});
       if(!ordersLoadFlightCurrent(flight))return false;
       if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
+      readyAttempt=Boolean(result.accepted);
       const data=result.payload||{};
       const rows=Array.isArray(data.rows)?data.rows:(Array.isArray(data.orders)?data.orders:[]);
-      reviveServerDates(rows);
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
-      state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
+      if(result.accepted){
+        const failPostHook=action=>{
+          try{return action();}catch(error){
+            if(_ordersFullViewControllers.has(state.orders))retireOrdersProjectionSource('orders.ready.post-hook-failed',{discardThin:true});
+            throw error;
+          }
+        };
+        const prepared=window.BLOrdersPublication.create({state,controllers:_ordersFullViewControllers,accepted:result.accepted,
+          fname:`Sunucu: ${sourceName}`,getAccepted:()=>_ordersAcceptedReceipt,setAccepted:value=>{_ordersAcceptedReceipt=value;},
+          sourceNow:captureOrdersReadySource(result.accepted),promotionApi:window.BLOrdersFullPromotion,
+          clientApi:window.BLOrdersProjectionClient,uiApi:window.BLOrdersUiCommand,fetch,
+          sha256Bytes:ordersReadySha256Bytes,nonce:ordersReadyNonce,normalizeDates:reviveServerDates,
+          afterPricing:()=>failPostHook(()=>applyPricingRulesToLoadedRows({render:false})),
+          invalidateOrders:()=>failPostHook(()=>invalidateUnifiedPriorityDecisions('orders-full-promoted',['orders']))});
+        readyView=prepared.publishReady();
+      }else{
+        reviveServerDates(rows);
+        state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
+      }
       _ordersRetiredFiniteView=null;
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
@@ -2362,6 +2649,10 @@ async function ensureOrdersLoaded(options={}){
       return true;
     }catch(err){
       if(!ordersLoadFlightCurrent(flight))return false;
+      if(readyAttempt){
+        if(readyView&&state.orders===readyView)retireOrdersProjectionSource('orders.ready.setup-failed',{discardThin:true});
+        else{_ordersColdFiniteClosed=true;_ordersProjectionClient?.invalidate();}
+      }
       const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(err&&err.message||err);
       window.BLModulePreparation?.setStatus('orders','error','ORDERS_LOAD_FAILED');
       setOrdersLoadingState(false,message);showToast(message);return false;
@@ -2420,15 +2711,18 @@ async function ensureOrdersFullForAction(reason='action'){
   }
 }
 window.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;
+window.BLOrdersRequireFullSynchronousRead=_ordersRequireFullSynchronousRead;
 /* Global Flow Map veri kaynağı. Harita CP/Orders sayfasının görünür/filtreli
    satırlarını veya son sayfa filtresini DEĞİL, kaynağın bütün veri kümesini
    (state.cp.rows / state.orders.rows) kullanır; yalnız kendi filtreleri
    daraltır. Critical, tek kanonik Unified Action Priority kodundan okunur;
    karar motoru henüz yüklenmediyse yüklendiğinde harita yeniden beslenir. */
 function globalFlowSourceRows(tableKey){
+  if(tableKey==='orders')_ordersRequireFullSynchronousRead();
   const rows=state[tableKey]&&Array.isArray(state[tableKey].rows)?state[tableKey].rows:[];
   if(rows.length&&!syncUnifiedPrioritiesForTable(tableKey)){
     Promise.resolve(window.BLPerf?.ensureFeature?.('cpAssistant')).then(()=>{
+      if(tableKey==='orders')_ordersRequireFullSynchronousRead();
       if(syncUnifiedPrioritiesForTable(tableKey))window.dispatchEvent(new CustomEvent('bl:global-flow-data-changed',{detail:{reason:'priority-ready',tables:[tableKey]}}));
     }).catch(()=>{});
   }
@@ -2438,14 +2732,28 @@ function globalFlowSourceRows(tableKey){
    kaynak filtresi zorunluyken/önbellek yokken istek atılmaz ve başarısız bir
    yükleme yalnız kullanıcı haritayı elle yenilediğinde tekrar denenir. */
 const globalFlowLoadFailed={cp:false,orders:false};
+let globalFlowOrdersFullFailure=null;
 async function globalFlowEnsure(tableKey,options){
+  if(tableKey==='orders'&&ordersProjectionIsThin()){
+    if(globalFlowOrdersFullFailure&&!(options&&options.force))throw globalFlowOrdersFullFailure;
+    const intent=captureOrdersConfigurationIntent();
+    try{
+      const rows=await ensureOrdersFullForAction('orders.global-flow');
+      assertOrdersConfigurationIntent(intent);
+      if(!state.orders||state.orders.rows!==rows)throw ordersFullActionError('ORDERS_FULL_STALE');
+      _ordersRequireFullSynchronousRead();
+      globalFlowOrdersFullFailure=null;globalFlowLoadFailed.orders=false;return true;
+    }catch(error){globalFlowOrdersFullFailure=error;throw error;}
+  }
   if(state[tableKey])return true;
   if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return false;
   if(globalFlowLoadFailed[tableKey]&&!(options&&options.force))return false;
   const ok=tableKey==='cp'
     ?(options&&options.force&&overviewCpLoadState==='error'?await ensureCpLoaded({deferRender:true,reason:'overview'}):await ensureOverviewCpDependency())
     :await ensureOrdersLoaded({deferRender:true});
-  globalFlowLoadFailed[tableKey]=!ok;return Boolean(ok);
+  globalFlowLoadFailed[tableKey]=!ok;
+  if(ok&&tableKey==='orders'&&ordersProjectionIsThin())return globalFlowEnsure(tableKey,options);
+  return Boolean(ok);
 }
 window.BLGlobalFlowDataProviders={
   cp:async options=>(await globalFlowEnsure('cp',options))?globalFlowSourceRows('cp'):[],
@@ -4186,6 +4494,7 @@ window.BLColumnGroups={ list:existingColumnGroups, placeInGroup:placeColumnInGro
 
 let CP_MODEL_COLUMN_DEFS=[];
 function syncCpModelColumns(defs){
+  _ordersRequireFullSynchronousRead();
   const clean=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.header&&d.label).map(d=>({...d}));
   // Bir önceki eşitlemedeki gruplar: sütun YALNIZ yeniyken ya da grubu
   // değiştiğinde taşınır; her eşitlemede taşımak elle sürüklenen sırayı bozardı.
@@ -4223,6 +4532,7 @@ function syncCpModelColumns(defs){
 let CP_NOTE_COLUMN_DEFS=[];
 let CP_NOTE_COLUMN_DEFS_REVISION=0;
 function syncCpNoteColumns(defs){
+  _ordersRequireFullSynchronousRead();
   CP_NOTE_COLUMN_DEFS=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.id&&d.label).map(d=>({...d}));
   const base=CP_COLS.filter(c=>!c.noteCustom&&!c.personalNote);
   const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'text',weight:12,group:canonicalColumnGroup(d.group)||'Notlar',noteCustom:true,noteColumnId:d.id}));
@@ -4237,16 +4547,60 @@ function syncCpNoteColumns(defs){
   syncOrdersColumnsFromCp();
   saveAutoTableColumnState();
 }
-async function saveCpNoteColumnDefs(nextDefs){
+// BEGIN private Orders note action guards
+// App-local private declarations, not authority or a second revision store.
+function ordersNoteActionStamp(kind){
+  try{
+    // Name-clash validation uses the actual current CP key/label catalog too.
+    const names=CP_COLS.map(column=>[column.k,column.label]);
+    if(kind==='shared')return JSON.stringify([CP_NOTE_COLUMN_DEFS_REVISION,CP_NOTE_COLUMN_DEFS,names]);
+    const notes=window.BLPersonalNoteColumns,store=window.BLStorage;
+    return JSON.stringify([notes?.definitions?.()||[],store?store.getItem('lcw.personalOrderNotes.definitions.v1'):null,names]);
+  }catch(_){return null;}
+}
+function captureOrdersNoteAction(kind){
+  return {kind,intent:captureOrdersConfigurationIntent(),profile:state.currentUser,userContext:window.BL_USER_CONTEXT,
+    actor:String(state.currentUser?.id),contextActor:String(window.BL_USER_CONTEXT?.id),page:activeProfilePage(),
+    notes:window.BLPersonalNoteColumns,store:window.BLStorage,stamp:ordersNoteActionStamp(kind)};
+}
+function assertOrdersNoteActionSource(action){
+  assertOrdersConfigurationIntent(action.intent);
+  if(action.profile!==state.currentUser||action.userContext!==window.BL_USER_CONTEXT
+    ||action.actor!==String(state.currentUser?.id)||action.contextActor!==String(window.BL_USER_CONTEXT?.id)
+    ||action.page!==activeProfilePage()||(action.kind==='personal'&&(action.notes!==window.BLPersonalNoteColumns||action.store!==window.BLStorage)))
+    throw ordersFullActionError('ORDERS_FULL_STALE');
+  _ordersRequireFullSynchronousRead();
+}
+function assertOrdersNoteAction(action){
+  assertOrdersNoteActionSource(action);
+  if(action.stamp===null||action.stamp!==ordersNoteActionStamp(action.kind))throw ordersFullActionError('ORDERS_FULL_STALE');
+}
+function acknowledgeOrdersNoteAction(action){
+  // Acknowledge only the known successful definition revision. The original
+  // profile/source/session intent is never recaptured or advanced for our write.
+  assertOrdersNoteActionSource(action);action.stamp=ordersNoteActionStamp(action.kind);
+  if(action.stamp===null)throw ordersFullActionError('ORDERS_FULL_STALE');
+}
+
+// END private Orders note action guards
+async function saveCpNoteColumnDefs(nextDefs,actionIntent=null){
+  _ordersRequireFullSynchronousRead();
+  const action=actionIntent||captureOrdersNoteAction('shared');
+  // A finite import/rollback must provide its original action; current full
+  // state alone cannot certify an externally retained definitions array.
+  if(!actionIntent&&ordersConfigurationIntentInvolved(action.intent))throw ordersFullActionError('ORDERS_FULL_STALE');
+  assertOrdersNoteAction(action);
   const previousIds=new Set(CP_NOTE_COLUMN_DEFS.map(d=>d.id));
   const res=await fetch('/api/note-columns',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(CP_NOTE_COLUMN_DEFS_REVISION||0)},body:JSON.stringify({columns:nextDefs})});
   const data=await res.json().catch(()=>({}));
+  assertOrdersNoteAction(action);
   if(!res.ok)throw new Error(data.error||res.statusText);
   CP_NOTE_COLUMN_DEFS_REVISION=Number(data.revision)||CP_NOTE_COLUMN_DEFS_REVISION;
   const savedDefs=data.columns||nextDefs,nextIds=new Set((Array.isArray(savedDefs)?savedDefs:[]).map(d=>d&&d.id).filter(Boolean));
   const removed=[...previousIds].filter(id=>!nextIds.has(id));
   if(removed.length){forgetPersistedColumnKeys('cp',removed);forgetPersistedColumnKeys('orders',removed);}
   syncCpNoteColumns(savedDefs);
+  acknowledgeOrdersNoteAction(action);
 }
 
 /* Kişisel sütunlar iş verisi değil, giriş yapan kullanıcının kendi notlarıdır.
@@ -4262,33 +4616,45 @@ function refreshPersonalOrderNoteColumns(rerenderFn){
   if(typeof rerenderFn==='function')rerenderFn();else{if(state.cp)renderCP();if(state.orders)renderOrders();}
 }
 async function addPersonalOrderNoteColumn(rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.addPersonalOrderNoteColumn','orders-schema',()=>()=>true,()=>addPersonalOrderNoteColumn(rerenderFn));
+  const action=captureOrdersNoteAction('personal');
   const notes=window.BLPersonalNoteColumns;if(!notes)return;
   const pair=await promptBilingualColumnName({title:appLang==='en'?'Add personal note column':'Kişisel not sütunu ekle',confirmLabel:appLang==='en'?'Add':'Ekle',validate:value=>cpNoteColumnNameClash(value,null)});
   if(!pair)return;
   const id='personal_note_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   try{
     const def=BLColumnNames.withDefinitionLabels({id},pair);
+    assertOrdersNoteAction(action);
     notes.setDefinitions([...notes.definitions(),def]);
+    assertOrdersNoteActionSource(action);
     refreshPersonalOrderNoteColumns(rerenderFn);
     showToast(appLang==='en'?'Private note column added. Only you can see its values.':'Kişisel not sütunu eklendi. İçeriğini yalnız siz görürsünüz.');
   }catch(err){showToast((appLang==='en'?'Personal column could not be added: ':'Kişisel sütun eklenemedi: ')+(err.message||err));}
 }
 async function renamePersonalOrderNoteColumn(id,rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.renamePersonalOrderNoteColumn','orders-schema',()=>()=>true,()=>renamePersonalOrderNoteColumn(id,rerenderFn));
+  const action=captureOrdersNoteAction('personal');
   const notes=window.BLPersonalNoteColumns,defs=notes?.definitions?.()||[];
   const def=defs.find(d=>d.id===id);if(!def)return;
   const pair=await promptBilingualColumnName({title:appLang==='en'?'Rename personal note column':'Kişisel not sütununu yeniden adlandır',confirmLabel:appLang==='en'?'Save':'Kaydet',definition:def,validate:value=>cpNoteColumnNameClash(value,id)});
   if(!pair)return;
   try{
+    assertOrdersNoteAction(action);
     notes.setDefinitions(defs.map(d=>d.id===id?BLColumnNames.withDefinitionLabels(d,pair):d));
+    assertOrdersNoteActionSource(action);
     refreshPersonalOrderNoteColumns(rerenderFn);
   }catch(err){showToast((appLang==='en'?'Could not rename private column: ':'Kişisel sütun yeniden adlandırılamadı: ')+(err.message||err));}
 }
 function removePersonalOrderNoteColumn(id,rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.removePersonalOrderNoteColumn','orders-schema',()=>()=>true,()=>removePersonalOrderNoteColumn(id,rerenderFn));
+  const action=captureOrdersNoteAction('personal');
   const notes=window.BLPersonalNoteColumns,def=notes?.definitions?.().find(d=>d.id===id);
   if(!def)return;
   if(!confirm(appLang==='en'?`Remove private note column "${def.label}" and its saved values?`:`"${def.label}" kişisel not sütunu ve kaydedilmiş notlar silinsin mi?`))return;
   try{
+    assertOrdersNoteAction(action);
     notes.removeDefinition(id);
+    assertOrdersNoteActionSource(action);
     forgetPersistedColumnKeys('cp',[id]);forgetPersistedColumnKeys('orders',[id]);
     refreshPersonalOrderNoteColumns(rerenderFn);
     showToast(appLang==='en'?'Private column removed.':'Kişisel sütun kaldırıldı.');
@@ -4326,17 +4692,23 @@ function cpNoteColumnNameClash(pair,exceptKey){
     ?(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.'):'';
 }
 async function addCpNoteColumn(rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.addCpNoteColumn','orders-schema',()=>()=>true,()=>addCpNoteColumn(rerenderFn));
+  const action=captureOrdersNoteAction('shared');
   const pair=await promptBilingualColumnName({title:appLang==='en'?'Add note column':'Not sütunu ekle',confirmLabel:appLang==='en'?'Add':'Ekle',validate:value=>cpNoteColumnNameClash(value,null)});
   if(!pair)return false;
   const id='note_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   try{
-    await saveCpNoteColumnDefs([...CP_NOTE_COLUMN_DEFS,BLColumnNames.withDefinitionLabels({id},pair)]);
+    assertOrdersNoteAction(action);
+    await saveCpNoteColumnDefs([...CP_NOTE_COLUMN_DEFS,BLColumnNames.withDefinitionLabels({id},pair)],action);
+    assertOrdersNoteAction(action);
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
     showToast(appLang==='en'?'Column added.':'Sütun eklendi.');
     return true;
   }catch(err){ showToast((appLang==='en'?'Column could not be added: ':'Sütun eklenemedi: ')+(err.message||err)); return false; }
 }
 async function renameCpNoteColumn(id,rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.renameCpNoteColumn','orders-schema',()=>()=>true,()=>renameCpNoteColumn(id,rerenderFn));
+  const action=captureOrdersNoteAction('shared');
   const def=CP_NOTE_COLUMN_DEFS.find(d=>d.id===id); if(!def)return;
   const column=CP_COLS.find(c=>c.noteCustom&&c.noteColumnId===id);
   const pair=await promptBilingualColumnName({title:appLang==='en'?'Rename note column':'Not sütununu yeniden adlandır',confirmLabel:appLang==='en'?'Save':'Kaydet',definition:def,
@@ -4345,24 +4717,31 @@ async function renameCpNoteColumn(id,rerenderFn){
   const current=BLColumnNames.definitionLabels(def);
   if(pair.en===current.en&&pair.tr===current.tr)return;
   try{
-    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.map(d=>d.id===id?BLColumnNames.withDefinitionLabels(d,pair):d));
+    assertOrdersNoteAction(action);
+    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.map(d=>d.id===id?BLColumnNames.withDefinitionLabels(d,pair):d),action);
+    assertOrdersNoteAction(action);
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
   }catch(err){ showToast((appLang==='en'?'Column could not be renamed: ':'Sütun yeniden adlandırılamadı: ')+(err.message||err)); }
 }
 async function removeCpNoteColumn(id,rerenderFn){
+  if(ordersProjectionIsThin())return window.BLOrdersUiChange('orders','orders.schema.removeCpNoteColumn','orders-schema',()=>()=>true,()=>removeCpNoteColumn(id,rerenderFn));
+  const action=captureOrdersNoteAction('shared');
   const def=CP_NOTE_COLUMN_DEFS.find(d=>d.id===id); if(!def)return;
   const question=appLang==='en'
     ?`Remove "${def.label}" from CP/Orders? Values entered in this column will be lost.`
     :`"${def.label}" CP/Siparişler'den kaldırılsın mı? Bu sütundaki değerler kaybolacak.`;
   if(!confirm(question))return;
   try{
-    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.filter(d=>d.id!==id));
+    assertOrdersNoteAction(action);
+    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.filter(d=>d.id!==id),action);
+    assertOrdersNoteAction(action);
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
     showToast(appLang==='en'?'Column removed.':'Sütun kaldırıldı.');
   }catch(err){ showToast((appLang==='en'?'Column could not be removed: ':'Sütun kaldırılamadı: ')+(err.message||err)); }
 }
 
 function syncOrdersColumnsFromCp(){
+  _ordersRequireFullSynchronousRead();
   // Siparişler tablosu CP sütunlarının kopyasıdır; ancak hesaplanan sütunlar
   // tabloya ÖZELDİR (CP'nin formülü Siparişler'e taşınmaz), bu yüzden kopyadan
   // çıkarılıp Siparişler'in kendi tanımları eklenir.
@@ -5934,8 +6313,14 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
    Artık ikisi de aynı tek-işlem ucunu kullanıyor: yalnız dokunulan sütun
    gider, yalnız o kaynağın revizyonu karşılaştırılır. */
 async function writeCpModelColumn(sourceId, cpColumn){
+  const intent=captureOrdersConfigurationIntent();
+  if(ordersProjectionIsThin())await ensureOrdersFullForAction('orders.model-column.write');
+  assertOrdersConfigurationIntent(intent);
+  _ordersRequireFullSynchronousRead();
   // Revizyon TAZE okunur: bu ekran uzun süre açık kalmış olabilir.
   await modelConnLoad();
+  assertOrdersConfigurationIntent(intent);
+  _ordersRequireFullSynchronousRead();
   const source=(modelConnState.items||[]).find(item=>item&&item.id===sourceId);
   if(!source)throw new Error(appLang==='en'?'Connection not found':'Bağlantı bulunamadı');
   const res=await fetch(`/api/data-management/source/${encodeURIComponent(sourceId)}`,{

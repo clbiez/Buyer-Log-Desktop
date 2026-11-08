@@ -13,6 +13,13 @@
   const validId=id=>/^personal_note_[a-z0-9_-]{3,60}$/.test(String(id||''));
   const cleanText=value=>String(value==null?'':value).slice(0,MAX_TEXT);
   const cleanName=value=>String(value==null?'':value).replace(/\s+/g,' ').trim().slice(0,80);
+  function requireFullSchemaMutation(){
+    const guard=root&&root.BLOrdersRequireFullSynchronousRead;
+    if(typeof guard==='function'){guard();return;}
+    // Missing capability can deny an armed finite lifecycle; never authorize it.
+    if(root&&root.BLOrdersFiniteLifecycleRequired===true)
+      throw Object.assign(new Error('ORDERS_FULL_STALE'),{code:'ORDERS_FULL_STALE'});
+  }
   function normalizeDefinitions(source){
     const seen=new Set(),out=[];
     for(const raw of Array.isArray(source)?source:[]){
@@ -31,6 +38,7 @@
       try{return normalizeDefinitions(JSON.parse(readRaw(KEY)||'[]'));}catch(_){return [];}
     }
     function setDefinitions(next){
+      requireFullSchemaMutation();
       if(!Array.isArray(next)||next.length>MAX_COLUMNS)throw new Error('PERSONAL_NOTE_COLUMN_LIMIT');
       const safe=normalizeDefinitions(next);
       if(safe.length!==next.length)throw new Error('PERSONAL_NOTE_INVALID_COLUMNS');
@@ -58,6 +66,7 @@
       return next;
     }
     function removeDefinition(id){
+      requireFullSchemaMutation();
       if(!validId(id))return false;
       const current=definitions();
       if(!current.some(def=>def.id===id))return false;

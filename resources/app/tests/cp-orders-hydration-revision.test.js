@@ -46,6 +46,10 @@ function load() {
   };
   vm.createContext(context);
   installLifecycle(context);
+  const guardStart=source.indexOf('const _ordersRequireFullSynchronousRead=()=>{');
+  const guardEnd=source.indexOf('\n};',guardStart)+3;
+  assert.ok(guardStart>=0&&guardEnd>guardStart,'actual root synchronous guard');
+  vm.runInContext(source.slice(guardStart,guardEnd),context,{filename:sourcePath});
   vm.runInContext(between('const _unifiedPriorityTableRevision=', 'function unifiedPriorityRowActive(')
     + '\nthis.tableRevision=()=>({..._unifiedPriorityTableRevision});', context, {filename: sourcePath});
   return {

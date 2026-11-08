@@ -1,0 +1,33 @@
+{
+  "productionAdopted": false,
+  "results": [
+    {
+      "mode": "baseline",
+      "exitCode": 1,
+      "signal": null,
+      "summary": [],
+      "sha256": "176c8ecf0d702c92158a7a1624de76ad7ef5b4a8d3c26a6380d83f75f37695dc",
+      "counts": {
+        "tests": 19,
+        "pass": 2,
+        "fail": 17,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "mode": "candidate",
+      "exitCode": 0,
+      "signal": null,
+      "summary": [],
+      "sha256": "874b3a1e396675cf10c5af8f7f28f65896e0da1ffed420e693a0824ce492b81b",
+      "counts": {
+        "tests": 19,
+        "pass": 19,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  ]
+}

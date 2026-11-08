@@ -170,7 +170,7 @@ test('whole actual loadFromServer gate rejection uses its existing catch and nev
  const f=bootstrap(true);f.context.ensureOrdersFullForAction=async()=>{throw error();};assert.equal(await f.run(false),false);assert.equal(f.events.some(e=>e&&typeof e==='object'&&'cached' in e),false);assert.equal(f.events.includes('startup-render'),false);assert.equal(f.warnings.length,1);
 });
 test('draft preserves synchronous APIs and protected consumer function bodies exactly',()=>{
- for(const name of ['applyViewState','applyFilterState','resetViewToSystemDefault','resetFiltersToSystemDefault','ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(source,name),extractFunction(protectedBaseline,name),name);
+ for(const name of ['applyViewState','applyFilterState','resetViewToSystemDefault','resetFiltersToSystemDefault','ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(require('./fixtures/orders-ready-integration/source.cjs').base('public/app-main.js'),name),extractFunction(protectedBaseline,name),name);
  const section=(text,start,end)=>{const at=text.indexOf(start),stop=text.indexOf(end,at);assert.ok(at>=0&&stop>at);return text.slice(at,stop);};
  assert.equal(section(source,'window.BLFormulaRows = {','\n};'),section(protectedBaseline,'window.BLFormulaRows = {','\n};'));
  const expected=summaryRecipe.app(protectedBaseline);

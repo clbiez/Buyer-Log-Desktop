@@ -1,0 +1,971 @@
+{
+  "schemaVersion": 3,
+  "synthetic": true,
+  "status": "passed",
+  "startedAt": "2026-11-08T10:35:45.687Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-ready-wiring-ui-20261108",
+  "requestedRows": 30,
+  "requestedModules": [
+    "orders"
+  ],
+  "rendererTimeoutMs": 60000,
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "sampling": {
+    "startMs": 0,
+    "endMs": 1000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [
+    {
+      "module": "orders",
+      "primaryScreenReadyMs": 2922.5,
+      "startupReadyMs": 2941.5,
+      "startupCompleteMs": 3818,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 869.6999999880791,
+      "systemStartupCompleteMs": 3818,
+      "primaryToGateMs": 19,
+      "initialGeneration": null,
+      "rows": 30,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 30,
+      "longTaskCount": 4,
+      "longTaskTotalMs": 321.40000000596046,
+      "maxLongTaskMs": 129,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 68.69999998807907,
+          "decodedBytes": 14456,
+          "encodedBytes": 4601
+        },
+        {
+          "path": "/api/page-projection/orders",
+          "ms": 124.59999999403954,
+          "decodedBytes": 72406,
+          "encodedBytes": 7058
+        },
+        {
+          "path": "/api/page-projection/orders",
+          "ms": 139.19999998807907,
+          "decodedBytes": 72406,
+          "encodedBytes": 7058
+        },
+        {
+          "path": "/api/page-projection/collection-catalog",
+          "ms": 28.5,
+          "decodedBytes": 1221,
+          "encodedBytes": 606
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 200.7000000178814,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 204.5,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 204.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 213.09999999403954,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 303.40000000596046,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 376.09999999403954,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 392.30000001192093,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 1098.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 1098.5,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 1157.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 1398.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 1427.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 1427.4000000059605,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 1427.5,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 1522.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 1533.5999999940395,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 1600.2000000178814,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 1610.7000000178814,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 76.90000000596046
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 1610.800000011921,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 1612.5,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 1616.2000000178814,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 1618.7000000178814,
+          "detail": {
+            "durationMs": 7.9000000059604645
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 1618.7000000178814,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 1618.800000011921,
+          "detail": {
+            "durationMs": 0.09999999403953552
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 1618.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 1618.9000000059605,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 1618.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 1618.9000000059605,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 1620.0999999940395,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.199999988079071
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 1620.0999999940395,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.199999988079071
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 1620.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 2002.300000011921,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 2595.0999999940395,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 3588.300000011921,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 3630.9000000059605,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 6
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 3630.9000000059605,
+          "detail": {
+            "mode": "after-ui"
+          }
+        }
+      ],
+      "jsHeapUsedBytes": 12532240,
+      "dom": {
+        "documents": 4,
+        "nodes": 18716,
+        "jsEventListeners": 2562
+      },
+      "heapSampling": "uncollected",
+      "navigationStartedAtMs": 1794134151968,
+      "observedAtMs": 1794134155967,
+      "projectionGenerations": [
+        "mw7p5d8c-266d0dfd84bf",
+        "mw7p5d8c-266d0dfd84bf",
+        "mw7p5d8c-266d0dfd84bf"
+      ],
+      "elapsedMs": 3973.170182,
+      "rendererRssBytes": 424239104,
+      "errors": [],
+      "generation": "mw7p5d8c-266d0dfd84bf",
+      "sourceRevision": "fd1f06de7f354c17cf909b1e4dfbedc1ce762623b02dd36c06f4fce38cae09e8"
+    }
+  ],
+  "healthSamples": [
+    {
+      "ms": 12.070208000000093,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T10:35:47.677Z"
+    },
+    {
+      "ms": 28.146406000000297,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "initial-start",
+      "startedAt": "2026-11-08T10:35:47.677Z"
+    },
+    {
+      "ms": 8.060938000000078,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:48.220Z"
+    },
+    {
+      "ms": 5.688103999999839,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:48.220Z"
+    },
+    {
+      "ms": 10.164342999999917,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:48.734Z"
+    },
+    {
+      "ms": 4.5060239999997975,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:48.734Z"
+    },
+    {
+      "ms": 6.689279999999599,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:49.250Z"
+    },
+    {
+      "ms": 3.9179629999998724,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "refresh",
+      "startedAt": "2026-11-08T10:35:49.250Z"
+    },
+    {
+      "ms": 30.14315700000043,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:50.805Z"
+    },
+    {
+      "ms": 2.527712999999494,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:50.805Z"
+    },
+    {
+      "ms": 6.36100499999975,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:51.338Z"
+    },
+    {
+      "ms": 7.338681000000179,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:51.338Z"
+    },
+    {
+      "ms": 28.094199000000117,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:51.855Z"
+    },
+    {
+      "ms": 21.93294799999967,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:51.855Z"
+    },
+    {
+      "ms": 6.1810850000001665,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:52.405Z"
+    },
+    {
+      "ms": 4.310183999999936,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:52.405Z"
+    },
+    {
+      "ms": 21.434606000000713,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:52.916Z"
+    },
+    {
+      "ms": 12.035491999999067,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:52.916Z"
+    },
+    {
+      "ms": 5.25896400000056,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:53.449Z"
+    },
+    {
+      "ms": 12.27572599999985,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:53.449Z"
+    },
+    {
+      "ms": 12.85475899999983,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:53.967Z"
+    },
+    {
+      "ms": 52.84885000000031,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:53.967Z"
+    },
+    {
+      "ms": 3.9799220000004425,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:54.533Z"
+    },
+    {
+      "ms": 2.1369230000000243,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:54.533Z"
+    },
+    {
+      "ms": 6.066373999999996,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:55.039Z"
+    },
+    {
+      "ms": 3.10665599999993,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:55.039Z"
+    },
+    {
+      "ms": 8.575473999999303,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:55.549Z"
+    },
+    {
+      "ms": 3.726591999999073,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:55.549Z"
+    },
+    {
+      "ms": 5.109232000000702,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/health",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:56.062Z"
+    },
+    {
+      "ms": 4.891106000000946,
+      "status": 200,
+      "attempt": 1,
+      "endpoint": "/api/status",
+      "phase": "startup",
+      "startedAt": "2026-11-08T10:35:56.062Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "b1bd1ffc5d832ce297271b108c9e7f47f4fdab22",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "1600000 400000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "68d9848ed2d40159bc472d3c73580511ebf2142ad2b3aed6516e1d906c2a2335",
+      "Antrepo - Demo.xlsx": "5c7ba081a8871a29af430fa145255d246c093fc37fba875c365542badb836c22",
+      "LFL - Demo.xlsx": "e6e17d8c699442c37542a3591ab988600cb162871cc36e7d730293f30baee60d"
+    }
+  },
+  "fixtureConditions": {
+    "maintenanceState": "recent-weekly-check",
+    "stateFile": "/tmp/buyerlog-startup-ready-wiring-ui-20261108/local/data-cleanup-state.json"
+  },
+  "refresh": {
+    "jobId": "mw7p5cac-lpya4sa6",
+    "serverInstanceId": "ac11361777b1f38d",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-08T10:35:47.696Z",
+    "finishedAt": "2026-11-08T10:35:48.942Z",
+    "elapsedMs": 1242,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 30,
+      "newlyAppeared": 30,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 30,
+      "antrepoChangedOrders": 9,
+      "asasChangeCount": 30,
+      "antrepoChangeCount": 9,
+      "hasChanges": true,
+      "details": {
+        "count": 39
+      },
+      "historyItemId": "refresh_mw7p5d8q_fsrj8c"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:47.710Z",
+        "timestampMs": 1794134147710,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:47.710Z",
+        "timestampMs": 1794134147710,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:47.710Z",
+        "timestampMs": 1794134147710,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.484Z",
+        "timestampMs": 1794134148484,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 774,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:48.488Z",
+        "timestampMs": 1794134148488,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.488Z",
+        "timestampMs": 1794134148488,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:48.488Z",
+        "timestampMs": 1794134148488,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.779Z",
+        "timestampMs": 1794134148779,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 291,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:48.790Z",
+        "timestampMs": 1794134148790,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.795Z",
+        "timestampMs": 1794134148795,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 5,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:48.795Z",
+        "timestampMs": 1794134148795,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.828Z",
+        "timestampMs": 1794134148828,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 33,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-08T10:35:48.828Z",
+        "timestampMs": 1794134148828,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-08T10:35:48.936Z",
+        "timestampMs": 1794134148936,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 108,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 0.5196270000001277,
+        "durationMs": 759.4125250000002,
+        "executionMs": 635.5923560000001,
+        "overheadMs": 123.82016900000008,
+        "heapUsedBytes": 36428368,
+        "mainReceiveMs": 1.2618750000001455,
+        "workerPostMessageMs": 0.8039880000001176,
+        "resultTransport": "message-port"
+      },
+      "antrepo": {
+        "queueWaitMs": 0.06925799999999072,
+        "durationMs": 274.3155310000002,
+        "executionMs": 224.06942000000026,
+        "overheadMs": 50.24611099999993,
+        "heapUsedBytes": 29479808,
+        "mainReceiveMs": 0.31060000000024957,
+        "workerPostMessageMs": 0.08261400000037611,
+        "resultTransport": "message-port"
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-08T10:35:47.707Z",
+        "ms": 3,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-08T10:35:47.710Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-08T10:35:47.710Z",
+        "ms": 775,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-08T10:35:48.485Z",
+        "ms": 3,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-08T10:35:48.488Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-08T10:35:48.488Z",
+        "ms": 302,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-08T10:35:48.790Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-08T10:35:48.790Z",
+        "ms": 5,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-08T10:35:48.795Z",
+        "ms": 33,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-08T10:35:48.828Z",
+        "ms": 108,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-08T10:35:48.936Z",
+        "ms": 6,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-08T10:35:48.486Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 12,
+      "dashboard": null,
+      "totalMs": 1239
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 15,
+      "successful": 15,
+      "failed": 0,
+      "p50Ms": 8.060938000000078,
+      "p95Ms": 30.14315700000043,
+      "maxMs": 30.14315700000043
+    },
+    "refresh": {
+      "count": 3,
+      "successful": 3,
+      "failed": 0,
+      "p50Ms": 8.060938000000078,
+      "p95Ms": 10.164342999999917,
+      "maxMs": 10.164342999999917
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      200
+    ],
+    "endpointAvailable": true
+  },
+  "statusProbe": {
+    "endpoint": "/api/status",
+    "all": {
+      "count": 15,
+      "successful": 15,
+      "failed": 0,
+      "p50Ms": 4.891106000000946,
+      "p95Ms": 52.84885000000031,
+      "maxMs": 52.84885000000031
+    },
+    "refresh": {
+      "count": 3,
+      "successful": 3,
+      "failed": 0,
+      "p50Ms": 4.5060239999997975,
+      "p95Ms": 5.688103999999839,
+      "maxMs": 5.688103999999839
+    }
+  },
+  "stalls": [],
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-ready-wiring-ui-20261108/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1",
+      "[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1"
+    ],
+    "stallProfiles": []
+  },
+  "refreshWallMs": 1606.790077,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 27,
+      "orders": 30,
+      "overview": 30
+    },
+    "generation": "mw7p5d8c-266d0dfd84bf",
+    "sourceRevision": "fd1f06de7f354c17cf909b1e4dfbedc1ce762623b02dd36c06f4fce38cae09e8",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 900.2642340000002,
+  "chromium": "154.0.8037.57",
+  "lifecycleEvents": [
+    {
+      "module": "orders",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 2922.5
+    },
+    {
+      "module": "orders",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 2941.5
+    },
+    {
+      "module": "orders",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 3818
+    }
+  ],
+  "limitations": [
+    "Linux headless Chromium; Windows/Electron, antivirus and cold OS disk cache are not measured.",
+    "Collection workspace is empty synthetic data. RSS sums include shared renderer pages, not unique physical memory.",
+    "Health probes are serial every 500 ms after completion; timeouts/errors are retained in quantiles, not discarded.",
+    "Long tasks use a fixed navigation window; startup events outside it remain separate timings."
+  ],
+  "finishedAt": "2026-11-08T10:35:56.698Z"
+}

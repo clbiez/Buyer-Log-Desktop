@@ -1,0 +1,31 @@
+{
+  "productionAdopted": false,
+  "results": [
+    {
+      "mode": "baseline",
+      "exitCode": 1,
+      "signal": null,
+      "summary": [
+        "# tests 1",
+        "# pass 0",
+        "# fail 1",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "a37daccb721b8924221317e57b45922e69348265b5be50e520ee643f78494927"
+    },
+    {
+      "mode": "candidate",
+      "exitCode": 0,
+      "signal": null,
+      "summary": [
+        "# tests 7",
+        "# pass 7",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0"
+      ],
+      "sha256": "be8ad82c6e605b294762bb48ee81075bda1da1463af1ff0394c35fbd9e491dd3"
+    }
+  ]
+}

@@ -1460,6 +1460,35 @@
           "en": "Actual post-change app in Turkish and light theme; CP rows shown after the first switch."
         }
       }
+    },
+    {
+      "id": "orders-source-continuity-schema-actions",
+      "type": "fix",
+      "module": {
+        "tr": "CP ve Siparişler",
+        "en": "CP and Orders"
+      },
+      "title": {
+        "tr": "Not sütunu işlemlerinde eski ekran yanıtlarına karşı koruma",
+        "en": "Protect note-column actions from stale screen responses"
+      },
+      "body": {
+        "tr": "Paylaşılan veya kişisel bir not sütununu ekleme, adlandırma ya da kaldırma işlemi beklerken kullanıcı veya veri kaynağı değişirse önceki ekrandan kalan yanıt artık yerel sütunları ve kayıtlı tercihleri değiştiremez. İşlem güncel ekran üzerinden yeniden denenebilir. Mevcut tam veri yükleme davranışı korunur.",
+        "en": "If the user or data source changes while a shared or personal note column is being added, renamed or removed, a response from the previous screen can no longer change local columns or saved preferences. The action can be retried from the current screen. Existing full-data loading is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-source-continuity-20261108.png",
+        "alt": {
+          "tr": "Değişiklik sonrası 30 sentetik siparişli gerçek Buyer Log ekranı",
+          "en": "Actual post-change Buyer Log screen with 30 synthetic orders"
+        },
+        "caption": {
+          "tr": "Türkçe ve açık tema; gerçek tarayıcıda doğrulanan mevcut Siparişler ekranı. Bu görsel performans karşılaştırması değildir.",
+          "en": "Turkish and light theme; the existing Orders screen verified in a real browser. This image is not a performance comparison."
+        }
+      }
     }
   ]
 }

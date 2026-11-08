@@ -9,8 +9,8 @@
   "captures": {
     "app-main.js": {
       "path": "public/app-main.js",
-      "sha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
-      "gitBlob": "3bc34eca6187d13f712d09df693fa5d80d18310a"
+      "sha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+      "gitBlob": "9947d0934ce52427d3554ffad9310b13875744e1"
     },
     "business-rules.js": {
       "path": "public/business-rules.js",
@@ -70,5 +70,6 @@
       "sha256": "4eae98d0c2f4926f7404f61d50e51b3e1edcfd01fba4ca43e8f758f4f03bb835",
       "gitBlob": "e678fc64f39d455ed68b9bdca4d84e86fe186a21"
     }
-  }
+  },
+  "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json"
 }
