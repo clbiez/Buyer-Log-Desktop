@@ -1,0 +1,30 @@
+{
+  "synthetic": true,
+  "appTree": "47dee74749ff7efb15ce361bc371a884670207c3",
+  "reviewedBy": "primary agent visual inspection, no independent review",
+  "reviewed": [
+    {
+      "file": "after-1-orders-en.png",
+      "finding": "Real Orders EN, 30k synthetic rows, visible table and aligned group/column bands at three frozen columns.",
+      "sha256": "886c09c8150687aec5cf8fc2240dd35518bdffafb86cd9307c1cb673917b9bb5",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "file": "after-1-cp-tr.png",
+      "finding": "Real CP TR, 24,982 synthetic rows, group/column header bands clear body rows; freeze boundary aligns.",
+      "sha256": "1c71b9fb5e2932cacdab3f12e71eaf74d19071b0a25a307313971a69373ef624",
+      "width": 1600,
+      "height": 1000
+    },
+    {
+      "file": "after-1-orders-en-modal.png",
+      "finding": "Real Orders note modal remains sharp and workspace is blurred. No mockup or editing.",
+      "sha256": "ae4222b0e2541e2ee926a05300190f4fa96fd312a47bb8cc9c934dd1c2283213",
+      "width": 1600,
+      "height": 1000
+    }
+  ],
+  "newProductFix": false,
+  "note": "Screenshots verify preserved #908 behavior; they do not demonstrate a new performance fix. Existing bilingual release-note entry and PNG remain unchanged."
+}

@@ -1,0 +1,39 @@
+{
+  "related": {
+    "tests": 137,
+    "pass": 137,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "batchesCompleted": [
+      "1/1"
+    ]
+  },
+  "cp-pass-cache-guards": {
+    "tests": 23,
+    "pass": 23,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "batchesCompleted": []
+  },
+  "full": {
+    "tests": 9000,
+    "pass": 8935,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0,
+    "batchesCompleted": [
+      "1/10",
+      "2/10",
+      "3/10",
+      "4/10",
+      "5/10",
+      "6/10",
+      "7/10",
+      "8/10",
+      "9/10",
+      "10/10"
+    ]
+  }
+}

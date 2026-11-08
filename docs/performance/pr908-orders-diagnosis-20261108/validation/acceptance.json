@@ -1,0 +1,89 @@
+{
+  "startedAt": "2026-11-08T10:37:01.174446+00:00",
+  "appTree": "47dee74749ff7efb15ce361bc371a884670207c3",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "table-header",
+        "table-group",
+        "freeze",
+        "workspace-blur",
+        "shared-ui",
+        "motion-plus",
+        "i18n",
+        "model-image-cache",
+        "first-transition"
+      ],
+      "startedAt": "2026-11-08T10:37:01.178172+00:00",
+      "tmpdir": "/tmp/pr908-diagnosis-related-23vhw0w7",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:37:04.100167+00:00",
+      "logSha256": "b38e7d0d0e4a843318bc7625bae9bbcbd18fdd97319b87d0d95dff47727e1f3b"
+    },
+    {
+      "name": "cp-pass-cache-guards",
+      "command": [
+        "node",
+        "--test",
+        "tests/checklist-components-row-cache.test.js",
+        "tests/cp-personal-layer-delta.test.js",
+        "tests/checklist-columns-delta.test.js",
+        "tests/checklist-summary-contribution-cache.test.js",
+        "tests/checklist-applies-row-memo.test.js",
+        "tests/checklist-answer-batch-notify.test.js",
+        "tests/checklist-assistant-view-reuse.test.js",
+        "tests/checklist-remote-merge-noop.test.js",
+        "tests/checklist-components-count-lookups.test.js"
+      ],
+      "startedAt": "2026-11-08T10:37:04.101230+00:00",
+      "tmpdir": "/tmp/pr908-diagnosis-cp-pass-cache-guards-q51rgap7",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:37:04.394238+00:00",
+      "logSha256": "f2899565f9ac1ed59c21c1ed214e49b218d11b034bbe524e4e65a395d59ae605"
+    },
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "startedAt": "2026-11-08T10:37:04.394703+00:00",
+      "tmpdir": "/tmp/pr908-diagnosis-full-mqes4_z2",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:38:55.308906+00:00",
+      "logSha256": "4930a272a88e8e97f8f6437fe90a6c4a8a5937973cd413de0ad02a1937d45de2"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "startedAt": "2026-11-08T10:38:55.362527+00:00",
+      "tmpdir": "/tmp/pr908-diagnosis-i18n-67r2f2vl",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:38:56.920315+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "name": "release-notes",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "startedAt": "2026-11-08T10:38:56.921753+00:00",
+      "tmpdir": "/tmp/pr908-diagnosis-release-notes-wbxkod3b",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:38:57.549649+00:00",
+      "logSha256": "a5e1ca123e9ba0108410ec1dcd118ffd265c026437e7c2e8852f38bc27c6c66e"
+    }
+  ],
+  "status": "passed",
+  "finishedAt": "2026-11-08T10:38:57.550079+00:00"
+}

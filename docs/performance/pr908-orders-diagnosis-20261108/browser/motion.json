@@ -1,0 +1,190 @@
+{
+  "synthetic": true,
+  "status": "passed",
+  "fixtureRoot": "/tmp/buyerlog-pr908-motion-5Eu92N",
+  "appTree": "47dee74749ff7efb15ce361bc371a884670207c3",
+  "runs": [
+    {
+      "arm": "A",
+      "errors": [],
+      "states": [
+        {
+          "module": "cp",
+          "render": "gpu",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {
+            "cpTable": 6
+          },
+          "seen": 6,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "gpu",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "software",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "software",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "gpu",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {
+            "ordersTable": 6
+          },
+          "seen": 6,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "gpu",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "software",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "software",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        }
+      ],
+      "rowHashesBefore": {
+        "cp": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+        "orders": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b"
+      },
+      "rowHashes": {
+        "cp": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+        "orders": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b"
+      }
+    },
+    {
+      "arm": "B",
+      "errors": [],
+      "states": [
+        {
+          "module": "cp",
+          "render": "gpu",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {
+            "cpTable": 6
+          },
+          "seen": 6,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "gpu",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "software",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "cp",
+          "render": "software",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "gpu",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {
+            "ordersTable": 6
+          },
+          "seen": 6,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "gpu",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "software",
+          "reducedMotion": "no-preference",
+          "enabled": true,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        },
+        {
+          "module": "orders",
+          "render": "software",
+          "reducedMotion": "reduce",
+          "enabled": false,
+          "counts": {},
+          "seen": 0,
+          "violations": []
+        }
+      ],
+      "rowHashesBefore": {
+        "cp": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+        "orders": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b"
+      },
+      "rowHashes": {
+        "cp": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+        "orders": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b"
+      }
+    }
+  ],
+  "startedAt": "2026-11-08T10:46:21.333Z",
+  "finishedAt": "2026-11-08T10:48:03.413Z"
+}

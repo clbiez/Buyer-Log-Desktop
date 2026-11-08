@@ -1,0 +1,1589 @@
+{
+  "classification": "native first-intent A/B diagnostic replication",
+  "profiled": false,
+  "startedAt": "2026-11-08T10:29:23.094785+00:00",
+  "order": "A/B\u2013B/A\u2013A/B",
+  "input": "/tmp/pr908-orders-diagnosis/phase0-02.json",
+  "inputSha256": "f8e322d839d91d72101999fde33b5d2fdb09f1f686149b6bd08e13d65bff5755",
+  "heads": {
+    "A": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "B": "96b7d12712259fac9680dd852778bfd73daa292c"
+  },
+  "timezone": "Europe/Istanbul",
+  "wrapperSha256": "1e4d1f09b3aadab97458d765f0f41ced4155d4c7a7d4eda765e4c073a21e1bdb",
+  "rowEquivalence": "Complete JSON and own-key order must match in every run; complete visible cells and headers must match the same 53/60 baseline variant. Different variants do not establish full DOM equality.",
+  "runs": [
+    {
+      "arm": "A",
+      "pair": 1,
+      "startedAt": "2026-11-08T10:29:23.109715+00:00",
+      "command": [
+        "node",
+        "/workspace/pr908-main/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/pr908-main/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair1-A/measurement.json"
+      ],
+      "diskFreeBytes": 8257032192,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:30:09.259344+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1386.4000000000233,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 5435.900000000023,
+          "dispatchAtMs": 1404.5,
+          "dispatchDelayMs": 18.099999999976717,
+          "dataReadyMs": 8660.800000000047,
+          "firstRowsPaintedMs": 8722,
+          "elapsedMs": 11324.400000000023,
+          "paintedAtMs": 12710.800000000047,
+          "observationEndMs": 13084,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1264,
+            "startupReadyMs": 1272.3000000000466,
+            "startupCompleteMs": 1385.7000000000698,
+            "continueAtMs": 1379.2000000000698,
+            "continueIntentAtMs": 1272.3000000000466,
+            "continueDispatchDelayMs": 106.90000000002328,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1385.7000000000698,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 382.5999999999767,
+                "duration": 55
+              },
+              {
+                "startTime": 536.9000000000233,
+                "duration": 69
+              },
+              {
+                "startTime": 606.2000000000698,
+                "duration": 60
+              },
+              {
+                "startTime": 736.0999999999767,
+                "duration": 64
+              },
+              {
+                "startTime": 1102.5999999999767,
+                "duration": 81
+              },
+              {
+                "startTime": 1756.3000000000466,
+                "duration": 226
+              },
+              {
+                "startTime": 2021.5999999999767,
+                "duration": 349
+              },
+              {
+                "startTime": 3899.4000000000233,
+                "duration": 88
+              },
+              {
+                "startTime": 4617.400000000023,
+                "duration": 5149
+              },
+              {
+                "startTime": 9768,
+                "duration": 232
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1120,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 2,
+          "maxPollGapMs": 1830.8999999999069,
+          "dispatchAtMs": 1128.2999999999302,
+          "dispatchDelayMs": 8.29999999993015,
+          "dataReadyMs": 3584.79999999993,
+          "firstRowsPaintedMs": 3646,
+          "elapsedMs": 6061.699999999953,
+          "paintedAtMs": 7181.699999999953,
+          "observationEndMs": 7067.599999999977,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1038.5,
+            "startupReadyMs": 1048,
+            "startupCompleteMs": 1119.5,
+            "continueAtMs": 1116.2999999999302,
+            "continueIntentAtMs": 1048,
+            "continueDispatchDelayMs": 68.29999999993015,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1119.5,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 260.4000000000233,
+                "duration": 53
+              },
+              {
+                "startTime": 355.29999999993015,
+                "duration": 50
+              },
+              {
+                "startTime": 468.0999999999767,
+                "duration": 71
+              },
+              {
+                "startTime": 630.4000000000233,
+                "duration": 63
+              },
+              {
+                "startTime": 846.1999999999534,
+                "duration": 86
+              },
+              {
+                "startTime": 1708.6999999999534,
+                "duration": 243
+              },
+              {
+                "startTime": 1995.9000000000233,
+                "duration": 783
+              },
+              {
+                "startTime": 2804,
+                "duration": 68
+              },
+              {
+                "startTime": 2891.0999999999767,
+                "duration": 270
+              },
+              {
+                "startTime": 3163.4000000000233,
+                "duration": 1335
+              },
+              {
+                "startTime": 4499,
+                "duration": 204
+              },
+              {
+                "startTime": 4822.29999999993,
+                "duration": 162
+              },
+              {
+                "startTime": 4985.29999999993,
+                "duration": 241
+              },
+              {
+                "startTime": 5229.400000000023,
+                "duration": 325
+              },
+              {
+                "startTime": 5590.199999999953,
+                "duration": 251
+              },
+              {
+                "startTime": 5890.900000000023,
+                "duration": 362
+              },
+              {
+                "startTime": 6270.699999999953,
+                "duration": 705
+              },
+              {
+                "startTime": 6976.5,
+                "duration": 189
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-l4fNj7",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "arm": "B",
+      "pair": 1,
+      "startedAt": "2026-11-08T10:30:09.264865+00:00",
+      "command": [
+        "node",
+        "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/Buyer-Log-Desktop/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair1-B/measurement.json"
+      ],
+      "diskFreeBytes": 8142540800,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:30:54.952924+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1383,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 5339.199999999953,
+          "dispatchAtMs": 1390.1000000000931,
+          "dispatchDelayMs": 7.100000000093132,
+          "dataReadyMs": 8505.300000000047,
+          "firstRowsPaintedMs": 8554.5,
+          "elapsedMs": 11108.900000000023,
+          "paintedAtMs": 12491.900000000023,
+          "observationEndMs": 12884.100000000093,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1281.1000000000931,
+            "startupReadyMs": 1289.6000000000931,
+            "startupCompleteMs": 1382.6000000000931,
+            "continueAtMs": 1379.2000000000698,
+            "continueIntentAtMs": 1289.6000000000931,
+            "continueDispatchDelayMs": 89.59999999997672,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1382.6000000000931,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 365.60000000009313,
+                "duration": 74
+              },
+              {
+                "startTime": 561.9000000000233,
+                "duration": 67
+              },
+              {
+                "startTime": 729.4000000000233,
+                "duration": 72
+              },
+              {
+                "startTime": 1116.8000000000466,
+                "duration": 93
+              },
+              {
+                "startTime": 1504,
+                "duration": 65
+              },
+              {
+                "startTime": 1764.9000000000233,
+                "duration": 269
+              },
+              {
+                "startTime": 2066.4000000000233,
+                "duration": 356
+              },
+              {
+                "startTime": 3788.9000000000233,
+                "duration": 75
+              },
+              {
+                "startTime": 4551.20000000007,
+                "duration": 5097
+              },
+              {
+                "startTime": 9649.400000000023,
+                "duration": 224
+              },
+              {
+                "startTime": 9958.70000000007,
+                "duration": 41.29999999993015
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1045.8000000000466,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 1546,
+          "dispatchAtMs": 1054,
+          "dispatchDelayMs": 8.199999999953434,
+          "dataReadyMs": 3434,
+          "firstRowsPaintedMs": 3485.1999999999534,
+          "elapsedMs": 5864.5,
+          "paintedAtMs": 6910.300000000047,
+          "observationEndMs": 6935.400000000023,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 962.8000000000466,
+            "startupReadyMs": 971.4000000000233,
+            "startupCompleteMs": 1045.2000000000698,
+            "continueAtMs": 1041.6000000000931,
+            "continueIntentAtMs": 971.4000000000233,
+            "continueDispatchDelayMs": 70.20000000006985,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1045.2000000000698,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 268.30000000004657,
+                "duration": 61
+              },
+              {
+                "startTime": 332.4000000000233,
+                "duration": 55
+              },
+              {
+                "startTime": 420.10000000009313,
+                "duration": 79
+              },
+              {
+                "startTime": 593.5,
+                "duration": 55
+              },
+              {
+                "startTime": 786.5,
+                "duration": 80
+              },
+              {
+                "startTime": 1168,
+                "duration": 184
+              },
+              {
+                "startTime": 1354.2000000000698,
+                "duration": 231
+              },
+              {
+                "startTime": 1630.7000000000698,
+                "duration": 746
+              },
+              {
+                "startTime": 2520,
+                "duration": 153
+              },
+              {
+                "startTime": 2678.4000000000233,
+                "duration": 253
+              },
+              {
+                "startTime": 2937,
+                "duration": 1329
+              },
+              {
+                "startTime": 4266.900000000023,
+                "duration": 195
+              },
+              {
+                "startTime": 4560.20000000007,
+                "duration": 184
+              },
+              {
+                "startTime": 4745.600000000093,
+                "duration": 230
+              },
+              {
+                "startTime": 4979.600000000093,
+                "duration": 348
+              },
+              {
+                "startTime": 5386.300000000047,
+                "duration": 251
+              },
+              {
+                "startTime": 5671.900000000023,
+                "duration": 381
+              },
+              {
+                "startTime": 6077.70000000007,
+                "duration": 702
+              },
+              {
+                "startTime": 6780.20000000007,
+                "duration": 181
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-GZh4em",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "arm": "B",
+      "pair": 2,
+      "startedAt": "2026-11-08T10:30:54.957722+00:00",
+      "command": [
+        "node",
+        "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/Buyer-Log-Desktop/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair2-B/measurement.json"
+      ],
+      "diskFreeBytes": 8028057600,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:31:40.692100+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1363.1000000000931,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 5792.400000000023,
+          "dispatchAtMs": 1375.6000000000931,
+          "dispatchDelayMs": 12.5,
+          "dataReadyMs": 8819.099999999977,
+          "firstRowsPaintedMs": 8876.79999999993,
+          "elapsedMs": 12229.099999999977,
+          "paintedAtMs": 13592.20000000007,
+          "observationEndMs": 13265.899999999907,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1239.7000000000698,
+            "startupReadyMs": 1246.8000000000466,
+            "startupCompleteMs": 1362.7000000000698,
+            "continueAtMs": 1358.6000000000931,
+            "continueIntentAtMs": 1246.8000000000466,
+            "continueDispatchDelayMs": 111.80000000004657,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1362.7000000000698,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 269,
+                "duration": 79
+              },
+              {
+                "startTime": 544.6000000000931,
+                "duration": 75
+              },
+              {
+                "startTime": 726.4000000000233,
+                "duration": 60
+              },
+              {
+                "startTime": 1088.3000000000466,
+                "duration": 77
+              },
+              {
+                "startTime": 1757.6000000000931,
+                "duration": 234
+              },
+              {
+                "startTime": 2034.6000000000931,
+                "duration": 379
+              },
+              {
+                "startTime": 3781.9000000000233,
+                "duration": 73
+              },
+              {
+                "startTime": 4397.100000000093,
+                "duration": 5542
+              },
+              {
+                "startTime": 9940.300000000047,
+                "duration": 59.699999999953434
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1029.2000000000698,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 2,
+          "maxPollGapMs": 1790.2000000000698,
+          "dispatchAtMs": 1039,
+          "dispatchDelayMs": 9.79999999993015,
+          "dataReadyMs": 3482.0999999999767,
+          "firstRowsPaintedMs": 3541.79999999993,
+          "elapsedMs": 5917.099999999977,
+          "paintedAtMs": 6946.300000000047,
+          "observationEndMs": 6924.899999999907,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 929.0999999999767,
+            "startupReadyMs": 936.2000000000698,
+            "startupCompleteMs": 1028.9000000000233,
+            "continueAtMs": 1026,
+            "continueIntentAtMs": 936.2000000000698,
+            "continueDispatchDelayMs": 89.79999999993015,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1028.9000000000233,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 208.30000000004657,
+                "duration": 54
+              },
+              {
+                "startTime": 435.30000000004657,
+                "duration": 70
+              },
+              {
+                "startTime": 588.5999999999767,
+                "duration": 70
+              },
+              {
+                "startTime": 789,
+                "duration": 73
+              },
+              {
+                "startTime": 1561.3000000000466,
+                "duration": 243
+              },
+              {
+                "startTime": 1804.5999999999767,
+                "duration": 50
+              },
+              {
+                "startTime": 1861.4000000000233,
+                "duration": 773
+              },
+              {
+                "startTime": 2736.8000000000466,
+                "duration": 262
+              },
+              {
+                "startTime": 3001.3000000000466,
+                "duration": 1325
+              },
+              {
+                "startTime": 4326.900000000023,
+                "duration": 183
+              },
+              {
+                "startTime": 4619.800000000047,
+                "duration": 145
+              },
+              {
+                "startTime": 4769.599999999977,
+                "duration": 222
+              },
+              {
+                "startTime": 4994,
+                "duration": 366
+              },
+              {
+                "startTime": 5406.099999999977,
+                "duration": 244
+              },
+              {
+                "startTime": 5681.400000000023,
+                "duration": 362
+              },
+              {
+                "startTime": 6058.900000000023,
+                "duration": 701
+              },
+              {
+                "startTime": 6760.300000000047,
+                "duration": 168
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-pzvNMn",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "arm": "A",
+      "pair": 2,
+      "startedAt": "2026-11-08T10:31:40.698023+00:00",
+      "command": [
+        "node",
+        "/workspace/pr908-main/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/pr908-main/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair2-A/measurement.json"
+      ],
+      "diskFreeBytes": 7913570304,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:32:27.325102+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1373.5,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 2,
+          "maxPollGapMs": 5609.29999999993,
+          "dispatchAtMs": 1386.5999999999767,
+          "dispatchDelayMs": 13.099999999976717,
+          "dataReadyMs": 8652.29999999993,
+          "firstRowsPaintedMs": 8705.29999999993,
+          "elapsedMs": 12051.699999999953,
+          "paintedAtMs": 13425.199999999953,
+          "observationEndMs": 13069.79999999993,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1244.8999999999069,
+            "startupReadyMs": 1253.7999999999302,
+            "startupCompleteMs": 1373.1999999999534,
+            "continueAtMs": 1369.8999999999069,
+            "continueIntentAtMs": 1253.7999999999302,
+            "continueDispatchDelayMs": 116.09999999997672,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1373.1999999999534,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 337.39999999990687,
+                "duration": 71
+              },
+              {
+                "startTime": 526.8999999999069,
+                "duration": 78
+              },
+              {
+                "startTime": 698.3999999999069,
+                "duration": 75
+              },
+              {
+                "startTime": 1094,
+                "duration": 79
+              },
+              {
+                "startTime": 1729.5,
+                "duration": 238
+              },
+              {
+                "startTime": 2003,
+                "duration": 359
+              },
+              {
+                "startTime": 3783.399999999907,
+                "duration": 76
+              },
+              {
+                "startTime": 4421,
+                "duration": 5333
+              },
+              {
+                "startTime": 9754.79999999993,
+                "duration": 245.20000000006985
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1116.5,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 2,
+          "maxPollGapMs": 2581.899999999907,
+          "dispatchAtMs": 1123.7999999999302,
+          "dispatchDelayMs": 7.299999999930151,
+          "dataReadyMs": 4987.29999999993,
+          "firstRowsPaintedMs": 5047.900000000023,
+          "elapsedMs": 6169.79999999993,
+          "paintedAtMs": 7286.29999999993,
+          "observationEndMs": 9830.400000000023,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1014.7999999999302,
+            "startupReadyMs": 1021,
+            "startupCompleteMs": 1116.1999999999534,
+            "continueAtMs": 1113.5999999999767,
+            "continueIntentAtMs": 1021,
+            "continueDispatchDelayMs": 92.59999999997672,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1116.1999999999534,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 243.40000000002328,
+                "duration": 53
+              },
+              {
+                "startTime": 346.0999999999767,
+                "duration": 51
+              },
+              {
+                "startTime": 459.5,
+                "duration": 79
+              },
+              {
+                "startTime": 651.2999999999302,
+                "duration": 58
+              },
+              {
+                "startTime": 863.0999999999767,
+                "duration": 77
+              },
+              {
+                "startTime": 1827.5,
+                "duration": 234
+              },
+              {
+                "startTime": 2107.5999999999767,
+                "duration": 775
+              },
+              {
+                "startTime": 2895.6999999999534,
+                "duration": 226
+              },
+              {
+                "startTime": 3137.9000000000233,
+                "duration": 299
+              },
+              {
+                "startTime": 3455.9000000000233,
+                "duration": 53
+              },
+              {
+                "startTime": 3535.1999999999534,
+                "duration": 315
+              },
+              {
+                "startTime": 3881.9000000000233,
+                "duration": 290
+              },
+              {
+                "startTime": 4173.29999999993,
+                "duration": 282
+              },
+              {
+                "startTime": 4460.29999999993,
+                "duration": 1424
+              },
+              {
+                "startTime": 5885.29999999993,
+                "duration": 217
+              },
+              {
+                "startTime": 6211.400000000023,
+                "duration": 489
+              },
+              {
+                "startTime": 6700.79999999993,
+                "duration": 193
+              },
+              {
+                "startTime": 8021.79999999993,
+                "duration": 1898
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-00K1RL",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "arm": "A",
+      "pair": 3,
+      "startedAt": "2026-11-08T10:32:27.332222+00:00",
+      "command": [
+        "node",
+        "/workspace/pr908-main/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/pr908-main/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair3-A/measurement.json"
+      ],
+      "diskFreeBytes": 7799087104,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:33:12.974070+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1369.6999999999534,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 5400,
+          "dispatchAtMs": 1385.3999999999069,
+          "dispatchDelayMs": 15.699999999953434,
+          "dataReadyMs": 8541.800000000047,
+          "firstRowsPaintedMs": 8609.599999999977,
+          "elapsedMs": 11317.199999999953,
+          "paintedAtMs": 12686.899999999907,
+          "observationEndMs": 13081.800000000047,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1246.6999999999534,
+            "startupReadyMs": 1255.7999999999302,
+            "startupCompleteMs": 1369.2999999999302,
+            "continueAtMs": 1363.5,
+            "continueIntentAtMs": 1255.7999999999302,
+            "continueDispatchDelayMs": 107.70000000006985,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1369.2999999999302,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 337.69999999995343,
+                "duration": 56
+              },
+              {
+                "startTime": 397.0999999999767,
+                "duration": 60
+              },
+              {
+                "startTime": 514.5999999999767,
+                "duration": 68
+              },
+              {
+                "startTime": 695.2999999999302,
+                "duration": 55
+              },
+              {
+                "startTime": 1077.6999999999534,
+                "duration": 95
+              },
+              {
+                "startTime": 1506.8999999999069,
+                "duration": 127
+              },
+              {
+                "startTime": 1754.3999999999069,
+                "duration": 240
+              },
+              {
+                "startTime": 2057.5999999999767,
+                "duration": 348
+              },
+              {
+                "startTime": 3754.899999999907,
+                "duration": 63
+              },
+              {
+                "startTime": 4530.699999999953,
+                "duration": 5115
+              },
+              {
+                "startTime": 9646.79999999993,
+                "duration": 249
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1093.1999999999534,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 4,
+          "maxPollGapMs": 1854.5,
+          "dispatchAtMs": 1100.1999999999534,
+          "dispatchDelayMs": 7,
+          "dataReadyMs": 3699,
+          "firstRowsPaintedMs": 3778.5,
+          "elapsedMs": 5403.800000000047,
+          "paintedAtMs": 6497,
+          "observationEndMs": 7413.800000000047,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 988.5,
+            "startupReadyMs": 994.7999999999302,
+            "startupCompleteMs": 1092.7999999999302,
+            "continueAtMs": 1089.7999999999302,
+            "continueIntentAtMs": 994.7999999999302,
+            "continueDispatchDelayMs": 95,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1092.7999999999302,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 284.19999999995343,
+                "duration": 53
+              },
+              {
+                "startTime": 339.79999999993015,
+                "duration": 53
+              },
+              {
+                "startTime": 445.0999999999767,
+                "duration": 75
+              },
+              {
+                "startTime": 624.2999999999302,
+                "duration": 68
+              },
+              {
+                "startTime": 823.7999999999302,
+                "duration": 90
+              },
+              {
+                "startTime": 1687.4000000000233,
+                "duration": 276
+              },
+              {
+                "startTime": 2009.0999999999767,
+                "duration": 788
+              },
+              {
+                "startTime": 2834.4000000000233,
+                "duration": 101
+              },
+              {
+                "startTime": 2950.0999999999767,
+                "duration": 265
+              },
+              {
+                "startTime": 3227.5999999999767,
+                "duration": 1345
+              },
+              {
+                "startTime": 4573.29999999993,
+                "duration": 217
+              },
+              {
+                "startTime": 4938.5,
+                "duration": 209
+              },
+              {
+                "startTime": 5148.099999999977,
+                "duration": 242
+              },
+              {
+                "startTime": 5392.400000000023,
+                "duration": 338
+              },
+              {
+                "startTime": 5785.699999999953,
+                "duration": 257
+              },
+              {
+                "startTime": 6080.79999999993,
+                "duration": 401
+              },
+              {
+                "startTime": 6498.5,
+                "duration": 749
+              },
+              {
+                "startTime": 7247.699999999953,
+                "duration": 245
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-IQlOti",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "arm": "B",
+      "pair": 3,
+      "startedAt": "2026-11-08T10:33:12.988585+00:00",
+      "command": [
+        "node",
+        "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+        "--app-root",
+        "/workspace/Buyer-Log-Desktop/resources/app",
+        "--measurement",
+        "/tmp/pr908-orders-diagnosis/phase0-02.json",
+        "--out",
+        "/tmp/pr908-orders-diagnosis/clean-native-series/pair3-B/measurement.json"
+      ],
+      "diskFreeBytes": 7684603904,
+      "returncode": 0,
+      "finishedAt": "2026-11-08T10:34:00.397791+00:00",
+      "transitions": [
+        {
+          "module": "cp",
+          "status": "passed",
+          "intentAtMs": 1712.7999999999302,
+          "startedWithRows": null,
+          "moduleContinueCount": 1,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 3,
+          "maxPollGapMs": 5694.199999999953,
+          "dispatchAtMs": 1726.6999999999534,
+          "dispatchDelayMs": 13.900000000023283,
+          "dataReadyMs": 9980,
+          "firstRowsPaintedMs": 10037.100000000093,
+          "elapsedMs": 13635.300000000047,
+          "paintedAtMs": 15348.099999999977,
+          "observationEndMs": 14673.100000000093,
+          "rows": 24982,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 1642.1999999999534,
+            "startupReadyMs": 1650.4000000000233,
+            "startupCompleteMs": 1712.2999999999302,
+            "continueAtMs": 1707.5999999999767,
+            "continueIntentAtMs": 1650.4000000000233,
+            "continueDispatchDelayMs": 57.199999999953434,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1712.2999999999302,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 329.29999999993015,
+                "duration": 52
+              },
+              {
+                "startTime": 447.79999999993015,
+                "duration": 57
+              },
+              {
+                "startTime": 607.4000000000233,
+                "duration": 94
+              },
+              {
+                "startTime": 850.5999999999767,
+                "duration": 73
+              },
+              {
+                "startTime": 1286.5999999999767,
+                "duration": 109
+              },
+              {
+                "startTime": 1400,
+                "duration": 167
+              },
+              {
+                "startTime": 2012,
+                "duration": 68
+              },
+              {
+                "startTime": 2098.29999999993,
+                "duration": 53
+              },
+              {
+                "startTime": 2151.5,
+                "duration": 364
+              },
+              {
+                "startTime": 2515.9000000000233,
+                "duration": 52
+              },
+              {
+                "startTime": 2590.0999999999767,
+                "duration": 365
+              },
+              {
+                "startTime": 5282.099999999977,
+                "duration": 72
+              },
+              {
+                "startTime": 6005.29999999993,
+                "duration": 3994.70000000007
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        },
+        {
+          "module": "orders",
+          "status": "passed",
+          "intentAtMs": 1075.7000000000698,
+          "startedWithRows": null,
+          "moduleContinueCount": 0,
+          "stabilityObservationMs": 1000,
+          "visibilityProbeVersion": 2,
+          "maxStablePollGapMs": 100,
+          "observationRestarts": 5,
+          "maxPollGapMs": 1777.9000000000233,
+          "dispatchAtMs": 1088.7000000000698,
+          "dispatchDelayMs": 13,
+          "dataReadyMs": 2399,
+          "firstRowsPaintedMs": 3608.5999999999767,
+          "elapsedMs": 3608.5999999999767,
+          "paintedAtMs": 4684.300000000047,
+          "observationEndMs": 6987,
+          "rows": 30000,
+          "domRows": 50,
+          "canAccess": true,
+          "rowVisibilityVerified": true,
+          "startup": {
+            "primaryScreenReadyMs": 959,
+            "startupReadyMs": 965.5999999999767,
+            "startupCompleteMs": 1075.3000000000466,
+            "continueAtMs": 1071.8000000000466,
+            "continueIntentAtMs": 965.5999999999767,
+            "continueDispatchDelayMs": 106.20000000006985,
+            "userWaitMs": 0,
+            "systemStartupCompleteMs": 1075.3000000000466,
+            "sampleWindowMs": 10000,
+            "longTasks": [
+              {
+                "startTime": 431.9000000000233,
+                "duration": 71
+              },
+              {
+                "startTime": 600.9000000000233,
+                "duration": 61
+              },
+              {
+                "startTime": 782.2000000000698,
+                "duration": 94
+              },
+              {
+                "startTime": 1572.0999999999767,
+                "duration": 122
+              },
+              {
+                "startTime": 1697.0999999999767,
+                "duration": 283
+              },
+              {
+                "startTime": 2022.9000000000233,
+                "duration": 1255
+              },
+              {
+                "startTime": 3277.9000000000233,
+                "duration": 192
+              },
+              {
+                "startTime": 3560.0999999999767,
+                "duration": 268
+              },
+              {
+                "startTime": 3840.0999999999767,
+                "duration": 785
+              },
+              {
+                "startTime": 4761.400000000023,
+                "duration": 561
+              },
+              {
+                "startTime": 5323,
+                "duration": 191
+              },
+              {
+                "startTime": 5575.70000000007,
+                "duration": 158
+              },
+              {
+                "startTime": 5734.800000000047,
+                "duration": 264
+              },
+              {
+                "startTime": 6001.400000000023,
+                "duration": 338
+              },
+              {
+                "startTime": 6371.300000000047,
+                "duration": 272
+              },
+              {
+                "startTime": 6645.599999999977,
+                "duration": 412
+              }
+            ]
+          },
+          "initialGeneration": null,
+          "revisions": {
+            "orders": 0,
+            "suppFob": 0
+          },
+          "projectionGenerations": [
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82",
+            "mw7on4ax-309477400e82"
+          ],
+          "errors": []
+        }
+      ],
+      "fixtureRoot": "/tmp/buyerlog-first-transition-z8lqEE",
+      "captures": {
+        "cp": {
+          "rowCount": 24982,
+          "rowsSha256": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+          "ownKeyOrderSha256": "2b844c57ef645253cb0c923a5451dca82bf54e5762ab2851406de113845193c0",
+          "cellsSha256": "81d62df462ec9a443379289201b6ad6601f574a070599faa2dbf010158e33634",
+          "schemaSha256": "6e3a2f46373d20daafe80b8fd677e65212563141f68559c8730ffbe3740db9ae",
+          "cellsPerRow": 61
+        },
+        "orders": {
+          "rowCount": 30000,
+          "rowsSha256": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b",
+          "ownKeyOrderSha256": "7278a43b787308fadb58ade450916b6b1bd388b93b2027e80f8db7bededa5aec",
+          "cellsSha256": "25227dcc2c0d48a38aae716d8cc4ca80e3cc7b7ad5f12b19baf6cda8f988ff32",
+          "schemaSha256": "7a89262e312e70f281ae3e4dfa1926027d319342edb224e335cbfce024b73364",
+          "cellsPerRow": 60
+        }
+      },
+      "status": "passed"
+    }
+  ],
+  "status": "passed",
+  "sourceHashes": {
+    "A": {
+      "resources/app/public/table-header-tracking.js": "2164f23b3748833b2bf51b4def20b0a050eca85079dc9f9ecbe43347fff49783",
+      "resources/app/public/workspace-blur.js": "469e4218f0d4b52a0122d62c0968b45b9b4810857eae8f78a119f1ecf00e71d3"
+    },
+    "B": {
+      "resources/app/public/table-header-tracking.js": "40613368cc68037db0d1b0c639bfb0159d210bfe606499c7d4141a8132f86a35",
+      "resources/app/public/workspace-blur.js": "b8db8cdcc9c35d194e1bf2638af6fddf1abb05e06383d6bf0d273c531620e07d"
+    }
+  },
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw7on4ax-309477400e82",
+    "sourceRevision": "6403dbf2f6b68dd2c091fbdc87fc8a6e060ddc1ffc99bed9c96e2e156e8739aa",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "summary": {
+    "cp": {
+      "elapsedMs": {
+        "A": 11324.400000000023,
+        "B": 12229.099999999977
+      },
+      "dataReadyMs": {
+        "A": 8652.29999999993,
+        "B": 8819.099999999977
+      },
+      "firstRowsPaintedMs": {
+        "A": 8705.29999999993,
+        "B": 8876.79999999993
+      },
+      "observationEndMs": {
+        "A": 13081.800000000047,
+        "B": 13265.899999999907
+      },
+      "pairedPercent": [
+        -1.9029705768075944,
+        1.4719915032735953,
+        20.482981656240963
+      ],
+      "observedSchemaVariants": [
+        61
+      ]
+    },
+    "orders": {
+      "elapsedMs": {
+        "A": 6061.699999999953,
+        "B": 5864.5
+      },
+      "dataReadyMs": {
+        "A": 3699,
+        "B": 3434
+      },
+      "firstRowsPaintedMs": {
+        "A": 3778.5,
+        "B": 3541.79999999993
+      },
+      "observationEndMs": {
+        "A": 7413.800000000047,
+        "B": 6935.400000000023
+      },
+      "pairedPercent": [
+        -3.253212795089744,
+        -4.095756750623303,
+        -33.22106665679807
+      ],
+      "observedSchemaVariants": [
+        60
+      ]
+    }
+  },
+  "finishedAt": "2026-11-08T10:34:00.407085+00:00"
+}

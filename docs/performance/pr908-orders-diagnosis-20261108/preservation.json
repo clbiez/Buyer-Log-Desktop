@@ -1,0 +1,67 @@
+{
+  "main": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "protected": "96b7d12712259fac9680dd852778bfd73daa292c",
+  "mainAlreadyAncestor": true,
+  "appTree": "47dee74749ff7efb15ce361bc371a884670207c3",
+  "noNewProductionChanges": true,
+  "protectedFiles": [
+    {
+      "file": "resources/app/public/app-main.js",
+      "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/perf-runtime.js",
+      "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/index.html",
+      "sha256": "54d2947a42dccd16d045d8482f8bd850058f1b82c3cbf07e37cb9cf2ea35553d",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/motion-plus.js",
+      "sha256": "a0fe378f6418a1e6c8cebc4fde0dab9b5d3ea17f6174550ca18a0b2a22a67f7c",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/checklist-components-engine.js",
+      "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/checklist-supplier-sync.js",
+      "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/public/cp-overview-assistant.js",
+      "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/scripts/benchmark-startup-orders.js",
+      "sha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/tests/checklist-components-row-cache.test.js",
+      "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": ".github/workflows/buyerlog-pr-fast-checks.yml",
+      "sha256": "c8b8a16bbbd4b7a2078febca76e4b200feaf24e91eaa213cb7a76a2f9d639429",
+      "equalMainAndProtected": true
+    },
+    {
+      "file": "resources/app/tests/fixtures/i18n-coverage-baseline.json",
+      "sha256": "20a8ac09f090a7e86be2d626769455a17b636e8822ef0db9967b38a9e151978d",
+      "equalMainAndProtected": true
+    }
+  ],
+  "serverEqualMain": true,
+  "nextJsonEqualProtected": true,
+  "originalRefUntouched": "Original branch was not checked out or pushed; contribution starts directly at protected SHA."
+}
