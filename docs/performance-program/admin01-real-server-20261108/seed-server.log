@@ -1,0 +1,34 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +38ms
+[PERF] DELTA_STORE_MODE +58ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +104ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/config.json · port=42079 · host=127.0.0.1
+[PERF] SERVER_READY +156ms
+Buyer Log sunucusu çalışıyor: http://localhost:42079
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/source
+[RUNTIME] heap-limit heapUsedMb=44 heapLimitMb=4288 rssMb=148
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +158ms
+[PERF] SHARED_SYNC_ROOT +158ms
+[PERF] SHARED_HUB_BOOTSTRAP +174ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +188ms
+[PERF] LOCAL_DB_READY +188ms
+[PERF] LOCAL_STATE_READY +188ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +203ms
+[2026-11-08T09:42:43.371Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-08T09:42:43.372Z] [ASAS Excel] [pivot-refresh] END duration=1ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-08T09:42:43.372Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4233ms
+[PERF] DELTA_STORE_HYDRATED +4234ms
+[2026-11-08T09:42:49.070Z] [ASAS Excel] [file-parse] END duration=5698ms category=wait
+[2026-11-08T09:42:49.173Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-08T09:42:49.173Z] [ANTREPO Excel] [pivot-refresh] END duration=0ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-08T09:42:49.173Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-08T09:42:49.937Z] [ANTREPO Excel] [file-parse] END duration=764ms category=wait
+[2026-11-08T09:42:50.620Z] [Refresh] [comparison] START category=wait
+[2026-11-08T09:42:51.256Z] [Refresh] [comparison] END duration=636ms category=wait
+[2026-11-08T09:42:51.256Z] [Local storage] [snapshot-save] START category=save
+[2026-11-08T09:42:58.083Z] [Local storage] [snapshot-save] END duration=6827ms category=save
+[2026-11-08T09:42:58.083Z] [Local storage] [page-cache-write] START category=cache
+[2026-11-08T09:43:08.758Z] [Local storage] [page-cache-write] END duration=10675ms category=cache

@@ -1,0 +1,18 @@
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +43ms
+[PERF] DELTA_STORE_MODE +66ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +116ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/config.json · port=44707 · host=127.0.0.1
+[PERF] SERVER_READY +166ms
+Buyer Log sunucusu çalışıyor: http://localhost:44707
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/source
+[RUNTIME] heap-limit heapUsedMb=48 heapLimitMb=4288 rssMb=145
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +168ms
+[PERF] SHARED_SYNC_ROOT +168ms
+[PERF] SHARED_HUB_BOOTSTRAP +188ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +202ms
+[PERF] LOCAL_DB_READY +202ms
+[PERF] LOCAL_STATE_READY +202ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +220ms

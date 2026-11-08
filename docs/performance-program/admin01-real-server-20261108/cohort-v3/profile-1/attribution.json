@@ -1,0 +1,18 @@
+{
+  "sampledWindowMs": 4171.782,
+  "sampledSelfMs": {
+    "idle": 655.9680000000006,
+    "crc_snapshot": 1226.4049999999972,
+    "sha256_update_snapshot": 166.1949999999999,
+    "sha256_update_validation": 157.82400000000004,
+    "crc_validation": 1067.0940000000005
+  },
+  "sampledWindowPercent": {
+    "idle": 15.723928048014029,
+    "crc_snapshot": 29.397629118683504,
+    "sha256_update_snapshot": 3.9837891816974116,
+    "sha256_update_validation": 3.783131525089279,
+    "crc_validation": 25.57885335331521
+  },
+  "interpretation": "Sampled self time over the backup-only profile window, including idle. Not exact function timers or process CPU. Separate profiled fresh servers; excluded from latency medians."
+}

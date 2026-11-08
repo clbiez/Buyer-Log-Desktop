@@ -1,0 +1,30 @@
+{
+  "baseline-1.json.gz": {
+    "uncompressedSha256": "0626ebbf464441bdac71e4f5889854be029fdaec9daa45a77f3c38020a634c27",
+    "compressedSha256": "acdb5ae10b88c5631cc36ddcff736da62d69f1466cdae125088fbae57ebb55c3"
+  },
+  "baseline-2.json.gz": {
+    "uncompressedSha256": "45e1385c60acdbf08d0884cf63ccde671f7ff9e91e644a1819c2fb485be974e3",
+    "compressedSha256": "29bd6f74e9d5bb735c0d7fc6a8daa55177a272b8d201ac00a8417d9c4cd4f6fd"
+  },
+  "baseline-3.json.gz": {
+    "uncompressedSha256": "161ba70c500d00ddeb832d2a899b56f328db98ea801745302c85fa74bab571fb",
+    "compressedSha256": "7a894fcdbbb666cb2d6b32f669315b38535d6d4ebbc90d2bda04aebdb7fed59c"
+  },
+  "trace-1.json.gz": {
+    "uncompressedSha256": "c8cb07bdd93eda5543f8e6e27fe8a6591fb2bd1985af91365d23c80f8b3f32a3",
+    "compressedSha256": "3534c3509872530ca8be69ee70fcf6ab6fa72a518ec807b5160b60fb4c9582f6"
+  },
+  "unchanged-control-1.json.gz": {
+    "uncompressedSha256": "ec1a12d4f2e446a5fa84749333b38a7b8124bbe284945fa62f8cd8d04ffcf48e",
+    "compressedSha256": "645f57c0885193e13eedd1a87748b152c98d648b92bf82f7529f85cfc26eda5b"
+  },
+  "unchanged-control-2.json.gz": {
+    "uncompressedSha256": "7cfd12b92132266874950ae430311299d202e402726bbc8adac1bd3f0ab3881e",
+    "compressedSha256": "99dfa32eea82c0dd6ae5a947aab7a77a2d1b3ec1dfb4d4bbea443353008c25c4"
+  },
+  "unchanged-control-3.json.gz": {
+    "uncompressedSha256": "f01098b7fce8b00e64fe5b3fa79b6e980aedb9450e939dada7c49e154e3f067c",
+    "compressedSha256": "c3379a80a90a356f35ebd7df09043671b49c3728129cf31502682a99a253db02"
+  }
+}

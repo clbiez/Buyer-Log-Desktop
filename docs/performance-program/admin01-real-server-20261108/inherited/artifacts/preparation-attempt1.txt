@@ -1,0 +1,15 @@
+✔ ADMIN-01 harness: nearest-rank p95, medians and all failed HTTP attempts remain visible (2.850939ms)
+✔ ADMIN-01 fixture: deterministic bytes, known CRC/SHA vectors and restored multi-chunk/empty entries (123.903019ms)
+✔ ADMIN-01 snapshot: source mutation between entries is rejected (18.958122ms)
+✔ ADMIN-01 snapshot: mutations after snapshot boundary cannot change archived bytes (67.201206ms)
+✔ ADMIN-01 integrity: valid CRC with wrong manifest SHA is still rejected (63.08609ms)
+✔ ADMIN-01 interruption: rejected progress cannot return success; partial ZIP is rejected (39.865583ms)
+✔ ADMIN-01 restore cancellation: incomplete entry is not committed and temporary bytes are removed (40.008314ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 424.033511

@@ -1,0 +1,11 @@
+✔ failed and timed-out attempts remain in latency quantiles (6.070668ms)
+✔ diagnostic output confinement rejects siblings and traversals (0.30432ms)
+✔ independent client preserves denied GET and generation mismatch; no retry (54.972402ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.954064

@@ -1,0 +1,170 @@
+{
+  "passed": true,
+  "archiveSha256": "89f9ed18d6f117e76f7b3e4e57971cbb13d81b3a92cb155de8ff7f6f22a523e1",
+  "contents": [
+    {
+      "path": "system/server-data/personal-login.json",
+      "size": 23813,
+      "sha256": "f7b448809a814f23ab334d6d3fa00487280b39e1fb486f7f6fc2e88e9acbbb3f",
+      "stage": "data"
+    },
+    {
+      "path": "system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34,
+      "sha256": "67ea706031568806219e829831a1a5b18ccb0b7f24cc3b0d7e5ff19b0be982be",
+      "stage": "data"
+    },
+    {
+      "path": "system/server-data/source-refresh-history.json",
+      "size": 591999,
+      "sha256": "be1d2db10ed31066ec3b0cdaf47a6babcb2250a491bc877bcade07c7c827b6ef",
+      "stage": "data"
+    },
+    {
+      "path": "system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34,
+      "sha256": "67ea706031568806219e829831a1a5b18ccb0b7f24cc3b0d7e5ff19b0be982be",
+      "stage": "data"
+    },
+    {
+      "path": "system/server-data/user-access.json.bak",
+      "size": 34330,
+      "sha256": "4cd6d5892bd9e2f2227e54196ca56f342d3d1c762b29a60f86d0985bb27359d6",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/BuyerLogLocal.db",
+      "size": 886,
+      "sha256": "48d7b08da6595aedbd891ee6edde4baaa951f1b901d38df0ea6788cd2475f77e",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375,
+      "sha256": "348d172ccba511c45d14a0cb01531b81c5906819df8800ef3cd1153cce295aae",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499,
+      "sha256": "00796ec4027332d301f76c129bb409f166434b07d1c9dd4e74e9c242f2f485b8",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432,
+      "sha256": "7c8170cf90301c0d7d22d8a0891ab951c0191536788283571e326bf49113b02f",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432,
+      "sha256": "501313380f69282da602686dde13e4a10482ace1d985f58a30e3b8dd625e3cad",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/vector.txt",
+      "size": 9,
+      "sha256": "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432,
+      "sha256": "764bcd2499d44f58a372137e60170cdcf40d0b2442b0257731de1ce0f08defd8",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432,
+      "sha256": "83bc9fde219d5e8e9c70380347524a8eb7c5889ec1bc904a99865de0d8391aef",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432,
+      "sha256": "ef92db267f944767ab2bf54dffb86174a6c0acba0736a1dd9c2d4b752bbf68bf",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/empty.bin",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432,
+      "sha256": "b1ef2080b7d65133586bd09a53db3aa0839754e9e256e7958f953604ebcc5783",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432,
+      "sha256": "f1c6cab22987c6547d4c091d0bf1e0fdbddf9c07937315c7f20d4dbac0aa36d0",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216,
+      "sha256": "5b6ff2e19d0da0fe323061018fc381393492884e74af8296c81ab9cb2694783a",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432,
+      "sha256": "4924b330cb9a0424ef47b5ea3f5b3aa434d62630df3623fe15a7b294446cd825",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/BuyerLogLocal.db.bak",
+      "size": 886,
+      "sha256": "48d7b08da6595aedbd891ee6edde4baaa951f1b901d38df0ea6788cd2475f77e",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84,
+      "sha256": "0db966a1902d06057aae5e234c69b4d7ebb05ec8babd8255f0e081c5e3b6b262",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34,
+      "sha256": "49f200e27762d1eb056b861d5b6cd6ef2b7344edf7ab26800bf98efd3a10f6a1",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/collection-permissions.json",
+      "size": 252,
+      "sha256": "957abfceae2c887326643cb59ea6f9e8ee541bad4a2f15cece6a77027c3224de",
+      "stage": "data"
+    },
+    {
+      "path": "system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34,
+      "sha256": "68ac04832e5563867c744e4ee7438ed028bbff94987cde8f3302b2e6d00b2b84",
+      "stage": "data"
+    },
+    {
+      "path": "system/config/config.json",
+      "size": 210,
+      "sha256": "9d6c48b507fdfb718fe2895816657613c93137b7f563fec84874bb0a144cc946",
+      "stage": "settings"
+    },
+    {
+      "path": "system/security/users-roles-permissions.json",
+      "size": 4446591,
+      "sha256": "73a0f24d1f10b062e33cb23ece1fea56d3ca6a04057ac768d12ed32b5f4131de",
+      "stage": "settings"
+    },
+    {
+      "path": "system/sync/metadata.json",
+      "size": 1342,
+      "sha256": "7190a2d0d255fd7f9bd9f38662efb1fc84370ef0e8a4cb94578f6142bb003b51",
+      "stage": "settings"
+    }
+  ],
+  "restoredFiles": 27,
+  "crcAndShaVerified": true
+}

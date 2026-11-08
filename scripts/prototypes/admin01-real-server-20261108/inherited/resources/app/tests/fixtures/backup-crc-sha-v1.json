@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "seed": 7,
+  "diskFiles": 8,
+  "diskBytes": 33554432,
+  "bufferBytes": 16777216,
+  "chunkBytes": 262144,
+  "createdAt": "2026-11-07T00:00:00.000Z"
+}

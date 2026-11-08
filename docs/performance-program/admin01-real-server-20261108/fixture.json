@@ -1,0 +1,114 @@
+{
+  "synthetic": true,
+  "inheritedFixtureSha256": "18daf1cf78dba1b7e46be23c501333248b6e7ce31f207a7e7fa362ffdf42d8df",
+  "config": {
+    "version": 1,
+    "seed": 7,
+    "diskFiles": 8,
+    "diskBytes": 33554432,
+    "bufferBytes": 16777216,
+    "chunkBytes": 262144,
+    "createdAt": "2026-11-07T00:00:00.000Z"
+  },
+  "mapped": [
+    {
+      "path": "system/local-data/disk-0.bin",
+      "size": 33554432,
+      "sha256": "b1ef2080b7d65133586bd09a53db3aa0839754e9e256e7958f953604ebcc5783",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-0.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-0.bin"
+    },
+    {
+      "path": "system/local-data/disk-1.bin",
+      "size": 33554432,
+      "sha256": "4924b330cb9a0424ef47b5ea3f5b3aa434d62630df3623fe15a7b294446cd825",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-1.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-1.bin"
+    },
+    {
+      "path": "system/local-data/disk-2.bin",
+      "size": 33554432,
+      "sha256": "f1c6cab22987c6547d4c091d0bf1e0fdbddf9c07937315c7f20d4dbac0aa36d0",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-2.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-2.bin"
+    },
+    {
+      "path": "system/local-data/disk-3.bin",
+      "size": 33554432,
+      "sha256": "501313380f69282da602686dde13e4a10482ace1d985f58a30e3b8dd625e3cad",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-3.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-3.bin"
+    },
+    {
+      "path": "system/local-data/disk-4.bin",
+      "size": 33554432,
+      "sha256": "83bc9fde219d5e8e9c70380347524a8eb7c5889ec1bc904a99865de0d8391aef",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-4.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-4.bin"
+    },
+    {
+      "path": "system/local-data/disk-5.bin",
+      "size": 33554432,
+      "sha256": "ef92db267f944767ab2bf54dffb86174a6c0acba0736a1dd9c2d4b752bbf68bf",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-5.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-5.bin"
+    },
+    {
+      "path": "system/local-data/disk-6.bin",
+      "size": 33554432,
+      "sha256": "764bcd2499d44f58a372137e60170cdcf40d0b2442b0257731de1ce0f08defd8",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-6.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-6.bin"
+    },
+    {
+      "path": "system/local-data/disk-7.bin",
+      "size": 33554432,
+      "sha256": "7c8170cf90301c0d7d22d8a0891ab951c0191536788283571e326bf49113b02f",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/disk-7.bin",
+      "archivePath": "system/local-data/admin01-payload/disk-7.bin"
+    },
+    {
+      "path": "system/local-data/empty.bin",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/empty.bin",
+      "archivePath": "system/local-data/admin01-payload/empty.bin"
+    },
+    {
+      "path": "system/local-data/vector.txt",
+      "size": 9,
+      "sha256": "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225",
+      "stage": "data",
+      "serverRelative": "local/admin01-payload/vector.txt",
+      "archivePath": "system/local-data/admin01-payload/vector.txt"
+    },
+    {
+      "path": "system/config/synthetic-settings.bin",
+      "size": 16777216,
+      "sha256": "5b6ff2e19d0da0fe323061018fc381393492884e74af8296c81ab9cb2694783a",
+      "stage": "settings",
+      "serverRelative": "local/admin01-payload/synthetic-settings.bin",
+      "archivePath": "system/local-data/admin01-payload/synthetic-settings.bin"
+    }
+  ],
+  "source": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "fixedToday": "2026-11-07",
+    "hashes": {
+      "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+      "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+      "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+    }
+  }
+}

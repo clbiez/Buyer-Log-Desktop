@@ -1,0 +1,59 @@
+{
+  "synthetic": true,
+  "status": "failed",
+  "scenario": "backup-only",
+  "ordinal": 1,
+  "root": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v1-backup-only-1",
+  "seed": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3",
+  "evidenceRoot": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/cohort-v1/backup-only-1",
+  "output": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/cohort-v1/backup-only-1/report.json",
+  "identity": {
+    "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "inheritedCommit": "04de59cdcfa959eab9923b9566ee09373daddee2",
+    "sourceHashes": {
+      "server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+      "server/lib/backup-service.js": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f",
+      "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "server/lib/user-access.js": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+      "server/lib/page-projection-cache.js": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "scripts/generate-demo-data.js": "b3519667d9b6a33eb929423eb8799cb41762c1a4cffab173f6c5a308439d13b6"
+    },
+    "harnessHashes": {
+      "analyze.cjs": "cf4ba336b2e75d110bff3b4198f4dafb7c083bc762678c8747cdf1f63d8dbfb4",
+      "common.cjs": "074f4f18c37f51e76445f6761df0806352a62b2792c8a3d5a7b7d5800f2d63f7",
+      "diagnostic.test.cjs": "fcd85d9b852f24778dd2f4f7f2750172a50abdf5f7e2245f45546c5b454d1f21",
+      "load.cjs": "db2200076a9940ebe216e44d33cf0a9e0751296d8b8f1ba4e0977457391cb9fa",
+      "observe.cjs": "b2c4629e1e694a3e937b4b03dc7244061ce924f98f6a4ce22e1b0a8087768521",
+      "run.cjs": "083c41b675267c874b8c458f2f3e11ef94d34a5981369bce55655a5a48e1e580",
+      "seed-builder.cjs": "069f5886aca8c87acdaa1abe28024ff401de5580b9f2d5ebffd8986a487b4187",
+      "series.sh": "778ab879ae922edeff3b8a9531815e223c1f691052174ccf22ae12b6d46e3831",
+      "verify.cjs": "fa683366df841543d527f7f91b2338fe6ad1ea095639130b60c0efc210920f1d"
+    }
+  },
+  "admission": {
+    "diskAvailableBytes": 31284084736,
+    "requiredDiskBytes": 3221225472,
+    "memoryCurrentBytes": 878219264,
+    "memoryLimitBytes": 17179869184,
+    "requiredMemoryHeadroomBytes": 4294967296,
+    "fsType": "0x794c7630",
+    "filesystem": "Filesystem     Type    1K-blocks   Used Available Use% Mounted on\noverlay        overlay  32978704 733736  30550864   3% /",
+    "cpuQuota": "400000 100000",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "node": "v24.19.0",
+    "kernel": "6.18.57",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "mutations": [],
+  "measurementsAreBeforeAfter": false,
+  "startedAt": "2026-11-08T09:43:55.266Z",
+  "finishedAt": "2026-11-08T09:43:55.324Z",
+  "error": {
+    "message": "Cannot access 'start' before initialization",
+    "stack": "ReferenceError: Cannot access 'start' before initialization\n    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:148:17)\n    at /workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:211:34\n    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:213:3)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47"
+  }
+}

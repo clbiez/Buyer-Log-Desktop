@@ -1,0 +1,141 @@
+{
+  "operation": "prepare-server-seed-once",
+  "synthetic": true,
+  "status": "passed",
+  "evidenceRoot": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3",
+  "output": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/prepare.json",
+  "mutations": [
+    {
+      "endpoint": "/api/user-login",
+      "method": "POST",
+      "status": 200,
+      "latencyMs": 98.76451599999564,
+      "retries": 0
+    },
+    {
+      "endpoint": "/api/refresh",
+      "method": "POST",
+      "status": 202,
+      "latencyMs": 11.903639000025578,
+      "retries": 0
+    }
+  ],
+  "admission": {
+    "diskAvailableBytes": 31672954880,
+    "requiredDiskBytes": 5368709120,
+    "memoryCurrentBytes": 474992640,
+    "memoryLimitBytes": 17179869184,
+    "requiredMemoryHeadroomBytes": 4294967296,
+    "fsType": "0x794c7630",
+    "filesystem": "Filesystem     Type    1K-blocks   Used Available Use% Mounted on\noverlay        overlay  32978704 353980  30930620   2% /",
+    "cpuQuota": "400000 100000",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "node": "v24.19.0",
+    "kernel": "6.18.57",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "identity": {
+    "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "inheritedCommit": "04de59cdcfa959eab9923b9566ee09373daddee2",
+    "sourceHashes": {
+      "server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+      "server/lib/backup-service.js": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f",
+      "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "server/lib/user-access.js": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+      "server/lib/page-projection-cache.js": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "scripts/generate-demo-data.js": "b3519667d9b6a33eb929423eb8799cb41762c1a4cffab173f6c5a308439d13b6"
+    },
+    "harnessHashes": {
+      "common.cjs": "074f4f18c37f51e76445f6761df0806352a62b2792c8a3d5a7b7d5800f2d63f7",
+      "load.cjs": "db2200076a9940ebe216e44d33cf0a9e0751296d8b8f1ba4e0977457391cb9fa",
+      "observe.cjs": "b2c4629e1e694a3e937b4b03dc7244061ce924f98f6a4ce22e1b0a8087768521",
+      "run.cjs": "083c41b675267c874b8c458f2f3e11ef94d34a5981369bce55655a5a48e1e580",
+      "seed-builder.cjs": "069f5886aca8c87acdaa1abe28024ff401de5580b9f2d5ebffd8986a487b4187",
+      "verify.cjs": "fa683366df841543d527f7f91b2338fe6ad1ea095639130b60c0efc210920f1d"
+    }
+  },
+  "materializedBytesFrom": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2",
+  "server": {
+    "pid": 1202,
+    "port": 42079,
+    "args": [
+      "/workspace/Buyer-Log-Desktop/resources/app/server/server.js"
+    ],
+    "environment": {
+      "PATH": "/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+      "LANG": "C.UTF-8",
+      "TZ": "UTC",
+      "NODE_ENV": "production",
+      "HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/home",
+      "XDG_CACHE_HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/home/cache",
+      "TMPDIR": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/tmp",
+      "TMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/tmp",
+      "TEMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/tmp",
+      "BUYER_LOG_SERVER_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/data",
+      "BUYER_LOG_AUTH_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/data",
+      "BUYER_LOG_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/app",
+      "BUYER_LOG_LOCAL_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/local",
+      "BUYER_LOG_LOCAL_DB": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/local/BuyerLogLocal.db",
+      "BUYER_LOG_CONFIG_PATH": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/config.json",
+      "BUYER_LOG_TEMP_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/tmp"
+    }
+  },
+  "login": {
+    "ok": true,
+    "userId": "moderator",
+    "normalPasswordFlow": true
+  },
+  "expected": {
+    "generation": "mw7n9msq-e2d86f5c6ab9",
+    "sourceRevision": "db5b4dd4979507e49dcb901bca360112ada502e34b6bfc1063ad363edcade9bb",
+    "sourceLoadedAt": "2026-11-08T09:42:49.172Z",
+    "revisions": {
+      "overrides": 0,
+      "orders": 0,
+      "suppFob": 0,
+      "pricingRules": 0,
+      "transitRules": 0,
+      "nonDtrManufacturers": 0,
+      "landedMultipliers": 0,
+      "freightRates": 0,
+      "antrepoMatchRule": 0,
+      "antrepoSourceMode": 0,
+      "asasSourceMode": 0,
+      "lflSourceMode": 0,
+      "noteColumnDefs": 0,
+      "importanceSettings": 0,
+      "refreshHistory": 1
+    },
+    "projections": {
+      "/api/page-projection/overview": {
+        "sha256": "7110b3001027317fb4a54a460069287df159a2f68fafb4e4705c62f7c82b19ca",
+        "bytes": 952040,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      },
+      "/api/page-projection/orders": {
+        "sha256": "3de20286efbd019576bb82bd59111d358dcb67bd40cdcaabbb01b1ff36445dbf",
+        "bytes": 5675954,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      }
+    },
+    "inheritedFixtureSha256": "18daf1cf78dba1b7e46be23c501333248b6e7ce31f207a7e7fa362ffdf42d8df",
+    "sourceHashes": {
+      "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+      "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+      "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+    },
+    "payloadSha256": "522ec94840cf9f2877093dd27670705782260dd8f0b2dcefc64a50adea9a62f9"
+  },
+  "serverExit": {
+    "code": 0,
+    "signal": null
+  }
+}

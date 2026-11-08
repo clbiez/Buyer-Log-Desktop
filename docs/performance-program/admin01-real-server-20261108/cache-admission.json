@@ -1,0 +1,2921 @@
+{
+  "beforeMemoryCurrentBytes": 13661286400,
+  "afterMemoryCurrentBytes": 1512562688,
+  "advice": "POSIX_FADV_DONTNEED after fsync; completed diagnostic runtime files only",
+  "filesDeleted": 0,
+  "files": [
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/download.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/BuyerLog_FullBackup_20261108-0945.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/tmp/buyerlog-backup-EULgXo/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-1/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/download.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/BuyerLog_FullBackup_20261108-0946.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/tmp/buyerlog-backup-mDM1vq/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-2/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/download.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/BuyerLog_FullBackup_20261108-0947.zip",
+      "size": 290325679
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/sync/metadata.json",
+      "size": 1342
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/tmp/buyerlog-backup-XiRV7i/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-interactive-3/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/download.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/BuyerLog_FullBackup_20261108-0944.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/tmp/buyerlog-backup-DCmpN6/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/download.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/BuyerLog_FullBackup_20261108-0946.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/tmp/buyerlog-backup-xQRrca/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-2/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/download.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/BuyerLog_FullBackup_20261108-0947.zip",
+      "size": 290325665
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/sync/metadata.json",
+      "size": 1328
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/tmp/buyerlog-backup-NMGg1g/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-3/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/download.zip",
+      "size": 290325657
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/sync/metadata.json",
+      "size": 1320
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/BuyerLog_FullBackup_20261108-0948.zip",
+      "size": 290325657
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/sync/metadata.json",
+      "size": 1320
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/download.zip",
+      "size": 290325657
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/config.json",
+      "size": 211
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/user-access.json",
+      "size": 4446871
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/user-audit.jsonl",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/sync/metadata.json",
+      "size": 1320
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/restored/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/BuyerLog_FullBackup_20261108-0949.zip",
+      "size": 290325657
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/manifest.json",
+      "size": 5959
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/security/users-roles-permissions.json",
+      "size": 4446591
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/config/config.json",
+      "size": 210
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/BuyerLogLocal.db",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/BuyerLogLocal.db.bak",
+      "size": 886
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/collection-image-scope-migration-v1.json",
+      "size": 84
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/BuyerLogLocal.db.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/collection-permissions.json",
+      "size": 252
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/collection-permissions.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/sync/metadata.json",
+      "size": 1320
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/server-data/personal-login.json",
+      "size": 23813
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/server-data/source-refresh-history.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/server-data/source-refresh-history.json",
+      "size": 591999
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/server-data/merch-calendar.json.write-fence.json",
+      "size": 34
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/server-data/user-access.json.bak",
+      "size": 34330
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/tmp/buyerlog-backup-kf9b7V/snapshot/system/local-data/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/refresh-performance/summary-v1.json",
+      "size": 1375
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-7.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-3.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/vector.txt",
+      "size": 9
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-6.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-4.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-5.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/empty.bin",
+      "size": 0
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-0.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-2.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/synthetic-settings.bin",
+      "size": 16777216
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/admin01-payload/disk-1.bin",
+      "size": 33554432
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/model-snapshots/moderator.json.gz",
+      "size": 9977645
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/manifest.json",
+      "size": 16080
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/collection-catalog.json.gz",
+      "size": 684
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/order-summary.json.gz",
+      "size": 3240346
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/overview.json.gz",
+      "size": 952040
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/orders.json.gz",
+      "size": 5675954
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/page-cache/moderator/mw7n9msq-e2d86f5c6ab9/cp.json.gz",
+      "size": 4644390
+    },
+    {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-2/local/refresh-performance/history/2026-11.jsonl",
+      "size": 499
+    }
+  ],
+  "seedAndFutureRunCacheUntouched": true
+}

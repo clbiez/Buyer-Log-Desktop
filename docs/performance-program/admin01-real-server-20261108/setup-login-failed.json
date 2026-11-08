@@ -1,0 +1,87 @@
+{
+  "operation": "prepare-server-seed-once",
+  "synthetic": true,
+  "status": "failed",
+  "evidenceRoot": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2",
+  "output": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/prepare.json",
+  "mutations": [
+    {
+      "endpoint": "/api/user-login",
+      "method": "POST",
+      "status": 500,
+      "latencyMs": 62.77482799999416,
+      "retries": 0
+    }
+  ],
+  "admission": {
+    "diskAvailableBytes": 32032137216,
+    "requiredDiskBytes": 5368709120,
+    "memoryCurrentBytes": 104247296,
+    "memoryLimitBytes": 17179869184,
+    "requiredMemoryHeadroomBytes": 4294967296,
+    "fsType": "0x794c7630",
+    "filesystem": "Filesystem     Type    1K-blocks  Used Available Use% Mounted on\noverlay        overlay  32978704  3216  31281384   1% /",
+    "cpuQuota": "400000 100000",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "node": "v24.19.0",
+    "kernel": "6.18.57",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "identity": {
+    "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "inheritedCommit": "04de59cdcfa959eab9923b9566ee09373daddee2",
+    "sourceHashes": {
+      "server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+      "server/lib/backup-service.js": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f",
+      "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "server/lib/user-access.js": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+      "server/lib/page-projection-cache.js": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "scripts/generate-demo-data.js": "b3519667d9b6a33eb929423eb8799cb41762c1a4cffab173f6c5a308439d13b6"
+    },
+    "harnessHashes": {
+      "common.cjs": "d8c75c9c14be145e0106028fb796a174e238bdb556ca3a18a1e8d88094b73683",
+      "load.cjs": "db2200076a9940ebe216e44d33cf0a9e0751296d8b8f1ba4e0977457391cb9fa",
+      "observe.cjs": "b2c4629e1e694a3e937b4b03dc7244061ce924f98f6a4ce22e1b0a8087768521",
+      "run.cjs": "ee885d3fd4d08db4b46fc5703f7337dc2e22398b93ef2506547cd8f541cd139c",
+      "seed-builder.cjs": "069f5886aca8c87acdaa1abe28024ff401de5580b9f2d5ebffd8986a487b4187",
+      "verify.cjs": "fa683366df841543d527f7f91b2338fe6ad1ea095639130b60c0efc210920f1d"
+    }
+  },
+  "server": {
+    "pid": 1115,
+    "port": 44707,
+    "args": [
+      "/workspace/Buyer-Log-Desktop/resources/app/server/server.js"
+    ],
+    "environment": {
+      "PATH": "/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+      "LANG": "C.UTF-8",
+      "TZ": "UTC",
+      "NODE_ENV": "production",
+      "HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/home",
+      "XDG_CACHE_HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/home/cache",
+      "TMPDIR": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/tmp",
+      "TMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/tmp",
+      "TEMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/tmp",
+      "BUYER_LOG_SERVER_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/data",
+      "BUYER_LOG_AUTH_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/auth",
+      "BUYER_LOG_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/app",
+      "BUYER_LOG_LOCAL_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/local",
+      "BUYER_LOG_LOCAL_DB": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/local/BuyerLogLocal.db",
+      "BUYER_LOG_CONFIG_PATH": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/config.json",
+      "BUYER_LOG_TEMP_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v2/tmp"
+    }
+  },
+  "serverExit": {
+    "code": 0,
+    "signal": null
+  },
+  "error": {
+    "message": "/api/user-login 500 {\"error\":\"Kullanıcı oturumu başlatılamadı.\",\"code\":\"USER_LOGIN_FAILED\"}",
+    "stack": "AssertionError [ERR_ASSERTION]: /api/user-login 500 {\"error\":\"Kullanıcı oturumu başlatılamadı.\",\"code\":\"USER_LOGIN_FAILED\"}\n    at json (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:19:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async login (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:60:31)\n    at async prepare (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:118:58)\n    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:204:27"
+  }
+}

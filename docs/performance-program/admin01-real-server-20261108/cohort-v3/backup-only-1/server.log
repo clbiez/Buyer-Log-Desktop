@@ -1,0 +1,20 @@
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +48ms
+[PERF] DELTA_STORE_MODE +67ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +167ms
+Buyer Log runtime config: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-backup-only-1/config.json · port=37251 · host=127.0.0.1
+[PERF] SERVER_READY +214ms
+Buyer Log sunucusu çalışıyor: http://localhost:37251
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3/source
+[RUNTIME] heap-limit heapUsedMb=60 heapLimitMb=4288 rssMb=174
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +216ms
+[PERF] SHARED_SYNC_ROOT +216ms
+[PERF] SHARED_HUB_BOOTSTRAP +219ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +222ms
+[PERF] LOCAL_DB_READY +222ms
+[PERF] LOCAL_STATE_READY +222ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +257ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4237ms
+[PERF] DELTA_STORE_HYDRATED +4238ms

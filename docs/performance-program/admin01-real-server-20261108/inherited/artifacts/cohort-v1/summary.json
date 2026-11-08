@@ -1,0 +1,180 @@
+{
+  "identity": {
+    "head": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "requiredAncestor": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "fileHashes": {
+      "server/lib/backup-service.js": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f",
+      "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+      "server/server.js": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+      "public/app-main.js": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+      "public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+      "public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21",
+      "public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e"
+    },
+    "harnessHashes": {
+      "scripts/benchmark-backup-crc-sha.js": "f78e3d7cf9e7ddd3ad8777df0e0bc09f0aa04e44b9a4df4bcbf5b138ef974e9e",
+      "scripts/lib/backup-diagnostic-fixture.js": "34979505817a4793a3c1dd4813abc1583f4141a74e4923ad333fc08a76108e63",
+      "tests/helpers/backup-health-probe.cjs": "29d0c003d5045bf60ca655b419636c64e9c9cff6eba52d80f59e58b5aa60a6d4",
+      "tests/fixtures/backup-crc-sha-v1.json": "da6e989b884c545cade6b655c13e2c8885bf8490297f53cf11f1e80f8e3d564a"
+    },
+    "source": "5da2de0690bd395fd0e1000bdb60b3fa9b110a33f38f42c313b6190e15729bf1",
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "cpuQuota": "400000 100000",
+    "memoryLimit": "17179869184"
+  },
+  "fixtureSha256": "18daf1cf78dba1b7e46be23c501333248b6e7ce31f207a7e7fa362ffdf42d8df",
+  "baseline": {
+    "runs": 3,
+    "wallMs": 3593.153622999962,
+    "cpuMs": 3857.206,
+    "eventLoopP95Ms": 2.051071,
+    "eventLoopMaxMs": 87.359487,
+    "healthP95Ms": 5.118305999960285,
+    "httpAttempts": 1092,
+    "httpFailures": 0,
+    "performanceAcceptance": false,
+    "reason": "preparation only; synthetic probe; no production after implementation"
+  },
+  "unchangedControl": {
+    "runs": 3,
+    "wallMs": 3663.7384160000365,
+    "cpuMs": 3858.735,
+    "eventLoopP95Ms": 2.144255,
+    "eventLoopMaxMs": 88.801279,
+    "healthP95Ms": 6.059201000025496,
+    "httpAttempts": 1054,
+    "httpFailures": 0,
+    "performanceAcceptance": false,
+    "reason": "preparation only; synthetic probe; no production after implementation"
+  },
+  "trace": {
+    "profile": [
+      {
+        "frame": "crcUpdate @ file:///workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js:30",
+        "sampledSelfMs": 2548.796
+      },
+      {
+        "frame": "update @ :0",
+        "sampledSelfMs": 362.855
+      },
+      {
+        "frame": "(idle) @ :0",
+        "sampledSelfMs": 347.304
+      },
+      {
+        "frame": "read @ :0",
+        "sampledSelfMs": 42.08
+      },
+      {
+        "frame": "(garbage collector) @ :0",
+        "sampledSelfMs": 40.95
+      },
+      {
+        "frame": "post @ node:inspector:115",
+        "sampledSelfMs": 39.149
+      },
+      {
+        "frame": "writeBuffer @ :0",
+        "sampledSelfMs": 34.301
+      },
+      {
+        "frame": "(program) @ :0",
+        "sampledSelfMs": 26.567
+      },
+      {
+        "frame": "writev @ :0",
+        "sampledSelfMs": 16.926
+      },
+      {
+        "frame": "FastBuffer @ node:internal/buffer:960",
+        "sampledSelfMs": 14.176
+      },
+      {
+        "frame": "ReadStream._read @ node:internal/fs/streams:252",
+        "sampledSelfMs": 7.852
+      },
+      {
+        "frame": "listOnTimeout @ node:internal/timers:576",
+        "sampledSelfMs": 7.669
+      },
+      {
+        "frame": "allocUnsafeSlow @ node:buffer:466",
+        "sampledSelfMs": 7.083
+      },
+      {
+        "frame": "ReadableState @ node:internal/streams/readable:264",
+        "sampledSelfMs": 7.03
+      },
+      {
+        "frame": "close @ :0",
+        "sampledSelfMs": 5.555
+      },
+      {
+        "frame": "fsCall @ node:internal/fs/promises:456",
+        "sampledSelfMs": 5.365
+      },
+      {
+        "frame": "processTicksAndRejections @ node:internal/process/task_queues:72",
+        "sampledSelfMs": 4.417
+      },
+      {
+        "frame": "(anonymous) @ file:///workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-backup-crc-sha.js:72",
+        "sampledSelfMs": 4.355
+      },
+      {
+        "frame": "read @ node:fs:665",
+        "sampledSelfMs": 3.34
+      },
+      {
+        "frame": "onconnection @ node:net:2477",
+        "sampledSelfMs": 3.321
+      },
+      {
+        "frame": "read @ node:internal/fs/promises:704",
+        "sampledSelfMs": 3.303
+      },
+      {
+        "frame": "FSReqCallback @ :0",
+        "sampledSelfMs": 3.26
+      },
+      {
+        "frame": "(anonymous) @ node:events:996",
+        "sampledSelfMs": 3.212
+      },
+      {
+        "frame": "Writable.write @ node:internal/streams/writable:502",
+        "sampledSelfMs": 3.07
+      },
+      {
+        "frame": "resolver @ node:events:1004",
+        "sampledSelfMs": 2.334
+      },
+      {
+        "frame": "runMicrotasks @ :0",
+        "sampledSelfMs": 2.231
+      },
+      {
+        "frame": "IncomingMessage @ node:_http_incoming:53",
+        "sampledSelfMs": 2.231
+      },
+      {
+        "frame": "onceWrapper @ node:events:625",
+        "sampledSelfMs": 2.186
+      },
+      {
+        "frame": "validateZip @ file:///workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js:104",
+        "sampledSelfMs": 2.181
+      },
+      {
+        "frame": "WritableState @ node:internal/streams/writable:302",
+        "sampledSelfMs": 2.18
+      }
+    ],
+    "wallMs": 3539.316785999981
+  },
+  "officialBeforeAfter": false,
+  "productionChanged": false
+}

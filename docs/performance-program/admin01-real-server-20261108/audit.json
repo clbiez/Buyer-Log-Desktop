@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "successfulRuns": 9,
+  "httpAttemptsInBackupWindows": 2657,
+  "inheritedFilesUnchanged": 39,
+  "measuredHarnessUnchanged": true,
+  "sourceHashesMatchMeasured": true,
+  "trackedPathsWithinAllowlist": true,
+  "quantilesIndependentlyRecomputed": true
+}

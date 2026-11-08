@@ -1,0 +1,61 @@
+{
+  "root": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/validation-v1",
+  "admission": {
+    "diskAvailableBytes": 17363124224,
+    "requiredDiskBytes": 3221225472,
+    "memoryCurrentBytes": 3039420416,
+    "memoryLimitBytes": 17179869184,
+    "requiredMemoryHeadroomBytes": 4294967296,
+    "fsType": "0x794c7630",
+    "filesystem": "Filesystem     Type    1K-blocks     Used Available Use% Mounted on\noverlay        overlay  32978704 14328424  16956176  46% /",
+    "cpuQuota": "400000 100000",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "node": "v24.19.0",
+    "kernel": "6.18.57",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "checks": [
+    {
+      "label": "related-tests",
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/backup-restore-worker-v20260922.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/backup-v757.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/compute-response.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-config-v782.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v781.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v783.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-users-v784.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/full-system-restore-v780.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/security-legacy-backup-v20261003.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/selective-backup-restore-v7148.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/shared-personal-backup-v7088.test.js",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/user-restore-my-data-v7086.test.js",
+        "/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/inherited/resources/app/tests/backup-crc-sha-preparation.test.js",
+        "/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/diagnostic.test.cjs"
+      ],
+      "log": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/validation-v1-related-tests.log",
+      "exitCode": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "label": "i18n",
+      "command": "npm",
+      "args": [
+        "run",
+        "i18n:check"
+      ],
+      "log": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/validation-v1-i18n.log",
+      "exitCode": 0,
+      "signal": null,
+      "error": null
+    }
+  ],
+  "testFiles": 14,
+  "passed": true
+}

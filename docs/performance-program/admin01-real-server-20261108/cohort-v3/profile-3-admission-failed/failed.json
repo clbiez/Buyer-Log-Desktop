@@ -1,0 +1,9 @@
+{
+  "status": "failed",
+  "stage": "memory-admission",
+  "error": "insufficient memory admission",
+  "serverStarted": false,
+  "postAttempts": 0,
+  "log": "../profile-3.driver.log",
+  "laterAction": "completed-file cache advice recorded in ../../cache-admission.json; no bytes removed"
+}

@@ -1,0 +1,10 @@
+AssertionError [ERR_ASSERTION]: {"message":"Backup snapshot tamamlanmadan kaynak değişti: system/local-data/BuyerLogLocal.db","stack":"Error: Backup snapshot tamamlanmadan kaynak değişti: system/local-data/BuyerLogLocal.db\n    at createBackupArchive (/workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js:386:93)\n    at async service.create (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/observe.cjs:32:18)\n    at async Immediate.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/server.js:6480:21)"}
+    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:173:66)
+    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:211:28 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

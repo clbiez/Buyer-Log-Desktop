@@ -1,0 +1,13 @@
+AssertionError [ERR_ASSERTION]: /api/user-login 500 {"error":"Kullanıcı oturumu başlatılamadı.","code":"USER_LOGIN_FAILED"}
+    at json (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:19:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async login (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:60:31)
+    at async prepare (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:118:58)
+    at async /workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:204:27 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

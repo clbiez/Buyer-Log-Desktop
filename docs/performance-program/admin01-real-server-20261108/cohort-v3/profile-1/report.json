@@ -1,0 +1,2115 @@
+{
+  "synthetic": true,
+  "status": "passed",
+  "scenario": "profile",
+  "ordinal": 1,
+  "root": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1",
+  "seed": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/seed-v3",
+  "evidenceRoot": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/cohort-v3/profile-1",
+  "output": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/cohort-v3/profile-1/report.json",
+  "identity": {
+    "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+    "inheritedCommit": "04de59cdcfa959eab9923b9566ee09373daddee2",
+    "sourceHashes": {
+      "server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "server/lib/backup-archive.js": "ece0469f3b916379e6a3061b9864cf7dfd6d86c31420038e4ec7e9fb0730d02d",
+      "server/lib/backup-service.js": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f",
+      "server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "server/lib/user-access.js": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+      "server/lib/page-projection-cache.js": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "scripts/generate-demo-data.js": "b3519667d9b6a33eb929423eb8799cb41762c1a4cffab173f6c5a308439d13b6"
+    },
+    "harnessHashes": {
+      "analyze.cjs": "cf4ba336b2e75d110bff3b4198f4dafb7c083bc762678c8747cdf1f63d8dbfb4",
+      "common.cjs": "074f4f18c37f51e76445f6761df0806352a62b2792c8a3d5a7b7d5800f2d63f7",
+      "diagnostic.test.cjs": "fcd85d9b852f24778dd2f4f7f2750172a50abdf5f7e2245f45546c5b454d1f21",
+      "load.cjs": "db2200076a9940ebe216e44d33cf0a9e0751296d8b8f1ba4e0977457391cb9fa",
+      "observe.cjs": "b2c4629e1e694a3e937b4b03dc7244061ce924f98f6a4ce22e1b0a8087768521",
+      "run.cjs": "640ead73ff26e2b4f89889f0f53e4102d5b83c291ec93bb41cacb5cfa8a8ea77",
+      "seed-builder.cjs": "069f5886aca8c87acdaa1abe28024ff401de5580b9f2d5ebffd8986a487b4187",
+      "series.sh": "778ab879ae922edeff3b8a9531815e223c1f691052174ccf22ae12b6d46e3831",
+      "verify.cjs": "fa683366df841543d527f7f91b2338fe6ad1ea095639130b60c0efc210920f1d"
+    }
+  },
+  "admission": {
+    "diskAvailableBytes": 21793243136,
+    "requiredDiskBytes": 3221225472,
+    "memoryCurrentBytes": 10642481152,
+    "memoryLimitBytes": 17179869184,
+    "requiredMemoryHeadroomBytes": 4294967296,
+    "fsType": "0x794c7630",
+    "filesystem": "Filesystem     Type    1K-blocks     Used Available Use% Mounted on\noverlay        overlay  32978704 10002136  21282464  32% /",
+    "cpuQuota": "400000 100000",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "node": "v24.19.0",
+    "kernel": "6.18.57",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "mutations": [
+    {
+      "endpoint": "/api/user-login",
+      "method": "POST",
+      "status": 200,
+      "latencyMs": 107.74772200000007,
+      "retries": 0
+    },
+    {
+      "endpoint": "/api/backups",
+      "method": "POST",
+      "status": 202,
+      "latencyMs": 7.333568000001833,
+      "retries": 0
+    }
+  ],
+  "measurementsAreBeforeAfter": false,
+  "startedAt": "2026-11-08T09:48:19.725Z",
+  "server": {
+    "pid": 1924,
+    "port": 35907,
+    "args": [
+      "--require",
+      "/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/observe.cjs",
+      "/workspace/Buyer-Log-Desktop/resources/app/server/server.js"
+    ],
+    "environment": {
+      "PATH": "/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+      "LANG": "C.UTF-8",
+      "TZ": "UTC",
+      "NODE_ENV": "production",
+      "HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/home",
+      "XDG_CACHE_HOME": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/home/cache",
+      "TMPDIR": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp",
+      "TMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp",
+      "TEMP": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp",
+      "BUYER_LOG_SERVER_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data",
+      "BUYER_LOG_AUTH_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/data",
+      "BUYER_LOG_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/app",
+      "BUYER_LOG_LOCAL_DATA_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local",
+      "BUYER_LOG_LOCAL_DB": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/local/BuyerLogLocal.db",
+      "BUYER_LOG_CONFIG_PATH": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/config.json",
+      "BUYER_LOG_TEMP_ROOT": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp",
+      "ADMIN01_OBSERVATION": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/cohort-v3/profile-1/observation.json",
+      "ADMIN01_PROFILE": "1"
+    }
+  },
+  "anonymousProjectionStatus": 401,
+  "login": {
+    "ok": true,
+    "userId": "moderator",
+    "normalPasswordFlow": true
+  },
+  "before": {
+    "generation": "mw7n9msq-e2d86f5c6ab9",
+    "sourceRevision": "db5b4dd4979507e49dcb901bca360112ada502e34b6bfc1063ad363edcade9bb",
+    "sourceLoadedAt": "2026-11-08T09:42:49.172Z",
+    "revisions": {
+      "overrides": 0,
+      "orders": 0,
+      "suppFob": 0,
+      "pricingRules": 0,
+      "transitRules": 0,
+      "nonDtrManufacturers": 0,
+      "landedMultipliers": 0,
+      "freightRates": 0,
+      "antrepoMatchRule": 0,
+      "antrepoSourceMode": 0,
+      "asasSourceMode": 0,
+      "lflSourceMode": 0,
+      "noteColumnDefs": 0,
+      "importanceSettings": 0,
+      "refreshHistory": 1
+    },
+    "projections": {
+      "/api/page-projection/overview": {
+        "sha256": "7110b3001027317fb4a54a460069287df159a2f68fafb4e4705c62f7c82b19ca",
+        "bytes": 952040,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      },
+      "/api/page-projection/orders": {
+        "sha256": "3de20286efbd019576bb82bd59111d358dcb67bd40cdcaabbb01b1ff36445dbf",
+        "bytes": 5675954,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      }
+    },
+    "inheritedFixtureSha256": "18daf1cf78dba1b7e46be23c501333248b6e7ce31f207a7e7fa362ffdf42d8df",
+    "sourceHashes": {
+      "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+      "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+      "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+    },
+    "payloadSha256": "522ec94840cf9f2877093dd27670705782260dd8f0b2dcefc64a50adea9a62f9"
+  },
+  "quiescence": {
+    "initialSettleMs": 10000,
+    "signatureStableMs": 3004.7581440000795,
+    "totalPollMs": 3005.085798999993,
+    "localDbSignature": "886:1794131304437.1782"
+  },
+  "jobId": "dc857ca4-2709-49ef-a4e5-5db9e0235c30",
+  "measurement": {
+    "startedMs": 750021.203991,
+    "memoryBefore": {
+      "rss": 287703040,
+      "heapTotal": 199639040,
+      "heapUsed": 96757568,
+      "external": 12591784,
+      "arrayBuffers": 9830226
+    },
+    "phases": [
+      {
+        "phase": "Hazırlanıyor",
+        "atMs": 750234.543751
+      },
+      {
+        "phase": "Veriler",
+        "atMs": 750234.577522
+      },
+      {
+        "phase": "Ayarlar",
+        "atMs": 752148.777012
+      },
+      {
+        "phase": "Doğrulanıyor",
+        "atMs": 752198.935626
+      },
+      {
+        "phase": "Tamamlandı",
+        "atMs": 754076.1991
+      }
+    ],
+    "archive": {
+      "path": "/workspace/Buyer-Log-Desktop/docs/performance-program/admin01-real-server-20261108/runtime/cohort-v3-profile-1/tmp/buyerlog-backup-jNZ2Sj/BuyerLog_FullBackup_20261108-0948.zip",
+      "size": 290325657,
+      "fileCount": 28
+    },
+    "endedMs": 754076.235805,
+    "wallMs": 4055.031813999987,
+    "cpuUserMs": 5091.97,
+    "cpuSystemMs": 966.091,
+    "cpuMs": 6058.061,
+    "memoryAfter": {
+      "rss": 434348032,
+      "heapTotal": 197451776,
+      "heapUsed": 58373016,
+      "external": 36016502,
+      "arrayBuffers": 33261004
+    },
+    "lifetimePeakRssBytes": 449658880,
+    "eventLoopUtilization": {
+      "idle": 422.7689640000008,
+      "active": 3633.0721339999454,
+      "utilization": 0.8957629370123794
+    },
+    "gaps": [
+      {
+        "fromMs": 750011.066528,
+        "toMs": 750093.361038,
+        "gapMs": 82.29450999991968
+      },
+      {
+        "fromMs": 750093.361038,
+        "toMs": 750103.116667,
+        "gapMs": 9.755629000021145
+      },
+      {
+        "fromMs": 750103.116667,
+        "toMs": 750234.053149,
+        "gapMs": 130.93648200004827
+      },
+      {
+        "fromMs": 750234.053149,
+        "toMs": 750245.824255,
+        "gapMs": 11.771105999941938
+      },
+      {
+        "fromMs": 750245.824255,
+        "toMs": 750255.646956,
+        "gapMs": 9.822701000026427
+      },
+      {
+        "fromMs": 750255.646956,
+        "toMs": 750267.051779,
+        "gapMs": 11.404822999960743
+      },
+      {
+        "fromMs": 750267.051779,
+        "toMs": 750282.197277,
+        "gapMs": 15.145498000085354
+      },
+      {
+        "fromMs": 750282.197277,
+        "toMs": 750328.356595,
+        "gapMs": 46.159317999961786
+      },
+      {
+        "fromMs": 750328.356595,
+        "toMs": 750339.990273,
+        "gapMs": 11.63367799995467
+      },
+      {
+        "fromMs": 750339.990273,
+        "toMs": 750352.367036,
+        "gapMs": 12.37676300003659
+      },
+      {
+        "fromMs": 750352.367036,
+        "toMs": 750363.121265,
+        "gapMs": 10.754228999954648
+      },
+      {
+        "fromMs": 750363.121265,
+        "toMs": 750385.696135,
+        "gapMs": 22.574870000011288
+      },
+      {
+        "fromMs": 750385.696135,
+        "toMs": 750395.867694,
+        "gapMs": 10.171559000038542
+      },
+      {
+        "fromMs": 750395.867694,
+        "toMs": 750405.840101,
+        "gapMs": 9.97240700002294
+      },
+      {
+        "fromMs": 750405.840101,
+        "toMs": 750417.653161,
+        "gapMs": 11.81305999995675
+      },
+      {
+        "fromMs": 750417.653161,
+        "toMs": 750428.18902,
+        "gapMs": 10.535859000054188
+      },
+      {
+        "fromMs": 750428.18902,
+        "toMs": 750438.7718,
+        "gapMs": 10.582779999938793
+      },
+      {
+        "fromMs": 750438.7718,
+        "toMs": 750448.81921,
+        "gapMs": 10.047409999999218
+      },
+      {
+        "fromMs": 750448.81921,
+        "toMs": 750458.129386,
+        "gapMs": 9.310175999999046
+      },
+      {
+        "fromMs": 750458.129386,
+        "toMs": 750468.15909,
+        "gapMs": 10.02970399998594
+      },
+      {
+        "fromMs": 750468.15909,
+        "toMs": 750478.240532,
+        "gapMs": 10.08144199999515
+      },
+      {
+        "fromMs": 750478.240532,
+        "toMs": 750489.361696,
+        "gapMs": 11.12116400001105
+      },
+      {
+        "fromMs": 750489.361696,
+        "toMs": 750500.261695,
+        "gapMs": 10.899999000015669
+      },
+      {
+        "fromMs": 750500.261695,
+        "toMs": 750510.24598,
+        "gapMs": 9.984285000013188
+      },
+      {
+        "fromMs": 750510.24598,
+        "toMs": 750521.370649,
+        "gapMs": 11.12466900004074
+      },
+      {
+        "fromMs": 750521.370649,
+        "toMs": 750531.949473,
+        "gapMs": 10.578823999967426
+      },
+      {
+        "fromMs": 750531.949473,
+        "toMs": 750541.204846,
+        "gapMs": 9.25537299993448
+      },
+      {
+        "fromMs": 750541.204846,
+        "toMs": 750551.443025,
+        "gapMs": 10.238179000094533
+      },
+      {
+        "fromMs": 750551.443025,
+        "toMs": 750561.92289,
+        "gapMs": 10.479865000001155
+      },
+      {
+        "fromMs": 750561.92289,
+        "toMs": 750571.021466,
+        "gapMs": 9.098575999960303
+      },
+      {
+        "fromMs": 750571.021466,
+        "toMs": 750582.436914,
+        "gapMs": 11.415447999956086
+      },
+      {
+        "fromMs": 750582.436914,
+        "toMs": 750592.092252,
+        "gapMs": 9.655338000040501
+      },
+      {
+        "fromMs": 750592.092252,
+        "toMs": 750603.344494,
+        "gapMs": 11.252241999958642
+      },
+      {
+        "fromMs": 750603.344494,
+        "toMs": 750614.10682,
+        "gapMs": 10.762326000025496
+      },
+      {
+        "fromMs": 750614.10682,
+        "toMs": 750625.901182,
+        "gapMs": 11.794361999956891
+      },
+      {
+        "fromMs": 750625.901182,
+        "toMs": 750636.416219,
+        "gapMs": 10.515037000062875
+      },
+      {
+        "fromMs": 750636.416219,
+        "toMs": 750647.406145,
+        "gapMs": 10.98992600000929
+      },
+      {
+        "fromMs": 750647.406145,
+        "toMs": 750657.494668,
+        "gapMs": 10.088523000013083
+      },
+      {
+        "fromMs": 750657.494668,
+        "toMs": 750667.461106,
+        "gapMs": 9.966437999974005
+      },
+      {
+        "fromMs": 750667.461106,
+        "toMs": 750677.612674,
+        "gapMs": 10.15156799997203
+      },
+      {
+        "fromMs": 750677.612674,
+        "toMs": 750688.823113,
+        "gapMs": 11.21043900004588
+      },
+      {
+        "fromMs": 750688.823113,
+        "toMs": 750698.667336,
+        "gapMs": 9.84422299999278
+      },
+      {
+        "fromMs": 750698.667336,
+        "toMs": 750708.715758,
+        "gapMs": 10.048422000021674
+      },
+      {
+        "fromMs": 750708.715758,
+        "toMs": 750718.623087,
+        "gapMs": 9.90732899995055
+      },
+      {
+        "fromMs": 750718.623087,
+        "toMs": 750729.425239,
+        "gapMs": 10.802152000018395
+      },
+      {
+        "fromMs": 750729.425239,
+        "toMs": 750741.18969,
+        "gapMs": 11.764451000024565
+      },
+      {
+        "fromMs": 750741.18969,
+        "toMs": 750751.837007,
+        "gapMs": 10.647316999966279
+      },
+      {
+        "fromMs": 750751.837007,
+        "toMs": 750761.09869,
+        "gapMs": 9.26168300001882
+      },
+      {
+        "fromMs": 750761.09869,
+        "toMs": 750771.715862,
+        "gapMs": 10.61717199999839
+      },
+      {
+        "fromMs": 750771.715862,
+        "toMs": 750782.305432,
+        "gapMs": 10.5895699999528
+      },
+      {
+        "fromMs": 750782.305432,
+        "toMs": 750792.770945,
+        "gapMs": 10.465513000031933
+      },
+      {
+        "fromMs": 750792.770945,
+        "toMs": 750802.341134,
+        "gapMs": 9.570188999990933
+      },
+      {
+        "fromMs": 750802.341134,
+        "toMs": 750812.910443,
+        "gapMs": 10.569309000042267
+      },
+      {
+        "fromMs": 750812.910443,
+        "toMs": 750822.071974,
+        "gapMs": 9.161530999932438
+      },
+      {
+        "fromMs": 750822.071974,
+        "toMs": 750832.487481,
+        "gapMs": 10.415507000056095
+      },
+      {
+        "fromMs": 750832.487481,
+        "toMs": 750843.076961,
+        "gapMs": 10.589479999965988
+      },
+      {
+        "fromMs": 750843.076961,
+        "toMs": 750853.196441,
+        "gapMs": 10.119479999993928
+      },
+      {
+        "fromMs": 750853.196441,
+        "toMs": 750863.320537,
+        "gapMs": 10.124095999985002
+      },
+      {
+        "fromMs": 750863.320537,
+        "toMs": 750873.961185,
+        "gapMs": 10.640648000058718
+      },
+      {
+        "fromMs": 750873.961185,
+        "toMs": 750884.162648,
+        "gapMs": 10.201463000033982
+      },
+      {
+        "fromMs": 750884.162648,
+        "toMs": 750894.123628,
+        "gapMs": 9.96097999997437
+      },
+      {
+        "fromMs": 750894.123628,
+        "toMs": 750904.224479,
+        "gapMs": 10.100850999937393
+      },
+      {
+        "fromMs": 750904.224479,
+        "toMs": 750914.129339,
+        "gapMs": 9.904860000009649
+      },
+      {
+        "fromMs": 750914.129339,
+        "toMs": 750925.18236,
+        "gapMs": 11.053020999999717
+      },
+      {
+        "fromMs": 750925.18236,
+        "toMs": 750935.964952,
+        "gapMs": 10.782591999974102
+      },
+      {
+        "fromMs": 750935.964952,
+        "toMs": 750945.099683,
+        "gapMs": 9.13473100005649
+      },
+      {
+        "fromMs": 750945.099683,
+        "toMs": 750955.24439,
+        "gapMs": 10.144706999999471
+      },
+      {
+        "fromMs": 750955.24439,
+        "toMs": 750965.340715,
+        "gapMs": 10.096325000049546
+      },
+      {
+        "fromMs": 750965.340715,
+        "toMs": 750975.296928,
+        "gapMs": 9.95621299999766
+      },
+      {
+        "fromMs": 750975.296928,
+        "toMs": 750985.169614,
+        "gapMs": 9.872685999958776
+      },
+      {
+        "fromMs": 750985.169614,
+        "toMs": 750995.191946,
+        "gapMs": 10.02233199996408
+      },
+      {
+        "fromMs": 750995.191946,
+        "toMs": 751005.440802,
+        "gapMs": 10.248856000020169
+      },
+      {
+        "fromMs": 751005.440802,
+        "toMs": 751015.739492,
+        "gapMs": 10.298689999966882
+      },
+      {
+        "fromMs": 751015.739492,
+        "toMs": 751026.011131,
+        "gapMs": 10.271639000042342
+      },
+      {
+        "fromMs": 751026.011131,
+        "toMs": 751036.63921,
+        "gapMs": 10.628079000045545
+      },
+      {
+        "fromMs": 751036.63921,
+        "toMs": 751046.674442,
+        "gapMs": 10.035231999936514
+      },
+      {
+        "fromMs": 751046.674442,
+        "toMs": 751056.612087,
+        "gapMs": 9.937645000056364
+      },
+      {
+        "fromMs": 751056.612087,
+        "toMs": 751066.094903,
+        "gapMs": 9.482816000003368
+      },
+      {
+        "fromMs": 751066.094903,
+        "toMs": 751076.82084,
+        "gapMs": 10.725936999893747
+      },
+      {
+        "fromMs": 751076.82084,
+        "toMs": 751086.855511,
+        "gapMs": 10.034671000088565
+      },
+      {
+        "fromMs": 751086.855511,
+        "toMs": 751097.08706,
+        "gapMs": 10.231549000018276
+      },
+      {
+        "fromMs": 751097.08706,
+        "toMs": 751108.740288,
+        "gapMs": 11.65322799992282
+      },
+      {
+        "fromMs": 751108.740288,
+        "toMs": 751118.561837,
+        "gapMs": 9.82154899998568
+      },
+      {
+        "fromMs": 751118.561837,
+        "toMs": 751128.216364,
+        "gapMs": 9.65452700003516
+      },
+      {
+        "fromMs": 751128.216364,
+        "toMs": 751139.000168,
+        "gapMs": 10.783804000006057
+      },
+      {
+        "fromMs": 751139.000168,
+        "toMs": 751150.909073,
+        "gapMs": 11.908904999960214
+      },
+      {
+        "fromMs": 751150.909073,
+        "toMs": 751160.918255,
+        "gapMs": 10.009182000067085
+      },
+      {
+        "fromMs": 751160.918255,
+        "toMs": 751171.153129,
+        "gapMs": 10.234873999957927
+      },
+      {
+        "fromMs": 751171.153129,
+        "toMs": 751181.612252,
+        "gapMs": 10.459123000036925
+      },
+      {
+        "fromMs": 751181.612252,
+        "toMs": 751192.533023,
+        "gapMs": 10.920770999975502
+      },
+      {
+        "fromMs": 751192.533023,
+        "toMs": 751202.10153,
+        "gapMs": 9.56850699998904
+      },
+      {
+        "fromMs": 751202.10153,
+        "toMs": 751212.897241,
+        "gapMs": 10.795710999984294
+      },
+      {
+        "fromMs": 751212.897241,
+        "toMs": 751222.965654,
+        "gapMs": 10.068413000088185
+      },
+      {
+        "fromMs": 751222.965654,
+        "toMs": 751233.059504,
+        "gapMs": 10.093849999946542
+      },
+      {
+        "fromMs": 751233.059504,
+        "toMs": 751243.246656,
+        "gapMs": 10.187152000027709
+      },
+      {
+        "fromMs": 751243.246656,
+        "toMs": 751253.094986,
+        "gapMs": 9.848329999949783
+      },
+      {
+        "fromMs": 751253.094986,
+        "toMs": 751264.195338,
+        "gapMs": 11.100351999979466
+      },
+      {
+        "fromMs": 751264.195338,
+        "toMs": 751275.319487,
+        "gapMs": 11.124149000039324
+      },
+      {
+        "fromMs": 751275.319487,
+        "toMs": 751285.549643,
+        "gapMs": 10.230156000005081
+      },
+      {
+        "fromMs": 751285.549643,
+        "toMs": 751295.390662,
+        "gapMs": 9.841019000043161
+      },
+      {
+        "fromMs": 751295.390662,
+        "toMs": 751305.724856,
+        "gapMs": 10.334193999995477
+      },
+      {
+        "fromMs": 751305.724856,
+        "toMs": 751315.449809,
+        "gapMs": 9.724952999968082
+      },
+      {
+        "fromMs": 751315.449809,
+        "toMs": 751325.287252,
+        "gapMs": 9.837442999938503
+      },
+      {
+        "fromMs": 751325.287252,
+        "toMs": 751335.493993,
+        "gapMs": 10.206741000059992
+      },
+      {
+        "fromMs": 751335.493993,
+        "toMs": 751345.549822,
+        "gapMs": 10.055828999960795
+      },
+      {
+        "fromMs": 751345.549822,
+        "toMs": 751356.251581,
+        "gapMs": 10.701759000075981
+      },
+      {
+        "fromMs": 751356.251581,
+        "toMs": 751366.010446,
+        "gapMs": 9.758864999981597
+      },
+      {
+        "fromMs": 751366.010446,
+        "toMs": 751377.18473,
+        "gapMs": 11.174283999949694
+      },
+      {
+        "fromMs": 751377.18473,
+        "toMs": 751387.493265,
+        "gapMs": 10.308535000076517
+      },
+      {
+        "fromMs": 751387.493265,
+        "toMs": 751397.573055,
+        "gapMs": 10.079789999988861
+      },
+      {
+        "fromMs": 751397.573055,
+        "toMs": 751407.426161,
+        "gapMs": 9.853105999995023
+      },
+      {
+        "fromMs": 751407.426161,
+        "toMs": 751417.301432,
+        "gapMs": 9.875270999968052
+      },
+      {
+        "fromMs": 751417.301432,
+        "toMs": 751427.527432,
+        "gapMs": 10.226000000024214
+      },
+      {
+        "fromMs": 751427.527432,
+        "toMs": 751437.629025,
+        "gapMs": 10.101592999999411
+      },
+      {
+        "fromMs": 751437.629025,
+        "toMs": 751447.285484,
+        "gapMs": 9.656458999961615
+      },
+      {
+        "fromMs": 751447.285484,
+        "toMs": 751458.198664,
+        "gapMs": 10.913180000032298
+      },
+      {
+        "fromMs": 751458.198664,
+        "toMs": 751469.157793,
+        "gapMs": 10.959128999966197
+      },
+      {
+        "fromMs": 751469.157793,
+        "toMs": 751479.333106,
+        "gapMs": 10.17531299998518
+      },
+      {
+        "fromMs": 751479.333106,
+        "toMs": 751489.062426,
+        "gapMs": 9.729320000042208
+      },
+      {
+        "fromMs": 751489.062426,
+        "toMs": 751499.970007,
+        "gapMs": 10.907581000006758
+      },
+      {
+        "fromMs": 751499.970007,
+        "toMs": 751509.008793,
+        "gapMs": 9.038785999990068
+      },
+      {
+        "fromMs": 751509.008793,
+        "toMs": 751519.06756,
+        "gapMs": 10.058766999980435
+      },
+      {
+        "fromMs": 751519.06756,
+        "toMs": 751529.085947,
+        "gapMs": 10.018386999960057
+      },
+      {
+        "fromMs": 751529.085947,
+        "toMs": 751539.957503,
+        "gapMs": 10.871556000085548
+      },
+      {
+        "fromMs": 751539.957503,
+        "toMs": 751549.799013,
+        "gapMs": 9.841509999940172
+      },
+      {
+        "fromMs": 751549.799013,
+        "toMs": 751559.042057,
+        "gapMs": 9.243044000002556
+      },
+      {
+        "fromMs": 751559.042057,
+        "toMs": 751570.276512,
+        "gapMs": 11.234455000027083
+      },
+      {
+        "fromMs": 751570.276512,
+        "toMs": 751581.199887,
+        "gapMs": 10.923375000013039
+      },
+      {
+        "fromMs": 751581.199887,
+        "toMs": 751591.770859,
+        "gapMs": 10.5709720000159
+      },
+      {
+        "fromMs": 751591.770859,
+        "toMs": 751601.683286,
+        "gapMs": 9.912427000002936
+      },
+      {
+        "fromMs": 751601.683286,
+        "toMs": 751611.473778,
+        "gapMs": 9.790491999941878
+      },
+      {
+        "fromMs": 751611.473778,
+        "toMs": 751621.092099,
+        "gapMs": 9.618321000016294
+      },
+      {
+        "fromMs": 751621.092099,
+        "toMs": 751631.876114,
+        "gapMs": 10.784014999982901
+      },
+      {
+        "fromMs": 751631.876114,
+        "toMs": 751641.236265,
+        "gapMs": 9.360150999971665
+      },
+      {
+        "fromMs": 751641.236265,
+        "toMs": 751651.318638,
+        "gapMs": 10.082373000099324
+      },
+      {
+        "fromMs": 751651.318638,
+        "toMs": 751661.45272,
+        "gapMs": 10.134081999887712
+      },
+      {
+        "fromMs": 751661.45272,
+        "toMs": 751671.656918,
+        "gapMs": 10.204198000021279
+      },
+      {
+        "fromMs": 751671.656918,
+        "toMs": 751681.070179,
+        "gapMs": 9.413261000066996
+      },
+      {
+        "fromMs": 751681.070179,
+        "toMs": 751692.667703,
+        "gapMs": 11.597523999982513
+      },
+      {
+        "fromMs": 751692.667703,
+        "toMs": 751703.944272,
+        "gapMs": 11.276568999979645
+      },
+      {
+        "fromMs": 751703.944272,
+        "toMs": 751713.985463,
+        "gapMs": 10.04119100002572
+      },
+      {
+        "fromMs": 751713.985463,
+        "toMs": 751723.645007,
+        "gapMs": 9.659543999936432
+      },
+      {
+        "fromMs": 751723.645007,
+        "toMs": 751733.111535,
+        "gapMs": 9.466528000077233
+      },
+      {
+        "fromMs": 751733.111535,
+        "toMs": 751743.334961,
+        "gapMs": 10.223425999982283
+      },
+      {
+        "fromMs": 751743.334961,
+        "toMs": 751762.997609,
+        "gapMs": 19.66264799993951
+      },
+      {
+        "fromMs": 751762.997609,
+        "toMs": 751772.937998,
+        "gapMs": 9.940388999995776
+      },
+      {
+        "fromMs": 751772.937998,
+        "toMs": 751782.105378,
+        "gapMs": 9.167379999998957
+      },
+      {
+        "fromMs": 751782.105378,
+        "toMs": 751792.857273,
+        "gapMs": 10.751894999993965
+      },
+      {
+        "fromMs": 751792.857273,
+        "toMs": 751802.501695,
+        "gapMs": 9.644422000041232
+      },
+      {
+        "fromMs": 751802.501695,
+        "toMs": 751812.418768,
+        "gapMs": 9.917072999989614
+      },
+      {
+        "fromMs": 751812.418768,
+        "toMs": 751823.342503,
+        "gapMs": 10.923735000076704
+      },
+      {
+        "fromMs": 751823.342503,
+        "toMs": 751834.595793,
+        "gapMs": 11.253289999905974
+      },
+      {
+        "fromMs": 751834.595793,
+        "toMs": 751844.365994,
+        "gapMs": 9.77020100003574
+      },
+      {
+        "fromMs": 751844.365994,
+        "toMs": 751857.103392,
+        "gapMs": 12.73739799996838
+      },
+      {
+        "fromMs": 751857.103392,
+        "toMs": 751873.018323,
+        "gapMs": 15.91493100009393
+      },
+      {
+        "fromMs": 751873.018323,
+        "toMs": 751884.171125,
+        "gapMs": 11.152801999938674
+      },
+      {
+        "fromMs": 751884.171125,
+        "toMs": 751895.156393,
+        "gapMs": 10.985268000047654
+      },
+      {
+        "fromMs": 751895.156393,
+        "toMs": 751905.392529,
+        "gapMs": 10.236135999904945
+      },
+      {
+        "fromMs": 751905.392529,
+        "toMs": 751916.176122,
+        "gapMs": 10.783593000029214
+      },
+      {
+        "fromMs": 751916.176122,
+        "toMs": 751926.251295,
+        "gapMs": 10.075172999990173
+      },
+      {
+        "fromMs": 751926.251295,
+        "toMs": 751936.097491,
+        "gapMs": 9.8461959999986
+      },
+      {
+        "fromMs": 751936.097491,
+        "toMs": 751947.054417,
+        "gapMs": 10.95692600007169
+      },
+      {
+        "fromMs": 751947.054417,
+        "toMs": 751958.085134,
+        "gapMs": 11.030717000016011
+      },
+      {
+        "fromMs": 751958.085134,
+        "toMs": 751968.98308,
+        "gapMs": 10.897945999982767
+      },
+      {
+        "fromMs": 751968.98308,
+        "toMs": 751978.294518,
+        "gapMs": 9.311437999946065
+      },
+      {
+        "fromMs": 751978.294518,
+        "toMs": 751989.223492,
+        "gapMs": 10.928974000038579
+      },
+      {
+        "fromMs": 751989.223492,
+        "toMs": 751999.070299,
+        "gapMs": 9.846806999994442
+      },
+      {
+        "fromMs": 751999.070299,
+        "toMs": 752009.483412,
+        "gapMs": 10.413112999987788
+      },
+      {
+        "fromMs": 752009.483412,
+        "toMs": 752024.190247,
+        "gapMs": 14.706834999960847
+      },
+      {
+        "fromMs": 752024.190247,
+        "toMs": 752034.913639,
+        "gapMs": 10.723392000072636
+      },
+      {
+        "fromMs": 752034.913639,
+        "toMs": 752045.082463,
+        "gapMs": 10.16882399993483
+      },
+      {
+        "fromMs": 752045.082463,
+        "toMs": 752055.322125,
+        "gapMs": 10.239661999978125
+      },
+      {
+        "fromMs": 752055.322125,
+        "toMs": 752065.182883,
+        "gapMs": 9.860758000053465
+      },
+      {
+        "fromMs": 752065.182883,
+        "toMs": 752075.153067,
+        "gapMs": 9.970183999976143
+      },
+      {
+        "fromMs": 752075.153067,
+        "toMs": 752085.695501,
+        "gapMs": 10.542434000060894
+      },
+      {
+        "fromMs": 752085.695501,
+        "toMs": 752095.813328,
+        "gapMs": 10.117826999980025
+      },
+      {
+        "fromMs": 752095.813328,
+        "toMs": 752106.11315,
+        "gapMs": 10.299821999971755
+      },
+      {
+        "fromMs": 752106.11315,
+        "toMs": 752116.61013,
+        "gapMs": 10.496980000054464
+      },
+      {
+        "fromMs": 752116.61013,
+        "toMs": 752126.420162,
+        "gapMs": 9.810031999950297
+      },
+      {
+        "fromMs": 752126.420162,
+        "toMs": 752136.682046,
+        "gapMs": 10.261884000035934
+      },
+      {
+        "fromMs": 752136.682046,
+        "toMs": 752146.013374,
+        "gapMs": 9.331327999942005
+      },
+      {
+        "fromMs": 752146.013374,
+        "toMs": 752160.067683,
+        "gapMs": 14.054309000028297
+      },
+      {
+        "fromMs": 752160.067683,
+        "toMs": 752180.49058,
+        "gapMs": 20.422896999982186
+      },
+      {
+        "fromMs": 752180.49058,
+        "toMs": 752190.396366,
+        "gapMs": 9.905785999959335
+      },
+      {
+        "fromMs": 752190.396366,
+        "toMs": 752200.136031,
+        "gapMs": 9.739665000000969
+      },
+      {
+        "fromMs": 752200.136031,
+        "toMs": 752210.069169,
+        "gapMs": 9.933138000080362
+      },
+      {
+        "fromMs": 752210.069169,
+        "toMs": 752220.074276,
+        "gapMs": 10.0051070000045
+      },
+      {
+        "fromMs": 752220.074276,
+        "toMs": 752231.279667,
+        "gapMs": 11.205391000024974
+      },
+      {
+        "fromMs": 752231.279667,
+        "toMs": 752241.151842,
+        "gapMs": 9.872174999909475
+      },
+      {
+        "fromMs": 752241.151842,
+        "toMs": 752251.009206,
+        "gapMs": 9.857364000054076
+      },
+      {
+        "fromMs": 752251.009206,
+        "toMs": 752261.165451,
+        "gapMs": 10.156244999961928
+      },
+      {
+        "fromMs": 752261.165451,
+        "toMs": 752271.083756,
+        "gapMs": 9.918305000057444
+      },
+      {
+        "fromMs": 752271.083756,
+        "toMs": 752281.014911,
+        "gapMs": 9.931154999998398
+      },
+      {
+        "fromMs": 752281.014911,
+        "toMs": 752291.04159,
+        "gapMs": 10.026679000002332
+      },
+      {
+        "fromMs": 752291.04159,
+        "toMs": 752301.007567,
+        "gapMs": 9.965976999956183
+      },
+      {
+        "fromMs": 752301.007567,
+        "toMs": 752311.009779,
+        "gapMs": 10.002211999963038
+      },
+      {
+        "fromMs": 752311.009779,
+        "toMs": 752322.745773,
+        "gapMs": 11.73599399998784
+      },
+      {
+        "fromMs": 752322.745773,
+        "toMs": 752332.79402,
+        "gapMs": 10.048247000086121
+      },
+      {
+        "fromMs": 752332.79402,
+        "toMs": 752342.061051,
+        "gapMs": 9.267030999995768
+      },
+      {
+        "fromMs": 752342.061051,
+        "toMs": 752352.072146,
+        "gapMs": 10.01109499996528
+      },
+      {
+        "fromMs": 752352.072146,
+        "toMs": 752362.015344,
+        "gapMs": 9.943197999964468
+      },
+      {
+        "fromMs": 752362.015344,
+        "toMs": 752372.046079,
+        "gapMs": 10.030735000036657
+      },
+      {
+        "fromMs": 752372.046079,
+        "toMs": 752385.584327,
+        "gapMs": 13.538247999968007
+      },
+      {
+        "fromMs": 752385.584327,
+        "toMs": 752396.480477,
+        "gapMs": 10.896150000044145
+      },
+      {
+        "fromMs": 752396.480477,
+        "toMs": 752406.107411,
+        "gapMs": 9.626933999941684
+      },
+      {
+        "fromMs": 752406.107411,
+        "toMs": 752416.143104,
+        "gapMs": 10.03569300007075
+      },
+      {
+        "fromMs": 752416.143104,
+        "toMs": 752426.131485,
+        "gapMs": 9.988381000002846
+      },
+      {
+        "fromMs": 752426.131485,
+        "toMs": 752442.3459,
+        "gapMs": 16.214414999936707
+      },
+      {
+        "fromMs": 752442.3459,
+        "toMs": 752452.409134,
+        "gapMs": 10.063234000001103
+      },
+      {
+        "fromMs": 752452.409134,
+        "toMs": 752462.144453,
+        "gapMs": 9.735319000086747
+      },
+      {
+        "fromMs": 752462.144453,
+        "toMs": 752472.086073,
+        "gapMs": 9.941619999939576
+      },
+      {
+        "fromMs": 752472.086073,
+        "toMs": 752482.371774,
+        "gapMs": 10.285701000015251
+      },
+      {
+        "fromMs": 752482.371774,
+        "toMs": 752492.075044,
+        "gapMs": 9.703270000056364
+      },
+      {
+        "fromMs": 752492.075044,
+        "toMs": 752502.060191,
+        "gapMs": 9.985146999941207
+      },
+      {
+        "fromMs": 752502.060191,
+        "toMs": 752512.753918,
+        "gapMs": 10.693727000034414
+      },
+      {
+        "fromMs": 752512.753918,
+        "toMs": 752522.70292,
+        "gapMs": 9.949001999921165
+      },
+      {
+        "fromMs": 752522.70292,
+        "toMs": 752532.880687,
+        "gapMs": 10.177767000044696
+      },
+      {
+        "fromMs": 752532.880687,
+        "toMs": 752542.96934,
+        "gapMs": 10.08865299995523
+      },
+      {
+        "fromMs": 752542.96934,
+        "toMs": 752553.179357,
+        "gapMs": 10.210017000092193
+      },
+      {
+        "fromMs": 752553.179357,
+        "toMs": 752563.184954,
+        "gapMs": 10.005597000010312
+      },
+      {
+        "fromMs": 752563.184954,
+        "toMs": 752573.340598,
+        "gapMs": 10.155643999925815
+      },
+      {
+        "fromMs": 752573.340598,
+        "toMs": 752583.812781,
+        "gapMs": 10.472183000063524
+      },
+      {
+        "fromMs": 752583.812781,
+        "toMs": 752593.814062,
+        "gapMs": 10.001280999975279
+      },
+      {
+        "fromMs": 752593.814062,
+        "toMs": 752603.341947,
+        "gapMs": 9.5278849999886
+      },
+      {
+        "fromMs": 752603.341947,
+        "toMs": 752613.326051,
+        "gapMs": 9.984104000031948
+      },
+      {
+        "fromMs": 752613.326051,
+        "toMs": 752623.419121,
+        "gapMs": 10.093069999944419
+      },
+      {
+        "fromMs": 752623.419121,
+        "toMs": 752633.438359,
+        "gapMs": 10.019238000037149
+      },
+      {
+        "fromMs": 752633.438359,
+        "toMs": 752643.251665,
+        "gapMs": 9.81330599996727
+      },
+      {
+        "fromMs": 752643.251665,
+        "toMs": 752654.268662,
+        "gapMs": 11.016996999969706
+      },
+      {
+        "fromMs": 752654.268662,
+        "toMs": 752664.279677,
+        "gapMs": 10.011015000054613
+      },
+      {
+        "fromMs": 752664.279677,
+        "toMs": 752674.280017,
+        "gapMs": 10.00034000002779
+      },
+      {
+        "fromMs": 752674.280017,
+        "toMs": 752684.081255,
+        "gapMs": 9.801237999927253
+      },
+      {
+        "fromMs": 752684.081255,
+        "toMs": 752694.334757,
+        "gapMs": 10.253502000006847
+      },
+      {
+        "fromMs": 752694.334757,
+        "toMs": 752705.083848,
+        "gapMs": 10.749091000063345
+      },
+      {
+        "fromMs": 752705.083848,
+        "toMs": 752716.183079,
+        "gapMs": 11.099230999941938
+      },
+      {
+        "fromMs": 752716.183079,
+        "toMs": 752727.228979,
+        "gapMs": 11.04590000002645
+      },
+      {
+        "fromMs": 752727.228979,
+        "toMs": 752737.281878,
+        "gapMs": 10.052899000002071
+      },
+      {
+        "fromMs": 752737.281878,
+        "toMs": 752747.0455,
+        "gapMs": 9.763621999998577
+      },
+      {
+        "fromMs": 752747.0455,
+        "toMs": 752758.198512,
+        "gapMs": 11.153012000024319
+      },
+      {
+        "fromMs": 752758.198512,
+        "toMs": 752768.7536,
+        "gapMs": 10.555088000022806
+      },
+      {
+        "fromMs": 752768.7536,
+        "toMs": 752778.010235,
+        "gapMs": 9.256634999997914
+      },
+      {
+        "fromMs": 752778.010235,
+        "toMs": 752788.482768,
+        "gapMs": 10.472532999934629
+      },
+      {
+        "fromMs": 752788.482768,
+        "toMs": 752798.548536,
+        "gapMs": 10.065767999971285
+      },
+      {
+        "fromMs": 752798.548536,
+        "toMs": 752808.451168,
+        "gapMs": 9.902632000041194
+      },
+      {
+        "fromMs": 752808.451168,
+        "toMs": 752818.408162,
+        "gapMs": 9.956994000007398
+      },
+      {
+        "fromMs": 752818.408162,
+        "toMs": 752828.054476,
+        "gapMs": 9.646314000012353
+      },
+      {
+        "fromMs": 752828.054476,
+        "toMs": 752839.000735,
+        "gapMs": 10.946258999989368
+      },
+      {
+        "fromMs": 752839.000735,
+        "toMs": 752848.845549,
+        "gapMs": 9.844813999952748
+      },
+      {
+        "fromMs": 752848.845549,
+        "toMs": 752858.108764,
+        "gapMs": 9.263215000042692
+      },
+      {
+        "fromMs": 752858.108764,
+        "toMs": 752868.320473,
+        "gapMs": 10.211709000053816
+      },
+      {
+        "fromMs": 752868.320473,
+        "toMs": 752882.545059,
+        "gapMs": 14.22458599996753
+      },
+      {
+        "fromMs": 752882.545059,
+        "toMs": 752892.763418,
+        "gapMs": 10.218358999933116
+      },
+      {
+        "fromMs": 752892.763418,
+        "toMs": 752902.819111,
+        "gapMs": 10.055693000089377
+      },
+      {
+        "fromMs": 752902.819111,
+        "toMs": 752912.438014,
+        "gapMs": 9.618902999907732
+      },
+      {
+        "fromMs": 752912.438014,
+        "toMs": 752922.608681,
+        "gapMs": 10.170666999998502
+      },
+      {
+        "fromMs": 752922.608681,
+        "toMs": 752932.843905,
+        "gapMs": 10.235224000061862
+      },
+      {
+        "fromMs": 752932.843905,
+        "toMs": 752942.141021,
+        "gapMs": 9.297115999972448
+      },
+      {
+        "fromMs": 752942.141021,
+        "toMs": 752952.648482,
+        "gapMs": 10.507461000001058
+      },
+      {
+        "fromMs": 752952.648482,
+        "toMs": 752963.088786,
+        "gapMs": 10.440304000047036
+      },
+      {
+        "fromMs": 752963.088786,
+        "toMs": 752973.430011,
+        "gapMs": 10.341224999981932
+      },
+      {
+        "fromMs": 752973.430011,
+        "toMs": 752983.734951,
+        "gapMs": 10.304939999943599
+      },
+      {
+        "fromMs": 752983.734951,
+        "toMs": 752994.41657,
+        "gapMs": 10.681619000039063
+      },
+      {
+        "fromMs": 752994.41657,
+        "toMs": 753004.365973,
+        "gapMs": 9.949402999947779
+      },
+      {
+        "fromMs": 753004.365973,
+        "toMs": 753014.74867,
+        "gapMs": 10.382697000051849
+      },
+      {
+        "fromMs": 753014.74867,
+        "toMs": 753024.978557,
+        "gapMs": 10.229887000052258
+      },
+      {
+        "fromMs": 753024.978557,
+        "toMs": 753034.48529,
+        "gapMs": 9.506732999929227
+      },
+      {
+        "fromMs": 753034.48529,
+        "toMs": 753044.207158,
+        "gapMs": 9.721867999993265
+      },
+      {
+        "fromMs": 753044.207158,
+        "toMs": 753054.620652,
+        "gapMs": 10.413493999978527
+      },
+      {
+        "fromMs": 753054.620652,
+        "toMs": 753064.779451,
+        "gapMs": 10.1587990000844
+      },
+      {
+        "fromMs": 753064.779451,
+        "toMs": 753074.602963,
+        "gapMs": 9.823511999915354
+      },
+      {
+        "fromMs": 753074.602963,
+        "toMs": 753084.467948,
+        "gapMs": 9.864984999992885
+      },
+      {
+        "fromMs": 753084.467948,
+        "toMs": 753094.128463,
+        "gapMs": 9.66051499999594
+      },
+      {
+        "fromMs": 753094.128463,
+        "toMs": 753104.065927,
+        "gapMs": 9.937464000075124
+      },
+      {
+        "fromMs": 753104.065927,
+        "toMs": 753126.247573,
+        "gapMs": 22.181646000011824
+      },
+      {
+        "fromMs": 753126.247573,
+        "toMs": 753136.341615,
+        "gapMs": 10.094042000011541
+      },
+      {
+        "fromMs": 753136.341615,
+        "toMs": 753146.90827,
+        "gapMs": 10.566654999973252
+      },
+      {
+        "fromMs": 753146.90827,
+        "toMs": 753156.992797,
+        "gapMs": 10.084526999969967
+      },
+      {
+        "fromMs": 753156.992797,
+        "toMs": 753167.040598,
+        "gapMs": 10.047801000066102
+      },
+      {
+        "fromMs": 753167.040598,
+        "toMs": 753177.146607,
+        "gapMs": 10.106008999980986
+      },
+      {
+        "fromMs": 753177.146607,
+        "toMs": 753187.093245,
+        "gapMs": 9.946637999964878
+      },
+      {
+        "fromMs": 753187.093245,
+        "toMs": 753197.575213,
+        "gapMs": 10.48196799994912
+      },
+      {
+        "fromMs": 753197.575213,
+        "toMs": 753207.701963,
+        "gapMs": 10.126750000054017
+      },
+      {
+        "fromMs": 753207.701963,
+        "toMs": 753217.590373,
+        "gapMs": 9.888410000014119
+      },
+      {
+        "fromMs": 753217.590373,
+        "toMs": 753227.953411,
+        "gapMs": 10.363037999952212
+      },
+      {
+        "fromMs": 753227.953411,
+        "toMs": 753237.859428,
+        "gapMs": 9.906017000088468
+      },
+      {
+        "fromMs": 753237.859428,
+        "toMs": 753247.781198,
+        "gapMs": 9.92176999989897
+      },
+      {
+        "fromMs": 753247.781198,
+        "toMs": 753257.556788,
+        "gapMs": 9.775590000092052
+      },
+      {
+        "fromMs": 753257.556788,
+        "toMs": 753267.414291,
+        "gapMs": 9.857502999948338
+      },
+      {
+        "fromMs": 753267.414291,
+        "toMs": 753277.32855,
+        "gapMs": 9.914258999982849
+      },
+      {
+        "fromMs": 753277.32855,
+        "toMs": 753287.229549,
+        "gapMs": 9.900999000063166
+      },
+      {
+        "fromMs": 753287.229549,
+        "toMs": 753297.620419,
+        "gapMs": 10.390870000002906
+      },
+      {
+        "fromMs": 753297.620419,
+        "toMs": 753307.775172,
+        "gapMs": 10.154753000009805
+      },
+      {
+        "fromMs": 753307.775172,
+        "toMs": 753317.551638,
+        "gapMs": 9.776465999893844
+      },
+      {
+        "fromMs": 753317.551638,
+        "toMs": 753327.844159,
+        "gapMs": 10.292521000024863
+      },
+      {
+        "fromMs": 753327.844159,
+        "toMs": 753337.083739,
+        "gapMs": 9.239580000052229
+      },
+      {
+        "fromMs": 753337.083739,
+        "toMs": 753347.538245,
+        "gapMs": 10.454505999921821
+      },
+      {
+        "fromMs": 753347.538245,
+        "toMs": 753357.067762,
+        "gapMs": 9.52951700007543
+      },
+      {
+        "fromMs": 753357.067762,
+        "toMs": 753367.764034,
+        "gapMs": 10.696271999971941
+      },
+      {
+        "fromMs": 753367.764034,
+        "toMs": 753377.197336,
+        "gapMs": 9.43330200004857
+      },
+      {
+        "fromMs": 753377.197336,
+        "toMs": 753387.283705,
+        "gapMs": 10.08636899990961
+      },
+      {
+        "fromMs": 753387.283705,
+        "toMs": 753398.00219,
+        "gapMs": 10.718485000077635
+      },
+      {
+        "fromMs": 753398.00219,
+        "toMs": 753408.324646,
+        "gapMs": 10.322456000023521
+      },
+      {
+        "fromMs": 753408.324646,
+        "toMs": 753418.423004,
+        "gapMs": 10.098357999930158
+      },
+      {
+        "fromMs": 753418.423004,
+        "toMs": 753429.279648,
+        "gapMs": 10.856644000043161
+      },
+      {
+        "fromMs": 753429.279648,
+        "toMs": 753439.474121,
+        "gapMs": 10.194473000010476
+      },
+      {
+        "fromMs": 753439.474121,
+        "toMs": 753449.865922,
+        "gapMs": 10.391800999990664
+      },
+      {
+        "fromMs": 753449.865922,
+        "toMs": 753460.104111,
+        "gapMs": 10.238188999937847
+      },
+      {
+        "fromMs": 753460.104111,
+        "toMs": 753470.284382,
+        "gapMs": 10.180271000019275
+      },
+      {
+        "fromMs": 753470.284382,
+        "toMs": 753480.783606,
+        "gapMs": 10.499224000028335
+      },
+      {
+        "fromMs": 753480.783606,
+        "toMs": 753491.067664,
+        "gapMs": 10.284057999961078
+      },
+      {
+        "fromMs": 753491.067664,
+        "toMs": 753501.948044,
+        "gapMs": 10.880379999987781
+      },
+      {
+        "fromMs": 753501.948044,
+        "toMs": 753511.206061,
+        "gapMs": 9.258017000043765
+      },
+      {
+        "fromMs": 753511.206061,
+        "toMs": 753521.776603,
+        "gapMs": 10.570542000001296
+      },
+      {
+        "fromMs": 753521.776603,
+        "toMs": 753531.078671,
+        "gapMs": 9.302067999960855
+      },
+      {
+        "fromMs": 753531.078671,
+        "toMs": 753541.182106,
+        "gapMs": 10.10343500005547
+      },
+      {
+        "fromMs": 753541.182106,
+        "toMs": 753551.520247,
+        "gapMs": 10.33814100001473
+      },
+      {
+        "fromMs": 753551.520247,
+        "toMs": 753561.94683,
+        "gapMs": 10.426582999993116
+      },
+      {
+        "fromMs": 753561.94683,
+        "toMs": 753571.844064,
+        "gapMs": 9.897233999916352
+      },
+      {
+        "fromMs": 753571.844064,
+        "toMs": 753582.494486,
+        "gapMs": 10.650422000093386
+      },
+      {
+        "fromMs": 753582.494486,
+        "toMs": 753592.990365,
+        "gapMs": 10.495878999936394
+      },
+      {
+        "fromMs": 753592.990365,
+        "toMs": 753602.939807,
+        "gapMs": 9.949442000011913
+      },
+      {
+        "fromMs": 753602.939807,
+        "toMs": 753613.192147,
+        "gapMs": 10.25234000000637
+      },
+      {
+        "fromMs": 753613.192147,
+        "toMs": 753623.218696,
+        "gapMs": 10.026549000060186
+      },
+      {
+        "fromMs": 753623.218696,
+        "toMs": 753633.159075,
+        "gapMs": 9.94037899991963
+      },
+      {
+        "fromMs": 753633.159075,
+        "toMs": 753643.316982,
+        "gapMs": 10.15790700004436
+      },
+      {
+        "fromMs": 753643.316982,
+        "toMs": 753653.575783,
+        "gapMs": 10.25880099995993
+      },
+      {
+        "fromMs": 753653.575783,
+        "toMs": 753663.860302,
+        "gapMs": 10.2845189999789
+      },
+      {
+        "fromMs": 753663.860302,
+        "toMs": 753673.339193,
+        "gapMs": 9.478891000035219
+      },
+      {
+        "fromMs": 753673.339193,
+        "toMs": 753684.146732,
+        "gapMs": 10.807539000059478
+      },
+      {
+        "fromMs": 753684.146732,
+        "toMs": 753694.700909,
+        "gapMs": 10.554176999954507
+      },
+      {
+        "fromMs": 753694.700909,
+        "toMs": 753704.918016,
+        "gapMs": 10.217106999945827
+      },
+      {
+        "fromMs": 753704.918016,
+        "toMs": 753714.415876,
+        "gapMs": 9.49786000000313
+      },
+      {
+        "fromMs": 753714.415876,
+        "toMs": 753725.052347,
+        "gapMs": 10.636471000034362
+      },
+      {
+        "fromMs": 753725.052347,
+        "toMs": 753735.43208,
+        "gapMs": 10.379733000067063
+      },
+      {
+        "fromMs": 753735.43208,
+        "toMs": 753746.099137,
+        "gapMs": 10.667056999984197
+      },
+      {
+        "fromMs": 753746.099137,
+        "toMs": 753756.658782,
+        "gapMs": 10.559644999913871
+      },
+      {
+        "fromMs": 753756.658782,
+        "toMs": 753766.240739,
+        "gapMs": 9.581957000074908
+      },
+      {
+        "fromMs": 753766.240739,
+        "toMs": 753776.230502,
+        "gapMs": 9.989762999932282
+      },
+      {
+        "fromMs": 753776.230502,
+        "toMs": 753786.802276,
+        "gapMs": 10.571774000069126
+      },
+      {
+        "fromMs": 753786.802276,
+        "toMs": 753796.919532,
+        "gapMs": 10.117255999939516
+      },
+      {
+        "fromMs": 753796.919532,
+        "toMs": 753807.33615,
+        "gapMs": 10.416618000017479
+      },
+      {
+        "fromMs": 753807.33615,
+        "toMs": 753817.916436,
+        "gapMs": 10.58028600004036
+      },
+      {
+        "fromMs": 753817.916436,
+        "toMs": 753827.226382,
+        "gapMs": 9.309945999993943
+      },
+      {
+        "fromMs": 753827.226382,
+        "toMs": 753837.434065,
+        "gapMs": 10.207683000015095
+      },
+      {
+        "fromMs": 753837.434065,
+        "toMs": 753848.29159,
+        "gapMs": 10.857524999999441
+      },
+      {
+        "fromMs": 753848.29159,
+        "toMs": 753858.870274,
+        "gapMs": 10.578683999949135
+      },
+      {
+        "fromMs": 753858.870274,
+        "toMs": 753868.659875,
+        "gapMs": 9.789601000025868
+      },
+      {
+        "fromMs": 753868.659875,
+        "toMs": 753878.192447,
+        "gapMs": 9.532571999938227
+      },
+      {
+        "fromMs": 753878.192447,
+        "toMs": 753888.58581,
+        "gapMs": 10.39336300001014
+      },
+      {
+        "fromMs": 753888.58581,
+        "toMs": 753898.319456,
+        "gapMs": 9.73364600003697
+      },
+      {
+        "fromMs": 753898.319456,
+        "toMs": 753908.889147,
+        "gapMs": 10.56969100004062
+      },
+      {
+        "fromMs": 753908.889147,
+        "toMs": 753918.981956,
+        "gapMs": 10.092808999936096
+      },
+      {
+        "fromMs": 753918.981956,
+        "toMs": 753928.089806,
+        "gapMs": 9.10785000002943
+      },
+      {
+        "fromMs": 753928.089806,
+        "toMs": 753938.555148,
+        "gapMs": 10.465342000010423
+      },
+      {
+        "fromMs": 753938.555148,
+        "toMs": 753949.061993,
+        "gapMs": 10.506844999967143
+      },
+      {
+        "fromMs": 753949.061993,
+        "toMs": 753959.731394,
+        "gapMs": 10.669401000021026
+      },
+      {
+        "fromMs": 753959.731394,
+        "toMs": 753970.201624,
+        "gapMs": 10.470229999977164
+      },
+      {
+        "fromMs": 753970.201624,
+        "toMs": 753981.021532,
+        "gapMs": 10.819908000063151
+      },
+      {
+        "fromMs": 753981.021532,
+        "toMs": 753991.511392,
+        "gapMs": 10.489859999972396
+      },
+      {
+        "fromMs": 753991.511392,
+        "toMs": 754002.085128,
+        "gapMs": 10.573735999991186
+      },
+      {
+        "fromMs": 754002.085128,
+        "toMs": 754012.341424,
+        "gapMs": 10.256295999977738
+      },
+      {
+        "fromMs": 754012.341424,
+        "toMs": 754022.771874,
+        "gapMs": 10.430449999985285
+      },
+      {
+        "fromMs": 754022.771874,
+        "toMs": 754033.194922,
+        "gapMs": 10.423048000084236
+      },
+      {
+        "fromMs": 754033.194922,
+        "toMs": 754043.945125,
+        "gapMs": 10.750202999915928
+      },
+      {
+        "fromMs": 754043.945125,
+        "toMs": 754053.655536,
+        "gapMs": 9.710411000065506
+      },
+      {
+        "fromMs": 754053.655536,
+        "toMs": 754063.560802,
+        "gapMs": 9.90526599995792
+      },
+      {
+        "fromMs": 754063.560802,
+        "toMs": 754073.099103,
+        "gapMs": 9.53830100002233
+      },
+      {
+        "fromMs": 754073.099103,
+        "toMs": 754096.093598,
+        "gapMs": 22.99449499999173
+      }
+    ]
+  },
+  "postToReadyMs": 4243.004527000012,
+  "http": {},
+  "eventLoop": {
+    "count": 368,
+    "failures": 0,
+    "p50Ms": 10.170666999998502,
+    "p95Ms": 11.81305999995675,
+    "maxMs": 130.93648200004827
+  },
+  "sampledParentPeakRssBytes": 450420736,
+  "sampledTreePeakRssSumBytes": 450420736,
+  "after": {
+    "generation": "mw7n9msq-e2d86f5c6ab9",
+    "sourceRevision": "db5b4dd4979507e49dcb901bca360112ada502e34b6bfc1063ad363edcade9bb",
+    "sourceLoadedAt": "2026-11-08T09:42:49.172Z",
+    "revisions": {
+      "overrides": 0,
+      "orders": 0,
+      "suppFob": 0,
+      "pricingRules": 0,
+      "transitRules": 0,
+      "nonDtrManufacturers": 0,
+      "landedMultipliers": 0,
+      "freightRates": 0,
+      "antrepoMatchRule": 0,
+      "antrepoSourceMode": 0,
+      "asasSourceMode": 0,
+      "lflSourceMode": 0,
+      "noteColumnDefs": 0,
+      "importanceSettings": 0,
+      "refreshHistory": 1
+    },
+    "projections": {
+      "/api/page-projection/overview": {
+        "sha256": "7110b3001027317fb4a54a460069287df159a2f68fafb4e4705c62f7c82b19ca",
+        "bytes": 952040,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      },
+      "/api/page-projection/orders": {
+        "sha256": "3de20286efbd019576bb82bd59111d358dcb67bd40cdcaabbb01b1ff36445dbf",
+        "bytes": 5675954,
+        "rows": 30000,
+        "generation": "mw7n9msq-e2d86f5c6ab9",
+        "cache": "hit"
+      }
+    },
+    "inheritedFixtureSha256": "18daf1cf78dba1b7e46be23c501333248b6e7ce31f207a7e7fa362ffdf42d8df",
+    "sourceHashes": {
+      "ASAS - Demo.xlsx": "1298ed6a66bf546a31cf65abc5e276ef1fe297d74d0c3b3ed458163f9583816d",
+      "Antrepo - Demo.xlsx": "f12ded74100c01aabb698df3f34a28848c295f7f41755973cfdd83347388cadd",
+      "LFL - Demo.xlsx": "e02a66c6ba593e991cc817100112e0068f783ff93a27d9c32c5be03beddf1ec8"
+    },
+    "payloadSha256": "522ec94840cf9f2877093dd27670705782260dd8f0b2dcefc64a50adea9a62f9"
+  },
+  "correctness": true,
+  "serverExit": {
+    "code": 0,
+    "signal": null
+  },
+  "finishedAt": "2026-11-08T09:48:45.885Z"
+}

@@ -1,0 +1,13 @@
+{
+  "status": "failed",
+  "stage": "initial seed-v1 admission before fixture generation",
+  "lock": "flock -n -E 75 /tmp/buyerlog-performance-measurement.lock",
+  "error": "spawnSync df EPERM",
+  "syscall": "spawnSync df",
+  "errno": -1,
+  "stdout": "Filesystem Type 1K-blocks Used Available Use% Mounted on\noverlay overlay 32978704 3228 31281372 1% /workspace\n",
+  "postAttempts": 0,
+  "fixtureGenerated": false,
+  "provenance": "Retained from original command tool output; report construction failed during admission, before prepare.json could be written.",
+  "resolution": "Approved outer executor used for Node subprocesses and loopback HTTP; no application security changes. Empty seed-v1 retained."
+}

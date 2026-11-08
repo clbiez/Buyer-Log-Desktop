@@ -1,0 +1,18 @@
+AssertionError [ERR_ASSERTION]: insufficient memory admission
+    at admission (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/common.cjs:27:10)
+    at run (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:145:38)
+    at /workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:222:34
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/scripts/prototypes/admin01-real-server-20261108/run.cjs:224:3)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

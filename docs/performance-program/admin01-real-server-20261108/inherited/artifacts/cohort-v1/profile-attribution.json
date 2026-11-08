@@ -1,0 +1,41 @@
+{
+  "sampledWindowMs": 3611.125,
+  "sampledSelfMs": {
+    "crc_snapshot": 1346.2809999999997,
+    "sha256_update_snapshot": 174.221,
+    "crc_validation": 1202.5149999999978,
+    "sha256_update_validation": 188.6339999999999
+  },
+  "updateStacks": [
+    {
+      "stack": [
+        "update @ ",
+        "update @ node:internal/crypto/hash",
+        "snapshotEntry @ file:///workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js",
+        "(root) @ "
+      ],
+      "sampledSelfMs": 173.142
+    },
+    {
+      "stack": [
+        "update @ ",
+        "update @ node:internal/crypto/hash",
+        "snapshotEntry @ file:///workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js",
+        "runMicrotasks @ ",
+        "processTicksAndRejections @ node:internal/process/task_queues",
+        "(root) @ "
+      ],
+      "sampledSelfMs": 1.079
+    },
+    {
+      "stack": [
+        "update @ ",
+        "update @ node:internal/crypto/hash",
+        "validateZip @ file:///workspace/Buyer-Log-Desktop/resources/app/server/lib/backup-archive.js",
+        "(root) @ "
+      ],
+      "sampledSelfMs": 188.6339999999999
+    }
+  ],
+  "interpretation": "Sampling attribution, not exact isolated function timers or process CPU. Includes idle samples. Profile is separate from six unprofiled measurements."
+}

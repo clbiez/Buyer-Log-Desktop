@@ -1,0 +1,1070 @@
+[
+  {
+    "atMs": 675232.736664,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 275267584,
+        "userTicks": 106,
+        "systemTicks": 20,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675283.231196,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 289181696,
+        "userTicks": 114,
+        "systemTicks": 21,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675333.41336,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 297132032,
+        "userTicks": 123,
+        "systemTicks": 22,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675383.956105,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 316198912,
+        "userTicks": 129,
+        "systemTicks": 23,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675433.636611,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 348495872,
+        "userTicks": 133,
+        "systemTicks": 25,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675484.177283,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 374931456,
+        "userTicks": 135,
+        "systemTicks": 28,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675533.674737,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 390971392,
+        "userTicks": 138,
+        "systemTicks": 32,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675584.129559,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 391012352,
+        "userTicks": 143,
+        "systemTicks": 32,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675633.875729,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 391016448,
+        "userTicks": 147,
+        "systemTicks": 33,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675683.439494,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 391028736,
+        "userTicks": 151,
+        "systemTicks": 34,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675733.834666,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 398151680,
+        "userTicks": 154,
+        "systemTicks": 37,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675784.243307,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 406011904,
+        "userTicks": 158,
+        "systemTicks": 38,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675834.732892,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 413622272,
+        "userTicks": 163,
+        "systemTicks": 39,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675885.223368,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 421855232,
+        "userTicks": 167,
+        "systemTicks": 41,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675937.734023,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 421945344,
+        "userTicks": 177,
+        "systemTicks": 41,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 675988.173071,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 421945344,
+        "userTicks": 182,
+        "systemTicks": 41,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676038.647212,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 422060032,
+        "userTicks": 192,
+        "systemTicks": 41,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676092.337786,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 377090048,
+        "userTicks": 200,
+        "systemTicks": 42,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676142.649,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 377102336,
+        "userTicks": 207,
+        "systemTicks": 43,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676193.006835,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376205312,
+        "userTicks": 218,
+        "systemTicks": 43,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676244.868554,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376205312,
+        "userTicks": 224,
+        "systemTicks": 43,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676295.277677,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376336384,
+        "userTicks": 232,
+        "systemTicks": 44,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676345.694101,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376336384,
+        "userTicks": 243,
+        "systemTicks": 44,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676398.886572,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376336384,
+        "userTicks": 253,
+        "systemTicks": 44,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676446.23066,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376336384,
+        "userTicks": 257,
+        "systemTicks": 45,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676496.649843,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380006400,
+        "userTicks": 266,
+        "systemTicks": 45,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676546.500116,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380006400,
+        "userTicks": 272,
+        "systemTicks": 45,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676596.90326,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380010496,
+        "userTicks": 281,
+        "systemTicks": 45,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676646.324789,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380010496,
+        "userTicks": 286,
+        "systemTicks": 46,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676696.736636,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380010496,
+        "userTicks": 295,
+        "systemTicks": 46,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676747.167992,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 380010496,
+        "userTicks": 301,
+        "systemTicks": 47,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676797.578507,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 386826240,
+        "userTicks": 306,
+        "systemTicks": 47,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676847.993769,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392855552,
+        "userTicks": 314,
+        "systemTicks": 48,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676897.423992,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392855552,
+        "userTicks": 319,
+        "systemTicks": 49,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676947.851863,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392855552,
+        "userTicks": 327,
+        "systemTicks": 50,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 676998.280575,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392855552,
+        "userTicks": 331,
+        "systemTicks": 52,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677048.708146,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392859648,
+        "userTicks": 338,
+        "systemTicks": 55,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677099.207094,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392859648,
+        "userTicks": 342,
+        "systemTicks": 56,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677148.616496,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392859648,
+        "userTicks": 345,
+        "systemTicks": 58,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677204.255586,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392859648,
+        "userTicks": 352,
+        "systemTicks": 59,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677256.664111,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392859648,
+        "userTicks": 359,
+        "systemTicks": 61,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677307.002267,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392863744,
+        "userTicks": 365,
+        "systemTicks": 63,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677356.368893,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392884224,
+        "userTicks": 373,
+        "systemTicks": 66,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677406.821301,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 392884224,
+        "userTicks": 377,
+        "systemTicks": 70,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677457.278677,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 383,
+        "systemTicks": 75,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677507.602891,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 389,
+        "systemTicks": 79,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677557.997772,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 397,
+        "systemTicks": 82,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677607.33875,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 403,
+        "systemTicks": 86,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677659.298532,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 411,
+        "systemTicks": 90,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677709.748647,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 411,
+        "systemTicks": 94,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677760.230375,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 419,
+        "systemTicks": 98,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677811.324959,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 428,
+        "systemTicks": 101,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677864.338889,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 435,
+        "systemTicks": 104,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677914.958931,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397602816,
+        "userTicks": 437,
+        "systemTicks": 108,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 677964.43939,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 404414464,
+        "userTicks": 438,
+        "systemTicks": 112,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678014.973211,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 408088576,
+        "userTicks": 446,
+        "systemTicks": 117,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678064.578769,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 408088576,
+        "userTicks": 454,
+        "systemTicks": 120,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678116.473243,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 415010816,
+        "userTicks": 464,
+        "systemTicks": 122,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678166.869255,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 415014912,
+        "userTicks": 469,
+        "systemTicks": 123,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678217.143589,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 375508992,
+        "userTicks": 480,
+        "systemTicks": 123,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678266.531759,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 375508992,
+        "userTicks": 485,
+        "systemTicks": 123,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678317.130448,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376164352,
+        "userTicks": 495,
+        "systemTicks": 124,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678366.743587,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376164352,
+        "userTicks": 506,
+        "systemTicks": 124,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678417.17974,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376164352,
+        "userTicks": 511,
+        "systemTicks": 125,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678467.600801,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376176640,
+        "userTicks": 522,
+        "systemTicks": 125,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678519.65109,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376176640,
+        "userTicks": 532,
+        "systemTicks": 126,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678570.129157,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 376176640,
+        "userTicks": 537,
+        "systemTicks": 126,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678619.52628,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 378798080,
+        "userTicks": 548,
+        "systemTicks": 126,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678669.902893,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 378798080,
+        "userTicks": 553,
+        "systemTicks": 126,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678719.334859,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 378798080,
+        "userTicks": 564,
+        "systemTicks": 127,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678769.72332,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 378798080,
+        "userTicks": 573,
+        "systemTicks": 127,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678820.219645,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 378798080,
+        "userTicks": 580,
+        "systemTicks": 127,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678874.084963,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 382468096,
+        "userTicks": 587,
+        "systemTicks": 127,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678923.39928,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 384303104,
+        "userTicks": 595,
+        "systemTicks": 129,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 678973.80646,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 384303104,
+        "userTicks": 600,
+        "systemTicks": 129,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679024.234111,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 389283840,
+        "userTicks": 605,
+        "systemTicks": 129,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679074.551765,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 397148160,
+        "userTicks": 608,
+        "systemTicks": 131,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679124.859204,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 619,
+        "systemTicks": 133,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679175.198762,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 623,
+        "systemTicks": 134,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679225.523847,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 634,
+        "systemTicks": 134,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679275.974623,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 645,
+        "systemTicks": 134,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679325.336582,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 650,
+        "systemTicks": 134,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679375.766061,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 655,
+        "systemTicks": 135,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679426.262185,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 665,
+        "systemTicks": 136,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679476.61636,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 669,
+        "systemTicks": 136,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679526.969127,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 674,
+        "systemTicks": 137,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679576.226108,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 685,
+        "systemTicks": 137,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679626.615376,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400293888,
+        "userTicks": 696,
+        "systemTicks": 137,
+        "threads": 13
+      }
+    ]
+  },
+  {
+    "atMs": 679676.964733,
+    "processes": [
+      {
+        "pid": 1781,
+        "rssBytes": 400302080,
+        "userTicks": 701,
+        "systemTicks": 138,
+        "threads": 13
+      }
+    ]
+  }
+]
