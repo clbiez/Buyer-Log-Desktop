@@ -1,0 +1,116 @@
+{
+  "status": "performance-blocked-not-merge-ready",
+  "runtimeRevision": "b954526199ed066feff77b438466cd48b78e03f5",
+  "sourceMain": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "fullPass": 8935,
+  "fullFail": 0,
+  "skip": 65,
+  "fullAll10OneInvocation": true,
+  "files": 1302,
+  "cpGuardPass": 23,
+  "relatedPass": 137,
+  "i18n": "0/0",
+  "notes": 51,
+  "cohort": {
+    "cp": {
+      "elapsedMs": {
+        "A": 44720.79999998212,
+        "B": 23224.09999999404
+      },
+      "firstRowsPaintedMs": {
+        "A": 38630.29999998212,
+        "B": 20531.80000001192
+      },
+      "dataReadyMs": {
+        "A": 38478.29999998212,
+        "B": 20419.69999998808
+      },
+      "observationEndMs": {
+        "A": 46993.39999997616,
+        "B": 30680.29999998212
+      },
+      "pairedPercent": [
+        -48.06868392335708,
+        -58.18593693033787,
+        30.277573660104018
+      ]
+    },
+    "orders": {
+      "elapsedMs": {
+        "A": 10541.600000023842,
+        "B": 11407
+      },
+      "firstRowsPaintedMs": {
+        "A": 7661.9000000059605,
+        "B": 8677.199999988079
+      },
+      "dataReadyMs": {
+        "A": 7567.4000000059605,
+        "B": 8572.300000011921
+      },
+      "observationEndMs": {
+        "A": 13541.90000000596,
+        "B": 14184.699999988079
+      },
+      "pairedPercent": [
+        4.595040025174946,
+        52.76105127615831,
+        8.209379980023911
+      ]
+    }
+  },
+  "ordersRegressionThreeOfThree": true,
+  "cpPair3RegressionPercent": 30.277573660104018,
+  "cause": "unknown; sequential shared server / background scheduling is a hypothesis only",
+  "fullRowArtifactsRetained": [
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair1-A/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair1-A/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair1-B/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair1-B/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair2-A/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair2-A/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair2-B/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair2-B/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair3-A/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair3-A/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair3-B/initial-orders-normalized-rows.json.gz",
+      "sha256": "88eacb07894c40bd1758b58e56ebaf7836168e1feed4850108f9cc8ce8e94b35"
+    },
+    {
+      "path": "/tmp/buyerlog-908-firstcp-final-after917/pair3-B/initial-cp-normalized-rows.json.gz",
+      "sha256": "45b56428e10df2c63ec1209b88d79b19a16b777b15f93f8012a2a862a0a06395"
+    }
+  ],
+  "createdAt": "2026-11-08T00:58:37.573390+00:00"
+}

@@ -1,0 +1,100 @@
+{
+  "revision": "b954526199ed066feff77b438466cd48b78e03f5",
+  "appTree": "47dee74749ff7efb15ce361bc371a884670207c3",
+  "startedAt": "2026-11-08T00:38:32.216950+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "cp-pass-cache-guards",
+      "command": [
+        "node",
+        "--test",
+        "tests/checklist-components-row-cache.test.js",
+        "tests/cp-personal-layer-delta.test.js",
+        "tests/checklist-columns-delta.test.js",
+        "tests/checklist-summary-contribution-cache.test.js",
+        "tests/checklist-applies-row-memo.test.js",
+        "tests/checklist-answer-batch-notify.test.js",
+        "tests/checklist-assistant-view-reuse.test.js",
+        "tests/checklist-remote-merge-noop.test.js",
+        "tests/checklist-components-count-lookups.test.js"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-cp-pass-cache-guards-ca640gyu",
+      "startedAt": "2026-11-08T00:38:32.217364+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:38:33.079670+00:00",
+      "logSha256": "77d226cb726a3b2da6b599cb6ce7cd00e1b79382cb7c31a1346b7ef898910fee",
+      "gzipSha256": "d6d80c55fc2e847be1c4400f24eae2e81d5d4af0e4373832a95d6b0a24ce08f0"
+    },
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "table-header",
+        "table-group",
+        "freeze",
+        "workspace-blur",
+        "shared-ui",
+        "motion-plus",
+        "i18n",
+        "model-image-cache",
+        "first-transition"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-related-integrated-49wfl1dc",
+      "startedAt": "2026-11-08T00:38:33.081022+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:38:39.474520+00:00",
+      "logSha256": "30f7137219e0b2391ac300aa5849faf8567cb6eee6cd57a1d79271dbe7886768",
+      "gzipSha256": "62a83113dad0dc65f531c3afbc775831f218f6faf0229165a150b089b0117e96"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-full-integrated-59pllxdc",
+      "startedAt": "2026-11-08T00:38:39.475880+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:43:19.465993+00:00",
+      "logSha256": "c1aeb5eeefaa1158d1459e60dbd575e7a932b35785160d1689d2bc78b7b2d4c8",
+      "gzipSha256": "9783e945f2d63fed38b8ef80435e7fa563cc87a51076f49c2399592f912a4f24"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-i18n-integrated-thxmu391",
+      "startedAt": "2026-11-08T00:43:19.541080+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:43:22.428959+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/tmp/buyerlog-shared-ui908/resources/app",
+      "tmpdir": "/tmp/buyerlog-908-release-integrated-bzsek01q",
+      "startedAt": "2026-11-08T00:43:22.429946+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:43:23.435136+00:00",
+      "logSha256": "a5e1ca123e9ba0108410ec1dcd118ffd265c026437e7c2e8852f38bc27c6c66e",
+      "gzipSha256": "3e22855bee9e9fa982d7c506a5d20692789b4a09fa712f443b4817865a63e1ad"
+    }
+  ],
+  "finishedAt": "2026-11-08T00:43:23.435799+00:00"
+}

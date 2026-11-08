@@ -1,0 +1,11 @@
+--- Main917/resources/app/scripts/benchmark-first-transitions.js
++++ NONFORMAL-SINGLE-ORDERS/resources/app/scripts/benchmark-first-transitions.js
+@@ -55,7 +55,7 @@
+   const login=await fetch(base+'/api/user-login',{method:'POST',signal:AbortSignal.timeout(60000),headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:'moderator',password:'synthetic-startup-only-123'})});
+   assert.ok(login.ok,'Synthetic login failed: '+login.status);cookie=String(login.headers.get('set-cookie')||'').split(';')[0];
+   browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
+-  for(const module of ['cp','orders']){
++  for(const module of ['orders']){
+     const context=await browser.newContext({viewport:{width:1440,height:900}}),split=cookie.indexOf('=');
+     try{
+       await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);

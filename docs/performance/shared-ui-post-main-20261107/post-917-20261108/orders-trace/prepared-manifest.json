@@ -1,0 +1,178 @@
+{
+  "preparationOnly": true,
+  "executed": false,
+  "preparedAt": "2026-11-08T01:00:38.479488+00:00",
+  "classification": "NONFORMAL derived SINGLE-ORDERS diagnostic; one A/B pair; no gain or merge acceptance claim",
+  "arms": {
+    "A": {
+      "checkout": "/workspace/buyerlog-analytics904",
+      "head": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+      "appRoot": "/workspace/buyerlog-analytics904/resources/app",
+      "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6"
+    },
+    "B": {
+      "checkout": "/tmp/buyerlog-shared-ui908",
+      "head": "b954526199ed066feff77b438466cd48b78e03f5",
+      "appRoot": "/tmp/buyerlog-shared-ui908/resources/app",
+      "appTree": "47dee74749ff7efb15ce361bc371a884670207c3"
+    }
+  },
+  "sourcePins": {
+    "A": {
+      "resources/app/scripts/benchmark-first-transitions.js": {
+        "blob": "34128ef6ac4e74b44ef0d276fb30339169d0bc19",
+        "sha256": "bd746f1a38b692223b8f62b88aa4e3355932714e01fde4ca8fbd4f41d0025cd1",
+        "bytes": 8612
+      },
+      "resources/app/scripts/lib/startup-benchmark.js": {
+        "blob": "b98f99ec787fe937e82fdd1b715804517a922dbf",
+        "sha256": "fefbd5ec7ca9cef7769d0695348461c145fc0eb37292eea976f4fe6fd12d1ca7",
+        "bytes": 6495
+      },
+      "resources/app/scripts/lib/first-transition-probe.js": {
+        "blob": "21786ec839d92d7d3ae9b3eb568efe4cce8297db",
+        "sha256": "403fd707ded5af40409e64baeae4f6b10d4fbd9c1f35dad82e9a76beb6b607cb",
+        "bytes": 6984
+      },
+      "resources/app/public/perf-runtime.js": {
+        "blob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+        "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+        "bytes": 23239
+      },
+      "resources/app/public/startup-module-preparation.js": {
+        "blob": "99749f9e48429b5a33f68a4698cce3153ab74e17",
+        "sha256": "16ee8d5a773ceab205a8967a140ecae31e34c83850b163fe689e4327233fad24",
+        "bytes": 2387
+      },
+      "resources/app/public/app-main.js": {
+        "blob": "1311e659e818e8227840a6258498f98283897e91",
+        "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+        "bytes": 3079292
+      },
+      "resources/app/public/table-header-tracking.js": {
+        "blob": "c923957f9477d8453854ed92e1cec7740838e613",
+        "sha256": "2164f23b3748833b2bf51b4def20b0a050eca85079dc9f9ecbe43347fff49783",
+        "bytes": 3528
+      },
+      "resources/app/public/workspace-blur.js": {
+        "blob": "7e90cc82812e797107ed93cc128f90431472f946",
+        "sha256": "469e4218f0d4b52a0122d62c0968b45b9b4810857eae8f78a119f1ecf00e71d3",
+        "bytes": 3320
+      }
+    },
+    "B": {
+      "resources/app/scripts/benchmark-first-transitions.js": {
+        "blob": "34128ef6ac4e74b44ef0d276fb30339169d0bc19",
+        "sha256": "bd746f1a38b692223b8f62b88aa4e3355932714e01fde4ca8fbd4f41d0025cd1",
+        "bytes": 8612
+      },
+      "resources/app/scripts/lib/startup-benchmark.js": {
+        "blob": "b98f99ec787fe937e82fdd1b715804517a922dbf",
+        "sha256": "fefbd5ec7ca9cef7769d0695348461c145fc0eb37292eea976f4fe6fd12d1ca7",
+        "bytes": 6495
+      },
+      "resources/app/scripts/lib/first-transition-probe.js": {
+        "blob": "21786ec839d92d7d3ae9b3eb568efe4cce8297db",
+        "sha256": "403fd707ded5af40409e64baeae4f6b10d4fbd9c1f35dad82e9a76beb6b607cb",
+        "bytes": 6984
+      },
+      "resources/app/public/perf-runtime.js": {
+        "blob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+        "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+        "bytes": 23239
+      },
+      "resources/app/public/startup-module-preparation.js": {
+        "blob": "99749f9e48429b5a33f68a4698cce3153ab74e17",
+        "sha256": "16ee8d5a773ceab205a8967a140ecae31e34c83850b163fe689e4327233fad24",
+        "bytes": 2387
+      },
+      "resources/app/public/app-main.js": {
+        "blob": "1311e659e818e8227840a6258498f98283897e91",
+        "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+        "bytes": 3079292
+      },
+      "resources/app/public/table-header-tracking.js": {
+        "blob": "b955c8cc95989d481eadcef4fae830ec0fd84cd7",
+        "sha256": "40613368cc68037db0d1b0c639bfb0159d210bfe606499c7d4141a8132f86a35",
+        "bytes": 4325
+      },
+      "resources/app/public/workspace-blur.js": {
+        "blob": "c860b2b02a00f66e2b5fa6ef3a740cd871586e7f",
+        "sha256": "b8db8cdcc9c35d194e1bf2638af6fddf1abb05e06383d6bf0d273c531620e07d",
+        "bytes": 4512
+      }
+    }
+  },
+  "change": {
+    "old": "for(const module of ['cp','orders']){",
+    "new": "for(const module of ['orders']){",
+    "expectedCount": 1
+  },
+  "timezone": "Europe/Istanbul",
+  "playwrightActual": "/opt/codex/cua_node/lib/node_modules/playwright",
+  "chromium": "/usr/bin/chromium",
+  "profilerSamplingIntervalUs": 1000,
+  "traceCategories": [
+    "devtools.timeline",
+    "v8.execute",
+    "toplevel"
+  ],
+  "traceMaximumBytes": 67108864,
+  "commonLock": "/tmp/buyerlog-performance-measurement.lock",
+  "originalFilename": "/workspace/buyerlog-analytics904/resources/app/scripts/benchmark-first-transitions.js",
+  "order": [
+    "A",
+    "B"
+  ],
+  "originalSourceSha256": "bd746f1a38b692223b8f62b88aa4e3355932714e01fde4ca8fbd4f41d0025cd1",
+  "derivedSourceSha256": "79cf2546d797a425dbd9da86b93a2dd4b07071242ced3231643bb61bed272bdd",
+  "input": {
+    "path": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+    "sha256": "932e3e2e2c75d1b780f654ce4d13d7725a51ed35a78c949357a9e7e3a5a540b3",
+    "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3",
+    "requestedRows": 30000,
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "expected": {
+      "rows": {
+        "koleksiyon": 0,
+        "cp": 24982,
+        "orders": 30000,
+        "overview": 30000
+      },
+      "generation": "mw6vhoks-9100b15fc128",
+      "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      }
+    }
+  },
+  "formalSeries": {
+    "path": "/tmp/buyerlog-908-firstcp-final-after917/series.json",
+    "sha256": "96406ca2d0d591219ec989acee749d05ccb1c5001211d1200bcb2bbfea94b092",
+    "snapshot": "/tmp/buyerlog-908-orders-regression-trace/source-snapshots/formal-series.json"
+  },
+  "equivalence": {
+    "path": "/tmp/buyerlog-908-firstcp-final-after917/predeclared-equivalence.json",
+    "sha256": "0b67cf8b9f0fa02c7a1f5ab7b379803899e1cf8795fa5958124f31f955c9f3f9",
+    "snapshot": "/tmp/buyerlog-908-orders-regression-trace/source-snapshots/predeclared-equivalence.json"
+  },
+  "observer": {
+    "path": "/tmp/buyerlog-908-final-schema-observer.cjs",
+    "sha256": "1b0301d765ae8970917430c95dabe113749b76815bc2d115a5e59a273f2fe451",
+    "snapshot": "/tmp/buyerlog-908-orders-regression-trace/source-snapshots/schema-observer.cjs"
+  },
+  "acceptance": {
+    "path": "/tmp/buyerlog-shared-ui908/docs/performance/shared-ui-post-main-20261107/post-917-20261108/acceptance.json",
+    "sha256": "32d3e248a6d52a63e5fde4ddd3a78bc9c9f5f17ea4ecce86f9637fb8a0f465b4"
+  }
+}

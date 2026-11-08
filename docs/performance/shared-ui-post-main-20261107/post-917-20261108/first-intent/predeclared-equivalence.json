@@ -1,0 +1,707 @@
+{
+  "declaredBeforeRuns": true,
+  "fullNormalizedRows": {
+    "cp": "6ae360b5cc7f2c9b2f125c3814653393438ecc7e175e671d830e0bbc6a50db4b",
+    "orders": "3611e608734e9d1db9400fd85fd3be566e55f0ba871ac780a36a381eb514c59b"
+  },
+  "cpFullVisibleCellsSha256": "d991c092fadd3b5d20f52e84b5dc66b1f288bb3e193ee4edd7e2d14030b9f4da",
+  "ordersFullVisibleCellsByObservedBaselineVariant": {
+    "60": "c6a6a9c7db927b18d4b1529890469b69fa82a63441f16bdf83816ce1c32a1da9",
+    "53": "de378cdec53e573ba35abd87afc8575a2c0587bbd367fb744200fb790a5e5a9b"
+  },
+  "variantEvidence": "Two same-code A/A controls before this cohort show 60/53 cells; exact common 53 cell texts/ids match all50rows and seven extras are checklist fields with dash cells. Preserve both full variants; do not claim identical initial DOM when variants differ.",
+  "ordersHeaders": {
+    "60": [
+      {
+        "key": "Merch Marka Ya\u015f Grup Kod",
+        "text": "MMYG\u25be"
+      },
+      {
+        "key": "Merch Alt Grup Kod",
+        "text": "MAG\u25be"
+      },
+      {
+        "key": "Buyer Grup (TR)",
+        "text": "Buying Grup\u25be"
+      },
+      {
+        "key": "Buyer",
+        "text": "Buyer\u25be"
+      },
+      {
+        "key": "__picture",
+        "text": "G\u00f6rsel"
+      },
+      {
+        "key": "Line",
+        "text": "Line\u25be"
+      },
+      {
+        "key": "\u00dcr\u00fcn Tan\u0131m",
+        "text": "\u00dcr\u00fcn Tan\u0131m\u0131\u25be"
+      },
+      {
+        "key": "Category",
+        "text": "Kategori\u25be"
+      },
+      {
+        "key": "PLM ID",
+        "text": "PLM ID\u25be"
+      },
+      {
+        "key": "Model Name",
+        "text": "Model Ad\u0131\u25be"
+      },
+      {
+        "key": "Artwork Detail",
+        "text": "Artwork Detay\u0131\u25be"
+      },
+      {
+        "key": "Fabric (PLM)",
+        "text": "Fabric (PLM)\u25be"
+      },
+      {
+        "key": "C.Code",
+        "text": "Renk Kodu\u25be"
+      },
+      {
+        "key": "Colour",
+        "text": "Renk\u25be"
+      },
+      {
+        "key": "Special Code",
+        "text": "\u00d6zel Kod\u25be"
+      },
+      {
+        "key": "Active/Inactive",
+        "text": "Aktif / Pasif\u25be"
+      },
+      {
+        "key": "Season",
+        "text": "Sezon\u25be"
+      },
+      {
+        "key": "Country",
+        "text": "\u00dclke\u25be"
+      },
+      {
+        "key": "Manufacturer",
+        "text": "\u00dcretici\u25be"
+      },
+      {
+        "key": "Sub-Manufacturer",
+        "text": "Alt \u00dcretici\u25be"
+      },
+      {
+        "key": "Order Code",
+        "text": "Sipari\u015f\u25be"
+      },
+      {
+        "key": "Importance",
+        "text": "\u00d6nem Etiketi\u25be"
+      },
+      {
+        "key": "FOB ($)",
+        "text": "FOB\u25be"
+      },
+      {
+        "key": "Supp. FOB",
+        "text": "Alt \u00dcretici FOB\u25be"
+      },
+      {
+        "key": "Order Quantity",
+        "text": "Sipari\u015f Adeti\u25be"
+      },
+      {
+        "key": "Shipment Quantity",
+        "text": "Y\u00fckleme Adet\u25be"
+      },
+      {
+        "key": "Remaining Units",
+        "text": "Kalan\u25be"
+      },
+      {
+        "key": "%",
+        "text": "%\u25be"
+      },
+      {
+        "key": "Licensor",
+        "text": "Lisans\u00f6r\u25be"
+      },
+      {
+        "key": "License",
+        "text": "Lisans\u25be"
+      },
+      {
+        "key": "Original Ex-factory",
+        "text": "Original Ex-F.\u25be"
+      },
+      {
+        "key": "OPD",
+        "text": "Sipari\u015f Tarihi\u25be"
+      },
+      {
+        "key": "Ex-factory",
+        "text": "Y\u00fckleme Termin\u25be"
+      },
+      {
+        "key": "LT",
+        "text": "\u00dcr. S\u00fcr.\u25be"
+      },
+      {
+        "key": "Retail Date",
+        "text": "Retail Tarihi\u25be"
+      },
+      {
+        "key": "Ex\u2192Retail",
+        "text": "Sevk\u2192Perakende\u25be"
+      },
+      {
+        "key": "In-Store (Model Budget)",
+        "text": "Model B\u00fct\u00e7e\u25be"
+      },
+      {
+        "key": "Kuma\u015f Tipi",
+        "text": "Kuma\u015f Tipi\u25be"
+      },
+      {
+        "key": "Kuma\u015f Kategorisi",
+        "text": "Kuma\u015f Kategorisi\u25be"
+      },
+      {
+        "key": "Kuma\u015f\u00e7\u0131 \u00dclkesi",
+        "text": "Kuma\u015f\u00e7\u0131 \u00dclkesi\u25be"
+      },
+      {
+        "key": "Kuma\u015f\u00e7\u0131",
+        "text": "Kuma\u015f\u00e7\u0131\u25be"
+      },
+      {
+        "key": "Kar\u0131\u015f\u0131m",
+        "text": "Kar\u0131\u015f\u0131m\u25be"
+      },
+      {
+        "key": "\u0130plik No",
+        "text": "\u0130plik No\u25be"
+      },
+      {
+        "key": "Gramaj",
+        "text": "Gramaj\u25be"
+      },
+      {
+        "key": "Del. Type",
+        "text": "Y\u00fckleme Tipi\u25be"
+      },
+      {
+        "key": "STATUS",
+        "text": "Durum\u25be"
+      },
+      {
+        "key": "Buying Son Onay Tarihi",
+        "text": "Y\u00fckleme Onay\u0131\u25be"
+      },
+      {
+        "key": "HANDOVER Tarihi",
+        "text": "Nakliye Depo Teslim\u25be"
+      },
+      {
+        "key": "Ant. Arrival",
+        "text": "Antrepo Var\u0131\u015f\u25be"
+      },
+      {
+        "key": "Notes",
+        "text": "Notlar\u25be"
+      },
+      {
+        "key": "Ek Not",
+        "text": "Ek Notlar\u25be"
+      },
+      {
+        "key": "__personalOrderNote",
+        "text": "Ki\u015fisel Not\u25be"
+      },
+      {
+        "key": "__checklist__pps",
+        "text": "PPS onay\u0131\u25be"
+      },
+      {
+        "key": "__checklist__soff",
+        "text": "S/Off onay\u0131\u25be"
+      },
+      {
+        "key": "__checklist__artwork",
+        "text": "Artwork onay\u0131\u25be"
+      },
+      {
+        "key": "__checklist__tests",
+        "text": "Testler\u25be"
+      },
+      {
+        "key": "__checklist__fabric",
+        "text": "Kuma\u015f haz\u0131rl\u0131\u011f\u0131\u25be"
+      },
+      {
+        "key": "__checklist__accessories",
+        "text": "Aksesuar haz\u0131rl\u0131\u011f\u0131\u25be"
+      },
+      {
+        "key": "__checklist__supplierConfirmation",
+        "text": "\u00dcretici y\u00fckleme teyidi\u25be"
+      }
+    ],
+    "53": [
+      {
+        "key": "Merch Marka Ya\u015f Grup Kod",
+        "text": "MMYG\u25be"
+      },
+      {
+        "key": "Merch Alt Grup Kod",
+        "text": "MAG\u25be"
+      },
+      {
+        "key": "Buyer Grup (TR)",
+        "text": "Buying Grup\u25be"
+      },
+      {
+        "key": "Buyer",
+        "text": "Buyer\u25be"
+      },
+      {
+        "key": "__picture",
+        "text": "G\u00f6rsel"
+      },
+      {
+        "key": "Line",
+        "text": "Line\u25be"
+      },
+      {
+        "key": "\u00dcr\u00fcn Tan\u0131m",
+        "text": "\u00dcr\u00fcn Tan\u0131m\u0131\u25be"
+      },
+      {
+        "key": "Category",
+        "text": "Kategori\u25be"
+      },
+      {
+        "key": "PLM ID",
+        "text": "PLM ID\u25be"
+      },
+      {
+        "key": "Model Name",
+        "text": "Model Ad\u0131\u25be"
+      },
+      {
+        "key": "Artwork Detail",
+        "text": "Artwork Detay\u0131\u25be"
+      },
+      {
+        "key": "Fabric (PLM)",
+        "text": "Fabric (PLM)\u25be"
+      },
+      {
+        "key": "C.Code",
+        "text": "Renk Kodu\u25be"
+      },
+      {
+        "key": "Colour",
+        "text": "Renk\u25be"
+      },
+      {
+        "key": "Special Code",
+        "text": "\u00d6zel Kod\u25be"
+      },
+      {
+        "key": "Active/Inactive",
+        "text": "Aktif / Pasif\u25be"
+      },
+      {
+        "key": "Season",
+        "text": "Sezon\u25be"
+      },
+      {
+        "key": "Country",
+        "text": "\u00dclke\u25be"
+      },
+      {
+        "key": "Manufacturer",
+        "text": "\u00dcretici\u25be"
+      },
+      {
+        "key": "Sub-Manufacturer",
+        "text": "Alt \u00dcretici\u25be"
+      },
+      {
+        "key": "Order Code",
+        "text": "Sipari\u015f\u25be"
+      },
+      {
+        "key": "Importance",
+        "text": "\u00d6nem Etiketi\u25be"
+      },
+      {
+        "key": "FOB ($)",
+        "text": "FOB\u25be"
+      },
+      {
+        "key": "Supp. FOB",
+        "text": "Alt \u00dcretici FOB\u25be"
+      },
+      {
+        "key": "Order Quantity",
+        "text": "Sipari\u015f Adeti\u25be"
+      },
+      {
+        "key": "Shipment Quantity",
+        "text": "Y\u00fckleme Adet\u25be"
+      },
+      {
+        "key": "Remaining Units",
+        "text": "Kalan\u25be"
+      },
+      {
+        "key": "%",
+        "text": "%\u25be"
+      },
+      {
+        "key": "Licensor",
+        "text": "Lisans\u00f6r\u25be"
+      },
+      {
+        "key": "License",
+        "text": "Lisans\u25be"
+      },
+      {
+        "key": "Original Ex-factory",
+        "text": "Original Ex-F.\u25be"
+      },
+      {
+        "key": "OPD",
+        "text": "Sipari\u015f Tarihi\u25be"
+      },
+      {
+        "key": "Ex-factory",
+        "text": "Y\u00fckleme Termin\u25be"
+      },
+      {
+        "key": "LT",
+        "text": "\u00dcr. S\u00fcr.\u25be"
+      },
+      {
+        "key": "Retail Date",
+        "text": "Retail Tarihi\u25be"
+      },
+      {
+        "key": "Ex\u2192Retail",
+        "text": "Sevk\u2192Perakende\u25be"
+      },
+      {
+        "key": "In-Store (Model Budget)",
+        "text": "Model B\u00fct\u00e7e\u25be"
+      },
+      {
+        "key": "Kuma\u015f Tipi",
+        "text": "Kuma\u015f Tipi\u25be"
+      },
+      {
+        "key": "Kuma\u015f Kategorisi",
+        "text": "Kuma\u015f Kategorisi\u25be"
+      },
+      {
+        "key": "Kuma\u015f\u00e7\u0131 \u00dclkesi",
+        "text": "Kuma\u015f\u00e7\u0131 \u00dclkesi\u25be"
+      },
+      {
+        "key": "Kuma\u015f\u00e7\u0131",
+        "text": "Kuma\u015f\u00e7\u0131\u25be"
+      },
+      {
+        "key": "Kar\u0131\u015f\u0131m",
+        "text": "Kar\u0131\u015f\u0131m\u25be"
+      },
+      {
+        "key": "\u0130plik No",
+        "text": "\u0130plik No\u25be"
+      },
+      {
+        "key": "Gramaj",
+        "text": "Gramaj\u25be"
+      },
+      {
+        "key": "Del. Type",
+        "text": "Y\u00fckleme Tipi\u25be"
+      },
+      {
+        "key": "STATUS",
+        "text": "Durum\u25be"
+      },
+      {
+        "key": "Buying Son Onay Tarihi",
+        "text": "Y\u00fckleme Onay\u0131\u25be"
+      },
+      {
+        "key": "HANDOVER Tarihi",
+        "text": "Nakliye Depo Teslim\u25be"
+      },
+      {
+        "key": "Ant. Arrival",
+        "text": "Antrepo Var\u0131\u015f\u25be"
+      },
+      {
+        "key": "Notes",
+        "text": "Notlar\u25be"
+      },
+      {
+        "key": "Ek Not",
+        "text": "Ek Notlar\u25be"
+      },
+      {
+        "key": "__personalOrderNote",
+        "text": "Ki\u015fisel Not\u25be"
+      }
+    ]
+  },
+  "headers53Evidence": "Inferred from source append order and exact observed53 full-cell snapshot; headers53 not separately captured in historical A2. A new unexpected header rejects.",
+  "cpHeader": [
+    {
+      "key": "Priority",
+      "text": "\u00d6ncelik\u25be"
+    },
+    {
+      "key": "PLM Numune",
+      "text": "PLM Numune\u25be"
+    },
+    {
+      "key": "Merch Marka Ya\u015f Grup Kod",
+      "text": "MMYG\u25be"
+    },
+    {
+      "key": "Merch Alt Grup Kod",
+      "text": "MAG\u25be"
+    },
+    {
+      "key": "Buyer Grup (TR)",
+      "text": "Buying Grup\u25be"
+    },
+    {
+      "key": "Buyer",
+      "text": "Buyer\u25be"
+    },
+    {
+      "key": "__picture",
+      "text": "G\u00f6rsel"
+    },
+    {
+      "key": "Line",
+      "text": "Line\u25be"
+    },
+    {
+      "key": "\u00dcr\u00fcn Tan\u0131m",
+      "text": "\u00dcr\u00fcn Tan\u0131m\u0131\u25be"
+    },
+    {
+      "key": "Category",
+      "text": "Kategori\u25be"
+    },
+    {
+      "key": "PLM ID",
+      "text": "PLM ID\u25be"
+    },
+    {
+      "key": "Model Name",
+      "text": "Model Ad\u0131\u25be"
+    },
+    {
+      "key": "Artwork Detail",
+      "text": "Artwork Detay\u0131\u25be"
+    },
+    {
+      "key": "Fabric (PLM)",
+      "text": "Fabric (PLM)\u25be"
+    },
+    {
+      "key": "C.Code",
+      "text": "Renk Kodu\u25be"
+    },
+    {
+      "key": "Colour",
+      "text": "Renk\u25be"
+    },
+    {
+      "key": "Special Code",
+      "text": "\u00d6zel Kod\u25be"
+    },
+    {
+      "key": "Season",
+      "text": "Sezon\u25be"
+    },
+    {
+      "key": "Country",
+      "text": "\u00dclke\u25be"
+    },
+    {
+      "key": "Manufacturer",
+      "text": "\u00dcretici\u25be"
+    },
+    {
+      "key": "Sub-Manufacturer",
+      "text": "Alt \u00dcretici\u25be"
+    },
+    {
+      "key": "Order Code",
+      "text": "Sipari\u015f\u25be"
+    },
+    {
+      "key": "Importance",
+      "text": "\u00d6nem Etiketi\u25be"
+    },
+    {
+      "key": "FOB ($)",
+      "text": "FOB\u25be"
+    },
+    {
+      "key": "Supp. FOB",
+      "text": "Alt \u00dcretici FOB\u25be"
+    },
+    {
+      "key": "Order Quantity",
+      "text": "Sipari\u015f Adeti\u25be"
+    },
+    {
+      "key": "Shipment Quantity",
+      "text": "Y\u00fckleme Adet\u25be"
+    },
+    {
+      "key": "Remaining Units",
+      "text": "Kalan\u25be"
+    },
+    {
+      "key": "%",
+      "text": "%\u25be"
+    },
+    {
+      "key": "Licensor",
+      "text": "Lisans\u00f6r\u25be"
+    },
+    {
+      "key": "License",
+      "text": "Lisans\u25be"
+    },
+    {
+      "key": "Original Ex-factory",
+      "text": "Original Ex-F.\u25be"
+    },
+    {
+      "key": "OPD",
+      "text": "Sipari\u015f Tarihi\u25be"
+    },
+    {
+      "key": "Ex-factory",
+      "text": "Y\u00fckleme Termin\u25be"
+    },
+    {
+      "key": "LT",
+      "text": "\u00dcr. S\u00fcr.\u25be"
+    },
+    {
+      "key": "Retail Date",
+      "text": "Retail Tarihi\u25be"
+    },
+    {
+      "key": "Ex\u2192Retail",
+      "text": "Sevk\u2192Perakende\u25be"
+    },
+    {
+      "key": "In-Store (Model Budget)",
+      "text": "Model B\u00fct\u00e7e\u25be"
+    },
+    {
+      "key": "Kuma\u015f Tipi",
+      "text": "Kuma\u015f Tipi\u25be"
+    },
+    {
+      "key": "Kuma\u015f Kategorisi",
+      "text": "Kuma\u015f Kategorisi\u25be"
+    },
+    {
+      "key": "Kuma\u015f\u00e7\u0131 \u00dclkesi",
+      "text": "Kuma\u015f\u00e7\u0131 \u00dclkesi\u25be"
+    },
+    {
+      "key": "Kuma\u015f\u00e7\u0131",
+      "text": "Kuma\u015f\u00e7\u0131\u25be"
+    },
+    {
+      "key": "Kar\u0131\u015f\u0131m",
+      "text": "Kar\u0131\u015f\u0131m\u25be"
+    },
+    {
+      "key": "\u0130plik No",
+      "text": "\u0130plik No\u25be"
+    },
+    {
+      "key": "Gramaj",
+      "text": "Gramaj\u25be"
+    },
+    {
+      "key": "Del. Type",
+      "text": "Y\u00fckleme Tipi\u25be"
+    },
+    {
+      "key": "STATUS",
+      "text": "Durum\u25be"
+    },
+    {
+      "key": "Buying Son Onay Tarihi",
+      "text": "Y\u00fckleme Onay\u0131\u25be"
+    },
+    {
+      "key": "HANDOVER Tarihi",
+      "text": "Nakliye Depo Teslim\u25be"
+    },
+    {
+      "key": "Ant. Arrival",
+      "text": "Antrepo Var\u0131\u015f\u25be"
+    },
+    {
+      "key": "Notes",
+      "text": "Notlar\u25be"
+    },
+    {
+      "key": "Ek Not",
+      "text": "Ek Notlar\u25be"
+    },
+    {
+      "key": "__personalOrderNote",
+      "text": "Ki\u015fisel Not\u25be"
+    },
+    {
+      "key": "__checklist__pps",
+      "text": "PPS onay\u0131\u25be"
+    },
+    {
+      "key": "__checklist__soff",
+      "text": "S/Off onay\u0131\u25be"
+    },
+    {
+      "key": "__checklist__artwork",
+      "text": "Artwork onay\u0131\u25be"
+    },
+    {
+      "key": "__checklist__tests",
+      "text": "Testler\u25be"
+    },
+    {
+      "key": "__checklist__fabric",
+      "text": "Kuma\u015f haz\u0131rl\u0131\u011f\u0131\u25be"
+    },
+    {
+      "key": "__checklist__accessories",
+      "text": "Aksesuar haz\u0131rl\u0131\u011f\u0131\u25be"
+    },
+    {
+      "key": "__checklist__supplierConfirmation",
+      "text": "\u00dcretici y\u00fckleme teyidi\u25be"
+    }
+  ],
+  "source916": "0c85445f1989cafbae4f104c13ddf5d8f0b84c6c"
+}
