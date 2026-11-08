@@ -1,0 +1,177 @@
+--- a/resources/app/server/lib/local-db.js
++++ b/resources/app/server/lib/local-db.js
+@@ -12,6 +12,7 @@
+ const fsp = require('fs/promises');
+ const path = require('path');
+ const crypto = require('crypto');
++const { AsyncLocalStorage } = require('node:async_hooks');
+ const { withFileLeaseAsync, replaceFileWithRetry, assertHeldFileLeases } = require('./shared-file-transaction');
+ const { resolveLocalDbFolder } = require('./local-path-policy');
+ const { createDurableFileRecovery } = require('./durable-file-recovery');
+@@ -533,6 +534,7 @@
+ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL_MAX_BYTES } = {}) {
+   let dbFile = path.resolve(file);
+   let deviceId = null;
++  const privatePrepareScope = new AsyncLocalStorage();
+   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
+      journal'da "yüklenmeyi bekliyor" olarak durursa sync durumu sahte
+      "N changes waiting" gösterir ve ilk Shared Hub eşitlemesi bekleyen
+@@ -781,7 +783,7 @@
+       if (operation.op === 'delta') validateTransportClocks(operation.payload.delta);
+       else if (operation.op === 'package') for (const delta of operation.payload.events || []) validateTransportClocks(delta);
+     }
+-    return withDbLease(async () => {
++    return withDbLease(async lease => {
+       recoverPendingWrites();
+       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
+       /* WAL'ın altında her zaman bir temel anlık görüntü bulunmalı. Yoksa
+@@ -791,7 +793,7 @@
+       const currentWal = await inspectWalForWrite();
+       const state = await loadState();
+       if (currentWal.tornTail) await writeSnapshot(state);
+-      if (typeof operations === 'function') operations = await operations(state);
++      if (typeof operations === 'function') operations = await operations(state, lease);
+       try {
+         const results = operations.map(item => { stampOperation(state, item); return item.apply(state); });
+ 
+@@ -836,8 +838,12 @@
+   }
+   async function privateRecordTransaction(prepare) {
+     let result;
+-    await appendOperations(async state => {
+-      const prepared = await prepare(state); result = prepared.result;
++    await appendOperations(async (state, lease) => {
++      const scope = { state, lease, file:dbFile, tags:await currentTags(), revision:state.revision, active:true, verifying:false };
++      let prepared;
++      try { prepared = await privatePrepareScope.run(scope, () => prepare(state)); }
++      finally { scope.active = false; }
++      result = prepared.result;
+       const payload = {records:prepared.records || {}, conflicts:prepared.conflicts || [], revision:Number(state.revision || 0) + 1};
+       for (const [key,record] of Object.entries(payload.records)) {
+         if (!record?.doc || !String(key).startsWith(record.doc.kind + ':')) throw new Error('Invalid private document');
+@@ -847,6 +853,116 @@
+     return result;
+   }
+ 
++  function privateDurabilityError(code, detail) {
++    return Object.assign(new Error(`Kalıcı kayıt doğrulanamadı. / Private record durability was not verified: ${detail}`), { code, statusCode:503 });
++  }
++  function requirePrivatePrepare(scope, state) {
++    if (!scope || privatePrepareScope.getStore() !== scope || !scope.active || scope.state !== state || scope.file !== dbFile
++      || !scope.lease || scope.lease.resource !== scope.file || typeof scope.lease.assertOwnedAsync !== 'function') {
++      throw privateDurabilityError('PRIVATE_DURABILITY_SCOPE_REQUIRED', 'active native prepare/DB lease required');
++    }
++    if (state.revision !== scope.revision || !Number.isSafeInteger(state.revision) || state.revision < 0) {
++      throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'prepare revision changed');
++    }
++  }
++  function privateDurabilityObject(value) { return Boolean(value && typeof value === 'object' && !Array.isArray(value)); }
++  function validatePrivateDurabilitySnapshot(raw) {
++    if (!privateDurabilityObject(raw) || raw.schemaVersion !== SCHEMA_VERSION || typeof raw.deviceId !== 'string' || !raw.deviceId
++      || !Number.isSafeInteger(raw.revision) || raw.revision < 0 || !Number.isSafeInteger(raw.localSequence) || raw.localSequence < 0
++      || !Array.isArray(raw.journal) || !Array.isArray(raw.conflicts)) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'snapshot envelope');
++    for (const name of ['records','tombstones','events','appliedEvents','appliedPackages','syncCheckpoints','syncLedger','assets','migrations']) {
++      if (!privateDurabilityObject(raw[name])) throw privateDurabilityError('DATA_INTEGRITY_ERROR', `snapshot ${name}`);
++    }
++  }
++  function validatePrivateDurabilityWal(parsed) {
++    // parseWal owns native version/checksum/torn-tail recognition. No valid
++    // prefix, unknown operation or damaged previous generation is a proof.
++    if (parsed.truncated) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'incomplete/corrupt WAL member');
++    for (const entry of parsed.entries) {
++      const p=entry.payload, object=privateDurabilityObject;
++      if (!object(p)) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'WAL payload');
++      if (entry.op === 'private-records') {
++        if (!object(p.records) || !Array.isArray(p.conflicts) || !Number.isSafeInteger(p.revision) || p.revision < 0) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'private WAL envelope');
++        for (const [key,record] of Object.entries(p.records)) {
++          if (!object(record) || !object(record.doc) || typeof record.doc.kind !== 'string' || !record.doc.kind || !key.startsWith(record.doc.kind+':')) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'private WAL document');
++        }
++      } else if (entry.op === 'patch' || entry.op === 'tombstone') {
++        if (typeof p.id !== 'string' || !p.id || typeof p.eventId !== 'string' || !p.eventId || typeof p.at !== 'string'
++          || (entry.op === 'patch' && p.patch!=null && !object(p.patch))) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'local WAL envelope');
++        validateTransportClocks(p);
++      } else if (entry.op === 'delta') {
++        if (!object(p.delta) || !recordId(p.delta.id) || typeof p.eventId !== 'string' || !p.eventId || typeof p.at !== 'string' || !Array.isArray(p.conflictIds)) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'delta WAL envelope');
++        validateTransportClocks(p.delta);receiptFirstSequence(p.delta);
++      } else if (entry.op === 'package') {
++        if (typeof p.packageId !== 'string' || !p.packageId || !Array.isArray(p.events) || typeof p.at !== 'string') throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'package WAL envelope');
++        for (const delta of p.events) { if (!object(delta) || !recordId(delta.id)) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'package delta');validateTransportClocks(delta);receiptFirstSequence(delta); }
++      } else if (entry.op === 'mark-synced' || entry.op === 'mark-ack') {
++        if (!Array.isArray(p.ids) || p.ids.some(id=>typeof id!=='string') || typeof p.at !== 'string') throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'ack WAL envelope');
++      } else if (entry.op === 'mark-ack-through') {
++        if (!Number.isSafeInteger(p.lastSequence) || p.lastSequence < 0 || typeof p.at !== 'string') throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'ack-through WAL envelope');
++      } else throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'unknown WAL operation');
++    }
++  }
++  async function assertNoPrivateDurabilityRecovery(folder) {
++    const recoveryFolder=path.join(folder,'.buyerlog-db-recovery');
++    try {
++      const names=await fsp.readdir(recoveryFolder);
++      if (names.some(name=>name.endsWith('.intent.json'))) throw privateDurabilityError('PRIVATE_DURABILITY_RECOVERY_PENDING', 'native recovery must complete first');
++      return recoveryFolder;
++    } catch (error) { if (error.code==='ENOENT') return null;throw error; }
++  }
++  async function syncPrivateDurabilityDirectory(folder) {
++    // Deliberately no best-effort/optional-sync catch: unsupported platforms
++    // produce no proof. Windows/Electron policy requires native validation.
++    const handle=await fsp.open(folder,'r');
++    try { await handle.sync(); } finally { await handle.close(); }
++  }
++  async function verifyPrivateRecordDurability(state) {
++    const scope=privatePrepareScope.getStore();requirePrivatePrepare(scope,state);
++    if (scope.verifying) throw privateDurabilityError('PRIVATE_DURABILITY_SCOPE_REQUIRED', 'concurrent verification in one prepare');
++    scope.verifying=true;
++    try {
++      await scope.lease.assertOwnedAsync();requirePrivatePrepare(scope,state);
++      if (scope.tags!==await currentTags()) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'native file generation changed');
++      const folder=path.dirname(scope.file),recoveryFolder=await assertNoPrivateDurabilityRecovery(folder);
++      const expectedStateHash=jsonSha256(state);
++      let replayed;
++      for (const suffix of ['',WAL_SUFFIX+'.bak',WAL_SUFFIX]) {
++        const target=scope.file+suffix,expectedTag=await fileTag(target);
++        if (!expectedTag) {
++          if (!suffix) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'primary snapshot missing');
++          continue; // Native current/previous WAL may be absent after rotation.
++        }
++        const lstat=await fsp.lstat(target);
++        if (!lstat.isFile() || lstat.isSymbolicLink()) throw privateDurabilityError('DATA_INTEGRITY_ERROR', 'non-file native member');
++        const handle=await fsp.open(target,'r+');
++        try {
++          if (statTag(await handle.stat())!==expectedTag) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'opened member changed');
++          const bytes=await handle.readFile();
++          if (!suffix) {
++            const raw=parseJsonBuffer(bytes);validatePrivateDurabilitySnapshot(raw);
++            replayed=normalizeState(raw,raw.deviceId);
++          } else {
++            const parsed=parseWal(bytes);validatePrivateDurabilityWal(parsed);
++            replayWal(replayed,parsed.entries);
++          }
++          requirePrivatePrepare(scope,state);await scope.lease.assertOwnedAsync();
++          await handle.sync(); // A failed prior append fsync is not a receipt.
++          if (statTag(await handle.stat())!==expectedTag || await fileTag(target)!==expectedTag) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'member changed during sync');
++        } finally { await handle.close(); }
++      }
++      if (!replayed || replayed.deviceId!==state.deviceId || replayed.revision!==scope.revision || jsonSha256(replayed)!==expectedStateHash) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'prepare is not the exact native replay');
++      // Persist recovery-intent removal as well as the native member names.
++      if (recoveryFolder) await syncPrivateDurabilityDirectory(recoveryFolder);
++      await syncPrivateDurabilityDirectory(folder);
++      await assertNoPrivateDurabilityRecovery(folder);
++      if (scope.tags!==await currentTags()) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'generation changed before proof');
++      await scope.lease.assertOwnedAsync();requirePrivatePrepare(scope,state);
++      if (jsonSha256(state)!==expectedStateHash) throw privateDurabilityError('PRIVATE_DURABILITY_STATE_CHANGED', 'state changed before proof');
++      return { verified:true,nativeRevision:scope.revision };
++    } finally { scope.verifying=false; }
++  }
++
+   async function transaction(mutator) {
+     return withDbLease(async () => {
+       recoverPendingWrites();
+@@ -1587,7 +1703,7 @@
+       return { status, deviceId: current.deviceId };
+     });
+   }
+-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, privateRecordTransaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
++  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, privateRecordTransaction, verifyPrivateRecordDurability, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+ }
+ 
+ /* ===================================================================
