@@ -1,0 +1,10 @@
+{
+  "beforeRouterSha256": "a9aae9dfb2ab5288562aca96d8c61d1237f0f4797ed964499e8b5a5d05fca3a9",
+  "afterRouterSha256": "b4adbc88603bbaac7c1498668090a6cae87e559f3168f0650076a6a4f2183247",
+  "exactReverseEquality": true,
+  "scope": "Reuse the existing schema DTO encoded byte count to add its separate bounded transport length; no row fetch/build/worker, no authority change.",
+  "schemaLimit": 65536,
+  "oldOwnedJsonAssertionBodiesUnchanged": true,
+  "parserSha256": "9295fc79956b2dfbff1b230af69c70fa02d1f8e2c5cbd07a65ddd97fc6a5606b",
+  "clientActivation": false
+}

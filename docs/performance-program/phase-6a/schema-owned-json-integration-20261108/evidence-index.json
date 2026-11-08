@@ -1,0 +1,31 @@
+[
+  {
+    "path": "buyerlog-phase6a-schema-decoded-length-red.log.gz",
+    "rawSha256": "182ca79017a72b2cdfa7d0d1a6c225bc4ae35c56bccbef6e6845530ed09a41c3",
+    "counts": {
+      "pass": 0,
+      "fail": 1,
+      "skipped": 0
+    }
+  },
+  {
+    "path": "buyerlog-phase6a-schema-owned-json-related-green/release.log.gz",
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "path": "buyerlog-phase6a-schema-owned-json-related-green/i18n.log.gz",
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "path": "buyerlog-phase6a-schema-owned-json-related-green/syntax.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "buyerlog-phase6a-schema-owned-json-related-green/receipt.json",
+    "rawSha256": "74ed5b425c69c4cefdd4b1511c4b9e613d85b9b5ab2647312fdded1c9b790f3f"
+  },
+  {
+    "path": "buyerlog-phase6a-schema-owned-json-related-green/related.log.gz",
+    "rawSha256": "ea6fe97ba56f20e3bbea77023c1fdd517996c7375de62da26ca57f42606dd0a8"
+  }
+]

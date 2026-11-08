@@ -105,3 +105,30 @@ test('classic browser export works without Node globals and uses the same actual
   const r=scope.BLOrdersOwnedJson.create({promotionApi:promotion,sha256Bytes:async bytes=>digest(bytes)});
   const got=await r.read(response('{"rows":[{"v":false}]}'),{current});assert.equal(JSON.stringify(got.payload),'{"rows":[{"v":false}]}');assert.equal(r.owns(got),true);
 });
+test('schema metadata uses the same sole owned bounded parse with a separate 64 KiB transport contract',async()=>{
+  const text='{"mode":"schema","token":{"actorId":"demo"},"schema":{"rowKeys":["İş"]}}';
+  const res=response(text,{'X-Orders-Schema-Json-Bytes':String(Buffer.byteLength(text))}),r=reader();
+  res.json=()=>assert.fail('metadata must not bypass bounded byte ownership');
+  const got=await r.readSchema(res,{current});assert.equal(got.rawText,text);assert.equal(got.mode,'schema');assert.equal(r.owns(got),true);
+  assert.equal(got.rawSha256,digest(Buffer.from(text)));assert.equal(got.payload.token.actorId,'demo');
+});
+test('schema never adopts row length, compressed Content-Length or a larger admitted row budget',async()=>{
+  for(const length of [null,'65537','99999999']){
+    const res=response('{"mode":"schema"}');if(length!==null)res.headers.set('X-Orders-Schema-Json-Bytes',length);
+    await assert.rejects(reader().readSchema(res,{current}),{code:'ORDERS_JSON_LENGTH'});
+  }
+});
+test('schema mode cannot certify a full/fallback payload or a DTO containing row data',async()=>{
+  for(const text of ['{"mode":"full"}','{"mode":"schema","rows":[]}']){
+    const res=response(text,{'X-Orders-Schema-Json-Bytes':String(Buffer.byteLength(text))});
+    await assert.rejects(reader().readSchema(res,{current}),{code:'ORDERS_JSON_MODE'});
+  }
+});
+test('schema byte truncation, source retirement and abort use the same exact native stream guards',async()=>{
+  const text='{"mode":"schema"}',headers={'X-Orders-Schema-Json-Bytes':String(Buffer.byteLength(text)+1)};
+  await assert.rejects(reader().readSchema(response(text,headers),{current}),{code:'ORDERS_FULL_BYTES'});
+  const res=response(text,{'X-Orders-Schema-Json-Bytes':String(Buffer.byteLength(text))}),control=new AbortController();control.abort();
+  await assert.rejects(reader().readSchema(res,{current,signal:control.signal}),e=>e.name==='AbortError');
+  let live=true;const r=reader({sha256Bytes:async bytes=>{live=false;return digest(bytes);}});
+  await assert.rejects(r.readSchema(response(text,{'X-Orders-Schema-Json-Bytes':String(Buffer.byteLength(text))}),{current:()=>live}),{code:'ORDERS_FULL_STALE'});
+});

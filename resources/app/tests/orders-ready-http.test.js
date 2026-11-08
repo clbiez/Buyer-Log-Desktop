@@ -149,6 +149,15 @@ test('schema GET is hit-only own metadata; PAGE context differs from separately 
   assert.deepEqual(got.body.schema.modelColumns[0].metadata,{zero:0,false:false,nil:null});
   cache.invalidate(f.owner);assert.deepEqual((await f.get()).body,{mode:'full'});assert.equal(f.jobs.length,0);
 });
+test('schema declares the exact bounded decoded DTO length without returning or building rows',async t=>{
+  const f=await fixture(t),got=await f.get();
+  assert.equal(got.headers.get('x-orders-schema-json-bytes'),String(Buffer.byteLength(got.text)));
+  assert.ok(Number(got.headers.get('x-orders-schema-json-bytes'))<=65536);
+  assert.equal(got.body.rows,undefined);assert.equal(f.jobs.length,0);
+  const parser=require('../public/orders-owned-json').create({promotionApi:require('../public/orders-full-promotion'),sha256Bytes:async bytes=>sha(bytes)});
+  const owned=await parser.readSchema(await f.rawRequest('GET','orders/schema'),{current:()=>true});
+  assert.equal(parser.owns(owned),true);assert.deepEqual(owned.payload,got.body);assert.equal(owned.rawSha256,sha(got.text));assert.equal(f.jobs.length,0);
+});
 test('cold POST returns ordinary full before actual background job is allowed to execute',async t=>{
   const f=await fixture(t),metadata=(await f.get()).body;f.beforeRun=deferred();
   const first=await f.post(f.body(metadata));assert.equal(first.status,200);assert.equal(first.headers.get('x-orders-view-mode'),'full');

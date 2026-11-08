@@ -24,7 +24,7 @@ test('all original 31 algorithms/assertions and historical receipts remain exact
   const original=fs.readFileSync(path.join(PACKET,'tests/orders-projection-client.test.cjs'),'utf8');
   const adopted=fs.readFileSync(path.join(APP,'tests/orders-projection-client.test.js'),'utf8');
   const marker="test('uninitialized";
-  const current='a9aae9dfb2ab5288562aca96d8c61d1237f0f4797ed964499e8b5a5d05fca3a9';
+  const current='b4adbc88603bbaac7c1498668090a6cae87e559f3168f0650076a6a4f2183247';
   const previous='c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01';
   const bodies=adopted.slice(adopted.indexOf(marker));assert.equal(bodies.split(current).length,2,'exactly one reviewed provenance literal');
   assert.equal(bodies.replace(current,previous),original.slice(original.indexOf(marker)));
@@ -40,7 +40,7 @@ test('actual full-parent header/identity/plan producers are byte-exact across th
   const old=require('node:zlib').gunzipSync(fs.readFileSync(path.join(__dirname,'fixtures/orders-projection-client/router-before-ordinary-binding.js.gz'))).toString('utf8');
   assert.equal(hash(old),'c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01');
   const current=fs.readFileSync(path.join(APP,'server/lib/orders-ready-http.js'),'utf8');
-  assert.equal(hash(current),'a9aae9dfb2ab5288562aca96d8c61d1237f0f4797ed964499e8b5a5d05fca3a9');
+  assert.equal(hash(current),'b4adbc88603bbaac7c1498668090a6cae87e559f3168f0650076a6a4f2183247');
   const {extractFunction}=require('./helpers/app-main-functions');
   for(const name of ['fullParentHeaders','responseIdentityHeaders','planHashFor'])assert.equal(extractFunction(current,name),extractFunction(old,name),name);
 });

@@ -211,8 +211,9 @@ function createOrdersReadyRouter({express,cache,guard,assertSourceFilters,contex
       const token=tokenFor(captured,context,full),guardStamp=sha(captured.key);
       const result={mode:'schema',profile:PROFILE,token,schema:binding.schema,schemaChecksum:binding.schemaChecksum,guardStamp,planHashVersion:1};
       const check=captureGuard(req,captured,context,full,binding,token,guardStamp);check();
-      if(Buffer.byteLength(JSON.stringify(result))>MAX_BODY)return res.set('Cache-Control','no-store').json({mode:'full'});
-      return res.set('Cache-Control','no-store').json(result);
+      const decodedBytes=Buffer.byteLength(JSON.stringify(result));
+      if(decodedBytes>MAX_BODY)return res.set('Cache-Control','no-store').json({mode:'full'});
+      return res.set('Cache-Control','no-store').set('X-Orders-Schema-Json-Bytes',String(decodedBytes)).json(result);
     }catch(error){return apiError(res,error,'Sipariş şeması okunamadı.');}
   });
   // Explicit promotion of this exact pending full parent. A different current
