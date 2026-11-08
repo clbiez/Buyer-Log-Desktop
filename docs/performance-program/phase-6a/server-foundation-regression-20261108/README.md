@@ -28,3 +28,25 @@ result does not replace the required new default full run. Original failing
 output and the passing targeted output are retained with SHA-256 hashes in
 `evidence-index.json`. Public thin loading remains disabled. No PR, merge,
 TEST or STABLE publication is claimed by this checkpoint.
+
+## Subsequent provider fixture failures / Sonraki sağlayıcı fixture hataları
+
+The next default run at `7cb50613` passed batches 1–2, then stopped in batch 3:
+**6365 PASS / 2 FAIL / 63 SKIP** across the three executed batches. Batches
+4–10 did not run. Both failures are preserved separately:
+
+- `lcwai-dynamic-columns`: the extracted real Orders table wrapper could not
+  find `_ordersRequireFullSynchronousRead`. The fixture now executes the real
+  private guard and its actual dependencies. A new case verifies that this
+  context throws `ORDERS_FULL_REQUIRED` for thin Orders and preserves CP.
+- `orders-profile-barriers`: the protected original object predates the reviewed
+  counts-only `tableSummary` addition. Its frozen original is unchanged. The
+  equality assertion now requires the exact existing summary patch applied to
+  that original, plus exact reverse-removal equality; all old methods remain
+  byte-exact. No arbitrary source drift is accepted.
+
+**[Doğrulandı]** İki test uyarlaması üretim kodunu veya önceki assertion'ların
+koruduğu davranışı değiştirmiyor. Kaynak eşitliği yalnız ayrı testlerde doğrulanmış
+sayım adaptörünün tam metnine izin veriyor. Hedefli dört dosya **94 PASS**, sıfır
+hata/atlama/iptal. Tam paket sonucu hâlâ yukarıdaki başarısız koşudur; yeni tam
+koşu tamamlanmadan başarı iddia edilmiyor.

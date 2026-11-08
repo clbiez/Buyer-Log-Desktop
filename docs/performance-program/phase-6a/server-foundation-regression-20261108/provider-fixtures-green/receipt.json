@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "lcwai-dynamic-columns",
+    "orders-profile-barriers",
+    "orders-sync-provider",
+    "orders-table-summary"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 94,
+    "pass": 94,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "8c8ab9963b530839d72874bc739f1c9bbf3ddd8af45a14b0a36d683c48434e65"
+}

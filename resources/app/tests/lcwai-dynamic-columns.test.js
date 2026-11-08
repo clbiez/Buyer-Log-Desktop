@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { extractFunction } = require('./helpers/app-main-functions');
 const main = fs.readFileSync(path.join(__dirname, '../public/app-main.js'), 'utf8');
 const chatSource = fs.readFileSync(path.join(__dirname, '../public/lcwai-chat.js'), 'utf8');
 const modelGroups = require('../public/collection-model-groups');
@@ -31,7 +32,7 @@ function fixture() {
     BuyerLogAI: { registerContextProvider: provider => providers.set(provider.id, provider) } };
   const env = {
     window, console, File, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } },
-    state: { cp: { rows: cpRows }, orders: { rows: cpRows } }, kolRows, kolWorkspaceRevision: 0, appLang: 'tr',
+    state: { cp: { rows: cpRows }, orders: { rows: cpRows } }, _ordersFullViewControllers: new WeakMap(), kolRows, kolWorkspaceRevision: 0, appLang: 'tr',
     APP_PAGE_META: { cp: { tr: 'CP', en: 'CP' }, orders: { tr: 'Siparişler', en: 'Orders' }, koleksiyon: { tr: 'Koleksiyon', en: 'Collection' } },
     KOL_SYNTHETIC_COL_KEYS: ['__bestPrice__', '__confirmedName__', '__confirmedPrice__'],
     KOL_SYNTHETIC_COL_META: { __bestPrice__: { kind: 'best', label: 'Best Price' }, __confirmedName__: { kind: 'confirmedName', label: 'Conf. Manufacturer' }, __confirmedPrice__: { kind: 'confirmedPrice', label: 'Approved Mfr. Price' } },
@@ -55,6 +56,8 @@ function fixture() {
     kolMoney2: value => Number(value).toFixed(2),
   };
   const context = vm.createContext(env);
+  vm.runInContext(['ordersProjectionIsThin', 'ordersFullActionError'].map(name => extractFunction(main, name)).join('\n') + '\n' +
+    section('const _ordersRequireFullSynchronousRead=()=>{', '\nvar startupPageProfileReady'), context);
   for (const [start, end] of [
     // #798: synthetic column labels resolve through one TR/EN helper.
     ['function kolSyntheticColLabel(', 'function kolIsSyntheticColKey('],
@@ -83,6 +86,14 @@ test('CP and Orders include declared formulas/database columns with current labe
     assert.ok(csv.includes('12.50,0'));
     assert.ok(!csv.includes('must stay local'));
   }
+});
+test('dynamic Orders context uses the actual synchronous full-data guard before exposing a thin row', () => {
+  const { env, chat } = fixture();
+  const rows = env.state.orders.rows;
+  env.state.orders.projectionProfile = 'thin';
+  assert.throws(() => chat.tableContext('orders', 'all'), { code: 'ORDERS_FULL_REQUIRED' });
+  assert.strictEqual(env.state.orders.rows, rows);
+  assert.deepEqual(plain(chat.tableContext('cp', 'all').rows), [['DEMO', 'Ready', '12.50', '0']]);
 });
 test('each build sees newly added columns and the current language', () => {
   const { env, window, chat, cpCols, cpRows } = fixture();

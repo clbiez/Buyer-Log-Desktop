@@ -10,5 +10,17 @@
     "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/fixture-green/native.log.gz",
     "rawBytes": 6725,
     "rawSha256": "d9f3462be8e67a2cf05a98ee1a631cbcba1518f4e07852df09c10c0cff8ba73c"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-server-foundation-full-7cb50613/full.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/full-red-7cb50613/full.log.gz",
+    "rawBytes": 644430,
+    "rawSha256": "f5335f083e4fc6e9b7eb38ca7a8f0148261ca3e9248115ee0d0f9037fa2def31"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-provider-fixtures-green/native.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/provider-fixtures-green/native.log.gz",
+    "rawBytes": 10046,
+    "rawSha256": "8c8ab9963b530839d72874bc739f1c9bbf3ddd8af45a14b0a36d683c48434e65"
   }
 ]

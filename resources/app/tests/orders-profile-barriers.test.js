@@ -7,6 +7,7 @@ const raw=read('public/app-main.js');read('tests/helpers/app-main-functions.js')
 const draft=require('./helpers/orders-profile-listener'),source=raw;
 const protectedBaseline=fs.readFileSync(path.join(__dirname,'fixtures/orders-config-protected-baseline.js'),'utf8');
 assert.equal(crypto.createHash('sha256').update(protectedBaseline).digest('hex'),pins.protectedBaselineSha256);
+const summaryRecipe=require('./fixtures/orders-table-summary/patch-recipe.cjs');
 const {extractFunction}=require(path.join(ROOT,'tests/helpers/app-main-functions.js'));
 const thin=[{_id:1,'Order Code':'same'}],full=[{_id:1,'Order Code':'same',__CPX_late:7}];
 const turn=()=>new Promise(resolve=>setImmediate(resolve));
@@ -161,5 +162,7 @@ test('draft preserves synchronous APIs and protected consumer function bodies ex
  for(const name of ['applyViewState','applyFilterState','resetViewToSystemDefault','resetFiltersToSystemDefault','ensureCpLoaded','registerManagedGridClipboard'])assert.equal(extractFunction(source,name),extractFunction(protectedBaseline,name),name);
  const section=(text,start,end)=>{const at=text.indexOf(start),stop=text.indexOf(end,at);assert.ok(at>=0&&stop>at);return text.slice(at,stop);};
  assert.equal(section(source,'window.BLFormulaRows = {','\n};'),section(protectedBaseline,'window.BLFormulaRows = {','\n};'));
- assert.equal(section(source,'window.BLAIScreenData = {','\n};'),section(protectedBaseline,'window.BLAIScreenData = {','\n};'));
+ const expected=summaryRecipe.app(protectedBaseline);
+ assert.equal(expected.replace(summaryRecipe.summary,''),protectedBaseline,'the separately reviewed counts adapter is the only allowed addition');
+ assert.equal(section(source,'window.BLAIScreenData = {','\n};'),section(expected,'window.BLAIScreenData = {','\n};'));
 });
