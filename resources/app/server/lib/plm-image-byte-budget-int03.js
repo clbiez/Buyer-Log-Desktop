@@ -11,10 +11,11 @@ const IMAGE_BYTES = 20 * MiB;
 const DOWNLOAD_BYTES = 2 * IMAGE_BYTES;
 // Kanonik commit senkron çalışır ve kayıtları tek tek tüketir. İki geçici
 // görseli, mevcut orijinali (user-data: 50 MiB), UTF-16 base64 kopyasını
-// (ceil(20 MiB / 3) * 4 * 2) ve saveCollectionImage'ın çözdüğü kopyayı kapsar:
-// toplam < 192 MiB. Bunlar uygulama bayt rezervasyonlarıdır; süreç RSS'i, GC,
+// (ceil(20 MiB / 3) * 4 * 2), saveCollectionImage'ın çözdüğü kopyayı ve
+// durable recovery'nin payload/son dosya checksum okumalarını kapsar:
+// toplam < 216 MiB. Bunlar uygulama bayt rezervasyonlarıdır; süreç RSS'i, GC,
 // ağ tamponları, nesne metadata'sı ve ilgisiz tüketiciler için tavan değildir.
-const COMMIT_BYTES = 192 * MiB;
+const COMMIT_BYTES = 216 * MiB;
 const PROCESS_BYTES = 256 * MiB;
 
 function cancelledError() {

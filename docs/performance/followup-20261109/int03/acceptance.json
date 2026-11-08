@@ -1,4 +1,9 @@
 {
+  "sourceSha256": {
+    "plm-image-sync-service.js": "16fcbcadd88922ddd47812dee811a4211b99a6c9cbe9d270ecb97640dd7ec269",
+    "plm-image-download-queue.js": "3358ed769bf2f6f400088d2b54c3ddc90f37c4520004bbd4d15af810c532df20",
+    "plm-image-byte-budget-int03.js": "afde8caff6610976dd225c92bfcef7c5f8111781c81d8e5ccf0ada1cae448363"
+  },
   "synthetic": true,
   "upstream": "loopback metadata and real HTTP stream; actual queue/ingest/server/auth/UI",
   "status": "passed",

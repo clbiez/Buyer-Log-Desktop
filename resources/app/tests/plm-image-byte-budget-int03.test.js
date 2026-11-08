@@ -99,7 +99,7 @@ test('INT-03: multiple jobs share the reservation through slow commit and clean 
     ...inputFor(20, ingest, async () => { downloads++; await tick(); return image(2 * MiB); }),
     isCancelled: () => cancelled,
   });
-  // The 192 MiB commit leaves room for one 40 MiB download, never eight.
+  // The 216 MiB commit leaves room for one 40 MiB download, never eight.
   await new Promise(resolve => setTimeout(resolve, 40));
   assert.ok(budgetLib.imageByteBudget.snapshot().used <= budgetLib.PROCESS_BYTES);
   cancelled = true;
@@ -300,7 +300,7 @@ test('INT-03: staging preserves bytes, bounds lazy cache, detects missing files,
 test('INT-03: reservation copy envelope follows canonical maximum original size', () => {
   const source = fs.readFileSync(path.join(__dirname, '../server/user-data.js'), 'utf8');
   assert.match(source, /const RAW_COLLECTION_IMAGE_MAX_BYTES = 50 \* 1024 \* 1024/);
-  const copies = 2 * budgetLib.IMAGE_BYTES + 50 * MiB + Math.ceil(budgetLib.IMAGE_BYTES / 3) * 4 * 2 + budgetLib.IMAGE_BYTES;
+  const copies = 2 * budgetLib.IMAGE_BYTES + 50 * MiB + Math.ceil(budgetLib.IMAGE_BYTES / 3) * 4 * 2 + 3 * budgetLib.IMAGE_BYTES;
   assert.ok(copies <= budgetLib.COMMIT_BYTES);
 });
 

@@ -3,6 +3,12 @@
 Kapsam: [#937, Paket 2 / INT-03](https://github.com/clbiez/Buyer-Log-Desktop/issues/937).
 Taban Main: `511cb2fae629cd6e0c1ad31eb773775e5c95841d`.
 Dal: `fix/followup-plm-image-budget-20261109`; ayrı worktree: `/workspace/buyerlog-int03`.
+PR açıldığında Main, yalnız sürüm notu arşivleme commit'leriyle
+`3b38cab887d9a5590a234f6c6f73c8dec0b01c6b` olmuştu. CI'ın çalışmasını engelleyen
+manifest çakışması, güncel Main'i bu dala alıp yalnız kendi pending kaydını
+ekleyerek çözüldü. Başka iş dalı/cherry-pick alınmadı; Main'e merge/yayın yapılmadı.
+Main'in mevcut arşivi/manifesti aynen korundu. Ürün kaynakları değişmedi; final
+manifest üzerinde standart tam test yine batch 1'den başlayarak çalıştırıldı.
 
 ## Sorun ve çözüm
 
@@ -20,8 +26,9 @@ FIFO ağırlıklı 256 MiB rezervasyon bütçesi uygular:
 - Permit, indirme/doğrulama ve özel geçici dosyaya yazma tamamlanana kadar tutulur.
   Kuyruk sonuçlarında yalnız dosya tanımları kalır. Dizin POSIX'te 0700,
   dosyalar 0600'dür; adları kaynaktan/PLM URL'sinden türetilmez.
-- Son kanonik commit başına 192 MiB: iki geçici görsel Buffer'ı, 50 MiB mevcut
-  orijinal, UTF-16 base64 ve depoya yazımın decoded kopyası için muhafazakâr pay.
+- Son kanonik commit başına 216 MiB: iki geçici görsel Buffer'ı, 50 MiB mevcut
+  orijinal, UTF-16 base64, depoya yazımın decoded kopyası ve durable recovery
+  payload/son dosya checksum okumaları için muhafazakâr pay.
   Gerçek kanonik ingest diziyi sırayla okur; `buffer` getter'ı yalnız son okunan
   dosyayı önbellekte tutar. Kopya zarfının dayandığı mevcut 50 MiB limit test edilir.
 - Tek son commit korunur. Erken registry/sahiplik yazımı veya eski dosya silme
@@ -63,9 +70,11 @@ metadata ve uygulamanın diğer tüketicilerini süreç RSS tavanı olarak sın�
   Tek yerel örneklem üretim kapasitesi/hızlanması iddiası değildir.
 - [i18n](i18n.log): yeni eksik 0, baseline eksik 0. Yeni hata metinlerinde ve
   release note'ta TR/EN çifti vardır; baseline değiştirilmez.
-- [Sürüm notu doğrulaması](release-notes.log): 7 kayıt. Eklenen tek ID:
+- [Sürüm notu doğrulaması](release-notes.log): final pending pakette 2 kayıt. Eklenen tek ID:
   `int03-shared-image-byte-budget-20261109`. Önceden var olan bütün manifest
-  metni byte düzeyinde aynıdır; diğer altı kayıt/asset değiştirilmez.
+  metni güncel Main'e göre byte düzeyinde aynıdır. İlk tabandaki diğer notların
+  arşivlenmesi Main'in mevcut geçmişinden gelir; bu iş arşivi veya başka kaydı
+  düzenlemez.
 - [Kaynak manifesti](source-manifest.json): taban, final çalışma dosyalarının
   SHA-256'ları ve runner ortamı. PR son SHA/CI sonucu issue final yorumundadır.
 
@@ -76,17 +85,22 @@ concurrency=4 ile tek kesintisiz koşudur. Runner bütün batch'leri kendisi sı
 çalıştırır; batch'ler elle birleştirilmez. Özet final yorumunda ve aşağıdaki
 [test-summary.json](test-summary.json) dosyasında yer alır.
 
-Sonuç: **1315 dosya / 10 batch / 9032 PASS / 0 FAIL / 65 SKIP / 0 CANCEL**,
-toplam 9097 test; 191,9 saniye, Linux x64 / Node v24.19.0. Skip'ler mevcut
+Sonuç özeti [test-summary.json](test-summary.json) dosyasındadır. Main arşiv
+güncellemesi öncesinde **1315 dosya / 10 batch / 9032 PASS / 0 FAIL / 65 SKIP /
+0 CANCEL**, toplam 9097 test, 191,9 saniye geçti
+([önceki tam koşu](full-test-before-main-archive.log)). Final koşu ayrı
+`full-test.log` dosyasındadır: **1315 dosya / 10 batch / 9032 PASS / 0 FAIL /
+65 SKIP / 0 CANCEL**, 188,2 saniye. Önceki koşu final yerine sunulmaz.
+Ortam Linux x64 / Node v24.19.0. Skip'ler mevcut
 platform/ortam koşullarındandır; yeni INT-03 testlerinde skip yoktur. Bağımlılıklar
 mevcut checkout'un node_modules dizininden geçici bağlantıyla kullanıldı;
 package/lock veya sürüm güncellemesi yapılmadı, bağlantı commit'e alınmadı.
 
 | Dar ölçüm (iki eşzamanlı iş) | Taban Main | Son kaynak |
 | --- | ---: | ---: |
-| Örneklenen RSS tepe değeri | 379,6 MiB | 179,4 MiB |
+| Örneklenen RSS tepe değeri | 379,6 MiB | 147,9 MiB |
 | Commit girişindeki azami eager Buffer kökleri, iş başına | 120 MiB | 0 MiB |
-| Ortak rezervasyon tepe değeri | Yok | 240 MiB / 256 MiB bütçe |
+| Ortak rezervasyon tepe değeri | Yok | 256 MiB / 256 MiB bütçe |
 | Sonuç içerik hash'leri | 80 | Aynı 80 |
 
 Sıfır eager kök, sıfır bellek demek değildir: lazy cache, aktif indirmeler ve

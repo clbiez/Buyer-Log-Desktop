@@ -59,7 +59,7 @@ async function main() {
   const child = spawn(process.execPath, [__filename, '--server'], { cwd: app, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let log = '', browser;
   child.stdout.on('data', b => { log += b; }); child.stderr.on('data', b => { log += b; });
-  const report = { synthetic: true, upstream: 'loopback metadata and real HTTP stream; actual queue/ingest/server/auth/UI', status: 'running' };
+  const report = { sourceSha256: Object.fromEntries(['plm-image-sync-service.js', 'plm-image-download-queue.js', 'plm-image-byte-budget-int03.js'].map(name => [name, crypto.createHash('sha256').update(fs.readFileSync(path.join(app, 'server/lib', name))).digest('hex')])), synthetic: true, upstream: 'loopback metadata and real HTTP stream; actual queue/ingest/server/auth/UI', status: 'running' };
   try {
     for (let i = 0; i < 120; i++) { try { if ((await fetch(base + '/api/user-profiles')).ok) break; } catch {} await pause(250); }
     const password = crypto.randomBytes(24).toString('hex');

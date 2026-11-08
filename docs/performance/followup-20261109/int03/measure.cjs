@@ -58,7 +58,8 @@ function fixture(job) {
     sample();
     const hashes = result.flatMap(run => run.outcomes.map(item => item.contentHash)).sort();
     console.log(JSON.stringify({ mode: baseline ? 'base-main' : 'post-change', node: process.version, platform: `${process.platform}/${process.arch}`, synthetic: true,
-      serviceSha256: crypto.createHash('sha256').update(source).digest('hex'), jobs: 2, imagesPerJob: 40, sizesMiB: [1, 2, 3, 4, 5],
+      serviceSha256: crypto.createHash('sha256').update(source).digest('hex'),
+      helperSha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(app, 'server/lib/plm-image-byte-budget-int03.js'))).digest('hex'), jobs: 2, imagesPerJob: 40, sizesMiB: [1, 2, 3, 4, 5],
       bytesDownloaded: result.reduce((n, run) => n + run.counts.bytesDownloaded, 0), outcomes: hashes.length,
       contentHashesSha256: crypto.createHash('sha256').update(JSON.stringify(hashes)).digest('hex'),
       before: start, sampledPeak: { rss, arrayBuffers, external }, maxEagerBufferRootsAtCommit: rootedBytes,
