@@ -102,12 +102,12 @@
     "skipped": 65,
     "cancelled": 0
   },
-  "elapsedSeconds": 210.1,
+  "elapsedSeconds": 212.2,
   "environment": {
     "os": "Debian 13 x86_64",
     "node": "v24.19.0",
-    "APPDATA": "/tmp/shell05-test-profile/appdata",
-    "LOCALAPPDATA": "/tmp/shell05-test-profile/localappdata",
+    "APPDATA": "/tmp/shell05-final-test-profile/appdata",
+    "LOCALAPPDATA": "/tmp/shell05-final-test-profile/localappdata",
     "HOME": "inherited; unchanged"
   },
   "lock": "/tmp/buyerlog-performance-measurement.lock",
@@ -124,6 +124,9 @@
   "sourceSha256": {
     "resources/app/public/app-main.js": "d22b172dc1ef17e0a817812a53bc36daa7abc1b3d96e64372bceff288c77417a",
     "resources/app/tests/shell05-native-module-warmup.test.js": "71ccd3b7611fbae3f9af2d92ea751f4f4317b4b6bfd44cf5a41b29ece5481562",
-    "resources/app/public/release-notes/next.json": "b81f448996343a7e0783ae76801ca2f518d03aea256876e4d847920e045def00"
-  }
+    "resources/app/public/release-notes/next.json": "d85e97ed6884e6fe6843e2c6b6bea0f1e17a0a9c557e165fb80ddab115d48c60"
+  },
+  "initialBaseMain": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "syncedBaseMain": "3b38cab887d9a5590a234f6c6f73c8dec0b01c6b",
+  "previousSuccessfulFullRun": "full-test-before-main-freeze.log.gz"
 }

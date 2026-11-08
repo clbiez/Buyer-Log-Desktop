@@ -2,4 +2,4 @@
 > buyer-log-desktop@7.0.343 release:notes:validate
 > node scripts/release-notes.js validate
 
-Release notes OK: 7 change(s).
+Release notes OK: 2 change(s).

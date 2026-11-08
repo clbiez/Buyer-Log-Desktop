@@ -1,7 +1,12 @@
 # SHELL-05 — Native sekmeye özel modül hazırlığı
 
 Issue: https://github.com/clbiez/Buyer-Log-Desktop/issues/937 (Paket 2).
-Base Main: `511cb2fae629cd6e0c1ad31eb773775e5c95841d`.
+İlk Base Main: `511cb2fae629cd6e0c1ad31eb773775e5c95841d`.
+PR tabanı / son Main eşitlemesi: `3b38cab887d9a5590a234f6c6f73c8dec0b01c6b`.
+Main, çalışma sırasında 7.0.343 notlarını arşivledi. Yalnız `next.json`
+çakışması mevcut bekleyen kaydı koruyup kendi ID'mizi ekleyerek çözüldü.
+Main'in üç commit'i yalnız release-note metadata/PNG arşivlemesidir; uygulama
+kodu değişmedi. Başka iş dalı alınmadı; Main'e merge/yayın yapılmadı.
 Branch: `perf/followup-native-module-warmup-20261109`.
 Worktree: `/workspace/shell05`; ortak checkout'ta branch değiştirilmedi.
 Risk: P2; renderer içindeki arka plan hazırlığının uygunluk filtresi.
@@ -95,19 +100,25 @@ HOME değiştirilmedi. [test-environment-probe.log](test-environment-probe.log)
 aynı hatayı veren iki dosyadaki 33 testi PASS doğruladı. Ardından tam runner
 baştan çalıştırıldı; kalan batch'ler elle birleştirilmedi.
 
-Son standart koşu **PASS**: 1315 dosya / 10 batch, 9028 PASS, 0 FAIL,
-65 mevcut SKIP, 0 CANCEL; 210.1 saniye. Ham çıktı: [full-test.log](full-test.log).
+Main eşitlemesinden önceki başarılı tam koşu
+[full-test-before-main-freeze.log.gz](full-test-before-main-freeze.log.gz)
+olarak saklandı (1315 dosya / 10 batch, 9028 PASS, 0 FAIL, 65 SKIP, 0 CANCEL).
+Son manifest için standart tam runner yeniden baştan çalıştırıldı: **PASS**,
+1315 dosya / 10 batch / concurrency=4; 9028 PASS, 0 FAIL, 65 SKIP,
+0 CANCEL; 212.2 saniye. Son koşu APPDATA/LOCALAPPDATA kökleri
+`/tmp/shell05-final-test-profile/{appdata,localappdata}` oldu.
+Son koşunun ham çıktısı: [full-test.log](full-test.log).
 Kesin dosya/batch ve PASS/FAIL/SKIP/CANCEL sayıları [summary.json](summary.json)
 ve issue'daki final yorumdadır. Ortam: Debian 13 x86_64, Node v24.19.0.
 
 [i18n.log](i18n.log): yeni eksik 0, eski baseline eksik 0.
-[release-notes.log](release-notes.log): mevcut 6 kayıt + tek yeni kayıt geçerli.
+[release-notes.log](release-notes.log): güncel Main'in 1 bekleyen kaydı + tek yeni kayıt geçerli.
 Release-note ID: `shell05-native-module-warmup-20261109` (TR/EN).
 Gerçek post-change PNG:
 [Electron Siparişler ekranı](../../../../resources/app/public/release-notes/next-assets/shell05-native-module-warmup-20261109.png).
 1439×871 görüntü görsel olarak incelendi: CP Bekliyor, Siparişler Hazır ve 20
 sentetik satır görülür. Ortak `next.json` dosyasındaki eski kayıtların alanları
-ve ekleme dışındaki bütün baytlar korunur; [review.json](review.json).
+ve ekleme dışındaki bütün baytlar güncel Main'e göre korunur; [review.json](review.json).
 
 ## Tekrarlama
 
