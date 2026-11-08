@@ -8,6 +8,7 @@ const { promisify } = require('util');
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
 const { LOCAL_DATA_ROOT, atomicWriteBuffer, atomicWriteBufferAsync } = require('../user-data');
+const { jsonToBuffer, parseJsonBuffer } = require('./large-json');
 
 const SNAPSHOT_ROOT = path.join(LOCAL_DATA_ROOT, 'model-snapshots');
 const LEGACY_SNAPSHOT_SCHEMA_VERSION = 1;
@@ -114,33 +115,33 @@ function expandSnapshotPayload(snapshot) {
   return value;
 }
 
-// İçerik JSON'u bir kez üretilir: hem dosyaya yazılır hem içerik anahtarı olur.
+// İçerik UTF-8 parçalarıyla üretilir; bütün kaynak için büyük bir V8 metni
+// oluşturmak, snapshot kaydında sunucuyu OOM ile kapatabiliyordu.
 // Gövde hash'i ve dosya baytları yalnız gerçekten yazılacaksa hazırlanır.
 function prepareSnapshot(payload) {
   const compacted = compactSnapshotPayload(payload);
   const { content, metadata } = splitCompactedPayload(compacted);
-  const contentJson = JSON.stringify(content);
-  return { contentJson, contentKey:checksum(contentJson), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
+  const contentBuffer = jsonToBuffer(content);
+  return { contentBuffer, contentKey:checksum(contentBuffer), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
 }
 function finishSnapshot(prepared) {
   // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
-  // contentJson is not carried into the result: the caller awaits gzip, gunzip
-  // and the write while holding the result, and the full content string would
-  // otherwise stay on the heap next to those buffers for the whole save.
-  const { contentJson, ...rest } = prepared, { contentKey, metadata, savedAt } = rest;
+  const { contentBuffer, ...rest } = prepared, { contentKey, metadata, savedAt } = rest;
   const metadataJson = JSON.stringify({ savedAt, ...metadata });
   // Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
   // birleştirilmiş tek metne dönüştürülüyordu; V8 bu metni düzleştirirken büyük
   // veri setinde içeriğin ikinci tam kopyasını heap'te açıyor ve yenileme
   // "snapshot-save" adımında heap out of memory ile çöküyordu. Baytlar aynıdır.
-  const bodyParts = contentJson === '{}' ? [metadataJson] : [`${metadataJson.slice(0, -1)},`, contentJson.slice(1)];
+  const bodyParts = contentBuffer.length === 2
+    ? [Buffer.from(metadataJson,'utf8')]
+    : [Buffer.from(`${metadataJson.slice(0, -1)},`,'utf8'),contentBuffer.subarray(1)];
   const hash = crypto.createHash('sha256');
-  for (const part of bodyParts) hash.update(part, 'utf8');
+  for (const part of bodyParts) hash.update(part);
   const digest = hash.digest('hex');
-  const parts = [`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":`, ...bodyParts, '}'];
-  const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + Buffer.byteLength(part, 'utf8'), 0));
+  const parts = [Buffer.from(`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":`,'utf8'), ...bodyParts, Buffer.from('}')];
+  const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + part.length, 0));
   let offset = 0;
-  for (const part of parts) offset += json.write(part, offset, 'utf8');
+  for (const part of parts) offset += part.copy(json, offset);
   if (offset !== json.length) throw new Error('Snapshot gövdesi yazılamadı.');
   return { ...rest, json, baseChecksum:digest };
 }
@@ -188,16 +189,16 @@ function reviveSnapshotDates(value) {
   return total;
 }
 
-function decodeSnapshotText(text) {
-  const parsed = JSON.parse(text);
+function decodeSnapshotRaw(raw) {
+  const parsed = parseJsonBuffer(raw);
   let value;
   if (parsed && parsed.schemaVersion === LEGACY_SNAPSHOT_SCHEMA_VERSION) {
     value = parsed;
   } else if (parsed && parsed.schemaVersion === SNAPSHOT_SCHEMA_VERSION && parsed.payload) {
-    const marker = '"payload":', start = text.indexOf(marker);
-    if (start < 0 || text[text.length - 1] !== '}') throw new Error('Snapshot payload biçimi geçersiz.');
-    const payloadJson = text.slice(start + marker.length, -1);
-    if (!parsed.checksum || checksum(payloadJson) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
+    const marker = Buffer.from('"payload":'), start = raw.indexOf(marker);
+    if (start < 0 || raw[raw.length - 1] !== 0x7d) throw new Error('Snapshot payload biçimi geçersiz.');
+    const payloadBytes = raw.subarray(start + marker.length, -1);
+    if (!parsed.checksum || checksum(payloadBytes) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
     value = expandSnapshotPayload(parsed.payload);
     Object.defineProperty(value, '_baseChecksum', { value:parsed.checksum, enumerable:false });
     if (/^[0-9a-f]{64}$/.test(String(parsed.contentKey || ''))) Object.defineProperty(value, '_contentKey', { value:parsed.contentKey, enumerable:false });
@@ -210,7 +211,7 @@ function decodeSnapshotText(text) {
 }
 
 function decodeSnapshotBuffer(buffer) {
-  return decodeSnapshotText(zlib.gunzipSync(buffer).toString('utf8'));
+  return decodeSnapshotRaw(zlib.gunzipSync(buffer));
 }
 
 function assertSnapshotPayload(payload) {
@@ -254,7 +255,7 @@ async function writeModelSnapshotAsync(userId, payload) {
     }
   }
   const encoded = finishSnapshot(prepared);
-  prepared = null; // release the content string before the awaited gzip/write
+  prepared = null; // release the content buffer before the awaited gzip/write
   const compressStarted = Date.now(), buffer = await gzip(encoded.json, { level: 6 });
   const validateStarted = Date.now();
   { const raw = await gunzip(buffer); assertRoundTrip(raw, encoded); } // raw is released before the write
@@ -296,7 +297,7 @@ async function loadModelSnapshotAsync(userId) {
     try {
       const compressed = await fs.promises.readFile(candidate);
       const readMs = Date.now() - started, raw = await gunzip(compressed), inflateMs = Date.now() - started - readMs;
-      const parseStarted = Date.now(), value = decodeSnapshotText(raw.toString('utf8'));
+      const parseStarted = Date.now(), value = decodeSnapshotRaw(raw);
       if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:raw.length });
       applySnapshotMetadata(userId, value);
       Object.defineProperty(value, '_snapshotMetrics', {
