@@ -1,0 +1,15 @@
+{
+  "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "files": {
+    "public/app-main.js": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+    "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1"
+  },
+  "baselineSwitchSha256": "487734b754aea980a95a1b785c7b1fb3176cd656f8933f39667dbf78ef1269df",
+  "outsideSwitchSha256": "bca1e905ccd7dee5ff5c4bf70024992659d861b7763ff0a86ea3f0a3f222e303",
+  "beforeAppSha256": "148fa4d8670684067cedeae85c5f82daec28136c51946cf5a1beca5cbb4b9d8c",
+  "currentSwitchSha256": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2",
+  "lifecycleDeltaProof": "docs/performance-program/phase-6a/source-retirement-integration-20261108/source-pin-review.json",
+  "configurationDeltaProof": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/source-pin-review.json",
+  "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json",
+  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json"
+}

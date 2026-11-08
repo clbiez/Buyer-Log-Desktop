@@ -1,0 +1,188 @@
+TAP version 13
+# Subtest: confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+not ok 1 - confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+  ---
+  duration_ms: 14.025557
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:22:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    confirmed writes must keep created columns
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:23:59)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: uncertain execute failure retains columns and labels server outcome unknown
+not ok 2 - uncertain execute failure retains columns and labels server outcome unknown
+  ---
+  duration_ms: 3.651925
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:26:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    lost transport is not proof of no commit
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:27:59)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actual plan is checked again after column creation before row mutation
+not ok 3 - actual plan is checked again after column creation before row mutation
+  ---
+  duration_ms: 20.691312
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:32:9)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: late primary completion cannot refresh audit or clear a newly opened wizard
+not ok 4 - late primary completion cannot refresh audit or clear a newly opened wizard
+  ---
+  duration_ms: 4.078549
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:34:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   busy: false,
+    +   plan: null,
+    +   progress: null,
+    +   result: {
+    +     conflictsResolved: 0,
+    +     created: 0,
+    +     customFieldsCreated: 0,
+    +     failed: 1,
+    +     message: "The import failed: Cannot read properties of undefined (reading 'refresh')",
+    +     skipped: 0,
+    +     status: 'failed',
+    +     updated: 0,
+    +     warnings: []
+    -   busy: 'new-busy',
+    -   plan: {
+    -     id: 'new-plan'
+        },
+    -   progress: {
+    -     new: true
+    -   }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    plan:
+      id: 'new-plan'
+    busy: 'new-busy'
+    progress:
+      new: true
+  actual:
+    plan: ~
+    busy: false
+    progress: ~
+    result:
+      status: 'failed'
+      created: 0
+      updated: 0
+      skipped: 0
+      failed: 1
+      warnings:
+      conflictsResolved: 0
+      customFieldsCreated: 0
+      message: "The import failed: Cannot read properties of undefined (reading 'refresh')"
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:36:9)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: closed or replaced wizard cannot continue from column ACK into row execution
+not ok 5 - closed or replaced wizard cannot continue from column ACK into row execution
+  ---
+  duration_ms: 1.91467
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:38:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot set properties of null (setting 'busy')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    Object.runImport [as run] (eval at fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:19:12), <anonymous>:49:18)
+    async TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:39:134)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actor replacement and in-place actor-id drift block late work without targeting new owner
+not ok 6 - actor replacement and in-place actor-id drift block late work without targeting new owner
+  ---
+  duration_ms: 1.951266
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:42:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:45:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: successful current import preserves counts refresh ordering and feedback
+ok 7 - successful current import preserves counts refresh ordering and feedback
+  ---
+  duration_ms: 1.50498
+  type: 'test'
+  ...
+# Subtest: read-only denial starts no creation or row mutation
+ok 8 - read-only denial starts no creation or row mutation
+  ---
+  duration_ms: 1.188244
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 2
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 198.096377

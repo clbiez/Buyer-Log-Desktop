@@ -1,0 +1,168 @@
+TAP version 13
+# Subtest: confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+not ok 1 - confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+  ---
+  duration_ms: 2.627822
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:21:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:22:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: uncertain execute failure retains columns and labels server outcome unknown
+not ok 2 - uncertain execute failure retains columns and labels server outcome unknown
+  ---
+  duration_ms: 2.290799
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:25:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:26:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: actual plan is checked again after column creation before row mutation
+not ok 3 - actual plan is checked again after column creation before row mutation
+  ---
+  duration_ms: 0.936215
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:29:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:30:26)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: late primary completion cannot refresh audit or clear a newly opened wizard
+not ok 4 - late primary completion cannot refresh audit or clear a newly opened wizard
+  ---
+  duration_ms: 0.657296
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:33:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:34:26)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: closed or replaced wizard cannot continue from column ACK into row execution
+not ok 5 - closed or replaced wizard cannot continue from column ACK into row execution
+  ---
+  duration_ms: 0.77017
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:37:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:38:26)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actor replacement and in-place actor-id drift block late work without targeting new owner
+not ok 6 - actor replacement and in-place actor-id drift block late work without targeting new owner
+  ---
+  duration_ms: 0.747822
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:41:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:43:27)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: successful current import preserves counts refresh ordering and feedback
+not ok 7 - successful current import preserves counts refresh ordering and feedback
+  ---
+  duration_ms: 0.710892
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:47:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:48:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: read-only denial starts no creation or row mutation
+not ok 8 - read-only denial starts no creation or row mutation
+  ---
+  duration_ms: 0.510983
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:51:1'
+  failureType: 'testCodeFailure'
+  error: 'app-main.js içinde "function runImport(" bulunamadı'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    extractFunction (/workspace/buyerlog-analytics904/resources/app/tests/helpers/app-main-functions.js:76:21)
+    fixture (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:18:52)
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:52:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 0
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 157.095038

@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: the owned CP refresh failure detail also changes language with the outcome
+not ok 1 - the owned CP refresh failure detail also changes language with the outcome
+  ---
+  duration_ms: 81.256187
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:129:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /sunucu verisi yeniden yüklenemedi/. Input:
+    
+    'Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. Server data could not be reloaded after import.'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Sunucu aktarım yanıtı alındı ancak ekran doğrulaması tamamlanamadı. Oluşturulan sütunlar korundu; yeniden yazmadan önce sunucu verisini kontrol edin. Server data could not be reloaded after import.'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:131:32)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 209.886576

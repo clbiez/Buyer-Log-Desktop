@@ -1,0 +1,354 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js excel-import import-profiles private-order-notes note-columns
+
+[Buyer Log tests] 11 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (11 dosya)
+✔ Collection Sütunlar adımı dört aksiyonlu ve varsayılanı yalnız canonical identity sütunlarında Match (2.660025ms)
+✔ Match yalnız identity bulur; Update yalnız seçili hedefi yazar; Ignore hiçbir alana yazılmaz (14.000775ms)
+✔ Explicit colour-level aynı değer bile override niyeti olarak plana girebilir; blank hücre mevcut semantiği korur (6.097018ms)
+✔ Eşleşme alanı yoksa ve duplicate update target varsa import validation açıkça bloklar (0.850522ms)
+✔ Create + Update + Match aynı planda çalışır; eşleşmeyen yeni row identity alanlarını Match kaynaklarından alır (7.614328ms)
+✔ AI maps canonical fields and repairs currency locally; only the approved plan writes (7.998541ms)
+✔ unknown fields/actions, duplicate mappings and arbitrary value writes are rejected atomically (6.156365ms)
+✔ normalization never guesses missing identifiers, dates or formula results (6.709298ms)
+✔ stale source, mapping, decisions and target revision cannot accept an old suggestion (7.301854ms)
+✔ the whole sheet is checked locally while AI context is bounded and honest about coverage (33.141602ms)
+✔ central LCW AI prompt contract forbids invented values and automatic conflict decisions (8.963873ms)
+✔ CP keeps its existing plan/bridge semantics and never creates unmatched rows (0.885635ms)
+✔ ambiguous matches remain blocked after accepting an AI formatting correction (1.682077ms)
+✔ inconsistent currency marks and fractional quantities are never silently repaired (1.762964ms)
+✔ a suggested matching subset disables removed match columns without granting write access (2.367539ms)
+✔ confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts (12.557832ms)
+✔ uncertain execute failure retains columns and labels server outcome unknown (3.022509ms)
+✔ actual plan is checked again after column creation before row mutation (20.928641ms)
+✔ late primary completion cannot refresh audit or clear a newly opened wizard (4.430571ms)
+✔ closed or replaced wizard cannot continue from column ACK into row execution (2.02162ms)
+✔ actor replacement and in-place actor-id drift block late work without targeting new owner (3.63585ms)
+✔ successful current import preserves counts refresh ordering and feedback (1.38486ms)
+✔ read-only denial starts no creation or row mutation (0.880917ms)
+✔ permission revoked during column creation blocks the subsequent row write (3.215412ms)
+✔ a second click cannot start another import while the first job is pending (2.85412ms)
+✔ partial primary ACK counts remain intact when the view refresh fails (1.95501ms)
+✔ optional source guards cannot return false or an unawaited Promise as permission to continue (1.464261ms)
+✔ normal same-actor hydration performed by the actual app keeps successful import completion (86.909333ms)
+✔ actual CP revision witness survives its own new blank column while still rejecting original-field edits (96.669023ms)
+✔ actual CP request carries the original plan revision through the mutation queue (37.780755ms)
+✔ an observed account/access change cannot be hidden by returning to the original actor before completion (3.514299ms)
+✔ same-id access revocation invalidates a pending job even when legacy canEdit still returns true (2.098242ms)
+✔ takma adlar yüksek güvenli öneri üretir (7.590243ms)
+✔ belirsiz/zayıf öneri gözden geçirme ister ve tek başına plana giremez (2.123124ms)
+✔ aynı hedefe iki kaynak sütun eşlenemez (1.052579ms)
+✔ otomatik eşleme aynı hedefi iki kez rezerve etmez (1.187986ms)
+✔ bir kaynak sütun birden çok anlamsal alanı açık kural olmadan süremez (0.618308ms)
+✔ yeni sütun eşlemesi ad ister ve mevcut alan adıyla çakışamaz (0.849684ms)
+✔ yazılamayan alan yalnız eşleşme için kullanılabilir (0.636931ms)
+✔ eşleşme kuralı zorunludur ve eşlenmemiş alanla kurulamaz (0.448035ms)
+✔ tip sezgisi öneridir ve baştaki sıfır kimliği ele verir (4.592283ms)
+✔ kimlik alanı sayı değildir: baştaki sıfır anlamlıdır (1.111024ms)
+✔ bileşik anahtarda eksik parça kimliği geçersiz kılar (0.848123ms)
+✔ exact / none / ambiguous / invalid doğru sınıflanır ve ilk sonuç seçilmez (1.240094ms)
+✔ Excel içindeki tekrar eden anahtarlar bildirilir (1.723955ms)
+✔ farklı anahtarlı iki satır tek hedefe düşerse ters tekrar raporlanır (0.448552ms)
+✔ benzerlik yalnız ÖNERİ üretir, kesin eşleşme üretmez (0.85627ms)
+✔ atomik içe aktarma: tek satır çakışırsa hiçbir satır yazılmaz (103.954647ms)
+✔ atomic istenmediğinde mevcut satır bazlı davranış aynen sürer (74.811206ms)
+✔ atomik parti tamamen uygulanabiliyorsa tek yazmada geçer (47.555188ms)
+✔ atomik içe aktarma yapısal değişikliği (yeni özel sütun) aynı yazmada taşır (57.638391ms)
+✔ CP içe aktarımı tek revizyon kapılı tek partidir; bayat revizyon hiçbir şey yazmaz (41.239154ms)
+✔ CP içe aktarımı mevcut override alanlarını kullanır (not, not sütunu, alt üretici, FOB, tarih) (20.818501ms)
+✔ bilinmeyen not sütununa yazılamaz (silinmiş sütun hayalet değer bırakmaz) (7.547592ms)
+✔ geçersiz sipariş kodu sessizce yutulmaz, atlandı olarak raporlanır (3.808634ms)
+✔ Excel seri tarihi saat dilimi kaymadan takvim gününe çevrilir (3.67605ms)
+✔ metin, Date ve biçimli tarihler aynı kanonik biçime iner (0.784681ms)
+✔ geçersiz tarih ve sayı zorlanmaz; geçersiz işaretlenir (0.970615ms)
+✔ baştaki sıfır korunur; korunamıyorsa uyarı üretilir, tahmin edilmez (0.876911ms)
+✔ güvenilmez formül hücresi değer olarak kullanılmaz (0.293135ms)
+✔ boş hücre varsayılan olarak mevcut değeri silmez ve önizlemede görünür (3.69704ms)
+✔ açık ayar ile boş hücre temizler ve bu önizlemede "clear" olarak görünür (1.39116ms)
+✔ yalnız boşluk içeren hücre boş hücreyle aynı sözleşmeye tabidir (0.96708ms)
+✔ yazılamayan kimlik alanı güncellemede değişiklik üretmez (0.898985ms)
+✔ eşleşmeyen satır yeni kayıt olur; oluşturma kapalıysa atlanır (1.861752ms)
+✔ CP gibi satır oluşturamayan hedefte eşleşmeyen satır açıkça atlanır (0.803398ms)
+✔ belirsiz eşleşme karar verilmeden planı engeller; karar verilince uygulanır (2.935467ms)
+✔ ters tekrar ve Excel içi tekrar engelleyicidir; first-wins sessizce uygulanmaz (1.151066ms)
+✔ geçersiz hücre taşıyan satır yazılmaz (0.693651ms)
+✔ kimliksiz satır eşleştirilemez ve yazılmaz (0.472313ms)
+✔ plan dondurulmuştur ve aynı girdi aynı parmak izini üretir (0.915254ms)
+✔ eşleme, eşleşme kuralı, ayar veya satır kararı değişince parmak izi değişir (0.575829ms)
+✔ bayat plan uygulanamaz: hedef revizyonu veya satırı değiştiyse durur (0.791418ms)
+✔ yeni sütun plana kendi alanıyla girer ve satır değeri olarak yazılır (2.361793ms)
+✔ hariç tutulan satır plana hiç girmez (0.418852ms)
+✔ özet sayaçları gerçek plana karşılık gelir (0.551126ms)
+✔ profil kullanıcıya ve modüle aittir (2.572154ms)
+✔ profilde yalnız yapılandırma saklanır, çalışma kitabı verisi saklanmaz (0.473093ms)
+✔ aynı şema birebir eşleşir, değişen şema gözden geçirme ister (0.772464ms)
+✔ profil deposu kullanıcı senkron listesine kayıtlıdır (0.430563ms)
+✖ CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır (5.950807ms)
+✖ CP adaptörü satır oluşturamaz ve bunu açıkça bildirir (3.133758ms)
+✔ sihirbaz onaydan önce yazmaz ve uygulama anında planı yeniden doğrular (4.73631ms)
+✔ önizleme ve uygulama aynı planı kullanır; girdi değişince plan çöpe atılır (4.641316ms)
+✔ Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta belleği geri alır (3.707092ms)
+✔ özel sütunlar Buyer Log'un mevcut sistemlerini kullanır (8.102921ms)
+✔ denetim kaydı sınırlıdır ve çalışma kitabı verisi taşımaz (2.031391ms)
+✔ başlık satırı rapor başlığının altında bulunur ve güven derecesi taşır (7.189013ms)
+✔ kullanıcı başlık satırını ezebilir ve güven "user" olur (1.030176ms)
+✔ tekrar eden başlıklar raporlanır ve sütunlar ayrı kimliklerini korur (2.656898ms)
+✔ başlık birleştirmesi veri birleştirmesinden ayrılır; aşağı doldurma yalnız istenirse yapılır (2.506254ms)
+✔ gizli satır ve sütunlar varsayılan olarak içeri girmez (1.329777ms)
+✔ tekrarlanan başlık ve toplam satırları iş kaydı sayılmaz (1.193758ms)
+✔ formül hücresi çalıştırılmaz: önbellekli değer kullanılır, yoksa güvenilmez işaretlenir (1.37842ms)
+✔ şema parmak izi dosya adına değil sayfa yapısına bağlıdır (0.978844ms)
+✔ çalışma kitabı özeti gizli sayfaları işaretler (1.18977ms)
+✔ normalizeNoteColumnDefs: id temizlenir, ad/id çakışması elenir, 40 ile sınırlanır (2.559924ms)
+✔ replaceNoteColumnDefs: revizyon kontrolü yapar, kaydeder, silinen sütunun değerlerini temizler (53.315124ms)
+✔ patchOrderOverride: noteColumns notesmap ile aynı anahtar/seed desenini kullanır (21.108167ms)
+✔ buildOrderRowsFromASAS: not sütunu değeri satıra yazılır, ham ASAS alanları bozulmaz (25.320618ms)
+✔ rotalar tanımlı: GET/PUT /api/note-columns, uygun alan yetkisiyle (1.676989ms)
+✔ artımlı proje önbelleği yaması noteColumns alanını da uyguluyor (1.828159ms)
+✔ başlangıç yükü not sütunu tanımlarını ve revizyonunu taşıyor (0.904889ms)
+✔ syncCpNoteColumns: CP_COLS içine dinamik metin sütunu ekler, Orders'a miras bırakır (0.733417ms)
+✔ addCpNoteColumn/renameCpNoteColumn/removeCpNoteColumn mevcut PUT akışını kullanır, ikinci bir sistem kurmaz (1.555098ms)
+✔ renderColPanel: Add Note Column düğmesi CP ve Orders panelinde basılıyor, rename/drop bağlanıyor (1.049547ms)
+✔ 2026-10-04 · Not Sütunu Ekle eylemi CP/Orders için görünür (v7.0.229: Alanlar çekmecesinde) (1.289894ms)
+✔ syncOverridesFromRow: not sütunu değerleri notesmap ile aynı anahtarla tutulur (1.504115ms)
+✔ syncOverrideToServer: noteColumns yalnız tanımlı sütun varsa gövdeye eklenir (1.015424ms)
+✔ hücre düzenleme ikinci bir yol açmıyor: type:'text' zaten genel editCell/commitCpEditor akışını kullanıyor (0.831589ms)
+✔ personal note definitions and values are isolated between account-scoped stores (4.51447ms)
+✔ note identity uses order, model and colour; never spills across line items (0.611647ms)
+✔ deleted private columns no longer expose data and cannot be edited (0.706468ms)
+✔ private notes have explicit bounds and reject malformed column identifiers (0.301128ms)
+✔ app uses private edit path even for view-only Orders; shared overrides still enforce IAM (29.514891ms)
+✔ private order notes use distinct line keys and never touch shared override fields (0.898221ms)
+✔ storage validates key, length and is per-user/synced but not profile-copyable (2.09827ms)
+✔ personal note column is offered in both CP and Orders and bypasses order edit checks (4.878395ms)
+✔ note content is HTML escaped and is not written onto an order row (2.110975ms)
+ℹ tests 119
+ℹ suites 0
+ℹ pass 117
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1057.120227
+
+✖ failing tests:
+
+test at tests/excel-import-profiles-wiring-v1060.test.js:126:1
+✖ CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır (5.950807ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /if\(moduleId==='cp'\)return\s*\{/. Input:
+  
+  "window.BLPerf?.mark?.('LOCAL_CONFIG_READY');\n" +
+    "// Uygulama dili: açılışta 'tr'; kayıtlı tercih aşağıdaki i18n bölümünde yüklenir.\n" +
+    "let appLang = 'tr';\n" +
+    '/* ===================================================================\n' +
+    '   Buyer Log — uygulama çekirdeği (app-main.js)\n' +
+    "   v4.98'e kadar bu kodun tamamı index.html içinde satır içi <script>\n" +
+    "   olarak duruyordu. index.html 'no-store' ile sunulduğu için 1,36 MB'lık\n" +
+    '   bu blok her sayfa açılışında yeniden indirilip yeniden ayrıştırılıyordu.\n' +
+    '   Ayrı dosyaya alınınca ?v= sürüm etiketiyle bir yıl önbelleklenir ve\n' +
+    '   tarayıcının derlenmiş kod önbelleği devreye girer.\n' +
+    '\n' +
+    "   ÖNEMLİ: dosya index.html'de tam olarak eski satır içi bloğun yerinde,\n" +
+    '   defer/async OLMADAN yüklenir. Yürütme sırası bilerek birebir korunmuştur;\n' +
+    "   defer eklemek üst düzey kodun DOM'u farklı bir anda görmesine yol açar.\n" +
+    '   =================================================================== */\n' +
+    'const state = { currentUser:window.BL_USER_CONTEXT||null, cp:null, orders:null, orderSummary:null, overviewSummary:null, collectionCatalogs:{}, cpSort:{key:null,dir:1}, ordersSort:{key:null,dir:1},\n' +
+    '  cpDirty:new Set(), cpSelected:new Set(), ordersSelected:new Set(), cpLogisticExpanded:new Set(), ordersLogisticExpanded:new Set(),\n' +
+    '  asasOrders:null, antrepoMap:{}, overrides:{notesmap:{}, submap:{}, suppfobmap:{}, suppfobmetamap:{}, delmap:{}, licensormap:{}, imagemap:{}, pricingRules:[], transitRules:[], nonDtrManufacturers:[], landedMultipliers:{tr:1.05,overseas:1.11}, noteColumnValues:{}},\n' +
+    "  colFilters:{cp:{}, orders:{}}, checkFilter:{cp:'', orders:''}, cpQuickExf:'', ordersQuickExf:'', ordersQuickActive:new Set(),\n" +
+    '  // Model kapsam özetleri: ufuk rozeti bunlardan üretilir.\n' +
+    '  modelScopes:[], modelHorizons:{},\n' +
+    '  storeRevisions:{overrides:0,orders:0,suppFob:0,pricingRules:0,transitRules:0,nonDtrManufacturers:0,landedMultipliers:0,freightRates:0,refreshHistory:0},\n' +
+    '  // Sütun dondurma: tablo başına { left:n, right:n }.\n' +
+    '  //   left  = soldan kaç sütun sabit kalacak (0 = yok)\n' +
+    '  //   right = sağdan kaç sütun sabit kalacak (0 = yok)\n' +
+    `  // Excel'deki "Bölmeleri Dondur" ile aynı mantık; ikisi birlikte kullanılınca\n` +
+    '  // ortada kalan sütunlar yatay kaydırılır.\n' +
+    '  freeze:{} };\n' +
+    '\n' +
+    'var startupPageProfileReady=Promise.resolve(),startupRevealPromise=null;\n' +
+    'var modulePreparation=window.BLStartupPreparation?.create({\n' +
+    "  readHistory:()=>JSON.parse(BLStorage.getItem('lcw.startup.moduleLastUsed.v1')||'{}'),\n" +
+    "  writeHistory:history=>BLStorage.setItem('lcw.startup.moduleLastUsed.v1',JSON.stringify(history)),\n" +
+    "  onChange:detail=>{renderModulePreparationStates();window.dispatchEvent(new CustomEvent('bl:module-preparation',{detail}));},\n" +
+    '});\n' +
+    'window.BLModulePreparation=modulePreparation;\n' +
+    'function renderModulePreparationStates(){\n' +
+    '  const snapshot=modulePreparation?.snapshot();if(!snapshot)return;\n' +
+    "  const L=(tr,en)=>appLang==='en'?en:tr;\n" +
+    "  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection')};\n" +
+    "  const labels={pending:L('Bekliyor','Pending'),loading:L('Yükleniyor','Loading'),ready:L('Hazır','Ready'),error:L('Hata','Error')};\n" +
+    "  for(const module of ['cp','orders','koleksiyon']){\n" +
+    `    const button=document.querySelector('nav.tabs button[data-tab="'+module+'"]');if(!button)continue;\n` +
+    "    let badge=button.querySelector('[data-module-preparation]');\n" +
+    "    if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove('hasModulePreparation');continue;}\n" +
+    "    if(!badge){badge=document.createElement('span');badge.className='modulePrepState';badge.dataset.modulePreparation=module;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');button.appendChild(badge);button.classList.add('hasModulePreparation');}\n" +
+    '    const status=snapshot[module].status,label=labels[status];\n' +
+    '    if(badge.textContent!==label)badge.textContent=label;\n' +
+    "    badge.dataset.status=status;badge.title=names[module]+' · '+label;\n" +
+    '  }\n' +
+    "  if(snapshot.cp.status==='error'&&currentActiveTab()==='cp')renderCpLoadError(snapshot.cp.error);\n" +
+    '}\n' +
+    'function startupModuleIntent(event){\n' +
+    "  const module=event.target?.closest?.('button[data-tab]')?.dataset.tab;\n" +
+    "  if(!['cp','orders','koleksiyon'].includes(module))return;\n" +
+    '  if(window.BLCanAccessArea?.(module)===true)modulePreparation?.noteIntent(module);\n' +
+    '}\n' +
+    "document.querySelector('nav.tabs')?.addEventListener('pointerover',startupModuleIntent);\n" +
+    "document.querySelector('nav.tabs')?.addEventListener('focusin',startupModuleIntent);\n" +
+    "window.addEventListener('bl:user-access-applied',renderModulePreparationStates);\n" +
+    "document.addEventListener('bl:language-changed',renderModulePreparationStates);\n" +
+    'function afterStartupReveal(callback){\n' +
+    '  if(!startupRevealPromise)startupRevealPromise=new Promise(resolve=>{\n' +
+    '    const painted=()=>requestAnimationFrame(()=>requestAnimationFrame(resolve));\n' +
+    "    if(window.BL_STARTUP_COMPLETE)painted();else window.addEventListener('bl:startup-complete',painted,{once:true});\n" +
+    '  });\n' +
+    '  return startupRevealPromise.then(callback);\n' +
+    '}\n' +
+    '\n' +
+    "const CORE_FILTER_AUTO_KEY='lcw.corePageFilters.auto.v1';\n" +
+    'let coreFilterAutoReady=false, coreFilterSaveTimer=null;\n' +
+    'function coreSerializeFilters(bucket){\n' +
+    '  const out={};\n' +
+    '  Object.entries(bucket||{}).forEach(([key,entry])=>{\n' +
+    '    if(!entry)return;\n' +
+    '    out[key]={\n' +
+    '      granularity:entry.granularity||null,\n' +
+    '      values:[...(entry.values||[])],\n' +
+    '      numericRule:entry.numericRule||null,\n' +
+    '      quickPriority:!!entry.quickPriority,\n' +
+    '      quickExf:!!entry.quickExf,\n' +
+    '      ...(entry.fabricDetails?{fabricDetails:entry.fabricDetails,hasValues:!!entry.values}:{}),\n' +
+    '    };\n' +
+    '  });\n' +
+    '  return out;\n' +
+    '}\n' +
+    'function coreDeserializeFilters(bucket){\n' +
+    '  const out={};\n' +
+    '  Object.entries(bucket||{}).forEach(([key,entry])=>{\n' +
+    '    if(!entry)return;\n' +
+    '    out[key]={\n' +
+    '      granularity:entry.granularity||null,\n' +
+    '      values:new Set(entry.values||[]),\n' +
+    '      numericRule:entry.numericRule||null,\n' +
+    '      quickPriority:!!entry.quickPriority,\n' +
+    '      quickExf:!!entry.quickExf,\n' +
+    '    };\n' +
+    '    // CP/Orders kumaş kartı alan süzgeci: yalnız alan seçimi varsa boş değer kümesi satır elememeli.\n' +
+    "    if(entry.fabricDetails&&typeof entry.fabricDetails==='object'){out[key].fabricDetails=entry.fabricDetails;if(entry.hasValues===false)delete out[key].values;}\n" +
+    '  });\n' +
+    '  return out;\n' +
+    '}\n' +
+    'function coreSetSelectValue(id,value){\n' +
+    '  const el=document.getElementById(id);if(!el)return;\n' +
+    "  const text=String(value||'');\n" +
+    '  if(text&&![...el.options].some(o=>o.value===text)){\n' +
+    "    const option=document.createElement('option');option.value=text;option.textContent=text;el.appendChild(option);\n" +
+    '  }\n' +
+    '  el.value=text;\n' +
+    '}\n' +
+    'function collectCoreAutoFilterState(){\n' +
+    "  const value=id=>document.getElementById(id)?.value||'';\n" +
+    '  return {\n' +
+    '    cp:{\n' +
+    "      search:value('cpSearch'),\n" +
+    "      selects:{cpFCountry:value('cpFCountry'),cpFLicense:value('cpFLicense'),cpFPriority:value('cpFPriority'),cpFDelType:value('cpFDelType'),cpFStatus:value('cpFStatus'),cpFSeason:value('cpFSeason')},\n" +
+    '      colFilters:coreSerializeFilters(state.colFilters.cp),\n' +
+    '      checkFilter:normalizeCheckFilterMode(state.checkFilter.cp),\n' +
+    "      quickExf:state.cpQuickExf||'',\n" +
+    '    },\n' +
+    '    orders:{\n' +
+    "      search:value('ordersSearch'),\n" +
+    "      selects:{ordersFCountry:value('ordersFCountry'),ordersFLicense:value('ordersFLicense'),ordersFDelType:value('ordersFDelType'),ordersFStatus:value('ordersFStatus'),ordersFSeason:value('ordersFSeason')},\n" +
+    '      colFilters:coreSerializeFilters(state.colFilters.orders),\n' +
+    '      checkFilter:normalizeCheckFilterMode(state.checkFilter.orders),\n' +
+    "      quickExf:state.ordersQuickExf||'',\n" +
+    '      quickActive:[...(state.ordersQuickActive||[])],\n' +
+    '    },\n' +
+    '  };\n' +
+    '}\n' +
+    'function saveCoreAutoFilterState(){\n' +
+    '  if(!coreFilterAutoReady)return;\n' +
+    '  try{BLStorage.setItem(CORE_FILTER_AUTO_KEY,JSON.stringify(collectCoreAutoFilterState()));}catch(e){}\n' +
+    '}\n' +
+    'const scheduleCoreAutoFilterSave=window.BLPerf?.debounce\n' +
+    '  ? window.BLPerf.debounce(saveCoreAutoFilterState,80)\n' +
+    '  : function(){if(!coreFilterAutoReady)return;clearTimeout(coreFilterSaveTimer);coreFilterSaveTimer=setTimeout(saveCoreAutoFilterState,80);};\n' +
+    'function applyCoreAutoFilterState(){\n' +
+    '  if(coreFilterAutoReady)return;\n' +
+    '  let saved=null;\n' +
+    "  try{saved=JSON.parse(BLStorage.getItem(CORE_FILTER_AUTO_KEY)||'null');}catch(e){}\n" +
+    '  if(saved&&saved.cp){\n' +
+    '    const x=saved.cp;\n' +
+    "    const search=document.getElementById('cpSearch');if(search)search.value=x.search||'';\n" +
+    '    Object.entries(x.selects||{}).forEach(([id,value])=>coreSetSelectValue(id,value));\n' +
+    '    state.colFilters.cp=coreDeserializeFilters(x.colFilters);\n' +
+    '    state.checkFilter.cp=normalizeCheckFilterMode(x.checkFilter);\n' +
+    "    state.cpQuickExf=x.quickExf||'';\n" +
+    '  }\n' +
+    '  if(saved&&saved.orders){\n' +
+    '    const x=saved.orders;\n' +
+    "    const search=document.getElementById('ordersSearch');if(search)search.value=x.search||'';\n" +
+    '    Object.entries(x.selects||{}).forEach(([id,value])=>coreSetSelectValue(id,value));\n' +
+    '    state.colFilters.orders=coreDeserializeFilters(x.colFilters);\n' +
+    '    state.checkFilter.orders=normalizeCheckFilterMode(x.checkFilter);\n' +
+    "    state.ordersQuickExf=x.quickExf||'';\n" +
+    '    state.ordersQuickActive=new Set(Array.isArray(x.quickActive)?x.quickActive:[]);\n' +
+    '  }\n' +
+    '  coreFilterAutoReady=true;\n' +
+    '}\n' +
+    "window.addEventListener('beforeunload',saveCoreAutoFilterState);\n" +
+    '\n' +
+    'const ORDER_URL = c => `https://troy.lcwaikiki.com/order-management/orders/${c}`;\n' +
+    'const SHIP_URL  = c => `https://troy.lcwaikiki.com/cps-management/shipment-request/${c}`;\n' +
+    "const PLM_STYLE_URL = 'https://corenectum.lcwaikiki.com/models-options/style-overview';\n" +
+    'let plmStyleLinks = new Map();\n' +
+    'let plmStyleLinksByModel = new Map();\n' +
+    'let plmStyleLinksMeta = {count:0,updatedAt:null};\n' +
+    '\n' +
+    'function normalizePlmLinkId(value){\n' +
+    "  const text=String(value==null?'':value).trim().replace(/^_+/,'').replace(/\\.(?=\\d{3}(?:\\D|$))/g,'');\n" +
+    "  if(!/^\\d+$/.test(text))return '';\n" +
+    "  const number=Number(text);return Number.isSafeInteger(number)&&number>0?String(number):'';\n" +
+    '}\n' +
+    'function plmStyleLinkInfo(plmId){return plmStyleLinks.get(normalizePlmLinkId(plmId))||null;}\n' +
+    "function normalizePlmModelName(value){return String(value==null?'':value).replace(/\\s+/g,' ').trim().toLocaleUpperCase('tr-TR');}\n" +
+    '/* v6.54 — YANLIŞ İS'... 3030948 more characters
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-profiles-wiring-v1060.test.js:139:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'window.BLPerf?.mark?.(\'LOCAL_CONFIG_READY\');\n// Uygulama dili: açılışta \'tr\'; kayıtlı tercih aşağıdaki i18n bölümünde yüklenir.\nlet appLang = \'tr\';\n/* ===================================================================\n   Buyer Log — uygulama çekirdeği (app-main.js)\n   v4.98\'e kadar bu kodun tamamı index.html içinde satır içi <script>\n   olarak duruyordu. index.html \'no-store\' ile sunulduğu için 1,36 MB\'lık\n   bu blok her sayfa açılışında yeniden indirilip yeniden ayrıştırılıyordu.\n   Ayrı dosyaya alınınca ?v= sürüm etiketiyle bir yıl önbelleklenir ve\n   tarayıcının derlenmiş kod önbelleği devreye girer.\n\n   ÖNEMLİ: dosya index.html\'de tam olarak eski satır içi bloğun yerinde,\n   defer/async OLMADAN yüklenir. Yürütme sırası bilerek birebir korunmuştur;\n   defer eklemek üst düzey kodun DOM\'u farklı bir anda görmesine yol açar.\n   =================================================================== */\nconst state = { currentUser:window.BL_USER_CONTEXT||null, cp:null, orders:null, orderSummary:null, overviewSummary:null, collectionCatalogs:{}, cpSort:{key:null,dir:1}, ordersSort:{key:null,dir:1},\n  cpDirty:new Set(), cpSelected:new Set(), ordersSelected:new Set(), cpLogisticExpanded:new Set(), ordersLogisticExpanded:new Set(),\n  asasOrders:null, antrepoMap:{}, overrides:{notesmap:{}, submap:{}, suppfobmap:{}, suppfobmetamap:{}, delmap:{}, licensormap:{}, imagemap:{}, pricingRules:[], transitRules:[], nonDtrManufacturers:[], landedMultipliers:{tr:1.05,overseas:1.11}, noteColumnValues:{}},\n  colFilters:{cp:{}, orders:{}}, checkFilter:{cp:\'\', orders:\'\'}, cpQuickExf:\'\', ordersQuickExf:\'\', ordersQuickActive:new Set(),\n  // Model kapsam özetleri: ufuk rozeti bunlardan üretilir.\n  modelScopes:[], modelHorizons:{},\n  storeRevisions:{overrides:0,orders:0,suppFob:0,pricingRules:0,transitRules:0,nonDtrManufacturers:0,landedMultipliers:0,freightRates:0,refreshHistory:0},\n  // Sütun dondurma: tablo başına { left:n, right:n }.\n  //   left  = soldan kaç sütun sabit kalacak (0 = yok)\n  //   right = sağdan kaç sütun sabit kalacak (0 = yok)\n  // Excel\'deki "Bölmeleri Dondur" ile aynı mantık; ikisi birlikte kullanılınca\n  // ortada kalan sütunlar yatay kaydırılır.\n  freeze:{} };\n\nvar startupPageProfileReady=Promise.resolve(),startupRevealPromise=null;\nvar modulePreparation=window.BLStartupPreparation?.create({\n  readHistory:()=>JSON.parse(BLStorage.getItem(\'lcw.startup.moduleLastUsed.v1\')||\'{}\'),\n  writeHistory:history=>BLStorage.setItem(\'lcw.startup.moduleLastUsed.v1\',JSON.stringify(history)),\n  onChange:detail=>{renderModulePreparationStates();window.dispatchEvent(new CustomEvent(\'bl:module-preparation\',{detail}));},\n});\nwindow.BLModulePreparation=modulePreparation;\nfunction renderModulePreparationStates(){\n  const snapshot=modulePreparation?.snapshot();if(!snapshot)return;\n  const L=(tr,en)=>appLang===\'en\'?en:tr;\n  const names={cp:\'CP Tracker\',orders:L(\'Siparişler\',\'Orders\'),koleksiyon:L(\'Koleksiyon\',\'Collection\')};\n  const labels={pending:L(\'Bekliyor\',\'Pending\'),loading:L(\'Yükleniyor\',\'Loading\'),ready:L(\'Hazır\',\'Ready\'),error:L(\'Hata\',\'Error\')};\n  for(const module of [\'cp\',\'orders\',\'koleksiyon\']){\n    const button=document.querySelector(\'nav.tabs button[data-tab="\'+module+\'"]\');if(!button)continue;\n    let badge=button.querySelector(\'[data-module-preparation]\');\n    if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove(\'hasModulePreparation\');continue;}\n    if(!badge){badge=document.createElement(\'span\');badge.className=\'modulePrepState\';badge.dataset.modulePreparation=module;badge.setAttribute(\'role\',\'status\');badge.setAttribute(\'aria-live\',\'polite\');button.appendChild(badge);button.classList.add(\'hasModulePreparation\');}\n    const status=snapshot[module].status,label=labels[status];\n    if(badge.textContent!==label)badge.textContent=label;\n    badge.dataset.status=status;badge.title=names[module]+\' · \'+label;\n  }\n  if(snapshot.cp.status===\'error\'&&currentActiveTab()===\'cp\')renderCpLoadError(snapshot.cp.error);\n}\nfunction startupModuleIntent(event){\n  const module=event.target?.closest?.(\'button[data-tab]\')?.dataset.tab;\n  if(![\'cp\',\'orders\',\'koleksiyon\'].includes(module))return;\n  if(window.BLCanAccessArea?.(module)===true)modulePreparation?.noteIntent(module);\n}\ndocument.querySelector(\'nav.tabs\')?.addEventListener(\'pointerover\',startupModuleIntent);\ndocument.querySelector(\'nav.tabs\')?.addEventListener(\'focusin\',startupModuleIntent);\nwindow.addEventListener(\'bl:user-access-applied\',renderModulePreparationStates);\ndocument.addEventListener(\'bl:language-changed\',renderModulePreparationStates);\nfunction afterStartupReveal(callback){\n  if(!startupRevealPromise)startupRevealPromise=new Promise(resolve=>{\n    const painted=()=>requestAnimationFrame(()=>requestAnimationFrame(resolve));\n    if(window.BL_STARTUP_COMPLETE)painted();else window.addEventListener(\'bl:startup-complete\',painted,{once:true});\n  });\n  return startupRevealPromise.then(callback);\n}\n\nconst CORE_FILTER_AUTO_KEY=\'lcw.corePageFilters.auto.v1\';\nlet coreFilterAutoReady=false, coreFilterSaveTimer=null;\nfunction coreSerializeFilters(bucket){\n  const out={};\n  Object.entries(bucket||{}).forEach(([key,entry])=>{\n    if(!entry)return;\n    out[key]={\n      granularity:entry.granularity||null,\n      values:[...(entry.values||[])],\n      numericRule:entry.numericRule||null,\n      quickPriority:!!entry.quickPriority,\n      quickExf:!!entry.quickExf,\n      ...(entry.fabricDetails?{fabricDetails:entry.fabricDetails,hasValues:!!entry.values}:{}),\n    };\n  });\n  return out;\n}\nfunction coreDeserializeFilters(bucket){\n  const out={};\n  Object.entries(bucket||{}).forEach(([key,entry])=>{\n    if(!entry)return;\n    out[key]={\n      granularity:entry.granularity||null,\n      values:new Set(entry.values||[]),\n      numericRule:entry.numericRule||null,\n      quickPriority:!!entry.quickPriority,\n      quickExf:!!entry.quickExf,\n    };\n    // CP/Orders kumaş kartı alan süzgeci: yalnız alan seçimi varsa boş değer kümesi satır elememeli.\n    if(entry.fabricDetails&&typeof entry.fabricDetails===\'object\'){out[key].fabricDetails=entry.fabricDetails;if(entry.hasValues===false)delete out[key].values;}\n  });\n  return out;\n}\nfunction coreSetSelectValue(id,value){\n  const el=document.getElementById(id);if(!el)return;\n  const text=String(value||\'\');\n  if(text&&![...el.options].some(o=>o.value===text)){\n    const option=document.createElement(\'option\');option.value=text;option.textContent=text;el.appendChild(option);\n  }\n  el.value=text;\n}\nfunction collectCoreAutoFilterState(){\n  const value=id=>document.getElementById(id)?.value||\'\';\n  return {\n    cp:{\n      search:value(\'cpSearch\'),\n      selects:{cpFCountry:value(\'cpFCountry\'),cpFLicense:value(\'cpFLicense\'),cpFPriority:value(\'cpFPriority\'),cpFDelType:value(\'cpFDelType\'),cpFStatus:value(\'cpFStatus\'),cpFSeason:value(\'cpFSeason\')},\n      colFilters:coreSerializeFilters(state.colFilters.cp),\n      checkFilter:normalizeCheckFilterMode(state.checkFilter.cp),\n      quickExf:state.cpQuickExf||\'\',\n    },\n    orders:{\n      search:value(\'ordersSearch\'),\n      selects:{ordersFCountry:value(\'ordersFCountry\'),ordersFLicense:value(\'ordersFLicense\'),ordersFDelType:value(\'ordersFDelType\'),ordersFStatus:value(\'ordersFStatus\'),ordersFSeason:value(\'ordersFSeason\')},\n      colFilters:coreSerializeFilters(state.colFilters.orders),\n      checkFilter:normalizeCheckFilterMode(state.checkFilter.orders),\n      quickExf:state.ordersQuickExf||\'\',\n      quickActive:[...(state.ordersQuickActive||[])],\n    },\n  };\n}\nfunction saveCoreAutoFilterState(){\n  if(!coreFilterAutoReady)return;\n  try{BLStorage.setItem(CORE_FILTER_AUTO_KEY,JSON.stringify(collectCoreAutoFilterState()));}catch(e){}\n}\nconst scheduleCoreAutoFilterSave=window.BLPerf?.debounce\n  ? window.BLPerf.debounce(saveCoreAutoFilterState,80)\n  : function(){if(!coreFilterAutoReady)return;clearTimeout(coreFilterSaveTimer);coreFilterSaveTimer=setTimeout(saveCoreAutoFilterState,80);};\nfunction applyCoreAutoFilterState(){\n  if(coreFilterAutoReady)return;\n  let saved=null;\n  try{saved=JSON.parse(BLStorage.getItem(CORE_FILTER_AUTO_KEY)||\'null\');}catch(e){}\n  if(saved&&saved.cp){\n    const x=saved.cp;\n    const search=document.getElementById(\'cpSearch\');if(search)search.value=x.search||\'\';\n    Object.entries(x.selects||{}).forEach(([id,value])=>coreSetSelectValue(id,value));\n    state.colFilters.cp=coreDeserializeFilters(x.colFilters);\n    state.checkFilter.cp=normalizeCheckFilterMode(x.checkFilter);\n    state.cpQuickExf=x.quickExf||\'\';\n  }\n  if(saved&&saved.orders){\n    const x=saved.orders;\n    const search=document.getElementById(\'ordersSearch\');if(search)search.value=x.search||\'\';\n    Object.entries(x.selects||{}).forEach(([id,value])=>coreSetSelectValue(id,value));\n    state.colFilters.orders=coreDeserializeFilters(x.colFilters);\n    state.checkFilter.orders=normalizeCheckFilterMode(x.checkFilter);\n    state.ordersQuickExf=x.quickExf||\'\';\n    state.ordersQuickActive=new Set(Array.isArray(x.quickActive)?x.quickActive:[]);\n  }\n  coreFilterAutoReady=true;\n}\nwindow.addEventListener(\'beforeunload\',saveCoreAutoFilterState);\n\nconst ORDER_URL = c => `https://troy.lcwaikiki.com/order-management/orders/${c}`;\nconst SHIP_URL  = c => `https://troy.lcwaikiki.com/cps-management/shipment-request/${c}`;\nconst PLM_STYLE_URL = \'https://corenectum.lcwaikiki.com/models-options/style-overview\';\nlet plmStyleLinks = new Map();\nlet plmStyleLinksByModel = new Map();\nlet plmStyleLinksMeta = {count:0,updatedAt:null};\n\nfunction normalizePlmLinkId(value){\n  const text=String(value==null?\'\':value).trim().replace(/^_+/,\'\').replace(/\\.(?=\\d{3}(?:\\D|$))/g,\'\');\n  if(!/^\\d+$/.test(text))return \'\';\n  const number=Number(text);return Number.isSafeInteger(number)&&number>0?String(number):\'\';\n}\nfunction plmStyleLinkInfo(plmId){return plmStyleLinks.get(normalizePlmLinkId(plmId))||null;}\nfunction normalizePlmModelName(value){return String(value==null?\'\':value).replace(/\\s+/g,\' \').trim().toLocaleUpperCase(\'tr-TR\');}\n/* v6.54 — YANLIŞ İS'... 3030948 more characters,
+    expected: /if\(moduleId==='cp'\)return\s*\{/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/excel-import-profiles-wiring-v1060.test.js:143:1
+✖ CP adaptörü satır oluşturamaz ve bunu açıkça bildirir (3.133758ms)
+  AssertionError [ERR_ASSERTION]: CP adaptör bloğu bulunamadı
+      at TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-profiles-wiring-v1060.test.js:145:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+[Buyer Log tests] Batch 1/1 süresi: 1.2s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.

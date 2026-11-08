@@ -1,0 +1,31 @@
+{
+  "baseSha256": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+  "candidateSha256": "7a3dd4ec68aa868392ae38f324151539c2f0376f3bf83cc5f4e93c7311c1cbd2",
+  "foundationHead": "3bb73d017fffee542617803eedf5fbcbea080083",
+  "edits": [
+    {
+      "old": "function cpImportRowRevision(row){",
+      "next": "function cpImportRowRevision(row,noteDefinitions=CP_NOTE_COLUMN_DEFS){"
+    },
+    {
+      "old": "  CP_NOTE_COLUMN_DEFS.forEach(def=>parts.push(importNormalizeText(row[def.id])));",
+      "next": "  noteDefinitions.forEach(def=>parts.push(importNormalizeText(row[def.id])));"
+    },
+    {
+      "old": "  get(moduleId){\n    if(moduleId==='cp')return {",
+      "next": "  get(moduleId){\n    const revisionNotes=moduleId==='cp'?CP_NOTE_COLUMN_DEFS.map(def=>({id:def.id})):null;\n    if(moduleId==='cp')return {"
+    },
+    {
+      "old": "      rowRevision:cpImportRowRevision,",
+      "next": "      rowRevision:row=>cpImportRowRevision(row,revisionNotes),"
+    },
+    {
+      "old": "          body:JSON.stringify({items}),\n        });\n        const skipped=Array.isArray(data.skipped)?data.skipped.length:0;",
+      "next": "          expectedRevision:plan.revisionGuard.storeRevision,\n          body:JSON.stringify({items}),\n        });\n        const skipped=Array.isArray(data.skipped)?data.skipped.length:0;"
+    },
+    {
+      "old": "      async refresh(){ await loadFromServer(false); },",
+      "next": "      async refresh(){if(!await loadFromServer(false))throw Object.assign(new Error(appLang==='en'?'Server data could not be reloaded after import.':'İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.'),{code:'IMPORT_REFRESH_FAILED'});},"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "revision": "2ce7eda8 plus reviewed profile/storage gate delta",
   "files": {
-    "public/app-main.js": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+    "public/app-main.js": "7a3dd4ec68aa868392ae38f324151539c2f0376f3bf83cc5f4e93c7311c1cbd2",
     "public/formula-columns.js": "421320b8502e2dad9a9166f44d79ddab84d805092545a2a4e6e4dd556c54b5b8",
     "public/formula-engine.js": "97ffd1bd904fafbb90044c60b4bbe28657bfa18833a06abb6f207fc1843f03ee",
     "public/user-storage.js": "b924316165494261b584b967c983ebcb238869a00274880cc92261783c6e90ee",
@@ -15,5 +15,6 @@
   "protectedBaselineSha256": "3201e3e29bbd6f0c139931f6df6fb379dd645dcfb641138ee1fbd87fc73695ab",
   "baselineSource": "7db9cbce871ebf6202e3584b82548a7c21492a82bc3fca2f77d1904557500f6f",
   "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json",
-  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json"
+  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json",
+  "importFoundationDelta": "tests/fixtures/orders-import-action-closure/integration-edits.json"
 }

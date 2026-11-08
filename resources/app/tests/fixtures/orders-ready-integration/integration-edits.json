@@ -6,7 +6,7 @@
     "public/perf-runtime.js": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
   },
   "candidateSha256": {
-    "public/app-main.js": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+    "public/app-main.js": "7a3dd4ec68aa868392ae38f324151539c2f0376f3bf83cc5f4e93c7311c1cbd2",
     "public/quick-filter-groups.js": "644a64b7219f89a75b63d35132aaac2d2216a8d4e6b1ac33910427e058cf8c44",
     "public/personal-order-notes.js": "499b970c67fb5bcc1f7160420ffbda1f5d8f8c5a68913290f983392d2c57c239",
     "public/perf-runtime.js": "2206fefc4cd0bed45154a6caaa1c64640ebd23148878c2259e37a867b372a80c"
@@ -261,6 +261,36 @@
       "file": "public/app-main.js",
       "old": "      if(movingSource){await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId},action);action.assert();}",
       "next": "      if(movingSource){saved=await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId},action);action.assert();}"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "function cpImportRowRevision(row){",
+      "next": "function cpImportRowRevision(row,noteDefinitions=CP_NOTE_COLUMN_DEFS){"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "  CP_NOTE_COLUMN_DEFS.forEach(def=>parts.push(importNormalizeText(row[def.id])));",
+      "next": "  noteDefinitions.forEach(def=>parts.push(importNormalizeText(row[def.id])));"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "  get(moduleId){\n    if(moduleId==='cp')return {",
+      "next": "  get(moduleId){\n    const revisionNotes=moduleId==='cp'?CP_NOTE_COLUMN_DEFS.map(def=>({id:def.id})):null;\n    if(moduleId==='cp')return {"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "      rowRevision:cpImportRowRevision,",
+      "next": "      rowRevision:row=>cpImportRowRevision(row,revisionNotes),"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "          body:JSON.stringify({items}),\n        });\n        const skipped=Array.isArray(data.skipped)?data.skipped.length:0;",
+      "next": "          expectedRevision:plan.revisionGuard.storeRevision,\n          body:JSON.stringify({items}),\n        });\n        const skipped=Array.isArray(data.skipped)?data.skipped.length:0;"
+    },
+    {
+      "file": "public/app-main.js",
+      "old": "      async refresh(){ await loadFromServer(false); },",
+      "next": "      async refresh(){if(!await loadFromServer(false))throw Object.assign(new Error(appLang==='en'?'Server data could not be reloaded after import.':'İçe aktarma sonrası sunucu verisi yeniden yüklenemedi.'),{code:'IMPORT_REFRESH_FAILED'});},"
     }
   ]
 }

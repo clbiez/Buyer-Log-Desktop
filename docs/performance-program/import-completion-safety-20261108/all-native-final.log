@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+ok 1 - confirmed row ACK followed by refresh failure never rolls back columns or erases acknowledged counts
+  ---
+  duration_ms: 9.243592
+  type: 'test'
+  ...
+# Subtest: uncertain execute failure retains columns and labels server outcome unknown
+ok 2 - uncertain execute failure retains columns and labels server outcome unknown
+  ---
+  duration_ms: 2.493755
+  type: 'test'
+  ...
+# Subtest: actual plan is checked again after column creation before row mutation
+ok 3 - actual plan is checked again after column creation before row mutation
+  ---
+  duration_ms: 11.254107
+  type: 'test'
+  ...
+# Subtest: late primary completion cannot refresh audit or clear a newly opened wizard
+ok 4 - late primary completion cannot refresh audit or clear a newly opened wizard
+  ---
+  duration_ms: 4.291732
+  type: 'test'
+  ...
+# Subtest: closed or replaced wizard cannot continue from column ACK into row execution
+ok 5 - closed or replaced wizard cannot continue from column ACK into row execution
+  ---
+  duration_ms: 5.82485
+  type: 'test'
+  ...
+# Subtest: actor replacement and in-place actor-id drift block late work without targeting new owner
+ok 6 - actor replacement and in-place actor-id drift block late work without targeting new owner
+  ---
+  duration_ms: 2.7977
+  type: 'test'
+  ...
+# Subtest: successful current import preserves counts refresh ordering and feedback
+ok 7 - successful current import preserves counts refresh ordering and feedback
+  ---
+  duration_ms: 1.090562
+  type: 'test'
+  ...
+# Subtest: read-only denial starts no creation or row mutation
+ok 8 - read-only denial starts no creation or row mutation
+  ---
+  duration_ms: 0.413888
+  type: 'test'
+  ...
+# Subtest: permission revoked during column creation blocks the subsequent row write
+ok 9 - permission revoked during column creation blocks the subsequent row write
+  ---
+  duration_ms: 3.984558
+  type: 'test'
+  ...
+# Subtest: a second click cannot start another import while the first job is pending
+ok 10 - a second click cannot start another import while the first job is pending
+  ---
+  duration_ms: 3.544964
+  type: 'test'
+  ...
+# Subtest: partial primary ACK counts remain intact when the view refresh fails
+ok 11 - partial primary ACK counts remain intact when the view refresh fails
+  ---
+  duration_ms: 1.357169
+  type: 'test'
+  ...
+# Subtest: optional source guards cannot return false or an unawaited Promise as permission to continue
+ok 12 - optional source guards cannot return false or an unawaited Promise as permission to continue
+  ---
+  duration_ms: 1.48087
+  type: 'test'
+  ...
+# Subtest: normal same-actor hydration performed by the actual app keeps successful import completion
+ok 13 - normal same-actor hydration performed by the actual app keeps successful import completion
+  ---
+  duration_ms: 54.925967
+  type: 'test'
+  ...
+# Subtest: actual CP revision witness survives its own new blank column while still rejecting original-field edits
+ok 14 - actual CP revision witness survives its own new blank column while still rejecting original-field edits
+  ---
+  duration_ms: 72.747138
+  type: 'test'
+  ...
+# Subtest: actual CP request carries the original plan revision through the mutation queue
+ok 15 - actual CP request carries the original plan revision through the mutation queue
+  ---
+  duration_ms: 36.577322
+  type: 'test'
+  ...
+# Subtest: an observed account/access change cannot be hidden by returning to the original actor before completion
+ok 16 - an observed account/access change cannot be hidden by returning to the original actor before completion
+  ---
+  duration_ms: 3.930426
+  type: 'test'
+  ...
+# Subtest: same-id access revocation invalidates a pending job even when legacy canEdit still returns true
+ok 17 - same-id access revocation invalidates a pending job even when legacy canEdit still returns true
+  ---
+  duration_ms: 1.735318
+  type: 'test'
+  ...
+# Subtest: actual CP refresh cannot silently report completion when the real loader returns false
+ok 18 - actual CP refresh cannot silently report completion when the real loader returns false
+  ---
+  duration_ms: 29.120064
+  type: 'test'
+  ...
+# Subtest: actual CP successful refresh preserves its original undefined result and calls the loader once
+ok 19 - actual CP successful refresh preserves its original undefined result and calls the loader once
+  ---
+  duration_ms: 30.058251
+  type: 'test'
+  ...
+# Subtest: changing language after a failed import redraws the new outcome explanation in the selected language
+ok 20 - changing language after a failed import redraws the new outcome explanation in the selected language
+  ---
+  duration_ms: 1.289049
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 419.679785

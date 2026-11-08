@@ -8,7 +8,7 @@ const adapter=require(path.join(APP,'server/lib/data-domain/legacy-adapter.js'))
 const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 const reviewed=require('../orders-ready-integration/source.cjs'),recipe=require('./adoption-edits.json');
 const candidate=reviewed.current('public/app-main.js');
-let base=candidate;
+let base=require('../orders-import-action-closure/source.cjs').beforeImport();
 for(const edit of [...recipe.edits].reverse()){assert.equal(base.split(edit.next).length,2,'exact model closure reverse');base=base.replace(edit.next,edit.old);}
 assert.equal(hash(base),recipe.baseSha256,'unchanged exact model closure predecessor');
 const source=process.env.BL_MODEL_ACTION_BASELINE==='1'?base:candidate;

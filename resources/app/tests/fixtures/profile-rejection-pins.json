@@ -1,7 +1,7 @@
 {
   "root": "/workspace/buyerlog-post-main-acceptance/resources/app",
   "files": {
-    "public/app-main.js": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
+    "public/app-main.js": "7a3dd4ec68aa868392ae38f324151539c2f0376f3bf83cc5f4e93c7311c1cbd2",
     "tests/helpers/app-main-functions.js": "278ae4c5bc56da6858e1cd3af2ece9c4f5cd507d4e9577bb6ee5ae2d0a427fb1"
   },
   "baselineSwitchSha256": "487734b754aea980a95a1b785c7b1fb3176cd656f8933f39667dbf78ef1269df",
@@ -11,5 +11,6 @@
   "lifecycleDeltaProof": "docs/performance-program/phase-6a/source-retirement-integration-20261108/source-pin-review.json",
   "configurationDeltaProof": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/source-pin-review.json",
   "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json",
-  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json"
+  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json",
+  "importFoundationDelta": "tests/fixtures/orders-import-action-closure/integration-edits.json"
 }

@@ -9,8 +9,8 @@
   "captures": {
     "app-main.js": {
       "path": "public/app-main.js",
-      "sha256": "9d5e3fe8dae83a5d5538932f37db8b1814c4c69c2e29aefeb36ad6b699ec6e6e",
-      "gitBlob": "a3d64e070b852452b9a473ba8f6253c18a0b0230"
+      "sha256": "7a3dd4ec68aa868392ae38f324151539c2f0376f3bf83cc5f4e93c7311c1cbd2",
+      "gitBlob": "a4b23544e0e7b64a926db67fea7cb7875f44b392"
     },
     "business-rules.js": {
       "path": "public/business-rules.js",
@@ -72,5 +72,6 @@
     }
   },
   "readyWiringProof": "docs/performance-program/phase-6a/actual-ready-wiring-20261108/source-pin-review.json",
-  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json"
+  "modelActionDeltaProof": "docs/performance-program/phase-6a/model-action-integration-20261108/validation.json",
+  "importFoundationDelta": "tests/fixtures/orders-import-action-closure/integration-edits.json"
 }

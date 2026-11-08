@@ -1,0 +1,52 @@
+{
+  "baseMain": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "independentReviewThrough": "244085ecfece32f1c47c1e1699475f52a3109ae5",
+  "reviewRounds": 1,
+  "reviewFindings": "R1/R2 root-fixed; final delta not second-reviewed",
+  "full": {
+    "status": "passed",
+    "runner": "unmodified npm test; default concurrency=4; one invocation; private TMPDIR",
+    "files": 1302,
+    "batchesPassed": 10,
+    "seconds": 210.0,
+    "tests": 9017,
+    "pass": 8952,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0,
+    "rawLogSha256": "a309336809fa3e81c0a2b4277d9cace65a3cf4fb9e78746f68f473c254c1d5d9"
+  },
+  "nativeNewPass": 21,
+  "relatedPass": 123,
+  "protected916Pass": 23,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 51,
+  "originalMainEntriesPreserved": 50,
+  "browser": {
+    "platform": "Linux Chromium",
+    "syntheticSourceRows": 30,
+    "cpRows": 27,
+    "postAckFailure": "passed; real note PUT/row POST; full CP projection retains column and value",
+    "normalSuccess": "passed; real new note and same-actor refresh",
+    "uploadPicker": "not exercised; existing _state sets workbook/table/mapping",
+    "screenshotsInspected": true
+  },
+  "measurement": "correctness-only probes; official 30k three-pair campaign not run for this new fix; no speed claim or phase acceptance",
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "44c78db14bb26dc25f5dae935a1de5acf2271cd0f95ac347f48f78050cf905fe",
+    "resources/app/public/excel-import-wizard.js": "ec68b89b8f8e672caddaad16362b33a99e9fd1b094cab45c2b484fd1c1fdf8c1",
+    "resources/app/tests/excel-import-completion-safety.test.js": "cfd1e3a8670ac1ccb4b04fb281a93620442e3b9522776b517e4e2c611e2c0145",
+    "resources/app/public/release-notes/next.json": "aa8639fd570bf30b7a46a0212d816ec5b6e30881aa039253b9003426a69b131c"
+  },
+  "activation": {
+    "phase6aThin": false,
+    "phase6c": false
+  },
+  "github": "not pushed or checked when this local receipt was generated; see PR for actual final-head status",
+  "merge": "not done",
+  "TEST": "not published",
+  "STABLE": "not published"
+}
