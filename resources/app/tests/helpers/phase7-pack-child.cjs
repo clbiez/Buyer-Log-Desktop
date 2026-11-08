@@ -2,7 +2,7 @@
 const path=require('node:path'),fsp=require('node:fs/promises');
 const [app,root,phase,device]=process.argv.slice(2),open=fsp.open;
 fsp.open=async function(...args){
- const file=String(args[0]);
+ const file=String(args[0]).replace(/\\/g,'/');
  const isTarget=phase==='pack-sync'?file.endsWith('.blpack'):file.includes('/'+phase+'/')&&file.endsWith('.tmp');
  if(isTarget&&phase!=='pack-sync'){process.send({phase});await new Promise(()=>{});}
  const handle=await open.apply(this,args);
