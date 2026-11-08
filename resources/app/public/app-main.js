@@ -1999,6 +1999,61 @@ async function retryRefreshAfterFieldMapping(repairAction={}){
 window.BLRetryRefreshAfterFieldMapping=retryRefreshAfterFieldMapping;
 
 let ordersLoadPromise=null;
+// PREPARATION CONTRACT: root installs the agreed external client's instance.
+// No finite source may be accepted until every documented pre-apply barrier exists.
+let _ordersProjectionClient=null,_ordersAcceptedReceipt=null;
+let _ordersUiSessionEpoch=0,_ordersProjectionSourceEpoch=0;
+let _ordersFiniteLoadAbort=null,_ordersPromotionAbort=null,_ordersLoadFlight=null,_ordersPromotionSubscribers=0;
+let _ordersGlobalUpdateDepth=0,_ordersRetiredFiniteView=null,_ordersColdFiniteClosed=false;
+function retireOrdersProjectionSource(reason,{discardThin=false,sessionChanged=false}={}){
+  const view=state.orders,thin=ordersProjectionIsThin();
+  _ordersProjectionSourceEpoch++;if(sessionChanged)_ordersUiSessionEpoch++;
+  if(thin||_ordersAcceptedReceipt)_ordersColdFiniteClosed=true;
+  if(thin)_ordersRetiredFiniteView={view,selected:state.ordersSelected,reason};
+  _ordersFiniteLoadAbort?.abort();_ordersFiniteLoadAbort=null;
+  _ordersPromotionAbort?.abort();_ordersPromotionAbort=null;_ordersPromotionSubscribers=0;
+  _ordersLoadFlight=null;ordersLoadPromise=null;projectionRequestGeneration.orders++;
+  _ordersAcceptedReceipt=null;_ordersProjectionClient?.invalidate();
+  if(discardThin&&thin){
+    // The initial finite slice admits empty selection only; selection initiators
+    // must promote first. Never guess a mapping or clear a nonempty Set here.
+    if(state.ordersSelected?.size)throw ordersFullActionError('ORDERS_FULL_STALE');
+    state.orders=null;
+  }
+  return _ordersProjectionSourceEpoch;
+}
+function ordersProjectionMustLoadFull(){return _ordersGlobalUpdateDepth>0||_ordersColdFiniteClosed||Boolean(_ordersRetiredFiniteView);}
+function beginOrdersGlobalUpdate(reason){
+  const epoch=retireOrdersProjectionSource(reason);_ordersGlobalUpdateDepth++;
+  return {epoch,sessionEpoch:_ordersUiSessionEpoch,closed:false};
+}
+function assertOrdersGlobalUpdate(token){
+  if(!token||token.closed||token.epoch!==_ordersProjectionSourceEpoch||token.sessionEpoch!==_ordersUiSessionEpoch)
+    throw ordersFullActionError('ORDERS_FULL_STALE');
+}
+function prepareOrdersGlobalApply(token,reason){
+  assertOrdersGlobalUpdate(token);
+  if(ordersProjectionIsThin()&&state.ordersSelected?.size)throw ordersFullActionError('ORDERS_FULL_STALE');
+  token.epoch=retireOrdersProjectionSource(reason,{discardThin:true});
+}
+function endOrdersGlobalUpdate(token){if(token&&!token.closed){token.closed=true;_ordersGlobalUpdateDepth--;}}
+function ordersLoadFlightCurrent(flight){
+  return _ordersLoadFlight===flight&&!flight.abort.signal.aborted&&flight.epoch===_ordersProjectionSourceEpoch
+    &&flight.sessionEpoch===_ordersUiSessionEpoch&&flight.profile===state.currentUser&&flight.userContext===window.BL_USER_CONTEXT;
+}
+async function ensureOrdersFullBeforePreferences(){
+  // This callback is awaited BY authHydrationPromise; ordinary full-only fetch
+  // must never await that same promise or call loadFromServer recursively.
+  if(_ordersRetiredFiniteView){
+    if(!await ensureOrdersLoaded({force:true,fullOnly:true,deferRender:true}))throw ordersFullActionError('ORDERS_FULL_STALE');
+    if(!state.orders||ordersProjectionIsThin())throw ordersFullActionError('ORDERS_FULL_STALE');
+  }else if(ordersProjectionIsThin())await ensureOrdersFullForAction('orders.preferences.hydrate');
+  if(!_ordersGlobalUpdateDepth)retireOrdersProjectionSource('orders.preferences.before-apply');
+}
+window.BLRetireOrdersProjectionSource=retireOrdersProjectionSource;
+// Polling a changed profile is a source/access change, not evidence of a new
+// authenticated session. Real login/switch navigation destroys this page.
+window.BLBeforeIamProfileApply=()=>retireOrdersProjectionSource('orders.iam.before-profile');
 let cpLoadPromise=null;
 let overviewLoadPromise=null;
 let startupReadySignaled=false;
@@ -2071,10 +2126,10 @@ async function fetchProjectionWithFallback(module,fallbackUrl){
   if(res.status===404)res=await fetch(fallbackUrl,{cache:'no-store'});
   return parseProjectionResponse(module,generation,res);
 }
-async function fetchOrdersProjection(){
+async function fetchOrdersProjection(options={}){
   const generation=++projectionRequestGeneration.orders;
-  let res=await fetch('/api/page-projection/orders',{cache:'no-store'});
-  if(res.status===404)res=await fetch('/api/data/orders',{cache:'no-store'});
+  let res=await fetch('/api/page-projection/orders',{cache:'no-store',signal:options.signal});
+  if(res.status===404)res=await fetch('/api/data/orders',{cache:'no-store',signal:options.signal});
   return parseProjectionResponse('orders',generation,res);
 }
 async function ensureOverviewLoaded(){
@@ -2219,18 +2274,26 @@ function setOrdersLoadingState(loading,message){
   }
 }
 async function ensureOrdersLoaded(options={}){
+  if(_ordersRetiredFiniteView?.view===state.orders)options={...options,force:true,fullOnly:true};
   if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
+  const flight={abort:new AbortController(),epoch:_ordersProjectionSourceEpoch,sessionEpoch:_ordersUiSessionEpoch,
+    profile:state.currentUser,userContext:window.BL_USER_CONTEXT,promise:null};
+  _ordersLoadFlight=flight;_ordersFiniteLoadAbort=flight.abort;
   window.BLModulePreparation?.setStatus('orders','loading');
   if(currentActiveTab()==='orders')setOrdersLoadingState(true);
-  ordersLoadPromise=(async()=>{
+  flight.promise=Promise.resolve().then(async()=>{
     try{
-      const result=await fetchOrdersProjection();if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
+      if(!ordersLoadFlightCurrent(flight))return false;
+      const result=await fetchOrdersProjection({signal:flight.abort.signal,fullOnly:options.fullOnly===true||ordersProjectionMustLoadFull()});
+      if(!ordersLoadFlightCurrent(flight))return false;
+      if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
       const data=result.payload||{};
       const rows=Array.isArray(data.rows)?data.rows:(Array.isArray(data.orders)?data.orders:[]);
       reviveServerDates(rows);
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
+      _ordersRetiredFiniteView=null;
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
@@ -2240,14 +2303,20 @@ async function ensureOrdersLoaded(options={}){
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
       buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender)renderOrders();
+      if(!ordersLoadFlightCurrent(flight))return false;
       window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
+      if(!ordersLoadFlightCurrent(flight))return false;
       const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(err&&err.message||err);
       window.BLModulePreparation?.setStatus('orders','error','ORDERS_LOAD_FAILED');
       setOrdersLoadingState(false,message);showToast(message);return false;
-    }finally{ordersLoadPromise=null;}
-  })();
+    }
+  }).finally(()=>{
+    if(_ordersLoadFlight===flight&&ordersLoadPromise===flight.promise){_ordersLoadFlight=null;ordersLoadPromise=null;}
+    if(_ordersFiniteLoadAbort===flight.abort)_ordersFiniteLoadAbort=null;
+  });
+  ordersLoadPromise=flight.promise;
   return ordersLoadPromise;
 }
 window.BLEnsureOrdersLoaded=ensureOrdersLoaded;
@@ -2268,15 +2337,21 @@ function ordersFullActionError(code){
   return Object.assign(new Error(message),{code});
 }
 async function ensureOrdersFullForAction(reason='action'){
+  const sourceEpoch=_ordersProjectionSourceEpoch,sessionEpoch=_ordersUiSessionEpoch;
   if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
   if(!state.orders&&!await ensureOrdersLoaded({deferRender:true}))throw ordersFullActionError('ORDERS_FULL_LOAD_FAILED');
+  if(sourceEpoch!==_ordersProjectionSourceEpoch||sessionEpoch!==_ordersUiSessionEpoch||_ordersRetiredFiniteView?.view===state.orders)
+    throw ordersFullActionError('ORDERS_FULL_STALE');
   if(!state.orders||!Array.isArray(state.orders.rows))throw ordersFullActionError('ORDERS_FULL_LOAD_FAILED');
   if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
   if(!ordersProjectionIsThin())return state.orders.rows;
   const controller=_ordersFullViewControllers.get(state.orders);
   if(!controller||typeof controller.ensure!=='function')throw ordersFullActionError('ORDERS_FULL_STALE');
+  const abort=_ordersPromotionAbort||(_ordersPromotionAbort=new AbortController());
+  _ordersPromotionSubscribers++;
   try{
-    const full=await controller.ensure();
+    const full=await controller.ensure({signal:abort.signal});
+    if(abort.signal.aborted||sourceEpoch!==_ordersProjectionSourceEpoch||sessionEpoch!==_ordersUiSessionEpoch)throw ordersFullActionError('ORDERS_FULL_STALE');
     if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
     if(!full||typeof full.assertCurrent!=='function')throw ordersFullActionError('ORDERS_FULL_STALE');
     full.assertCurrent();
@@ -2286,6 +2361,8 @@ async function ensureOrdersFullForAction(reason='action'){
   }catch(error){
     if(error?.code==='ORDERS_FULL_FORBIDDEN')throw error;
     throw ordersFullActionError('ORDERS_FULL_STALE');
+  }finally{
+    if(_ordersPromotionAbort===abort&&--_ordersPromotionSubscribers===0)_ordersPromotionAbort=null;
   }
 }
 window.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;
@@ -14954,11 +15031,22 @@ function refreshJobLostError(expectedJob,jobState){
   return err;
 }
 async function loadFromServer(force, targets){
+  const refreshIntent={epoch:_ordersProjectionSourceEpoch,sessionEpoch:_ordersUiSessionEpoch};
+  if(force&&ordersProjectionIsThin()){
+    try{await ensureOrdersFullForAction('orders.refresh.start');
+      if(refreshIntent.epoch!==_ordersProjectionSourceEpoch||refreshIntent.sessionEpoch!==_ordersUiSessionEpoch)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }catch(error){
+      const message=(appLang==='en'?'Refresh could not start: ':'Yenileme başlatılamadı: ')+(error.message||String(error));
+      setServerStatus(message);updSourceHint(message);showToast(message);return false;
+    }
+  }
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
   // yapılandırmayı sunucudan oku; API sunucu tarafında yine kesin genişletir.
   if(force&&Array.isArray(targets)&&targets.length){
-    try{await syncLinkedRefreshMembers();}
+    try{await syncLinkedRefreshMembers();
+      if(refreshIntent.epoch!==_ordersProjectionSourceEpoch||refreshIntent.sessionEpoch!==_ordersUiSessionEpoch)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
     catch(error){
       const message=(appLang==='en'?'Refresh could not start: ':'Yenileme başlatılamadı: ')+(error.message||String(error));
       setServerStatus(message);updSourceHint(message);showToast(message);
@@ -14971,7 +15059,12 @@ async function loadFromServer(force, targets){
   if(userVisibleRefresh){
     // Sıra: açık düzenleyiciyi kapat, bekleyen yazmaları bitir, sonra yenile.
     try{ commitOpenCellEditors(targets); }catch(_){ }
-    await settleOverrideWrites();
+    try{await settleOverrideWrites();
+      if(refreshIntent.epoch!==_ordersProjectionSourceEpoch||refreshIntent.sessionEpoch!==_ordersUiSessionEpoch)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }catch(error){
+      const message=(appLang==='en'?'Refresh could not start: ':'Yenileme başlatılamadı: ')+(error.message||String(error));
+      setServerStatus(message);updSourceHint(message);showToast(message);return false;
+    }
     refreshWatchCancelled=false; startSourceRefreshTimer(refreshTimerKey);
     // Önceki yenilemenin arka plan ön-hazırlığı yarıda bırakılır; bu yenileme bitince yenisi başlar.
     refreshPrewarmToken++;
@@ -15080,7 +15173,9 @@ async function waitForRefreshJob(expectedJob=null){
   // kontrolüne AÇIKÇA tıkladığında açılır — bkz. isRefreshRunning() ⇒
   // openRefreshStagesModal() çağıran tıklama işleyicileri.
   if(userVisibleRefresh){ setRefreshFailureState(false); }
+  let ordersGlobalTransaction=null;
   try{
+    ordersGlobalTransaction=beginOrdersGlobalUpdate(force?'orders.source.refresh':'orders.source.reload');
     const res = await fetch(force ? '/api/refresh' : ((initialScreenLoad||leanReload)?'/api/data?mode=initial':'/api/data'), {
       method: force ? 'POST' : 'GET',
       headers: force ? {'Content-Type':'application/json'} : undefined,
@@ -15091,6 +15186,7 @@ async function waitForRefreshJob(expectedJob=null){
       }) : undefined,
       cache:'no-store',
     });
+    assertOrdersGlobalUpdate(ordersGlobalTransaction);
     if(!res.ok){
       const e = await res.json().catch(()=>({error:res.statusText}));
       if(e.code==='USER_SELECTION_REQUIRED'){ location.href='/select-user.html'; return; }
@@ -15100,6 +15196,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(initialScreenLoad)window.BLPerf?.mark?.('LOCAL_DB_READY');
     const jsonParseMetric=initialScreenLoad?window.BLPerf?.begin?.('bootstrapJsonParseMs'):null;
     let data = await res.json();
+    assertOrdersGlobalUpdate(ordersGlobalTransaction);
     if(jsonParseMetric)window.BLPerf?.end?.(jsonParseMetric);
     if(cacheLoadMetric)endStartupStage(cacheLoadMetric,'CACHE_LOAD',{pageCache:data&&data.pageCache||null});
     // Yenileme artık arka planda çalışıyor: sunucu hemen 202 döner, uygulama
@@ -15109,6 +15206,7 @@ async function waitForRefreshJob(expectedJob=null){
       if(refreshTimerKey&&sourceRefreshTimers[refreshTimerKey]){sourceRefreshTimers[refreshTimerKey].eta=startedJob&&startedJob.eta||null;updateSourceRefreshTimerDisplays();}
       if(topBtn&&startedJob&&startedJob.eta&&startedJob.eta.available)topBtn.title=(appLang==='en'?'Refresh in progress · Estimated ':'Yenileme sürüyor · Tahmini ')+refreshEtaRangeText(startedJob.eta);
       const completedJob=await waitForRefreshJob(startedJob);
+      assertOrdersGlobalUpdate(ordersGlobalTransaction);
       // Aynı URL'nin eski yanıtını tarayıcıdan alma ihtimalini tamamen kapat. Refresh
       // tamamlandıktan SONRA bellekteki yeni snapshot tek seferde geri okunur.
       // Refresh sonrasında yalnız hafif Overview bootstrap'ını al. CP/Orders/
@@ -15119,6 +15217,7 @@ async function waitForRefreshJob(expectedJob=null){
         const err=new Error(e.error||after.statusText);err.code=e.code||'';throw err;
       }
       data = await after.json();
+      assertOrdersGlobalUpdate(ordersGlobalTransaction);
       // Arka-plan endpoint'i summary bilgisini /api/data içine koymaz; tamamlanan
       // job'ın sonucunu yeni veriyle birleştir ki kullanıcı gerçek refresh sonucunu görsün.
       if(completedJob&&completedJob.summary)data.refreshSummary=completedJob.summary;
@@ -15132,6 +15231,9 @@ async function waitForRefreshJob(expectedJob=null){
         }catch(_){/* geçmiş penceresi yenilemeyi başarısız saydırmasın */}
       }
     }
+    // initialScreenLoad and refresh intent were captured before any discard.
+    // Ordinary full refs/selection and the existing partial-refresh rules stay intact.
+    prepareOrdersGlobalApply(ordersGlobalTransaction,'orders.source.before-globals');
     const hydrateMetric=initialScreenLoad?window.BLPerf?.begin?.('stateHydrateMs'):null;
     const datasourceMetric=initialScreenLoad?beginStartupStage('DATASOURCE_PREPARATION'):null;
     window.SERVER_BACKED = true;
@@ -15160,6 +15262,16 @@ async function waitForRefreshJob(expectedJob=null){
        tarayıcıya özel localStorage'da duruyordu; başka bir tarayıcıda açınca
        görünmüyorlardı. Açılışta sunucudaki kopyayla birleştiriyoruz (v5.98). */
     const sync=await authHydrationPromise;
+    assertOrdersGlobalUpdate(ordersGlobalTransaction);
+    // hydrateUserPreferencesAfterUi intentionally catches storage failures.
+    // A failed beforeApply must not let this caller migrate against null/thin
+    // Orders; also cover a hydration promise that completed before retirement.
+    if(_ordersRetiredFiniteView){
+      const preferencesPage=activeProfilePage();
+      await ensureOrdersFullBeforePreferences();
+      if(activeProfilePage()!==preferencesPage)throw ordersFullActionError('ORDERS_FULL_STALE');
+    }
+    assertOrdersGlobalUpdate(ordersGlobalTransaction);
     // Tercih eşitlemesi uygulama çekirdeği yüklendikten sonra tamamlanabilir.
     // Uzak taraftan daha yeni bir sütun yerleşimi geldiyse onu aynı açılışta
     // belleğe yeniden uygula; aksi halde kullanıcı eski/varsayılan sırayı görür.
@@ -15412,6 +15524,7 @@ async function waitForRefreshJob(expectedJob=null){
     }
     return true;
   }catch(err){
+    if(ordersGlobalTransaction&&(ordersGlobalTransaction.epoch!==_ordersProjectionSourceEpoch||ordersGlobalTransaction.sessionEpoch!==_ordersUiSessionEpoch))return false;
     if(err&&err.code==='REFRESH_CANCELLED'){
       // Hata değil, kullanıcının kendi kararı: başarısızlık göstergesi yakılmaz.
       setRefreshFailureState(false);
@@ -15439,6 +15552,7 @@ async function waitForRefreshJob(expectedJob=null){
     console.warn('Sunucu veri hatası:', err);
     return false;
   }finally{
+    endOrdersGlobalUpdate(ordersGlobalTransaction);
     if(userVisibleRefresh && btn){ btn.disabled=false; btn.classList.remove('spinning'); btn.innerHTML=prevLabel; btn.title=prevTitle; }
     if(userVisibleRefresh && topBtn){topBtn.classList.remove('spinning');topBtn.disabled=topWasDisabled;topBtn.removeAttribute('aria-busy');topBtn.title=topPrevTitle;}
     if(userVisibleRefresh){ stopSourceRefreshTimer(refreshTimerKey); window.BL_REFRESH_BUSY=''; setReadOnlyMode(false); try{ renderSourceTargets(); }catch(_){} }
@@ -16887,7 +17001,7 @@ function hydrateUserPreferencesAfterUi(){
   if(authHydrationPromise)return authHydrationPromise;
   if(!window.BLStorage||typeof BLStorage.hydrate!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('AUTH_USER_LOAD_START',{mode:'after-ui'});
-  authHydrationPromise=Promise.resolve().then(()=>BLStorage.hydrate({beforeApply:()=>ordersProjectionIsThin()?ensureOrdersFullForAction('orders.preferences.hydrate'):undefined})).then(sync=>{
+  authHydrationPromise=Promise.resolve().then(()=>BLStorage.hydrate({beforeApply:ensureOrdersFullBeforePreferences})).then(sync=>{
     window.BLPerf?.mark?.('AUTH_USER_LOAD_READY',{mode:'after-ui',applied:Number(sync&&sync.applied)||0,pushed:Number(sync&&sync.pushed)||0});
     window.BLPerf?.mark?.('AUTH_READY',{mode:'after-ui'});
     if(sync&&Number(sync.applied)>0){

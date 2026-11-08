@@ -1,0 +1,92 @@
+[
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-native-first/candidate.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-native-first/candidate.tap.gz",
+    "rawBytes": 16893,
+    "rawSha256": "4746bbf3f9806913ab0a6e123fc3600a2a34cb8821fa6ba78f79cb9a496b6ad3"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-native-first/baseline.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-native-first/baseline.tap.gz",
+    "rawBytes": 3364,
+    "rawSha256": "f771e0537286db25bf28631b9fd7cb0159dfc7061cc0cdf70287180be830094d"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-native-v2/candidate.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-native-v2/candidate.tap.gz",
+    "rawBytes": 7375,
+    "rawSha256": "4552ea941554e67e1401f359df8df88b72bacfbb73376e7a7f795b477051c49c"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-native-v2/baseline.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-native-v2/baseline.tap.gz",
+    "rawBytes": 21678,
+    "rawSha256": "ef59425d3d46f168207771c3fe59b98bceaab471646cbdc5f27b7b2ef2aa8f95"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-product-green/native.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-product-green/native.tap.gz",
+    "rawBytes": 7369,
+    "rawSha256": "4ec06a8adb6ee6e1f31e68a21607418c966364f1175e48a071ca185c4806ffa1"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-related-first/native.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-related-first/native.log.gz",
+    "rawBytes": 106272,
+    "rawSha256": "94ac8d241d5985d9edaf09464b03bd44ec305e2019fe38882c530790ee851b17"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-related-v2/native.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-related-v2/native.log.gz",
+    "rawBytes": 39661,
+    "rawSha256": "682fe370b47a4d6001494cd96040db318cbaf9a7a0a318f744febf29572dfec2"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retired-profile-page-red/native.tap",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retired-profile-page-red/native.tap.gz",
+    "rawBytes": 17249,
+    "rawSha256": "ded954b78cb9e049aa0a97bc02612f0e6f30bb111e05ad7d184a75b685226127"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-related-green/native.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-related-green/native.log.gz",
+    "rawBytes": 42386,
+    "rawSha256": "d2918deb46102bd87fdb35bd745cd1b8e0fa98bf3bc4e3207d4efa54b780755e"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/release.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/release.log.gz",
+    "rawBytes": 126,
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/i18n.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/i18n.log.gz",
+    "rawBytes": 125,
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/syntaxIam.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/syntaxIam.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/syntaxApp.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/syntaxApp.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/protected916.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/protected916.log.gz",
+    "rawBytes": 2026,
+    "rawSha256": "cd4ba4a2075598193258fc6296b5d4feee3127e42a0f7b085045a0db4dec1a03"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-retirement-accepted-targets/related.log",
+    "archive": "docs/performance-program/phase-6a/source-retirement-integration-20261108/buyerlog-phase6a-retirement-accepted-targets/related.log.gz",
+    "rawBytes": 41054,
+    "rawSha256": "4da1afbe75588fcaa87b2cb4d5acb2a7c1dc87b8260755b8fab2e4efd545c35c"
+  }
+]

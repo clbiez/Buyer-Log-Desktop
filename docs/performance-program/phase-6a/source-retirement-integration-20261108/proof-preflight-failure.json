@@ -1,0 +1,6 @@
+{
+  "status": "preflight failed before source proof",
+  "cause": "Node child_process default maxBuffer was smaller than the 3 MB app Git blob; ENOBUFS",
+  "productOrTestBudgetChanged": false,
+  "fixedDiagnosticBufferBytes": 16777216
+}

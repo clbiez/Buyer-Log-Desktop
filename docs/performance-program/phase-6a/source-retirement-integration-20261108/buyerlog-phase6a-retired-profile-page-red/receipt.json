@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/orders-source-retirement.test.js",
+    "tests/orders-profile-barriers.test.js"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "tests": 69,
+    "pass": 67,
+    "fail": 2,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "ded954b78cb9e049aa0a97bc02612f0e6f30bb111e05ad7d184a75b685226127"
+}

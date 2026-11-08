@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const {installLifecycle} = require('./helpers/orders-retirement-source');
 
 const APP_PATH = path.join(__dirname, '..', 'public', 'app-main.js');
 const OI_UI_PATH = path.join(__dirname, '..', 'public', 'order-importance-ui.js');
@@ -248,6 +249,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
     Array,
   };
   vm.createContext(ctx);
+  installLifecycle(ctx);
   vm.runInContext(extractFunction(APP, 'ensureOrdersLoaded'), ctx);
 
   // force verilmezse mevcut state.orders korunur, yeni istek atılmaz.

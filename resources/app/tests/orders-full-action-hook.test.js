@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {extractFunction}=require('./helpers/app-main-functions');
+const {installLifecycle}=require('./helpers/orders-retirement-source');
 const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
 function fixture(options={}){
   const state={orders:options.orders===undefined?{rows:[{_id:0,'Order Code':7}]}:options.orders};
@@ -9,6 +10,7 @@ function fixture(options={}){
   const globals={state,window,appLang:'en',_ordersFullViewControllers:controllers,
     ensureOrdersLoaded:async()=>{loads++;return options.load?options.load(state):false;}};
   const context=vm.createContext(globals);
+  installLifecycle(context);
   vm.runInContext(['ordersProjectionIsThin','ordersFullActionError','ensureOrdersFullForAction'].map(name=>extractFunction(source,name)).join('\n'),context);
   return {state,controllers,context,run:reason=>context.ensureOrdersFullForAction(reason),loads:()=>loads,deny:()=>{allowed=false;}};
 }

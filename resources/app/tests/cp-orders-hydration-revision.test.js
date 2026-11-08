@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const {fixtures} = require('./fixtures/cp-orders-revision.cjs');
+const {installLifecycle} = require('./helpers/orders-retirement-source');
 
 const sourcePath = path.resolve(__dirname, '../public/app-main.js');
 const source = fs.readFileSync(sourcePath, 'utf8');
@@ -44,6 +45,7 @@ function load() {
     ordersLoadPromise: null,
   };
   vm.createContext(context);
+  installLifecycle(context);
   vm.runInContext(between('const _unifiedPriorityTableRevision=', 'function unifiedPriorityRowActive(')
     + '\nthis.tableRevision=()=>({..._unifiedPriorityTableRevision});', context, {filename: sourcePath});
   return {

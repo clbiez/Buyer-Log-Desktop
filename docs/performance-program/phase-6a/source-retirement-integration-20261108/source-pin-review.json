@@ -1,0 +1,71 @@
+{
+  "oldAppSha256": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
+  "currentAppSha256": "d0885781d9b9a5e88135a1fd7a7c9c309603d4f4484191219079408ad1237810",
+  "restoredAppSha256": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
+  "functions": [
+    {
+      "name": "fetchOrdersProjection",
+      "beforeSha256": "f63a23013084adf469e19e57fd774c35558da9d05964d02509ffbb1b4cc46de0",
+      "afterSha256": "79ea69562ae17cc19a49b4e13d0a118b8fde0731f04e1973dd90ebbf8c115b6c"
+    },
+    {
+      "name": "ensureOrdersLoaded",
+      "beforeSha256": "414fec7b658d6522233958d2728b96653deedff2d68253348735f2e2fe60e172",
+      "afterSha256": "406e0c956b507a87633ad4478fea401d7cae21cde8004b19545b2f8744866b95"
+    },
+    {
+      "name": "ensureOrdersFullForAction",
+      "beforeSha256": "14899d6b9d25c0e5be8639b7ffde28f5454b52ba11d180d33512a1d15788d24e",
+      "afterSha256": "6b6ef1fc94187668dc030f6078f99da5164c93e07c2191b90f049a5f186cae07"
+    },
+    {
+      "name": "loadFromServer",
+      "beforeSha256": "48aaf96f6f2b094ee639d97d428af5338abe2fb0e2650ade408b4bd61cb28484",
+      "afterSha256": "daac6e8173f14419cc2d737a07da3351bcba5bec7e44dfbffcbc67dd09101119"
+    },
+    {
+      "name": "hydrateUserPreferencesAfterUi",
+      "beforeSha256": "f45da2af21620d67514bd40ca3bbe94534417e8607c88264cfb02a0ff0102f18",
+      "afterSha256": "4f03805a6665bb2fe725830ca36f019162e8de9864c69749a1566deb99db51a6"
+    }
+  ],
+  "lifecycleDeclarationsSha256": "64935361de4061daec8060bf40de71fe1ea6631f45b3151cbe3091ffd755f995",
+  "protectedFunctions": [
+    "switchTab",
+    "applyViewState",
+    "applyFilterState",
+    "resetViewToSystemDefault",
+    "resetFiltersToSystemDefault",
+    "ensureCpLoaded",
+    "registerManagedGridClipboard",
+    "norm",
+    "toNum",
+    "dateOrdinal",
+    "normalizeTransitDelType",
+    "turknorm",
+    "makeDateOnly",
+    "dateOnlyFromDateObject",
+    "excelSerialToDateOnly",
+    "coerceDateLoose",
+    "normalizeCPDates",
+    "applyCpApprovalDate",
+    "cpLogisticSegments",
+    "cpLogisticHasDetails",
+    "rebuildCpLogisticCaches"
+  ],
+  "protected916Files": [
+    "public/checklist-components-engine.js",
+    "public/cp-overview-assistant.js",
+    "public/checklist-supplier-sync.js",
+    "tests/checklist-components-row-cache.test.js"
+  ],
+  "protected916FastWorkflowUnchanged": true,
+  "iam": {
+    "oldSha256": "4396e4586ab2726160f55cf386e83bef7391f8ba47e670b5df8869d68a4346a1",
+    "currentSha256": "9611525e3614d53c8002b4deba68ae3c8b8d5ffa7061e6474bf3d7409e57e994",
+    "restoredSha256": "4396e4586ab2726160f55cf386e83bef7391f8ba47e670b5df8869d68a4346a1",
+    "hookSha256": "39e397a32d673ded0f1120b881625028b3dde8d93f75017ec08420ce0aac3ea8"
+  },
+  "outsideSwitchSha256": "67c01539cdc02719d8f35b3d4619cf29ac53886f27d0db06cda47a95b577d29b",
+  "switchCurrentSha256": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2"
+}

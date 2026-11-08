@@ -1,0 +1,24 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-",
+    "cp-decision-input-revision",
+    "cp-orders-hydration",
+    "partial-refresh",
+    "startup-primary",
+    "user-storage",
+    "iam-ui",
+    "profile-rejection"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "tests": 398,
+    "pass": 397,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "d2918deb46102bd87fdb35bd745cd1b8e0fa98bf3bc4e3207d4efa54b780755e"
+}

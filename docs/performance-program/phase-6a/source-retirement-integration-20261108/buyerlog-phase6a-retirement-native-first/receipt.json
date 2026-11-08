@@ -1,0 +1,50 @@
+{
+  "head": "d2c99056f51d8bd4545e7a4830c55f0251e979e5",
+  "candidateSha256": "af612facde9c73bbf65588e03cbfde9cbee0390ca9b77291db22f88c950c0cea",
+  "commands": [
+    {
+      "mode": "baseline",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/tmp/buyerlog-phase6a-orders-source-retirement-preparation/tests/orders-source-retirement.test.js",
+        "/tmp/buyerlog-phase6a-orders-source-retirement-preparation/tests/orders-iam-before-apply.test.js"
+      ],
+      "startedAt": "2026-11-08T08:10:39.761008+00:00",
+      "exitCode": 1,
+      "counts": {
+        "tests": 2,
+        "pass": 0,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "f771e0537286db25bf28631b9fd7cb0159dfc7061cc0cdf70287180be830094d",
+      "setupError": false
+    },
+    {
+      "mode": "candidate",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/tmp/buyerlog-phase6a-orders-source-retirement-preparation/tests/orders-source-retirement.test.js",
+        "/tmp/buyerlog-phase6a-orders-source-retirement-preparation/tests/orders-iam-before-apply.test.js"
+      ],
+      "startedAt": "2026-11-08T08:10:40.473126+00:00",
+      "exitCode": 1,
+      "counts": {
+        "tests": 30,
+        "pass": 21,
+        "fail": 9,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "4746bbf3f9806913ab0a6e123fc3600a2a34cb8821fa6ba78f79cb9a496b6ad3",
+      "setupError": false
+    }
+  ]
+}

@@ -9,9 +9,10 @@ const rawApp=read('public/app-main.js'),rawStorage=read('public/user-storage.js'
 const app=rawApp,storage=rawStorage;
 read('tests/helpers/app-main-functions.js');
 const {extractFunction}=require(path.join(ROOT,'tests/helpers/app-main-functions.js'));
+const {installLifecycle}=require('./helpers/orders-retirement-source');
 const turn=()=>new Promise(resolve=>setImmediate(resolve));
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});promise.catch(()=>{});return {promise,resolve,reject};}
-function load(names,globals){const context=vm.createContext({...globals});vm.runInContext(names.map(name=>extractFunction(app,name)).join('\n')+'\nglobalThis.api={'+names.join(',')+'};',context);return {api:context.api,context};}
+function load(names,globals){const context=vm.createContext({...globals});installLifecycle(context);vm.runInContext(names.map(name=>extractFunction(app,name)).join('\n')+'\nglobalThis.api={'+names.join(',')+'};',context);return {api:context.api,context};}
 function nativeStore(values=new Map()){return {values,get length(){return values.size;},key:index=>[...values.keys()][index]??null,getItem:key=>values.has(String(key))?values.get(String(key)):null,setItem:(key,value)=>values.set(String(key),String(value)),removeItem:key=>values.delete(String(key)),clear:()=>values.clear()};}
 function bootStorage(fetch,initial){const native=nativeStore(new Map(initial||[])),window={localStorage:native,BL_USER_CONTEXT:{id:'demo'}};vm.runInNewContext(storage,{window,fetch});return {api:window.BLStorage,native,window};}
 const FORMULA_KEY='bl.formulaColumns.orders.v1',FILTER_KEY='lcw.corePageFilters.auto.v1',VIEW_KEY='lcw.tableViewFocus.v1',personal=key=>'bl.user.demo.'+key;

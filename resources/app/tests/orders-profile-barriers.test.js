@@ -9,11 +9,12 @@ const protectedBaseline=fs.readFileSync(path.join(__dirname,'fixtures/orders-con
 assert.equal(crypto.createHash('sha256').update(protectedBaseline).digest('hex'),pins.protectedBaselineSha256);
 const summaryRecipe=require('./fixtures/orders-table-summary/patch-recipe.cjs');
 const {extractFunction}=require(path.join(ROOT,'tests/helpers/app-main-functions.js'));
+const {installLifecycle}=require('./helpers/orders-retirement-source');
 const thin=[{_id:1,'Order Code':'same'}],full=[{_id:1,'Order Code':'same',__CPX_late:7}];
 const turn=()=>new Promise(resolve=>setImmediate(resolve));
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});promise.catch(()=>{});return {promise,resolve,reject};}
 function error(){return Object.assign(Error('Selection/source changed'),{code:'ORDERS_FULL_STALE'});}
-function bind(code,globals,names=[]){const context=vm.createContext({...globals});vm.runInContext(names.map(name=>extractFunction(source,name)).join('\n')+'\n'+code,context);return context;}
+function bind(code,globals,names=[]){const context=vm.createContext({...globals});installLifecycle(context);vm.runInContext(names.map(name=>extractFunction(source,name)).join('\n')+'\n'+code,context);return context;}
 function fixture(kind,{isThin=true,page='orders',reject=false}={}){
  const events=[],gate=deferred(),network=deferred(),nodes=new Map();let currentThin=isThin,currentPage=page,rows=isThin?thin:full;
  const select={value:'chosen',isConnected:true,addEventListener(_type,fn){this.handler=fn;}},button={isConnected:true,addEventListener(_type,fn){this.handler=fn;}};
@@ -143,7 +144,17 @@ function bootstrap(isThin){
   fetch:async()=>({ok:true,json:async()=>({})}),cpClientWorkInProgress:()=>false,normalizeTransitRules:value=>value||[],normalizeNonDtrManufacturers:value=>value||[],normalizeKolLandedMultipliers:value=>value||{},cloneMatchConfig:value=>value,
   applyCachedProfilesForCurrentPage:value=>events.push({cached:value,rows:state.orders.rows}),renderStartupActiveModule:()=>{events.push('startup-render');return 'overview';},console:{warn:(...args)=>warnings.push(args)},refreshDiagnosisText:()=>''};
  for(const name of ['setServerStatus','updSourceHint','showToast','reviveServerDates','hideSourceFilterRequiredNotice','syncModelImageRegistry','renderAntrepoSourceControl','renderAsasSourceControl','renderLflSourceControl','applyLicensorMerges','applyIncomingPricingRules','saveLocalTransitRules','invalidateUnifiedPriorityDecisions','saveLocalNonDtrManufacturers','renderHorizonBadges','applyPricingRulesToLoadedRows','setWarnings','buildCPFilters','buildOrdersFilters','applyCoreAutoFilterState','refreshSubmfrList','refreshLicenseList','refreshLicensorList'])globals[name]=()=>{};
- const context=bind('globalThis.run=loadFromServer;',globals,['loadFromServer']);return {run:context.run,context,events,warnings,gate,setPage:value=>{page=value;}};
+ const context=bind('globalThis.run=loadFromServer;',globals,['loadFromServer']);
+ // Reuse this fixture's existing gated synthetic full response for the new
+ // fresh-loader dependency. Actual fullOnly HTTP/normalization/ownership are
+ // separately exercised by orders-source-retirement's real-loader cases.
+ context.ensureOrdersLoaded=async options=>{
+  assert.equal(options.force,true);assert.equal(options.fullOnly,true);assert.equal(options.deferRender,true);
+  await context.ensureOrdersFullForAction('fixture.fresh-full-response');
+  assert.equal(thinState,false);assert.equal(state.orders.rows,full);
+  context._ordersRetiredFiniteView=null;return true;
+ };
+ return {run:context.run,context,events,warnings,gate,setPage:value=>{page=value;}};
 }
 test('whole actual loadFromServer direct cached call waits and captures the hydrated full row reference',async()=>{
  const f=bootstrap(true),pending=f.run(false);await turn();const before=f.events.slice();f.gate.resolve();const result=await pending;

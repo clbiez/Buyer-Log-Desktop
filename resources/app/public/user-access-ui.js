@@ -57,6 +57,21 @@
   // Check only the local validated session. Central polling belongs to the
   // server, so an unavailable share never blocks page guards or normal APIs.
   let iamSessionCheck = false, lastSessionSignature = '';
+  function beforeIamProfileApply() {
+    const hook=window.BLBeforeIamProfileApply;
+    if(typeof hook!=='function'){
+      // Cold finite admission requires this capability before any request.
+      // Legacy full pages retain their existing profile update path.
+      if(window.BLOrdersFiniteLifecycleRequired===true||(typeof state!=='undefined'&&state.orders?.projectionProfile==='thin'))return false;
+      return true;
+    }
+    const result=hook();
+    if(result&&(typeof result==='object'||typeof result==='function')&&typeof result.then==='function'){
+      // Invalid async callbacks never authorize assignment; drain rejection.
+      Promise.resolve(result).catch(()=>{});return false;
+    }
+    return result!==false;
+  }
   async function checkIamSession() {
     if (iamSessionCheck || !current()?.centralIamEnabled) return;
     iamSessionCheck = true;
@@ -82,6 +97,7 @@
       const before = window.BL_USER_CONTEXT || null;
       const accessOf = user => JSON.stringify(user ? [user.systemRole, user.accessAreas, user.permissions, user.capabilities, user.scopes] : null);
       const accessChanged = Boolean(lastSessionSignature && before && accessOf(before) !== accessOf(result.user));
+      if(!beforeIamProfileApply())return;
       lastSessionSignature = signature;
       window.BL_USER_CONTEXT = result.user;
       if (accessChanged && typeof showToast === 'function') {
