@@ -35,3 +35,6 @@ before attributing them. Background work is **not proven** to cause the formal
 regression. The initial NODE_PATH preflight rejection, identical subsequent
 environment sanitation, genuine row/generation/revision/cell gates, process-exit
 proofs and lossless compression hashes are retained. #908 stays draft/blocked.
+
+
+Tam yeniden çalıştırma girdileri (source-snapshots ve preparation-readonly-facts dahil) diagnostic-source-package.tar.gz içindedir. B kolunu yeniden kurmak için doküman commitleriyle karıştırmadan ölçülen b9545261 runtime commitini kullanın; tüm kaynak pinleri korunur. / Complete launcher inputs, including source snapshots and read-only facts, are in diagnostic-source-package.tar.gz. Recreate the measured b9545261 runtime rather than treating later evidence-only commits as source changes. Frozen live-clock hashes are historical to the recorded date; a new control cohort is required before changing any expected hash.
