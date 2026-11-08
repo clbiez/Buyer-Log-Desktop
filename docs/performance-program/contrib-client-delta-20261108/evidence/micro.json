@@ -1,0 +1,249 @@
+{
+  "recordedAt": "2026-11-08T07:59:28.241Z",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "cpuCount": 5,
+    "totalMemory": 18882662400,
+    "hostname": "8c21a4b22bda"
+  },
+  "baseCommit": "d66c1f803097af5991616f0420392e1027888f2e",
+  "rowCount": 30000,
+  "editsPerArm": 10,
+  "baseBytes": 13103403,
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "armIsolation": "fresh Node process per arm; sequential on the same VM; spawn and warmup excluded",
+  "cases": [
+    {
+      "name": "independent-cell-edit-plus-history",
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "legacy",
+            "delta"
+          ],
+          "samples": [
+            {
+              "arm": "legacy",
+              "setupMs": 0.5664870000000519,
+              "editMs": 795.3555019999999,
+              "msPerEdit": 79.53555019999999,
+              "retainedHeapDelta": 179225056,
+              "historyBytes": 131034023,
+              "touchedRows": 0,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64424232
+            },
+            {
+              "arm": "delta",
+              "setupMs": 127.12455000000006,
+              "editMs": 42.50705299999993,
+              "msPerEdit": 4.250705299999993,
+              "retainedHeapDelta": 331064,
+              "historyBytes": 9073,
+              "touchedRows": 1,
+              "transportMs": 20.724442000000067,
+              "payloadBytes": 530,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64424304
+            }
+          ]
+        },
+        {
+          "pair": 2,
+          "order": [
+            "delta",
+            "legacy"
+          ],
+          "samples": [
+            {
+              "arm": "delta",
+              "setupMs": 124.273459,
+              "editMs": 40.000271999999995,
+              "msPerEdit": 4.0000272,
+              "retainedHeapDelta": 331064,
+              "historyBytes": 9073,
+              "touchedRows": 1,
+              "transportMs": 25.10160899999994,
+              "payloadBytes": 530,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64424232
+            },
+            {
+              "arm": "legacy",
+              "setupMs": 0.5253040000000055,
+              "editMs": 813.8785670000001,
+              "msPerEdit": 81.38785670000001,
+              "retainedHeapDelta": 179225056,
+              "historyBytes": 131034023,
+              "touchedRows": 0,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64424232
+            }
+          ]
+        },
+        {
+          "pair": 3,
+          "order": [
+            "legacy",
+            "delta"
+          ],
+          "samples": [
+            {
+              "arm": "legacy",
+              "setupMs": 0.5510429999999928,
+              "editMs": 813.3206729999999,
+              "msPerEdit": 81.33206729999999,
+              "retainedHeapDelta": 179224880,
+              "historyBytes": 131034023,
+              "touchedRows": 0,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64424304
+            },
+            {
+              "arm": "delta",
+              "setupMs": 129.59177900000003,
+              "editMs": 42.57570700000008,
+              "msPerEdit": 4.257570700000008,
+              "retainedHeapDelta": 331136,
+              "historyBytes": 9073,
+              "touchedRows": 1,
+              "transportMs": 21.61364500000002,
+              "payloadBytes": 530,
+              "finalDigest": "9b18ef050ce176056c4593bfc9983e5fbfaab5831187e7e03801e5cbc595cd35",
+              "sourceHeap": 64423704
+            }
+          ]
+        }
+      ],
+      "medianEditMs": {
+        "legacy": 813.3206729999999,
+        "delta": 42.50705299999993
+      }
+    },
+    {
+      "name": "group-cell-edit-plus-history",
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "legacy",
+            "delta"
+          ],
+          "samples": [
+            {
+              "arm": "legacy",
+              "setupMs": 0.561108000000047,
+              "editMs": 3446.79058,
+              "msPerEdit": 344.679058,
+              "retainedHeapDelta": 197149752,
+              "historyBytes": 131033951,
+              "touchedRows": 30000,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64465000
+            },
+            {
+              "arm": "delta",
+              "setupMs": 121.46526500000004,
+              "editMs": 47.70665399999996,
+              "msPerEdit": 4.770665399999996,
+              "retainedHeapDelta": 577536,
+              "historyBytes": 59981,
+              "touchedRows": 4,
+              "transportMs": 2.046453999999926,
+              "payloadBytes": 1786,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64464992
+            }
+          ]
+        },
+        {
+          "pair": 2,
+          "order": [
+            "delta",
+            "legacy"
+          ],
+          "samples": [
+            {
+              "arm": "delta",
+              "setupMs": 122.17887400000001,
+              "editMs": 50.50880100000006,
+              "msPerEdit": 5.050880100000006,
+              "retainedHeapDelta": 571352,
+              "historyBytes": 59981,
+              "touchedRows": 4,
+              "transportMs": 2.087906999999973,
+              "payloadBytes": 1786,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64464992
+            },
+            {
+              "arm": "legacy",
+              "setupMs": 0.5626010000000292,
+              "editMs": 3334.149876,
+              "msPerEdit": 333.4149876,
+              "retainedHeapDelta": 197149752,
+              "historyBytes": 131033951,
+              "touchedRows": 30000,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64464992
+            }
+          ]
+        },
+        {
+          "pair": 3,
+          "order": [
+            "legacy",
+            "delta"
+          ],
+          "samples": [
+            {
+              "arm": "legacy",
+              "setupMs": 0.527766999999983,
+              "editMs": 3384.162269,
+              "msPerEdit": 338.41622689999997,
+              "retainedHeapDelta": 197149816,
+              "historyBytes": 131033951,
+              "touchedRows": 30000,
+              "transportMs": null,
+              "payloadBytes": null,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64465064
+            },
+            {
+              "arm": "delta",
+              "setupMs": 119.63923199999999,
+              "editMs": 49.06752099999994,
+              "msPerEdit": 4.906752099999994,
+              "retainedHeapDelta": 577536,
+              "historyBytes": 59981,
+              "touchedRows": 4,
+              "transportMs": 2.1444420000000264,
+              "payloadBytes": 1786,
+              "finalDigest": "c3698fab5c97708b2f1ebf64a59cb38aa3eb54a44d7e9f285e462c75fabf819f",
+              "sourceHeap": 64464992
+            }
+          ]
+        }
+      ],
+      "medianEditMs": {
+        "legacy": 3384.162269,
+        "delta": 49.06752099999994
+      }
+    }
+  ],
+  "scope": "Module CPU/retained heap comparison only: actual editor dispatch + actual kolPushUndo/kolSnapshot, save:false, rerender:false, quotations:false. New arm prepare/apply with retained before/after inverse slots. No UI/storage/network/server timing; binding/certification setup and touched-row materialization reported separately. No application speedup claim. History bytes are JSON UTF-8 representation, not heap."
+}

@@ -1,0 +1,12 @@
+{
+  "baseCommit": "d66c1f803097af5991616f0420392e1027888f2e",
+  "blobs": {
+    "app-main.js": "26bda8b746eec81a95e06109516bd27ecb2834e0",
+    "collection-model-groups.js": "f5da3a90ea4af8a7216c1b270299621acad97167",
+    "overview-collection-summary.js": "01d105160a3f765eb34f0cc523b0d5035fb1cd12",
+    "model-option-stats.js": "27f74b59358cc287070ef60db3aaae9393b26b18",
+    "business-rules.js": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e",
+    "chronological-values.js": "db6eacd41c5cecd81c3adbee9384a28750baba08"
+  },
+  "purpose": "New dedicated fixture: actual frozen editor/snapshot and group resolver, portable repository-relative locator. Shared pins unchanged."
+}

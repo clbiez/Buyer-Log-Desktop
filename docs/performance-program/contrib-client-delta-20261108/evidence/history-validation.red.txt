@@ -1,0 +1,43 @@
+✔ field: history advances only after primary ACK, including undo and redo (5.28518ms)
+✔ field: lost ACK retains intent; duplicate ACK and replay are idempotent (0.565195ms)
+✔ field: older ACK keeps newer intent and its original base; immutable transport excludes it (0.731876ms)
+✔ field: malformed atomic subset with omitted rows fails before any acknowledgement (0.375838ms)
+✔ group: history advances only after primary ACK, including undo and redo (9.177606ms)
+✔ group: lost ACK retains intent; duplicate ACK and replay are idempotent (1.013903ms)
+✔ group: older ACK keeps newer intent and its original base; immutable transport excludes it (1.868135ms)
+✔ group: malformed atomic subset with omitted rows fails before any acknowledgement (0.994684ms)
+✔ group: legacy transport requires atomic closure, excludes override peers and unrelated rows (1.016927ms)
+✔ pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source (0.643233ms)
+✔ pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence (0.453305ms)
+✔ independent scalar gate rejects special custom schema and JSON values changed by serialization (0.357571ms)
+✖ field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes (1.416171ms)
+✔ group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites (1.923858ms)
+✔ field: atomic omission across two independent rows cannot advance one row (0.459435ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32.618752
+
+✖ failing tests:
+
+test at resources/app/tests/collection-client-delta-lifecycle.test.js:135:1
+✖ field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes (1.416171ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-lifecycle.test.js:144:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [Function (anonymous)],
+    operator: 'throws',
+    diff: 'simple'
+  }

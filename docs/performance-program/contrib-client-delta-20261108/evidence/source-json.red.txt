@@ -1,0 +1,46 @@
+✔ field: history advances only after primary ACK, including undo and redo (5.593968ms)
+✔ field: lost ACK retains intent; duplicate ACK and replay are idempotent (0.728842ms)
+✔ field: older ACK keeps newer intent and its original base; immutable transport excludes it (0.762362ms)
+✔ field: malformed atomic subset with omitted rows fails before any acknowledgement (0.426434ms)
+✔ group: history advances only after primary ACK, including undo and redo (14.180219ms)
+✔ group: lost ACK retains intent; duplicate ACK and replay are idempotent (1.158461ms)
+✔ group: older ACK keeps newer intent and its original base; immutable transport excludes it (1.959413ms)
+✔ group: malformed atomic subset with omitted rows fails before any acknowledgement (1.36876ms)
+✔ group: legacy transport requires atomic closure, excludes override peers and unrelated rows (1.271442ms)
+✔ pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source (1.148176ms)
+✔ pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence (0.517202ms)
+✔ independent scalar gate rejects special custom schema and JSON values changed by serialization (0.401176ms)
+✔ field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes (1.287056ms)
+✔ group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites (2.065593ms)
+✔ field: atomic omission across two independent rows cannot advance one row (0.548389ms)
+✔ field: out-of-order ACKs preserve local history order across independent rows (0.422559ms)
+✔ one certified Collection session composes independent and group intent with one ACK-gated history (2.360509ms)
+✖ independent source certification rejects lossy unknown JSON before command preparation without reading accessors (0.606307ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 17
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43.820524
+
+✖ failing tests:
+
+test at resources/app/tests/collection-client-delta-lifecycle.test.js:213:1
+✖ independent source certification rejects lossy unknown JSON before command preparation without reading accessors (0.606307ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-lifecycle.test.js:218:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [Function (anonymous)],
+    operator: 'throws',
+    diff: 'simple'
+  }

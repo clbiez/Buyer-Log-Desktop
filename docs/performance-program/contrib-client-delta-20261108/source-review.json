@@ -1,0 +1,90 @@
+{
+  "baseCommit": "d66c1f803097af5991616f0420392e1027888f2e",
+  "actualPins": {
+    "app-main.js": "26bda8b746eec81a95e06109516bd27ecb2834e0",
+    "collection-model-groups.js": "f5da3a90ea4af8a7216c1b270299621acad97167",
+    "overview-collection-summary.js": "01d105160a3f765eb34f0cc523b0d5035fb1cd12",
+    "model-option-stats.js": "27f74b59358cc287070ef60db3aaae9393b26b18",
+    "business-rules.js": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e",
+    "chronological-values.js": "db6eacd41c5cecd81c3adbee9384a28750baba08"
+  },
+  "testPreservation": {
+    "resources/app/tests/collection-client-delta-field.test.js": {
+      "assertionBodiesIdentical": true,
+      "sha256": "7fd2ec7acfeb70dfa373712252c9e94800bde1ec5658cb6355927d50f08bf202"
+    },
+    "resources/app/tests/collection-client-delta-group.test.js": {
+      "assertionBodiesIdentical": true,
+      "sha256": "c2b66aa64e395f230ad6ac82a10127868f93f3d8d7928d6c6bbda9233fc8069a"
+    }
+  },
+  "functions": [
+    {
+      "name": "editableValuesEqual",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "715e11936dd53862a0762fca10bd864469d76049290ce3a9051f46229ff16d0f"
+    },
+    {
+      "name": "kolNormalizeModelGroups",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "8dfc6b5530fad68cb1e7c11a168da8654e13e914a9386d4cf779504be466a2f8"
+    },
+    {
+      "name": "kolFieldMetadata",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "9c694f9518b1a5f00e9268691c4a7c2fe450f5eb2c92ee35dac1b6d678fea74c"
+    },
+    {
+      "name": "kolIsColorSpecific",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "c8a81e5a8e5588374d9e87ad10b78b707c5919a934d5f98ad0170fc81ee1ba45"
+    },
+    {
+      "name": "kolCellLinkedToModel",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "ef19204c4d59b9d7ea2f61d0803651f87786edba1a0fd989b6322612113070da"
+    },
+    {
+      "name": "kolHasVariantOverride",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "5a5de5fda62fbfc90c337e47238abba4930bb8be8ae835fe0022941c5e9e80b8"
+    },
+    {
+      "name": "kolEffectiveValue",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "de69146bf427eac17c77d171423509adc7b6ccd9fba67e0c988261ee70a9f36d"
+    },
+    {
+      "name": "kolWriteGroupedStorageValue",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "df92fc4658e3320924dcbd249bd1d513ddf0d5546a0f451a7debc211ce3f9798"
+    },
+    {
+      "name": "commitKolEditor",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "5e6bda3c753f51d3b1ca15619bfa89d046c8635e47fbf54b2f2ab94d3e45cb15"
+    },
+    {
+      "name": "kolSpreadsheetMakeEditor",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "a36d6633cc6874ebe44b01ba91c64a58c8d51f233584f19000c1b2568779eab4"
+    },
+    {
+      "name": "kolApplyCollectionCellChange",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "50e82f77d2998e1cb5700706f3d19d5b25638eac849e117041b1a610127724f8"
+    },
+    {
+      "name": "kolSnapshot",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "f89e96f866d8cc5808717d041d5f275e7c290e8b384deae6a955d76b2aad7651"
+    },
+    {
+      "name": "kolPushUndo",
+      "identicalToInheritedReference": true,
+      "actualBodySha256": "6d4dc2cf5b6eeede7b9600e15dcaa7052e62fd9cef0ecf2d2749219287860f08"
+    }
+  ],
+  "sharedFilesChanged": [],
+  "review": "Production modules reuse field19/group22 algorithms; original tests/assertions and shared pins are unchanged. Actual frozen editor/snapshot is measured separately from the old pinned harness."
+}

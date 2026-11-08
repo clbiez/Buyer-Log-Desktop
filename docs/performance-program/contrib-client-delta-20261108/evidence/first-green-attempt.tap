@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: resources/app/tests/collection-client-delta-field.test.js
+ok 1 - resources/app/tests/collection-client-delta-field.test.js
+  ---
+  duration_ms: 66.440926
+  type: 'test'
+  ...
+# node:internal/modules/cjs/loader:1520
+#   throw err;
+#   ^
+# Error: Cannot find module './reference/collection-model-groups.js'
+# Require stack:
+# - /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-client-delta/reference-harness.cjs
+# - /workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-group.test.js
+#     at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+#     at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+#     at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+#     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+#     at Module._load (node:internal/modules/cjs/loader:1294:5)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+#     at Module.require (node:internal/modules/cjs/loader:1617:12)
+#     at require (node:internal/modules/helpers:153:16)
+#     at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-client-delta/reference-harness.cjs:16:16)
+#     at Module._compile (node:internal/modules/cjs/loader:1872:14) {
+#   code: 'MODULE_NOT_FOUND',
+#   requireStack: [
+#     '/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-client-delta/reference-harness.cjs',
+#     '/workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-group.test.js'
+#   ]
+# }
+# Node.js v24.19.0
+# Subtest: resources/app/tests/collection-client-delta-group.test.js
+not ok 2 - resources/app/tests/collection-client-delta-group.test.js
+  ---
+  duration_ms: 47.509015
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-group.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: resources/app/tests/collection-client-delta-lifecycle.test.js
+ok 3 - resources/app/tests/collection-client-delta-lifecycle.test.js
+  ---
+  duration_ms: 97.053868
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 114.92138

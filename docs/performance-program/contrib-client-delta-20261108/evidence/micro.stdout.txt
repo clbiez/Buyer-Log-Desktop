@@ -1,0 +1,21 @@
+{
+  "rowCount": 30000,
+  "editsPerArm": 10,
+  "baseBytes": 13103403,
+  "cases": [
+    {
+      "name": "independent-cell-edit-plus-history",
+      "medianEditMs": {
+        "legacy": 813.3206729999999,
+        "delta": 42.50705299999993
+      }
+    },
+    {
+      "name": "group-cell-edit-plus-history",
+      "medianEditMs": {
+        "legacy": 3384.162269,
+        "delta": 49.06752099999994
+      }
+    }
+  ]
+}
