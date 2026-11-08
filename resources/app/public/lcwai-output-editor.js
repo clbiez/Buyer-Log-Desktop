@@ -159,6 +159,7 @@
   /* Smart Layout Studio is a view of the existing draft and layout, never a second document. */
   async function openSelection(tab, scope) {
     try {
+      if (tab === 'orders') await window.BLEnsureOrdersFullForAction('studio.selection');
       let info = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: false });
       if (!info) throw Error(L('Bu kaynakta kullanılabilir kayıt yok.', 'This source has no available records.'));
       const selected = new Set(info.selectedIds || []);

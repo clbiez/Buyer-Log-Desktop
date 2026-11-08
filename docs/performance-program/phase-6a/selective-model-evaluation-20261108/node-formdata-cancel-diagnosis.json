@@ -1,0 +1,47 @@
+{
+  "scope": "tiny Node Response(FormData) cancellation diagnosis; listener captures evidence only, no production suppression",
+  "rows": [
+    {
+      "mode": "immediate",
+      "exit": 1,
+      "signal": null,
+      "stdout": "{\"mode\":\"immediate\",\"errors\":[{\"name\":\"TypeError\",\"code\":\"ERR_INVALID_STATE\",\"message\":\"Invalid state: ReadableStream is already closed\",\"stack\":\"TypeError [ERR_INVALID_STATE]: Invalid state: ReadableStream is already closed\\n    at ReadableByteStreamController.enqueue (node:internal/webstreams/readablestream:1273:13)\\n    at node:internal/deps/undici/undici:6940:28\"}],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "mode": "delay-microtask",
+      "exit": 1,
+      "signal": null,
+      "stdout": "{\"mode\":\"delay-microtask\",\"errors\":[{\"name\":\"TypeError\",\"code\":\"ERR_INVALID_STATE\",\"message\":\"Invalid state: ReadableStream is already closed\",\"stack\":\"TypeError [ERR_INVALID_STATE]: Invalid state: ReadableStream is already closed\\n    at ReadableByteStreamController.enqueue (node:internal/webstreams/readablestream:1273:13)\\n    at node:internal/deps/undici/undici:6940:28\"}],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "mode": "reader",
+      "exit": 1,
+      "signal": null,
+      "stdout": "{\"mode\":\"reader\",\"errors\":[{\"name\":\"TypeError\",\"code\":\"ERR_INVALID_STATE\",\"message\":\"Invalid state: ReadableStream is already closed\",\"stack\":\"TypeError [ERR_INVALID_STATE]: Invalid state: ReadableStream is already closed\\n    at ReadableByteStreamController.enqueue (node:internal/webstreams/readablestream:1273:13)\\n    at node:internal/deps/undici/undici:6940:28\"}],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "mode": "partial",
+      "exit": 1,
+      "signal": null,
+      "stdout": "{\"mode\":\"partial\",\"errors\":[{\"name\":\"TypeError\",\"code\":\"ERR_INVALID_STATE\",\"message\":\"Invalid state: ReadableStream is already closed\",\"stack\":\"TypeError [ERR_INVALID_STATE]: Invalid state: ReadableStream is already closed\\n    at ReadableByteStreamController.enqueue (node:internal/webstreams/readablestream:1273:13)\\n    at node:internal/deps/undici/undici:6940:28\"}],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "mode": "all",
+      "exit": 0,
+      "signal": null,
+      "stdout": "{\"mode\":\"all\",\"errors\":[],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "mode": "buffer",
+      "exit": 0,
+      "signal": null,
+      "stdout": "{\"mode\":\"buffer\",\"errors\":[],\"node\":\"v24.19.0\"}\n",
+      "stderr": ""
+    }
+  ]
+}

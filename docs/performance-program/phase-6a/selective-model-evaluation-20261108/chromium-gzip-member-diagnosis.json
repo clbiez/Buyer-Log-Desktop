@@ -1,0 +1,41 @@
+{
+  "status": "confirmed-chromium-first-member-only",
+  "scope": "tiny gzip transport diagnosis; no app/codec behavior change",
+  "node": "v24.19.0",
+  "expected": "{\"synthetic\":true}",
+  "firstMemberText": "{\"synthetic\":",
+  "cases": [
+    {
+      "name": "one",
+      "members": 1,
+      "compressedBytes": 38,
+      "compressedSha256": "38164841bbd0094324cffa2e9c5b64aff51f68423af36f61bfd5a4a913903b99",
+      "nativeExpected": "{\"synthetic\":true}",
+      "nodeFetchText": "{\"synthetic\":true}",
+      "browser": {
+        "status": 200,
+        "contentLength": 38,
+        "decodedBytes": 18,
+        "text": "{\"synthetic\":true}"
+      }
+    },
+    {
+      "name": "two",
+      "members": 2,
+      "compressedBytes": 58,
+      "compressedSha256": "1d81f08df8ad8b779a0cf287c42b9e06a23979e22643f1167b2450e6386a97ba",
+      "nativeExpected": "{\"synthetic\":true}",
+      "nodeFetchText": "{\"synthetic\":true}",
+      "browser": {
+        "status": 200,
+        "contentLength": 58,
+        "decodedBytes": 13,
+        "text": "{\"synthetic\":"
+      }
+    }
+  ],
+  "chromium": "154.0.8037.57",
+  "singleMemberPassed": true,
+  "multiMemberDeliveredComplete": false,
+  "multiMemberOnlyFirst": true
+}

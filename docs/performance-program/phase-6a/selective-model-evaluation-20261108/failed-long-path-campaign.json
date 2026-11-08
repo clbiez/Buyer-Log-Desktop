@@ -1,0 +1,49 @@
+{
+  "status": "failed",
+  "label": "root-native-base-vs-multipart-first",
+  "startedAt": "2026-11-08T03:33:07.050Z",
+  "pins": {
+    "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+    "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+    "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+    "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+    "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+    "generation": "mw6vhoks-9100b15fc128",
+    "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+    "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+    "gzipBytes": 5676208,
+    "rawBytes": 73145820,
+    "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+    "rows": 30000
+  },
+  "sequence": [
+    "A1",
+    "G1",
+    "B1",
+    "B2",
+    "G2",
+    "A2",
+    "A3",
+    "G3",
+    "B3"
+  ],
+  "arms": [],
+  "definitions": {
+    "A": "full augmented JSON serialized + gzip4; ordinary Chromium Response.json",
+    "G": "ready build with ALL model components; ready base single gzip ordinary Chromium Response.json",
+    "B": "ready build with ALL model components + multipart none; actual multipart Chromium decode"
+  },
+  "limitations": [
+    "Derived synthetic2x128model data, not original fixture hash or production consumer closure.",
+    "Source setup/oracles/file IO excluded from buildMs. No coldOS-cache claim.",
+    "Heap is post-GC retained payload delta, not peak, RSS or app startup heap.",
+    "Linux Chromium only; standalone codec cost, not universal gain or app benchmark."
+  ],
+  "peakObservedDiskBytes": 8803104,
+  "error": {
+    "message": "browser child failed; inspect preserved stdout/stderr\n\n1 !== 0\n",
+    "stack": "AssertionError [ERR_ASSERTION]: browser child failed; inspect preserved stdout/stderr\n\n1 !== 0\n\n    at run (/tmp/buyerlog-phase6a-ready-model-cost/run.cjs:20:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /tmp/buyerlog-phase6a-ready-model-cost/run.cjs:31:68"
+  },
+  "finishedAt": "2026-11-08T03:33:35.339Z"
+}

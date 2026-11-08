@@ -1,0 +1,110 @@
+{
+  "status": "passed",
+  "scope": "actual loopback Chromium multipart response + per-file native DecompressionStream; no app/gain/consumer certificate",
+  "oldCodecSha256": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+  "oldGzipMembersBrowserResult": "Root reported FAIL in first none case: Unexpected end of JSON; old failure artifacts preserved, not replaced by native equivalence.",
+  "startedAt": "2026-11-08T03:32:46.144Z",
+  "cases": [
+    {
+      "endpoint": "/none",
+      "actualBrowserFetch": true,
+      "standardMultipartFormData": true,
+      "nativePerFileDecompressionStream": true,
+      "selectedKeys": [],
+      "headers": {
+        "contentType": "multipart/form-data; boundary=bl6a-a3a0ce2935e02ccaebf425f1a960482b16f9",
+        "contentEncoding": null
+      },
+      "transport": {
+        "format": "ready-model-multipart-alpha-1",
+        "multipartBytes": 1153,
+        "decodedComponentBytes": 920,
+        "partCount": 2,
+        "compressedDigestsVerified": true
+      },
+      "stats": {
+        "modelDefines": 0,
+        "suffixDeletes": 0,
+        "suffixDefines": 0
+      },
+      "rows": 3,
+      "orderedRows": "[{\"Order Code\":\"same\",\"canonical\":0,\"unknown\":{\"z\":false,\"a\":null},\"tail\":false},{\"Order Code\":\"same\",\"canonical\":1,\"unknown\":{\"z\":null,\"a\":0},\"tail\":null},{\"Order Code\":\"same\",\"canonical\":2,\"unknown\":{\"z\":0,\"a\":false},\"tail\":0}]",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+      "timezone": "Europe/Istanbul"
+    },
+    {
+      "endpoint": "/one",
+      "actualBrowserFetch": true,
+      "standardMultipartFormData": true,
+      "nativePerFileDecompressionStream": true,
+      "selectedKeys": [
+        "__CPX_a"
+      ],
+      "headers": {
+        "contentType": "multipart/form-data; boundary=bl6a-b76adab927a7f49f529b1da9e3431dd435ce",
+        "contentEncoding": null
+      },
+      "transport": {
+        "format": "ready-model-multipart-alpha-1",
+        "multipartBytes": 1590,
+        "decodedComponentBytes": 1174,
+        "partCount": 3,
+        "compressedDigestsVerified": true
+      },
+      "stats": {
+        "modelDefines": 2,
+        "suffixDeletes": 2,
+        "suffixDefines": 2
+      },
+      "rows": 3,
+      "orderedRows": "[{\"Order Code\":\"same\",\"canonical\":0,\"unknown\":{\"z\":false,\"a\":null},\"__CPX_a\":null,\"tail\":false},{\"Order Code\":\"same\",\"canonical\":1,\"unknown\":{\"z\":null,\"a\":0},\"tail\":null},{\"Order Code\":\"same\",\"canonical\":2,\"unknown\":{\"z\":0,\"a\":false},\"__CPX_a\":false,\"tail\":0}]",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+      "timezone": "Europe/Istanbul"
+    },
+    {
+      "endpoint": "/all",
+      "actualBrowserFetch": true,
+      "standardMultipartFormData": true,
+      "nativePerFileDecompressionStream": true,
+      "selectedKeys": [
+        "__CPX_a",
+        "__CPX_b"
+      ],
+      "headers": {
+        "contentType": "multipart/form-data; boundary=bl6a-6b9cb5e0bc76dcc32a383410ddc4208ffbd5",
+        "contentEncoding": null
+      },
+      "transport": {
+        "format": "ready-model-multipart-alpha-1",
+        "multipartBytes": 2025,
+        "decodedComponentBytes": 1426,
+        "partCount": 4,
+        "compressedDigestsVerified": true
+      },
+      "stats": {
+        "modelDefines": 4,
+        "suffixDeletes": 3,
+        "suffixDefines": 3
+      },
+      "rows": 3,
+      "orderedRows": "[{\"Order Code\":\"same\",\"canonical\":0,\"unknown\":{\"z\":false,\"a\":null},\"__CPX_a\":null,\"__CPX_b\":0,\"tail\":false},{\"Order Code\":\"same\",\"canonical\":1,\"unknown\":{\"z\":null,\"a\":0},\"__CPX_b\":false,\"tail\":null},{\"Order Code\":\"same\",\"canonical\":2,\"unknown\":{\"z\":0,\"a\":false},\"__CPX_a\":false,\"tail\":0}]",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+      "timezone": "Europe/Istanbul"
+    }
+  ],
+  "limitations": [
+    "Linux headless Chromium only; Windows/Electron/proxy behavior unverified.",
+    "No production thin adoption until source/owner/generation/integrity, all canonical consumer closures/full-before-use barriers and measurements pass."
+  ],
+  "chromium": "154.0.8037.57",
+  "node": {
+    "version": "v24.19.0",
+    "execPath": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node"
+  },
+  "readyComponentSha256": [
+    "90a0c05fb85b097b85c78fb82ef5931971ece9df179308a38a94ff10a5d3c9c3",
+    "4545e925148461b61534a7dce3459979219e9f0c9b079bffe69884304bc4f1c6",
+    "4676f0a15f2d4f2652856b2f22f666201d62b08ced9311f4c5bf6c8b92c3e387"
+  ],
+  "finishedAt": "2026-11-08T03:32:47.484Z"
+}

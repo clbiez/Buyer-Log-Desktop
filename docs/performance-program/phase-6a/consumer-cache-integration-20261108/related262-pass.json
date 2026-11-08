@@ -1,0 +1,54 @@
+{
+  "scope": "current corrected consumer/schema/cache integration; no defaultthin enablement",
+  "startedAt": "2026-11-08T04:08:20.659327+00:00",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "orders-full",
+        "module-projection-schema",
+        "compute-module-schemas",
+        "page-cache",
+        "page-projection",
+        "projection-reuse",
+        "compute-tasks-equivalence",
+        "compute-compressed-publication",
+        "table-fields",
+        "contextual-command",
+        "lcwai-chat-data-query",
+        "lcwai-output-editor",
+        "lcwai-output-studio",
+        "collection-order-backfill",
+        "cp-decision-input-revision",
+        "checklist-components-row-cache",
+        "phase5-regression",
+        "v714-performance-hardening",
+        "v714-complete-performance",
+        "v712-performance-and-workflow"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "finishedAt": "2026-11-08T04:08:28.534099+00:00"
+}

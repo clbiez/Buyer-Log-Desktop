@@ -1,0 +1,8 @@
+{
+  "capturedAt": "2026-11-08T03:39:33.198784+00:00",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "cpuMax": "1600000 400000",
+  "memoryMax": "17179869184",
+  "logicalCpuCount": 5,
+  "scope": "current Linux headless codec experiment only; not Windows/Electron"
+}

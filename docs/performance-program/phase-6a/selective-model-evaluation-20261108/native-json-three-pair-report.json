@@ -1,0 +1,882 @@
+{
+  "status": "passed",
+  "label": "r1",
+  "startedAt": "2026-11-08T03:43:45.865Z",
+  "pins": {
+    "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+    "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+    "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+    "generation": "mw6vhoks-9100b15fc128",
+    "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+    "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+    "gzipBytes": 5676208,
+    "rawBytes": 73145820,
+    "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+    "rows": 30000
+  },
+  "sequence": [
+    "A1",
+    "N1",
+    "N2",
+    "A2",
+    "A3",
+    "N3"
+  ],
+  "arms": [
+    {
+      "id": "A1",
+      "pair": 1,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 704.281205,
+        "sourceParseMs": 1474.32394,
+        "serializeMs": 1650.0883130000002,
+        "gzipMs": 1045.7618909999992,
+        "buildMs": 2763.8748499999992,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "full cache/details readiness build"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245408,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632504,
+        "metrics": {
+          "headersMs": 14,
+          "loaderDecodeMs": 1233.699999988079,
+          "fetchToResultMs": 1247.699999988079,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 691.0999999940395,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194576.60516,
+          "finishTimestamp": 194577.296606,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 691.445999982534
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "id": "N1",
+      "pair": 1,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 195.942525,
+        "sourceParseMs": 567.532471,
+        "buildMs": 2072.387325,
+        "rawBytes": 73145820,
+        "response": {
+          "file": "thin.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "thin-only ADDITIONAL view build; preexisting full cache/details cost not included"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "thin.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54605160,
+          "totalSize": 55836672,
+          "embedderHeapUsedSize": 301712,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992256,
+        "metrics": {
+          "headersMs": 24,
+          "loaderDecodeMs": 1032.699999988079,
+          "fetchToResultMs": 1056.699999988079,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 615.7999999821186,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194594.249164,
+          "finishTimestamp": 194594.865116,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 615.9519999928307
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "id": "N2",
+      "pair": 2,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 229.326646,
+        "sourceParseMs": 765.3492580000001,
+        "buildMs": 2571.0321489999997,
+        "rawBytes": 73145820,
+        "response": {
+          "file": "thin.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "thin-only ADDITIONAL view build; preexisting full cache/details cost not included"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "thin.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54605096,
+          "totalSize": 55836672,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992192,
+        "metrics": {
+          "headersMs": 27.200000017881393,
+          "loaderDecodeMs": 1737.3999999761581,
+          "fetchToResultMs": 1764.5999999940395,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 1170.300000011921,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194612.53142,
+          "finishTimestamp": 194613.701811,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 1170.390999992378
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "id": "A2",
+      "pair": 2,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 327.051783,
+        "sourceParseMs": 557.856842,
+        "serializeMs": 751.1059180000002,
+        "gzipMs": 1214.8501719999995,
+        "buildMs": 2047.422294,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "full cache/details readiness build"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245408,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632504,
+        "metrics": {
+          "headersMs": 15.900000005960464,
+          "loaderDecodeMs": 1473.0999999940395,
+          "fetchToResultMs": 1489,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 793,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194631.326719,
+          "finishTimestamp": 194632.120106,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 793.3869999833405
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "id": "A3",
+      "pair": 3,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 206.99365699999998,
+        "sourceParseMs": 536.454348,
+        "serializeMs": 678.9836700000001,
+        "gzipMs": 980.5479239999995,
+        "buildMs": 1723.3107829999994,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "full cache/details readiness build"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245408,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632504,
+        "metrics": {
+          "headersMs": 22.599999994039536,
+          "loaderDecodeMs": 1428.5999999940395,
+          "fetchToResultMs": 1451.199999988079,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 772.0999999940395,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194649.894815,
+          "finishTimestamp": 194650.666961,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 772.1460000029765
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "id": "N3",
+      "pair": 3,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "pins": {
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "scope": "native stringify/replacer + gzip4 only; derived synthetic, not app/consumer certificate",
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "sourceGunzipMs": 206.137784,
+        "sourceParseMs": 526.606835,
+        "buildMs": 2161.4501849999997,
+        "rawBytes": 73145820,
+        "response": {
+          "file": "thin.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0",
+        "buildAccounting": "thin-only ADDITIONAL view build; preexisting full cache/details cost not included"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "thin.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54605160,
+          "totalSize": 55574528,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992256,
+        "metrics": {
+          "headersMs": 19.900000005960464,
+          "loaderDecodeMs": 1144.7999999821186,
+          "fetchToResultMs": 1164.699999988079,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 709,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194666.80621,
+          "finishTimestamp": 194667.515254,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 709.0439999883529
+        },
+        "chromium": "154.0.8037.57"
+      }
+    }
+  ],
+  "scope": "native JSON stringify/replacer+gzip4, original native fields retained; synthetic2x128-only, no app/prod closure",
+  "interpretation": "Thin build is ADDITIONAL view work. Full cache/details readiness is measured separately, never counted as free on refresh.",
+  "peakObservedDiskBytes": 25930004,
+  "detailsCacheCost": [
+    {
+      "pair": 1,
+      "fullCacheDetailsBuildMs": 2763.8748499999992,
+      "additionalThinViewBuildMs": 2072.387325,
+      "sumOfIndependentMeasuredBuildsMs": 4836.262175,
+      "scope": "Sum is build accounting, not an observed integrated refresh."
+    },
+    {
+      "pair": 2,
+      "fullCacheDetailsBuildMs": 2047.422294,
+      "additionalThinViewBuildMs": 2571.0321489999997,
+      "sumOfIndependentMeasuredBuildsMs": 4618.454443,
+      "scope": "Sum is build accounting, not an observed integrated refresh."
+    },
+    {
+      "pair": 3,
+      "fullCacheDetailsBuildMs": 1723.3107829999994,
+      "additionalThinViewBuildMs": 2161.4501849999997,
+      "sumOfIndependentMeasuredBuildsMs": 3884.760967999999,
+      "scope": "Sum is build accounting, not an observed integrated refresh."
+    }
+  ],
+  "medians": {
+    "full": {
+      "sourceBuildMs": 2047.422294,
+      "wireBodyBytes": 8764774,
+      "decodedBytes": 82325820,
+      "networkWallMs": 772.0999999940395,
+      "loaderDecodeMs": 1428.5999999940395,
+      "fetchToResultMs": 1451.199999988079,
+      "retainedPayloadHeapDeltaBytes": 62632504
+    },
+    "base": {
+      "sourceBuildMs": 2161.4501849999997,
+      "wireBodyBytes": 5676208,
+      "decodedBytes": 73145820,
+      "networkWallMs": 709,
+      "loaderDecodeMs": 1144.7999999821186,
+      "fetchToResultMs": 1164.699999988079,
+      "retainedPayloadHeapDeltaBytes": 53992256
+    }
+  },
+  "fullPlusThinBuildAccountingMedianMs": 4618.454443,
+  "preservedFullDetailsAuthority": {
+    "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+    "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+    "file": "A1/p/full.json.gz",
+    "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e",
+    "note": "Full synthetic-augmented artifact preserved; original source gzip remains read-only native authority. No fabricated original model details."
+  },
+  "diskBytes": 14539391,
+  "finishedAt": "2026-11-08T03:45:37.990Z"
+}

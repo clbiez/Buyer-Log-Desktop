@@ -1,0 +1,33 @@
+{
+  "scope": "strict multipart prototype cancellation/digest gate; not app/production adoption",
+  "startedAt": "2026-11-08T03:29:34.255344+00:00",
+  "sourcePins": {
+    "multipart-transport.js": "a9a76e55d666f76d380103de77c08ed7c6c8258620cd88fbe5dab58a201341ca",
+    "cancellation.test.cjs": "e01ea7c4c6d02e1b05ad4be3afd29d7eecc005fba29ed0a83208d94eb6d21498",
+    "multipart-transport.test.cjs": "b7e4d00d06a796f3bd549360dddbc34b40a133ec20b4151ab526f3eecbb76e7f"
+  },
+  "commands": [
+    {
+      "name": "red-old",
+      "target": "/tmp/buyerlog-phase6a-ready-model-multipart/multipart-transport.js",
+      "command": [
+        "node",
+        "--test",
+        "/tmp/buyerlog-phase6a-multipart-strict/cancellation.test.cjs"
+      ],
+      "exitCode": 1
+    },
+    {
+      "name": "green-strict",
+      "target": "/tmp/buyerlog-phase6a-multipart-strict/multipart-transport.js",
+      "command": [
+        "node",
+        "--test",
+        "/tmp/buyerlog-phase6a-multipart-strict/cancellation.test.cjs"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "pinsUnchanged": true,
+  "finishedAt": "2026-11-08T03:29:35.055730+00:00"
+}

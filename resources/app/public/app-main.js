@@ -2241,6 +2241,43 @@ async function ensureOrdersLoaded(options={}){
 }
 window.BLEnsureOrdersLoaded=ensureOrdersLoaded;
 window.BLEnsureCpLoaded=ensureCpLoaded;
+// Only a validated thin loader can install a controller. Legacy/full sources
+// keep their exact references and never fetch or normalize a second time.
+const _ordersFullViewControllers=new WeakMap();
+function ordersProjectionIsThin(){
+  return Boolean(state.orders&&(state.orders.projectionProfile==='thin'||_ordersFullViewControllers.has(state.orders)));
+}
+function ordersFullActionError(code){
+  const en=appLang==='en';
+  const message=code==='ORDERS_FULL_FORBIDDEN'
+    ?(en?'Access to Orders is no longer available.':'Siparişler erişimi artık kullanılamıyor.')
+    :code==='ORDERS_FULL_LOAD_FAILED'
+      ?(en?'Orders data could not be loaded. Try the action again.':'Sipariş verisi yüklenemedi. İşlemi tekrar deneyin.')
+      :(en?'Orders data or selection changed. Try the action again.':'Sipariş verisi veya seçim değişti. İşlemi tekrar deneyin.');
+  return Object.assign(new Error(message),{code});
+}
+async function ensureOrdersFullForAction(reason='action'){
+  if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+  if(!state.orders&&!await ensureOrdersLoaded({deferRender:true}))throw ordersFullActionError('ORDERS_FULL_LOAD_FAILED');
+  if(!state.orders||!Array.isArray(state.orders.rows))throw ordersFullActionError('ORDERS_FULL_LOAD_FAILED');
+  if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+  if(!ordersProjectionIsThin())return state.orders.rows;
+  const controller=_ordersFullViewControllers.get(state.orders);
+  if(!controller||typeof controller.ensure!=='function')throw ordersFullActionError('ORDERS_FULL_STALE');
+  try{
+    const full=await controller.ensure();
+    if(window.BLCanAccessArea?.('orders')===false)throw ordersFullActionError('ORDERS_FULL_FORBIDDEN');
+    if(!full||typeof full.assertCurrent!=='function')throw ordersFullActionError('ORDERS_FULL_STALE');
+    full.assertCurrent();
+    if(ordersProjectionIsThin()||!state.orders||state.orders.rows!==full.rows)throw ordersFullActionError('ORDERS_FULL_STALE');
+    window.BLPerf?.mark?.('ORDERS_FULL_ACTION_READY',{reason,rows:full.rows.length});
+    return full.rows;
+  }catch(error){
+    if(error?.code==='ORDERS_FULL_FORBIDDEN')throw error;
+    throw ordersFullActionError('ORDERS_FULL_STALE');
+  }
+}
+window.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;
 /* Global Flow Map veri kaynağı. Harita CP/Orders sayfasının görünür/filtreli
    satırlarını veya son sayfa filtresini DEĞİL, kaynağın bütün veri kümesini
    (state.cp.rows / state.orders.rows) kullanır; yalnız kendi filtreleri
@@ -4699,7 +4736,10 @@ function tableFieldsColumn(tableKey,key){
   const labelEditable=!!window.BLColumnNames&&BLColumnNames.TABLES.includes(tableKey);
   return {key,col,label:tableColumnLabel(tableKey,col),kind,fixed:col.type==='cpImage',canRename:kind==='system'?labelEditable:kind!=='cpChecklist',canDelete:['formula','model','note','personalNote'].includes(kind),userLabel:kind==='system'&&tableColumnHasUserLabel(tableKey,col)};
 }
-function tableFieldsRenameColumn(tableKey,key){
+async function tableFieldsRenameColumn(tableKey,key){
+  if(tableKey==='orders'&&ordersProjectionIsThin()){
+    try{await ensureOrdersFullForAction('orders.fields.edit');}catch(error){showToast(error.message,{kind:'error'});return;}
+  }
   const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
   if(!meta.col||!meta.canRename)return;
   if(tableKey==='koleksiyon'){
@@ -4809,18 +4849,32 @@ function renderTableFieldsMenu(menu,tableKey){
     button.closest('.tableFieldsGroup')?.classList.toggle('isOpen',open);
     if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,open,{trigger:button});else if(body)body.hidden=!open;
   }));
-  menu.querySelectorAll('[data-table-fields-group]').forEach(button=>button.addEventListener('click',()=>{
+  menu.querySelectorAll('[data-table-fields-group]').forEach(button=>button.addEventListener('click',async()=>{
     const group=button.dataset.tableFieldsGroup;
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.fields.group');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!menu.isConnected)return;
+    }
     cycleTableGroupMode(tableKey,group);
     renderTableFieldsMenu(menu,tableKey);
     menu.querySelector(`[data-table-fields-group="${CSS.escape(group)}"]`)?.focus();
   }));
-  menu.querySelectorAll('[data-table-fields-preset]').forEach(input=>input.addEventListener('change',()=>{
-    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsPreset,[input.dataset.key],input.checked);
+  menu.querySelectorAll('[data-table-fields-preset]').forEach(input=>input.addEventListener('change',async()=>{
+    const preset=input.dataset.tableFieldsPreset,key=input.dataset.key,checked=input.checked;
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.fields.preset');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!menu.isConnected||input.checked!==checked)return;
+    }
+    tableFieldsSetPresetKeys(tableKey,preset,[key],checked);
   }));
-  menu.querySelectorAll('[data-table-fields-group-preset]').forEach(input=>input.addEventListener('change',()=>{
+  menu.querySelectorAll('[data-table-fields-group-preset]').forEach(input=>input.addEventListener('change',async()=>{
     const entry=catalog.find(item=>item.group===input.dataset.group);if(!entry)return;
-    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsGroupPreset,entry.keys,input.checked);
+    const preset=input.dataset.tableFieldsGroupPreset,checked=input.checked;
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.fields.group-preset');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!menu.isConnected||input.checked!==checked)return;
+    }
+    tableFieldsSetPresetKeys(tableKey,preset,entry.keys,checked);
   }));
   menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
   menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
@@ -4843,10 +4897,20 @@ function renderTableFieldsMenu(menu,tableKey){
       tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after);
     });
   });
-  menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',()=>{resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);});
+  menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',async()=>{
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.fields.reset');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!menu.isConnected)return;
+    }
+    resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);
+  });
   const done=()=>tableFieldsRerender(tableKey);
-  menu.querySelectorAll('[data-table-fields-add]').forEach(button=>button.addEventListener('click',()=>{
+  menu.querySelectorAll('[data-table-fields-add]').forEach(button=>button.addEventListener('click',async()=>{
     const action=button.dataset.tableFieldsAdd;
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.fields.add');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!menu.isConnected)return;
+    }
     if(tableKey==='koleksiyon'){void kolAddCustomColumn(null).then(()=>done());return;}
     if(action==='column')openCpModelColumnModal(null,done);
     else if(action==='note')void addCpNoteColumn(done);
@@ -4932,9 +4996,14 @@ function detailTableViewSnapshot(tableKey='cp'){
   };
 }
 window.BLTableViewSetup=Object.freeze({snapshot:detailTableViewSnapshot});
-document.addEventListener('click',event=>{
+document.addEventListener('click',async event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
-  applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
+  const tableKey=button.dataset.tableKey,preset=button.dataset.tableViewPreset;
+  if(tableKey==='orders'&&ordersProjectionIsThin()){
+    try{await ensureOrdersFullForAction('orders.view.preset');}catch(error){showToast(error.message,{kind:'error'});return;}
+    if(!button.isConnected)return;
+  }
+  applyTableViewPreset(tableKey,preset);
 });
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
@@ -4998,8 +5067,20 @@ function openManagedTableColumnMenu(event,tableKey,currentKey,rerender){
     columns:cols.map(c=>({key:c.k,label:tableColumnLabel(tableKey,c)})),
     hiddenKeys:[...cs.hidden],
     onHide:key=>{cs.hidden.add(key);saveAutoTableColumnState();rerender?.();},
-    onShow:key=>{cs.hidden.delete(key);saveAutoTableColumnState();rerender?.();},
-    onShowAll:()=>{cs.hidden.clear();saveAutoTableColumnState();rerender?.();},
+    onShow:async key=>{
+      if(tableKey==='orders'&&ordersProjectionIsThin()){
+        try{await ensureOrdersFullForAction('orders.columns.show');}catch(error){showToast(error.message,{kind:'error'});return;}
+        if(colmgr[tableKey]!==cs)return;
+      }
+      cs.hidden.delete(key);saveAutoTableColumnState();rerender?.();
+    },
+    onShowAll:async()=>{
+      if(tableKey==='orders'&&ordersProjectionIsThin()){
+        try{await ensureOrdersFullForAction('orders.columns.show-all');}catch(error){showToast(error.message,{kind:'error'});return;}
+        if(colmgr[tableKey]!==cs)return;
+      }
+      cs.hidden.clear();saveAutoTableColumnState();rerender?.();
+    },
   });
 }
 let _tableHeaderMeasureCtx=null;
@@ -5612,14 +5693,32 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
     +((tableKey==='cp'||tableKey==='orders')?`<button type="button" class="colPanelAdd" id="cpAddPersonalNoteColumnBtn">+ ${escapeHtml(appLang==='en'?'Personal Note Column':'Kişisel Not Sütunu')}</button>`:'')
     +(formulaTable?`<button type="button" class="colPanelAdd colPanelAddFormula" id="addFormulaColumnBtn_${escapeHtml(tableKey)}" data-formula-add="${escapeHtml(tableKey)}">+ ${escapeHtml(appLang==='en'?'Calculated Column':'Hesaplanan Sütun')}</button>`:'');
   panelEl.querySelectorAll('input[data-key]').forEach(inp=>{
-    inp.addEventListener('change', ()=>{
-      if(inp.checked) cs.hidden.delete(inp.dataset.key); else cs.hidden.add(inp.dataset.key);
+    inp.addEventListener('change', async()=>{
+      const checked=inp.checked,key=inp.dataset.key;
+      if(checked&&tableKey==='orders'&&ordersProjectionIsThin()){
+        try{await ensureOrdersFullForAction('orders.columns.show');}catch(error){showToast(error.message,{kind:'error'});return;}
+        if(colmgr[tableKey]!==cs||!panelEl.isConnected||inp.checked!==checked)return;
+      }
+      if(checked) cs.hidden.delete(key); else cs.hidden.add(key);
       saveAutoTableColumnState(); rerenderFn();
     });
   });
   const refreshCpPanel=()=>{rerenderFn();if(panelEl.isConnected)renderColPanel(tableKey,panelEl,rerenderFn);};
-  panelEl.querySelector('[data-formula-add]')?.addEventListener('click',()=>window.BLFormulaColumns.open(tableKey,null,refreshCpPanel));
-  panelEl.querySelectorAll('[data-formula-edit]').forEach(btn=>btn.addEventListener('click',()=>window.BLFormulaColumns.open(tableKey,btn.dataset.formulaEdit,refreshCpPanel)));
+  panelEl.querySelector('[data-formula-add]')?.addEventListener('click',async()=>{
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.formula.add');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!panelEl.isConnected)return;
+    }
+    window.BLFormulaColumns.open(tableKey,null,refreshCpPanel);
+  });
+  panelEl.querySelectorAll('[data-formula-edit]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const formulaId=btn.dataset.formulaEdit;
+    if(tableKey==='orders'&&ordersProjectionIsThin()){
+      try{await ensureOrdersFullForAction('orders.formula.edit');}catch(error){showToast(error.message,{kind:'error'});return;}
+      if(!panelEl.isConnected)return;
+    }
+    window.BLFormulaColumns.open(tableKey,formulaId,refreshCpPanel);
+  }));
   panelEl.querySelectorAll('[data-formula-drop]').forEach(btn=>btn.addEventListener('click',()=>removeFormulaColumn(tableKey,btn.dataset.formulaDrop,refreshCpPanel)));
   panelEl.querySelector('#cpAddModelColumnBtn')?.addEventListener('click',()=>openCpModelColumnModal(null,refreshCpPanel));
   panelEl.querySelectorAll('[data-cp-model-edit]').forEach(btn=>btn.addEventListener('click',()=>openCpModelColumnModal(btn.dataset.cpModelEdit,refreshCpPanel)));
@@ -22059,6 +22158,10 @@ async function exportCpTableWithLightTheme(){
 // Aktif sekmedeki tabloyu dışa aktarır (CP / Orders / Nakliye).
 async function exportActiveTableStyled(){
   const tab = document.body.dataset.activeTab;
+  if(tab==='orders'){
+    await ensureOrdersFullForAction('orders.export');
+    if(document.body.dataset.activeTab!==tab)return;
+  }
   const cfg = {
     cp:      {sel:'#cpTable',   set:state.cpSelected,   name:'CP_Tracker', tableKey:'cp', rowsFn:()=>filteredCP(), computeFn:computeFlags},
     orders:  {sel:'#ordersTable',set:state.ordersSelected,name:'Orders', tableKey:'orders', rowsFn:()=>filteredOrders(), computeFn:computeFlags},
@@ -29818,7 +29921,10 @@ const contextModel=ctx=>contextOne(ctx)||(contextualCommandModelKey(ctx.rows[0],
 const contextArea=area=>window.BLCanAccessArea?.(area)?'':contextualCommandLabel('Bu alana erişim yetkisi gerekli.','Access to this area is required.');
 const contextOrderTarget=ctx=>ctx.module==='orders'?'cp':'orders';
 window.BLContextCommands=window.BLContextualCommands.create({snapshot:contextualCommandSnapshot,onUnavailable:message=>showToast(message),changedLabel:()=>contextualCommandLabel('Seçim veya oturum değişti. Paleti yeniden açın.','Selection or session changed. Reopen the palette.'),actions:[
-  {id:'linked-order',label:ctx=>ctx.module==='orders'?contextualCommandLabel('Bağlı CP kaydını aç','Open linked CP record'):contextualCommandLabel('Bağlı siparişleri aç','Open linked orders'),guard:ctx=>(ctx.module==='koleksiyon'?contextModel(ctx):contextOne(ctx))||contextArea(contextOrderTarget(ctx)),prepare:ctx=>ctx.module==='orders'?ensureCpLoaded():ensureOrdersLoaded(),run:ctx=>{
+  {id:'linked-order',label:ctx=>ctx.module==='orders'?contextualCommandLabel('Bağlı CP kaydını aç','Open linked CP record'):contextualCommandLabel('Bağlı siparişleri aç','Open linked orders'),guard:ctx=>(ctx.module==='koleksiyon'?contextModel(ctx):contextOne(ctx))||contextArea(contextOrderTarget(ctx)),prepare:async ctx=>{
+    if(ctx.module==='orders'){await ensureOrdersFullForAction('context.linked-order.source');await ensureCpLoaded();}
+    else{await ensureOrdersLoaded();await ensureOrdersFullForAction('context.linked-order.target');}
+  },run:ctx=>{
     const target=contextOrderTarget(ctx),row=ctx.rows[0],rows=ctx.module==='koleksiyon'?(state[target]?.rows||[]).filter(item=>contextualCommandModelKey(item,target)===contextualCommandModelKey(row,ctx.module)):orderLinePeerRows(target,row);
     if(!rows.length){showToast(contextualCommandLabel('Güncel yetkili veride bağlı sipariş bulunamadı.','No linked order was found in the current authorized data.'));return false;}
     window.BLDetailDrawer.open({storageKey:'commands.linked-orders',moduleId:target,source:target,tableSetup:target,title:contextualCommandLabel('Bağlı siparişler','Linked orders'),rows,columns:[],images:true});return true;
@@ -29829,7 +29935,7 @@ window.BLContextCommands=window.BLContextualCommands.create({snapshot:contextual
     window.BLCollectionAnalyticsBridge.openDrilldown(rows,contextualCommandLabel('Bağlı Koleksiyon modelleri','Linked Collection models'));return true;
   }},
   {id:'price-detail',when:ctx=>ctx.module==='koleksiyon',label:()=>contextualCommandLabel('Fiyat ayrıntısını aç','Open price details'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.open(ctx.rows[0])},
-  {id:'price-lineage',when:ctx=>ctx.module!=='koleksiyon',label:()=>contextualCommandLabel('Bu fiyat nereden geliyor?','Why this value?'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.openCp(ctx.rows[0],ctx.module)},
+  {id:'price-lineage',when:ctx=>ctx.module!=='koleksiyon',label:()=>contextualCommandLabel('Bu fiyat nereden geliyor?','Why this value?'),guard:contextOne,prepare:ctx=>ctx.module==='orders'?ensureOrdersFullForAction('context.price-lineage'):undefined,run:ctx=>window.BLCollectionPriceDrawer?.openCp(ctx.rows[0],ctx.module)},
   {id:'pricing-rule',label:()=>contextualCommandLabel('İlgili fiyat kuralını incele','Inspect the matching pricing rule'),guard:ctx=>contextOne(ctx)||(!window.BLHasPermission?.('manageBusinessRules')?contextualCommandLabel('İş kuralı yönetim yetkisi gerekli.','Business-rule management permission is required.'):'')||(!contextualCommandRule(ctx)?contextualCommandLabel('Bu kayıt için eşleşen fiyat kuralı yok.','No pricing rule matches this record.'):''),run:ctx=>{
     const rule=contextualCommandRule(ctx);void openSuppFobRulesModal(rule?.id);return true;
   }},
@@ -30250,7 +30356,7 @@ function canonicalPriceObservation(row,moduleId,base={}){
    verir; ayrı sorgu yapılmaz. Sipariş listesi ortak detay çekmecesinde açılır. */
 const _manufacturerRowVersions=new WeakMap();let _manufacturerRowVersionSeq=0;
 window.BLManufacturerDataBridge={
-  async rows(){await ensureOrdersLoaded();return (state.orders&&state.orders.rows)||[];},
+  async rows(){await ensureOrdersLoaded();await ensureOrdersFullForAction('manufacturers.rows');return (state.orders&&state.orders.rows)||[];},
   // Yenilemede satır dizisi yeniden kurulur; dizi kimliği sürüm olarak yeter.
   version(){const rows=(state.orders&&state.orders.rows)||null;if(!rows)return '';if(!_manufacturerRowVersions.has(rows))_manufacturerRowVersions.set(rows,++_manufacturerRowVersionSeq);return `orders:${_manufacturerRowVersions.get(rows)}:${_unifiedPriorityTableRevision.orders}`;},
   openOrders(rows,title){
@@ -30305,7 +30411,7 @@ window.BLPriceSupplierAnalysisBridge={
       return {source:selected,scope,priceType:chosen,priceTypes,observations,rawCount:rows.length,version:`horizon:${data.loadedAt||''}:${rows.length}`};
     }
     if(selected==='cp')await ensureCpLoaded();
-    else if(selected==='orders')await ensureOrdersLoaded();
+    else if(selected==='orders'){await ensureOrdersLoaded();await ensureOrdersFullForAction('price-analysis.rows');}
     else await ensureCollectionCatalogLoaded();
     let rows=[];
     if(selected==='cp')rows=scope==='filtered'?filteredCP():((state.cp&&state.cp.rows)||[]);
@@ -39935,6 +40041,16 @@ document.getElementById('cpCopyToKolBtn')?.addEventListener('click',async event=
     window.BLTableToolbarActionCleanup?.finish?.(btn,false);
     return;
   }
+  cpKolBackfillBusy=true;
+  try{
+  if(document.body.dataset.activeTab==='orders'){
+    const workspaceOwner=kolWorkspaceOwnerId,workspaceRevision=kolWorkspaceRevision;
+    try{await ensureOrdersFullForAction('collection.backfill');}
+    catch(error){showToast(error.message,{kind:'error'});window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;}
+    if(document.body.dataset.activeTab!=='orders'||workspaceOwner!==kolWorkspaceOwnerId||workspaceRevision!==kolWorkspaceRevision||!kolRequireWorkspaceEdit()||!kolIsOwnWorkspace()){
+      window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
+    }
+  }
   const rows=cpKolSelectedSourceRows();
   if(!rows.length){
     showToast(appLang==='en'?'Select at least one visible CP/Orders row first.':'Önce CP/Orders içinde görünür en az bir sipariş seç.');
@@ -39946,8 +40062,6 @@ document.getElementById('cpCopyToKolBtn')?.addEventListener('click',async event=
     window.BLTableToolbarActionCleanup?.finish?.(btn,true);return;
   }
   const owner=kolWorkspaceOwnerId,revision=kolWorkspaceRevision,snapshot=JSON.stringify(kolRows),sourceSnapshot=JSON.stringify(rows);
-  cpKolBackfillBusy=true;
-  try{
     const decision=await cpKolBackfillPreview(plan,trigger||btn);
     if(!decision){window.BLTableToolbarActionCleanup?.finish?.(btn);return;}
     const approved=new Set(decision&&decision.approved&&typeof decision.approved[Symbol.iterator]==='function'?decision.approved:[]);

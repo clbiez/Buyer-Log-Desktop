@@ -1,0 +1,8 @@
+{
+  "scope": "Targeted source-pin revalidation after root full-before-use consumer integration, not blind hash update",
+  "oldMainBlob": "1311e659e818e8227840a6258498f98283897e91",
+  "unchangedActualFunction": "syncCpModelColumns",
+  "sha256": "70828e95c15da517a3fc514d1906dbf2a5d4f0d28b47197bc7ad69a7f2bc582b",
+  "originalSchemaRun": "17 behavior PASS / 1 whole-file pin mismatch; preserved",
+  "productionDefaultSchemaCallback": "not called; no row-key scan"
+}

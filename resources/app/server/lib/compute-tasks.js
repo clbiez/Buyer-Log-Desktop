@@ -25,7 +25,7 @@ function scopedOrders(source,target,data){
   return data.access?access.filterRows(data.access,rows):rows;
 }
 function sameRows(a,b){return a===b||(a.length===b.length&&a.every((row,index)=>row===b[index]));}
-function buildProjections(source,data){
+function buildProjections(source,data,options){
   data=withSourceOverrides(source,data);
   const wanted=new Set(data.modules||['cp','orders','overview','order-summary','collection-catalog']),out={},overrides=data.overrides||{};
   const cpSource=scopedOrders(source,'cp',data),ordersSource=scopedOrders(source,'orders',data),cpAntrepo=antrepoFor(source,'cp'),ordersAntrepo=antrepoFor(source,'orders');
@@ -44,6 +44,7 @@ function buildProjections(source,data){
   if(wanted.has('overview'))out.overview={rows:overview};
   if(wanted.has('order-summary')){const rows=summaryAllowed?parse.buildOrderSummaryRowsFromASAS(cpSource,cpAntrepo,overrides):[];rows.forEach(row=>{row._canEdit=canEdit(row);});out['order-summary']={rows};}
   if(wanted.has('collection-catalog')){const rows=catalogFromCp?overview:data.catalogRows||pair.orders;out['collection-catalog']={catalogs:allowed?buildCollectionCatalogs(rows.length?rows:overview):{},catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}
+  if(typeof options?.onSchemas==='function')options.onSchemas(require('./compute-module-schemas').buildModuleSchemas({data,cpRows:out.cp?.rows,ordersRows:out.orders?.rows,sameRows:()=>sameRows(cpSource,ordersSource),sameAntrepo:cpAntrepo===ordersAntrepo}));
   return out;
 }
 function buildBacklog(kind,source,data){

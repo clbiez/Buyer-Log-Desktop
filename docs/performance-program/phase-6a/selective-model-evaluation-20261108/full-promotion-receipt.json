@@ -1,0 +1,16 @@
+{
+  "scope": "inactive full-before-use coordinator contract only; no real app consumer/HTTP adoption; contrived unsafe specimen NOT treated as actual production RED",
+  "pins": {
+    "orders-full-promotion.js": "8e22220709e3352e6e12d12c2f8d61b1ace10aa2844b69e2172e5cdb882e5841",
+    "orders-full-promotion.test.cjs": "8312d72fb2ef70780c5d675d24cc7ff4a32c7ce866eaddfc8215e41e4140a8ff"
+  },
+  "startedAt": "2026-11-08T03:32:11.083966+00:00",
+  "command": [
+    "node",
+    "--test",
+    "/tmp/buyerlog-phase6a-orders-full-promotion/orders-full-promotion.test.cjs"
+  ],
+  "exitCode": 0,
+  "pinsUnchanged": true,
+  "finishedAt": "2026-11-08T03:32:11.373687+00:00"
+}

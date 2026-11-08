@@ -1,0 +1,15 @@
+{
+  "reason": "First campaign failed before measurements: actual Chromium FATAL Socket path too long; no data/performance result",
+  "priorEvidence": "/tmp/buyerlog-phase6a-ready-model-cost/runs/root-native-base-vs-multipart-first",
+  "sourceFilesUnchanged": {
+    "common.cjs": "d678b2db56890d4252af3f1abd6c23fea6c5b269241a5a5b724c5023c1a63083",
+    "producer.cjs": "78f2b17a5e8ca13bc374cedcc8a528229414116dc2c7f9460c003adb279af5c5",
+    "browser.cjs": "4284373a2b7a3b3ece0f4f6ac128d5c27f323b017740a375adbc43abe0b923ca",
+    "run.cjs": "d904bdebf4dc42980f460bbfdc6d3c877de1796738666bd0ea2b7afcac0e9791",
+    "run-prepared.sh": "2b40f09f7385c7053bb85d4c92f730e874b3f20fcbc1b5c2d0a675225bdf5770",
+    "README.md": "0487996f9b7bb0ea9f913eee6ad580e550f65de32891ac21e5c0ae4fd215ef8e"
+  },
+  "invocation": "explicit existing common flock + new short path run.cjs --label r1; original hardcoded wrapper unused",
+  "prospectiveSocketBytes": 78,
+  "sourceAndCodecsUnchanged": true
+}

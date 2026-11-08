@@ -1,0 +1,17 @@
+{
+  "scope": "existing-cache advisory derived ready views only; no public thin enablement",
+  "startedAt": "2026-11-08T03:52:56.797873+00:00",
+  "commands": [
+    {
+      "source": "baseline",
+      "sha256": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "exitCode": 1
+    },
+    {
+      "source": "candidate",
+      "sha256": "cb0123c09194cf7c48c39f1c1bab0756f2bebec8060f2bedea3aa45a196f7222",
+      "exitCode": 1
+    }
+  ],
+  "finishedAt": "2026-11-08T03:52:57.680593+00:00"
+}

@@ -1,0 +1,11 @@
+{
+  "scope": "finite Orders candidate; actual pinned engines/normalizer, no production consumer adoption",
+  "sourceSha256": "7788d31e65a7ab657ca946d83fd86b573d82d0af318df3a129a9b8faaaf1443a",
+  "command": [
+    "node",
+    "--test",
+    "/tmp/buyerlog-phase6a-orders-finite-closure/orders-finite-closure.test.cjs"
+  ],
+  "exitCode": 0,
+  "finishedAt": "2026-11-08T03:34:33.291250+00:00"
+}

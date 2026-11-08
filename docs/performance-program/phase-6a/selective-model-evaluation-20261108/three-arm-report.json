@@ -1,0 +1,2279 @@
+{
+  "status": "passed",
+  "label": "r1",
+  "startedAt": "2026-11-08T03:34:45.388Z",
+  "pins": {
+    "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+    "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+    "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+    "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+    "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+    "generation": "mw6vhoks-9100b15fc128",
+    "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+    "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+    "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+    "gzipBytes": 5676208,
+    "rawBytes": 73145820,
+    "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+    "rows": 30000
+  },
+  "sequence": [
+    "A1",
+    "G1",
+    "B1",
+    "B2",
+    "G2",
+    "A2",
+    "A3",
+    "G3",
+    "B3"
+  ],
+  "arms": [
+    {
+      "name": "A1",
+      "pair": 1,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 329.12898,
+        "sourceParseMs": 1505.037425,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 2475.032062000001,
+        "serializeMs": 1463.5555980000008,
+        "gzipMs": 1011.4936299999999,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245232,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 301288,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632328,
+        "metrics": {
+          "headersMs": 28.19999998807907,
+          "loaderDecodeMs": 1123.5,
+          "fetchToResultMs": 1151.699999988079,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 642.4000000059605,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194035.815877,
+          "finishTimestamp": 194036.458488,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 642.6110000174958
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "G1",
+      "pair": 1,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 224.02804099999997,
+        "sourceParseMs": 571.292293,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 7528.8663670000005,
+        "readyBuildMs": 7528.797006000001,
+        "multipartAssemblyMs": null,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "base.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "rawBytes": 73145820
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "base.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54604984,
+          "totalSize": 55836672,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992080,
+        "metrics": {
+          "headersMs": 20,
+          "loaderDecodeMs": 1218,
+          "fetchToResultMs": 1238,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 742,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194060.829644,
+          "finishTimestamp": 194061.571794,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 742.149999976391
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "B1",
+      "pair": 1,
+      "arm": "none",
+      "source": {
+        "status": "passed",
+        "arm": "none",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 258.677391,
+        "sourceParseMs": 531.2425920000001,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 7766.704474,
+        "readyBuildMs": 7758.791225999999,
+        "multipartAssemblyMs": 7.9284349999998085,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "none.multipart",
+          "bytes": 5678689,
+          "sha256": "df2d2e93a38d7ed16ca54cf7b78edf35026b0d085cd3f02858a3e7e3d22a5e1c"
+        },
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=bl6a-2a5f08035f768185e80ab3b6e73e74f72771",
+          "Content-Length": "5678689",
+          "Cache-Control": "no-store"
+        },
+        "functionalAll": {
+          "response": {
+            "file": "all.multipart",
+            "bytes": 8201628,
+            "sha256": "9620a27968e0d8f9615a3b3c78d2744b945c53f5f3aca068f0feb7d366daa2d7"
+          },
+          "headers": {
+            "Content-Type": "multipart/form-data; boundary=bl6a-59ae52e462dc84af9455fd09802080289fc2",
+            "Content-Length": "8201628",
+            "Cache-Control": "no-store"
+          }
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "none",
+        "functionalOnly": false,
+        "sourceFile": "none.multipart",
+        "sourceBodyBytes": 5678689,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 1183940,
+          "totalSize": 2138112,
+          "embedderHeapUsedSize": 303424,
+          "backingStorageSize": 26411
+        },
+        "heapAfter": {
+          "usedSize": 55305652,
+          "totalSize": 56401920,
+          "embedderHeapUsedSize": 308040,
+          "backingStorageSize": 26567
+        },
+        "retainedPayloadHeapDeltaBytes": 54121712,
+        "metrics": {
+          "headersMs": 16.700000017881393,
+          "loaderDecodeMs": 1580.199999988079,
+          "fetchToResultMs": 1596.9000000059605,
+          "loaderKind": "bounded multipart/blob/formData/digests/per-file gzip/JSON/frozen codec including body wait",
+          "headers": {
+            "contentType": "multipart/form-data; boundary=bl6a-2a5f08035f768185e80ab3b6e73e74f72771",
+            "contentEncoding": null,
+            "contentLength": "5678689"
+          },
+          "networkWallMs": 91.40000000596046,
+          "browserDecodedHttpBodyBytes": 5678689,
+          "browserEncodedHttpBodyBytes": 5678689,
+          "transport": {
+            "format": "ready-model-multipart-alpha-1",
+            "multipartBytes": 5678689,
+            "decodedComponentBytes": 73147947,
+            "partCount": 2,
+            "compressedDigestsVerified": true
+          },
+          "stats": {
+            "modelDefines": 0,
+            "suffixDeletes": 0,
+            "suffixDefines": 0
+          },
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194086.739415,
+          "cdpDecodedDataLength": 5678689
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "B2",
+      "pair": 2,
+      "arm": "none",
+      "source": {
+        "status": "passed",
+        "arm": "none",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 298.139402,
+        "sourceParseMs": 549.8586620000001,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 7593.4352309999995,
+        "readyBuildMs": 7582.971174,
+        "multipartAssemblyMs": 10.479170999999042,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "none.multipart",
+          "bytes": 5678689,
+          "sha256": "9f94f63c69612c5c86b703c8c2efb057f27f8567d449d5416d279eaf37657e18"
+        },
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=bl6a-57fb364b2e3b0177b91267aec3957bad8a5e",
+          "Content-Length": "5678689",
+          "Cache-Control": "no-store"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "none",
+        "functionalOnly": false,
+        "sourceFile": "none.multipart",
+        "sourceBodyBytes": 5678689,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 1183940,
+          "totalSize": 2138112,
+          "embedderHeapUsedSize": 303424,
+          "backingStorageSize": 26411
+        },
+        "heapAfter": {
+          "usedSize": 55305652,
+          "totalSize": 56401920,
+          "embedderHeapUsedSize": 308040,
+          "backingStorageSize": 26567
+        },
+        "retainedPayloadHeapDeltaBytes": 54121712,
+        "metrics": {
+          "headersMs": 28.399999976158142,
+          "loaderDecodeMs": 1192.9000000059605,
+          "fetchToResultMs": 1221.2999999821186,
+          "loaderKind": "bounded multipart/blob/formData/digests/per-file gzip/JSON/frozen codec including body wait",
+          "headers": {
+            "contentType": "multipart/form-data; boundary=bl6a-57fb364b2e3b0177b91267aec3957bad8a5e",
+            "contentEncoding": null,
+            "contentLength": "5678689"
+          },
+          "networkWallMs": 84.7000000178814,
+          "browserDecodedHttpBodyBytes": 5678689,
+          "browserEncodedHttpBodyBytes": 5678689,
+          "transport": {
+            "format": "ready-model-multipart-alpha-1",
+            "multipartBytes": 5678689,
+            "decodedComponentBytes": 73147947,
+            "partCount": 2,
+            "compressedDigestsVerified": true
+          },
+          "stats": {
+            "modelDefines": 0,
+            "suffixDeletes": 0,
+            "suffixDefines": 0
+          },
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194112.588942,
+          "finishTimestamp": 194112.673778,
+          "encodedDataLength": 5678929,
+          "cdpDecodedDataLength": 5678689,
+          "cdpWallMs": 84.83599999453872
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "G2",
+      "pair": 2,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 299.60699900000003,
+        "sourceParseMs": 543.060988,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 6360.769388000001,
+        "readyBuildMs": 6360.757136,
+        "multipartAssemblyMs": null,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "base.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "rawBytes": 73145820
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "base.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54604984,
+          "totalSize": 55836672,
+          "embedderHeapUsedSize": 300864,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992080,
+        "metrics": {
+          "headersMs": 20.100000023841858,
+          "loaderDecodeMs": 1136.7999999821186,
+          "fetchToResultMs": 1156.9000000059605,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 662.5999999940395,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194135.573717,
+          "finishTimestamp": 194136.236525,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 662.8079999936745
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "A2",
+      "pair": 2,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 360.144602,
+        "sourceParseMs": 571.5461359999999,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 2066.079167,
+        "serializeMs": 1082.0964199999999,
+        "gzipMs": 984.0008560000006,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245232,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 301288,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632328,
+        "metrics": {
+          "headersMs": 25,
+          "loaderDecodeMs": 1199.7000000178814,
+          "fetchToResultMs": 1224.7000000178814,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 666.3000000119209,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194153.314025,
+          "finishTimestamp": 194153.980501,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 666.4760000130627
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "A3",
+      "pair": 3,
+      "arm": "full",
+      "source": {
+        "status": "passed",
+        "arm": "full",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 190.522985,
+        "sourceParseMs": 634.4716599999999,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 1810.8292649999999,
+        "serializeMs": 730.5874959999996,
+        "gzipMs": 1080.3133400000006,
+        "rawBytes": 82325820,
+        "response": {
+          "file": "full.json.gz",
+          "bytes": 8764774,
+          "sha256": "f2b5ddf8de689434e29b1b603ea040afa412ef0a07f4437851364330b6f8068e"
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "8764774"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "full",
+        "functionalOnly": false,
+        "sourceFile": "full.json.gz",
+        "sourceBodyBytes": 8764774,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+          "rawBytes": 82325820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 63245232,
+          "totalSize": 64225280,
+          "embedderHeapUsedSize": 301712,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 62632328,
+        "metrics": {
+          "headersMs": 24,
+          "loaderDecodeMs": 1571.2999999821186,
+          "fetchToResultMs": 1595.2999999821186,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "8764774"
+          },
+          "networkWallMs": 1076.9000000059605,
+          "browserDecodedHttpBodyBytes": 82325820,
+          "browserEncodedHttpBodyBytes": 8764774,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+          "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+        },
+        "network": {
+          "startTimestamp": 194170.785417,
+          "finishTimestamp": 194171.862485,
+          "encodedDataLength": 8764997,
+          "cdpDecodedDataLength": 82325820,
+          "cdpWallMs": 1077.0679999841377
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "G3",
+      "pair": 3,
+      "arm": "base",
+      "source": {
+        "status": "passed",
+        "arm": "base",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 215.97638,
+        "sourceParseMs": 498.95603400000005,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 7846.199828000001,
+        "readyBuildMs": 7846.173083,
+        "multipartAssemblyMs": null,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "base.json.gz",
+          "bytes": 5676208,
+          "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "rawBytes": 73145820
+        },
+        "headers": {
+          "Content-Type": "application/json;charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Cache-Control": "no-store",
+          "Content-Length": "5676208"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "base",
+        "functionalOnly": false,
+        "sourceFile": "base.json.gz",
+        "sourceBodyBytes": 5676208,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 612904,
+          "totalSize": 1048576,
+          "embedderHeapUsedSize": 296856,
+          "backingStorageSize": 6
+        },
+        "heapAfter": {
+          "usedSize": 54604984,
+          "totalSize": 55574528,
+          "embedderHeapUsedSize": 301712,
+          "backingStorageSize": 41
+        },
+        "retainedPayloadHeapDeltaBytes": 53992080,
+        "metrics": {
+          "headersMs": 24.600000023841858,
+          "loaderDecodeMs": 1092.3999999761581,
+          "fetchToResultMs": 1117,
+          "loaderKind": "ordinary Response.json including body wait + HTTP inflater",
+          "headers": {
+            "contentType": "application/json;charset=utf-8",
+            "contentEncoding": "gzip",
+            "contentLength": "5676208"
+          },
+          "networkWallMs": 546.2999999821186,
+          "browserDecodedHttpBodyBytes": 73145820,
+          "browserEncodedHttpBodyBytes": 5676208,
+          "transport": null,
+          "stats": null,
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194195.201263,
+          "finishTimestamp": 194195.747625,
+          "encodedDataLength": 5676431,
+          "cdpDecodedDataLength": 73145820,
+          "cdpWallMs": 546.3619999936782
+        },
+        "chromium": "154.0.8037.57"
+      }
+    },
+    {
+      "name": "B3",
+      "pair": 3,
+      "arm": "none",
+      "source": {
+        "status": "passed",
+        "arm": "none",
+        "scope": "standalone derived-synthetic codec producer; no app or consumer closure",
+        "pins": {
+          "codecSha": "610043c449c6723c4b12bce99fa5d441d9d493e4e9740867fcf9b1a44d9e6cbe",
+          "transportSha": "41a7d262f78a781f8e10991ac774363e2e00a2987a1d270d47d85c3564e11ec9",
+          "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/mw6vhoks-9100b15fc128/orders.json.gz",
+          "manifest": "/tmp/buyerlog-first-transition-Hxb1BB/local/page-cache/moderator/manifest.json",
+          "manifestSha": "7a755ac4b3abbfe6ac3b17e9c59d85caffdba80a8fde4b81ea1eb31dc19cac05",
+          "generation": "mw6vhoks-9100b15fc128",
+          "contextHash": "1ec4031c7ea0a40f4be1689713515f6e2358a38b1c1511b01bbe19cebc5b277c",
+          "sourceRevisionKey": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+          "gzipSha": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+          "gzipBytes": 5676208,
+          "rawBytes": 73145820,
+          "orderedRowsSha": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "rows": 30000
+        },
+        "augmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "sourceGunzipMs": 209.74945200000002,
+        "sourceParseMs": 559.550576,
+        "derivedGeneration": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "buildMs": 6940.541156000001,
+        "readyBuildMs": 6929.691893000001,
+        "multipartAssemblyMs": 10.872976999999082,
+        "buildMetrics": {
+          "baseRawBytes": 73145820,
+          "modelRawBytes": 8332890,
+          "baseGzipBytes": 5676208,
+          "modelGzipBytes": 2522164,
+          "sourceKeys": 91,
+          "modelKeys": 2,
+          "precedenceEdges": 90
+        },
+        "codecMetadata": {
+          "format": "ready-model-gzip-alpha-1",
+          "rowCount": 30000,
+          "sharedKeyOrder": [
+            "_id",
+            "_matchOcode",
+            "_isActive",
+            "Active/Inactive",
+            "_imageKey",
+            "_imageRef",
+            "_imageUrl",
+            "Season",
+            "Country",
+            "Manufacturer",
+            "Sub-Manufacturer",
+            "Licensor",
+            "License",
+            "Category",
+            "Special Code",
+            "PLM ID",
+            "Model Name",
+            "Ürün Tanım",
+            "C.Code",
+            "Colour",
+            "Order Code",
+            "FOB ($)",
+            "Supp. FOB",
+            "_suppFobManual",
+            "_suppFobRule",
+            "_suppFobMeta",
+            "_suppFobImported",
+            "_suppFobOverride",
+            "_licensorManual",
+            "_licensorSource",
+            "_nonDtrManufacturerRule",
+            "OPD",
+            "Original Ex-factory",
+            "Ex-factory",
+            "_asasExFactory",
+            "_exFactoryRevision",
+            "_asasRetailDate",
+            "_asasInStore",
+            "HANDOVER Tarihi",
+            "Retail Date",
+            "Ex→Retail",
+            "Buying Son Onay Tarihi",
+            "In-Store (Model Budget)",
+            "_initialInspection",
+            "Order Quantity",
+            "Shipment Quantity",
+            "Remaining Units",
+            "%",
+            "STATUS",
+            "Ant. Arrival",
+            "Del. Type",
+            "_logisticSegments",
+            "_logisticStatusValues",
+            "_logisticDelTypeValues",
+            "_logisticArrivalValues",
+            "_logisticProductionQty",
+            "_logisticShortageQty",
+            "_logisticRemainingQty",
+            "_logisticLoadedQty",
+            "_logisticPartialCount",
+            "_logisticAllPartialsInWarehouse",
+            "_logisticTotalQty",
+            "Notes",
+            "Ek Not",
+            "NotesHtml",
+            "Ek NotHtml",
+            "_notesAt",
+            "_ekNotAt",
+            "_notesBy",
+            "_notesByName",
+            "_ekNotBy",
+            "_ekNotByName",
+            "Merch Marka Yaş Grup Kod",
+            "Merch Alt Grup Kod",
+            "Buyer",
+            "Buyer Grup (TR)",
+            "Line",
+            "Kumaş Kategorisi",
+            "Kumaşçı Ülkesi",
+            "Kumaşçı",
+            "Kumaş Tipi",
+            "İplik No",
+            "Gramaj",
+            "Karışım",
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B",
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "registeredModelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "modelKeys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "suffixKeys": [
+            "Importance",
+            "_importanceId",
+            "_importanceSource",
+            "LT",
+            "_canEdit"
+          ],
+          "baseRawBytes": 73145820,
+          "bounds": {
+            "baseRaw": 134217728,
+            "columnRaw": 16777216,
+            "modelRawTotal": 67108864,
+            "totalRaw": 202375168
+          }
+        },
+        "components": [
+          {
+            "file": "base.json.gz",
+            "bytes": 5676208,
+            "sha256": "0ae76023a204fc688048581fe853ff0cdda246f4d1c38aeebc694663283a2d44",
+            "rawBytes": 73145820
+          },
+          {
+            "file": "column-0.json.gz",
+            "bytes": 1261091,
+            "sha256": "6892c2def04628638012f21367fdef680824eece0bec84463d4d41408a364620",
+            "key": "__CPX_SYNTH_CODEC_A",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          },
+          {
+            "file": "column-1.json.gz",
+            "bytes": 1261073,
+            "sha256": "b3e93ef0a341529a4108616472fca9ef65a79d1dd1d90afb186bbcccf81c3019",
+            "key": "__CPX_SYNTH_CODEC_B",
+            "rawBytes": 4166445,
+            "presentCount": 30000
+          }
+        ],
+        "response": {
+          "file": "none.multipart",
+          "bytes": 5678689,
+          "sha256": "2ea2b4b17d2ef3973eb3fb9bfaf1225ebd143b0de3b57ccc61aeb7f292372ca3"
+        },
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=bl6a-68b8940ffa2373e9c5653429bc1532cb533f",
+          "Content-Length": "5678689",
+          "Cache-Control": "no-store"
+        },
+        "expectations": {
+          "full": {
+            "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+            "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+            "rawBytes": 82325820
+          },
+          "none": {
+            "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+            "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "rawBytes": 73145820
+          }
+        },
+        "augmentedSourceSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+        "rows": 30000,
+        "node": "v24.19.0"
+      },
+      "browser": {
+        "status": "passed",
+        "mode": "none",
+        "functionalOnly": false,
+        "sourceFile": "none.multipart",
+        "sourceBodyBytes": 5678689,
+        "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+        "syntheticAugmentation": {
+          "kind": "synthetic-two-model-strings-v1",
+          "keys": [
+            "__CPX_SYNTH_CODEC_A",
+            "__CPX_SYNTH_CODEC_B"
+          ],
+          "charactersPerValue": 128,
+          "position": "before each original row last5 own keys",
+          "originalFixtureHashClaim": false
+        },
+        "expected": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+          "rawBytes": 73145820
+        },
+        "scope": "standalone actual Chromium retained JSON/codec probe only",
+        "heapBefore": {
+          "usedSize": 1183940,
+          "totalSize": 2138112,
+          "embedderHeapUsedSize": 303424,
+          "backingStorageSize": 26411
+        },
+        "heapAfter": {
+          "usedSize": 55305652,
+          "totalSize": 56401920,
+          "embedderHeapUsedSize": 308040,
+          "backingStorageSize": 26567
+        },
+        "retainedPayloadHeapDeltaBytes": 54121712,
+        "metrics": {
+          "headersMs": 24.69999998807907,
+          "loaderDecodeMs": 1457.7000000178814,
+          "fetchToResultMs": 1482.4000000059605,
+          "loaderKind": "bounded multipart/blob/formData/digests/per-file gzip/JSON/frozen codec including body wait",
+          "headers": {
+            "contentType": "multipart/form-data; boundary=bl6a-68b8940ffa2373e9c5653429bc1532cb533f",
+            "contentEncoding": null,
+            "contentLength": "5678689"
+          },
+          "networkWallMs": 94,
+          "browserDecodedHttpBodyBytes": 5678689,
+          "browserEncodedHttpBodyBytes": 5678689,
+          "transport": {
+            "format": "ready-model-multipart-alpha-1",
+            "multipartBytes": 5678689,
+            "decodedComponentBytes": 73147947,
+            "partCount": 2,
+            "compressedDigestsVerified": true
+          },
+          "stats": {
+            "modelDefines": 0,
+            "suffixDeletes": 0,
+            "suffixDefines": 0
+          },
+          "rows": 30000,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+        },
+        "actual": {
+          "rowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7",
+          "envelopeSha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+        },
+        "network": {
+          "startTimestamp": 194218.126571,
+          "cdpDecodedDataLength": 5678689
+        },
+        "chromium": "154.0.8037.57"
+      }
+    }
+  ],
+  "definitions": {
+    "A": "full augmented JSON serialized + gzip4; ordinary Chromium Response.json",
+    "G": "ready build with ALL model components; ready base single gzip ordinary Chromium Response.json",
+    "B": "ready build with ALL model components + multipart none; actual multipart Chromium decode"
+  },
+  "limitations": [
+    "Derived synthetic2x128model data, not original fixture hash or production consumer closure.",
+    "Source setup/oracles/file IO excluded from buildMs. No coldOS-cache claim.",
+    "Heap is post-GC retained payload delta, not peak, RSS or app startup heap.",
+    "Linux Chromium only; standalone codec cost, not universal gain or app benchmark."
+  ],
+  "peakObservedDiskBytes": 55735191,
+  "functionalAll": {
+    "status": "passed",
+    "mode": "all-functional",
+    "functionalOnly": true,
+    "sourceFile": "all.multipart",
+    "sourceBodyBytes": 8201628,
+    "generation": "mw6vhoks-9100b15fc128+synthetic-two-model-strings-v1",
+    "syntheticAugmentation": {
+      "kind": "synthetic-two-model-strings-v1",
+      "keys": [
+        "__CPX_SYNTH_CODEC_A",
+        "__CPX_SYNTH_CODEC_B"
+      ],
+      "charactersPerValue": 128,
+      "position": "before each original row last5 own keys",
+      "originalFixtureHashClaim": false
+    },
+    "expected": {
+      "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+      "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744",
+      "rawBytes": 82325820
+    },
+    "scope": "standalone actual Chromium retained JSON/codec probe only",
+    "functional": {
+      "rows": 30000,
+      "transport": {
+        "format": "ready-model-multipart-alpha-1",
+        "multipartBytes": 8201628,
+        "decodedComponentBytes": 81481286,
+        "partCount": 4,
+        "compressedDigestsVerified": true
+      },
+      "stats": {
+        "modelDefines": 60000,
+        "suffixDeletes": 150000,
+        "suffixDefines": 150000
+      },
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+    },
+    "actual": {
+      "rowsSha256": "1ca8977898ff9ddfcdb6d2888b2388538820376cb4eecd3ff0bb36baf5d6552e",
+      "envelopeSha256": "01012c261a3f7f988b54899bcb3aad7cae4e679fc1f192993d3fda3caef9a744"
+    },
+    "network": {
+      "startTimestamp": 194224.363772,
+      "cdpDecodedDataLength": 8201628
+    },
+    "chromium": "154.0.8037.57"
+  },
+  "medians": {
+    "full": {
+      "sourceBuildMs": 2066.079167,
+      "wireBodyBytes": 8764774,
+      "networkWallMs": 666.3000000119209,
+      "loaderDecodeMs": 1199.7000000178814,
+      "fetchToResultMs": 1224.7000000178814,
+      "retainedPayloadHeapDeltaBytes": 62632328
+    },
+    "base": {
+      "sourceBuildMs": 7528.8663670000005,
+      "wireBodyBytes": 5676208,
+      "networkWallMs": 662.5999999940395,
+      "loaderDecodeMs": 1136.7999999821186,
+      "fetchToResultMs": 1156.9000000059605,
+      "retainedPayloadHeapDeltaBytes": 53992080
+    },
+    "none": {
+      "sourceBuildMs": 7593.4352309999995,
+      "wireBodyBytes": 5678689,
+      "networkWallMs": 91.40000000596046,
+      "loaderDecodeMs": 1457.7000000178814,
+      "fetchToResultMs": 1482.4000000059605,
+      "retainedPayloadHeapDeltaBytes": 54121712
+    }
+  },
+  "diskBytes": 39224175,
+  "finishedAt": "2026-11-08T03:38:19.510Z"
+}

@@ -160,6 +160,7 @@
         // Koleksiyon ekranı hiç açılmamış olsa da PLM'den gelen Artwork Detayı
         // bağlama girsin diye BOM projeksiyonu önce tazelenir.
         async build(mode) {
+          if (tab === 'orders') await window.BLEnsureOrdersFullForAction('lcwai.context');
           if (tab === 'koleksiyon' && window.BLCollectionArtworkDetail && window.BLCollectionArtworkDetail.ensureFresh) {
             try { await window.BLCollectionArtworkDetail.ensureFresh(); } catch (_) {}
           }
@@ -960,7 +961,8 @@
       if (seen.has(key)) continue;
       seen.add(key);
       // Ad verilmediyse yalnız Siparişler yüklenir; diğer tablolar yüklüyse sorguya girer.
-      if (named || target.screen === 'orders') await ensureQueryData(target.screen);
+      if (target.screen === 'orders') await window.BLEnsureOrdersFullForAction('lcwai.query');
+      else if (named) await ensureQueryData(target.screen);
       let rows = null, columns = null;
       if (target.scope === 'overview') { rows = data.overviewCpRows(); columns = data.cpColumns(); }
       else {

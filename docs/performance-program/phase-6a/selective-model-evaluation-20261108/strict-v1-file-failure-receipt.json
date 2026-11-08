@@ -1,0 +1,6 @@
+{
+  "kind": "existing21 assertions unchanged against strict module",
+  "exitCode": 1,
+  "strictSha256": "a9a76e55d666f76d380103de77c08ed7c6c8258620cd88fbe5dab58a201341ca",
+  "testSha256": "b7e4d00d06a796f3bd549360dddbc34b40a133ec20b4151ab526f3eecbb76e7f"
+}

@@ -11,6 +11,9 @@ const vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, '..', 'public', name), 'utf8');
 const SOURCES = ['canonical-fields.js', 'date-dimension.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
 const fixture = require('./helpers/merch-calendar-fixture');
+const { extractFunction } = require('./helpers/app-main-functions');
+const fullGateSource = ['ordersProjectionIsThin', 'ordersFullActionError', 'ensureOrdersFullForAction']
+  .map(name => extractFunction(read('app-main.js'), name)).join('\n');
 
 function ordersTable() {
   const rows = [
@@ -29,6 +32,7 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
   const queue = plans.slice();
   let loaded = ordersLoaded;
   const orders = ordersTable();
+  const gateState = { orders: ordersLoaded ? { rows: orders.rows } : null };
   const api = {
     registerContextProvider() {}, getAvailableContext() { return [{ screen: 'orders', label: 'Siparişler', options: [{ id: 'orders:all', label: 'Tüm kayıtlar' }] }]; },
     async buildContext(id) { return { id, screen: 'orders', label: 'Siparişler — tüm kayıtlar', summary: '4 kayıt', columns: orders.columns.map(c => c.label), rows: orders.rows.map(r => orders.columns.map(c => c.readValue(r))), totalRows: 4 }; },
@@ -41,7 +45,7 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
   const window = {
     appLang: 'tr', BuyerLogAI: api, addEventListener() {},
     BLStorage: { getItem: key => (storage.has(key) ? storage.get(key) : null), setItem: (key, value) => storage.set(key, String(value)) },
-    async BLEnsureOrdersLoaded(options) { calls.ensure++; assert.equal(options.deferRender, true, 'görünmeyen modül çizilmez'); loaded = true; return true; },
+    async BLEnsureOrdersLoaded(options) { calls.ensure++; assert.equal(options.deferRender, true, 'görünmeyen modül çizilmez'); loaded = true; gateState.orders = { rows: orders.rows }; return true; },
     BLAIScreenData: {
       lastTab: () => 'overview', pageTitle: tab => ({ orders: 'Siparişler', cp: 'CP Tracker' }[tab] || tab),
       table(tab, opts = {}) { if (tab !== 'orders' || !loaded) return null; return { tableKey: 'orders', rows: orders.rows, columns: orders.columns, selectedIds: [], filters: {}, rowId: row => row._id, all: Boolean(opts.all) }; },
@@ -49,7 +53,8 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
     },
   };
   window.window = window;
-  const context = vm.createContext({ window, globalThis: window, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
+  const context = vm.createContext({ window, globalThis: window, state: gateState, appLang: 'tr', ensureOrdersLoaded: options => window.BLEnsureOrdersLoaded(options), document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
+  vm.runInContext('const _ordersFullViewControllers=new WeakMap();\n' + fullGateSource + '\nwindow.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;', context);
   SOURCES.forEach((source, index) => {
     vm.runInContext(source, context);
     // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.
@@ -88,6 +93,16 @@ test('dağınık yazım, bağlam eklenmeden: Siparişler bulunur, veri çizilmed
   assert.equal(calls.ask.length, 1);
   assert.equal(calls.ask[0].context.today.length, 10);
   assert.ok(lastAnswer(chat).query, 'hesaplanmış cevap');
+});
+
+test('güncel gerçek tam-veri kapısı erişim iptalinde planlayıcıya veya sohbete veri göndermez', async () => {
+  const { chat, calls, window } = load({ plans: [PIVOT] });
+  window.BLCanAccessArea = () => false;
+  await chat.send('sipariş W6 MB ayı tablo');
+  assert.equal(calls.ask.length, 0);
+  assert.equal(calls.chat.length, 0);
+  assert.equal(calls.uploads.length, 0);
+  assert.match(lastAnswer(chat).error, /ORDERS_FULL_FORBIDDEN/);
 });
 
 test('belirsizlikte tahmin edilmez: LCW AI sorusu seçeneklerle gösterilir, cevap önceki istekle birleştirilir', async () => {

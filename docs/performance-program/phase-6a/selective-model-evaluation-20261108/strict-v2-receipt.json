@@ -1,0 +1,25 @@
+{
+  "scope": "v2 minimal guard relocation after bounded EOF; original test assertions unchanged",
+  "startedAt": "2026-11-08T03:32:44.720768+00:00",
+  "sources": {
+    "multipart-transport.js": "cb5a2726cdd2695761444cfa4d84a162d88d299815a272f9c4c265d9effb2e0a",
+    "cancellation.test.cjs": "e01ea7c4c6d02e1b05ad4be3afd29d7eecc005fba29ed0a83208d94eb6d21498",
+    "multipart-transport.test.cjs": "b7e4d00d06a796f3bd549360dddbc34b40a133ec20b4151ab526f3eecbb76e7f"
+  },
+  "commands": [
+    {
+      "name": "strict14",
+      "exitCode": 0
+    },
+    {
+      "name": "legacy21",
+      "exitCode": 0
+    },
+    {
+      "name": "actual-Chromium",
+      "exitCode": 0
+    }
+  ],
+  "finishedAt": "2026-11-08T03:32:47.496581+00:00",
+  "sourcesUnchanged": true
+}
