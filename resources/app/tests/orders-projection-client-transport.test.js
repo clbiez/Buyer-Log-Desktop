@@ -20,11 +20,14 @@ async function parentFixture(overrides={}){
   return {...f,live,expected,responseHeaders,options,fetchFull:()=>candidate.createFetchFull(options)};
 }
 
-test('all original 31 test bodies and historical red/green receipts remain exact',()=>{
+test('all original 31 algorithms/assertions and historical receipts remain exact except the reviewed router pin',()=>{
   const original=fs.readFileSync(path.join(PACKET,'tests/orders-projection-client.test.cjs'),'utf8');
   const adopted=fs.readFileSync(path.join(APP,'tests/orders-projection-client.test.js'),'utf8');
   const marker="test('uninitialized";
-  assert.equal(adopted.slice(adopted.indexOf(marker)),original.slice(original.indexOf(marker)));
+  const current='21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e';
+  const previous='c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01';
+  const bodies=adopted.slice(adopted.indexOf(marker));assert.equal(bodies.split(current).length,2,'exactly one reviewed provenance literal');
+  assert.equal(bodies.replace(current,previous),original.slice(original.indexOf(marker)));
   const evidence=path.resolve(PACKET,'../root-native-evidence');
   for(const [name,pass,fail] of [['first',30,1],['green',31,0]]){
     const root=path.join(evidence,'buyerlog-phase6a-orders-client-native-'+name);
@@ -32,6 +35,14 @@ test('all original 31 test bodies and historical red/green receipts remain exact
     assert.equal(hash(fs.readFileSync(path.join(root,'native.tap'))),receipt.sha256);
     assert.equal(receipt.counts.pass,pass);assert.equal(receipt.counts.fail,fail);
   }
+});
+test('actual full-parent header/identity/plan producers are byte-exact across the ordinary binding addition',()=>{
+  const old=require('node:zlib').gunzipSync(fs.readFileSync(path.join(__dirname,'fixtures/orders-projection-client/router-before-ordinary-binding.js.gz'))).toString('utf8');
+  assert.equal(hash(old),'c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01');
+  const current=fs.readFileSync(path.join(APP,'server/lib/orders-ready-http.js'),'utf8');
+  assert.equal(hash(current),'21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e');
+  const {extractFunction}=require('./helpers/app-main-functions');
+  for(const name of ['fullParentHeaders','responseIdentityHeaders','planHashFor'])assert.equal(extractFunction(current,name),extractFunction(old,name),name);
 });
 
 test('classic browser export and full-parent transport work without Node globals',async()=>{

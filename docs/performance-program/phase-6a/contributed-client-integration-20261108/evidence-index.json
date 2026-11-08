@@ -1,0 +1,26 @@
+[
+  {
+    "source": "/tmp/buyerlog-phase6a-contributed-client-current-first/native.log",
+    "archive": "docs/performance-program/phase-6a/contributed-client-integration-20261108/buyerlog-phase6a-contributed-client-current-first/native.log.gz",
+    "rawBytes": 31208,
+    "rawSha256": "467853b3b379073ae44f395f22dff7153f88fceca3daa77531758088622f4aff"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-contributed-client-current-green/native.log",
+    "archive": "docs/performance-program/phase-6a/contributed-client-integration-20261108/buyerlog-phase6a-contributed-client-current-green/native.log.gz",
+    "rawBytes": 30149,
+    "rawSha256": "2d609de544de1f17667800ac01c0829c3ccad3134fb99df3592c6713a314fd73"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-contributed-client-static/release.log",
+    "archive": "docs/performance-program/phase-6a/contributed-client-integration-20261108/static/release.log.gz",
+    "rawBytes": 126,
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-contributed-client-static/i18n.log",
+    "archive": "docs/performance-program/phase-6a/contributed-client-integration-20261108/static/i18n.log.gz",
+    "rawBytes": 125,
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  }
+]

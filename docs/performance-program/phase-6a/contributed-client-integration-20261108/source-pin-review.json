@@ -1,0 +1,10 @@
+{
+  "oldRouterSha256": "c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01",
+  "currentRouterSha256": "21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e",
+  "sourceCommits": [
+    "0d127f58db13051d4714abf54fed3b6c000a7607",
+    "0d57b7b9493e447ff20accbe45a54dd4243c4cbe"
+  ],
+  "reason": "actual ordinary-GET binding hook was added after the frozen contribution base; full-parent producer remains unchanged",
+  "original31Bodies": "frozen original retained; live test differs only in one reviewed router source-pin literal"
+}

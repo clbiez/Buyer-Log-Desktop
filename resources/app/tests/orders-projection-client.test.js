@@ -1,5 +1,6 @@
 'use strict';
-// The original 31 test bodies are retained verbatim from 01-orders-client.
+// Original 31 bodies retain their assertions/algorithms; the one router SHA
+// follows the separately reviewed ordinary-GET binding addition after handoff.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),zlib=require('node:zlib');
 const {APP,actual,extractFunction,builder,planHashFor,promotion,candidate,recipe,app,seams,hash,clone,hostFunction,headers,fixture,coldFixture}=require('./fixtures/orders-projection-client/runtime.cjs');
 test('uninitialized and caller-authored guard strings cannot select a finite request',async()=>{
@@ -93,7 +94,7 @@ test('actual full promotion helper accepts sparse full rows with empty proven re
 test('full-parent adapter uses actual additional header producer, exact DTO and owned decoded-byte hash; identity is never echoed',async()=>{
  const f=await fixture();await f.initialize();const wire=await f.ready();await f.client.accept(wire.request,wire);
  const router=fs.readFileSync(path.join(APP,'server/lib/orders-ready-http.js'),'utf8');
- assert.equal(hash(router),'c6caf8daa7bb876976ae13b43186153042a42843ac3c7aa88da559d5cf2e0d01');
+ assert.equal(hash(router),'21bcb5534f8f5cfa8216ac38661b4b8635cadf0ffda1cba524f77411a138046e');
  const extra=hostFunction('fullParentHeaders',{Buffer,stale:()=>Object.assign(Error('stale'),{code:'PROJECTION_VIEW_STALE'})},router)(f.metadata.token,
   {pin:{uncompressedBytes:Buffer.byteLength(f.rawText)},schema:{rowCount:f.metadata.schema.rowCount}});
  const live={token:f.metadata.token,fullGzipChecksum:f.h['X-Orders-Full-Gzip-Sha256'],guardStamp:f.metadata.guardStamp,

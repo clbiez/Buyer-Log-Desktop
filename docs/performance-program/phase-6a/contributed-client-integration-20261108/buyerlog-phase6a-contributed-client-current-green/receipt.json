@@ -1,0 +1,26 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-projection-client",
+    "orders-ui-command",
+    "orders-source-retirement",
+    "orders-iam-before-apply",
+    "orders-finite-closure",
+    "orders-finite-schema",
+    "orders-full-promotion",
+    "orders-ready-http",
+    "projection-ready-json",
+    "module-schema-wire-keys"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 270,
+    "pass": 270,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "2d609de544de1f17667800ac01c0829c3ccad3134fb99df3592c6713a314fd73"
+}
