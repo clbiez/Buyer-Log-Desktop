@@ -1,0 +1,10 @@
+✔ docs/performance-program/parallel-handoff-20261108/02-collection-client/field/collection-field-command.test.cjs (79.842057ms)
+✔ docs/performance-program/parallel-handoff-20261108/02-collection-client/group/collection-group-command.test.cjs (162.17342ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181.566339

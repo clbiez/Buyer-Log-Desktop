@@ -1,0 +1,38 @@
+✔ field: history advances only after primary ACK, including undo and redo (5.530031ms)
+✔ field: lost ACK retains intent; duplicate ACK and replay are idempotent (0.648661ms)
+✔ field: older ACK keeps newer intent and its original base; immutable transport excludes it (0.667199ms)
+✔ field: malformed atomic subset with omitted rows fails before any acknowledgement (0.385523ms)
+✔ group: history advances only after primary ACK, including undo and redo (9.657983ms)
+✔ group: lost ACK retains intent; duplicate ACK and replay are idempotent (0.991188ms)
+✔ group: older ACK keeps newer intent and its original base; immutable transport excludes it (1.507499ms)
+✔ group: malformed atomic subset with omitted rows fails before any acknowledgement (0.998349ms)
+✔ group: legacy transport requires atomic closure, excludes override peers and unrelated rows (1.188607ms)
+✔ pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source (0.764937ms)
+✔ pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence (0.410721ms)
+✔ independent scalar gate rejects special custom schema and JSON values changed by serialization (0.467617ms)
+✔ field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes (1.066393ms)
+✔ group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites (1.858801ms)
+✔ field: atomic omission across two independent rows cannot advance one row (0.36335ms)
+✔ field: out-of-order ACKs preserve local history order across independent rows (0.398052ms)
+✖ one certified Collection session composes independent and group intent with one ACK-gated history (0.414407ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 16
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33.688956
+
+✖ failing tests:
+
+test at resources/app/tests/collection-client-delta-lifecycle.test.js:193:1
+✖ one certified Collection session composes independent and group intent with one ACK-gated history (0.414407ms)
+  TypeError: groupApi.applyCommand is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-client-delta-lifecycle.test.js:195:24)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

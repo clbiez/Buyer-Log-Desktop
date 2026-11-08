@@ -1,0 +1,83 @@
+{
+  "baseCommit": "d66c1f803097af5991616f0420392e1027888f2e",
+  "branch": "contrib/phase6c-client-delta-20261108",
+  "namespace": "collection-workspaces",
+  "productionDefaultEnabled": false,
+  "allChangesNewAndOwned": true,
+  "moduleAndEvidenceSha256": {
+    "resources/app/public/collection-delta-commands.js": "5c2062c314d8df63752d0733b1c1d57f8ab54b06b6db03e7b07945feb529cdda",
+    "resources/app/public/collection-group-delta.js": "78f29531316d9e4a62356b7a21b6844017c774fd7f76f1bb2c8489f4d4dae134",
+    "resources/app/tests/collection-client-delta-actual.test.js": "4393a5c02f5116123699d2312eb72fbb61783705709331760bdad436f7d28173",
+    "resources/app/tests/collection-client-delta-field.test.js": "530928e713a2ee268af6d9ba9318f079202996cc142efd6ddbfcd46e396124b7",
+    "resources/app/tests/collection-client-delta-group.test.js": "349dbc052cfb3030c4db51fb4325ec619f35a6ef767a6bfca7c617115522920a",
+    "resources/app/tests/collection-client-delta-legacy-server.test.js": "9f8139338775dc3433ff4004ff84ad4cbb0e696c36ae217b3fd614b355e8a2ac",
+    "resources/app/tests/collection-client-delta-lifecycle.test.js": "08c040cfb0ebfe585f7b755d3b8c62e9bb980d975ae317cb2d126cb670f9a69c",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/actual-first.tap": "f65d288d157233a547191da0e20bb1c574503293a9be0ff747a7542380361fc3",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/baseline-membership.red.txt": "392522646557e31668c07021902d816f1f7d7c6d117cfa44e34f5c953843721c",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/collection-regression.initial.txt": "87d9d2487226800c8473a5e9b01fc7d21691d6f2e67bea2c1cca7253f930231f",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/collection-regression.txt": "d84f7f98672e77ccb6ad7ebfbfd6522a8db09e780ba8319e7f8e0462e8c95580",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/first-green-attempt.tap": "5b66c7f6c8ab3edf62ff7ac8f70abc4666f16b9db976689df0bb1e2140e761e8",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/green.tap": "d180dbe5ef018d869c0c9093515fad3d1cc7d77d30bdb8e41306bc0665acb860",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/history-order.red.txt.gz": "62b1ad577b792d90da2fcea75ab3dabe5a1f1e7d3e67ff78d59288187f05f421",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/history-validation.red.txt": "174aa924fefbcc53b891178405f3f0b1a8eeaa869850c6e00a19faf5309ea551",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/i18n.txt": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/inherited-native.tap": "550e60cac3003bc44c17ff19bb1c4bb7903c5b9418829da5069df887909d8ff2",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/inherited.tap": "b9541ad2723f459a6b686828a176948818b3307da57c4b2bd1702e9bb593a4ad",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/micro.json": "d0e4ba8482e5d05fa584a4da8fe687db6086625b0d9d0c64250489c0aa60ba9b",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/micro.process-output-failure.txt": "180ad39530fb7cd75ce0cb55fdfdf8ce0b0685920bbed6ed2145f32157c62589",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/micro.shared-process.json": "471a4a63733dd2c3939593b2cc6afb86cca547dcc52e00f5e13a086f28b0a78a",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/micro.stdout.txt": "753440f6f2a92022a079f2386f26c0a6dee6a60a709d51f5882b0849af6d4a9b",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/mixed-session.red.txt": "f4ca80c8749814ae8f9cb9cdd37e689be3100c8cf7aaf51720e490e0f14e685d",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/prototype.red.txt.gz": "36302fcd46c11d24b1df4a1a4a7a37711da86f7ede8c977a37172dbccf351841",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/red.tap": "b469196292f1a81c7a67369bf19e7ab79cc660f607f362524527dffac589a7fb",
+    "docs/performance-program/contrib-client-delta-20261108/evidence/source-json.red.txt": "6650b63927155ed7b0c50506b856d58b37e8698e684b9f5f89657765515c9afc"
+  },
+  "checks": {
+    "inheritedNative": {
+      "tests": 41,
+      "pass": 41
+    },
+    "dedicatedFinal": {
+      "tests": 66,
+      "pass": 66,
+      "fail": 0
+    },
+    "collectionAndI18nRunner": {
+      "files": 142,
+      "pass": 142,
+      "fail": 0
+    },
+    "i18nCheck": {
+      "newMissing": 0,
+      "baselineMissing": 0,
+      "baselineFiles": 0
+    },
+    "prototypeRed": {
+      "tests": 19,
+      "pass": 1,
+      "fail": 18
+    },
+    "sharedMeasurementLock": "/tmp/buyerlog-performance-measurement.lock",
+    "finalFullDefaultRegression": "Required on root integrated Phase6 code; not run here"
+  },
+  "measurement": {
+    "pairsPerCase": 3,
+    "cases": 2,
+    "rows": 30000,
+    "editsPerArm": 10,
+    "armIsolation": "sequential fresh Node processes on one VM",
+    "artifact": "evidence/micro.json"
+  },
+  "integrationRequired": [
+    "Phase6a closure before activation",
+    "root editor/source lifecycle and durable pending1/2/journal adaptation",
+    "server commit-time schema/group-membership authority contract",
+    "one Phase6c integration PR, independent P1 review and all-batch final default regression"
+  ],
+  "release": {
+    "prOpened": false,
+    "merged": false,
+    "testPublished": false,
+    "stablePublished": false
+  }
+}

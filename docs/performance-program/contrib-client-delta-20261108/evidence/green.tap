@@ -1,0 +1,406 @@
+TAP version 13
+# Subtest: actual editor + real snapshot parity for independent custom field
+ok 1 - actual editor + real snapshot parity for independent custom field
+  ---
+  duration_ms: 5.191579
+  type: 'test'
+  ...
+# Subtest: actual editor + real snapshot parity for group custom field
+ok 2 - actual editor + real snapshot parity for group custom field
+  ---
+  duration_ms: 4.707888
+  type: 'test'
+  ...
+# Subtest: standalone browser scripts expose portable APIs without CommonJS or UI/storage/network access
+ok 3 - standalone browser scripts expose portable APIs without CommonJS or UI/storage/network access
+  ---
+  duration_ms: 3.965205
+  type: 'test'
+  ...
+# Subtest: own-property slots distinguish absence, explicit null, zero, false and blank
+ok 4 - own-property slots distinguish absence, explicit null, zero, false and blank
+  ---
+  duration_ms: 4.656469
+  type: 'test'
+  ...
+# Subtest: deleting an explicit null restores null presence on inverse, not inherited absence
+ok 5 - deleting an explicit null restores null presence on inverse, not inherited absence
+  ---
+  duration_ms: 0.777075
+  type: 'test'
+  ...
+# Subtest: forward/inverse copy touched row only; untouched rows and nested fields retain identity
+ok 6 - forward/inverse copy touched row only; untouched rows and nested fields retain identity
+  ---
+  duration_ms: 0.782854
+  type: 'test'
+  ...
+# Subtest: changed mutable values are owned; command capture and applying do not alias caller values
+ok 7 - changed mutable values are owned; command capture and applying do not alias caller values
+  ---
+  duration_ms: 0.652336
+  type: 'test'
+  ...
+# Subtest: stale owner/generation, read-only and Multi-Buyer bindings reject before effects
+ok 8 - stale owner/generation, read-only and Multi-Buyer bindings reject before effects
+  ---
+  duration_ms: 0.320404
+  type: 'test'
+  ...
+# Subtest: row CAS rejects unrelated remote row edits; workspace revision is not a row base
+ok 9 - row CAS rejects unrelated remote row edits; workspace revision is not a row base
+  ---
+  duration_ms: 0.520817
+  type: 'test'
+  ...
+# Subtest: same-field local conflict and missing row do not overwrite or resurrect intent
+ok 10 - same-field local conflict and missing row do not overwrite or resurrect intent
+  ---
+  duration_ms: 0.538955
+  type: 'test'
+  ...
+# Subtest: inverse checks current after-state and preserves unrelated accepted remote fields
+ok 11 - inverse checks current after-state and preserves unrelated accepted remote fields
+  ---
+  duration_ms: 0.679688
+  type: 'test'
+  ...
+# Subtest: coupled groups, semantic editors, server fields, unknown writes and structure fail closed
+ok 12 - coupled groups, semantic editors, server fields, unknown writes and structure fail closed
+  ---
+  duration_ms: 0.657284
+  type: 'test'
+  ...
+# Subtest: group membership/metadata and custom schema changes invalidate prepared commands
+ok 13 - group membership/metadata and custom schema changes invalidate prepared commands
+  ---
+  duration_ms: 0.326944
+  type: 'test'
+  ...
+# Subtest: legacy adapter sends touched rows with explicit existence and legacy zero CAS, no structure fence
+ok 14 - legacy adapter sends touched rows with explicit existence and legacy zero CAS, no structure fence
+  ---
+  duration_ms: 0.532546
+  type: 'test'
+  ...
+# Subtest: adapter preserves unknown persisted keys and strips both actual transient image projections
+ok 15 - adapter preserves unknown persisted keys and strips both actual transient image projections
+  ---
+  duration_ms: 0.374967
+  type: 'test'
+  ...
+# Subtest: one legacy row can compose ordered commands; omitted prerequisites reject
+ok 16 - one legacy row can compose ordered commands; omitted prerequisites reject
+  ---
+  duration_ms: 0.642712
+  type: 'test'
+  ...
+# Subtest: operation replay is idempotent before/after ACK; ID collision and cross-owner replay reject
+ok 17 - operation replay is idempotent before/after ACK; ID collision and cross-owner replay reject
+  ---
+  duration_ms: 0.592556
+  type: 'test'
+  ...
+# Subtest: captured old request/ACK does not send or clear newer local same-field intent
+ok 18 - captured old request/ACK does not send or clear newer local same-field intent
+  ---
+  duration_ms: 0.532315
+  type: 'test'
+  ...
+# Subtest: adapter excludes an unrelated unsubmitted local field even on the same touched row
+ok 19 - adapter excludes an unrelated unsubmitted local field even on the same touched row
+  ---
+  duration_ms: 0.5157
+  type: 'test'
+  ...
+# Subtest: partial HTTP 200 acknowledges only applied row operations and leaves conflicts pending
+ok 20 - partial HTTP 200 acknowledges only applied row operations and leaves conflicts pending
+  ---
+  duration_ms: 0.795723
+  type: 'test'
+  ...
+# Subtest: late/invalid ACK and replication-only success cannot advance operation status or row bases
+ok 21 - late/invalid ACK and replication-only success cannot advance operation status or row bases
+  ---
+  duration_ms: 1.258884
+  type: 'test'
+  ...
+# Subtest: invalid/nonpersistable slots, duplicate row identity and no-op commands reject
+ok 22 - invalid/nonpersistable slots, duplicate row identity and no-op commands reject
+  ---
+  duration_ms: 0.516701
+  type: 'test'
+  ...
+# Subtest: stable source certificate matches actual normalizer data; legacy repairs require explicit fallback
+ok 23 - stable source certificate matches actual normalizer data; legacy repairs require explicit fallback
+  ---
+  duration_ms: 2.712972
+  type: 'test'
+  ...
+# Subtest: actual app single-cell shared edit matches group unit and keeps explicit false override/raw stale value
+ok 24 - actual app single-cell shared edit matches group unit and keeps explicit false override/raw stale value
+  ---
+  duration_ms: 3.776269
+  type: 'test'
+  ...
+# Subtest: affected closure rejects pending normalization on unrelated rows too
+ok 25 - affected closure rejects pending normalization on unrelated rows too
+  ---
+  duration_ms: 0.353655
+  type: 'test'
+  ...
+# Subtest: direct actual shared export parity preserves null/zero/false/blank and owns mutable field values
+ok 26 - direct actual shared export parity preserves null/zero/false/blank and owns mutable field values
+  ---
+  duration_ms: 6.068074
+  type: 'test'
+  ...
+# Subtest: actual app override edit updates override plus materialized row only
+ok 27 - actual app override edit updates override plus materialized row only
+  ---
+  duration_ms: 2.197843
+  type: 'test'
+  ...
+# Subtest: actual setVariantOverride parity preserves explicit falsy values and materialized cells
+ok 28 - actual setVariantOverride parity preserves explicit falsy values and materialized cells
+  ---
+  duration_ms: 3.341892
+  type: 'test'
+  ...
+# Subtest: actual context-menu make-colour-specific creates exact inherited override presence
+ok 29 - actual context-menu make-colour-specific creates exact inherited override presence
+  ---
+  duration_ms: 1.588531
+  type: 'test'
+  ...
+# Subtest: actual context-menu clear override parity restores model value; inverse restores false plus original stale raw
+ok 30 - actual context-menu clear override parity restores model value; inverse restores false plus original stale raw
+  ---
+  duration_ms: 3.229864
+  type: 'test'
+  ...
+# Subtest: clear override matches actual explicit null/zero/false/blank shared fallback
+ok 31 - clear override matches actual explicit null/zero/false/blank shared fallback
+  ---
+  duration_ms: 6.539987
+  type: 'test'
+  ...
+# Subtest: clear override preserves actual missing-raw/undefined fallback and original raw when parent raw is blank
+ok 32 - clear override preserves actual missing-raw/undefined fallback and original raw when parent raw is blank
+  ---
+  duration_ms: 3.130934
+  type: 'test'
+  ...
+# Subtest: same-model peers inside group follow inheritance; separately persisted/detached same-PLM groups stay unchanged
+ok 33 - same-model peers inside group follow inheritance; separately persisted/detached same-PLM groups stay unchanged
+  ---
+  duration_ms: 1.082657
+  type: 'test'
+  ...
+# Subtest: actual whole-row clones and normalizer copies are replaced only by scoped COW, with value parity
+ok 34 - actual whole-row clones and normalizer copies are replaced only by scoped COW, with value parity
+  ---
+  duration_ms: 0.875554
+  type: 'test'
+  ...
+# Subtest: shared edit plus inverse restores exact raw/shared presence without replacing unknown nested fields
+ok 35 - shared edit plus inverse restores exact raw/shared presence without replacing unknown nested fields
+  ---
+  duration_ms: 1.681342
+  type: 'test'
+  ...
+# Subtest: stale group add/remove/reorder/role changes reject the entire prepared unit
+ok 36 - stale group add/remove/reorder/role changes reject the entire prepared unit
+  ---
+  duration_ms: 0.970447
+  type: 'test'
+  ...
+# Subtest: owner/generation/schema/row revision and same-field conflict reject before effects
+ok 37 - owner/generation/schema/row revision and same-field conflict reject before effects
+  ---
+  duration_ms: 0.686167
+  type: 'test'
+  ...
+# Subtest: legacy absent/explicit-zero row bases stay zero without changing server-owned revision fields
+ok 38 - legacy absent/explicit-zero row bases stay zero without changing server-owned revision fields
+  ---
+  duration_ms: 3.505039
+  type: 'test'
+  ...
+# Subtest: inverse uses explicit fresh row bases and preserves unrelated accepted remote fields/map keys
+ok 39 - inverse uses explicit fresh row bases and preserves unrelated accepted remote fields/map keys
+  ---
+  duration_ms: 2.201388
+  type: 'test'
+  ...
+# Subtest: actual linked-variant editor guard and no-op string comparison remain explicit
+ok 40 - actual linked-variant editor guard and no-op string comparison remain explicit
+  ---
+  duration_ms: 1.951981
+  type: 'test'
+  ...
+# Subtest: parent with explicit override follows actual app override route instead of overwriting shared model state
+ok 41 - parent with explicit override follows actual app override route instead of overwriting shared model state
+  ---
+  duration_ms: 1.424664
+  type: 'test'
+  ...
+# Subtest: rich note/pricing/period/checklist/structure/identity operations have no generic scalar fallback
+ok 42 - rich note/pricing/period/checklist/structure/identity operations have no generic scalar fallback
+  ---
+  duration_ms: 0.617944
+  type: 'test'
+  ...
+# Subtest: captured units own changed JSON, preserve unknown keys and never mutate borrowed rows
+ok 43 - captured units own changed JSON, preserve unknown keys and never mutate borrowed rows
+  ---
+  duration_ms: 0.736153
+  type: 'test'
+  ...
+# Subtest: malformed duplicate patch rows and unsupported slot shapes reject without partial changes
+ok 44 - malformed duplicate patch rows and unsupported slot shapes reject without partial changes
+  ---
+  duration_ms: 0.390831
+  type: 'test'
+  ...
+# Subtest: actual legacy reducer: partial 200 maps only applied rows; lost ACK retry conflict keeps intent
+ok 45 - actual legacy reducer: partial 200 maps only applied rows; lost ACK retry conflict keeps intent
+  ---
+  duration_ms: 2.470935
+  type: 'test'
+  ...
+# Subtest: actual legacy reducer: explicit existence blocks resurrection of old absent/zero _rev rows
+ok 46 - actual legacy reducer: explicit existence blocks resurrection of old absent/zero _rev rows
+  ---
+  duration_ms: 1.289299
+  type: 'test'
+  ...
+# Subtest: actual legacy reducer: typed group request is atomic and inverse preserves unrelated accepted data
+ok 47 - actual legacy reducer: typed group request is atomic and inverse preserves unrelated accepted data
+  ---
+  duration_ms: 4.287352
+  type: 'test'
+  ...
+# Subtest: field: history advances only after primary ACK, including undo and redo
+ok 48 - field: history advances only after primary ACK, including undo and redo
+  ---
+  duration_ms: 1.096849
+  type: 'test'
+  ...
+# Subtest: field: lost ACK retains intent; duplicate ACK and replay are idempotent
+ok 49 - field: lost ACK retains intent; duplicate ACK and replay are idempotent
+  ---
+  duration_ms: 0.821171
+  type: 'test'
+  ...
+# Subtest: field: older ACK keeps newer intent and its original base; immutable transport excludes it
+ok 50 - field: older ACK keeps newer intent and its original base; immutable transport excludes it
+  ---
+  duration_ms: 0.467086
+  type: 'test'
+  ...
+# Subtest: field: malformed atomic subset with omitted rows fails before any acknowledgement
+ok 51 - field: malformed atomic subset with omitted rows fails before any acknowledgement
+  ---
+  duration_ms: 0.234384
+  type: 'test'
+  ...
+# Subtest: group: history advances only after primary ACK, including undo and redo
+ok 52 - group: history advances only after primary ACK, including undo and redo
+  ---
+  duration_ms: 3.923302
+  type: 'test'
+  ...
+# Subtest: group: lost ACK retains intent; duplicate ACK and replay are idempotent
+ok 53 - group: lost ACK retains intent; duplicate ACK and replay are idempotent
+  ---
+  duration_ms: 0.90589
+  type: 'test'
+  ...
+# Subtest: group: older ACK keeps newer intent and its original base; immutable transport excludes it
+ok 54 - group: older ACK keeps newer intent and its original base; immutable transport excludes it
+  ---
+  duration_ms: 1.438285
+  type: 'test'
+  ...
+# Subtest: group: malformed atomic subset with omitted rows fails before any acknowledgement
+ok 55 - group: malformed atomic subset with omitted rows fails before any acknowledgement
+  ---
+  duration_ms: 0.724655
+  type: 'test'
+  ...
+# Subtest: group: legacy transport requires atomic closure, excludes override peers and unrelated rows
+ok 56 - group: legacy transport requires atomic closure, excludes override peers and unrelated rows
+  ---
+  duration_ms: 0.678686
+  type: 'test'
+  ...
+# Subtest: pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source
+ok 57 - pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source
+  ---
+  duration_ms: 0.608149
+  type: 'test'
+  ...
+# Subtest: pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence
+ok 58 - pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence
+  ---
+  duration_ms: 0.295737
+  type: 'test'
+  ...
+# Subtest: independent scalar gate rejects special custom schema and JSON values changed by serialization
+ok 59 - independent scalar gate rejects special custom schema and JSON values changed by serialization
+  ---
+  duration_ms: 0.497792
+  type: 'test'
+  ...
+# Subtest: field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes
+ok 60 - field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes
+  ---
+  duration_ms: 1.186674
+  type: 'test'
+  ...
+# Subtest: group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites
+ok 61 - group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites
+  ---
+  duration_ms: 1.484254
+  type: 'test'
+  ...
+# Subtest: field: atomic omission across two independent rows cannot advance one row
+ok 62 - field: atomic omission across two independent rows cannot advance one row
+  ---
+  duration_ms: 0.44251
+  type: 'test'
+  ...
+# Subtest: field: out-of-order ACKs preserve local history order across independent rows
+ok 63 - field: out-of-order ACKs preserve local history order across independent rows
+  ---
+  duration_ms: 0.348397
+  type: 'test'
+  ...
+# Subtest: one certified Collection session composes independent and group intent with one ACK-gated history
+ok 64 - one certified Collection session composes independent and group intent with one ACK-gated history
+  ---
+  duration_ms: 2.157021
+  type: 'test'
+  ...
+# Subtest: independent source certification rejects lossy unknown JSON before command preparation without reading accessors
+ok 65 - independent source certification rejects lossy unknown JSON before command preparation without reading accessors
+  ---
+  duration_ms: 0.250679
+  type: 'test'
+  ...
+# Subtest: current and accepted baseline must agree on complete group membership before a typed edit
+ok 66 - current and accepted baseline must agree on complete group membership before a typed edit
+  ---
+  duration_ms: 0.387726
+  type: 'test'
+  ...
+1..66
+# tests 66
+# suites 0
+# pass 66
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 222.235712

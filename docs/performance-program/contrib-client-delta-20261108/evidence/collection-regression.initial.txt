@@ -1,0 +1,239 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js collection
+
+[Buyer Log tests] 141 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (141 dosya)
+✔ tests/collection-active-filter-layout-v1066.test.js (110.911649ms)
+✔ tests/collection-artwork-detail.test.js (77.894823ms)
+✔ tests/collection-asas-excel-grid-v489.test.js (199.131116ms)
+✔ tests/collection-best-price-history-v481.test.js (60.332462ms)
+✔ tests/collection-best-price-summary-v563.test.js (58.821779ms)
+✔ tests/collection-catalog-compute-contract.test.js (288.285922ms)
+✔ tests/collection-cell-alignment-v70106.test.js (66.852734ms)
+✔ tests/collection-checkbox-copy-precedence.test.js (63.838728ms)
+✔ tests/collection-client-delta-actual.test.js (96.318817ms)
+✔ tests/collection-client-delta-field.test.js (74.214839ms)
+✔ tests/collection-client-delta-group.test.js (159.997608ms)
+✔ tests/collection-client-delta-legacy-server.test.js (132.221405ms)
+✔ tests/collection-client-delta-lifecycle.test.js (94.500327ms)
+✔ tests/collection-clipboard-modal-guard-v781.test.js (47.962831ms)
+✔ tests/collection-clipboard-safe.test.js (65.472974ms)
+✔ tests/collection-coedit-merge-v20260926.test.js (464.404134ms)
+✔ tests/collection-collapsed-export-projection-v7084.test.js (112.804821ms)
+✔ tests/collection-colour-override-consistency-v20260920.test.js (71.701499ms)
+✔ tests/collection-colour-overrides-group-summary-v20260920.test.js (100.616044ms)
+✔ tests/collection-column-filter-accessible-name-v1048.test.js (67.716316ms)
+✔ tests/collection-columns-dialog-v784.test.js (64.575817ms)
+✔ tests/collection-common-rule-language-v1063.test.js (69.806395ms)
+✔ tests/collection-concept2-projection-v20260920.test.js (74.917581ms)
+✔ tests/collection-concept2-row-checkbox-v20260920.test.js (82.107911ms)
+✔ tests/collection-concurrency-v721.test.js (7541.583099ms)
+✔ tests/collection-confirmation-header-language-v1060.test.js (71.739294ms)
+✔ tests/collection-confirmed-filter-v290.test.js (97.916749ms)
+✔ tests/collection-copy-clean-v661.test.js (85.743718ms)
+✔ tests/collection-costing-search-accessible-name-v1046.test.js (71.351833ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-delete-license-automation-v831.test.js (101.595096ms)
+✔ tests/collection-deleted-stale-save.test.js (175.221858ms)
+✔ tests/collection-derived-cell-clipboard-v781.test.js (114.005204ms)
+✔ tests/collection-derived-days-language-v1061.test.js (91.920007ms)
+✔ tests/collection-draft-feedback.test.js (83.717666ms)
+✔ tests/collection-dropdown-clipboard-v593.test.js (54.725164ms)
+✔ tests/collection-editor-popup-v491.test.js (84.083714ms)
+✔ tests/collection-empty-action.test.js (79.870974ms)
+✔ tests/collection-empty-state-v1039.test.js (56.764007ms)
+✔ tests/collection-excel-import-actions-v20260920.test.js (49.98429ms)
+✔ tests/collection-export-derived-v552.test.js (49.074755ms)
+✔ tests/collection-export-flat-rows-v813.test.js (90.175524ms)
+✔ tests/collection-fabric-card-clipboard.test.js (41.027038ms)
+✔ tests/collection-filter-tooltip-language-v1057.test.js (51.185307ms)
+✔ tests/collection-fixes-v642.test.js (101.461819ms)
+✔ tests/collection-fob-pan-v483.test.js (63.900226ms)
+✔ tests/collection-freeze-grid-alignment-v1015.test.js (84.104545ms)
+✔ tests/collection-header-layout.test.js (92.346466ms)
+✔ tests/collection-image-canonical-bridge-v1103.test.js (55.818056ms)
+✔ tests/collection-image-context-v495.test.js (79.28011ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-image-sharing-v20260926.test.js (41.478795ms)
+✔ tests/collection-image-sync-policy.test.js (38.115059ms)
+✔ tests/collection-import-duplicate-v484.test.js (73.408182ms)
+✔ tests/collection-instore-month-v528.test.js (55.699798ms)
+✔ tests/collection-landed-add-row-v488.test.js (61.891189ms)
+✔ tests/collection-landed-formula-v490.test.js (58.045594ms)
+✔ tests/collection-landed-profit-v553.test.js (78.369559ms)
+✔ tests/collection-landed-settings-v549.test.js (118.034002ms)
+✔ tests/collection-landed-v430.test.js (250.112935ms)
+✔ tests/collection-language-contract-v1033.test.js (79.212097ms)
+✔ tests/collection-late-read-after-save.test.js (57.126302ms)
+✔ tests/collection-lfl-country-filter.test.js (295.777939ms)
+✔ tests/collection-lfl-detail.test.js (112.495207ms)
+✔ tests/collection-lfl-persistence.test.js (126.624753ms)
+✔ tests/collection-lfl-reference.test.js (141.414313ms)
+✔ tests/collection-linked-cell-lock-v781.test.js (109.797619ms)
+✔ tests/collection-live-reload-isolation.test.js (2310.750015ms)
+✔ tests/collection-master-catalog.test.js (115.820564ms)
+✔ tests/collection-mb-month-locale-filter.test.js (73.416742ms)
+✔ tests/collection-model-group-enhancements-v1014.test.js (91.209592ms)
+✔ tests/collection-model-group-integration.test.js (60.068222ms)
+✔ tests/collection-model-groups.test.js (53.679654ms)
+✔ tests/collection-multi-buyer-analytics-v665.test.js (142.30615ms)
+✔ tests/collection-no-sample-seed-v20260926.test.js (57.098102ms)
+✔ tests/collection-order-backfill.test.js (78.120604ms)
+✔ tests/collection-overseas-weighted-change-v569.test.js (84.610636ms)
+✔ tests/collection-owner-recovery-v20260922.test.js (155.662484ms)
+✔ tests/collection-paste-mutation-pipeline-v70106.test.js (108.56814ms)
+✔ tests/collection-pending-draft-recovery.test.js (138.12902ms)
+✔ tests/collection-permissions-hub-attach-v20260926.test.js (118.385817ms)
+✔ tests/collection-plm-drag-create-v70127.test.js (875.823845ms)
+✔ tests/collection-plm-fixes-v654.test.js (81.860874ms)
+✔ tests/collection-plm-images-persistence-export-20261026.test.js (104.318806ms)
+✔ tests/collection-price-detail-v20261023.test.js (73.505367ms)
+✔ tests/collection-price-view-buttons-v20261030.test.js (51.446888ms)
+✔ tests/collection-price-view-v20261022.test.js (89.886672ms)
+✔ tests/collection-pricing-columns-v466.test.js (77.352964ms)
+✔ tests/collection-pricing-context.test.js (70.014489ms)
+✔ tests/collection-pricing-engine.test.js (520.351049ms)
+✔ tests/collection-private-replication-v978.test.js (478.757103ms)
+✔ tests/collection-product-main-definition-suggestions-v829.test.js (133.692875ms)
+✔ tests/collection-quick-filter-button-v1049.test.js (101.456464ms)
+✔ tests/collection-recycle-bin-v597.test.js (95.634221ms)
+✔ tests/collection-reference-footer.test.js (78.192833ms)
+✔ tests/collection-remote-editor-preservation.test.js (76.55107ms)
+✔ tests/collection-replication-empty-text.test.js (58.642667ms)
+✔ tests/collection-replication-merge-publish-failure.test.js (151.883631ms)
+✔ tests/collection-replication-publish-recovery.test.js (100.751698ms)
+✔ tests/collection-replication-windows-eperm-v20260927.test.js (170.019308ms)
+✔ tests/collection-row-height.test.js (111.836436ms)
+✔ tests/collection-row-writes-v722.test.js (497.515732ms)
+✔ tests/collection-scope-accessible-name-v1047.test.js (52.795498ms)
+✔ tests/collection-scope-toolbar-v714.test.js (192.732176ms)
+✔ tests/collection-scroll-pan-v485.test.js (61.067864ms)
+✔ tests/collection-select-copy-v20261007.test.js (40.703476ms)
+✔ tests/collection-selection-action-gating-v1041.test.js (60.573165ms)
+✔ tests/collection-shared-conflict-recovery.test.js (69.345067ms)
+✔ tests/collection-shared-hover-v712.test.js (57.89686ms)
+✔ tests/collection-sharing-network-recovery-v723.test.js (63.623757ms)
+✔ tests/collection-shipping-landed-ui-v975.test.js (96.09691ms)
+✔ tests/collection-single-click-edit-v775.test.js (63.230133ms)
+✔ tests/collection-spreadsheet-engine.test.js (66.970647ms)
+✔ tests/collection-spreadsheet-performance-guards.test.js (89.977374ms)
+✔ tests/collection-spreadsheet-wiring.test.js (83.669428ms)
+✔ tests/collection-status-capacity-request-v648.test.js (149.603888ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-status-catalog-shared-v1091.test.js (54.438035ms)
+✔ tests/collection-status-live-color-v70165.test.js (70.143654ms)
+✔ tests/collection-status-management-v1092.test.js (88.84326ms)
+✔ tests/collection-status-render-snapshot.test.js (69.748236ms)
+✔ tests/collection-style-management-v452.test.js (81.417037ms)
+✔ tests/collection-summary-images-rules-v492.test.js (74.388993ms)
+✔ tests/collection-table-range-v70259.test.js (49.427485ms)
+✔ tests/collection-toolbar-compact-actions-v1042.test.js (69.377356ms)
+✔ tests/collection-toolbar-language-v1058.test.js (52.356854ms)
+✔ tests/collection-usability-v562.test.js (83.251936ms)
+✔ tests/collection-worker-authority-recheck.test.js (271.027584ms)
+✔ tests/compute-collection-lfl-reference.test.js (45.957199ms)
+✔ tests/compute-collection-lfl-source-version.test.js (420.408416ms)
+✔ tests/copy-to-collection-backfill-v20261023.test.js (139.473203ms)
+✔ tests/cp-orders-collection-sync-v20261023.test.js (117.560646ms)
+✔ tests/excel-sort-collection-drop-v303.test.js (86.915351ms)
+✔ tests/lfl-trial-collection-fob.test.js (84.001174ms)
+✔ tests/license-royalty-collection-sync-v519.test.js (55.088183ms)
+✔ tests/login-collection-images-nonblocking-v7093.test.js (56.216539ms)
+✔ tests/overview-collection-header-showcase-20261021.test.js (63.691409ms)
+✔ tests/overview-collection-month-locale-order-v20261021.test.js (79.919434ms)
+✔ tests/overview-collection-month-revolver-v20261007.test.js (87.023493ms)
+✔ tests/overview-collection-status-language-v1065.test.js (54.58318ms)
+✔ tests/overview-collection-summary-v770.test.js (93.000435ms)
+✔ tests/quotation-collection-images-v568.test.js (62.382891ms)
+✔ tests/startup-collection-image-gate.test.js (74.530461ms)
+✔ tests/table-selection-collection-summary-v304.test.js (60.135238ms)
+ℹ tests 141
+ℹ suites 0
+ℹ pass 138
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8168.953186
+
+✖ failing tests:
+
+test at tests/collection-delete-license-automation-v831.test.js:1:1
+✖ tests/collection-delete-license-automation-v831.test.js (101.595096ms)
+  'test failed'
+
+test at tests/collection-image-sharing-v20260926.test.js:1:1
+✖ tests/collection-image-sharing-v20260926.test.js (41.478795ms)
+  'test failed'
+
+test at tests/collection-status-catalog-shared-v1091.test.js:1:1
+✖ tests/collection-status-catalog-shared-v1091.test.js (54.438035ms)
+  'test failed'
+[Buyer Log tests] Batch 1/1 süresi: 8.2s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
