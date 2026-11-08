@@ -117,7 +117,20 @@
     },
     "github": "Actual final-head CI and merge status tracked in PR #918",
     "TEST": "not triggered",
-    "STABLE": "not triggered"
+    "STABLE": "not triggered",
+    "metadataOnlyMainUpdate": {
+      "main": "94eeeaca56e91285190dbe1a8cf67be968549c27",
+      "mergeCommit": "0cbd5c7b3ca1ed391ec6ff93776bca6459afcaf8",
+      "version": "7.0.343",
+      "changed": [
+        "resources/app/package.json",
+        "resources/app/package-lock.json",
+        "docs/dependencies/sbom.cdx.json"
+      ],
+      "runtimeAndTestsByteIdenticalToFullTest": true,
+      "versionAssert": "passed",
+      "dependencyInventoryCheck": "passed"
+    }
   },
   "earlierMainIntegrations": [
     {
