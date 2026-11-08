@@ -10,4 +10,5 @@ function getComputeService(){
   return service;
 }
 async function closeComputeService(){if(service)await service.close();}
-module.exports={getComputeService,closeComputeService};
+function retireComputeSource(ownerId){service?.retireSource(ownerId);}
+module.exports={getComputeService,closeComputeService,retireComputeSource};

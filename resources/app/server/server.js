@@ -349,7 +349,7 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
-const { getComputeService:serverCompute, closeComputeService } = require('./lib/compute-runtime');
+const { getComputeService:serverCompute, closeComputeService, retireComputeSource } = require('./lib/compute-runtime');
 const { createComputeReadGuard } = require('./lib/compute-read-guard');
 const { createComputeReadService } = require('./lib/compute-read-service');
 const { collectionLflSourceVersion } = require('./lib/collection-lfl-source-version');
@@ -6695,6 +6695,11 @@ const initialDataLoadPromises = new Map();
 // Bu küçük, tek amaçlı temizleyici uzun süre erişilmeyen girdileri düşürür.
 const sourceCacheLastAccess = new Map();
 const SOURCE_CACHE_IDLE_EVICT_MS = 24 * 60 * 60 * 1000;
+function retireUserComputeSource(id) {
+  publishedComputeSources.delete(id);
+  coldComputeSourcesInFlight.delete(id);
+  retireComputeSource(id);
+}
 function evictIdleSourceCaches() {
   const cutoff = Date.now() - SOURCE_CACHE_IDLE_EVICT_MS;
   for (const [id, last] of sourceCacheLastAccess) {
@@ -6702,6 +6707,7 @@ function evictIdleSourceCaches() {
       sourceCaches.delete(id);
       sourceCacheLastAccess.delete(id);
       initialDataLoadPromises.delete(id);
+      retireUserComputeSource(id);
     }
   }
 }
@@ -6740,7 +6746,7 @@ if (process.env.BL_TEST_SEED === '1') {
   };
 }
 function resetUserCache(value) {
-  const id = sourceUserId(value); initialDataLoadPromises.delete(id); return replaceUserCache(id, emptySourceCache());
+  const id = sourceUserId(value); initialDataLoadPromises.delete(id); retireUserComputeSource(id); return replaceUserCache(id, emptySourceCache());
 }
 function sourceFolderForUser(value) {
   const id = sourceUserId(value);

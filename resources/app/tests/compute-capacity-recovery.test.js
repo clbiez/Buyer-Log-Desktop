@@ -89,3 +89,22 @@ test('cached output leases do not retain old resident sources after the next ref
     assert.equal(service.stats().liveSources,1,'only the current source remains resident even while the previous output is cached');
   }finally{held.release();}
 });
+test('a successful worker replica releases its strong source reference',async t=>{
+  const {service}=setup(t),raw=source();
+  const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:raw,uncompressedBytes:MiB});
+  assert.ok(descriptor.replicaFile);assert.equal(service.stats().liveSources,0);
+  const lease=await service.run('projections',descriptor,params());
+  try{assert.equal(unpack(lease.value.compressed.cp).rows[0]['Model Name'],'CURRENT');}finally{lease.release();}
+});
+test('idle-owner retirement releases inline sources despite cached outputs and permits a fresh source',async t=>{
+  const {service}=setup(t),first=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:8*MiB});
+  const held=await service.run('projections',first,params());
+  try{
+    service.retireSource('a');assert.equal(service.stats().liveSources,0);
+    await assert.rejects(service.run('projections',first,params()),{code:'COMPUTE_STALE_GENERATION'});
+    const next=await service.seedSource({ownerId:'a',generation:'g1',source:source('RETURNED'),uncompressedBytes:8*MiB});
+    assert.notEqual(next.capability,first.capability);
+    const lease=await service.run('projections',next,params());
+    try{assert.equal(unpack(lease.value.compressed.cp).rows[0]['Model Name'],'RETURNED');}finally{lease.release();}
+  }finally{held.release();}
+});

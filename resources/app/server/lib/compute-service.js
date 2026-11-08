@@ -39,7 +39,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     return locally(async()=>{
       assertCurrent();const started=performance.now(),transfer=[];
       const sourceIndependent=['projection-envelope','cp-image-registry','cp-shared-edit-codes'].includes(task);
-      let source=record.liveSource;
+      let source=record.liveSource||record.sourceRef?.deref();
       if(!source&&!sourceIndependent&&record.descriptor.replicaFile){
         source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);
       }else if(!source&&!sourceIndependent){
@@ -61,20 +61,27 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     try{
       if(record.descriptor.replicaFile)await fs.promises.rm(record.descriptor.replicaFile,{force:true,maxRetries:3,retryDelay:50});
       if(records.get(record.key)===record)records.delete(record.key);reservedDiskBytes-=record.diskBytes;record.diskBytes=0;
-      record.liveSource=null;
+      record.liveSource=null;record.sourceRef=null;
     }catch{record.removing=false;/* Windows: açık native okuma bitene kadar baytlar ücretli kalır. */}
   }
   function advance(owner,generation){
     current.set(owner,generation);pool.setGeneration(poolOwner(owner),generation);
     // Cached output leases may outlive a refresh; they must not keep the old
     // resident source alive. A running local task already holds its own reference.
-    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;record.liveSource=null;void discard(record);}
+    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;record.liveSource=null;record.sourceRef=null;void discard(record);}
+  }
+  function retireSource(ownerId){
+    const owner=String(ownerId||'');if(!owner)return;
+    preparing.delete(owner);current.delete(owner);
+    const retired='retired:'+crypto.randomBytes(16).toString('hex');
+    pool.setGeneration(poolOwner(owner),retired);pool.setGeneration('prepare:'+owner,retired);
+    for(const record of records.values())if(record.owner===owner){record.retired=true;record.liveSource=null;record.sourceRef=null;void discard(record);}
   }
   async function seedSource({ownerId,generation,source,uncompressedBytes,publish=true}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const owner=String(ownerId||''),version=String(generation||'');
     if(!owner||!version||!Number.isSafeInteger(uncompressedBytes)||uncompressedBytes<1)throw failure('COMPUTE_SOURCE_TOO_LARGE');
-    const id=key(owner,version),known=records.get(id);if(known)return known.ready;
+    const id=key(owner,version),known=records.get(id);if(known&&!known.retired)return known.ready;
     const diskBytes=uncompressedBytes*2+MiB;
     if(!Number.isSafeInteger(diskBytes)||reservedDiskBytes+diskBytes>diskBudgetBytes)throw failure('COMPUTE_SOURCE_TOO_LARGE');
     const replicaFile=path.join(privateRoot,crypto.randomBytes(24).toString('hex')+'.v8');
@@ -101,6 +108,9 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
         if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
         descriptor.checksum=lease.value.checksum;descriptor.loadedAt=lease.value.loadedAt;
         descriptor.projectionKeys=Object.freeze({...lease.value.projectionKeys});
+        // The runtime owns this source. A weak reference avoids a second load
+        // for a live fallback without extending an inactive user's lifetime.
+        record.sourceRef=new WeakRef(source);record.liveSource=null;
         reservedDiskBytes-=record.diskBytes-lease.value.fileBytes;record.diskBytes=lease.value.fileBytes;
         Object.freeze(descriptor);if(publish)advance(owner,version);return descriptor;
       }catch(error){record.retired=true;throw error;}
@@ -116,7 +126,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   async function coldSource({ownerId,generation,loadedAt=null,uncompressedBytes,replace=false}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const owner=String(ownerId||''),version=String(generation||''),id=key(owner,version);
-    const existing=records.get(id);if(existing)return existing.ready;
+    const existing=records.get(id);if(existing&&!existing.retired)return existing.ready;
     if(!replace&&current.has(owner)&&current.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
     if(!owner||!version||!Number.isSafeInteger(uncompressedBytes)||uncompressedBytes<1)throw failure('COMPUTE_SOURCE_TOO_LARGE');
     const descriptor=Object.freeze({ownerId:owner,generation:version,loadedAt,capability:crypto.randomBytes(24).toString('hex'),bytes:Math.max(64*MiB,uncompressedBytes*4)});
@@ -282,6 +292,6 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await localTail;await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
+  return {seedSource,publishSource,retireSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};
