@@ -1,0 +1,7 @@
+0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141  /tmp/buyerlog-phase6c-native-verifier-preparation/base/local-db.js
+9447f6fd563a6271c382bcdc817fbdcd1c986c007ef0b62943f8bffdd53f7125  /tmp/buyerlog-phase6c-native-verifier-preparation/local-db.js
+a47af27d102e74761a0d774f0b884109f59ebee36fa3b8c147a060f3e352f0b2  /tmp/buyerlog-phase6c-native-verifier-preparation/native-verifier.patch
+8d2fb5698898f7775678979acdfd3f4d62dbf69a5d665ccf4fbb93c9593d9f83  /tmp/buyerlog-phase6c-native-verifier-preparation/tests/local-db-private-durability.test.js
+2049102f9a03b9610d5ce743b63508cd038984dfa30d5cff848a1cae0582bb03  /tmp/buyerlog-phase6c-native-verifier-preparation/tests/native-verifier-crash-child.cjs
+568b2f6ea1868fb809b478aa354dda7f26176853fa250840e0cb6676ae31db6f  /tmp/buyerlog-phase6c-native-verifier-preparation/tests/helpers/native-verifier-subject.cjs
+f2d9599b987d9b71e5aaab7e29e86fe038911bf368cba1482283294080fc3afe  /tmp/buyerlog-phase6c-native-verifier-preparation/native-adapter-request.md
