@@ -102,47 +102,59 @@ Her dal arşiv olarak korundu / All branches remain available as archives.
 #918 açık ve merge edilmemiştir; açıklamasında **performans programı dışı** yazar;
 kullanıcı ayrıca karar verecektir / Remains open, unmerged and outside this program for a separate decision.
 
-## ERTELENEN İŞ — uygulanmadı / DEFERRED — not implemented
+## ERTELENEN İŞ — sohbet 1–8 sonuçları / DEFERRED — chats 1–8 outcomes
 
-A/B/C kaynak incelemesindeki öncelik düzeyleridir; erteleme maliyetsizlik veya başarı demek değildir.
-**EN:** Priority A/B/C follows the review; deferral is neither a zero-cost finding nor completion.
+A/B/C kaynak incelemesindeki öncelik düzeyleridir. Bu güncelleme mevcut sohbet kapanışlarını ve gerçek PR durumlarını kaydeder; yeni ölçüm veya kanıt dosyası üretmez.
+**EN:** Priority A/B/C follows the review. This update records existing chat outcomes and actual PR states; it adds no new measurements or raw evidence.
 
-| Öncelik / Priority | Madde / Item | Gerekçe / Reason |
-| --- | --- | --- |
-| A | ANA-02 | Orders arama/predicate tekrarını kaldıran uygulama yok / Search/predicate caching not implemented. |
-| A | ANA-03 | Kapalı pivot dallarını DOM'dan ayırma uygulanmadı / Collapsed-branch DOM pruning not implemented. |
-| A | ANA-04 | Backlog detay/Intake ortak sanal tabloya geçirilmedi / Shared virtualization not implemented. |
-| A | CPR-04 | Render sırasında tam kural sync/save yan etkilerini ayırma uygulanmadı / Render-side rule sync/save separation deferred. |
-| A | CPR-08 | Dirty-row/formül bağımlılık grafiği üretime bağlanmadı / Dirty-row dependency graph not integrated. |
-| B | ANA-08 | Overview yalnız aktif kırılımı hazırlamıyor / Active-breakdown-only preparation deferred. |
-| C | ANA-09 | Freeze-picker global flush davranışı değiştirilmedi / Global flush behavior unchanged. |
-| B | ANA-10 | Bulk CP kimlik indeksli güncelleme uygulanmadı / Indexed bulk updates deferred. |
-| B | DS-01 | Delta/legacy çift kalıcılık yolu korunuyor / Duplicate persistence path remains. |
-| A | DS-02 | Kaynak cache-key hashing maliyeti için ayrı üretim düzeltmesi yok / Source-key hashing not independently optimized. |
-| A | DS-03 | Override hash/modül cache kapsamı daraltılmadı / Override hashing/cache scope unchanged. |
-| A | DS-04 | loadOverrides normalizasyon/overlay maliyeti kaldırılmadı / Repeated normalization/overlay remains. |
-| B | DS-10 | No-change sync sonrası hydrate kaldırılmadı / Post-sync hydration unchanged. |
-| B | 6b: SHELL-05 | Native sekmenin yalnız kendi modülünü hazırlaması uygulanmadı / Native module-only preparation deferred. |
-| B | 6b: SHELL-06 | Helper 73 test ve Chromium'da doğrulandı; context/asset/caller bağlantısı ve Electron kabulü yok / Helper verified but unwired. |
-| B | 6b: app-main yaşam döngüsü / lifecycle | load/mount/activate/deactivate/dispose entegrasyonu tamamlanmadı / Lifecycle integration incomplete. |
-| A | 6a ince projeksiyon / thin projection | Yerel aday kapalı; full-data tüketici ve son üretim kabulü tamamlanmadı / Candidate disabled; consumer and production acceptance incomplete. |
-| A | 6c delta kalıcılık / persistence | CPR-02/03, DS-07/09, WAL/undo/owner kaynak sahipliği adaptörleri üretimde etkin değil / Delta/WAL/undo/owner adapters not activated. |
-| A | INT-01 | Tam grafik kopyası yavaşladı; immutable kaynak sahipliği tasarımı bekliyor / Full copying regressed; ownership design remains pending. |
-| A | INT-03 | Byte-budget helper var; PLM Sync'e dokunulmuyor, üretim pipeline'ı bağlanmadı / Helper exists; production pipeline untouched. |
-| B | INT-06 | Prototip yazım tasarrufuna karşın son RSS +%5,85; kabul edilmedi / Final prototype RSS regression rejected. |
-| B | ANA-12 | İstemci/backend helper var; gerçek HTTP→job iptali ve üretim CPU kabulü yok / Helpers exist; real route cancellation unintegrated. |
-| B | INT-08 | Main179 tanısı 12/12 ve 32 sentetik orijinalde ~459 MiB decoded cache'i doğruladı; preview uygulaması, kalite ve native ürün kabulü yok / Measured need, no preview implementation or acceptance. |
-| C | DS-11 | Gerçek SMB/peer RTT ortamı yok / Real SMB/peer RTT environment unavailable. |
-| B | INT-07 | Gerçek PLM kapasite/retry kabul ortamı yok / Real PLM capacity/retry acceptance unavailable. |
-| C | INT-10 | Upstream upload kapasitesi ve kazancı doğrulanmadı / Upstream upload capacity and benefit unverified. |
-| C | ADMIN-02 | Güvenli disk geçişi azaltımı kanıtlanmadı / Safe reduction of disk passes unproven. |
-| C | ADMIN-01 | Gerçek demo tanısı worker faydasını kanıtlamadı / Real demo-server diagnostic did not prove offload benefit. |
-| B | ADMIN-03 | Yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu yapılmadı / Hierarchy optimization not implemented. |
-| C | INT-12 | Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk unresolved. |
-| B | CPR-06 kalan / remainder | Hesap kazanımı var; büyük ilk DOM için pencereleme yok / Computation improved; initial DOM windowing absent. |
-| B | CPR-09 / CP ilk açılış worker'ı | #916 satır cache'i korunuyor; CP kişisel katman/ilk hesap worker'a taşınmadı / Row cache retained; initial/personal computation not offloaded. |
-| A | CPR-10 kalan / remainder | Önceki batch kazanımları var; tam delta/WAL entegrasyonu uygulanmadı / Earlier batching retained; full delta integration deferred. |
-| C | CARD-01 lisans / license | +%24,42 arama p95 gerilemesi nedeniyle parça ayrıldı / Portion excluded for search regression. |
+**Kayıt kesimi / Cutoff: 2026-11-08 19:50 (Europe/Istanbul, UTC+03).** Sonuçlanmış sohbetlerdeki “atlandı” kararı aynen aktarılır. Kapanış mesajı veya uygulama PR’ı doğrulanamayan yedi madde bu raporda “atlandı — teslim doğrulanamadı” olarak kapatılır; sürmekte görünen sohbetlere tamamlandı veya başarısız ölçüm sonucu atfedilmez.
+**EN:** Final skip decisions are copied from completed chats. Seven items without a verifiable final delivery are closed in this report as “skipped — delivery unverified”; ongoing chats are not claimed to have completed or failed measurement.
+
+| Öncelik / Priority | Madde / Item | Sonuç / Outcome | Gerekçe ve PR / Reason and PR |
+| --- | --- | --- | --- |
+| A | ANA-02 | Atlandı / Skipped | 681,9 → 612,1 ms; kazanç 69,8 ms < 100 ms; çıktı hash’leri eşit; PR yok / Gain below 100 ms; equal output hashes; no PR. |
+| A | ANA-03 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Sohbet kaydında yalnız görev var; ölçüm, kapanış mesajı veya uygulama PR’ı yok; teslim doğrulanamadı / Only the assignment is recorded; no measurement, final outcome or implementation PR to verify. |
+| A | ANA-04 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Sohbet kaydında yalnız görev var; Backlog/Intake uygulaması ve eşdeğerlik sonucu doğrulanamadı; PR yok / Only the assignment is recorded; no verifiable implementation or parity outcome; no PR. |
+| A | CPR-04 | Atlandı / Skipped | Açılış 2355,3 → 2277,4 ms (%3,3), filtre 1151,4 → 1040,7 ms (%9,6), sıralama 1165,7 → 1088,7 ms (%6,6): %10 kapısı geçmedi; veri/hücre hash’leri eşit; senkronize veride kayıt 0 → 0, yüklü kural 0; PR yok / All gains below 10%; equal data/cell hashes; zero saves on synchronized data with no loaded rules; no PR. |
+| A | CPR-08 | Atlandı / Skipped | 30k kaynak → 24.982 CP satırı; 220,7 → 228,4 ms (%3,5 yavaşlama); 14/14 senaryoda hücre hash’leri ve hata özetleri eşit; PR yok / Slower candidate; 14/14 cell-hash and error-summary checks equal; no PR. |
+| B | ANA-08 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Sohbet kaydında yalnız görev var; aktif kırılım için ölçüm veya kapanış sonucu doğrulanamadı; PR yok / Only the assignment is recorded; no verifiable measurement or final outcome; no PR. |
+| C | ANA-09 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Sohbet kaydında yalnız görev var; freeze/sanallaştırma kabul sonucu doğrulanamadı; PR yok / Only the assignment is recorded; no verifiable freeze/virtualization acceptance; no PR. |
+| B | ANA-10 | Atlandı / Skipped | İlk çift 237,1 → 8,8 ms, fakat çıktı hash’i farklı; eşdeğerlik kapısı geçmedi; PR yok / First pair only; output hashes differ, parity failed; no PR. |
+| A | DS-02 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Son kayıt ölçümün sürdüğünü söylüyor; üç çift hedef-metrik kapanışı ve uygulama PR’ı yok; teslim doğrulanamadı / Last update says measurement is ongoing; no final three-pair target-metric outcome or implementation PR to verify. |
+| A | DS-03 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | İlgisiz override değişimi gerektiren ayrı tetikleyici ölçülmediği son ara kayıtta belirtilmiş; kapanış sonucu ve uygulama PR’ı yok / Last update identifies a missing unrelated-override trigger; no final outcome or implementation PR. |
+| A | DS-04 | Atlandı — teslim doğrulanamadı / Skipped — delivery unverified | Son kayıt ölçümün sürdüğünü söylüyor; hedef API süresi/eşdeğerlik için kesin kapanış sonucu ve uygulama PR’ı yok / Last update says measurement is ongoing; no final API-time/parity outcome or implementation PR. |
+| B | INT-08 | Atlandı / Skipped | Yalnız model-image-cache.js izni, app-main.js içindeki cache’i atlayan warmup ve prior/loaded yollarını kapsamıyor; kapsam engeli nedeniyle yeni A/B veya hash karşılaştırması yok; 22/22 mevcut test PASS; PR yok / Cache-bypassing callers require changes outside the allowed file; no new A/B or parity claim; existing tests pass; no PR. |
+| B | CPR-06 kalan / remainder | Atlandı / Skipped | İlk çizim 8.342 → 843 ms, DOM 435.111 → 4.606, düzenleme 402 → 307 ms; yerel kopyalama main’deki 120 yerine 31 satır verdi, eşdeğerlik geçmedi; değişiklik geri alındı, PR yok / Faster first paint failed clipboard parity (31 vs 120 rows); candidate reverted; no PR. |
+
+### Yapılmayacaklar — bu kapanış turunda kapsam dışı / Outside this closure round
+
+Bu işler sohbet 1–8’e verilen dar uygulama kapsamına alınmadı; kapsam dışı kaydı, tamamlandı veya kazancı yok anlamına gelmez.
+**EN:** These items were not assigned to chats 1–8; out of scope means neither completed nor proven to have no benefit.
+
+| Öncelik / Priority | Madde / Item | Sonuç / Outcome | Gerekçe / Reason |
+| --- | --- | --- | --- |
+| B | DS-01 | Kapsam dışı / Out of scope | Delta/legacy çift yazımı kaldırmak korunan senkron/delta-store sahipliğini değiştirir; bu turun kapsamı dışında / Removing duplicate persistence changes protected sync/delta-store ownership. |
+| B | DS-10 | Kapsam dışı / Out of scope | No-change sync sonrası hydrate, bu turda izin verilmeyen senkron akışına bağlı / Post-sync hydration belongs to the sync path excluded from this round. |
+| B | 6b: SHELL-05 | Kapsam dışı / Out of scope | Native sekmede modüle özel hazırlık Windows/Electron kabulü gerektirir; bu turda native kabuk kapsamı yok / Native module-only startup needs Windows/Electron acceptance outside this round. |
+| B | 6b: SHELL-06 | Kapsam dışı / Out of scope | 73 test ve Chromium helper doğrulaması üretim bağlantısı değildir; context/asset/caller entegrasyonu ve Electron kabulü ayrı iş / Helper verification does not cover production wiring or Electron acceptance. |
+| B | 6b: app-main yaşam döngüsü / lifecycle | Kapsam dışı / Out of scope | load/mount/activate/deactivate/dispose entegrasyonu, izin verilen dar fonksiyon değişikliklerinden geniş bir kabuk dönüşümüdür / Lifecycle integration exceeds the assigned function-level changes. |
+| A | 6a ince projeksiyon / thin projection | Kapsam dışı / Out of scope | Kapalı adayın full-data tüketicileri ve üretim kabulü tamamlanmadı; projeksiyon mimarisi bu turda yeniden açılmıyor / Incomplete consumer and production acceptance; projection redesign excluded. |
+| A | 6c delta kalıcılık / persistence | Kapsam dışı / Out of scope | CPR-02/03, DS-07/09, WAL/undo/owner adaptörleri üretimde etkin değil; veri sahipliği ve delta-store entegrasyonu bu turda yasak / Ownership and delta-store integration excluded; adapters remain inactive. |
+| B | 6d SQLite | Kapsam dışı / Out of scope | Karar bekle; prototip üretim/pilot/migrasyon izni değildir ve SMB üzerinde kurulum yapılmayacak / Decision remains wait; prototype does not authorize a production pilot, migration or SQLite-on-SMB. |
+| A | INT-01 | Kapsam dışı / Out of scope | Tam grafik kopyası 7,122 → 8,928 s ile geriledi; immutable kaynak sahipliği tasarımı ayrı mimari iş / Full copying regressed; immutable ownership is a separate architectural change. |
+| A | INT-03 | Kapsam dışı / Out of scope | Byte-budget helper üretime bağlı değil; gerekli PLM Sync pipeline değişikliği açıkça yasak / Helper is unwired; required PLM Sync changes are prohibited. |
+| B | INT-06 | Kapsam dışı / Out of scope | Son prototip RSS +%5,85 ile kabul edilmedi; checkpoint kalıcılığı sohbet 1–8’e atanmadı / Prototype RSS failed acceptance; checkpoint persistence was not assigned. |
+| B | ANA-12 | Kapsam dışı / Out of scope | HTTP→job iptali helper düzeyinde kaldı; gerçek route/CPU kabulü ve backend iptal entegrasyonu bu tura atanmadı / Route cancellation integration and production CPU acceptance were not assigned. |
+| C | DS-11 | Kapsam dışı / Out of scope | Gerçek SMB/peer RTT kabul ortamı yok; bu tur ortam veya protokol değişikliği içermez / No real SMB/peer RTT acceptance environment; environment/protocol changes excluded. |
+| B | INT-07 | Kapsam dışı / Out of scope | Gerçek PLM kapasite/retry kabul ortamı yok ve PLM Sync/BOM akışı koruma altında / Real PLM capacity/retry environment unavailable; PLM Sync/BOM protected. |
+| C | INT-10 | Kapsam dışı / Out of scope | Upstream upload kapasitesi ve kazancı doğrulanmadı; dış sistem kapasite deneyi bu turun dışında / Upload capacity and benefit unverified; upstream load experiments excluded. |
+| C | ADMIN-02 | Kapsam dışı / Out of scope | Güvenli disk geçişi azaltımı kanıtlanmadı; yedekleme doğruluğunu değiştiren çalışma atanmadı / Safe reduction of disk passes unproven; backup changes not assigned. |
+| C | ADMIN-01 | Kapsam dışı / Out of scope | Gerçek demo sunucu tanısı worker faydasını kanıtlamadı; yeni worker/tanı turu kapsam dışı / Diagnostic did not prove offload benefit; another worker/diagnostic round excluded. |
+| B | ADMIN-03 | Kapsam dışı / Out of scope | #915 yetki düzeltmesi mevcut; ayrı hiyerarşi/public-profile performans çalışması bu tura atanmadı / Authority fix retained; hierarchy/public-profile optimization not assigned. |
+| C | INT-12 | Kapsam dışı / Out of scope | Kurumsal kapasite ve 1 → 2 spekülatif istek riski çözülmedi; dış transport paralelliği atanmadı / Enterprise capacity and speculative-load risks remain; transport parallelism not assigned. |
+| B | CPR-09 / CP ilk açılış worker'ı | Kapsam dışı / Out of scope | #916 satır cache’i korunacak; kişisel katman/ilk hesap worker dönüşümü ayrı mimari iş olarak bu tura atanmadı / Row cache retained; initial/personal worker offload is a separate unassigned architectural task. |
+| A | CPR-10 kalan / remainder | Kapsam dışı / Out of scope | Önceki batch kazanımları korunur; kalan delta/WAL entegrasyonu yasaklanan kalıcılık mimarisi kapsamına girer / Earlier batching retained; remaining delta/WAL work crosses excluded persistence scope. |
+| C | CARD-01 lisans / license | Kapsam dışı / Out of scope | Parça +%24,42 arama p95 gerilemesi nedeniyle ayrıldı; lisans kartları bu turda yeniden açılmadı / Portion excluded for search regression; license cards not reopened. |
 
 INT-08 için Linux tanı ortamı vardı; eksik olan preview/native üretim kabulüdür.
 **EN:** INT-08 is not “unmeasured for lack of any environment”; the missing part is implementation and product acceptance.
