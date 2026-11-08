@@ -87,6 +87,8 @@
 .pdMatrix .pdStickyBest{left:280px}
 .pdMatrix .pdStickyDelta{left:424px}
 .pdMatrix tbody tr{height:36px}
+.pdMatrix tbody tr.pdVirtualSpacer{height:0}
+.pdMatrix tbody tr.pdVirtualSpacer>td{padding:0}
 .pdMfrHead{overflow:hidden}
 .pdMfrHead .linkBtn{white-space:normal;text-align:left}
 .pdMfrHead small{overflow:hidden;text-overflow:ellipsis}
