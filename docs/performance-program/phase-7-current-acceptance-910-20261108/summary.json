@@ -1,0 +1,45 @@
+{
+  "revision": "1c0dc72d85165d7b88fe0d3767b9ae3e29a1d406",
+  "appTree": "1d15c9b011cdab8f61f53b10da2f8ea1c5859bf9",
+  "all10BatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "totals": {
+    "pass": 8945,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "relatedPass": 32,
+  "reviewedSourceExact": [
+    {
+      "path": "resources/app/server/lib/model-image-distribution.js",
+      "blob": "83c0ca2ccb6e39c7377fbb31fdaa7f8de9ac2633",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/server/lib/shared-image-store.js",
+      "blob": "faf9077b2352d57f4babf6b0291046df81bb3dbd",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/helpers/phase7-pack-child.cjs",
+      "blob": "e1390059b39258295d53f4f08ad29d722c4f434b",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/phase7-local-images.test.js",
+      "blob": "9791c339bb07ae1c1d8f2c93ddab5d2bec08a3e9",
+      "exactPriorReview": true
+    },
+    {
+      "path": "resources/app/tests/phase7-pack-batch.test.js",
+      "blob": "816dcfae8fde2d86deac7997c5d9d0f379bfa8dd",
+      "exactPriorReview": true
+    }
+  ],
+  "i18n": "0/0",
+  "notes": 52,
+  "mainIncluded": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "benchmark": "Historical3pairs retained original63159fb3 source, Linuxlocaldisk, notSMB/Windows, notrelabeled newMain acceptance",
+  "merge": "not authorized; P1 stop before merge; no TEST/STABLE"
+}
