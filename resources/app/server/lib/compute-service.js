@@ -66,7 +66,9 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   }
   function advance(owner,generation){
     current.set(owner,generation);pool.setGeneration(poolOwner(owner),generation);
-    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;void discard(record);}
+    // Cached output leases may outlive a refresh; they must not keep the old
+    // resident source alive. A running local task already holds its own reference.
+    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;record.liveSource=null;void discard(record);}
   }
   async function seedSource({ownerId,generation,source,uncompressedBytes,publish=true}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
@@ -275,7 +277,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     try{try{onMetrics?.({...lease.metrics,...encodeMetrics,paramsBytes:inputBytes-1024});}catch{}return lease.value.authorityHash;}
     finally{lease.release();}
   }
-  function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
+  function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,liveSources:[...records.values()].filter(record=>Boolean(record.liveSource)).length,...pool.stats()};}
   function close(){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await localTail;await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;

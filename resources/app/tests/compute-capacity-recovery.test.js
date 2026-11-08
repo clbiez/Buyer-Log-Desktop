@@ -80,3 +80,12 @@ test('worker execution failures remain failures and never silently use the capac
   const service=createComputeService({root,pool:{setGeneration(){},run:async()=>{throw Object.assign(Error('failed'),{code:'COMPUTE_WORKER_FAILED'});},close:async()=>{}}});t.after(()=>service.close());
   await assert.rejects(service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB}),{code:'COMPUTE_WORKER_FAILED'});
 });
+test('cached output leases do not retain old resident sources after the next refresh',async t=>{
+  const {service}=setup(t),first=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:8*MiB});
+  const held=await service.run('projections',first,params());
+  try{
+    assert.equal(service.stats().liveSources,1);
+    await service.seedSource({ownerId:'a',generation:'g2',source:source('NEXT'),uncompressedBytes:8*MiB});
+    assert.equal(service.stats().liveSources,1,'only the current source remains resident even while the previous output is cached');
+  }finally{held.release();}
+});
