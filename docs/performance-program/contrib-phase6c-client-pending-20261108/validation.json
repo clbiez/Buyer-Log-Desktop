@@ -1,0 +1,92 @@
+{
+  "baseCommit": "ea49389836dba23f0970a974b4c0185f1b36ec0e",
+  "branch": "contrib/phase6c-client-pending-20261108",
+  "originalContribution": "2d95db6d4a1e51ad28cb791aeaf4e6d67649176a",
+  "normalCherryPickCommit": "83e93fd281612836be13994c9ee4cef4af23c9bd",
+  "inheritedFileCount": 35,
+  "candidateFilesSha256": {
+    "resources/app/public/collection-delta-pending-journal.js": "2d6177573b6aac35c94d9e4a5cc7ff3c99c897d899e157564263c985b90307e4",
+    "resources/app/tests/collection-delta-pending-journal.test.js": "06895fac4378f33a48da1f63b46e6bbf6a3516df8b03fecbca5b31d80534112a",
+    "resources/app/tests/collection-delta-pending-legacy.test.js": "f6aea1d1dce06c790f26e7c2f03d97382dd621e72c15e33ce2a1d11e35879600",
+    "resources/app/tests/collection-delta-pending-lifecycle.test.js": "a6de9ca5c5e7766456112a1610d3c243029b1c5c1eb4ab7d7170f7911e734ce3",
+    "resources/app/tests/collection-delta-pending-source.test.js": "cd83ce11f9a0efb8f013595ace9a9841c90b8a16f0f7101a182dec9128c40f62",
+    "resources/app/tests/collection-delta-pending-storage.test.js": "f400020b78a7f31e6b23bb7c0944b391462d74d1b2641d00b598b0c519cb6106",
+    "resources/app/tests/fixtures/collection-delta-pending/harness.cjs": "f75834e86d4a51175b005ce943e56e89b28a5c23602d50fee94af1a2443ca518",
+    "resources/app/tests/fixtures/collection-delta-pending/native-storage.cjs": "918eefd3f6876f1d4c637ae727826a94086c2a41a5a6d29e701415902f69261f"
+  },
+  "checks": {
+    "candidateTests": {
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0
+    },
+    "realNodeWebStorage": {
+      "pass": 5,
+      "separateProcesses": true
+    },
+    "realChromiumStorage": {
+      "pass": 5
+    },
+    "nativeInherited": {
+      "pass": 41,
+      "fail": 0
+    },
+    "contributionRegression": {
+      "pass": 63,
+      "failedFile": 1,
+      "blockedActualAssertions": 3,
+      "reason": "read-only inherited app-main whole-file source pin differs at fixed base"
+    },
+    "collectionAndI18nRunner": {
+      "files": 147,
+      "pass": 869,
+      "fail": 1,
+      "reason": "same inherited actual-editor source-pin blocker"
+    },
+    "i18n": {
+      "newMissing": 0,
+      "baselineMissing": 0,
+      "baselineFiles": 0
+    },
+    "fullDefaultRegression": "not run; root integration gate",
+    "independentP1Review": "not performed; user reserved root single review",
+    "sourceAudit": {
+      "pass": true,
+      "actualEditorFunctionBodiesUnchanged": 13,
+      "allOtherInheritedPinnedFilesUnchanged": 5
+    }
+  },
+  "measurements": {
+    "rows": 30000,
+    "edits": [
+      10,
+      100
+    ],
+    "alternatingPairsPerCase": 3,
+    "freshNativeWebStorageProcessPerArm": true,
+    "sharedFlock": "/tmp/buyerlog-performance-measurement.lock",
+    "bindingAndRestoreSeparate": true,
+    "byteSemantics": "successful Storage.setItem UTF-8 value/key bytes, not physical writes"
+  },
+  "blockers": [
+    "schema1/2 full semantic import and history migration remains legacy-only",
+    "root single-writer serialization; localStorage compare/write is not atomic CAS",
+    "server receipt replay/dedup for lost ACK and commit-time schema/membership/authority proof",
+    "finite non-reclaiming retention recovery/GC policy",
+    "root review/update inherited actual-editor source pin and rerun three actual tests"
+  ],
+  "production": {
+    "enabled": false,
+    "appMainChanged": false,
+    "deltaGroupChanged": false,
+    "serverLocalDbComputeContractsChanged": false,
+    "legacyPendingDeleted": false,
+    "newDbMigration": false,
+    "prCreated": false,
+    "merged": false,
+    "testPublished": false,
+    "stablePublished": false
+  },
+  "allNewChangesWithinAuthorizedPaths": true,
+  "candidateFileCount": 36
+}

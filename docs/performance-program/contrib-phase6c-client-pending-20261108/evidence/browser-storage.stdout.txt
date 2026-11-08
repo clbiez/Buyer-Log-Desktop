@@ -1,0 +1,56 @@
+{
+  "browser": "154.0.8037.57",
+  "engine": "Chromium real localStorage",
+  "cases": [
+    {
+      "mode": "quota",
+      "rejected": true,
+      "oldPendingPreserved": true,
+      "history": [],
+      "basePresent": true,
+      "reopened": {
+        "value": "20",
+        "originalPending": "{\"schemaVersion\":2,\"ownerId\":\"synthetic-owner\",\"rows\":[],\"extension\":\"preserve\"}"
+      }
+    },
+    {
+      "mode": "missing",
+      "rejected": true,
+      "oldPendingPreserved": true,
+      "history": [],
+      "basePresent": true,
+      "reopened": null
+    },
+    {
+      "mode": "corrupt",
+      "rejected": true,
+      "oldPendingPreserved": true,
+      "history": [],
+      "basePresent": true,
+      "reopened": null
+    },
+    {
+      "mode": "half-compaction",
+      "rejected": true,
+      "oldPendingPreserved": true,
+      "history": [],
+      "basePresent": true,
+      "reopened": {
+        "value": "20",
+        "originalPending": "{\"schemaVersion\":2,\"ownerId\":\"synthetic-owner\",\"rows\":[],\"extension\":\"preserve\"}"
+      }
+    },
+    {
+      "mode": "ack-storage-failure",
+      "rejected": true,
+      "oldPendingPreserved": true,
+      "history": [],
+      "basePresent": true,
+      "reopened": {
+        "value": "20",
+        "originalPending": "{\"schemaVersion\":2,\"ownerId\":\"synthetic-owner\",\"rows\":[],\"extension\":\"preserve\"}"
+      }
+    }
+  ],
+  "claims": "Storage API success and page reload only; no power-loss or physical fsync proof"
+}

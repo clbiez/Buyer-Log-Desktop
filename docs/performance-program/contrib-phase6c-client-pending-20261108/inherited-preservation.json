@@ -1,0 +1,146 @@
+{
+  "originalCommit": "2d95db6d4a1e51ad28cb791aeaf4e6d67649176a",
+  "normalCherryPickCommit": "83e93fd281612836be13994c9ee4cef4af23c9bd",
+  "filesPreservedExactly": [
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/MEASUREMENTS.md",
+      "gitBlob": "397906e90c444cf9c4c6e9607a9dc4576cc6453a"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/README.md",
+      "gitBlob": "c7b0b7456665f9d8e003bd5a5f83e6af22c1424a"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/benchmark.cjs",
+      "gitBlob": "b4f66d4c4c33e3452b5ae61f98c7d0349590cbc5"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/actual-first.tap",
+      "gitBlob": "ae77a6f412e2fb6806c12fcd730e078a54c15c1d"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/baseline-membership.red.txt",
+      "gitBlob": "930c4161e8c2df8cbc50c75cac9100e6f034e9a2"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/collection-regression.initial.txt",
+      "gitBlob": "b1b45518dc429bb91181078befc475bf0c04cf6e"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/collection-regression.txt",
+      "gitBlob": "c1a0ae30a3c73727f9f4e5c1bffe0144ea95c869"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/first-green-attempt.tap",
+      "gitBlob": "510e41f810a65f05312afee1e44362151383eb3e"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/green.tap",
+      "gitBlob": "450b9ee23675e2430a34ede269a6bfb10e3d351c"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/history-order.red.txt.gz",
+      "gitBlob": "7b2a78da955ef71fd7d2d88478acf0d5039e0485"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/history-validation.red.txt",
+      "gitBlob": "8e374948c77024a385c338491886c3d86cec3f4d"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/i18n.txt",
+      "gitBlob": "a2ffe78cdd2edcb5d9c1f70f9d39a32f0c936e10"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/inherited-native.tap",
+      "gitBlob": "1a7dc26712f12c00a675b81630755202be2ac884"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/inherited.tap",
+      "gitBlob": "39beeb5c3aba965054e1020334daab9f87259ce0"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/micro.json",
+      "gitBlob": "ed29fb68afbc14e4062ad0a0577c235a66abec82"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/micro.process-output-failure.txt",
+      "gitBlob": "8dfb312cf48423ebd6d301d48fa3c179aa39d8ca"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/micro.shared-process.json",
+      "gitBlob": "ba0af16287342446bb46a080726e000d5ef5ebe6"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/micro.stdout.txt",
+      "gitBlob": "094dec518d73230d736fd11624649bab13483719"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/mixed-session.red.txt",
+      "gitBlob": "0663db13c8781bfedf26801c8df6d299f5788ec0"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/prototype.red.txt.gz",
+      "gitBlob": "70a5fe2fada64ff3b28141f133b678a52167f3d4"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/red.tap",
+      "gitBlob": "0d5410839b72b70d0f76b686b7002794f7b7d633"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/evidence/source-json.red.txt",
+      "gitBlob": "8dc3a4a2d58868020bb17dddd543adb74b33f491"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/prototype-red.cjs",
+      "gitBlob": "a11dd9fe140fc929cacf954e9574467c463b312d"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/source-review.json",
+      "gitBlob": "e04e280e771c024fb27d1fda409aed1a93681f72"
+    },
+    {
+      "path": "docs/performance-program/contrib-client-delta-20261108/validation.json",
+      "gitBlob": "6ef0753762aa82096e29cdc66fc80c40b8629727"
+    },
+    {
+      "path": "resources/app/public/collection-delta-commands.js",
+      "gitBlob": "305ba75ea85259a7c8144b594af09f217d90e8b6"
+    },
+    {
+      "path": "resources/app/public/collection-group-delta.js",
+      "gitBlob": "e639e5d9689f2531b221a92f6accd094ee13525d"
+    },
+    {
+      "path": "resources/app/tests/collection-client-delta-actual.test.js",
+      "gitBlob": "74bac7ada34a6dbc6123bcbc584a07cb767e6d28"
+    },
+    {
+      "path": "resources/app/tests/collection-client-delta-field.test.js",
+      "gitBlob": "4ca44a872ea9f2d761e306dc922144a3da420665"
+    },
+    {
+      "path": "resources/app/tests/collection-client-delta-group.test.js",
+      "gitBlob": "4a7e278cb224a23155299b77d9266bc81261032e"
+    },
+    {
+      "path": "resources/app/tests/collection-client-delta-legacy-server.test.js",
+      "gitBlob": "c3c37f61317c2140bcfb40a612c03534e1643785"
+    },
+    {
+      "path": "resources/app/tests/collection-client-delta-lifecycle.test.js",
+      "gitBlob": "cb8ce5093de758d640b258a1513cb7d887845d00"
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-client-delta/actual-editor.cjs",
+      "gitBlob": "0df2562a91d8866b65ead884f3f76992a73e73b8"
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-client-delta/actual-source-pins.json",
+      "gitBlob": "3a6c976079093b9f6df7f3eedd7e44ca86ea9a90"
+    },
+    {
+      "path": "resources/app/tests/fixtures/collection-client-delta/reference-harness.cjs",
+      "gitBlob": "55ee7540ccbbab93ce507d6a80af8fa6f43b7867"
+    }
+  ]
+}

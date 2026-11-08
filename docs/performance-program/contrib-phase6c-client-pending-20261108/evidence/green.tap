@@ -1,0 +1,38 @@
+✔ edit is secured only after record AND manifest writes; failed write preserves prior state and retry ID (6.894033ms)
+✔ current owner, generation, source, editability and single view are checked on every mutation (1.625618ms)
+✔ reopen retains original source and CAS across live generation change; no fresh remote is adopted (0.86035ms)
+✔ bounded checkpoint contains overlays and identities, never serializes full rows on edit/compaction (1.595973ms)
+✔ missing or corrupt committed records fail closed and preserve every existing key (2.092904ms)
+✔ half compaction and quota preserve old head, base and prior edit; successful checkpoint reopens (1.284372ms)
+✔ admission bounds fail without discarding unacknowledged/inverse evidence (0.863065ms)
+✔ stale writer cannot overwrite a newer committed head (0.493856ms)
+✔ standalone browser UMD loads without storage access or production activation (1.596444ms)
+✔ schema 1 archives and exports exact raw data; remains on explicit legacy route (3.100347ms)
+✔ schema 2 archives and exports exact raw data; remains on explicit legacy route (1.306816ms)
+✔ unknown new schema, corrupt legacy, owner mismatch never downgrade or overwrite old pending (0.923056ms)
+✔ an unknown embedded candidate version cannot be routed to legacy; archival slot cannot grow without bound (0.37743ms)
+✔ native schema1/2 export carries operation/request/inverse evidence without activating legacy storage (3.443947ms)
+✔ lost ACK, reopen, retry use identical operation/request identity and original payload (11.577935ms)
+✔ primary ACK storage failure does not advance state/history; same receipt can be recorded after reopen (1.974625ms)
+✔ source change immediately after committed ACK reports local record accurately and suppresses current-view success (1.513058ms)
+✔ same operation in overlapping requests rejects a different receipt instead of double history (1.38262ms)
+✔ duplicate/reordered ACK and replication status keep intent history order (2.164243ms)
+✔ old owner/generation/source delivery and prior runtime delivery are rejected (2.283292ms)
+✔ partial primary ACK advances only accepted independent operations; older base remains for later edits (3.105625ms)
+✔ atomic group ACK closure, checkpoint and inverse survive reopening (14.705092ms)
+✔ actual pending function bodies match reviewed fixed-base source, without modifying inherited pins (3.701146ms)
+✔ actual pending writer returns false after quota; actual saveKolRows ignores that false (root adapter demand) (3.421783ms)
+✔ schema2 export preserves old CAS when real legacy merger sees a newer remote; schema1 remains conservative (10.141612ms)
+✔ real persistent Web Storage across processes: ack (101.135577ms)
+✔ real persistent Web Storage across processes: quota (112.683416ms)
+✔ real persistent Web Storage across processes: half-compaction (96.847148ms)
+✔ real persistent Web Storage across processes: corrupt (96.6297ms)
+✔ real persistent Web Storage across processes: missing (93.547365ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 877.104989

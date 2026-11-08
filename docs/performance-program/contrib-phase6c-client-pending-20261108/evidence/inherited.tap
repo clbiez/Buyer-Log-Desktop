@@ -1,0 +1,95 @@
+/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-client-delta/actual-editor.cjs:11
+  if (actual !== expected) throw new Error('Actual Collection source changed; review before updating fixture: ' + name);
+                           ^
+
+Error: Actual Collection source changed; review before updating fixture: app-main.js
+    at Object.<anonymous> (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-client-delta/actual-editor.cjs:11:34)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at Object.<anonymous> (/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-client-delta-actual.test.js:7:34)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+
+Node.js v24.19.0
+✖ resources/app/tests/collection-client-delta-actual.test.js (42.932119ms)
+✔ own-property slots distinguish absence, explicit null, zero, false and blank (10.436999ms)
+✔ deleting an explicit null restores null presence on inverse, not inherited absence (0.643994ms)
+✔ forward/inverse copy touched row only; untouched rows and nested fields retain identity (0.526826ms)
+✔ changed mutable values are owned; command capture and applying do not alias caller values (0.699437ms)
+✔ stale owner/generation, read-only and Multi-Buyer bindings reject before effects (0.316378ms)
+✔ row CAS rejects unrelated remote row edits; workspace revision is not a row base (0.521228ms)
+✔ same-field local conflict and missing row do not overwrite or resurrect intent (0.45638ms)
+✔ inverse checks current after-state and preserves unrelated accepted remote fields (0.634649ms)
+✔ coupled groups, semantic editors, server fields, unknown writes and structure fail closed (0.538354ms)
+✔ group membership/metadata and custom schema changes invalidate prepared commands (0.495198ms)
+✔ legacy adapter sends touched rows with explicit existence and legacy zero CAS, no structure fence (1.037639ms)
+✔ adapter preserves unknown persisted keys and strips both actual transient image projections (0.766599ms)
+✔ one legacy row can compose ordered commands; omitted prerequisites reject (0.607528ms)
+✔ operation replay is idempotent before/after ACK; ID collision and cross-owner replay reject (0.446856ms)
+✔ captured old request/ACK does not send or clear newer local same-field intent (0.440657ms)
+✔ adapter excludes an unrelated unsubmitted local field even on the same touched row (0.50317ms)
+✔ partial HTTP 200 acknowledges only applied row operations and leaves conflicts pending (0.665506ms)
+✔ late/invalid ACK and replication-only success cannot advance operation status or row bases (0.500997ms)
+✔ invalid/nonpersistable slots, duplicate row identity and no-op commands reject (0.639647ms)
+✔ stable source certificate matches actual normalizer data; legacy repairs require explicit fallback (5.050315ms)
+✔ actual app single-cell shared edit matches group unit and keeps explicit false override/raw stale value (6.699588ms)
+✔ affected closure rejects pending normalization on unrelated rows too (0.67483ms)
+✔ direct actual shared export parity preserves null/zero/false/blank and owns mutable field values (6.690135ms)
+✔ actual app override edit updates override plus materialized row only (3.005544ms)
+✔ actual setVariantOverride parity preserves explicit falsy values and materialized cells (3.80368ms)
+✔ actual context-menu make-colour-specific creates exact inherited override presence (1.892781ms)
+✔ actual context-menu clear override parity restores model value; inverse restores false plus original stale raw (3.024022ms)
+✔ clear override matches actual explicit null/zero/false/blank shared fallback (10.012759ms)
+✔ clear override preserves actual missing-raw/undefined fallback and original raw when parent raw is blank (3.925804ms)
+✔ same-model peers inside group follow inheritance; separately persisted/detached same-PLM groups stay unchanged (1.196378ms)
+✔ actual whole-row clones and normalizer copies are replaced only by scoped COW, with value parity (1.149418ms)
+✔ shared edit plus inverse restores exact raw/shared presence without replacing unknown nested fields (1.753391ms)
+✔ stale group add/remove/reorder/role changes reject the entire prepared unit (0.547918ms)
+✔ owner/generation/schema/row revision and same-field conflict reject before effects (0.633899ms)
+✔ legacy absent/explicit-zero row bases stay zero without changing server-owned revision fields (3.972085ms)
+✔ inverse uses explicit fresh row bases and preserves unrelated accepted remote fields/map keys (1.793782ms)
+✔ actual linked-variant editor guard and no-op string comparison remain explicit (1.748033ms)
+✔ parent with explicit override follows actual app override route instead of overwriting shared model state (1.473978ms)
+✔ rich note/pricing/period/checklist/structure/identity operations have no generic scalar fallback (0.624885ms)
+✔ captured units own changed JSON, preserve unknown keys and never mutate borrowed rows (0.851898ms)
+✔ malformed duplicate patch rows and unsupported slot shapes reject without partial changes (0.364801ms)
+✔ actual legacy reducer: partial 200 maps only applied rows; lost ACK retry conflict keeps intent (6.020422ms)
+✔ actual legacy reducer: explicit existence blocks resurrection of old absent/zero _rev rows (1.914074ms)
+✔ actual legacy reducer: typed group request is atomic and inverse preserves unrelated accepted data (14.134668ms)
+✔ field: history advances only after primary ACK, including undo and redo (5.4169ms)
+✔ field: lost ACK retains intent; duplicate ACK and replay are idempotent (0.630724ms)
+✔ field: older ACK keeps newer intent and its original base; immutable transport excludes it (0.80024ms)
+✔ field: malformed atomic subset with omitted rows fails before any acknowledgement (0.405163ms)
+✔ group: history advances only after primary ACK, including undo and redo (10.460704ms)
+✔ group: lost ACK retains intent; duplicate ACK and replay are idempotent (4.276145ms)
+✔ group: older ACK keeps newer intent and its original base; immutable transport excludes it (1.67974ms)
+✔ group: malformed atomic subset with omitted rows fails before any acknowledgement (0.914032ms)
+✔ group: legacy transport requires atomic closure, excludes override peers and unrelated rows (1.367378ms)
+✔ pending schemas 1/2 are owned captures; old base/existence and absent revision survive fresh source (1.110469ms)
+✔ pending keeps proved new intent, deletion bases, structure, unknown fields and ambiguous legacy existence (0.397081ms)
+✔ independent scalar gate rejects special custom schema and JSON values changed by serialization (0.972361ms)
+✔ field: pending history cannot be jumped or forged; history caps account UTF-8 command bytes (1.398094ms)
+✔ group: captured request rejects late owner/generation, unknown receipts and out-of-order prerequisites (2.525668ms)
+✔ field: atomic omission across two independent rows cannot advance one row (0.672567ms)
+✔ field: out-of-order ACKs preserve local history order across independent rows (0.643132ms)
+✔ one certified Collection session composes independent and group intent with one ACK-gated history (3.829093ms)
+✔ independent source certification rejects lossy unknown JSON before command preparation without reading accessors (0.386173ms)
+✔ current and accepted baseline must agree on complete group membership before a typed edit (0.394717ms)
+ℹ tests 64
+ℹ suites 0
+ℹ pass 63
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 462.670151
+
+✖ failing tests:
+
+test at resources/app/tests/collection-client-delta-actual.test.js:1:1
+✖ resources/app/tests/collection-client-delta-actual.test.js (42.932119ms)
+  'test failed'

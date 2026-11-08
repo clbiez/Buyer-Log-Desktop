@@ -1,0 +1,12 @@
+10 edits, pair 1, legacy: complete
+10 edits, pair 1, candidate: complete
+10 edits, pair 2, candidate: complete
+10 edits, pair 2, legacy: complete
+10 edits, pair 3, legacy: complete
+10 edits, pair 3, candidate: complete
+100 edits, pair 1, legacy: complete
+100 edits, pair 1, candidate: complete
+100 edits, pair 2, candidate: complete
+100 edits, pair 2, legacy: complete
+100 edits, pair 3, legacy: complete
+100 edits, pair 3, candidate: complete

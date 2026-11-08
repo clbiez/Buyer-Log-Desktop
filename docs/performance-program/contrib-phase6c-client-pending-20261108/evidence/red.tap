@@ -1,0 +1,408 @@
+✖ edit is secured only after record AND manifest writes; failed write preserves prior state and retry ID (1.146564ms)
+✖ current owner, generation, source, editability and single view are checked on every mutation (0.241736ms)
+✖ reopen retains original source and CAS across live generation change; no fresh remote is adopted (0.170889ms)
+✖ bounded checkpoint contains overlays and identities, never serializes full rows on edit/compaction (0.889815ms)
+✖ missing or corrupt committed records fail closed and preserve every existing key (0.208545ms)
+✖ half compaction and quota preserve old head, base and prior edit; successful checkpoint reopens (0.18485ms)
+✖ admission bounds fail without discarding unacknowledged/inverse evidence (0.153983ms)
+✖ stale writer cannot overwrite a newer committed head (0.163518ms)
+✖ standalone browser UMD loads without storage access or production activation (1.152102ms)
+✖ schema 1 archives and exports exact raw data; remains on explicit legacy route (0.970958ms)
+✖ schema 2 archives and exports exact raw data; remains on explicit legacy route (0.15854ms)
+✖ unknown new schema, corrupt legacy, owner mismatch never downgrade or overwrite old pending (0.180293ms)
+✖ native schema1/2 export carries operation/request/inverse evidence without activating legacy storage (0.253784ms)
+✖ lost ACK, reopen, retry use identical operation/request identity and original payload (1.240505ms)
+✖ primary ACK storage failure does not advance state/history; same receipt can be recorded after reopen (0.193382ms)
+✖ duplicate/reordered ACK and replication status keep intent history order (0.170778ms)
+✖ old owner/generation/source delivery and prior runtime delivery are rejected (0.259453ms)
+✖ partial primary ACK advances only accepted independent operations; older base remains for later edits (0.788251ms)
+✖ atomic group ACK closure, checkpoint and inverse survive reopening (0.333554ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 0
+ℹ fail 19
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 198.120256
+
+✖ failing tests:
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:6:1
+✖ edit is secured only after record AND manifest writes; failed write preserves prior state and retry ID (1.146564ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:21:1
+✖ current owner, generation, source, editability and single view are checked on every mutation (0.241736ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:30:1
+✖ reopen retains original source and CAS across live generation change; no fresh remote is adopted (0.170889ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:40:1
+✖ bounded checkpoint contains overlays and identities, never serializes full rows on edit/compaction (0.889815ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:54:1
+✖ missing or corrupt committed records fail closed and preserve every existing key (0.208545ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:67:1
+✖ half compaction and quota preserve old head, base and prior edit; successful checkpoint reopens (0.18485ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:79:1
+✖ admission bounds fail without discarding unacknowledged/inverse evidence (0.153983ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:87:1
+✖ stale writer cannot overwrite a newer committed head (0.163518ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-journal.test.js:92:1
+✖ standalone browser UMD loads without storage access or production activation (1.152102ms)
+  Error: Cannot find module '../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at require.resolve (node:internal/modules/helpers:171:31)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js:95:43)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-journal.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-legacy.test.js:5:37
+✖ schema 1 archives and exports exact raw data; remains on explicit legacy route (0.970958ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-legacy.test.js:5:37
+✖ schema 2 archives and exports exact raw data; remains on explicit legacy route (0.15854ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-legacy.test.js:18:1
+✖ unknown new schema, corrupt legacy, owner mismatch never downgrade or overwrite old pending (0.180293ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-legacy.test.js:27:1
+✖ native schema1/2 export carries operation/request/inverse evidence without activating legacy storage (0.253784ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-legacy.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:5:1
+✖ lost ACK, reopen, retry use identical operation/request identity and original payload (1.240505ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:15:1
+✖ primary ACK storage failure does not advance state/history; same receipt can be recorded after reopen (0.193382ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:26:1
+✖ duplicate/reordered ACK and replication status keep intent history order (0.170778ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:38:1
+✖ old owner/generation/source delivery and prior runtime delivery are rejected (0.259453ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:48:1
+✖ partial primary ACK advances only accepted independent operations; older base remains for later edits (0.788251ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }
+
+test at resources/app/tests/collection-delta-pending-lifecycle.test.js:63:1
+✖ atomic group ACK closure, checkpoint and inverse survive reopening (0.333554ms)
+  Error: Cannot find module '../../../public/collection-delta-pending-journal.js'
+  Require stack:
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs
+  - /workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+      at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+      at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+      at Module._load (node:internal/modules/cjs/loader:1294:5)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16)
+      at journal (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:5:23)
+      at fixture (/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs:22:19) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [ '/workspace/buyerlog-phase6c-pending/resources/app/tests/fixtures/collection-delta-pending/harness.cjs', '/workspace/buyerlog-phase6c-pending/resources/app/tests/collection-delta-pending-lifecycle.test.js' ]
+  }

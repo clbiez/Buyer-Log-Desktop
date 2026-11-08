@@ -1,0 +1,32 @@
+✔ edit is secured only after record AND manifest writes; failed write preserves prior state and retry ID (8.532725ms)
+✔ current owner, generation, source, editability and single view are checked on every mutation (1.645058ms)
+✔ reopen retains original source and CAS across live generation change; no fresh remote is adopted (1.198732ms)
+✔ bounded checkpoint contains overlays and identities, never serializes full rows on edit/compaction (1.724829ms)
+✔ missing or corrupt committed records fail closed and preserve every existing key (2.587644ms)
+✔ half compaction and quota preserve old head, base and prior edit; successful checkpoint reopens (1.125332ms)
+✔ admission bounds fail without discarding unacknowledged/inverse evidence (0.837717ms)
+✔ stale writer cannot overwrite a newer committed head (0.461228ms)
+✔ standalone browser UMD loads without storage access or production activation (1.700472ms)
+✔ schema 1 archives and exports exact raw data; remains on explicit legacy route (3.037384ms)
+✔ schema 2 archives and exports exact raw data; remains on explicit legacy route (1.274718ms)
+✔ unknown new schema, corrupt legacy, owner mismatch never downgrade or overwrite old pending (0.996677ms)
+✔ native schema1/2 export carries operation/request/inverse evidence without activating legacy storage (4.367375ms)
+✔ lost ACK, reopen, retry use identical operation/request identity and original payload (7.935361ms)
+✔ primary ACK storage failure does not advance state/history; same receipt can be recorded after reopen (1.820343ms)
+✔ duplicate/reordered ACK and replication status keep intent history order (2.051993ms)
+✔ old owner/generation/source delivery and prior runtime delivery are rejected (2.918424ms)
+✔ partial primary ACK advances only accepted independent operations; older base remains for later edits (3.154381ms)
+✔ atomic group ACK closure, checkpoint and inverse survive reopening (15.049661ms)
+✔ real persistent Web Storage across processes: ack (100.123111ms)
+✔ real persistent Web Storage across processes: quota (117.505389ms)
+✔ real persistent Web Storage across processes: half-compaction (94.525005ms)
+✔ real persistent Web Storage across processes: corrupt (95.354749ms)
+✔ real persistent Web Storage across processes: missing (97.305069ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 802.253802

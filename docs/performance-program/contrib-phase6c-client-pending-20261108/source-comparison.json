@@ -1,0 +1,151 @@
+{
+  "baseCommit": "ea49389836dba23f0970a974b4c0185f1b36ec0e",
+  "inheritedFixtureBase": "d66c1f803097af5991616f0420392e1027888f2e",
+  "appMainAtBaseMatches": true,
+  "actualEditorFunctions": [
+    {
+      "name": "editableValuesEqual",
+      "unchanged": true,
+      "oldSha256": "715e11936dd53862a0762fca10bd864469d76049290ce3a9051f46229ff16d0f",
+      "currentSha256": "715e11936dd53862a0762fca10bd864469d76049290ce3a9051f46229ff16d0f"
+    },
+    {
+      "name": "kolNormalizeModelGroups",
+      "unchanged": true,
+      "oldSha256": "8dfc6b5530fad68cb1e7c11a168da8654e13e914a9386d4cf779504be466a2f8",
+      "currentSha256": "8dfc6b5530fad68cb1e7c11a168da8654e13e914a9386d4cf779504be466a2f8"
+    },
+    {
+      "name": "kolFieldMetadata",
+      "unchanged": true,
+      "oldSha256": "9c694f9518b1a5f00e9268691c4a7c2fe450f5eb2c92ee35dac1b6d678fea74c",
+      "currentSha256": "9c694f9518b1a5f00e9268691c4a7c2fe450f5eb2c92ee35dac1b6d678fea74c"
+    },
+    {
+      "name": "kolIsColorSpecific",
+      "unchanged": true,
+      "oldSha256": "c8a81e5a8e5588374d9e87ad10b78b707c5919a934d5f98ad0170fc81ee1ba45",
+      "currentSha256": "c8a81e5a8e5588374d9e87ad10b78b707c5919a934d5f98ad0170fc81ee1ba45"
+    },
+    {
+      "name": "kolCellLinkedToModel",
+      "unchanged": true,
+      "oldSha256": "ef19204c4d59b9d7ea2f61d0803651f87786edba1a0fd989b6322612113070da",
+      "currentSha256": "ef19204c4d59b9d7ea2f61d0803651f87786edba1a0fd989b6322612113070da"
+    },
+    {
+      "name": "kolHasVariantOverride",
+      "unchanged": true,
+      "oldSha256": "5a5de5fda62fbfc90c337e47238abba4930bb8be8ae835fe0022941c5e9e80b8",
+      "currentSha256": "5a5de5fda62fbfc90c337e47238abba4930bb8be8ae835fe0022941c5e9e80b8"
+    },
+    {
+      "name": "kolEffectiveValue",
+      "unchanged": true,
+      "oldSha256": "de69146bf427eac17c77d171423509adc7b6ccd9fba67e0c988261ee70a9f36d",
+      "currentSha256": "de69146bf427eac17c77d171423509adc7b6ccd9fba67e0c988261ee70a9f36d"
+    },
+    {
+      "name": "kolWriteGroupedStorageValue",
+      "unchanged": true,
+      "oldSha256": "df92fc4658e3320924dcbd249bd1d513ddf0d5546a0f451a7debc211ce3f9798",
+      "currentSha256": "df92fc4658e3320924dcbd249bd1d513ddf0d5546a0f451a7debc211ce3f9798"
+    },
+    {
+      "name": "commitKolEditor",
+      "unchanged": true,
+      "oldSha256": "5e6bda3c753f51d3b1ca15619bfa89d046c8635e47fbf54b2f2ab94d3e45cb15",
+      "currentSha256": "5e6bda3c753f51d3b1ca15619bfa89d046c8635e47fbf54b2f2ab94d3e45cb15"
+    },
+    {
+      "name": "kolSpreadsheetMakeEditor",
+      "unchanged": true,
+      "oldSha256": "a36d6633cc6874ebe44b01ba91c64a58c8d51f233584f19000c1b2568779eab4",
+      "currentSha256": "a36d6633cc6874ebe44b01ba91c64a58c8d51f233584f19000c1b2568779eab4"
+    },
+    {
+      "name": "kolApplyCollectionCellChange",
+      "unchanged": true,
+      "oldSha256": "50e82f77d2998e1cb5700706f3d19d5b25638eac849e117041b1a610127724f8",
+      "currentSha256": "50e82f77d2998e1cb5700706f3d19d5b25638eac849e117041b1a610127724f8"
+    },
+    {
+      "name": "kolSnapshot",
+      "unchanged": true,
+      "oldSha256": "f89e96f866d8cc5808717d041d5f275e7c290e8b384deae6a955d76b2aad7651",
+      "currentSha256": "f89e96f866d8cc5808717d041d5f275e7c290e8b384deae6a955d76b2aad7651"
+    },
+    {
+      "name": "kolPushUndo",
+      "unchanged": true,
+      "oldSha256": "6d4dc2cf5b6eeede7b9600e15dcaa7052e62fd9cef0ecf2d2749219287860f08",
+      "currentSha256": "6d4dc2cf5b6eeede7b9600e15dcaa7052e62fd9cef0ecf2d2749219287860f08"
+    }
+  ],
+  "pinnedFiles": [
+    {
+      "name": "app-main.js",
+      "expected": "26bda8b746eec81a95e06109516bd27ecb2834e0",
+      "actual": "9947d0934ce52427d3554ffad9310b13875744e1",
+      "unchanged": false
+    },
+    {
+      "name": "collection-model-groups.js",
+      "expected": "f5da3a90ea4af8a7216c1b270299621acad97167",
+      "actual": "f5da3a90ea4af8a7216c1b270299621acad97167",
+      "unchanged": true
+    },
+    {
+      "name": "overview-collection-summary.js",
+      "expected": "01d105160a3f765eb34f0cc523b0d5035fb1cd12",
+      "actual": "01d105160a3f765eb34f0cc523b0d5035fb1cd12",
+      "unchanged": true
+    },
+    {
+      "name": "model-option-stats.js",
+      "expected": "27f74b59358cc287070ef60db3aaae9393b26b18",
+      "actual": "27f74b59358cc287070ef60db3aaae9393b26b18",
+      "unchanged": true
+    },
+    {
+      "name": "business-rules.js",
+      "expected": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e",
+      "actual": "25d9e5352c4946896bbf953942d4a3ac0ccbf24e",
+      "unchanged": true
+    },
+    {
+      "name": "chronological-values.js",
+      "expected": "db6eacd41c5cecd81c3adbee9384a28750baba08",
+      "actual": "db6eacd41c5cecd81c3adbee9384a28750baba08",
+      "unchanged": true
+    }
+  ],
+  "pendingFunctions": [
+    {
+      "name": "kolPersistPendingWorkspace",
+      "line": 23645,
+      "sha256": "f0b3d424f12ca26fef9b1f3584c164b3189a97ad2078ab04d891e6394e22bd7e"
+    },
+    {
+      "name": "kolReadPendingWorkspace",
+      "line": 23661,
+      "sha256": "2756eb10599bee74a99d964db2c0d21f8c4f6ddc1fcf4a872a0a72100e79087e"
+    },
+    {
+      "name": "kolMergePendingWorkspace",
+      "line": 23666,
+      "sha256": "b65fdecb91f64c50d3bc44e6f556172ba7f21142185ae26358d76d4c75a08a53"
+    },
+    {
+      "name": "kolRestorePendingWorkspace",
+      "line": 23702,
+      "sha256": "1fe1ae08ad16828ce9b4b74c2f7e26cbed6de8d279a55c9cd6f19b1e1e9dd744"
+    },
+    {
+      "name": "saveKolRows",
+      "line": 26913,
+      "sha256": "f94532275c2b12edafe24ba8ed2e78b866318339c2c500f5cff66d2ced07f1e6"
+    }
+  ],
+  "inheritedPinPolicy": "Unchanged. Whole-file app-main pin blocks original actual-editor fixture; root must review/update it within root scope."
+}
