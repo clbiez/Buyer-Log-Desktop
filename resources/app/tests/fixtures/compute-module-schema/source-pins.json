@@ -16,7 +16,7 @@
     "server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
     "public/canonical-fields.js": "790b20613f6ce92a8ab223c9f5000e1326de1c52",
     "public/canonical-module-bindings.js": "92526fb3d8722c2e85c4baa3134bf71fe9a775f5",
-    "public/app-main.js": "26bda8b746eec81a95e06109516bd27ecb2834e0"
+    "public/app-main.js": "3bc34eca6187d13f712d09df693fa5d80d18310a"
   },
   "nativeCasesPrepared": 18,
   "executedByPreparingAgent": {
@@ -30,5 +30,6 @@
   "workerServerCacheClientWiring": false,
   "adoptionNote": "Only compute optional callback added; app-main differences are full-before-use gates. Actual syncCpModelColumns must remain exact f076; root extraction proof archived separately. Price-source loader stays in its existing branch, followed by the new full barrier; real behavioral tests retained.",
   "runtimeSchemaSha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390",
-  "frozenSchemaFixture": "tests/fixtures/compute-module-schema/module-projection-schema-before-wire.js"
+  "frozenSchemaFixture": "tests/fixtures/compute-module-schema/module-projection-schema-before-wire.js",
+  "appSourceDeltaProof": "docs/performance-program/phase-6a/foundation-regression-a31f8360-20261108/schema-app-source-proof.json"
 }

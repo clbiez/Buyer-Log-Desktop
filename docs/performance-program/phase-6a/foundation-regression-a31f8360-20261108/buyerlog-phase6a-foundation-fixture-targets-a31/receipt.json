@@ -1,0 +1,68 @@
+{
+  "scope": "configuration writer integration targeted only; final full/browser/firstCP acceptance pending",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "compute-module-schemas",
+        "contextual-command-adapter",
+        "copy-to-collection-backfill-v20261023",
+        "data-loss-and-filters-v634",
+        "dynamic-column-order-persistence",
+        "lcwai-chat-data-query",
+        "linked-refresh-horizon-v20260928",
+        "manufacturers-page-v20261004",
+        "user-prefs-sync-v598"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 111,
+        "pass": 111,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-xwrck90u",
+      "rawSha256": "b22af08ef2b96a022186e4a4a2b7a832e34850a2b103dd11ce6018cdbf2a23dc"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-zr8obol7",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-06u76ym0",
+      "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+    }
+  ]
+}

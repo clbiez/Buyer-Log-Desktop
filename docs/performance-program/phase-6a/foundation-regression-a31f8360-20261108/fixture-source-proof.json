@@ -1,0 +1,54 @@
+[
+  {
+    "file": "resources/app/tests/contextual-command-adapter.test.js",
+    "beforeSha256": "6640a1ff98b4da0d915b83269002ba844a0245af22f0e0ea15b782e869668893",
+    "afterSha256": "d1c2badaedb42704d272e18afa2ffe8b32df081c44bd9a8490be0768ba5bc82a",
+    "fixtureOnlyExactReverse": true
+  },
+  {
+    "file": "resources/app/tests/manufacturers-page-v20261004.test.js",
+    "beforeSha256": "c99b52ce65a60591d2a61c5238470c30b212399319f4abec2728c89b87ab2f26",
+    "afterSha256": "50499c57a6705c04d33af8734f981712acc50eb360f1c01408da9c7aebfd00bb",
+    "fixtureOnlyExactReverse": true
+  },
+  {
+    "file": "resources/app/tests/lcwai-chat-data-query.test.js",
+    "beforeSha256": "01098045a6e22ca3decf5c1c371974d7c5729bca0f858430f2d4d043937bb1d6",
+    "afterSha256": "b925fc3bb537def7826ed51e7321816f1e694eaf79bce561bfa5c71bbaff763c",
+    "fixtureOnlyExactReverse": true
+  },
+  {
+    "file": "resources/app/tests/copy-to-collection-backfill-v20261023.test.js",
+    "beforeSha256": "5fb985b9bfd4eb56d1966a12d0b3648904349d24955231cdd102af358ef402e0",
+    "afterSha256": "096d4cc2e4447b8b5ead1f1546dd36a3595321ae5ca33be2e9d013d0b88a738f",
+    "fixtureOnlyExactReverse": true
+  },
+  {
+    "file": "resources/app/tests/data-loss-and-filters-v634.test.js",
+    "beforeSha256": "44e270222864a22b91925d5742e0b28f7c73bbde02768a2e463ed6c606d2f5f0",
+    "afterSha256": "6c46223ce2299b0d284454489294b39602398d5d3d897fd19e69410706f5f484",
+    "allAssertionsUnchanged": true,
+    "delta": "Read the exact named actual loadFromServer instead of a fixed-size arbitrary text window."
+  },
+  {
+    "file": "resources/app/tests/linked-refresh-horizon-v20260928.test.js",
+    "beforeSha256": "bddd7e43b72b56c0687495bcb58030a25710dc1822dd4ff279318a990350bccb",
+    "afterSha256": "1425aa03ff0f8d9e8cc6620e187b8984c947c455e1848dc0751c38d970b30439",
+    "allAssertionsUnchanged": true,
+    "delta": "Read the exact named actual loadFromServer instead of a fixed-size arbitrary text window."
+  },
+  {
+    "file": "resources/app/tests/dynamic-column-order-persistence.test.js",
+    "beforeSha256": "23cb8afb353109c2c98c7607b5c3645cf7bf3738cb77b28df1006d3aa7f84d9e",
+    "afterSha256": "3c68f418b357a23f6897a897c1837fd8c2d18e15fc16619c4c2544a1ba84fef9",
+    "allAssertionsUnchanged": true,
+    "delta": "Read the exact named actual loadFromServer instead of a fixed-size arbitrary text window."
+  },
+  {
+    "file": "resources/app/tests/user-prefs-sync-v598.test.js",
+    "beforeSha256": "49a179c455f16c091c1180887027e20fb855cd8072e9a13364287be32ce707b6",
+    "afterSha256": "68ec047f635003f9ca366e78742e34fc9915d2daec7bbaba2ad12ef3eb3a9c9d",
+    "allAssertionsUnchanged": true,
+    "delta": "Read the exact named actual loadFromServer instead of a fixed-size arbitrary text window."
+  }
+]

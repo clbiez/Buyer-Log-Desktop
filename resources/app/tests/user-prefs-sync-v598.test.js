@@ -1,4 +1,5 @@
 'use strict';
+const {extractFunction:extractAppFunction}=require('./helpers/app-main-functions');
 
 // v5.98 — Notlar ve kişisel veriler tarayıcılar arasında taşınmıyordu.
 //
@@ -116,11 +117,12 @@ test('v5.98 açılışta birleştirme çağrılıyor ve Not Defteri önbelleği 
   // hydrate() çağrısı authHydrationPromise'in içine taşındı: açılış onu
   // beklemeden ilerliyor, bu blok yalnız sonucu alıp önbellekleri bırakıyor.
   const anchor = 'const sync=await authHydrationPromise;';
-  const at = APP.indexOf(anchor);
+  const load = extractAppFunction(APP, 'loadFromServer');
+  const at = load.indexOf(anchor);
   assert.ok(at > 0, 'açılışta kişisel veri birleştirmesi beklenmeli');
   const hydrate = extractFunction(APP, 'hydrateUserPreferencesAfterUi');
   assert.match(hydrate, /authHydrationPromise=Promise\.resolve\(\)\.then\(\(\)=>BLStorage\.hydrate\(\{beforeApply:/, 'birleştirme BLStorage.hydrate ve uygulanma öncesi kapısıyla yapılmalı');
-  const block = APP.slice(at, at + 500);
+  const block = load.slice(at);
   // Not Defteri belleğe alınıyor; taze veri geldiğinde bırakılmalı, yoksa
   // sunucudan gelen notlar ekrana yansımazdı.
   assert.match(block, /if\(sync&&sync\.applied\)\{ _todoState=null; \}/);

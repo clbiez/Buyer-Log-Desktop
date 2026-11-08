@@ -1,4 +1,5 @@
 'use strict';
+const {extractFunction:extractAppFunction}=require('./helpers/app-main-functions');
 
 /* v20260928 — BAĞLI YENİLEME VE UFUK.
  *
@@ -199,7 +200,7 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   assert.match(APP, /fetch\('\/api\/refresh-targets',\{cache:'no-store'\}\)/);
   const refreshConfig=APP.slice(APP.indexOf('function linkedRefreshMembers(){'),APP.indexOf('function withLinkedRefreshTargets'));
   assert.doesNotMatch(refreshConfig, /state\.modelScopes|sharedFilter/);
-  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 1350);
+  const load = extractAppFunction(APP, 'loadFromServer');
   assert.match(load, /await syncLinkedRefreshMembers\(\)/);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
   // v2026-10-30 — Menü iki satır: "CP" ve "Diğer modüller + CP" (= bütün modüller;

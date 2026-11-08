@@ -12,6 +12,7 @@ const read = name => fs.readFileSync(path.join(__dirname, '..', 'public', name),
 const SOURCES = ['canonical-fields.js', 'date-dimension.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
 const fixture = require('./helpers/merch-calendar-fixture');
 const { extractFunction } = require('./helpers/app-main-functions');
+const { installLifecycle } = require('./helpers/orders-retirement-source');
 const fullGateSource = ['ordersProjectionIsThin', 'ordersFullActionError', 'ensureOrdersFullForAction']
   .map(name => extractFunction(read('app-main.js'), name)).join('\n');
 
@@ -54,7 +55,8 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
   };
   window.window = window;
   const context = vm.createContext({ window, globalThis: window, state: gateState, appLang: 'tr', ensureOrdersLoaded: options => window.BLEnsureOrdersLoaded(options), document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
-  vm.runInContext('const _ordersFullViewControllers=new WeakMap();\n' + fullGateSource + '\nwindow.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;', context);
+  installLifecycle(context);
+  vm.runInContext(fullGateSource + '\nwindow.BLEnsureOrdersFullForAction=ensureOrdersFullForAction;', context);
   SOURCES.forEach((source, index) => {
     vm.runInContext(source, context);
     // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.

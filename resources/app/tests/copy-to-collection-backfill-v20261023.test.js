@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const {extractFunction}=require('./helpers/app-main-functions');
+const {installLifecycle}=require('./helpers/orders-retirement-source');
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const FULL_GATE_SOURCE=['ordersProjectionIsThin','ordersFullActionError','ensureOrdersFullForAction'].map(name=>extractFunction(APP,name)).join('\n');
@@ -136,7 +137,8 @@ async function transferAction(selected,existing=[],options={}){
   const engine=require('../public/collection-order-backfill');
   if(options.sourceDenied)scope.window.BLCanAccessArea=()=>false;
   scope.cpKolBackfillPlan=rows=>engine.plan(rows.map(row=>({key:scope.cpKolSourceIdentity(row,true),row:{...row,id:null,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']}})),scope.kolRows,scope.kolRows.map(row=>scope.cpKolSourceIdentity(row)));
-  vm.runInNewContext('const _ordersFullViewControllers=new WeakMap();\n'+FULL_GATE_SOURCE+'\n'+segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
+  vm.createContext(scope);installLifecycle(scope);
+  vm.runInContext(FULL_GATE_SOURCE+'\n'+segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
   await events.click({currentTarget:{}});
   assert.doesNotMatch(toasts.join(' '),/not defined|not a function/,'fixture must provide the real full-data gate dependencies');
   return {scope,toasts};

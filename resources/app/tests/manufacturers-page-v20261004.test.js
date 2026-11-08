@@ -13,6 +13,7 @@ const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const { extractFunction } = require('./helpers/app-main-functions');
+const { installLifecycle } = require('./helpers/orders-retirement-source');
 
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const INDEX = read('public/index.html');
@@ -63,6 +64,7 @@ test('shared bridge waits for the real full-data gate and returns its exact publ
   const window = {};
   const context = vm.createContext({ state, window, appLang: 'en', _ordersFullViewControllers: controllers,
     ensureOrdersLoaded: async () => { loads++; }, fetch() { throw Error('A second Orders source must not be fetched'); } });
+  installLifecycle(context);
   const start = APP.indexOf('window.BLManufacturerDataBridge={');
   const end = APP.indexOf('\n};', start) + 4;
   assert.ok(start >= 0 && end > start);

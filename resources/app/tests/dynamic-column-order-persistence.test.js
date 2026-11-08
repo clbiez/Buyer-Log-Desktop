@@ -1,4 +1,5 @@
 'use strict';
+const {extractFunction:extractAppFunction}=require('./helpers/app-main-functions');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -80,9 +81,10 @@ test('sunucudan yeni tercih geldiyse sütun state aynı açılışta tekrar yük
   assert.match(reload, /autoTableColumnStateSnapshot=null;/);
   assert.match(reload, /loadAutoTableColumnState\(\)/);
   assert.match(reload, /loadKolColState\(\{preserveCustom:true\}\)/);
-  const at = APP.indexOf('const sync=await authHydrationPromise;');
+  const load = extractAppFunction(APP, 'loadFromServer');
+  const at = load.indexOf('const sync=await authHydrationPromise;');
   assert.ok(at > 0, 'auth hydration bekleme noktası bulunmalı');
-  const block = APP.slice(at, at + 900);
+  const block = load.slice(at);
   assert.match(block, /if\(sync&&sync\.applied\)\{ reloadPersistedTableColumnStateAfterHydration\(\); \}/);
 });
 

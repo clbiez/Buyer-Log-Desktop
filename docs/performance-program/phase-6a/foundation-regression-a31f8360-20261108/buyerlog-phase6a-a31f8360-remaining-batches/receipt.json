@@ -1,0 +1,134 @@
+{
+  "head": "a31f8360ecb4ca39fe98a6fb2f0949e4806104ce",
+  "runnerSha256": "e1fc5914a854f2d19708fc34c761c720e119621603a3699a523e5ab7bc339cad",
+  "scope": "Remaining original batches 2-10 after default run stopped in batch1; NOT a passing default full invocation",
+  "commands": [
+    {
+      "batch": 2,
+      "startedAt": "2026-11-08T09:11:47.090105+00:00",
+      "finishedAt": "2026-11-08T09:12:31.344556+00:00",
+      "exitCode": 1,
+      "rawSha256": "da45052bcdca05ff106f3b4adb903e7cd9f4b5a427c9a9eac612a5b505831f1f",
+      "counts": {
+        "tests": 2331,
+        "pass": 2317,
+        "fail": 11,
+        "cancelled": 0,
+        "skipped": 3
+      }
+    },
+    {
+      "batch": 3,
+      "startedAt": "2026-11-08T09:12:31.346007+00:00",
+      "finishedAt": "2026-11-08T09:13:26.042432+00:00",
+      "exitCode": 1,
+      "rawSha256": "8f1e4aa219d00e345700432569d2a001fc72c8f5c7a2f46e73051f4f3ee912e0",
+      "counts": {
+        "tests": 2433,
+        "pass": 2422,
+        "fail": 11,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 4,
+      "startedAt": "2026-11-08T09:13:26.044790+00:00",
+      "finishedAt": "2026-11-08T09:14:23.202627+00:00",
+      "exitCode": 0,
+      "rawSha256": "ebaacddac0edb80c4ca72b0f573928c48c30493373a5191cff9c343e6ad103fb",
+      "counts": {
+        "tests": 2116,
+        "pass": 2115,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "batch": 5,
+      "startedAt": "2026-11-08T09:14:23.204972+00:00",
+      "finishedAt": "2026-11-08T09:14:49.883874+00:00",
+      "exitCode": 1,
+      "rawSha256": "3dc4c4f9db213c5b3d5623e6c74c07ccef283c83b2c2e32cd3513ea02317b7b6",
+      "counts": {
+        "tests": 962,
+        "pass": 961,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 6,
+      "startedAt": "2026-11-08T09:14:49.885600+00:00",
+      "finishedAt": "2026-11-08T09:14:50.125418+00:00",
+      "exitCode": 0,
+      "rawSha256": "e8477521ff4538fb34df0fe413a5c76fdd6477520222c163887d04511df4074d",
+      "counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 7,
+      "startedAt": "2026-11-08T09:14:50.125852+00:00",
+      "finishedAt": "2026-11-08T09:14:52.425072+00:00",
+      "exitCode": 0,
+      "rawSha256": "2109f2759b70e263bdaa12d3c8f82dd93566c61f3e786608ec9cc94f7919ba43",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 8,
+      "startedAt": "2026-11-08T09:14:52.425550+00:00",
+      "finishedAt": "2026-11-08T09:14:52.592880+00:00",
+      "exitCode": 0,
+      "rawSha256": "c54df96777d10b82ebd903b3f2f2b663a85c147d8cc79d9330b2517f61d4ff8c",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 9,
+      "startedAt": "2026-11-08T09:14:52.593347+00:00",
+      "finishedAt": "2026-11-08T09:15:00.168823+00:00",
+      "exitCode": 0,
+      "rawSha256": "5be42aafd875a927335f2b61e2400197b11654386034c7446cd7a99c8bda97fd",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 10,
+      "startedAt": "2026-11-08T09:15:00.169301+00:00",
+      "finishedAt": "2026-11-08T09:15:13.498877+00:00",
+      "exitCode": 0,
+      "rawSha256": "1f1018b4d347c1ede175e3c0e46a789112e0f8c0beb40283c3bde35c69767baf",
+      "counts": {
+        "tests": 15,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 1
+      }
+    }
+  ],
+  "appUnchangedAfterRun": true
+}

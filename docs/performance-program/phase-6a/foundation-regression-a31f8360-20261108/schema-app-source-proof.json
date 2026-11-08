@@ -1,0 +1,19 @@
+{
+  "beforeBlob": "26bda8b746eec81a95e06109516bd27ecb2834e0",
+  "afterBlob": "3bc34eca6187d13f712d09df693fa5d80d18310a",
+  "beforeAppSha256": "ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515",
+  "afterAppSha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+  "exactRegistrationExpression": true,
+  "exactUnchangedFunctions": {
+    "syncCpModelColumns": "70828e95c15da517a3fc514d1906dbf2a5d4f0d28b47197bc7ad69a7f2bc582b",
+    "syncOrdersColumnsFromCp": "67a75f1f04034c6381acde214451e889c7f11a90f1b6483fd0ad80dd3a8f59ea",
+    "cpModelColumnDefinitionsFromConnections": "1a86bd18b496a76269f71ccb0cb9b0c8fe2376ea9862357ab634ea803bef7f9f"
+  },
+  "allOtherRuntimePinsUnchanged": true,
+  "allOriginalSchemaLineagePinsUnchanged": true,
+  "deltaProofs": [
+    "docs/performance-program/phase-6a/source-retirement-integration-20261108/source-pin-review.json",
+    "docs/performance-program/phase-6a/ui-command-integration-20261108/source-pin-review.json",
+    "docs/performance-program/phase-6a/configuration-writer-integration-20261108/source-pin-review.json"
+  ]
+}

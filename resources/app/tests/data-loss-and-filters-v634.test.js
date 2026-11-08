@@ -1,4 +1,5 @@
 'use strict';
+const {extractFunction:extractAppFunction}=require('./helpers/app-main-functions');
 
 /* v6.34 — Veri kaybı önlemleri ve tablo filtreleri.
  *
@@ -148,7 +149,7 @@ test('v6.34 sayfa kapanışında bekleyen yazmalar boşaltılıyor', () => {
 });
 
 test('v6.34 yenileme, bekleyen yazmalar tamamlanmadan başlamıyor', () => {
-  const block = APP.slice(APP.indexOf('async function loadFromServer'), APP.indexOf('async function loadFromServer') + 1400);
+  const block = extractAppFunction(APP, 'loadFromServer');
   // SIRA ÖNEMLİ: düzenleyici kapat → boşalt+bekle → ancak sonra yenilemeyi başlat.
   // v7.41 — GÜNCELLENDİ (§156): sıra iddiası aynı; çağrılar artık HEDEFİ de
   // alıyor (kilit yalnız yeniden çizilecek ekranlara konsun diye).
