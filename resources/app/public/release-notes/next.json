@@ -68,6 +68,35 @@
           "en": "Actual post-change application with demo data; refreshed rows and priorities are preserved."
         }
       }
+    },
+    {
+      "id": "cpr06-model-matrix-window",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Büyük fiyat matrisleri daha hızlı açılır",
+        "en": "Large pricing matrices open faster"
+      },
+      "body": {
+        "tr": "Matrisi kopyala ve blok yapıştırma ekran dışındaki modelleri de kapsar. Excel aktarımı tüm modelleri korur; kaydırma sırasında düzenlenen hücre ve klavye konumu korunur.",
+        "en": "Copy matrix and block paste include models outside the screen. Excel export keeps all models, and scrolling preserves the cell being edited and keyboard position."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cpr06-model-matrix-window.png",
+        "alt": {
+          "tr": "Gerçek Fiyat Masası ekranında demo modelleri ve Matrisi kopyala düğmesi",
+          "en": "Demo models and the Copy matrix button in the actual Pricing Desk"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, 150 demo model ve 20 üretici; tüm modeller kopyalama ve Excel aktarımında korunur.",
+          "en": "Actual post-change application with 150 demo models and 20 manufacturers; copy and Excel export retain every model."
+        }
+      }
     }
   ]
 }
