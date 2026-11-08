@@ -1,0 +1,5 @@
+# Root pre-execution review
+
+Actual default full-suite receipt pins this HEAD/appTree, all ten batches9261PASS/0FAIL/65existingSKIP; i18n/release also pass. Run alone under common lock; no concurrent source mutation. Snapshot load is the actual read-only API and its original file SHA is checked before/after; user-data import uses private temp/server/auth/config-independent paths. Production timeout600000ms equals the task options; no budget/admission/timeout increase.
+
+Native managed replicas are temporary resources. The actual service.close() cleanup may remove its managed replica directory on BOTH success and failure; README's broader promise about incomplete private files is not guaranteed. Original snapshot, source XLSX, raw resultJSON/logs and any remaining private artifacts stay preserved. No original evidence is removed. This measurement observes input posting/combined dispatch-to-receive overhead and small ready outputs, NOT a separate measurement of the historic raw128MB Excel result receive/deserialization stall. It cannot close that Phase5/6c source-ownership requirement. No application/browser/Windows/Electron/firstCP acceptance is claimed.

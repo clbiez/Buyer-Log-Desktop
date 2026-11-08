@@ -1,0 +1,1263 @@
+{
+  "status": "passed",
+  "arm": "A",
+  "startedAt": "2026-11-08T05:38:18.842Z",
+  "pid": 691556,
+  "app": "/workspace/buyerlog-post-main-acceptance/resources/app",
+  "source": "/tmp/buyerlog-first-transition-Hxb1BB/local/model-snapshots/moderator.json.gz",
+  "sourceSha256": "e858d85fd76a1db2858098b820a0c5e20e8466d3c3895e12ad6c93c9ab9530dd",
+  "classification": "30k synthetic ASAS parser → native shared pool/IPC cost; not application or thin-client latency",
+  "modelAugmentation": {
+    "keys": [
+      "__CPX_SYNTH_WORKER_COST_A",
+      "__CPX_SYNTH_WORKER_COST_B"
+    ],
+    "definitions": [
+      {
+        "id": "synthetic_worker_cost_0",
+        "header": "__CPX_SYNTH_WORKER_COST_A",
+        "label": "Synthetic worker cost 0",
+        "synthetic": true,
+        "percentageScale": 0
+      },
+      {
+        "id": "synthetic_worker_cost_1",
+        "header": "__CPX_SYNTH_WORKER_COST_B",
+        "label": "Synthetic worker cost 1",
+        "synthetic": true,
+        "percentageScale": 0
+      }
+    ],
+    "values": "ordinal-based, A192/B256 UTF8 ASCII characters; modulo11 0,false,null,empty-string preserved",
+    "beforeProjection": true
+  },
+  "stages": [
+    {
+      "name": "native-snapshot-load",
+      "startedAtMs": 139.408864,
+      "memoryBefore": {
+        "rss": 41156608,
+        "heapTotal": 8646656,
+        "heapUsed": 6228512,
+        "external": 8209238,
+        "arrayBuffers": 6010774,
+        "atMs": 139.425684
+      },
+      "wallMs": 3623.726687,
+      "memoryAfter": {
+        "rss": 878891008,
+        "heapTotal": 318214144,
+        "heapUsed": 230982096,
+        "external": 522490638,
+        "arrayBuffers": 268885436,
+        "atMs": 3763.275973
+      },
+      "status": "passed"
+    },
+    {
+      "name": "augment-true-ASAS-model-extras",
+      "startedAtMs": 3764.812267,
+      "memoryBefore": {
+        "rss": 879022080,
+        "heapTotal": 318214144,
+        "heapUsed": 230987888,
+        "external": 522490638,
+        "arrayBuffers": 268885436,
+        "atMs": 3764.897493
+      },
+      "wallMs": 42.51542700000027,
+      "memoryAfter": {
+        "rss": 897634304,
+        "heapTotal": 333418496,
+        "heapUsed": 226689696,
+        "external": 522490638,
+        "arrayBuffers": 268885436,
+        "atMs": 3807.404121
+      },
+      "status": "passed"
+    },
+    {
+      "name": "actual-V8-source-charge",
+      "startedAtMs": 3807.426111,
+      "memoryBefore": {
+        "rss": 897634304,
+        "heapTotal": 333418496,
+        "heapUsed": 226691160,
+        "external": 522490638,
+        "arrayBuffers": 268885436,
+        "atMs": 3807.477916
+      },
+      "wallMs": 1035.3562049999996,
+      "memoryAfter": {
+        "rss": 1082839040,
+        "heapTotal": 333418496,
+        "heapUsed": 236085256,
+        "external": 670524891,
+        "arrayBuffers": 268885436,
+        "atMs": 4843.035748
+      },
+      "status": "passed"
+    },
+    {
+      "name": "native-seed-source",
+      "startedAtMs": 4979.764865,
+      "memoryBefore": {
+        "rss": 784850944,
+        "heapTotal": 341008384,
+        "heapUsed": 196240440,
+        "external": 419140491,
+        "arrayBuffers": 268885436,
+        "atMs": 4979.848023
+      },
+      "wallMs": 4790.636046999999,
+      "memoryAfter": {
+        "rss": 1283227648,
+        "heapTotal": 341008384,
+        "heapUsed": 197005832,
+        "external": 419140539,
+        "arrayBuffers": 268885484,
+        "atMs": 9770.565715
+      },
+      "status": "passed"
+    },
+    {
+      "name": "projection-plan",
+      "startedAtMs": 10388.569375,
+      "memoryBefore": {
+        "rss": 994676736,
+        "heapTotal": 148107264,
+        "heapUsed": 5545888,
+        "external": 2379402,
+        "arrayBuffers": 162203,
+        "atMs": 10388.608258
+      },
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 4042.164643,
+        "retainedBytes": 592137012,
+        "outputBytes": 39436,
+        "queueWaitMs": 0.06596300000092015,
+        "durationMs": 4043.675149999999,
+        "postMessageMs": 0.11979000000064843,
+        "paramsSerializeMs": 0.08789400000023306,
+        "paramsBytes": 1091,
+        "inputBytes": 2115
+      },
+      "poolBefore": {
+        "queued": 1,
+        "completed": 1,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 1910628764,
+        "totalQueueWaitMs": 0.49937799999952404,
+        "totalDurationMs": 4787.9712119999995,
+        "totalPostMessageMs": 557.2949790000002,
+        "lastQueueWaitMs": 0.49937799999952404,
+        "lastDurationMs": 4787.9712119999995,
+        "maxQueueWaitMs": 0.49937799999952404,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 218294987,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 251849419,
+        "maxPendingBytes": 536870912
+      },
+      "poolAtReceipt": {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 2128930096,
+        "totalQueueWaitMs": 0.5653410000004442,
+        "totalDurationMs": 8831.646362,
+        "totalPostMessageMs": 557.4147690000009,
+        "lastQueueWaitMs": 0.06596300000092015,
+        "lastDurationMs": 4043.675149999999,
+        "maxQueueWaitMs": 0.49937799999952404,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 592137012,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 39436,
+        "reservedBytes": 625730880,
+        "maxPendingBytes": 536870912
+      },
+      "wallMs": 4044.6727360000004,
+      "memoryAfter": {
+        "rss": 1062440960,
+        "heapTotal": 148107264,
+        "heapUsed": 5668064,
+        "external": 2379402,
+        "arrayBuffers": 162203,
+        "atMs": 14433.308578
+      },
+      "status": "passed"
+    },
+    {
+      "name": "native-full-projection",
+      "startedAtMs": 14448.421273,
+      "memoryBefore": {
+        "rss": 1062068224,
+        "heapTotal": 8122368,
+        "heapUsed": 5451192,
+        "external": 2379402,
+        "arrayBuffers": 162203,
+        "atMs": 14448.589303
+      },
+      "metrics": {
+        "threadId": 1,
+        "executionMs": 5328.759847000001,
+        "retainedBytes": 592137012,
+        "outputBytes": 6291335,
+        "queueWaitMs": 0.10119400000075984,
+        "durationMs": 5331.376709999999,
+        "postMessageMs": 0.04084799999873212,
+        "paramsSerializeMs": 0.04727199999979348,
+        "paramsBytes": 981,
+        "inputBytes": 2005
+      },
+      "poolBefore": {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 2128930096,
+        "totalQueueWaitMs": 0.5653410000004442,
+        "totalDurationMs": 8831.646362,
+        "totalPostMessageMs": 557.4147690000009,
+        "lastQueueWaitMs": 0.06596300000092015,
+        "lastDurationMs": 4043.675149999999,
+        "maxQueueWaitMs": 0.49937799999952404,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 592137012,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 625691444,
+        "maxPendingBytes": 536870912
+      },
+      "poolAtReceipt": {
+        "queued": 3,
+        "completed": 3,
+        "failed": 0,
+        "rejected": 0,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 2502771791,
+        "totalQueueWaitMs": 0.666535000001204,
+        "totalDurationMs": 14163.023071999998,
+        "totalPostMessageMs": 557.4556169999996,
+        "lastQueueWaitMs": 0.10119400000075984,
+        "lastDurationMs": 5331.376709999999,
+        "maxQueueWaitMs": 0.49937799999952404,
+        "maxWorkers": 2,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 4294967296,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 592137012,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 6291335,
+        "reservedBytes": 631982779,
+        "maxPendingBytes": 536870912
+      },
+      "wallMs": 5332.1508539999995,
+      "memoryAfter": {
+        "rss": 1048379392,
+        "heapTotal": 8122368,
+        "heapUsed": 5596384,
+        "external": 8631301,
+        "arrayBuffers": 162203,
+        "atMs": 19780.625677
+      },
+      "status": "passed"
+    },
+    {
+      "name": "post-timing-full-normalization-and-ordinal-restoration",
+      "startedAtMs": 19793.768183,
+      "memoryBefore": {
+        "rss": 1048510464,
+        "heapTotal": 8122368,
+        "heapUsed": 5614704,
+        "external": 8631301,
+        "arrayBuffers": 162203,
+        "atMs": 19793.806947
+      },
+      "wallMs": 5668.630257000001,
+      "memoryAfter": {
+        "rss": 1458110464,
+        "heapTotal": 287363072,
+        "heapUsed": 172514272,
+        "external": 341305499,
+        "arrayBuffers": 167300128,
+        "atMs": 25462.576459
+      },
+      "status": "passed"
+    }
+  ],
+  "ipc": [
+    {
+      "id": 1,
+      "task": "seed-source",
+      "transferCount": 0,
+      "inputTransferBytes": 0,
+      "postStartedAtMs": 4988.785705,
+      "postReturnedAtMs": 5545.852326,
+      "nativePostCallMs": 557.0666209999999,
+      "transferredBuffersDetached": true,
+      "receivedAtMs": 9769.863387,
+      "roundTripMs": 4781.077681999999,
+      "ok": true,
+      "workerExecutionMs": 3227.9072430000006,
+      "roundTripMinusWorkerExecutionMs": 1553.1704389999986,
+      "threadId": 1,
+      "outputBytes": 1024
+    },
+    {
+      "id": 2,
+      "task": "projection-plan",
+      "transferCount": 1,
+      "inputTransferBytes": 1091,
+      "postStartedAtMs": 10389.475613,
+      "postReturnedAtMs": 10389.53128,
+      "nativePostCallMs": 0.05566699999872071,
+      "transferredBuffersDetached": true,
+      "receivedAtMs": 14432.895843,
+      "roundTripMs": 4043.4202299999997,
+      "ok": true,
+      "workerExecutionMs": 4042.164643,
+      "roundTripMinusWorkerExecutionMs": 1.2555869999996503,
+      "threadId": 1,
+      "outputBytes": 39436
+    },
+    {
+      "id": 3,
+      "task": "projections",
+      "transferCount": 1,
+      "inputTransferBytes": 981,
+      "postStartedAtMs": 14449.075272,
+      "postReturnedAtMs": 14449.099695,
+      "nativePostCallMs": 0.024423000000751927,
+      "transferredBuffersDetached": true,
+      "receivedAtMs": 19780.259576,
+      "roundTripMs": 5331.184304,
+      "ok": true,
+      "workerExecutionMs": 5328.759847000001,
+      "roundTripMinusWorkerExecutionMs": 2.4244569999991654,
+      "threadId": 1,
+      "outputBytes": 6291335
+    }
+  ],
+  "workers": [
+    {
+      "threadId": 1,
+      "file": "/workspace/buyerlog-post-main-acceptance/resources/app/server/workers/compute-worker.js",
+      "createdAt": "2026-11-08T05:38:23.751Z",
+      "resourceLimits": {
+        "maxOldGenerationSizeMb": 3072
+      },
+      "exitedAt": "2026-11-08T05:38:44.277Z",
+      "exitCode": 1
+    }
+  ],
+  "memory": [
+    {
+      "stage": "before-source-load",
+      "rss": 41156608,
+      "heapTotal": 8646656,
+      "heapUsed": 6219920,
+      "external": 8209198,
+      "arrayBuffers": 6010774,
+      "atMs": 139.337548
+    },
+    {
+      "stage": "after-main-source-release",
+      "rss": 994676736,
+      "heapTotal": 148107264,
+      "heapUsed": 5219912,
+      "external": 2379402,
+      "arrayBuffers": 162203,
+      "atMs": 10381.912466
+    },
+    {
+      "stage": "before-measured-pipeline",
+      "rss": 1062068224,
+      "heapTotal": 8122368,
+      "heapUsed": 5444832,
+      "external": 2379402,
+      "arrayBuffers": 162203,
+      "atMs": 14447.935946
+    },
+    {
+      "stage": "after-measured-pipeline-before-parse",
+      "rss": 1048379392,
+      "heapTotal": 8122368,
+      "heapUsed": 5602208,
+      "external": 8631301,
+      "arrayBuffers": 162203,
+      "atMs": 19787.766818
+    },
+    {
+      "stage": "after-native-close",
+      "rss": 1365770240,
+      "heapTotal": 287363072,
+      "heapUsed": 173408448,
+      "external": 351418009,
+      "arrayBuffers": 177408562,
+      "atMs": 25531.071382
+    }
+  ],
+  "date": {
+    "timezone": "Europe/Istanbul",
+    "day": "2026-11-8",
+    "policy": "native Date and date normalization; reject day rollover, no clock replacement"
+  },
+  "productionAdmission": {
+    "diskBudgetBytes": 2147483648,
+    "reservedDiskBytes": 0,
+    "sourceFiles": 0,
+    "queued": 0,
+    "completed": 0,
+    "failed": 0,
+    "rejected": 0,
+    "peakActiveWorkers": 0,
+    "peakReservedBytes": 0,
+    "totalQueueWaitMs": 0,
+    "totalDurationMs": 0,
+    "totalPostMessageMs": 0,
+    "lastQueueWaitMs": 0,
+    "lastDurationMs": 0,
+    "maxQueueWaitMs": 0,
+    "maxWorkers": 2,
+    "workerCount": 0,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 4294967296,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 0,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 0,
+    "maxPendingBytes": 536870912
+  },
+  "sourceTopology": {
+    "rows": 30000,
+    "sameRowsByOriginalOrdinal": true,
+    "sameAntrepo": true,
+    "loadedAt": "2026-11-07T20:44:58.203Z",
+    "sources": {
+      "asas": "Excel: ASAS - Demo.xlsx",
+      "antrepo": "Excel: Antrepo - Demo.xlsx",
+      "lfl": "Excel: ASAS - Demo.xlsx",
+      "cpupdate": null
+    }
+  },
+  "sourceCharge": {
+    "encodedBytes": 148034253,
+    "encodedSha256": "d3c112621fe0b0240948d2528dfa58867cdf64755b1dc4de4776ab8a7ea687c4",
+    "uncompressedBytesPassedToSeed": 148034253,
+    "privateDiskReservationBytes": 297117082,
+    "encodedGraphAlreadyMaterialized": true,
+    "nativeReplicaBytes": 148258013,
+    "nativeReplicaSha256": "9c7965a3b2160e9672f7dde1dc920fbb93207d4a0d5c1f72af0e8e0cdd723cab",
+    "poolAfterSeed": {
+      "queued": 1,
+      "completed": 1,
+      "failed": 0,
+      "rejected": 0,
+      "peakActiveWorkers": 1,
+      "peakReservedBytes": 1910628764,
+      "totalQueueWaitMs": 0.49937799999952404,
+      "totalDurationMs": 4787.9712119999995,
+      "totalPostMessageMs": 557.2949790000002,
+      "lastQueueWaitMs": 0.49937799999952404,
+      "lastDurationMs": 4787.9712119999995,
+      "maxQueueWaitMs": 0.49937799999952404,
+      "maxWorkers": 2,
+      "workerCount": 1,
+      "activeWorkers": 0,
+      "pending": 0,
+      "memoryBudgetBytes": 4294967296,
+      "estimatedActiveBytes": 0,
+      "retainedWorkerBytes": 218294987,
+      "queuedInputBytes": 0,
+      "leasedOutputBytes": 0,
+      "reservedBytes": 251849419,
+      "maxPendingBytes": 536870912
+    },
+    "seedIpc": [
+      {
+        "id": 1,
+        "task": "seed-source",
+        "transferCount": 0,
+        "inputTransferBytes": 0,
+        "postStartedAtMs": 4988.785705,
+        "postReturnedAtMs": 5545.852326,
+        "nativePostCallMs": 557.0666209999999,
+        "transferredBuffersDetached": true,
+        "receivedAtMs": 9769.863387,
+        "roundTripMs": 4781.077681999999,
+        "ok": true,
+        "workerExecutionMs": 3227.9072430000006,
+        "roundTripMinusWorkerExecutionMs": 1553.1704389999986,
+        "threadId": 1,
+        "outputBytes": 1024
+      }
+    ]
+  },
+  "descriptor": {
+    "ownerId": "moderator",
+    "generation": "synthetic-ready-cost:e858d85fd76a1db28580:model-extras-v1",
+    "loadedAt": "2026-11-07T20:44:58.203Z",
+    "replicaFile": "/tmp/buyerlog-phase6a-ready-worker-cost-v2/runs/p3A/private/buyerlog-source-replicas-7JWWOf/08bf5dbbfd4eba01577ebd5d309feea43d362339e1e0f89a.v8",
+    "bytes": 592137012,
+    "checksum": "9c7965a3b2160e9672f7dde1dc920fbb93207d4a0d5c1f72af0e8e0cdd723cab",
+    "projectionKeys": {
+      "cp": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "overview": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "orders": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "order-summary": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "collection-catalog": "4b112f1e386de96e2270ba6c6997d51edc7e8efa21c18d4be5961feddf94bfcd",
+      "backlog": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813"
+    },
+    "capabilitySha256": "f9f8713273b1a1bd8df807162fb59db74abe8245f08f56c2e6cec843790d827c"
+  },
+  "plan": {
+    "sourceMeta": {
+      "loadedAt": "2026-11-07T20:44:58.203Z",
+      "sources": {
+        "asas": "Excel: ASAS - Demo.xlsx",
+        "antrepo": "Excel: Antrepo - Demo.xlsx",
+        "lfl": "Excel: ASAS - Demo.xlsx",
+        "cpupdate": null
+      },
+      "cpupdateInfo": null,
+      "cpupdateOverrides": {
+        "submap": {},
+        "suppfobmap": {},
+        "suppfobmetamap": {}
+      },
+      "fabricHeaderInfo": {
+        "source": "ASAS",
+        "matchingRule": "Sipariş Kod + Model Adı + Renk Kod; yalnız Ana Kumaş Mı = 1",
+        "mainFlagHeader": "Ana Kumaş Mı",
+        "mainRowCount": 30000,
+        "ignoredNonMainRows": 0,
+        "duplicateMainRows": 0,
+        "duplicateMainSourceRows": 0,
+        "sourceRowCount": 30000,
+        "orderIdentityCount": 30000,
+        "rowsPerOrderIdentity": 1,
+        "resolvedHeaders": {
+          "main": "Ana Kumaş Mı",
+          "fabricCategory": "Kumaş Kategorisi",
+          "fabricSupplierCountry": "Kumaşçı Ülkesi",
+          "fabricSupplier": "Kumaşçı",
+          "kumasTipi": "Kumaş Tipi",
+          "iplikNo": "İplik No",
+          "fabricWeight": "Gramaj",
+          "karisim": "Karışım"
+        },
+        "warnings": [],
+        "warningDetails": []
+      },
+      "antrepoHeaderInfo": {
+        "ok": true,
+        "rowCount": 12726,
+        "dataRows": 12726,
+        "keyCount": 12726,
+        "blankStatus": 0,
+        "blankLoadedQty": 0,
+        "blankIasOrderQty": 0,
+        "iasOrderQtyColumnPresent": true,
+        "lineKeyRows": 12726,
+        "matchableRows": 12726,
+        "pivotIdentityFillCount": 0,
+        "partialIdentityRows": 0,
+        "blankPartialIdentity": 12726,
+        "warningDetailRows": {
+          "blankLoadedQty": [],
+          "blankIasOrderQty": [],
+          "limit": 5000
+        },
+        "statusCounts": [
+          [
+            "Depoda",
+            7727
+          ],
+          [
+            "Üretimde",
+            2331
+          ],
+          [
+            "Yolda",
+            1935
+          ],
+          [
+            "Yüklemede",
+            733
+          ]
+        ],
+        "columns": [
+          "Sipariş Kod",
+          "Model Adı",
+          "Renk Kod",
+          "Renk Tanım",
+          "Supplier Portal Statü",
+          "Tahmini Antrepo Giriş Tarihi",
+          "Vasita Tanim",
+          "HANDOVER Tarihi",
+          "Yükleme Toplam Adet",
+          "Net Alım Sipariş Miktarı"
+        ],
+        "resolved": {
+          "ocode": "Sipariş Kod",
+          "model": "Model Adı",
+          "ccode": "Renk Kod",
+          "colour": "Renk Tanım",
+          "statu": "Supplier Portal Statü",
+          "arr": "Tahmini Antrepo Giriş Tarihi",
+          "handover": "HANDOVER Tarihi",
+          "vasita": "Vasita Tanim",
+          "loadedQty": "Yükleme Toplam Adet",
+          "iasOrderQty": "Net Alım Sipariş Miktarı"
+        },
+        "missing": [],
+        "reason": ""
+      },
+      "lflMeta": {
+        "sheets": [
+          {
+            "name": "ASAS",
+            "headerRow": 2,
+            "score": 26,
+            "mappedHeaders": {
+              "orderCode": "Sipariş Kod",
+              "modelName": "Model Adı",
+              "plmId": "Plm Kod",
+              "productDescription": "Ürün Ana Tanım",
+              "colourCode": "Renk Kod",
+              "mag": "Merch Alt Grup Kod",
+              "mmyg": "Merch Marka Yaş Grup Kod",
+              "classification": "Ürün Klasman",
+              "season": "Sezon",
+              "inStore": "Model Bütçe Tarih Yıl Ay Gün",
+              "opd": "Sipariş Yerleştirme MerchTarih",
+              "retailDate": "Retail Depo Tarih Yıl Ay Gün",
+              "exFactory": "Orijinal Exfactory Merch Tarih",
+              "fob": "FOB Fiyatı",
+              "quantity": "Net Alım Sipariş Miktarı",
+              "manufacturer": "Üretici",
+              "country": "Siparişin Üretildiği Ülke",
+              "buyer": "Buyer",
+              "buyingGroup": "Buyer Grup (TR)",
+              "license": "Lisans",
+              "licensor": "Lisans",
+              "line": "Line",
+              "mainFabric": "Ana Kumaş Mı",
+              "fabricCategory": "Kumaş Kategorisi",
+              "fabricSupplierCountry": "Kumaşçı Ülkesi",
+              "fabricSupplier": "Kumaşçı",
+              "kumasTipi": "Kumaş Tipi",
+              "iplikNo": "İplik No",
+              "fabricWeight": "Gramaj",
+              "karisim": "Karışım"
+            },
+            "rows": 30000
+          }
+        ],
+        "rowCount": 30000,
+        "rawValidRows": 30000,
+        "duplicateRowsRemoved": 0,
+        "skippedMissingPrice": 0,
+        "skippedMissingQuantity": 0,
+        "skippedEmpty": 0,
+        "skippedMissingDimensions": 0,
+        "missingDimensionCounts": {
+          "mag": 0,
+          "mmyg": 0,
+          "classification": 0,
+          "season": 0,
+          "periodDate": 0,
+          "manufacturer": 0,
+          "country": 0,
+          "buyingGroup": 0,
+          "buyer": 0
+        },
+        "mainFabricRows": 30000,
+        "ignoredNonMainFabricRows": 0,
+        "missingMainFabricSheets": 0,
+        "warnings": [],
+        "dimensions": {
+          "seasons": [
+            "6S27",
+            "6W26"
+          ],
+          "mags": [
+            "A1",
+            "A3",
+            "B2",
+            "C1",
+            "D4"
+          ],
+          "mmygs": [
+            "KB",
+            "KG",
+            "MN",
+            "TN",
+            "WM"
+          ],
+          "brandDirectorates": [],
+          "classifications": [
+            "HIRKA",
+            "KAZAK",
+            "PIJAMA",
+            "SWEATSHIRT",
+            "T-SHIRT"
+          ],
+          "productDescriptions": [
+            "HIRKA BARBIE",
+            "HIRKA DISNEY",
+            "HIRKA FCB",
+            "HIRKA HARRY POTTER",
+            "HIRKA LOONEY TUNES",
+            "HIRKA MARVEL",
+            "HIRKA NASA",
+            "HIRKA POKEMON",
+            "HIRKA STAR WARS",
+            "KAZAK BARBIE",
+            "KAZAK DISNEY",
+            "KAZAK FCB",
+            "KAZAK HARRY POTTER",
+            "KAZAK LOONEY TUNES",
+            "KAZAK MARVEL",
+            "KAZAK NASA",
+            "KAZAK POKEMON",
+            "KAZAK STAR WARS",
+            "PIJAMA BARBIE",
+            "PIJAMA DISNEY",
+            "PIJAMA FCB",
+            "PIJAMA HARRY POTTER",
+            "PIJAMA LOONEY TUNES",
+            "PIJAMA MARVEL",
+            "PIJAMA NASA",
+            "PIJAMA POKEMON",
+            "PIJAMA STAR WARS",
+            "SWEATSHIRT BARBIE",
+            "SWEATSHIRT DISNEY",
+            "SWEATSHIRT FCB",
+            "SWEATSHIRT HARRY POTTER",
+            "SWEATSHIRT LOONEY TUNES",
+            "SWEATSHIRT MARVEL",
+            "SWEATSHIRT NASA",
+            "SWEATSHIRT POKEMON",
+            "SWEATSHIRT STAR WARS",
+            "T-SHIRT BARBIE",
+            "T-SHIRT DISNEY",
+            "T-SHIRT FCB",
+            "T-SHIRT HARRY POTTER",
+            "T-SHIRT LOONEY TUNES",
+            "T-SHIRT MARVEL",
+            "T-SHIRT NASA",
+            "T-SHIRT POKEMON",
+            "T-SHIRT STAR WARS"
+          ],
+          "manufacturers": [
+            "ANADOLU TRIKO",
+            "ATLAS KNIT",
+            "CHITTAGONG KNIT",
+            "DELTA TEXTILE",
+            "DHAKA APPAREL",
+            "EGE ORME",
+            "KUTAISI TEXTILE",
+            "MARMARA KNIT",
+            "NILE KNIT",
+            "NINGBO KNITWEAR"
+          ],
+          "countries": [
+            "BANGLADES",
+            "CIN",
+            "FAS",
+            "Georgia",
+            "MISIR",
+            "TURKIYE"
+          ],
+          "buyers": [
+            "Ayşe K.",
+            "Burak E.",
+            "Can D.",
+            "Deniz A.",
+            "Ece B.",
+            "Emre S.",
+            "Mert Y.",
+            "Selin T."
+          ],
+          "buyingGroups": [
+            "KIDS BOY",
+            "KIDS GIRL",
+            "MEN",
+            "TEEN",
+            "WOMEN"
+          ],
+          "licenses": [
+            "BARBIE",
+            "DISNEY",
+            "FCB",
+            "HARRY POTTER",
+            "LOONEY TUNES",
+            "MARVEL",
+            "NASA",
+            "POKEMON",
+            "STAR WARS"
+          ],
+          "licensors": [
+            "BARBIE",
+            "DISNEY",
+            "FCB",
+            "HARRY POTTER",
+            "LOONEY TUNES",
+            "MARVEL",
+            "NASA",
+            "POKEMON",
+            "STAR WARS"
+          ],
+          "dtrTypes": [
+            "NON-DTR"
+          ],
+          "lines": [
+            "Kids Boy Knit",
+            "Kids Girl Knit",
+            "Men Licence",
+            "Teen Knit",
+            "Women Licence"
+          ],
+          "fabricCategories": [
+            "Örme"
+          ],
+          "fabricSupplierCountries": [
+            "Türkiye"
+          ],
+          "fabricSuppliers": [
+            "DEMO KUMAŞ A.Ş."
+          ],
+          "fabricTypes": [
+            "İki İplik",
+            "Ribana",
+            "Süprem",
+            "Triko"
+          ],
+          "yarnCounts": [
+            "2/28",
+            "20/1",
+            "24/1",
+            "30/1"
+          ],
+          "fabricWeights": [
+            "180",
+            "220",
+            "280",
+            "320"
+          ],
+          "fabricBlends": [
+            "%50 YÜN %50 AKRİLİK",
+            "%80 PAMUK %20 POLYESTER",
+            "%100 PAMUK"
+          ],
+          "inStoreMonths": [
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03",
+            "2027-04",
+            "2027-05"
+          ],
+          "opdMonths": [
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ],
+          "retailDateMonths": [
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03",
+            "2027-04"
+          ]
+        }
+      },
+      "refreshWarnings": [
+        "ASAS Excel pivot tabloları yenilenemedi; veri sunucudan güncellenmedi, \"ASAS - Demo.xlsx\" dosyasının son kaydedilmiş hali kullanıldı. ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.",
+        "Antrepo Excel (Antrepo - Demo.xlsx): 12.726 ASAS satırı Sipariş Kod + Model Adı/Ürün Ad + Renk Kod ile birebir eşleşti.",
+        "Antrepo (EXCEL): 12726 IAS satırında İthalat Dosya No boş geldi. Fact satırları yine ayrı parsiyel olarak korunmuştur; kaynak veri kalitesi için dosya numarasını kontrol edin.",
+        "Antrepo Excel pivot tabloları yenilenemedi; veri sunucudan güncellenmedi, \"Antrepo - Demo.xlsx\" dosyasının son kaydedilmiş hali kullanıldı. Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      ],
+      "refreshWarningDetails": [],
+      "modelRefresh": {
+        "at": "2026-11-07T20:44:58.203Z",
+        "antrepoSourceMode": "excel",
+        "antrepoLiveAt": null,
+        "antrepoFallback": null,
+        "dashboard": null,
+        "asasSourceMode": "excel",
+        "lflSourceMode": "excel",
+        "scopes": [],
+        "appliedHorizons": {},
+        "connections": [],
+        "queryMetrics": {
+          "actualRequests": 0,
+          "reusedRequests": 0,
+          "retained": 0
+        },
+        "sourceGenerationId": "2026-11-07T20:44:58.203Z",
+        "moduleProjectionTargets": [
+          "cp",
+          "orders",
+          "backlog",
+          "lfl",
+          "priceanalysis"
+        ]
+      },
+      "lastRefreshResult": {
+        "at": "2026-11-07T20:45:02.479Z",
+        "targets": [
+          "cp",
+          "orders",
+          "backlog",
+          "lfl",
+          "priceanalysis"
+        ],
+        "skippedTargets": [],
+        "cpCoverage": null,
+        "hasChanges": true,
+        "totalChanges": 42726,
+        "asasChangeCount": 30000,
+        "antrepoChangeCount": 12726,
+        "newlyAppeared": 30000,
+        "disappeared": 0,
+        "statusChanged": 0,
+        "qtyChangedOrders": 0,
+        "historyItemId": null,
+        "notes": [
+          {
+            "source": "ASAS",
+            "ocode": "4100000",
+            "modelName": "DISNEY Classic Pijama",
+            "colour": "EKRU",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 4100"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100001",
+            "modelName": "DISNEY Glitter Pijama",
+            "colour": "BORDO",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 0"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100002",
+            "modelName": "HARRY Crew Kazak",
+            "colour": "EKRU",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 5100"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100003",
+            "modelName": "BARBIE Glitter Kazak",
+            "colour": "BORDO",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 3600"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100004",
+            "modelName": "DISNEY Crew T-shirt",
+            "colour": "HAKI",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 5000"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100005",
+            "modelName": "FCB Crew Pijama",
+            "colour": "HAKI",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 4900"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100006",
+            "modelName": "BARBIE Logo Pijama",
+            "colour": "GRI MELANJ",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 2500"
+          },
+          {
+            "source": "ASAS",
+            "ocode": "4100007",
+            "modelName": "LOONEY Varsity Hirka",
+            "colour": "MAVI",
+            "changeType": "Yeni görünen",
+            "detail": "Kalan: 2800"
+          }
+        ]
+      }
+    },
+    "sourceProjectionKeys": {
+      "cp": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "overview": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "orders": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "order-summary": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813",
+      "collection-catalog": "4b112f1e386de96e2270ba6c6997d51edc7e8efa21c18d4be5961feddf94bfcd",
+      "backlog": "52b88ba78725357dd03f8baf8397c9b55a625937368f9bcc90ce2b23b030c813"
+    },
+    "inputKeys": {
+      "cp": "4dc724f77941fc101c6569f4fec151deeabe45eb126250d899072eef538a8e66",
+      "overview": "4dc724f77941fc101c6569f4fec151deeabe45eb126250d899072eef538a8e66",
+      "orders": "4dc724f77941fc101c6569f4fec151deeabe45eb126250d899072eef538a8e66",
+      "order-summary": "4dc724f77941fc101c6569f4fec151deeabe45eb126250d899072eef538a8e66",
+      "collection-catalog": "61ff63496ce75606b5dae05138940810f0267686f1127d1c6874ae79d29a5952",
+      "backlog": "4dc724f77941fc101c6569f4fec151deeabe45eb126250d899072eef538a8e66"
+    }
+  },
+  "projectionParams": {
+    "modules": [
+      "orders"
+    ],
+    "overrides": {},
+    "horizons": {},
+    "cpAllowed": true,
+    "summaryAllowed": true,
+    "access": {
+      "userId": "moderator",
+      "systemRole": "moderator",
+      "manageAll": true,
+      "viewScope": {
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "editScopes": {
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "authority": {},
+      "authorityHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "ownershipProfiles": [],
+      "accessHash": "e18efead32f0f2a9f9fcfc48e1ac20b191b8a628d1c801528e268fe597eec827"
+    },
+    "calendar": {
+      "configured": false
+    },
+    "cpModelColumns": [
+      {
+        "id": "synthetic_worker_cost_0",
+        "header": "__CPX_SYNTH_WORKER_COST_A",
+        "label": "Synthetic worker cost 0",
+        "synthetic": true,
+        "percentageScale": 0
+      },
+      {
+        "id": "synthetic_worker_cost_1",
+        "header": "__CPX_SYNTH_WORKER_COST_B",
+        "label": "Synthetic worker cost 1",
+        "synthetic": true,
+        "percentageScale": 0
+      }
+    ],
+    "moduleSchemaExposureCp": true,
+    "moduleSchemaTargetKnownCp": true,
+    "moduleSchemaBindingsKnownCp": true,
+    "moduleSchemaExposureOrders": true,
+    "moduleSchemaTargetKnownOrders": true,
+    "moduleSchemaBindingsKnownOrders": true
+  },
+  "projectionContextHash": "1658fa45ecfb52abe9c3790cf18472998ca0b61f4ec52318b161cf6371fc83f7",
+  "mainHeapSamplePeak": {
+    "rss": 1048379392,
+    "heapTotal": 8122368,
+    "heapUsed": 5562984,
+    "external": 2379402,
+    "arrayBuffers": 162203,
+    "atMs": 19702.970957
+  },
+  "rssSamplePeak": {
+    "rss": 1265049600,
+    "heapTotal": 8122368,
+    "heapUsed": 5555208,
+    "external": 2379402,
+    "arrayBuffers": 162203,
+    "atMs": 18792.550998
+  },
+  "pipelineWallMs": 5338.983885999998,
+  "output": {
+    "fullGzipBytes": 6251899,
+    "fullGzipSha256": "85b9b534f01d1a9ebc1a06f6e0e834ac51d5ca38758a2ab5026f1910bd9e91e2",
+    "fullJsonBytes": 83579517,
+    "selectedGzipBytes": 6251899,
+    "selectedGzipSha256": "85b9b534f01d1a9ebc1a06f6e0e834ac51d5ca38758a2ab5026f1910bd9e91e2",
+    "selectedJsonBytes": 83579517
+  },
+  "workerHeapAfterPipeline": [
+    {
+      "threadId": 1,
+      "statistics": {
+        "total_heap_size": 594026496,
+        "total_heap_size_executable": 1048576,
+        "total_physical_size": 594296832,
+        "total_available_size": 3093808624,
+        "used_heap_size": 426335088,
+        "heap_size_limit": 3422552064,
+        "malloced_memory": 548936,
+        "peak_malloced_memory": 33658824,
+        "does_zap_garbage": false,
+        "number_of_native_contexts": 1,
+        "number_of_detached_contexts": 0,
+        "total_global_handles_size": 8192,
+        "used_global_handles_size": 2816,
+        "external_memory": 99518672
+      },
+      "timing": "after measured pipeline"
+    }
+  ],
+  "normalizer": {
+    "appMainSha256": "d773c2a7abb9f2f198512df1b02d6c5e09332b1626b57cc9b96b9e70320376bc",
+    "extractedCodeSha256": "af9e09209ef6eadcc28937a07162dcbc173939150f60ee0b1326678e222dc634",
+    "functions": [
+      "norm",
+      "toNum",
+      "dateOrdinal",
+      "normalizeTransitDelType",
+      "turknorm",
+      "makeDateOnly",
+      "dateOnlyFromDateObject",
+      "excelSerialToDateOnly",
+      "coerceDateLoose",
+      "normalizeCPDates",
+      "applyCpApprovalDate",
+      "cpLogisticSegments",
+      "cpLogisticHasDetails",
+      "rebuildCpLogisticCaches"
+    ]
+  },
+  "equivalence": {
+    "status": "passed",
+    "rows": 30000,
+    "fullJsonSha256": "beb00eb5e0930198d6d4197746e7520e4d7ad1cd479d4f84664a49d6e20365fd",
+    "fullRawBytes": 83579517,
+    "fullRowsSha256": "b0b088bb31bdd8ade4f8ed20f694dcb348977044662e0f1b8fc5ad15caeceee8",
+    "normalizedRowsSha256": "06b6d3fd200a702c63e8e03f6c26478ec213ee9435cbbb0d6bd087e0be626196",
+    "restoredByOriginalOrdinal": true,
+    "allOwnKeysAndNestedValuesCompared": false,
+    "modelPresence": [
+      {
+        "key": "__CPX_SYNTH_WORKER_COST_A",
+        "present": 30000,
+        "zeros": 2728,
+        "falseValues": 2728,
+        "nullValues": 2728
+      },
+      {
+        "key": "__CPX_SYNTH_WORKER_COST_B",
+        "present": 30000,
+        "zeros": 2727,
+        "falseValues": 2728,
+        "nullValues": 2728
+      }
+    ],
+    "verificationMs": 5667.957843999997,
+    "readyRawBytes": null,
+    "fullGraphMaterializedAfterTiming": true
+  },
+  "poolBeforeClose": {
+    "diskBudgetBytes": 2147483648,
+    "reservedDiskBytes": 148258013,
+    "sourceFiles": 1,
+    "queued": 3,
+    "completed": 3,
+    "failed": 0,
+    "rejected": 0,
+    "peakActiveWorkers": 1,
+    "peakReservedBytes": 2502771791,
+    "totalQueueWaitMs": 0.666535000001204,
+    "totalDurationMs": 14163.023071999998,
+    "totalPostMessageMs": 557.4556169999996,
+    "lastQueueWaitMs": 0.10119400000075984,
+    "lastDurationMs": 5331.376709999999,
+    "maxQueueWaitMs": 0.49937799999952404,
+    "maxWorkers": 2,
+    "workerCount": 1,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 4294967296,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 592137012,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 625691444,
+    "maxPendingBytes": 536870912
+  },
+  "poolAfterClose": {
+    "diskBudgetBytes": 2147483648,
+    "reservedDiskBytes": 0,
+    "sourceFiles": 0,
+    "queued": 3,
+    "completed": 3,
+    "failed": 0,
+    "rejected": 0,
+    "peakActiveWorkers": 1,
+    "peakReservedBytes": 2502771791,
+    "totalQueueWaitMs": 0.666535000001204,
+    "totalDurationMs": 14163.023071999998,
+    "totalPostMessageMs": 557.4556169999996,
+    "lastQueueWaitMs": 0.10119400000075984,
+    "lastDurationMs": 5331.376709999999,
+    "maxQueueWaitMs": 0.49937799999952404,
+    "maxWorkers": 2,
+    "workerCount": 0,
+    "activeWorkers": 0,
+    "pending": 0,
+    "memoryBudgetBytes": 4294967296,
+    "estimatedActiveBytes": 0,
+    "retainedWorkerBytes": 0,
+    "queuedInputBytes": 0,
+    "leasedOutputBytes": 0,
+    "reservedBytes": 0,
+    "maxPendingBytes": 536870912
+  },
+  "nativeWorkerExitsVerified": true,
+  "finishedAt": "2026-11-08T05:38:44.295Z"
+}

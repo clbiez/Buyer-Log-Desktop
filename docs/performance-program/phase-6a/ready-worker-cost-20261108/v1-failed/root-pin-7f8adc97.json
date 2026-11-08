@@ -1,0 +1,18 @@
+{
+  "head": "7f8adc97e1b26276cd849cdd34a6dada142779e9",
+  "appTree": "b6d4a17129c2e9ef6e4c67ce86f02a3b43319929",
+  "testsStatus": "passed",
+  "testEvidencePath": "/tmp/buyerlog-phase6a-foundation-full-7f8adc97/full.log",
+  "testEvidenceSha256": "06856d28421382f6d1264bd1650e85942968e151a77f7dd49eb2fc69cebd409a",
+  "exclusiveMeasurement": true,
+  "fullReceiptPath": "/tmp/buyerlog-phase6a-foundation-full-7f8adc97/receipt.json",
+  "fullReceiptSha256": "6f82a3cb6c7447a0bd55d3999413b1a212c0bf1a4b46169e2014a8417d8811c5",
+  "allTenBatchesPassed": true,
+  "counts": {
+    "tests": 9326,
+    "pass": 9261,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "status": "failed",
+  "formalAcceptance": false,
+  "startedAt": "2026-11-08T05:29:27.940192+00:00",
+  "rootPin": "/tmp/buyerlog-phase6a-ready-worker-cost-preparation/root-pin-7f8adc97.json",
+  "rootPinSha256": "aacc78ae7667746160303894766569d97c680d9ead6ff80d6f26a1db2faf7543",
+  "sourcePins": {
+    "head": "7f8adc97e1b26276cd849cdd34a6dada142779e9",
+    "appTree": "b6d4a17129c2e9ef6e4c67ce86f02a3b43319929",
+    "testsStatus": "passed",
+    "testEvidencePath": "/tmp/buyerlog-phase6a-foundation-full-7f8adc97/full.log",
+    "testEvidenceSha256": "06856d28421382f6d1264bd1650e85942968e151a77f7dd49eb2fc69cebd409a",
+    "exclusiveMeasurement": true,
+    "fullReceiptPath": "/tmp/buyerlog-phase6a-foundation-full-7f8adc97/receipt.json",
+    "fullReceiptSha256": "6f82a3cb6c7447a0bd55d3999413b1a212c0bf1a4b46169e2014a8417d8811c5",
+    "allTenBatchesPassed": true,
+    "counts": {
+      "tests": 9326,
+      "pass": 9261,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 65
+    }
+  },
+  "scriptSha256": "9e7e1a95c379afc77d372019221df58ca10bc0ae17b3fddc7bd78dec076f2f7f",
+  "input": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/measurement.json",
+  "inputSha256": "932e3e2e2c75d1b780f654ce4d13d7725a51ed35a78c949357a9e7e3a5a540b3",
+  "snapshot": "/tmp/buyerlog-first-transition-Hxb1BB/local/model-snapshots/moderator.json.gz",
+  "snapshotSha256": "e858d85fd76a1db2858098b820a0c5e20e8466d3c3895e12ad6c93c9ab9530dd",
+  "sourceMetadata": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "order": [
+    [
+      1,
+      "A"
+    ],
+    [
+      1,
+      "B"
+    ],
+    [
+      2,
+      "B"
+    ],
+    [
+      2,
+      "A"
+    ],
+    [
+      3,
+      "A"
+    ],
+    [
+      3,
+      "B"
+    ]
+  ],
+  "day": "2026-11-8",
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "A",
+      "status": "failed",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--expose-gc",
+        "/tmp/buyerlog-phase6a-ready-worker-cost-preparation/measure.cjs",
+        "--arm",
+        "A",
+        "--out",
+        "/tmp/buyerlog-phase6a-ready-worker-cost-preparation/runs/p1A",
+        "--day",
+        "2026-11-8"
+      ],
+      "startedAt": "2026-11-08T05:29:28.082172+00:00",
+      "freeBeforeBytes": 962113536,
+      "identity": {
+        "pid": 690829,
+        "ppid": 690756,
+        "group": 690829,
+        "session": 690829,
+        "startTicks": "20090069"
+      },
+      "minimumFreeBytes": 813842432,
+      "peakPacketBytes": 148309529,
+      "returncode": 0,
+      "error": "FileNotFoundError(2, 'No such file or directory')",
+      "finishedAt": "2026-11-08T05:30:03.020708+00:00",
+      "cleanup": []
+    }
+  ],
+  "admission": {
+    "minimumFreeBytes": 671088640,
+    "emergencyFreeBytes": 134217728,
+    "packetDiskCapBytes": 536870912,
+    "timeoutSeconds": 1200
+  },
+  "scope": "Current-source full producer versus current-source full+schema+ready producer. Native worker/IPC only; no UI/client performance claim.",
+  "error": "FileNotFoundError(2, 'No such file or directory')",
+  "finishedAt": "2026-11-08T05:30:03.208267+00:00"
+}

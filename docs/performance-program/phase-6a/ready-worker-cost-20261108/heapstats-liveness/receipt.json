@@ -1,0 +1,29 @@
+[
+  {
+    "case": "unref-1",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "",
+    "before": true,
+    "after": false,
+    "closed": false
+  },
+  {
+    "case": "unref-2",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "",
+    "before": true,
+    "after": false,
+    "closed": false
+  },
+  {
+    "case": "ref-1",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "",
+    "before": true,
+    "after": true,
+    "closed": true
+  }
+]
