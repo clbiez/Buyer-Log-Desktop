@@ -1,0 +1,14 @@
+{"ns":"575197970832","wall":"2026-11-08T10:28:50.233Z","pid":1342,"event":"initialized","name":"init","childPid":1354}
+{"ns":"575200861883","wall":"2026-11-08T10:28:50.236Z","pid":1342,"event":"child:exit","name":"init","code":0,"signal":null}
+{"ns":"575243753196","wall":"2026-11-08T10:28:50.279Z","pid":1342,"event":"held","name":"a","childPid":1365,"token":"cdc2b4d4-3da6-4494-b438-805c36c47401","generation":1}
+{"ns":"578288712304","wall":"2026-11-08T10:28:53.324Z","pid":1342,"event":"rejected","name":"b-busy","childPid":1376,"eventId":"diag-b-0","code":"SHARED_WRITE_BUSY"}
+{"ns":"578296210923","wall":"2026-11-08T10:28:53.331Z","pid":1342,"event":"child:exit","name":"b-busy","code":0,"signal":null}
+{"ns":"595258151769","wall":"2026-11-08T10:29:10.293Z","pid":1342,"event":"renewed","name":"a","childPid":1365}
+{"ns":"595258270749","wall":"2026-11-08T10:29:10.293Z","pid":1342,"event":"child:send","name":"a","command":"go"}
+{"ns":"595264388428","wall":"2026-11-08T10:29:10.300Z","pid":1342,"event":"ack","name":"a","childPid":1365,"eventId":"diag-a-0","sequence":1}
+{"ns":"595267945606","wall":"2026-11-08T10:29:10.303Z","pid":1342,"event":"child:exit","name":"a","code":0,"signal":null}
+{"ns":"595318222142","wall":"2026-11-08T10:29:10.353Z","pid":1342,"event":"held","name":"b","childPid":1398,"token":"838e91af-27d3-4843-88ef-15d0081d22c7","generation":2}
+{"ns":"595324967360","wall":"2026-11-08T10:29:10.360Z","pid":1342,"event":"ack","name":"b","childPid":1398,"eventId":"diag-b-0","sequence":2}
+{"ns":"595329157435","wall":"2026-11-08T10:29:10.364Z","pid":1342,"event":"child:exit","name":"b","code":0,"signal":null}
+{"ns":"595377607259","wall":"2026-11-08T10:29:10.413Z","pid":1342,"event":"verified","name":"verify","childPid":1409,"records":2,"acceptedEvents":2,"sequence":2,"eventIdsHash":"1080a7a9c2a692f11c2336b61a7547d0554431b0d71ff90ed8cfa6b11ac6d39e","businessHash":"64973e0c2a330ae7edebadb3b46f36c10ff63fc517245ecc4ba47d9e325c5714","events":2,"ledger":0,"pending":2,"allExpectedValuesChecked":true}
+{"ns":"595379846495","wall":"2026-11-08T10:29:10.415Z","pid":1342,"event":"child:exit","name":"verify","code":0,"signal":null}

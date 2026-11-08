@@ -1,0 +1,14 @@
+{
+  "mode": "verify",
+  "size": 200000,
+  "file": "/tmp/buyerlog-shared-lease-diag-wJPWKX/BuyerLogLocal.db",
+  "trace": true,
+  "ranges": [
+    {
+      "writer": "single",
+      "count": 200000
+    }
+  ],
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-trace-200k/verify.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-trace-200k/verify.result.json"
+}

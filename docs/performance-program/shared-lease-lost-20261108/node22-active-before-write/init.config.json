@@ -1,0 +1,7 @@
+{
+  "scenario": "active-before-write",
+  "role": "init",
+  "file": "/tmp/buyerlog-shared-lease-diag-uBs5KH/BuyerLogLocal.db",
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-active-before-write/init.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-active-before-write/init.result.json"
+}

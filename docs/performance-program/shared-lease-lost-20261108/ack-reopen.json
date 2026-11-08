@@ -1,0 +1,124 @@
+[
+  {
+    "label": "node22-active-after-fsync",
+    "acknowledgedCount": 1,
+    "acknowledged": [
+      "diag-b-0"
+    ],
+    "permittedUnacknowledgedIds": [
+      "diag-a-0"
+    ],
+    "checkedDurableCount": 2,
+    "actualReopenedEventIdsHash": "1080a7a9c2a692f11c2336b61a7547d0554431b0d71ff90ed8cfa6b11ac6d39e",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node22-active-before-write",
+    "acknowledgedCount": 1,
+    "acknowledged": [
+      "diag-b-0"
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 1,
+    "actualReopenedEventIdsHash": "5fe7cadb0d4c86edd5ff33ce7460254b18331362dc6506b36057d83a3f1d5605",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node22-completion-race",
+    "acknowledgedCount": 1,
+    "acknowledged": [
+      "diag-a-0"
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 1,
+    "actualReopenedEventIdsHash": "c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node22-contention",
+    "acknowledgedCount": 2,
+    "acknowledged": [
+      "diag-a-0",
+      "diag-b-0"
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 2,
+    "actualReopenedEventIdsHash": "1080a7a9c2a692f11c2336b61a7547d0554431b0d71ff90ed8cfa6b11ac6d39e",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node22-plain-200k-retry",
+    "acknowledgedCount": 200000,
+    "acknowledged": [
+      {
+        "writer": "single",
+        "first": 0,
+        "count": 200000,
+        "format": "diag-single-{index}"
+      }
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 200000,
+    "actualReopenedEventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node22-trace-200k",
+    "acknowledgedCount": 200000,
+    "acknowledged": [
+      {
+        "writer": "single",
+        "first": 0,
+        "count": 200000,
+        "format": "diag-single-{index}"
+      }
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 200000,
+    "actualReopenedEventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node24-completion-race",
+    "acknowledgedCount": 1,
+    "acknowledged": [
+      "diag-a-0"
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 1,
+    "actualReopenedEventIdsHash": "c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  },
+  {
+    "label": "node24-plain-200k",
+    "acknowledgedCount": 200000,
+    "acknowledged": [
+      {
+        "writer": "single",
+        "first": 0,
+        "count": 200000,
+        "format": "diag-single-{index}"
+      }
+    ],
+    "permittedUnacknowledgedIds": [],
+    "checkedDurableCount": 200000,
+    "actualReopenedEventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+    "businessValuesChecked": true,
+    "equality": "ACK union explicitly permitted unacknowledged IDs equals actual disk-reopened IDs",
+    "rawFieldNote": "verify.result.json acceptedEvents counts the expected durable set supplied to the oracle. It includes permitted unacknowledged writes in active-after-fsync; use acknowledgedCount here or manifest.accepted for ACK count."
+  }
+]

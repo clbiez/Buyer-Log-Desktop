@@ -1,0 +1,13 @@
+{
+  "scenario": "completion-race",
+  "role": "verify",
+  "file": "/tmp/buyerlog-shared-lease-diag-YPbi2H/BuyerLogLocal.db",
+  "ranges": [
+    {
+      "writer": "a",
+      "count": 1
+    }
+  ],
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node24-completion-race/verify.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node24-completion-race/verify.result.json"
+}

@@ -1,0 +1,7 @@
+{
+  "scenario": "contention",
+  "role": "init",
+  "file": "/tmp/buyerlog-shared-lease-diag-0GsohV/BuyerLogLocal.db",
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-contention/init.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-contention/init.result.json"
+}

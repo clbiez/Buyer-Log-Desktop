@@ -1,0 +1,278 @@
+[
+  {
+    "label": "node22-active-after-fsync",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "active-after-fsync",
+    "trace": "controlled",
+    "durationMs": 211,
+    "warningLines": 0,
+    "renewalCalls": 0,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 2,
+    "longestCallbackMs": 13.71764,
+    "accepted": [
+      {
+        "name": "b",
+        "event": "ack",
+        "eventId": "diag-b-0",
+        "sequence": 2
+      }
+    ],
+    "rejected": [
+      {
+        "name": "a",
+        "event": "rejected",
+        "eventId": "diag-a-0",
+        "code": "SHARED_LEASE_LOST"
+      }
+    ],
+    "permittedUnacknowledged": [
+      "diag-a-0"
+    ],
+    "conclusion": "Injected transfer after WAL fsync: stale call rejects, its unacknowledged durable event and successor ACK/event reopen.",
+    "reopened": {
+      "records": 2,
+      "acceptedEvents": 2,
+      "sequence": 2,
+      "eventIdsHash": "1080a7a9c2a692f11c2336b61a7547d0554431b0d71ff90ed8cfa6b11ac6d39e",
+      "businessHash": "64973e0c2a330ae7edebadb3b46f36c10ff63fc517245ecc4ba47d9e325c5714",
+      "events": 2,
+      "ledger": 0,
+      "pending": 2,
+      "allExpectedValuesChecked": true
+    }
+  },
+  {
+    "label": "node22-active-before-write",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "active-before-write",
+    "trace": "controlled",
+    "durationMs": 212,
+    "warningLines": 0,
+    "renewalCalls": 0,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 2,
+    "longestCallbackMs": 15.947542,
+    "accepted": [
+      {
+        "name": "b",
+        "event": "ack",
+        "eventId": "diag-b-0",
+        "sequence": 1
+      }
+    ],
+    "rejected": [
+      {
+        "name": "a",
+        "event": "rejected",
+        "eventId": "diag-a-0",
+        "code": "SHARED_LEASE_LOST"
+      }
+    ],
+    "permittedUnacknowledged": [],
+    "conclusion": "Injected ownership transfer before WAL: stale write rejects, only successor ACK/event reopens.",
+    "reopened": {
+      "records": 1,
+      "acceptedEvents": 1,
+      "sequence": 1,
+      "eventIdsHash": "5fe7cadb0d4c86edd5ff33ce7460254b18331362dc6506b36057d83a3f1d5605",
+      "businessHash": "c10e94e6e045b578ea68a14a174bafa0e0b728c3464f6cf3fc8d2095649e4d92",
+      "events": 1,
+      "ledger": 0,
+      "pending": 1,
+      "allExpectedValuesChecked": true
+    }
+  },
+  {
+    "label": "node22-completion-race",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "completion-race",
+    "trace": "controlled",
+    "durationMs": 20166,
+    "warningLines": 1,
+    "renewalCalls": 1,
+    "renewalRejectedCalls": 1,
+    "leaseCount": 1,
+    "longestCallbackMs": 20018.414708,
+    "accepted": [
+      {
+        "name": "a",
+        "event": "ack",
+        "eventId": "diag-a-0",
+        "sequence": 1
+      }
+    ],
+    "rejected": [],
+    "conclusion": "Scope completion precedes rejected renewal; same token/generation until release; one accepted event reopens.",
+    "reopened": {
+      "records": 1,
+      "acceptedEvents": 1,
+      "sequence": 1,
+      "eventIdsHash": "c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c",
+      "businessHash": "00e44cb7c25948add43d9b59c4437b31ee97253cffa700b29643e6bb5eacb97b",
+      "events": 1,
+      "ledger": 0,
+      "pending": 1,
+      "allExpectedValuesChecked": true
+    }
+  },
+  {
+    "label": "node22-contention",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "contention",
+    "trace": "controlled",
+    "durationMs": 20232,
+    "warningLines": 0,
+    "renewalCalls": 1,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 2,
+    "longestCallbackMs": 20019.830985,
+    "accepted": [
+      {
+        "name": "a",
+        "event": "ack",
+        "eventId": "diag-a-0",
+        "sequence": 1
+      },
+      {
+        "name": "b",
+        "event": "ack",
+        "eventId": "diag-b-0",
+        "sequence": 2
+      }
+    ],
+    "rejected": [
+      {
+        "name": "b-busy",
+        "event": "rejected",
+        "eventId": "diag-b-0",
+        "code": "SHARED_WRITE_BUSY"
+      }
+    ],
+    "conclusion": "Live owner renews; contender rejects busy; retry after release ACKs; both accepted events reopen.",
+    "reopened": {
+      "records": 2,
+      "acceptedEvents": 2,
+      "sequence": 2,
+      "eventIdsHash": "1080a7a9c2a692f11c2336b61a7547d0554431b0d71ff90ed8cfa6b11ac6d39e",
+      "businessHash": "64973e0c2a330ae7edebadb3b46f36c10ff63fc517245ecc4ba47d9e325c5714",
+      "events": 2,
+      "ledger": 0,
+      "pending": 2,
+      "allExpectedValuesChecked": true
+    }
+  },
+  {
+    "label": "node22-plain-200k-retry",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "independent-200k",
+    "trace": "plain",
+    "durationMs": 113315,
+    "warningLines": 0,
+    "renewalCalls": 0,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 0,
+    "longestCallbackMs": 0,
+    "reopened": {
+      "records": 50000,
+      "acceptedEvents": 200000,
+      "sequence": 200000,
+      "eventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+      "businessHash": "bb62f89a62f10d2aa81319f708f26924cd13d27fc6277d125c1f5c0abc713ceb",
+      "events": 41000,
+      "ledger": 159000,
+      "pending": 40000,
+      "allExpectedValuesChecked": true
+    },
+    "maxRssBytes": 1255952384
+  },
+  {
+    "label": "node22-trace-200k",
+    "status": "passed",
+    "node": "22.23.4",
+    "scenario": "independent-200k",
+    "trace": "trace",
+    "durationMs": 140200,
+    "warningLines": 0,
+    "renewalCalls": 0,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 23,
+    "longestCallbackMs": 11417.58032,
+    "reopened": {
+      "records": 50000,
+      "acceptedEvents": 200000,
+      "sequence": 200000,
+      "eventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+      "businessHash": "bb62f89a62f10d2aa81319f708f26924cd13d27fc6277d125c1f5c0abc713ceb",
+      "events": 41000,
+      "ledger": 159000,
+      "pending": 40000,
+      "allExpectedValuesChecked": true
+    },
+    "maxRssBytes": 1659363328
+  },
+  {
+    "label": "node24-completion-race",
+    "status": "passed",
+    "node": "24.19.0",
+    "scenario": "completion-race",
+    "trace": "controlled",
+    "durationMs": 20171,
+    "warningLines": 1,
+    "renewalCalls": 1,
+    "renewalRejectedCalls": 1,
+    "leaseCount": 1,
+    "longestCallbackMs": 20008.168771,
+    "accepted": [
+      {
+        "name": "a",
+        "event": "ack",
+        "eventId": "diag-a-0",
+        "sequence": 1
+      }
+    ],
+    "rejected": [],
+    "conclusion": "Scope completion precedes rejected renewal; same token/generation until release; one accepted event reopens.",
+    "reopened": {
+      "records": 1,
+      "acceptedEvents": 1,
+      "sequence": 1,
+      "eventIdsHash": "c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c",
+      "businessHash": "00e44cb7c25948add43d9b59c4437b31ee97253cffa700b29643e6bb5eacb97b",
+      "events": 1,
+      "ledger": 0,
+      "pending": 1,
+      "allExpectedValuesChecked": true
+    }
+  },
+  {
+    "label": "node24-plain-200k",
+    "status": "passed",
+    "node": "24.19.0",
+    "scenario": "independent-200k",
+    "trace": "plain",
+    "durationMs": 105369,
+    "warningLines": 0,
+    "renewalCalls": 0,
+    "renewalRejectedCalls": 0,
+    "leaseCount": 0,
+    "longestCallbackMs": 0,
+    "reopened": {
+      "records": 50000,
+      "acceptedEvents": 200000,
+      "sequence": 200000,
+      "eventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+      "businessHash": "bb62f89a62f10d2aa81319f708f26924cd13d27fc6277d125c1f5c0abc713ceb",
+      "events": 41000,
+      "ledger": 159000,
+      "pending": 40000,
+      "allExpectedValuesChecked": true
+    },
+    "maxRssBytes": 1303248896
+  }
+]

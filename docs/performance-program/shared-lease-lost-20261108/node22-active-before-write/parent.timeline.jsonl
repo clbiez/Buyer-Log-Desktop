@@ -1,0 +1,15 @@
+{"ns":"595476551960","wall":"2026-11-08T10:29:10.512Z","pid":1420,"event":"initialized","name":"init","childPid":1432}
+{"ns":"595481221020","wall":"2026-11-08T10:29:10.516Z","pid":1420,"event":"child:exit","name":"init","code":0,"signal":null}
+{"ns":"595524830064","wall":"2026-11-08T10:29:10.560Z","pid":1420,"event":"held","name":"a","childPid":1443,"token":"c65da8cd-16cd-4c0d-a097-9f22a016f17e","generation":1}
+{"ns":"595524994703","wall":"2026-11-08T10:29:10.560Z","pid":1420,"event":"injection:live-owner-directory-displaced","previous":{"protocolVersion":2,"processLeaseId":"35be855a-5916-4082-b2df-9c633fc91de7","threadId":0,"token":"c65da8cd-16cd-4c0d-a097-9f22a016f17e","instanceId":"diag-node22-active-before-write-a","machine":"26cdcc52a913","pid":1443,"createdAt":"2026-11-08T10:29:10.556Z","startedAt":"2026-11-08T10:29:10.556Z","expiresAt":"2026-11-08T10:30:10.556Z","resource":"/tmp/buyerlog-shared-lease-diag-uBs5KH/BuyerLogLocal.db","generation":1},"inode":1425}
+{"ns":"595571585967","wall":"2026-11-08T10:29:10.607Z","pid":1420,"event":"held","name":"b","childPid":1454,"token":"13477f0d-d64c-4953-b146-7d299710da57","generation":2}
+{"ns":"595571677606","wall":"2026-11-08T10:29:10.607Z","pid":1420,"event":"injection:successor-owner","current":{"protocolVersion":2,"processLeaseId":"ca0d475d-fef8-4b5a-b20f-3872433edff3","threadId":0,"token":"13477f0d-d64c-4953-b146-7d299710da57","instanceId":"diag-node22-active-before-write-b","machine":"26cdcc52a913","pid":1454,"createdAt":"2026-11-08T10:29:10.602Z","startedAt":"2026-11-08T10:29:10.602Z","expiresAt":"2026-11-08T10:30:10.602Z","resource":"/tmp/buyerlog-shared-lease-diag-uBs5KH/BuyerLogLocal.db","generation":2},"inode":1430}
+{"ns":"595571751878","wall":"2026-11-08T10:29:10.607Z","pid":1420,"event":"child:send","name":"a","command":"go"}
+{"ns":"595577379337","wall":"2026-11-08T10:29:10.613Z","pid":1420,"event":"rejected","name":"a","childPid":1443,"eventId":"diag-a-0","code":"SHARED_LEASE_LOST"}
+{"ns":"595582189710","wall":"2026-11-08T10:29:10.617Z","pid":1420,"event":"child:exit","name":"a","code":0,"signal":null}
+{"ns":"595582234508","wall":"2026-11-08T10:29:10.617Z","pid":1420,"event":"assertion:successor-preserved"}
+{"ns":"595582249571","wall":"2026-11-08T10:29:10.617Z","pid":1420,"event":"child:send","name":"b","command":"go"}
+{"ns":"595588426390","wall":"2026-11-08T10:29:10.624Z","pid":1420,"event":"ack","name":"b","childPid":1454,"eventId":"diag-b-0","sequence":1}
+{"ns":"595591303980","wall":"2026-11-08T10:29:10.626Z","pid":1420,"event":"child:exit","name":"b","code":0,"signal":null}
+{"ns":"595631466144","wall":"2026-11-08T10:29:10.667Z","pid":1420,"event":"verified","name":"verify","childPid":1465,"records":1,"acceptedEvents":1,"sequence":1,"eventIdsHash":"5fe7cadb0d4c86edd5ff33ce7460254b18331362dc6506b36057d83a3f1d5605","businessHash":"c10e94e6e045b578ea68a14a174bafa0e0b728c3464f6cf3fc8d2095649e4d92","events":1,"ledger":0,"pending":1,"allExpectedValuesChecked":true}
+{"ns":"595634518269","wall":"2026-11-08T10:29:10.670Z","pid":1420,"event":"child:exit","name":"verify","code":0,"signal":null}

@@ -1,0 +1,242 @@
+[
+  {
+    "label": "node22-active-after-fsync",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-o7gFYS",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 441,
+        "inode": 1438,
+        "sha256": "7bf8875f644e94d127f436d832e696bfb26cd93ae4801b99baa9107d3289e740"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 1500,
+        "inode": 1444,
+        "sha256": "e361ec8f08faf2abeec7d49e36041d3e25dec552659f45b3d0cc44a0038a640d"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 34,
+        "inode": 1448,
+        "sha256": "fd9dad18236267592182ff9031484621de6427308e4f77c3b49943dcb2dc1ea0"
+      },
+      {
+        "path": "retained-displaced-lock/owner.json",
+        "bytes": 422,
+        "inode": 1443,
+        "sha256": "343a8102782cc5968621ead2480a624404bb45ab24db898c279b106858f9fa88"
+      }
+    ]
+  },
+  {
+    "label": "node22-active-before-write",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-uBs5KH",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 441,
+        "inode": 1420,
+        "sha256": "ae40150f35c8d6f44ebf862cc1eda607cfee0a8f784be77b0ff1df7d75b289b2"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 750,
+        "inode": 1431,
+        "sha256": "9e4f17d7c362f4e982c42fae14eb6f182546feb0d9715fb2eb59be6e4f378469"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 34,
+        "inode": 1429,
+        "sha256": "fd9dad18236267592182ff9031484621de6427308e4f77c3b49943dcb2dc1ea0"
+      },
+      {
+        "path": "retained-displaced-lock/owner.json",
+        "bytes": 423,
+        "inode": 1425,
+        "sha256": "d9d7dbc5cef76501f6cb781b0bd27da8858603f297bedb05f6bde03c6a164031"
+      }
+    ]
+  },
+  {
+    "label": "node22-completion-race",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-XRC3JK",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 441,
+        "inode": 1320,
+        "sha256": "ff604e28bd60f75922d25a9d5a03e71619a539015fef09f6b3271f8be20fdbc3"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 750,
+        "inode": 1374,
+        "sha256": "eb04988f7d4c627856dbb7cb2936ab8a86ae140085d2dd879d8faf29bd84ea9e"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 34,
+        "inode": 1324,
+        "sha256": "67ea706031568806219e829831a1a5b18ccb0b7f24cc3b0d7e5ff19b0be982be"
+      }
+    ]
+  },
+  {
+    "label": "node22-contention",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-0GsohV",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 441,
+        "inode": 1380,
+        "sha256": "0dfe0ef72ed2c47af9379704855d6e788fe8143dfc2533cf207e289129c8ef7a"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 1500,
+        "inode": 1408,
+        "sha256": "49caa9b3644e43b58f7638d3b26c50a7b6f46ded33b9dcaba07c6dbc37a30f48"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 34,
+        "inode": 1413,
+        "sha256": "fd9dad18236267592182ff9031484621de6427308e4f77c3b49943dcb2dc1ea0"
+      }
+    ]
+  },
+  {
+    "label": "node22-plain-200k-retry",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-1z3qu4",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 93744746,
+        "inode": 774,
+        "sha256": "34e90a3f3cbf7abf926b10fe902c407a3409fc6099ba99f6d05aa4fca69edb44"
+      },
+      {
+        "path": "BuyerLogLocal.db.bak",
+        "bytes": 93744746,
+        "inode": 778,
+        "sha256": "34e90a3f3cbf7abf926b10fe902c407a3409fc6099ba99f6d05aa4fca69edb44"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 0,
+        "inode": 782,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal.bak",
+        "bytes": 0,
+        "inode": 785,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 35,
+        "inode": 769,
+        "sha256": "c0922586c382c027ca065edc669c7fff941954bee3a701f367b8595decfd7b75"
+      }
+    ]
+  },
+  {
+    "label": "node22-trace-200k",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-wJPWKX",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 93744746,
+        "inode": 1262,
+        "sha256": "6b99bbb40c598ebca253c2d471783a7a5d72f00123569b73bc7a26cacc4b087d"
+      },
+      {
+        "path": "BuyerLogLocal.db.bak",
+        "bytes": 93744746,
+        "inode": 1266,
+        "sha256": "6b99bbb40c598ebca253c2d471783a7a5d72f00123569b73bc7a26cacc4b087d"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 0,
+        "inode": 1270,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal.bak",
+        "bytes": 0,
+        "inode": 1273,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 35,
+        "inode": 1257,
+        "sha256": "c0922586c382c027ca065edc669c7fff941954bee3a701f367b8595decfd7b75"
+      }
+    ]
+  },
+  {
+    "label": "node24-completion-race",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-YPbi2H",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 441,
+        "inode": 1864,
+        "sha256": "8935e5c1372fa18c10f53fe6dc5ff9e35e62e2995baa06a2233d8904a9ddb5f1"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 750,
+        "inode": 1890,
+        "sha256": "427acdf6a57eeea57fac8fe81775a08aa816e213e366d5b30bfc46e1b3c50896"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 34,
+        "inode": 1868,
+        "sha256": "67ea706031568806219e829831a1a5b18ccb0b7f24cc3b0d7e5ff19b0be982be"
+      }
+    ]
+  },
+  {
+    "label": "node24-plain-200k",
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-ISphpy",
+    "files": [
+      {
+        "path": "BuyerLogLocal.db",
+        "bytes": 93744746,
+        "inode": 1826,
+        "sha256": "e2d278cd4afa3e0b1afd44af57e61dd32649446dbf25c9400820f4b345e4a802"
+      },
+      {
+        "path": "BuyerLogLocal.db.bak",
+        "bytes": 93744746,
+        "inode": 1830,
+        "sha256": "e2d278cd4afa3e0b1afd44af57e61dd32649446dbf25c9400820f4b345e4a802"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal",
+        "bytes": 0,
+        "inode": 1834,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.wal.bak",
+        "bytes": 0,
+        "inode": 1837,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "BuyerLogLocal.db.write-fence.json",
+        "bytes": 35,
+        "inode": 1781,
+        "sha256": "c0922586c382c027ca065edc669c7fff941954bee3a701f367b8595decfd7b75"
+      }
+    ]
+  }
+]

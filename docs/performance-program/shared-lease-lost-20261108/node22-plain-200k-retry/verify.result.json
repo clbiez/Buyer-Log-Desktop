@@ -1,0 +1,11 @@
+{
+  "records": 50000,
+  "acceptedEvents": 200000,
+  "sequence": 200000,
+  "eventIdsHash": "680e6ce05eb4b1dba254d642aae20f86c551fdb8575abc5c6f583c7e262be855",
+  "businessHash": "bb62f89a62f10d2aa81319f708f26924cd13d27fc6277d125c1f5c0abc713ceb",
+  "events": 41000,
+  "ledger": 159000,
+  "pending": 40000,
+  "allExpectedValuesChecked": true
+}

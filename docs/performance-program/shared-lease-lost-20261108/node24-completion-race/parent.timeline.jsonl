@@ -1,0 +1,8 @@
+{"ns":"701451783955","wall":"2026-11-08T10:30:56.487Z","pid":1634,"event":"initialized","name":"init","childPid":1646}
+{"ns":"701455284658","wall":"2026-11-08T10:30:56.490Z","pid":1634,"event":"child:exit","name":"init","code":0,"signal":null}
+{"ns":"701504844504","wall":"2026-11-08T10:30:56.540Z","pid":1634,"event":"held","name":"a","childPid":1657,"token":"3bd30352-9490-46c6-88cc-f6fd2b3e3ab6","generation":1}
+{"ns":"721508229412","wall":"2026-11-08T10:31:16.543Z","pid":1634,"event":"renew-read-held","name":"a","childPid":1657}
+{"ns":"721515047410","wall":"2026-11-08T10:31:16.550Z","pid":1634,"event":"ack","name":"a","childPid":1657,"eventId":"diag-a-0","sequence":1}
+{"ns":"721518778821","wall":"2026-11-08T10:31:16.554Z","pid":1634,"event":"child:exit","name":"a","code":0,"signal":null}
+{"ns":"721564305222","wall":"2026-11-08T10:31:16.599Z","pid":1634,"event":"verified","name":"verify","childPid":1681,"records":1,"acceptedEvents":1,"sequence":1,"eventIdsHash":"c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c","businessHash":"00e44cb7c25948add43d9b59c4437b31ee97253cffa700b29643e6bb5eacb97b","events":1,"ledger":0,"pending":1,"allExpectedValuesChecked":true}
+{"ns":"721567051063","wall":"2026-11-08T10:31:16.602Z","pid":1634,"event":"child:exit","name":"verify","code":0,"signal":null}

@@ -1,0 +1,9 @@
+{
+  "scenario": "contention",
+  "role": "b",
+  "file": "/tmp/buyerlog-shared-lease-diag-0GsohV/BuyerLogLocal.db",
+  "name": "b-busy",
+  "expectedError": "SHARED_WRITE_BUSY",
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-contention/b-busy.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-contention/b-busy.result.json"
+}

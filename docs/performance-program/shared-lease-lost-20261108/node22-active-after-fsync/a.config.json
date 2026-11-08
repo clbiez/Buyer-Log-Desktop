@@ -1,0 +1,8 @@
+{
+  "scenario": "active-after-fsync",
+  "role": "a",
+  "file": "/tmp/buyerlog-shared-lease-diag-o7gFYS/BuyerLogLocal.db",
+  "expectedError": "SHARED_LEASE_LOST",
+  "timeline": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-active-after-fsync/a.timeline.jsonl",
+  "result": "/workspace/buyerlog-diag-shared-lease-lost-20261108/docs/performance-program/shared-lease-lost-20261108/node22-active-after-fsync/a.result.json"
+}

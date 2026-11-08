@@ -1,0 +1,17 @@
+{
+  "checkedRuns": 8,
+  "streamsChecked": 50,
+  "productionTrackedDiff": "empty",
+  "i18nBaselineFiles": {},
+  "sourceAndRecordedHarnessHashes": "match",
+  "ackReopenEquality": "passed",
+  "streamBytesReconstructed": "identical",
+  "lock": {
+    "path": "/tmp/buyerlog-performance-measurement.lock",
+    "inode": 438,
+    "unlinked": false
+  },
+  "platform": "linux",
+  "arch": "x64",
+  "checkedAt": "2026-11-08T10:35:46.831Z"
+}

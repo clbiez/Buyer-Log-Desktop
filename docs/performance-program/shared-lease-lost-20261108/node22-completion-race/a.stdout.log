@@ -1,0 +1,1 @@
+[LEASE] renew:failed instanceId=diag-node22-completion-race-a pid=1294 resource=/tmp/buyerlog-shared-lease-diag-XRC3JK/BuyerLogLocal.db error=SHARED_LEASE_LOST

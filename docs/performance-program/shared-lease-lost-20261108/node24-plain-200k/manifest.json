@@ -1,0 +1,112 @@
+{
+  "label": "node24-plain-200k",
+  "size": 200000,
+  "trace": "plain",
+  "runtime": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+  "versions": {
+    "node": "24.19.0",
+    "acorn": "8.17.0",
+    "ada": "3.4.4",
+    "amaro": "1.1.10",
+    "ares": "1.34.6",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.3",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "137",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.69.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "3.5.7",
+    "simdjson": "4.6.4",
+    "simdutf": "6.4.0",
+    "sqlite": "3.53.3",
+    "tz": "2026b",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "13.6.233.17-node.51",
+    "zlib": "1.3.2.1-motley-3246f1b",
+    "zstd": "1.5.7"
+  },
+  "sourceBase": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "historical": "abc683e4bcc247a7e8e412c07532bc8059fe3adb",
+  "sourcePins": {
+    "resources/app/server/lib/local-db.js": {
+      "sha256": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+      "historicalSha256": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141"
+    },
+    "resources/app/server/lib/shared-file-transaction.js": {
+      "sha256": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+      "historicalSha256": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881"
+    },
+    "resources/app/server/lib/durable-file-recovery.js": {
+      "sha256": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62",
+      "historicalSha256": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62"
+    },
+    "resources/app/server/lib/lease-worker-registry.js": {
+      "sha256": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+      "historicalSha256": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d"
+    }
+  },
+  "harnessPins": {
+    "check-timelines.cjs": "b9a6c1b9bced93dc6cb8c1b786bda434ffe25d8bb79cbca4b08c3f555311be2a",
+    "run.cjs": "4c471254c3d1f919d56130fe0f671064dc56126c8ed4536f88e5cf4d99f9100d",
+    "run.sh": "e0d6f88be28329e16a28df0a6a75d81731342563739af81edc060e66f4726b72",
+    "scenario-worker.cjs": "cd6017cfa17af1ca43dda4062671c67111688dd994b2a8f5afa1ad6ea0921946",
+    "scenarios.cjs": "bdad676f3142a5436f563ac7a0ffef4df659549d738ced9b7962a38fbf84d499",
+    "trace.cjs": "39ff1dacd2cac0bd3fa90993093ca93860b0f651fb15e6cbc8b43d830144584f",
+    "validate.sh": "ef053232f497d6a43243f802e3ec5f5b31a66f7f51e0c36b369bf7fe48bc86a8",
+    "worker.cjs": "fdcc0713120cff94d057a9305ad4517d80c03e553e35f823e38d5deb754c8110",
+    "workload.cjs": "0be2267c372d23f5df253c47dbddf336cea004f25b69d3c268cb72144f924292"
+  },
+  "preflight": {
+    "freeDiskBytes": 9066278912,
+    "freeMemoryBytes": 17668005888,
+    "totalMemoryBytes": 18882662400,
+    "dataRoot": "/tmp/buyerlog-shared-lease-diag-ISphpy",
+    "lock": "/tmp/buyerlog-performance-measurement.lock"
+  },
+  "started": "2026-11-08T10:29:11.013Z",
+  "classification": "unmodified-source; harness API boundaries only",
+  "equivalence": "Independent 200k-cardinality diagnostic, not a replay of historical #900 workload or Electron 39",
+  "status": "passed",
+  "ended": "2026-11-08T10:30:56.382Z",
+  "diskFiles": [
+    {
+      "name": ".buyerlog-db-recovery",
+      "size": 40,
+      "directory": true
+    },
+    {
+      "name": "BuyerLogLocal.db",
+      "size": 93744746,
+      "directory": false
+    },
+    {
+      "name": "BuyerLogLocal.db.bak",
+      "size": 93744746,
+      "directory": false
+    },
+    {
+      "name": "BuyerLogLocal.db.wal",
+      "size": 0,
+      "directory": false
+    },
+    {
+      "name": "BuyerLogLocal.db.wal.bak",
+      "size": 0,
+      "directory": false
+    },
+    {
+      "name": "BuyerLogLocal.db.write-fence.json",
+      "size": 35,
+      "directory": false
+    }
+  ]
+}

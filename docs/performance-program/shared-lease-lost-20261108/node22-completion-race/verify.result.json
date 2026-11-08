@@ -1,0 +1,11 @@
+{
+  "records": 1,
+  "acceptedEvents": 1,
+  "sequence": 1,
+  "eventIdsHash": "c513cc364d6c7c951615238bbe6dbfdce0613056d61f68abd6edcecc205afa2c",
+  "businessHash": "00e44cb7c25948add43d9b59c4437b31ee97253cffa700b29643e6bb5eacb97b",
+  "events": 1,
+  "ledger": 0,
+  "pending": 1,
+  "allExpectedValuesChecked": true
+}
