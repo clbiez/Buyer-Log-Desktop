@@ -1,0 +1,34 @@
+TAP version 13
+# Subtest: published Orders parent promotes on CP visual page with actual unchanged Orders full transport identity
+not ok 1 - published Orders parent promotes on CP visual page with actual unchanged Orders full transport identity
+  ---
+  duration_ms: 209.97585
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-schema-action-gates/tests/source-page-followup.test.cjs:14:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    visual CP page must not retire the published Orders source
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-schema-action-gates/tests/source-page-followup.test.cjs:18:9)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 539.245681
+
+STDERR

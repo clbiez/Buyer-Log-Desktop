@@ -1,0 +1,54 @@
+TAP version 13
+# Subtest: actual ensure publishes a privately registered native ready view instead of silently labelling thin as full
+ok 1 - actual ensure publishes a privately registered native ready view instead of silently labelling thin as full
+  ---
+  duration_ms: 407.576226
+  type: 'test'
+  ...
+# Subtest: actual whole-module promotion replaces source once and applies full pricing once for concurrent actions
+ok 2 - actual whole-module promotion replaces source once and applies full pricing once for concurrent actions
+  ---
+  duration_ms: 255.634227
+  type: 'test'
+  ...
+# Subtest: ordinary full path keeps actual row normalization and adds no publication or parent request
+ok 3 - ordinary full path keeps actual row normalization and adds no publication or parent request
+  ---
+  duration_ms: 131.557601
+  type: 'test'
+  ...
+# Subtest: ready setup error evicts only its own empty-selection view before later ordinary retry
+ok 4 - ready setup error evicts only its own empty-selection view before later ordinary retry
+  ---
+  duration_ms: 139.717431
+  type: 'test'
+  ...
+# Subtest: post-publication full pricing error retires unsettled full rows instead of exposing an apparently ready view
+ok 5 - post-publication full pricing error retires unsettled full rows instead of exposing an apparently ready view
+  ---
+  duration_ms: 170.173985
+  type: 'test'
+  ...
+# Subtest: actual old source flight cannot publish ready rows after actor/profile replacement
+ok 6 - actual old source flight cannot publish ready rows after actor/profile replacement
+  ---
+  duration_ms: 86.265357
+  type: 'test'
+  ...
+# Subtest: exact integration recipe preserves all other functions and the inactive lifecycle lexical block
+ok 7 - exact integration recipe preserves all other functions and the inactive lifecycle lexical block
+  ---
+  duration_ms: 31.643183
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1741.077625
+
+STDERR

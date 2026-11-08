@@ -1,0 +1,1074 @@
+TAP version 13
+# Subtest: kişisel ad EN/TR ayrı saklanır ve yalnız o dilde sistem adının önüne geçer
+ok 1 - kişisel ad EN/TR ayrı saklanır ve yalnız o dilde sistem adının önüne geçer
+  ---
+  duration_ms: 3.920121
+  type: 'test'
+  ...
+# Subtest: sistem adıyla aynı yazılan dil saklanmaz; ikisi de aynıysa kayıt silinir
+ok 2 - sistem adıyla aynı yazılan dil saklanmaz; ikisi de aynıysa kayıt silinir
+  ---
+  duration_ms: 0.44491
+  type: 'test'
+  ...
+# Subtest: tablolar birbirinden bağımsızdır; tanımsız tablo ve bozuk kayıt yok sayılır
+ok 3 - tablolar birbirinden bağımsızdır; tanımsız tablo ve bozuk kayıt yok sayılır
+  ---
+  duration_ms: 0.24155
+  type: 'test'
+  ...
+# Subtest: depo dışarıdan (hesap eşitlemesi) değişince yeni değer okunur
+ok 4 - depo dışarıdan (hesap eşitlemesi) değişince yeni değer okunur
+  ---
+  duration_ms: 28.798684
+  type: 'test'
+  ...
+# Subtest: ortak tanım EN/TR taşır; label geriye dönük kimlik olarak TR (yoksa EN) olur
+ok 5 - ortak tanım EN/TR taşır; label geriye dönük kimlik olarak TR (yoksa EN) olur
+  ---
+  duration_ms: 0.394699
+  type: 'test'
+  ...
+# Subtest: sunucu: not sütunu ve DB sütunu EN/TR adlarını kaydeder
+ok 6 - sunucu: not sütunu ve DB sütunu EN/TR adlarını kaydeder
+  ---
+  duration_ms: 30.907543
+  type: 'test'
+  ...
+# Subtest: PATCH ucu cpColumn.labelEn/labelTr alanlarını yazıcıya geçirir
+ok 7 - PATCH ucu cpColumn.labelEn/labelTr alanlarını yazıcıya geçirir
+  ---
+  duration_ms: 16.044239
+  type: 'test'
+  ...
+# Subtest: "In Store" (MB) sütununun ASAS alanı ve Veri Yönetimi eşlemesindeki fiziksel sütunu gösterilir
+ok 8 - "In Store" (MB) sütununun ASAS alanı ve Veri Yönetimi eşlemesindeki fiziksel sütunu gösterilir
+  ---
+  duration_ms: 1.015929
+  type: 'test'
+  ...
+# Subtest: DB sütunu, Koleksiyon alanı ve formül sütunu kendi kaynağını anlatır
+ok 9 - DB sütunu, Koleksiyon alanı ve formül sütunu kendi kaynağını anlatır
+  ---
+  duration_ms: 0.623655
+  type: 'test'
+  ...
+# Subtest: kaynak kataloğu CP sistem sütunlarının tamamını kapsar
+ok 10 - kaynak kataloğu CP sistem sütunlarının tamamını kapsar
+  ---
+  duration_ms: 1.272971
+  type: 'test'
+  ...
+# Subtest: CP/Orders başlığı kişisel adı ve sonradan eklenen sütunun EN/TR adını kullanır
+ok 11 - CP/Orders başlığı kişisel adı ve sonradan eklenen sütunun EN/TR adını kullanır
+  ---
+  duration_ms: 0.660609
+  type: 'test'
+  ...
+# Subtest: Columns paneli: sistem sütunları kalem düğmesiyle düzenlenir (CP/Orders ve Koleksiyon)
+ok 12 - Columns paneli: sistem sütunları kalem düğmesiyle düzenlenir (CP/Orders ve Koleksiyon)
+  ---
+  duration_ms: 5.580514
+  type: 'test'
+  ...
+# Subtest: sonradan eklenen sütunlar EN/TR adla oluşturulur
+ok 13 - sonradan eklenen sütunlar EN/TR adla oluşturulur
+  ---
+  duration_ms: 3.387328
+  type: 'test'
+  ...
+# Subtest: kanonik etiket katmanı kullanıcı adlı başlığı yeniden yazmaz
+ok 14 - kanonik etiket katmanı kullanıcı adlı başlığı yeniden yazmaz
+  ---
+  duration_ms: 0.916725
+  type: 'test'
+  ...
+# Subtest: modül app-main.js'ten önce yüklenir
+ok 15 - modül app-main.js'ten önce yüklenir
+  ---
+  duration_ms: 3.421274
+  type: 'test'
+  ...
+# Subtest: v7.42 · "Order Info" seçilen sütun O BANDIN İÇİNE girer, ikinci bant açılmaz
+ok 16 - v7.42 · "Order Info" seçilen sütun O BANDIN İÇİNE girer, ikinci bant açılmaz
+  ---
+  duration_ms: 4.476088
+  type: 'test'
+  ...
+# Subtest: v7.42 · ortadaki bir gruba eklemek sonraki grupları bozmaz
+ok 17 - v7.42 · ortadaki bir gruba eklemek sonraki grupları bozmaz
+  ---
+  duration_ms: 1.165518
+  type: 'test'
+  ...
+# Subtest: v7.42 · başlık adı büyük/küçük harften bağımsız eşleşir (TR duyarlı)
+ok 18 - v7.42 · başlık adı büyük/küçük harften bağımsız eşleşir (TR duyarlı)
+  ---
+  duration_ms: 1.424446
+  type: 'test'
+  ...
+# Subtest: v7.42 · bilinmeyen başlık kendi bandını açar (sütun sonda kalır)
+ok 19 - v7.42 · bilinmeyen başlık kendi bandını açar (sütun sonda kalır)
+  ---
+  duration_ms: 1.217527
+  type: 'test'
+  ...
+# Subtest: v7.42 · aynı yeni başlığı alan ikinci sütun BİRİNCİNİN yanına gider
+ok 20 - v7.42 · aynı yeni başlığı alan ikinci sütun BİRİNCİNİN yanına gider
+  ---
+  duration_ms: 0.638291
+  type: 'test'
+  ...
+# Subtest: v7.42 · seçenek listesi başlıkları EKRANDAKİ sırayla ve tekrarsız verir
+ok 21 - v7.42 · seçenek listesi başlıkları EKRANDAKİ sırayla ve tekrarsız verir
+  ---
+  duration_ms: 1.134202
+  type: 'test'
+  ...
+# Subtest: v7.42 · sıra kullanıcının sürüklediği hâlde ise liste de o sırayı izler
+ok 22 - v7.42 · sıra kullanıcının sürüklediği hâlde ise liste de o sırayı izler
+  ---
+  duration_ms: 3.7733
+  type: 'test'
+  ...
+# Subtest: v7.42 · sırada olmayan (gizlenmiş/yeni) sütunun grubu da listede kalır
+ok 23 - v7.42 · sırada olmayan (gizlenmiş/yeni) sütunun grubu da listede kalır
+  ---
+  duration_ms: 0.840298
+  type: 'test'
+  ...
+# Subtest: v7.42 · grupsuz sütun listeye boş bir başlık eklemez
+ok 24 - v7.42 · grupsuz sütun listeye boş bir başlık eklemez
+  ---
+  duration_ms: 1.174878
+  type: 'test'
+  ...
+# Subtest: v7.42 · hesaplanan sütun grubu tanımdan gelir, seçilmemişse Hesaplanan
+ok 25 - v7.42 · hesaplanan sütun grubu tanımdan gelir, seçilmemişse Hesaplanan
+  ---
+  duration_ms: 0.958091
+  type: 'test'
+  ...
+# Subtest: v7.42 · syncColumns sütuna seçilen grubu verir
+ok 26 - v7.42 · syncColumns sütuna seçilen grubu verir
+  ---
+  duration_ms: 1.376442
+  type: 'test'
+  ...
+# Subtest: v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişikliğinde kurulur
+ok 27 - v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişikliğinde kurulur
+  ---
+  duration_ms: 1.534365
+  type: 'test'
+  ...
+# Subtest: v7.42 · son yerleştirilen grup tanımın yanında saklanır, gereksiz yazma yok
+ok 28 - v7.42 · son yerleştirilen grup tanımın yanında saklanır, gereksiz yazma yok
+  ---
+  duration_ms: 0.23438
+  type: 'test'
+  ...
+# Subtest: v7.42 · pencerede başlık seçimi ve yeni başlık kutusu var
+ok 29 - v7.42 · pencerede başlık seçimi ve yeni başlık kutusu var
+  ---
+  duration_ms: 0.942848
+  type: 'test'
+  ...
+# Subtest: v7.42 · yeni başlık seçilip adı boş bırakılırsa kaydedilmez
+ok 30 - v7.42 · yeni başlık seçilip adı boş bırakılırsa kaydedilmez
+  ---
+  duration_ms: 0.630197
+  type: 'test'
+  ...
+# Subtest: v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi kullanır
+ok 31 - v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi kullanır
+  ---
+  duration_ms: 0.383647
+  type: 'test'
+  ...
+# Subtest: v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database
+ok 32 - v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database
+  ---
+  duration_ms: 0.407816
+  type: 'test'
+  ...
+# Subtest: v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır
+ok 33 - v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır
+  ---
+  duration_ms: 0.45736
+  type: 'test'
+  ...
+# Subtest: v7.42 · sunucu grubu saklar; uydurmaz (§152)
+ok 34 - v7.42 · sunucu grubu saklar; uydurmaz (§152)
+  ---
+  duration_ms: 0.158589
+  type: 'test'
+  ...
+# Subtest: v7.42 · sunucu grubu kaydeder ve uzunluğu sınırlar
+ok 35 - v7.42 · sunucu grubu kaydeder ve uzunluğu sınırlar
+  ---
+  duration_ms: 216.051726
+  type: 'test'
+  ...
+# Subtest: v7.42 · veri tabanı sütunu penceresinde başlık seçimi var
+ok 36 - v7.42 · veri tabanı sütunu penceresinde başlık seçimi var
+  ---
+  duration_ms: 0.983285
+  type: 'test'
+  ...
+# Subtest: v7.42 · düzenlemede sütunun kayıtlı başlığı seçili gelir
+ok 37 - v7.42 · düzenlemede sütunun kayıtlı başlığı seçili gelir
+  ---
+  duration_ms: 0.629277
+  type: 'test'
+  ...
+# Subtest: v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır
+ok 38 - v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır
+  ---
+  duration_ms: 0.857462
+  type: 'test'
+  ...
+# Subtest: v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz)
+ok 39 - v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz)
+  ---
+  duration_ms: 0.486657
+  type: 'test'
+  ...
+# Subtest: v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir
+ok 40 - v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir
+  ---
+  duration_ms: 196.399542
+  type: 'test'
+  ...
+# Subtest: v7.42 · veri tabanı penceresinde tam genişlik alan SIRAYLA değil adıyla seçilir
+ok 41 - v7.42 · veri tabanı penceresinde tam genişlik alan SIRAYLA değil adıyla seçilir
+  ---
+  duration_ms: 173.695158
+  type: 'test'
+  ...
+# Subtest: v7.42/v7.43 · sürüm tek canonical kaynaktan runtime türetilir
+ok 42 - v7.42/v7.43 · sürüm tek canonical kaynaktan runtime türetilir
+  ---
+  duration_ms: 43.496296
+  type: 'test'
+  ...
+# Subtest: CP startup registry only returns current projection identities, including colour name keys and tombstones
+ok 43 - CP startup registry only returns current projection identities, including colour name keys and tombstones
+  ---
+  duration_ms: 3.713967
+  type: 'test'
+  ...
+# Subtest: CP registry applies after projection fetch but before render, without querying PLM
+ok 44 - CP registry applies after projection fetch but before render, without querying PLM
+  ---
+  duration_ms: 10.271811
+  type: 'test'
+  ...
+# Subtest: reopening CP hydrates canonical refs; name-specific overrides, deletion and unrelated registry entries remain consistent
+ok 45 - reopening CP hydrates canonical refs; name-specific overrides, deletion and unrelated registry entries remain consistent
+  ---
+  duration_ms: 76.317621
+  type: 'test'
+  ...
+# Subtest: geç yüklenen dinamik sütun ilk açılış saveinde kaybolmaz ve yüklenince eski yerine döner
+ok 46 - geç yüklenen dinamik sütun ilk açılış saveinde kaybolmaz ve yüklenince eski yerine döner
+  ---
+  duration_ms: 4.937695
+  type: 'test'
+  ...
+# Subtest: kullanıcı base sütunları dinamikler yüklenmeden yeniden sıralarsa iki niyet de korunur
+ok 47 - kullanıcı base sütunları dinamikler yüklenmeden yeniden sıralarsa iki niyet de korunur
+  ---
+  duration_ms: 1.115579
+  type: 'test'
+  ...
+# Subtest: CP/Orders ve generic tablolar geç yüklenen state restore yolunu ortak kullanır
+ok 48 - CP/Orders ve generic tablolar geç yüklenen state restore yolunu ortak kullanır
+  ---
+  duration_ms: 1.261533
+  type: 'test'
+  ...
+# Subtest: Calculated Column geç yüklenince persisted anahtarı yeni sütun saymaz
+ok 49 - Calculated Column geç yüklenince persisted anahtarı yeni sütun saymaz
+  ---
+  duration_ms: 0.476798
+  type: 'test'
+  ...
+# Subtest: sunucudan yeni tercih geldiyse sütun state aynı açılışta tekrar yüklenir
+ok 50 - sunucudan yeni tercih geldiyse sütun state aynı açılışta tekrar yüklenir
+  ---
+  duration_ms: 7.534699
+  type: 'test'
+  ...
+# Subtest: silinen dinamik sütunun hayalet sıra, gizlilik ve genişlik kaydı temizlenir
+ok 51 - silinen dinamik sütunun hayalet sıra, gizlilik ve genişlik kaydı temizlenir
+  ---
+  duration_ms: 1.448364
+  type: 'test'
+  ...
+# Subtest: profil kullanıcıya ve modüle aittir
+ok 52 - profil kullanıcıya ve modüle aittir
+  ---
+  duration_ms: 3.648522
+  type: 'test'
+  ...
+# Subtest: profilde yalnız yapılandırma saklanır, çalışma kitabı verisi saklanmaz
+ok 53 - profilde yalnız yapılandırma saklanır, çalışma kitabı verisi saklanmaz
+  ---
+  duration_ms: 10.081978
+  type: 'test'
+  ...
+# Subtest: aynı şema birebir eşleşir, değişen şema gözden geçirme ister
+ok 54 - aynı şema birebir eşleşir, değişen şema gözden geçirme ister
+  ---
+  duration_ms: 4.347928
+  type: 'test'
+  ...
+# Subtest: profil deposu kullanıcı senkron listesine kayıtlıdır
+ok 55 - profil deposu kullanıcı senkron listesine kayıtlıdır
+  ---
+  duration_ms: 1.808335
+  type: 'test'
+  ...
+# Subtest: CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır
+ok 56 - CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır
+  ---
+  duration_ms: 19.088924
+  type: 'test'
+  ...
+# Subtest: CP adaptörü satır oluşturamaz ve bunu açıkça bildirir
+ok 57 - CP adaptörü satır oluşturamaz ve bunu açıkça bildirir
+  ---
+  duration_ms: 4.320201
+  type: 'test'
+  ...
+# Subtest: sihirbaz onaydan önce yazmaz ve uygulama anında planı yeniden doğrular
+ok 58 - sihirbaz onaydan önce yazmaz ve uygulama anında planı yeniden doğrular
+  ---
+  duration_ms: 6.269422
+  type: 'test'
+  ...
+# Subtest: önizleme ve uygulama aynı planı kullanır; girdi değişince plan çöpe atılır
+ok 59 - önizleme ve uygulama aynı planı kullanır; girdi değişince plan çöpe atılır
+  ---
+  duration_ms: 4.680893
+  type: 'test'
+  ...
+# Subtest: Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta belleği geri alır
+ok 60 - Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta belleği geri alır
+  ---
+  duration_ms: 4.359722
+  type: 'test'
+  ...
+# Subtest: özel sütunlar Buyer Log'un mevcut sistemlerini kullanır
+ok 61 - özel sütunlar Buyer Log'un mevcut sistemlerini kullanır
+  ---
+  duration_ms: 7.372242
+  type: 'test'
+  ...
+# Subtest: denetim kaydı sınırlıdır ve çalışma kitabı verisi taşımaz
+ok 62 - denetim kaydı sınırlıdır ve çalışma kitabı verisi taşımaz
+  ---
+  duration_ms: 4.037936
+  type: 'test'
+  ...
+# Subtest: iki tarih sütununun farkı GÜN verir (8 haneli ASAS tarih metni dâhil)
+ok 63 - iki tarih sütununun farkı GÜN verir (8 haneli ASAS tarih metni dâhil)
+  ---
+  duration_ms: 11.743486
+  type: 'test'
+  ...
+# Subtest: 8 haneli olduğu hâlde tarih olmayan sayılar SAYI kalır
+ok 64 - 8 haneli olduğu hâlde tarih olmayan sayılar SAYI kalır
+  ---
+  duration_ms: 1.202972
+  type: 'test'
+  ...
+# Subtest: gg.aa.yyyy ve ISO biçimleri de tarih sayılır
+ok 65 - gg.aa.yyyy ve ISO biçimleri de tarih sayılır
+  ---
+  duration_ms: 1.783673
+  type: 'test'
+  ...
+# Subtest: tarih farkı negatif olabilir — ters sıra sessizce düzeltilmez
+ok 66 - tarih farkı negatif olabilir — ters sıra sessizce düzeltilmez
+  ---
+  duration_ms: 0.873446
+  type: 'test'
+  ...
+# Subtest: fark / çarpım / bölme ve karmaşık formül
+ok 67 - fark / çarpım / bölme ve karmaşık formül
+  ---
+  duration_ms: 0.873609
+  type: 'test'
+  ...
+# Subtest: nokta ondalık ayırıcıdır — programın geri kalanıyla aynı kural
+ok 68 - nokta ondalık ayırıcıdır — programın geri kalanıyla aynı kural
+  ---
+  duration_ms: 0.265998
+  type: 'test'
+  ...
+# Subtest: belirsizlik olmayan binlik biçimleri doğru çözümlenir
+ok 69 - belirsizlik olmayan binlik biçimleri doğru çözümlenir
+  ---
+  duration_ms: 2.65317
+  type: 'test'
+  ...
+# Subtest: işlem önceliği ve parantez matematiğe uyar
+ok 70 - işlem önceliği ve parantez matematiğe uyar
+  ---
+  duration_ms: 0.420349
+  type: 'test'
+  ...
+# Subtest: olmayan sütun 0 değil HATA üretir
+ok 71 - olmayan sütun 0 değil HATA üretir
+  ---
+  duration_ms: 1.131235
+  type: 'test'
+  ...
+# Subtest: sıfıra bölme hata verir, sonsuz veya 0 vermez
+ok 72 - sıfıra bölme hata verir, sonsuz veya 0 vermez
+  ---
+  duration_ms: 2.907642
+  type: 'test'
+  ...
+# Subtest: bozuk formül derlenmez ve sebebi bildirilir
+ok 73 - bozuk formül derlenmez ve sebebi bildirilir
+  ---
+  duration_ms: 3.625765
+  type: 'test'
+  ...
+# Subtest: IFERROR ile kullanıcı hatayı bilerek yutabilir
+ok 74 - IFERROR ile kullanıcı hatayı bilerek yutabilir
+  ---
+  duration_ms: 0.841402
+  type: 'test'
+  ...
+# Subtest: boş hücreyle aritmetik boş verir — 0 değil
+ok 75 - boş hücreyle aritmetik boş verir — 0 değil
+  ---
+  duration_ms: 0.689509
+  type: 'test'
+  ...
+# Subtest: ISBLANK / COALESCE ile boş hücre bilinçli yönetilir
+ok 76 - ISBLANK / COALESCE ile boş hücre bilinçli yönetilir
+  ---
+  duration_ms: 2.693804
+  type: 'test'
+  ...
+# Subtest: sütunları birleştirme (kullanıcı: "sütunları birleştiren")
+ok 77 - sütunları birleştirme (kullanıcı: "sütunları birleştiren")
+  ---
+  duration_ms: 1.557689
+  type: 'test'
+  ...
+# Subtest: koşullu sütun
+ok 78 - koşullu sütun
+  ---
+  duration_ms: 1.179448
+  type: 'test'
+  ...
+# Subtest: IF tembeldir: seçilmeyen dal hata verse bile sonuç üretilir
+ok 79 - IF tembeldir: seçilmeyen dal hata verse bile sonuç üretilir
+  ---
+  duration_ms: 0.361159
+  type: 'test'
+  ...
+# Subtest: formül betikleri app-main.js sonrasında, lazy deferredUi grubunda yüklenir
+ok 80 - formül betikleri app-main.js sonrasında, lazy deferredUi grubunda yüklenir
+  ---
+  duration_ms: 180.587221
+  type: 'test'
+  ...
+# Subtest: sütun paneline "Hesaplanan Sütun" düğmesi eklenir ve üç tabloda açıktır
+ok 81 - sütun paneline "Hesaplanan Sütun" düğmesi eklenir ve üç tabloda açıktır
+  ---
+  duration_ms: 2.004628
+  type: 'test'
+  ...
+# Subtest: cellHtml 'formula' türünü çizer ve hata durumunda tire gösterir
+ok 82 - cellHtml 'formula' türünü çizer ve hata durumunda tire gösterir
+  ---
+  duration_ms: 26.670142
+  type: 'test'
+  ...
+# Subtest: hesaplama üç çizimden de ÖNCE yapılır (sıralama ve sayfa filtreleri görsün)
+ok 83 - hesaplama üç çizimden de ÖNCE yapılır (sıralama ve sayfa filtreleri görsün)
+  ---
+  duration_ms: 10.212201
+  type: 'test'
+  ...
+# Subtest: satır sağlayıcısı üç tablo için de yayımlanır
+ok 84 - satır sağlayıcısı üç tablo için de yayımlanır
+  ---
+  duration_ms: 40.400404
+  type: 'test'
+  ...
+# Subtest: Excel/pano çıktısı hesaplanan sütunu ekrandakiyle aynı yazar
+ok 85 - Excel/pano çıktısı hesaplanan sütunu ekrandakiyle aynı yazar
+  ---
+  duration_ms: 1.16533
+  type: 'test'
+  ...
+# Subtest: Database sütunu eklenince formül sütunları yeniden kurulur
+ok 86 - Database sütunu eklenince formül sütunları yeniden kurulur
+  ---
+  duration_ms: 0.354123
+  type: 'test'
+  ...
+# Subtest: Siparişler tablosu CP kopyasını alırken CP formül sütunlarını taşımaz
+ok 87 - Siparişler tablosu CP kopyasını alırken CP formül sütunlarını taşımaz
+  ---
+  duration_ms: 1.097747
+  type: 'test'
+  ...
+# Subtest: formül sütunu formülünde başka formül sütunu kullanılamaz (sonsuz döngü)
+ok 88 - formül sütunu formülünde başka formül sütunu kullanılamaz (sonsuz döngü)
+  ---
+  duration_ms: 0.248189
+  type: 'test'
+  ...
+# Subtest: tanımlar kullanıcı hesabıyla eşitlenir ve "columns" kategorisindedir
+ok 89 - tanımlar kullanıcı hesabıyla eşitlenir ve "columns" kategorisindedir
+  ---
+  duration_ms: 3.10228
+  type: 'test'
+  ...
+# Subtest: kategori çözümleyicisi anahtarı columns olarak tanır
+ok 90 - kategori çözümleyicisi anahtarı columns olarak tanır
+  ---
+  duration_ms: 33.623981
+  type: 'test'
+  ...
+# Subtest: sütun silmek yalnız hesaplanan alanı düşürür, kaynak veriye dokunmaz (§142)
+ok 91 - sütun silmek yalnız hesaplanan alanı düşürür, kaynak veriye dokunmaz (§142)
+  ---
+  duration_ms: 0.351566
+  type: 'test'
+  ...
+# Subtest: tablo başına sütun sayısı sınırlıdır (depo kotası taşmasın)
+ok 92 - tablo başına sütun sayısı sınırlıdır (depo kotası taşmasın)
+  ---
+  duration_ms: 0.204294
+  type: 'test'
+  ...
+# Subtest: yüzde ve ondalık biçimleri tanımlıdır
+ok 93 - yüzde ve ondalık biçimleri tanımlıdır
+  ---
+  duration_ms: 0.140675
+  type: 'test'
+  ...
+# Subtest: tarih sonucu satıra ISO olarak yazılır (metin sıralaması doğru kalsın)
+ok 94 - tarih sonucu satıra ISO olarak yazılır (metin sıralaması doğru kalsın)
+  ---
+  duration_ms: 0.763202
+  type: 'test'
+  ...
+# Subtest: yerel gece yarısı Date nesnesi bir gün kaymaz (UTC+3)
+ok 95 - yerel gece yarısı Date nesnesi bir gün kaymaz (UTC+3)
+  ---
+  duration_ms: 0.673215
+  type: 'test'
+  ...
+# Subtest: kaç satırda hesaplanamadığı sayılır — birkaç boş hücre sütunu bozuk göstermez
+ok 96 - kaç satırda hesaplanamadığı sayılır — birkaç boş hücre sütunu bozuk göstermez
+  ---
+  duration_ms: 0.46076
+  type: 'test'
+  ...
+# Subtest: düzeltilen bir formülün eski uyarısı ekranda asılı kalmaz
+ok 97 - düzeltilen bir formülün eski uyarısı ekranda asılı kalmaz
+  ---
+  duration_ms: 0.237525
+  type: 'test'
+  ...
+# Subtest: kaydedince tablo yeni sütuna kaydırılır (46+ sütunlu tabloda sağda kalırdı)
+ok 98 - kaydedince tablo yeni sütuna kaydırılır (46+ sütunlu tabloda sağda kalırdı)
+  ---
+  duration_ms: 48.467884
+  type: 'test'
+  ...
+# Subtest: sürüm numarası tek canonical runtime kaynaktan yayılır
+ok 99 - sürüm numarası tek canonical runtime kaynaktan yayılır
+  ---
+  duration_ms: 24.468867
+  type: 'test'
+  ...
+# Subtest: formül betikleri canonical asset etiketiyle yüklenir (önbellek yenilensin)
+ok 100 - formül betikleri canonical asset etiketiyle yüklenir (önbellek yenilensin)
+  ---
+  duration_ms: 28.144347
+  type: 'test'
+  ...
+# Subtest: varsayılan kip formül yazmayı gerektirmez — üç kip vardır
+ok 101 - varsayılan kip formül yazmayı gerektirmez — üç kip vardır
+  ---
+  duration_ms: 0.435253
+  type: 'test'
+  ...
+# Subtest: işlem listesi Excel işaretleriyle gösterilir (+ − × ÷)
+ok 102 - işlem listesi Excel işaretleriyle gösterilir (+ − × ÷)
+  ---
+  duration_ms: 0.192966
+  type: 'test'
+  ...
+# Subtest: kutulardan matematik formülü üretilir
+ok 103 - kutulardan matematik formülü üretilir
+  ---
+  duration_ms: 0.287436
+  type: 'test'
+  ...
+# Subtest: KUTU SIRASI = HESAP SIRASI. "A ÷ B × 100" parantezle sabitlenir
+ok 104 - KUTU SIRASI = HESAP SIRASI. "A ÷ B × 100" parantezle sabitlenir
+  ---
+  duration_ms: 0.31788
+  type: 'test'
+  ...
+# Subtest: eksik kutu formül üretmez (yarım formül kaydedilemez)
+ok 105 - eksik kutu formül üretmez (yarım formül kaydedilemez)
+  ---
+  duration_ms: 0.427559
+  type: 'test'
+  ...
+# Subtest: sabit sayı operandı Türkçe virgülle de yazılabilir
+ok 106 - sabit sayı operandı Türkçe virgülle de yazılabilir
+  ---
+  duration_ms: 0.177358
+  type: 'test'
+  ...
+# Subtest: BİRLEŞTİRME: seçilen sütunlar ayraçla birleşir
+ok 107 - BİRLEŞTİRME: seçilen sütunlar ayraçla birleşir
+  ---
+  duration_ms: 0.789931
+  type: 'test'
+  ...
+# Subtest: BOŞ HÜCRE ayracı çift bırakmaz — "&" ile birleştirmenin asıl sorunu buydu
+ok 108 - BOŞ HÜCRE ayracı çift bırakmaz — "&" ile birleştirmenin asıl sorunu buydu
+  ---
+  duration_ms: 0.313338
+  type: 'test'
+  ...
+# Subtest: hepsi boşsa sonuç boştur, yalnız ayraç yazılmaz
+ok 109 - hepsi boşsa sonuç boştur, yalnız ayraç yazılmaz
+  ---
+  duration_ms: 0.123515
+  type: 'test'
+  ...
+# Subtest: ayraç seçenekleri arasında boşluk ve özel ayraç da vardır
+ok 110 - ayraç seçenekleri arasında boşluk ve özel ayraç da vardır
+  ---
+  duration_ms: 0.26407
+  type: 'test'
+  ...
+# Subtest: metin içindeki tırnak ve ters bölü kaçışları çözülür
+ok 111 - metin içindeki tırnak ve ters bölü kaçışları çözülür
+  ---
+  duration_ms: 0.316079
+  type: 'test'
+  ...
+# Subtest: DÜZENLEMEDE kutular geri gelir — formül motorun ayrıştırıcısıyla çözülür
+ok 112 - DÜZENLEMEDE kutular geri gelir — formül motorun ayrıştırıcısıyla çözülür
+  ---
+  duration_ms: 1.010089
+  type: 'test'
+  ...
+# Subtest: kutuya SIĞMAYAN formül kutu gibi gösterilmez — Gelişmiş kipte açılır
+ok 113 - kutuya SIĞMAYAN formül kutu gibi gösterilmez — Gelişmiş kipte açılır
+  ---
+  duration_ms: 1.631766
+  type: 'test'
+  ...
+# Subtest: kurucu ile Gelişmiş kip arasında geçişte kurulan formül taşınır
+ok 114 - kurucu ile Gelişmiş kip arasında geçişte kurulan formül taşınır
+  ---
+  duration_ms: 0.43209
+  type: 'test'
+  ...
+# Subtest: üretilen formül kullanıcıya AÇIKÇA gösterilir
+ok 115 - üretilen formül kullanıcıya AÇIKÇA gösterilir
+  ---
+  duration_ms: 272.592301
+  type: 'test'
+  ...
+# Subtest: kurucu ile formül tek yürütücüden geçer — ikinci bir hesaplama yolu yok
+ok 116 - kurucu ile formül tek yürütücüden geçer — ikinci bir hesaplama yolu yok
+  ---
+  duration_ms: 0.559115
+  type: 'test'
+  ...
+# Subtest: tarih GÖSTERİMİ programın diğer sütunlarıyla aynı biçimdedir (gg.aa.yy)
+ok 117 - tarih GÖSTERİMİ programın diğer sütunlarıyla aynı biçimdedir (gg.aa.yy)
+  ---
+  duration_ms: 0.128366
+  type: 'test'
+  ...
+# Subtest: v7.34 · "Sütun Ekle" ile eklenen ASAS/IAS sütunları kaynak listesinde görünür
+ok 118 - v7.34 · "Sütun Ekle" ile eklenen ASAS/IAS sütunları kaynak listesinde görünür
+  ---
+  duration_ms: 20.45819
+  type: 'test'
+  ...
+# Subtest: v7.34 · sunucu anahtarı gerçekten "__CPX_" ile başlıyor (kusurun sebebi kaynağında)
+ok 119 - v7.34 · sunucu anahtarı gerçekten "__CPX_" ile başlıyor (kusurun sebebi kaynağında)
+  ---
+  duration_ms: 0.639672
+  type: 'test'
+  ...
+# Subtest: v7.34 · iç yardımcı alanlar hâlâ listeye girmez
+ok 120 - v7.34 · iç yardımcı alanlar hâlâ listeye girmez
+  ---
+  duration_ms: 1.335226
+  type: 'test'
+  ...
+# Subtest: v7.34 · veri tabanı sütunu formülde ADIYLA anılır, iç anahtarla değil
+ok 121 - v7.34 · veri tabanı sütunu formülde ADIYLA anılır, iç anahtarla değil
+  ---
+  duration_ms: 2.041672
+  type: 'test'
+  ...
+# Subtest: v7.34 · kaynağı görünür: ASAS ile IAS/Antrepo ayırt edilir
+ok 122 - v7.34 · kaynağı görünür: ASAS ile IAS/Antrepo ayırt edilir
+  ---
+  duration_ms: 1.382473
+  type: 'test'
+  ...
+# Subtest: v7.34 · hesaplanan sütunlar (v7.31) ve normal sütunlar bozulmadan kalır
+ok 123 - v7.34 · hesaplanan sütunlar (v7.31) ve normal sütunlar bozulmadan kalır
+  ---
+  duration_ms: 1.530298
+  type: 'test'
+  ...
+# Subtest: 2026-10-04 · Checklist sütunları hesaplanan sütun kaynak listesinde görünür
+ok 124 - 2026-10-04 · Checklist sütunları hesaplanan sütun kaynak listesinde görünür
+  ---
+  duration_ms: 3.928336
+  type: 'test'
+  ...
+# Subtest: 2026-10-04 · Checklist başvurusu kalıcı anahtara çevrilir ve satır değerini okur
+ok 125 - 2026-10-04 · Checklist başvurusu kalıcı anahtara çevrilir ve satır değerini okur
+  ---
+  duration_ms: 8.440238
+  type: 'test'
+  ...
+# Subtest: v7.34 · formül, veri tabanı sütununun DEĞERİNİ okur (ad → __CPX_ çözümü)
+ok 126 - v7.34 · formül, veri tabanı sütununun DEĞERİNİ okur (ad → __CPX_ çözümü)
+  ---
+  duration_ms: 3.409193
+  type: 'test'
+  ...
+# Subtest: v7.34 · aynı adlı GERÇEK bir satır alanı varsa davranış değişmez (o kazanır)
+ok 127 - v7.34 · aynı adlı GERÇEK bir satır alanı varsa davranış değişmez (o kazanır)
+  ---
+  duration_ms: 2.260083
+  type: 'test'
+  ...
+# Subtest: v7.34 · değeri henüz gelmemiş sütun 0 değil HATA verir (§152)
+ok 128 - v7.34 · değeri henüz gelmemiş sütun 0 değil HATA verir (§152)
+  ---
+  duration_ms: 3.912883
+  type: 'test'
+  ...
+# Subtest: v7.34 · pencerede ASAS / IAS-Antrepo'dan sütun getirme düğmesi var
+ok 129 - v7.34 · pencerede ASAS / IAS-Antrepo'dan sütun getirme düğmesi var
+  ---
+  duration_ms: 3.613013
+  type: 'test'
+  ...
+# Subtest: v7.34 · düğme MEVCUT akışı açar, ikinci bir kopyasını yazmaz
+ok 130 - v7.34 · düğme MEVCUT akışı açar, ikinci bir kopyasını yazmaz
+  ---
+  duration_ms: 0.482266
+  type: 'test'
+  ...
+# Subtest: v7.34 · sütun eklendikten sonra kaynak listesi PENCERE AÇIKKEN tazelenir
+ok 131 - v7.34 · sütun eklendikten sonra kaynak listesi PENCERE AÇIKKEN tazelenir
+  ---
+  duration_ms: 1.256663
+  type: 'test'
+  ...
+# Subtest: v7.34 · yetkisiz kullanıcıya düğme değil SEBEP gösterilir (§32)
+ok 132 - v7.34 · yetkisiz kullanıcıya düğme değil SEBEP gösterilir (§32)
+  ---
+  duration_ms: 1.466585
+  type: 'test'
+  ...
+# Subtest: v7.34 · yetki kararı SUNUCUDA verilir
+ok 133 - v7.34 · yetki kararı SUNUCUDA verilir
+  ---
+  duration_ms: 25.335038
+  type: 'test'
+  ...
+# Subtest: v7.34 · Nakliye Kıyaslama tablosunda bu yol hiç çizilmez (veri tabanı sütunu yok)
+ok 134 - v7.34 · Nakliye Kıyaslama tablosunda bu yol hiç çizilmez (veri tabanı sütunu yok)
+  ---
+  duration_ms: 0.221187
+  type: 'test'
+  ...
+# Subtest: v7.34 · değerlerin ne zaman geleceği açıkça yazılır
+ok 135 - v7.34 · değerlerin ne zaman geleceği açıkça yazılır
+  ---
+  duration_ms: 0.187249
+  type: 'test'
+  ...
+# Subtest: v7.34 · kaynak ekleme satırının biçimi tanımlı ve boşken yer kaplamaz
+ok 136 - v7.34 · kaynak ekleme satırının biçimi tanımlı ve boşken yer kaplamaz
+  ---
+  duration_ms: 0.622128
+  type: 'test'
+  ...
+# Subtest: v7.34/v7.35 sürüm canonical runtime kaynaktan birlikte ilerliyor
+ok 137 - v7.34/v7.35 sürüm canonical runtime kaynaktan birlikte ilerliyor
+  ---
+  duration_ms: 35.049396
+  type: 'test'
+  ...
+# Subtest: ASAS matrix parsing retains the licensor through canonical header bindings
+ok 138 - ASAS matrix parsing retains the licensor through canonical header bindings
+  ---
+  duration_ms: 84.051701
+  type: 'test'
+  ...
+# Subtest: a rule-derived persisted FOB is recalculated but a manual FOB is preserved
+ok 139 - a rule-derived persisted FOB is recalculated but a manual FOB is preserved
+  ---
+  duration_ms: 5.391039
+  type: 'test'
+  ...
+# Subtest: deferred CP load applies royalty before constructing filters and rendering
+ok 140 - deferred CP load applies royalty before constructing filters and rendering
+  ---
+  duration_ms: 0.758797
+  type: 'test'
+  ...
+# Subtest: identical royalty revisions do not trigger another whole-view recalculation
+ok 141 - identical royalty revisions do not trigger another whole-view recalculation
+  ---
+  duration_ms: 8.7801
+  type: 'test'
+  ...
+# Subtest: server CP and Orders projections apply temporal TR/YD commissions and refresh applied rule values
+ok 142 - server CP and Orders projections apply temporal TR/YD commissions and refresh applied rule values
+  ---
+  duration_ms: 28.163773
+  type: 'test'
+  ...
+# Subtest: a complete card response hydrates the same canonical royalty rules even when a revision hint is already known
+ok 143 - a complete card response hydrates the same canonical royalty rules even when a revision hint is already known
+  ---
+  duration_ms: 6.335919
+  type: 'test'
+  ...
+# Subtest: royalty saves use the editor revision and notify card caches only after a successful commit
+ok 144 - royalty saves use the editor revision and notify card caches only after a successful commit
+  ---
+  duration_ms: 8.375628
+  type: 'test'
+  ...
+# Subtest: a delayed failed royalty write cannot roll back a newer canonical response received meanwhile
+ok 145 - a delayed failed royalty write cannot roll back a newer canonical response received meanwhile
+  ---
+  duration_ms: 5.158854
+  type: 'test'
+  ...
+# Subtest: normalizeNoteColumnDefs: id temizlenir, ad/id çakışması elenir, 40 ile sınırlanır
+ok 146 - normalizeNoteColumnDefs: id temizlenir, ad/id çakışması elenir, 40 ile sınırlanır
+  ---
+  duration_ms: 1.401422
+  type: 'test'
+  ...
+# Subtest: replaceNoteColumnDefs: revizyon kontrolü yapar, kaydeder, silinen sütunun değerlerini temizler
+ok 147 - replaceNoteColumnDefs: revizyon kontrolü yapar, kaydeder, silinen sütunun değerlerini temizler
+  ---
+  duration_ms: 35.442717
+  type: 'test'
+  ...
+# Subtest: patchOrderOverride: noteColumns notesmap ile aynı anahtar/seed desenini kullanır
+ok 148 - patchOrderOverride: noteColumns notesmap ile aynı anahtar/seed desenini kullanır
+  ---
+  duration_ms: 14.608232
+  type: 'test'
+  ...
+# Subtest: buildOrderRowsFromASAS: not sütunu değeri satıra yazılır, ham ASAS alanları bozulmaz
+ok 149 - buildOrderRowsFromASAS: not sütunu değeri satıra yazılır, ham ASAS alanları bozulmaz
+  ---
+  duration_ms: 20.880809
+  type: 'test'
+  ...
+# Subtest: rotalar tanımlı: GET/PUT /api/note-columns, uygun alan yetkisiyle
+ok 150 - rotalar tanımlı: GET/PUT /api/note-columns, uygun alan yetkisiyle
+  ---
+  duration_ms: 0.990959
+  type: 'test'
+  ...
+# Subtest: artımlı proje önbelleği yaması noteColumns alanını da uyguluyor
+ok 151 - artımlı proje önbelleği yaması noteColumns alanını da uyguluyor
+  ---
+  duration_ms: 0.966819
+  type: 'test'
+  ...
+# Subtest: başlangıç yükü not sütunu tanımlarını ve revizyonunu taşıyor
+ok 152 - başlangıç yükü not sütunu tanımlarını ve revizyonunu taşıyor
+  ---
+  duration_ms: 0.55477
+  type: 'test'
+  ...
+# Subtest: syncCpNoteColumns: CP_COLS içine dinamik metin sütunu ekler, Orders'a miras bırakır
+ok 153 - syncCpNoteColumns: CP_COLS içine dinamik metin sütunu ekler, Orders'a miras bırakır
+  ---
+  duration_ms: 0.400752
+  type: 'test'
+  ...
+# Subtest: addCpNoteColumn/renameCpNoteColumn/removeCpNoteColumn mevcut PUT akışını kullanır, ikinci bir sistem kurmaz
+ok 154 - addCpNoteColumn/renameCpNoteColumn/removeCpNoteColumn mevcut PUT akışını kullanır, ikinci bir sistem kurmaz
+  ---
+  duration_ms: 0.789471
+  type: 'test'
+  ...
+# Subtest: renderColPanel: Add Note Column düğmesi CP ve Orders panelinde basılıyor, rename/drop bağlanıyor
+ok 155 - renderColPanel: Add Note Column düğmesi CP ve Orders panelinde basılıyor, rename/drop bağlanıyor
+  ---
+  duration_ms: 0.699389
+  type: 'test'
+  ...
+# Subtest: 2026-10-04 · Not Sütunu Ekle eylemi CP/Orders için görünür (v7.0.229: Alanlar çekmecesinde)
+ok 156 - 2026-10-04 · Not Sütunu Ekle eylemi CP/Orders için görünür (v7.0.229: Alanlar çekmecesinde)
+  ---
+  duration_ms: 0.410609
+  type: 'test'
+  ...
+# Subtest: syncOverridesFromRow: not sütunu değerleri notesmap ile aynı anahtarla tutulur
+ok 157 - syncOverridesFromRow: not sütunu değerleri notesmap ile aynı anahtarla tutulur
+  ---
+  duration_ms: 0.547125
+  type: 'test'
+  ...
+# Subtest: syncOverrideToServer: noteColumns yalnız tanımlı sütun varsa gövdeye eklenir
+ok 158 - syncOverrideToServer: noteColumns yalnız tanımlı sütun varsa gövdeye eklenir
+  ---
+  duration_ms: 0.603862
+  type: 'test'
+  ...
+# Subtest: hücre düzenleme ikinci bir yol açmıyor: type:'text' zaten genel editCell/commitCpEditor akışını kullanıyor
+ok 159 - hücre düzenleme ikinci bir yol açmıyor: type:'text' zaten genel editCell/commitCpEditor akışını kullanıyor
+  ---
+  duration_ms: 0.463877
+  type: 'test'
+  ...
+# Subtest: renderColPanel: Add Column düğmesi artık Orders için de basılıyor
+ok 160 - renderColPanel: Add Column düğmesi artık Orders için de basılıyor
+  ---
+  duration_ms: 2.820905
+  type: 'test'
+  ...
+# Subtest: renderColPanel: DB-bağlı özel sütunlar Orders panelinde de düzenle/kaldır alır
+ok 161 - renderColPanel: DB-bağlı özel sütunlar Orders panelinde de düzenle/kaldır alır
+  ---
+  duration_ms: 0.95468
+  type: 'test'
+  ...
+# Subtest: ⋯ More Actions menüsü: Orders artık Add Column eylemini alıyor
+ok 162 - ⋯ More Actions menüsü: Orders artık Add Column eylemini alıyor
+  ---
+  duration_ms: 4.135691
+  type: 'test'
+  ...
+# Subtest: sütun kaydı tek yoldan gider: ikinci bir Orders-özel sütun sistemi yok
+ok 163 - sütun kaydı tek yoldan gider: ikinci bir Orders-özel sütun sistemi yok
+  ---
+  duration_ms: 4.950689
+  type: 'test'
+  ...
+# Subtest: syncOrdersColumnsFromCp: DB-bağlı özel sütunlar (modelCustom) filtrelenmiyor, yalnız formulaCustom düşüyor
+ok 164 - syncOrdersColumnsFromCp: DB-bağlı özel sütunlar (modelCustom) filtrelenmiyor, yalnız formulaCustom düşüyor
+  ---
+  duration_ms: 0.433731
+  type: 'test'
+  ...
+# Subtest: ORDERS_COLS, sistem sütununu (durum) kaybetmeden CP_COLS kopyası olarak kuruluyor
+ok 165 - ORDERS_COLS, sistem sütununu (durum) kaybetmeden CP_COLS kopyası olarak kuruluyor
+  ---
+  duration_ms: 0.596776
+  type: 'test'
+  ...
+# Subtest: core page loading states use the shared status marker loader
+ok 166 - core page loading states use the shared status marker loader
+  ---
+  duration_ms: 2.6887
+  type: 'test'
+  ...
+# Subtest: Orders failure stops the loading animation and renders an error state
+ok 167 - Orders failure stops the loading animation and renders an error state
+  ---
+  duration_ms: 0.386313
+  type: 'test'
+  ...
+# Subtest: Data Management first paint uses the same status marker visual
+ok 168 - Data Management first paint uses the same status marker visual
+  ---
+  duration_ms: 0.345033
+  type: 'test'
+  ...
+# Subtest: private order notes use distinct line keys and never touch shared override fields
+ok 169 - private order notes use distinct line keys and never touch shared override fields
+  ---
+  duration_ms: 1.816639
+  type: 'test'
+  ...
+# Subtest: storage validates key, length and is per-user/synced but not profile-copyable
+ok 170 - storage validates key, length and is per-user/synced but not profile-copyable
+  ---
+  duration_ms: 2.004007
+  type: 'test'
+  ...
+# Subtest: personal note column is offered in both CP and Orders and bypasses order edit checks
+ok 171 - personal note column is offered in both CP and Orders and bypasses order edit checks
+  ---
+  duration_ms: 6.283867
+  type: 'test'
+  ...
+# Subtest: note content is HTML escaped and is not written onto an order row
+ok 172 - note content is HTML escaped and is not written onto an order row
+  ---
+  duration_ms: 2.811816
+  type: 'test'
+  ...
+# Subtest: v7.14 cache hit exposes the validated gzip payload without parse/serialize
+ok 173 - v7.14 cache hit exposes the validated gzip payload without parse/serialize
+  ---
+  duration_ms: 16.834857
+  type: 'test'
+  ...
+# Subtest: v7.14 duplicate generation work is single-flight per user/context/module set
+ok 174 - v7.14 duplicate generation work is single-flight per user/context/module set
+  ---
+  duration_ms: 5.928449
+  type: 'test'
+  ...
+# Subtest: v7.14 startup keeps projection parsing out of the critical path and lazy-loads active data
+ok 175 - v7.14 startup keeps projection parsing out of the critical path and lazy-loads active data
+  ---
+  duration_ms: 2.125258
+  type: 'test'
+  ...
+# Subtest: v7.14 development metrics cover server timing, parse, hydrate, filters, render and first interaction
+ok 176 - v7.14 development metrics cover server timing, parse, hydrate, filters, render and first interaction
+  ---
+  duration_ms: 31.407257
+  type: 'test'
+  ...
+# Subtest: v7.14 visual metadata does not invalidate large business projections
+ok 177 - v7.14 visual metadata does not invalidate large business projections
+  ---
+  duration_ms: 1.438303
+  type: 'test'
+  ...
+1..177
+# tests 177
+# suites 0
+# pass 177
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1757.199403
+
+STDERR

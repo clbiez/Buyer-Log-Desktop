@@ -1,0 +1,78 @@
+TAP version 13
+# Subtest: RED whole action: thin personal add must promote before prompt, definition/storage read or write
+ok 1 - RED whole action: thin personal add must promote before prompt, definition/storage read or write
+  ---
+  duration_ms: 34.993649
+  type: 'test'
+  ...
+# Subtest: each high-level note/personal entry gates before prompt/confirm/definition captures while thin
+ok 2 - each high-level note/personal entry gates before prompt/confirm/definition captures while thin
+  ---
+  duration_ms: 44.383852
+  type: 'test'
+  ...
+# Subtest: full synchronous remove stays synchronous and preserves private other-account values
+ok 3 - full synchronous remove stays synchronous and preserves private other-account values
+  ---
+  duration_ms: 6.384456
+  type: 'test'
+  ...
+# Subtest: prompt pending actor/profile/page/source or definition change blocks private storage and schema refresh
+ok 4 - prompt pending actor/profile/page/source or definition change blocks private storage and schema refresh
+  ---
+  duration_ms: 38.554074
+  type: 'test'
+  ...
+# Subtest: shared prompt pending definition revision drift prevents PUT and ordinary full adds no new pre-prompt await
+ok 5 - shared prompt pending definition revision drift prevents PUT and ordinary full adds no new pre-prompt await
+  ---
+  duration_ms: 7.785789
+  type: 'test'
+  ...
+# Subtest: shared HTTP/JSON pending drift cannot apply revision, persisted-key removal or schema
+ok 6 - shared HTTP/JSON pending drift cannot apply revision, persisted-key removal or schema
+  ---
+  duration_ms: 42.990541
+  type: 'test'
+  ...
+# Subtest: an inactive action that becomes armed rejects after prompt; remaining unarmed keeps original PUT semantics
+ok 7 - an inactive action that becomes armed rejects after prompt; remaining unarmed keeps original PUT semantics
+  ---
+  duration_ms: 12.810484
+  type: 'test'
+  ...
+# Subtest: known successful shared write acknowledges only definition revision and retains original source intent
+ok 8 - known successful shared write acknowledges only definition revision and retains original source intent
+  ---
+  duration_ms: 14.230986
+  type: 'test'
+  ...
+# Subtest: low-level personal schema guards reject before input getter/coercion or storage; missing armed capability denies
+ok 9 - low-level personal schema guards reject before input getter/coercion or storage; missing armed capability denies
+  ---
+  duration_ms: 23.027929
+  type: 'test'
+  ...
+# Subtest: writer without original action is legacy-compatible only while unarmed and fails finite import/rollback closed
+ok 10 - writer without original action is legacy-compatible only while unarmed and fails finite import/rollback closed
+  ---
+  duration_ms: 33.64124
+  type: 'test'
+  ...
+# Subtest: exact text edits restore whole app/personal source and preserve untouched original action bodies
+ok 11 - exact text edits restore whole app/personal source and preserve untouched original action bodies
+  ---
+  duration_ms: 92.301975
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1008.591577
+
+STDERR

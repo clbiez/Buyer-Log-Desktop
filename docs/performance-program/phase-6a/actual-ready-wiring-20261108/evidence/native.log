@@ -1,0 +1,352 @@
+TAP version 13
+# Subtest: RED whole action: thin personal add must promote before prompt, definition/storage read or write
+ok 1 - RED whole action: thin personal add must promote before prompt, definition/storage read or write
+  ---
+  duration_ms: 33.591065
+  type: 'test'
+  ...
+# Subtest: each high-level note/personal entry gates before prompt/confirm/definition captures while thin
+ok 2 - each high-level note/personal entry gates before prompt/confirm/definition captures while thin
+  ---
+  duration_ms: 48.637183
+  type: 'test'
+  ...
+# Subtest: full synchronous remove stays synchronous and preserves private other-account values
+ok 3 - full synchronous remove stays synchronous and preserves private other-account values
+  ---
+  duration_ms: 6.97627
+  type: 'test'
+  ...
+# Subtest: prompt pending actor/profile/page/source or definition change blocks private storage and schema refresh
+ok 4 - prompt pending actor/profile/page/source or definition change blocks private storage and schema refresh
+  ---
+  duration_ms: 43.523779
+  type: 'test'
+  ...
+# Subtest: shared prompt pending definition revision drift prevents PUT and ordinary full adds no new pre-prompt await
+ok 5 - shared prompt pending definition revision drift prevents PUT and ordinary full adds no new pre-prompt await
+  ---
+  duration_ms: 6.520372
+  type: 'test'
+  ...
+# Subtest: shared HTTP/JSON pending drift cannot apply revision, persisted-key removal or schema
+ok 6 - shared HTTP/JSON pending drift cannot apply revision, persisted-key removal or schema
+  ---
+  duration_ms: 53.42765
+  type: 'test'
+  ...
+# Subtest: an inactive action that becomes armed rejects after prompt; remaining unarmed keeps original PUT semantics
+ok 7 - an inactive action that becomes armed rejects after prompt; remaining unarmed keeps original PUT semantics
+  ---
+  duration_ms: 15.141081
+  type: 'test'
+  ...
+# Subtest: known successful shared write acknowledges only definition revision and retains original source intent
+ok 8 - known successful shared write acknowledges only definition revision and retains original source intent
+  ---
+  duration_ms: 14.948465
+  type: 'test'
+  ...
+# Subtest: low-level personal schema guards reject before input getter/coercion or storage; missing armed capability denies
+ok 9 - low-level personal schema guards reject before input getter/coercion or storage; missing armed capability denies
+  ---
+  duration_ms: 8.536565
+  type: 'test'
+  ...
+# Subtest: writer without original action is legacy-compatible only while unarmed and fails finite import/rollback closed
+ok 10 - writer without original action is legacy-compatible only while unarmed and fails finite import/rollback closed
+  ---
+  duration_ms: 14.209652
+  type: 'test'
+  ...
+# Subtest: exact text edits restore whole app/personal source and preserve untouched original action bodies
+ok 11 - exact text edits restore whole app/personal source and preserve untouched original action bodies
+  ---
+  duration_ms: 97.389412
+  type: 'test'
+  ...
+# Subtest: ready view and real controller stay private until one guarded publication; normalization owns its write closure
+ok 12 - ready view and real controller stay private until one guarded publication; normalization owns its write closure
+  ---
+  duration_ms: 262.595286
+  type: 'test'
+  ...
+# Subtest: first ready CAS rechecks real selection, source, pricing and accepted receipt after private preparation
+ok 13 - first ready CAS rechecks real selection, source, pricing and accepted receipt after private preparation
+  ---
+  duration_ms: 492.798873
+  type: 'test'
+  ...
+# Subtest: actual full-parent DTO/headers/raw SHA and sparse native order promote once; hooks execute only after full CAS
+ok 14 - actual full-parent DTO/headers/raw SHA and sparse native order promote once; hooks execute only after full CAS
+  ---
+  duration_ms: 115.948368
+  type: 'test'
+  ...
+# Subtest: pending DOM input invalidates accepted UI capture but not private full source continuity/remap
+ok 15 - pending DOM input invalidates accepted UI capture but not private full source continuity/remap
+  ---
+  duration_ms: 110.377458
+  type: 'test'
+  ...
+# Subtest: actual full sync gate stays closed in the native publish-to-posthooks microtask gap
+ok 16 - actual full sync gate stays closed in the native publish-to-posthooks microtask gap
+  ---
+  duration_ms: 101.148815
+  type: 'test'
+  ...
+# Subtest: real normalizer added keys and after-pricing shape/value/key order match actual ordinary ensureOrdersLoaded
+ok 17 - real normalizer added keys and after-pricing shape/value/key order match actual ordinary ensureOrdersLoaded
+  ---
+  duration_ms: 174.836045
+  type: 'test'
+  ...
+# Subtest: pending retirement, pricing, permission, actor, row identity and selection drift fail before full CAS/hooks
+ok 18 - pending retirement, pricing, permission, actor, row identity and selection drift fail before full CAS/hooks
+  ---
+  duration_ms: 1049.059329
+  type: 'test'
+  ...
+# Subtest: real full-parent transport rejects wrong owner/context/gzip/raw bytes and never retries through ready
+ok 19 - real full-parent transport rejects wrong owner/context/gzip/raw bytes and never retries through ready
+  ---
+  duration_ms: 395.673896
+  type: 'test'
+  ...
+# Subtest: normalization writes only fresh row/segment objects and deleting any original raw field fails closed
+ok 20 - normalization writes only fresh row/segment objects and deleting any original raw field fails closed
+  ---
+  duration_ms: 207.141429
+  type: 'test'
+  ...
+# Subtest: one cancelled subscriber leaves another native promotion alive; both cancelled publish nothing
+ok 21 - one cancelled subscriber leaves another native promotion alive; both cancelled publish nothing
+  ---
+  duration_ms: 201.502693
+  type: 'test'
+  ...
+# Subtest: post-publication hook failure retains the unsettled full guard until root retirement/full recovery
+ok 22 - post-publication hook failure retains the unsettled full guard until root retirement/full recovery
+  ---
+  duration_ms: 110.567099
+  type: 'test'
+  ...
+# Subtest: ordinary full or nonempty real selections are not adopted into the first thin contract
+ok 23 - ordinary full or nonempty real selections are not adopted into the first thin contract
+  ---
+  duration_ms: 251.669369
+  type: 'test'
+  ...
+# Subtest: published Orders parent promotes on CP visual page with actual unchanged Orders full transport identity
+ok 24 - published Orders parent promotes on CP visual page with actual unchanged Orders full transport identity
+  ---
+  duration_ms: 309.276059
+  type: 'test'
+  ...
+# Subtest: actual UI command independently rejects an old visual-tab target after full await
+ok 25 - actual UI command independently rejects an old visual-tab target after full await
+  ---
+  duration_ms: 136.408647
+  type: 'test'
+  ...
+# Subtest: actual ensure publishes a privately registered native ready view instead of silently labelling thin as full
+ok 26 - actual ensure publishes a privately registered native ready view instead of silently labelling thin as full
+  ---
+  duration_ms: 337.675098
+  type: 'test'
+  ...
+# Subtest: actual whole-module promotion replaces source once and applies full pricing once for concurrent actions
+ok 27 - actual whole-module promotion replaces source once and applies full pricing once for concurrent actions
+  ---
+  duration_ms: 188.130118
+  type: 'test'
+  ...
+# Subtest: ordinary full path keeps actual row normalization and adds no publication or parent request
+ok 28 - ordinary full path keeps actual row normalization and adds no publication or parent request
+  ---
+  duration_ms: 100.127139
+  type: 'test'
+  ...
+# Subtest: ready setup error evicts only its own empty-selection view before later ordinary retry
+ok 29 - ready setup error evicts only its own empty-selection view before later ordinary retry
+  ---
+  duration_ms: 248.397655
+  type: 'test'
+  ...
+# Subtest: post-publication full pricing error retires unsettled full rows instead of exposing an apparently ready view
+ok 30 - post-publication full pricing error retires unsettled full rows instead of exposing an apparently ready view
+  ---
+  duration_ms: 193.353793
+  type: 'test'
+  ...
+# Subtest: actual old source flight cannot publish ready rows after actor/profile replacement
+ok 31 - actual old source flight cannot publish ready rows after actor/profile replacement
+  ---
+  duration_ms: 148.239965
+  type: 'test'
+  ...
+# Subtest: exact integration restores every predecessor byte and preserves inactive lexical lifecycle
+ok 32 - exact integration restores every predecessor byte and preserves inactive lexical lifecycle
+  ---
+  duration_ms: 640.778495
+  type: 'test'
+  ...
+# node:internal/modules/cjs/loader:1520
+#   throw err;
+#   ^
+# Error: Cannot find module '../candidate/orders-ready-load.js'
+# Require stack:
+# - /workspace/buyerlog-post-main-acceptance/resources/app/tests/fixtures/orders-ready-integration/wiring/orders-ready-wiring.test.cjs
+# - /workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-wiring.test.js
+#     at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+#     at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+#     at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+#     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+#     at Module._load (node:internal/modules/cjs/loader:1294:5)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+#     at Module.require (node:internal/modules/cjs/loader:1617:12)
+#     at require (node:internal/modules/helpers:153:16)
+#     at Object.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/fixtures/orders-ready-integration/wiring/orders-ready-wiring.test.cjs:10:19)
+#     at Module._compile (node:internal/modules/cjs/loader:1872:14) {
+#   code: 'MODULE_NOT_FOUND',
+#   requireStack: [
+#     '/workspace/buyerlog-post-main-acceptance/resources/app/tests/fixtures/orders-ready-integration/wiring/orders-ready-wiring.test.cjs',
+#     '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-wiring.test.js'
+#   ]
+# }
+# Node.js v24.19.0
+# Subtest: tests/orders-ready-wiring.test.js
+not ok 5 - tests/orders-ready-wiring.test.js
+  ---
+  duration_ms: 309.138147
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/orders-ready-wiring.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: QFG save refuses thin BEFORE invoking next getters or storage
+ok 34 - QFG save refuses thin BEFORE invoking next getters or storage
+  ---
+  duration_ms: 11.216592
+  type: 'test'
+  ...
+# Subtest: QFG finite marker without actual root guard fails closed; legacy stays usable
+ok 35 - QFG finite marker without actual root guard fails closed; legacy stays usable
+  ---
+  duration_ms: 5.196133
+  type: 'test'
+  ...
+# Subtest: QFG full open preserves synchronous undefined and does not call UI gate
+ok 36 - QFG full open preserves synchronous undefined and does not call UI gate
+  ---
+  duration_ms: 6.568452
+  type: 'test'
+  ...
+# Subtest: QFG thin open waits real whole-module promotion before modal or columns
+ok 37 - QFG thin open waits real whole-module promotion before modal or columns
+  ---
+  duration_ms: 342.431992
+  type: 'test'
+  ...
+# Subtest: QFG source retirement during open cannot close or create a modal
+ok 38 - QFG source retirement during open cannot close or create a modal
+  ---
+  duration_ms: 12.365386
+  type: 'test'
+  ...
+# Subtest: syncCpModelColumns rejects thin before touching schema input
+ok 39 - syncCpModelColumns rejects thin before touching schema input
+  ---
+  duration_ms: 12.26569
+  type: 'test'
+  ...
+# Subtest: syncCpNoteColumns rejects thin before touching schema input
+ok 40 - syncCpNoteColumns rejects thin before touching schema input
+  ---
+  duration_ms: 6.535318
+  type: 'test'
+  ...
+# Subtest: syncOrdersColumnsFromCp rejects thin before touching schema input
+ok 41 - syncOrdersColumnsFromCp rejects thin before touching schema input
+  ---
+  duration_ms: 5.276255
+  type: 'test'
+  ...
+# Subtest: Global Flow direct Orders getter rejects before unified-priority work
+ok 42 - Global Flow direct Orders getter rejects before unified-priority work
+  ---
+  duration_ms: 4.432098
+  type: 'test'
+  ...
+# Subtest: Global Flow Orders ensure returns only after real promotion; CP provider stays exact
+ok 43 - Global Flow Orders ensure returns only after real promotion; CP provider stays exact
+  ---
+  duration_ms: 9.410333
+  type: 'test'
+  ...
+# Subtest: Global Flow failed full gate rejects, waits manual retry, and never returns empty success
+ok 44 - Global Flow failed full gate rejects, waits manual retry, and never returns empty success
+  ---
+  duration_ms: 6.737397
+  type: 'test'
+  ...
+# Subtest: CP thin loader waits before image registry, pricing or schema mutation
+ok 45 - CP thin loader waits before image registry, pricing or schema mutation
+  ---
+  duration_ms: 7.468827
+  type: 'test'
+  ...
+# Subtest: CP loader rejects source replacement during promotion before publication
+ok 46 - CP loader rejects source replacement during promotion before publication
+  ---
+  duration_ms: 7.441966
+  type: 'test'
+  ...
+# Subtest: CP loader rejects profile replacement during promotion before publication
+ok 47 - CP loader rejects profile replacement during promotion before publication
+  ---
+  duration_ms: 5.269645
+  type: 'test'
+  ...
+# Subtest: CP loader rejects cp-request replacement during promotion before publication
+ok 48 - CP loader rejects cp-request replacement during promotion before publication
+  ---
+  duration_ms: 12.861087
+  type: 'test'
+  ...
+# Subtest: CP image registry rechecks the actual caller before mutating globals after its HTTP wait
+ok 49 - CP image registry rechecks the actual caller before mutating globals after its HTTP wait
+  ---
+  duration_ms: 22.809392
+  type: 'test'
+  ...
+# Subtest: ordinary full CP loader starts image fetch without added promotion and preserves Orders refs
+ok 50 - ordinary full CP loader starts image fetch without added promotion and preserves Orders refs
+  ---
+  duration_ms: 18.12689
+  type: 'test'
+  ...
+# Subtest: model-column write waits full before preflight or PATCH, then uses one original PATCH
+ok 51 - model-column write waits full before preflight or PATCH, then uses one original PATCH
+  ---
+  duration_ms: 11.191121
+  type: 'test'
+  ...
+# Subtest: changed source during model-column preflight cannot issue PATCH
+ok 52 - changed source during model-column preflight cannot issue PATCH
+  ---
+  duration_ms: 4.116099
+  type: 'test'
+  ...
+1..52
+# tests 52
+# suites 0
+# pass 51
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11092.667734

@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: RED seam: actual fetchOrdersProjection uses real metadata/native ready/client before hydration
+ok 1 - RED seam: actual fetchOrdersProjection uses real metadata/native ready/client before hydration
+  ---
+  duration_ms: 302.42068
+  type: 'test'
+  ...
+# Subtest: disabled, CPX0 and fullOnly preserve actual ordinary full without feature runtime or metadata roundtrip
+ok 2 - disabled, CPX0 and fullOnly preserve actual ordinary full without feature runtime or metadata roundtrip
+  ---
+  duration_ms: 183.075964
+  type: 'test'
+  ...
+# Subtest: ready-cache MISS reuses immediate ordinary full without finite accept or redundant GET
+ok 3 - ready-cache MISS reuses immediate ordinary full without finite accept or redundant GET
+  ---
+  duration_ms: 75.545199
+  type: 'test'
+  ...
+# Subtest: actual QFG swallowed malformed/unknown/legacy extra never becomes eligibility authority
+ok 4 - actual QFG swallowed malformed/unknown/legacy extra never becomes eligibility authority
+  ---
+  duration_ms: 215.818753
+  type: 'test'
+  ...
+# Subtest: actual selection, legacy control, sort and partial prerequisites decline before metadata
+ok 5 - actual selection, legacy control, sort and partial prerequisites decline before metadata
+  ---
+  duration_ms: 336.150963
+  type: 'test'
+  ...
+# Subtest: real lifecycle profile/source/actor invalidation cancels old flight without ordinary publication
+ok 6 - real lifecycle profile/source/actor invalidation cancels old flight without ordinary publication
+  ---
+  duration_ms: 282.782161
+  type: 'test'
+  ...
+# Subtest: QFG raw drift or wrong owner header makes actual client decline ready and use current ordinary full
+ok 7 - QFG raw drift or wrong owner header makes actual client decline ready and use current ordinary full
+  ---
+  duration_ms: 147.82761
+  type: 'test'
+  ...
+# Subtest: missing transport closure or same-shaped unowned parse receipt cannot publish finite data
+ok 8 - missing transport closure or same-shaped unowned parse receipt cannot publish finite data
+  ---
+  duration_ms: 164.592267
+  type: 'test'
+  ...
+# Subtest: private controller source guard survives pending DOM while actual accepted capture rejects it
+ok 9 - private controller source guard survives pending DOM while actual accepted capture rejects it
+  ---
+  duration_ms: 113.393103
+  type: 'test'
+  ...
+# Subtest: exact recipe changes only fetch; ordinary branch and every existing app function restore exactly
+ok 10 - exact recipe changes only fetch; ordinary branch and every existing app function restore exactly
+  ---
+  duration_ms: 80.406105
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2507.986814

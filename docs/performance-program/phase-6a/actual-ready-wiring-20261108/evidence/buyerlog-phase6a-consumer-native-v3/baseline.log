@@ -1,0 +1,356 @@
+✖ QFG save refuses thin BEFORE invoking next getters or storage (10.513857ms)
+✖ QFG finite marker without actual root guard fails closed; legacy stays usable (3.876987ms)
+✔ QFG full open preserves synchronous undefined and does not call UI gate (4.676393ms)
+✖ QFG thin open waits real whole-module promotion before modal or columns (4.40013ms)
+✖ QFG source retirement during open cannot close or create a modal (15.595793ms)
+✖ syncCpModelColumns rejects thin before touching schema input (4.45401ms)
+✖ syncCpNoteColumns rejects thin before touching schema input (4.532314ms)
+✖ syncOrdersColumnsFromCp rejects thin before touching schema input (4.690109ms)
+✖ Global Flow direct Orders getter rejects before unified-priority work (4.402945ms)
+✖ Global Flow Orders ensure returns only after real promotion; CP provider stays exact (9.426544ms)
+✖ Global Flow failed full gate rejects, waits manual retry, and never returns empty success (5.218979ms)
+✖ CP thin loader waits before image registry, pricing or schema mutation (7.740959ms)
+✖ CP loader rejects source replacement during promotion before publication (6.042259ms)
+✖ CP loader rejects profile replacement during promotion before publication (8.199999ms)
+✖ CP loader rejects cp-request replacement during promotion before publication (6.138228ms)
+✖ CP image registry rechecks the actual caller before mutating globals after its HTTP wait (6.090455ms)
+✔ ordinary full CP loader starts image fetch without added promotion and preserves Orders refs (5.719175ms)
+✖ model-column write waits full before preflight or PATCH, then uses one original PATCH (6.213764ms)
+✖ changed source during model-column preflight cannot issue PATCH (5.317064ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 2
+ℹ fail 17
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 422.390824
+
+✖ failing tests:
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ QFG save refuses thin BEFORE invoking next getters or storage (10.513857ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:69:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ QFG finite marker without actual root guard fails closed; legacy stays usable (3.876987ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:73:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ QFG thin open waits real whole-module promotion before modal or columns (4.40013ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:81:65)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ QFG source retirement during open cannot close or create a modal (15.595793ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:86:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ syncCpModelColumns rejects thin before touching schema input (4.45401ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: INPUT_READ
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: INPUT_READ
+        at Object.get (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:90:47)
+        at Object.syncCpModelColumns (evalmachine.<anonymous>:2:45)
+        at /tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:29
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+        at Test.runInAsyncScope (node:async_hooks:227:14)
+        at Test.run (node:internal/test_runner/test:1382:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+        at Test.postRun (node:internal/test_runner/test:1522:19),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ syncCpNoteColumns rejects thin before touching schema input (4.532314ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: INPUT_READ
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: INPUT_READ
+        at Object.get (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:90:47)
+        at Object.syncCpNoteColumns (evalmachine.<anonymous>:2:53)
+        at /tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:29
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+        at Test.runInAsyncScope (node:async_hooks:227:14)
+        at Test.run (node:internal/test_runner/test:1382:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+        at Test.postRun (node:internal/test_runner/test:1522:19),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ syncOrdersColumnsFromCp rejects thin before touching schema input (4.690109ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: INPUT_READ
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: INPUT_READ
+        at Object.get (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:90:47)
+        at Object.syncOrdersColumnsFromCp (evalmachine.<anonymous>:5:45)
+        at /tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:29
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:91:9)
+        at Test.runInAsyncScope (node:async_hooks:227:14)
+        at Test.run (node:internal/test_runner/test:1382:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+        at Test.postRun (node:internal/test_runner/test:1522:19),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ Global Flow direct Orders getter rejects before unified-priority work (4.402945ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:94:27)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ Global Flow Orders ensure returns only after real promotion; CP provider stays exact (9.426544ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:98:67)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ Global Flow failed full gate rejects, waits manual retry, and never returns empty success (5.218979ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:101:31)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ CP thin loader waits before image registry, pricing or schema mutation (7.740959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:104:69)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ CP loader rejects source replacement during promotion before publication (6.042259ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:110:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ CP loader rejects profile replacement during promotion before publication (8.199999ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:110:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ CP loader rejects cp-request replacement during promotion before publication (6.138228ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:110:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ CP image registry rechecks the actual caller before mutating globals after its HTTP wait (6.090455ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:115:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ model-column write waits full before preflight or PATCH, then uses one original PATCH (6.213764ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:123:70)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:5:25
+✖ changed source during model-column preflight cannot issue PATCH (5.317064ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/tmp/buyerlog-phase6a-remaining-consumer-gates-v3/tests/remaining-consumer-gates.test.cjs:127:123)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+STDERR

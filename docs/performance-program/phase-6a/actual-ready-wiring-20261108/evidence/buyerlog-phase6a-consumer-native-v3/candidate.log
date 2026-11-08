@@ -1,0 +1,29 @@
+✔ QFG save refuses thin BEFORE invoking next getters or storage (36.120185ms)
+✔ QFG finite marker without actual root guard fails closed; legacy stays usable (5.851807ms)
+✔ QFG full open preserves synchronous undefined and does not call UI gate (5.650962ms)
+✔ QFG thin open waits real whole-module promotion before modal or columns (24.690374ms)
+✔ QFG source retirement during open cannot close or create a modal (19.831318ms)
+✔ syncCpModelColumns rejects thin before touching schema input (7.35408ms)
+✔ syncCpNoteColumns rejects thin before touching schema input (5.750716ms)
+✔ syncOrdersColumnsFromCp rejects thin before touching schema input (7.427023ms)
+✔ Global Flow direct Orders getter rejects before unified-priority work (4.00866ms)
+✔ Global Flow Orders ensure returns only after real promotion; CP provider stays exact (6.040366ms)
+✔ Global Flow failed full gate rejects, waits manual retry, and never returns empty success (3.968018ms)
+✔ CP thin loader waits before image registry, pricing or schema mutation (5.944192ms)
+✔ CP loader rejects source replacement during promotion before publication (4.993709ms)
+✔ CP loader rejects profile replacement during promotion before publication (3.776698ms)
+✔ CP loader rejects cp-request replacement during promotion before publication (4.348173ms)
+✔ CP image registry rechecks the actual caller before mutating globals after its HTTP wait (4.364568ms)
+✔ ordinary full CP loader starts image fetch without added promotion and preserves Orders refs (4.573131ms)
+✔ model-column write waits full before preflight or PATCH, then uses one original PATCH (7.014908ms)
+✔ changed source during model-column preflight cannot issue PATCH (4.331883ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 831.407617
+
+STDERR

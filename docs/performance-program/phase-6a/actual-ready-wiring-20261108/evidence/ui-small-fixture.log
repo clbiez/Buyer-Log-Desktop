@@ -1,0 +1,4 @@
+orders BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":2922.5}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":2941.5}
+orders BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":3818}
+Report: /tmp/buyerlog-phase6a-adopted-ready-first/ui-small-fixture.json; retained diagnostics: /tmp/buyerlog-startup-ready-wiring-ui-20261108
