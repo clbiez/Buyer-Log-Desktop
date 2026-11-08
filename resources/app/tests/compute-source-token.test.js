@@ -6,6 +6,7 @@ test('registering a cold read keeps the source guard stable; publishing a live e
   vm.createContext(context);vm.runInContext(extractFunction(source,'computeSourceToken')+';globalThis.read=computeSourceToken;',context);
   const cold=context.read('a');publishedComputeSources.set('a',{key:'k1',descriptor:{capability:'cold-random'}});assert.equal(context.read('a'),cold);
   publishedComputeSources.set('a',{key:'k1',descriptor:{capability:'exact-random',replicaFile:'private-file'}});assert.notEqual(context.read('a'),cold);
+  publishedComputeSources.set('a',{key:'k1',descriptor:{capability:'inline-random',inlineSource:true}});assert.equal(context.read('a'),'inline-random');
 });
 test('learning cold source metadata keeps the guard stable but a different source manifest invalidates it',()=>{
   let base={key:'empty',active:{},manifest:null};const publishedComputeSources=new Map(),context={publishedComputeSources,computeSourceBase:()=>base};
