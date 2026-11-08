@@ -1,0 +1,53 @@
+{
+  "revision": "e42f24b6283d68f80dece1a5012f12055ecc3374",
+  "appTree": "9a03e95b338a514bcb7a7ea323007bee81cefbf6",
+  "startedAt": "2026-11-08T00:25:46.561211+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-first-transition-full-integrated-bgqg69pt",
+      "startedAt": "2026-11-08T00:25:46.561649+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:29:22.623875+00:00",
+      "logSha256": "d4c42dbb409993484c840eb1c50c2d69a25791a62228b64256ad51d95f77870c",
+      "gzipSha256": "f4d7a0d5502f04e6f518fd7f44ab9abf54a8a014695571d6380afcca136138e6"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-first-transition-i18n-integrated-nng6zb88",
+      "startedAt": "2026-11-08T00:29:22.700199+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:29:25.581026+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-first-transition-release-integrated-0b_ob9u5",
+      "startedAt": "2026-11-08T00:29:25.585138+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T00:29:26.826112+00:00",
+      "logSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e",
+      "gzipSha256": "b79625e3d624368357064d9d686a918be8defa6da7d53b7dc3c8dd4fc93a21c5"
+    }
+  ],
+  "finishedAt": "2026-11-08T00:29:26.827109+00:00"
+}

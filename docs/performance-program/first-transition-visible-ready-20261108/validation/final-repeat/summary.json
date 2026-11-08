@@ -1,0 +1,24 @@
+{
+  "fullCommand": "npm test",
+  "all10BatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "files": 1301,
+  "totals": {
+    "tests": 8996,
+    "pass": 8931,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "relatedPass": 22,
+  "oldFullFailurePreserved": true,
+  "controlledExactBatch3Repeat": {
+    "tests": 2074,
+    "pass": 2074,
+    "fail": 0,
+    "timeoutCause": "unknown"
+  },
+  "i18n": "0/0",
+  "notes": 50,
+  "productionDelta": false
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.js",
+    "reviewedBlob": "682182e55cf88992f89b4fb561ea6f2ad7065304",
+    "integratedBlob": "682182e55cf88992f89b4fb561ea6f2ad7065304"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-worker.js",
+    "reviewedBlob": "9fb1016e4a91bfa58bd87a02fc09e642771e4586",
+    "integratedBlob": "9fb1016e4a91bfa58bd87a02fc09e642771e4586"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-engine.js",
+    "reviewedBlob": "71c7ef4ca1286b9495cb7d909285a6b3fcac0c4a",
+    "integratedBlob": "71c7ef4ca1286b9495cb7d909285a6b3fcac0c4a"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "reviewedBlob": "4029952fdeede4bee647c7c347940de6d79a779a",
+    "integratedBlob": "4029952fdeede4bee647c7c347940de6d79a779a"
+  },
+  {
+    "file": "resources/app/public/lfl-calculation-engine.js",
+    "reviewedBlob": "b7e2cd68294d69f9324e7a4791b1b779baae97e9",
+    "integratedBlob": "b7e2cd68294d69f9324e7a4791b1b779baae97e9"
+  },
+  {
+    "file": "resources/app/public/transit-analysis.js",
+    "reviewedBlob": "604f07234a51345a8cbbd36825361e0540121899",
+    "integratedBlob": "604f07234a51345a8cbbd36825361e0540121899"
+  },
+  {
+    "file": "resources/app/public/transit-analysis-ui.js",
+    "reviewedBlob": "d8020817eca70dfa104c7de67abd8505da4e00c3",
+    "integratedBlob": "d8020817eca70dfa104c7de67abd8505da4e00c3"
+  }
+]

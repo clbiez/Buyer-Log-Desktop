@@ -1,0 +1,11 @@
+{
+  "status": "failed",
+  "error": "fetch failed: read ECONNRESET",
+  "retrospectiveRecord": true,
+  "exactRequestUrl": "not logged; unknown",
+  "serverExitSignal": "not captured; unknown",
+  "initialOomCounter": "not captured; historical attribution unknown",
+  "productionChanged": false,
+  "evidencePreserved": true,
+  "adaptation": "existing Phase0 bounded retry only for GET status/health; fresh v2 root; refresh POST never retried; child exit and cgroup counters recorded"
+}

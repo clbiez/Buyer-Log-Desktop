@@ -8,13 +8,31 @@
   'use strict';
   const CONFIG_ITEM='@set-components',SUFFIX='~part~';
   function validCount(value){const n=Number(value);return Number.isInteger(n)&&n>=1&&n<=26?n:0;}
+  /* Tek senkron hesap geçişinde (CP karar katmanı, kontrol listesi sütunları)
+     set kimliği her satır ve kalem için yeniden okunuyordu. CP satırında
+     bulunmayan başlıklar ortak alan okuyucusunda satırın tüm başlıklarını
+     taradığından bu ilk açılışta ~3 sn tutuyordu. Geçiş süresince satır başına
+     bir kez okunur; geçiş bitince önbellek atılır, dışarıda davranış aynıdır. */
+  let rowCache=null;
+  function withRowCache(fn){
+    if(rowCache)return fn();
+    rowCache=new WeakMap();
+    try{return fn();}finally{rowCache=null;}
+  }
+  function cachedFact(row,moduleId,name,read){
+    if(!rowCache||!row||typeof row!=='object')return read();
+    let byRow=rowCache.get(row);if(!byRow){byRow=Object.create(null);rowCache.set(row,byRow);}
+    const key=(moduleId||'cp')+'\u0000'+name;
+    if(!(key in byRow))byRow[key]=read();
+    return byRow[key];
+  }
   function description(row,moduleId){
-    return ['category','productDescription','productMainDefinition'].map(id=>String(Fields.value(row||{},moduleId||'cp',id)||'')).join(' ');
+    return cachedFact(row,moduleId,'description',()=>['category','productDescription','productMainDefinition'].map(id=>String(Fields.value(row||{},moduleId||'cp',id)||'')).join(' '));
   }
   const SET_PATTERN=/tak[ıi]m|\bsets?\b/i;
   function isSet(row,moduleId){return SET_PATTERN.test(description(row,moduleId));}
   function count(row,moduleId){
-    const explicit=validCount(Fields.value(row||{},moduleId||'cp','setPieceCount'));
+    const explicit=validCount(cachedFact(row,moduleId,'setPieceCount',()=>Fields.value(row||{},moduleId||'cp','setPieceCount')));
     if(explicit)return explicit>1?explicit:0;
     // Açıklama bir kez okunur; isSet aynı metni yeniden türetirdi (CP'de satır ×
     // kalem başına üç ek alan araması).
@@ -105,6 +123,6 @@
     const label=typeof statusLabel==='function'?statusLabel:(v=>v);
     return (Array.isArray(list)?list:[]).map(item=>item.name+' · '+label(item.state)).join(' | ');
   }
-  return {CONFIG_ITEM,validCount,isSet,count,labels,itemId,parseItem,configKey,partsFor,aggregate,valueParts,updateValue,
+  return {CONFIG_ITEM,withRowCache,validCount,isSet,count,labels,itemId,parseItem,configKey,partsFor,aggregate,valueParts,updateValue,
     MAX_ELEMENTS,ELEMENT_SUGGESTIONS,elementName,elementKey,normalizeElements,upsertElement,elementsState,elementsLabel};
 });
