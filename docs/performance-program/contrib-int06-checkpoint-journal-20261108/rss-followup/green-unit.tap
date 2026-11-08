@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: INT-06 incremental counters, transitions, replay and owned delta copies
+ok 1 - INT-06 incremental counters, transitions, replay and owned delta copies
+  ---
+  duration_ms: 7.731789
+  type: 'test'
+  ...
+# Subtest: INT-06 partial tail is truncated before another append; complete corruption fails closed
+ok 2 - INT-06 partial tail is truncated before another append; complete corruption fails closed
+  ---
+  duration_ms: 1.68674
+  type: 'test'
+  ...
+# Subtest: INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+ok 3 - INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+  ---
+  duration_ms: 1.217761
+  type: 'test'
+  ...
+# Subtest: INT-06 periodic snapshot only, no growing graph serialization per commit
+ok 4 - INT-06 periodic snapshot only, no growing graph serialization per commit
+  ---
+  duration_ms: 1.321147
+  type: 'test'
+  ...
+# Subtest: INT-06 unknown orders/states and invalid sequence cannot mutate disk
+ok 5 - INT-06 unknown orders/states and invalid sequence cannot mutate disk
+  ---
+  duration_ms: 1.166594
+  type: 'test'
+  ...
+# Subtest: INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+ok 6 - INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+  ---
+  duration_ms: 2.660032
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot and retirement I/O errors preserve all durable batches
+ok 7 - INT-06 snapshot and retirement I/O errors preserve all durable batches
+  ---
+  duration_ms: 5.39691
+  type: 'test'
+  ...
+# Subtest: INT-06 growing prior rows and states are never visited by the commit hot path
+ok 8 - INT-06 growing prior rows and states are never visited by the commit hot path
+  ---
+  duration_ms: 15.710943
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshots serialize owned state without parsing a second full graph; public copies stay isolated
+ok 9 - INT-06 snapshots serialize owned state without parsing a second full graph; public copies stay isolated
+  ---
+  duration_ms: 33.714272
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 136.168471

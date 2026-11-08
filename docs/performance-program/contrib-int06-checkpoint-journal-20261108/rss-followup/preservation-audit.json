@@ -1,0 +1,15 @@
+{
+  "protectedDelivery": "9e966b1fcbe6974b60def70503aae13ff56c7319",
+  "deliveryIsAncestor": true,
+  "originalArtifactHashesVerified": 67,
+  "protectedProductionHashesVerified": 62,
+  "inheritedPreparationHashesVerified": 9,
+  "committedChangedPaths": [
+    "resources/app/server/lib/power-bi-checkpoint-journal.js",
+    "resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs",
+    "resources/app/tests/int06-checkpoint-journal-unit.test.js"
+  ],
+  "productionIntegrated": false,
+  "productionGainAccepted": false,
+  "rssRegressionAccepted": false
+}

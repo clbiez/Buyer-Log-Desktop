@@ -1,0 +1,1746 @@
+{
+  "diagnosticOnly": true,
+  "forceGC": false,
+  "sampleHeap": false,
+  "execArgv": [
+    "--trace-gc",
+    "--require",
+    "./resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs"
+  ],
+  "node": "v24.19.0",
+  "helperSha256": "02ef57c024a19d33f4f3b52ceff09ce03d7f513e639bc344461a48b8b5a60886",
+  "profilerSha256": "1b9648c8eab33bab528ee718b7daa214880b1a0070f7334d38da9652ea5733ce",
+  "events": [
+    {
+      "stage": "fixture:created",
+      "region": "startup",
+      "ms": 63.98928,
+      "rss": 47054848,
+      "heapTotal": 18100224,
+      "heapUsed": 10833608,
+      "external": 2332052,
+      "arrayBuffers": 143651,
+      "maxRSS": 47054848
+    },
+    {
+      "stage": "trace:ready:before-gc",
+      "region": "trace",
+      "ms": 988.318426,
+      "rss": 133300224,
+      "heapTotal": 112472064,
+      "heapUsed": 57377568,
+      "external": 2332056,
+      "arrayBuffers": 143615,
+      "maxRSS": 133300224
+    },
+    {
+      "stage": "trace:hashed",
+      "region": "trace",
+      "ms": 1178.092812,
+      "rss": 192159744,
+      "heapTotal": 170553344,
+      "heapUsed": 116929224,
+      "external": 2332056,
+      "arrayBuffers": 143615,
+      "maxRSS": 246886400
+    },
+    {
+      "stage": "journal:open:before-gc",
+      "region": "initialize",
+      "ms": 1438.058289,
+      "rss": 149381120,
+      "heapTotal": 127344640,
+      "heapUsed": 79651776,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "initialize",
+      "ms": 1438.550864,
+      "rss": 149381120,
+      "heapTotal": 127344640,
+      "heapUsed": 79674624,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:13)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35",
+        "at timed (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:50:18)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "initialize",
+      "ms": 1448.928025,
+      "rss": 158949376,
+      "heapTotal": 130146304,
+      "heapUsed": 82477024,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:13)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35",
+        "at timed (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:50:18)"
+      ],
+      "chars": 2800355
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "initialize",
+      "ms": 1449.029058,
+      "rss": 158949376,
+      "heapTotal": 130146304,
+      "heapUsed": 82484136,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:13)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35",
+        "at timed (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:50:18)"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "initialize",
+      "ms": 1453.969768,
+      "rss": 160522240,
+      "heapTotal": 131751936,
+      "heapUsed": 90486824,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:13)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35",
+        "at timed (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:50:18)"
+      ],
+      "chars": 2800355
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "initialize",
+      "ms": 2191.209613,
+      "rss": 190959616,
+      "heapTotal": 211693568,
+      "heapUsed": 90440184,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "initialize",
+      "ms": 2196.278888,
+      "rss": 194891776,
+      "heapTotal": 214495232,
+      "heapUsed": 92802456,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ],
+      "chars": 2800355
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "initialize",
+      "ms": 2196.413551,
+      "rss": 194891776,
+      "heapTotal": 214495232,
+      "heapUsed": 92809944,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "initialize",
+      "ms": 2201.306369,
+      "rss": 196595712,
+      "heapTotal": 216100864,
+      "heapUsed": 100813264,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:168:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ],
+      "chars": 2800355
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "initialize",
+      "ms": 2437.363206,
+      "rss": 198955008,
+      "heapTotal": 218501120,
+      "heapUsed": 113261624,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:169:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "initialize",
+      "ms": 2449.661472,
+      "rss": 208916480,
+      "heapTotal": 222703616,
+      "heapUsed": 117463840,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:169:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ],
+      "chars": 4200448
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "initialize",
+      "ms": 2452.463368,
+      "rss": 208916480,
+      "heapTotal": 222703616,
+      "heapUsed": 117472736,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:169:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "initialize",
+      "ms": 2461.365729,
+      "rss": 214290432,
+      "heapTotal": 227508224,
+      "heapUsed": 122275104,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 246886400,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:169:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:60:35"
+      ],
+      "chars": 4800594
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "initialize",
+      "ms": 2461.965125,
+      "rss": 214290432,
+      "heapTotal": 227508224,
+      "heapUsed": 122284040,
+      "external": 2332078,
+      "arrayBuffers": 143637,
+      "maxRSS": 246886400,
+      "chars": 4800595
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "initialize",
+      "ms": 2464.7393,
+      "rss": 219271168,
+      "heapTotal": 232312832,
+      "heapUsed": 127088400,
+      "external": 7132673,
+      "arrayBuffers": 4944232,
+      "maxRSS": 246886400
+    },
+    {
+      "stage": "journal:opened:before-gc",
+      "region": "initialize",
+      "ms": 2466.229012,
+      "rss": 219271168,
+      "heapTotal": 232312832,
+      "heapUsed": 127521528,
+      "external": 7132679,
+      "arrayBuffers": 4944238,
+      "maxRSS": 246886400
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-64",
+      "ms": 2648.515547,
+      "rss": 221732864,
+      "heapTotal": 220200960,
+      "heapUsed": 93793104,
+      "external": 7132679,
+      "arrayBuffers": 143631,
+      "maxRSS": 282710016
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-64",
+      "ms": 2897.542625,
+      "rss": 225796096,
+      "heapTotal": 224014336,
+      "heapUsed": 112739952,
+      "external": 7132679,
+      "arrayBuffers": 143631,
+      "maxRSS": 282710016,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-64",
+      "ms": 2932.001128,
+      "rss": 262103040,
+      "heapTotal": 240287744,
+      "heapUsed": 129387392,
+      "external": 7132679,
+      "arrayBuffers": 143631,
+      "maxRSS": 282710016,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 8136133
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-64",
+      "ms": 2946.478999,
+      "rss": 262103040,
+      "heapTotal": 240287744,
+      "heapUsed": 129396384,
+      "external": 7132679,
+      "arrayBuffers": 143631,
+      "maxRSS": 282710016,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-64",
+      "ms": 2981.409385,
+      "rss": 281124864,
+      "heapTotal": 258703360,
+      "heapUsed": 147813704,
+      "external": 7132679,
+      "arrayBuffers": 143631,
+      "maxRSS": 299458560,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 9207775
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-64",
+      "ms": 2981.613984,
+      "rss": 281124864,
+      "heapTotal": 258703360,
+      "heapUsed": 147816760,
+      "external": 2332078,
+      "arrayBuffers": 143637,
+      "maxRSS": 299458560,
+      "chars": 9207776
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-64",
+      "ms": 3007.547316,
+      "rss": 299474944,
+      "heapTotal": 277118976,
+      "heapUsed": 166235256,
+      "external": 11670142,
+      "arrayBuffers": 9481701,
+      "maxRSS": 299474944
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-64",
+      "ms": 3013.919681,
+      "rss": 299474944,
+      "heapTotal": 277118976,
+      "heapUsed": 166244760,
+      "external": 11670148,
+      "arrayBuffers": 9481707,
+      "maxRSS": 299474944
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-128",
+      "ms": 3199.866079,
+      "rss": 287571968,
+      "heapTotal": 264843264,
+      "heapUsed": 144858984,
+      "external": 11670148,
+      "arrayBuffers": 143631,
+      "maxRSS": 311795712
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-128",
+      "ms": 3463.723026,
+      "rss": 293994496,
+      "heapTotal": 269598720,
+      "heapUsed": 165901304,
+      "external": 11670148,
+      "arrayBuffers": 143631,
+      "maxRSS": 311795712,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-128",
+      "ms": 3523.339899,
+      "rss": 243122176,
+      "heapTotal": 249618432,
+      "heapUsed": 118426264,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 317718528,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 12081035
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-128",
+      "ms": 3547.225685,
+      "rss": 243122176,
+      "heapTotal": 249618432,
+      "heapUsed": 118434616,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 317718528,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-128",
+      "ms": 3599.932239,
+      "rss": 302297088,
+      "heapTotal": 276869120,
+      "heapUsed": 145683728,
+      "external": 2332072,
+      "arrayBuffers": 143631,
+      "maxRSS": 329498624,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 13623669
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-128",
+      "ms": 3600.132382,
+      "rss": 302297088,
+      "heapTotal": 276869120,
+      "heapUsed": 145686864,
+      "external": 2332078,
+      "arrayBuffers": 143637,
+      "maxRSS": 329498624,
+      "chars": 13623670
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-128",
+      "ms": 3642.269935,
+      "rss": 308969472,
+      "heapTotal": 284151808,
+      "heapUsed": 148733048,
+      "external": 16216318,
+      "arrayBuffers": 14027877,
+      "maxRSS": 329498624
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-128",
+      "ms": 3650.683858,
+      "rss": 308969472,
+      "heapTotal": 284151808,
+      "heapUsed": 148742304,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 329498624
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-192",
+      "ms": 3832.57213,
+      "rss": 320937984,
+      "heapTotal": 289624064,
+      "heapUsed": 161365904,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 329498624
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-192",
+      "ms": 4092.418687,
+      "rss": 330375168,
+      "heapTotal": 296562688,
+      "heapUsed": 190569112,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 330375168,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-192",
+      "ms": 4178.571514,
+      "rss": 293101568,
+      "heapTotal": 277860352,
+      "heapUsed": 140592888,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 378085376,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 16025961
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-192",
+      "ms": 4210.26806,
+      "rss": 293101568,
+      "heapTotal": 277860352,
+      "heapUsed": 140601240,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 378085376,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-192",
+      "ms": 4305.056664,
+      "rss": 362061824,
+      "heapTotal": 313942016,
+      "heapUsed": 176636072,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 398073856,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 18039587
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-192",
+      "ms": 4305.251288,
+      "rss": 362061824,
+      "heapTotal": 313942016,
+      "heapUsed": 176638968,
+      "external": 16216330,
+      "arrayBuffers": 14027889,
+      "maxRSS": 398073856,
+      "chars": 18039588
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-192",
+      "ms": 4349.594777,
+      "rss": 398106624,
+      "heapTotal": 350023680,
+      "heapUsed": 212684688,
+      "external": 34646776,
+      "arrayBuffers": 32458335,
+      "maxRSS": 398106624
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-192",
+      "ms": 4360.762143,
+      "rss": 398106624,
+      "heapTotal": 350023680,
+      "heapUsed": 212693800,
+      "external": 34646782,
+      "arrayBuffers": 32458341,
+      "maxRSS": 398106624
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-256",
+      "ms": 4529.970843,
+      "rss": 376610816,
+      "heapTotal": 328523776,
+      "heapUsed": 198317880,
+      "external": 34646782,
+      "arrayBuffers": 14027883,
+      "maxRSS": 429432832
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-256",
+      "ms": 4800.393101,
+      "rss": 383164416,
+      "heapTotal": 335110144,
+      "heapUsed": 222760744,
+      "external": 34646782,
+      "arrayBuffers": 14027883,
+      "maxRSS": 429432832,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-256",
+      "ms": 4904.5035,
+      "rss": 424300544,
+      "heapTotal": 376086528,
+      "heapUsed": 263727928,
+      "external": 34646782,
+      "arrayBuffers": 14027883,
+      "maxRSS": 464084992,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 19970690
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-256",
+      "ms": 4943.348385,
+      "rss": 424206336,
+      "heapTotal": 376086528,
+      "heapUsed": 263736264,
+      "external": 34646782,
+      "arrayBuffers": 14027883,
+      "maxRSS": 464084992,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-256",
+      "ms": 5038.970179,
+      "rss": 448405504,
+      "heapTotal": 401027072,
+      "heapUsed": 267040936,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 493232128,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 22455284
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-256",
+      "ms": 5039.243142,
+      "rss": 448405504,
+      "heapTotal": 401027072,
+      "heapUsed": 267045008,
+      "external": 16216330,
+      "arrayBuffers": 14027889,
+      "maxRSS": 493232128,
+      "chars": 22455285
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-256",
+      "ms": 5099.455325,
+      "rss": 493756416,
+      "heapTotal": 447250432,
+      "heapUsed": 311907280,
+      "external": 39192753,
+      "arrayBuffers": 37004312,
+      "maxRSS": 493756416
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-256",
+      "ms": 5117.948227,
+      "rss": 493756416,
+      "heapTotal": 447250432,
+      "heapUsed": 311923504,
+      "external": 39192759,
+      "arrayBuffers": 37004318,
+      "maxRSS": 493756416
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-320",
+      "ms": 5287.803274,
+      "rss": 472752128,
+      "heapTotal": 426119168,
+      "heapUsed": 299640976,
+      "external": 39192759,
+      "arrayBuffers": 14027883,
+      "maxRSS": 516169728
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-320",
+      "ms": 5584.017691,
+      "rss": 482713600,
+      "heapTotal": 435818496,
+      "heapUsed": 328875272,
+      "external": 39192759,
+      "arrayBuffers": 14027883,
+      "maxRSS": 516169728,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-320",
+      "ms": 5711.9899,
+      "rss": 500424704,
+      "heapTotal": 453681152,
+      "heapUsed": 320608144,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 552968192,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 23915621
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-320",
+      "ms": 5758.642681,
+      "rss": 500424704,
+      "heapTotal": 453681152,
+      "heapUsed": 320616480,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 552968192,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-320",
+      "ms": 5904.278814,
+      "rss": 554168320,
+      "heapTotal": 509521920,
+      "heapUsed": 374346408,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 607907840,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 26871207
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-320",
+      "ms": 5904.483423,
+      "rss": 554168320,
+      "heapTotal": 509521920,
+      "heapUsed": 374349488,
+      "external": 16216330,
+      "arrayBuffers": 14027889,
+      "maxRSS": 607907840,
+      "chars": 26871208
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-320",
+      "ms": 6001.91306,
+      "rss": 607907840,
+      "heapTotal": 563265536,
+      "heapUsed": 428058480,
+      "external": 43738964,
+      "arrayBuffers": 41550523,
+      "maxRSS": 607907840
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-320",
+      "ms": 6018.28158,
+      "rss": 607907840,
+      "heapTotal": 563265536,
+      "heapUsed": 428067536,
+      "external": 43738970,
+      "arrayBuffers": 41550529,
+      "maxRSS": 607907840
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-384",
+      "ms": 6210.660399,
+      "rss": 593104896,
+      "heapTotal": 548487168,
+      "heapUsed": 423826552,
+      "external": 43738970,
+      "arrayBuffers": 14027883,
+      "maxRSS": 621277184
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-384",
+      "ms": 6510.919007,
+      "rss": 602804224,
+      "heapTotal": 558256128,
+      "heapUsed": 458667520,
+      "external": 43738970,
+      "arrayBuffers": 14027883,
+      "maxRSS": 621277184,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-384",
+      "ms": 6698.127122,
+      "rss": 617615360,
+      "heapTotal": 574062592,
+      "heapUsed": 441959216,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 673320960,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 27860553
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "commit-384",
+      "ms": 6754.280358,
+      "rss": 617615360,
+      "heapTotal": 574062592,
+      "heapUsed": 441967552,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 673320960,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "commit-384",
+      "ms": 6936.947538,
+      "rss": 680189952,
+      "heapTotal": 636637184,
+      "heapUsed": 504543584,
+      "external": 16216324,
+      "arrayBuffers": 14027883,
+      "maxRSS": 742658048,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:207:47)",
+        "at Object.commit (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:96:34)"
+      ],
+      "chars": 31287131
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "commit-384",
+      "ms": 6937.114621,
+      "rss": 680189952,
+      "heapTotal": 636637184,
+      "heapUsed": 504546400,
+      "external": 16216330,
+      "arrayBuffers": 14027889,
+      "maxRSS": 742658048,
+      "chars": 31287132
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "commit-384",
+      "ms": 7032.851103,
+      "rss": 420200448,
+      "heapTotal": 347766784,
+      "heapUsed": 212146536,
+      "external": 34400930,
+      "arrayBuffers": 32212489,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-384",
+      "ms": 7051.781947,
+      "rss": 420200448,
+      "heapTotal": 347766784,
+      "heapUsed": 212158032,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "commit:boundary:before-gc",
+      "region": "commit-400",
+      "ms": 7092.869152,
+      "rss": 431210496,
+      "heapTotal": 358703104,
+      "heapUsed": 226209872,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "commit:complete:before-gc",
+      "region": "commit-400",
+      "ms": 7095.50644,
+      "rss": 431865856,
+      "heapTotal": 359432192,
+      "heapUsed": 227148104,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "final:before:before-gc",
+      "region": "final-compact",
+      "ms": 7095.65203,
+      "rss": 431865856,
+      "heapTotal": 359432192,
+      "heapUsed": 227151336,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "final-compact",
+      "ms": 7387.348136,
+      "rss": 441958400,
+      "heapTotal": 368537600,
+      "heapUsed": 269093352,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:102:34)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:62:27"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "final-compact",
+      "ms": 7540.502285,
+      "rss": 501297152,
+      "heapTotal": 427839488,
+      "heapUsed": 328388528,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:18:24)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:102:34)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:62:27"
+      ],
+      "chars": 28846686
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "final-compact",
+      "ms": 7599.729119,
+      "rss": 501297152,
+      "heapTotal": 427839488,
+      "heapUsed": 328396280,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:102:34)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:62:27"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "final-compact",
+      "ms": 7735.661479,
+      "rss": 566079488,
+      "heapTotal": 492621824,
+      "heapUsed": 393180048,
+      "external": 34400936,
+      "arrayBuffers": 32212495,
+      "maxRSS": 742711296,
+      "stack": [
+        "at pack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:19:15)",
+        "at snapshot (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:139:19)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:146:7)",
+        "at Object.compact (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:102:34)",
+        "at /workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:62:27"
+      ],
+      "chars": 32391000
+    },
+    {
+      "stage": "snapshot:write:before",
+      "region": "final-compact",
+      "ms": 7735.818937,
+      "rss": 566079488,
+      "heapTotal": 492621824,
+      "heapUsed": 393182864,
+      "external": 34400942,
+      "arrayBuffers": 32212501,
+      "maxRSS": 742711296,
+      "chars": 32391001
+    },
+    {
+      "stage": "snapshot:write:after",
+      "region": "final-compact",
+      "ms": 7828.92704,
+      "rss": 551845888,
+      "heapTotal": 477331456,
+      "heapUsed": 342859384,
+      "external": 35537367,
+      "arrayBuffers": 33348926,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "final:after:before-gc",
+      "region": "final-compact",
+      "ms": 7848.87412,
+      "rss": 551845888,
+      "heapTotal": 477331456,
+      "heapUsed": 342868264,
+      "external": 35537373,
+      "arrayBuffers": 33348932,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "acceptance-peak-boundary",
+      "region": "final-compact",
+      "ms": 7848.923595,
+      "rss": 551845888,
+      "heapTotal": 477331456,
+      "heapUsed": 342870464,
+      "external": 35537373,
+      "arrayBuffers": 33348932,
+      "maxRSS": 742711296,
+      "oracleCreated": false
+    },
+    {
+      "stage": "journal:open:before-gc",
+      "region": "load-after-measurement",
+      "ms": 7849.041293,
+      "rss": 551845888,
+      "heapTotal": 477331456,
+      "heapUsed": 342874536,
+      "external": 35537373,
+      "arrayBuffers": 33348932,
+      "maxRSS": 742711296
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "load-after-measurement",
+      "ms": 7899.417844,
+      "rss": 650018816,
+      "heapTotal": 477331456,
+      "heapUsed": 342887912,
+      "external": 133524664,
+      "arrayBuffers": 66554221,
+      "maxRSS": 742711296,
+      "stack": [
+        "at unpack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:23:27)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:154:19)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "load-after-measurement",
+      "ms": 7951.585864,
+      "rss": 524640256,
+      "heapTotal": 352579584,
+      "heapUsed": 217221992,
+      "external": 133524664,
+      "arrayBuffers": 66554215,
+      "maxRSS": 742711296,
+      "stack": [
+        "at unpack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:23:27)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:154:19)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ],
+      "chars": 32391001
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "load-after-measurement",
+      "ms": 8010.603151,
+      "rss": 524615680,
+      "heapTotal": 352579584,
+      "heapUsed": 217238296,
+      "external": 133524664,
+      "arrayBuffers": 66554215,
+      "maxRSS": 742711296,
+      "stack": [
+        "at unpack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:25:26)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:154:19)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "load-after-measurement",
+      "ms": 8103.094601,
+      "rss": 533397504,
+      "heapTotal": 361398272,
+      "heapUsed": 260527480,
+      "external": 133524664,
+      "arrayBuffers": 66554215,
+      "maxRSS": 742711296,
+      "stack": [
+        "at unpack (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:25:26)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:154:19)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ],
+      "chars": 28846686
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "load-after-measurement",
+      "ms": 8980.192236,
+      "rss": 640122880,
+      "heapTotal": 414310400,
+      "heapUsed": 297467144,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 742711296,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:157:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "load-after-measurement",
+      "ms": 9220.878242,
+      "rss": 699412480,
+      "heapTotal": 473554944,
+      "heapUsed": 356704008,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 756985856,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:157:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)"
+      ],
+      "chars": 28817529
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "load-after-measurement",
+      "ms": 9221.061229,
+      "rss": 699412480,
+      "heapTotal": 473554944,
+      "heapUsed": 356710832,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 756985856,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:157:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "load-after-measurement",
+      "ms": 9307.897008,
+      "rss": 708194304,
+      "heapTotal": 482373632,
+      "heapUsed": 399933984,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 756985856,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at install (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:99:12)",
+        "at Object.openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:157:5)",
+        "at openCheckpointJournal (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/profile.cjs:89:29)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:20)"
+      ],
+      "chars": 28817529
+    },
+    {
+      "stage": "journal:opened:before-gc",
+      "region": "load-after-measurement",
+      "ms": 9361.358935,
+      "rss": 726544384,
+      "heapTotal": 500686848,
+      "heapUsed": 418650248,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 756985856
+    },
+    {
+      "stage": "json:stringify:before",
+      "region": "load-after-measurement",
+      "ms": 9664.560847,
+      "rss": 663793664,
+      "heapTotal": 437911552,
+      "heapUsed": 349831392,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 756985856,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at Object.materialize (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:117:35)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:52)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ]
+    },
+    {
+      "stage": "json:stringify:after",
+      "region": "load-after-measurement",
+      "ms": 9828.662896,
+      "rss": 723120128,
+      "heapTotal": 497156096,
+      "heapUsed": 409068256,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 780693504,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:40)",
+        "at Object.materialize (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:117:35)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:52)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ],
+      "chars": 28817529
+    },
+    {
+      "stage": "json:parse:before",
+      "region": "load-after-measurement",
+      "ms": 9828.831761,
+      "rss": 723120128,
+      "heapTotal": 497156096,
+      "heapUsed": 409073800,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 780693504,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at Object.materialize (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:117:35)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:52)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ]
+    },
+    {
+      "stage": "json:parse:after",
+      "region": "load-after-measurement",
+      "ms": 9934.194043,
+      "rss": 758136832,
+      "heapTotal": 532529152,
+      "heapUsed": 429315824,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 780693504,
+      "stack": [
+        "at clone (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:13:29)",
+        "at Object.materialize (/workspace/Buyer-Log-Desktop/resources/app/server/lib/power-bi-checkpoint-journal.js:117:35)",
+        "at load (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:63:52)",
+        "at run (/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/int06-checkpoint-journal/measure.cjs:91:19)"
+      ],
+      "chars": 28817529
+    },
+    {
+      "stage": "oracle:first-access",
+      "region": "load-after-measurement",
+      "ms": 9934.391321,
+      "rss": 758136832,
+      "heapTotal": 532529152,
+      "heapUsed": 429318640,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 780693504
+    },
+    {
+      "stage": "oracle:created",
+      "region": "load-after-measurement",
+      "ms": 10295.319123,
+      "rss": 796250112,
+      "heapTotal": 569921536,
+      "heapUsed": 481205328,
+      "external": 133524658,
+      "arrayBuffers": 66554215,
+      "maxRSS": 799686656
+    }
+  ],
+  "collections": [
+    {
+      "startTime": 40.022069,
+      "duration": 0.6394169999985024,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 43.897949,
+      "duration": 0.838132000004407,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 46.697046,
+      "duration": 1.6216720000375062,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 49.529849,
+      "duration": 1.0046990000410005,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 55.452894,
+      "duration": 1.0614640000276268,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 59.364588,
+      "duration": 3.5979589999769814,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 77.658215,
+      "duration": 1.2421880000038072,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 128.551916,
+      "duration": 1.170719999994617,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 172.597275,
+      "duration": 1.4017190000158735,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 216.464964,
+      "duration": 1.061565000039991,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 260.696854,
+      "duration": 2.503346000041347,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 299.289788,
+      "duration": 0.23089000000618398,
+      "kind": 8,
+      "flags": 0
+    },
+    {
+      "startTime": 309.033692,
+      "duration": 2.3741989999543875,
+      "kind": 4,
+      "flags": 64
+    },
+    {
+      "startTime": 424.905875,
+      "duration": 0.7922280000057071,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 520.486616,
+      "duration": 1.5947119999909773,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 617.763022,
+      "duration": 1.2265949999564327,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 714.331177,
+      "duration": 2.450535000010859,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 931.791996,
+      "duration": 2.020635000022594,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 1188.679059,
+      "duration": 2.296252000029199,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 1525.938418,
+      "duration": 6.021965000021737,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 1996.27232,
+      "duration": 8.169542999996338,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 2623.558761,
+      "duration": 6.132763000030536,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 3034.861827,
+      "duration": 4.550540000025649,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 3511.791167,
+      "duration": 4.901780999964103,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 3600.154585,
+      "duration": 2.983851999975741,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 3603.143355,
+      "duration": 0.29280200001085177,
+      "kind": 8,
+      "flags": 0
+    },
+    {
+      "startTime": 3653.768832,
+      "duration": 10.308947999961674,
+      "kind": 4,
+      "flags": 0
+    },
+    {
+      "startTime": 4156.3277,
+      "duration": 6.701102999970317,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 4287.61375,
+      "duration": 1.7073409999720752,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 4305.273211,
+      "duration": 0.28275799995753914,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 4473.684586,
+      "duration": 3.9412690000026487,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5011.899096,
+      "duration": 5.600548999966122,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5039.28143,
+      "duration": 1.0322500000474975,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5200.236149,
+      "duration": 3.2635749999899417,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5687.890862,
+      "duration": 3.379529999976512,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5839.616812,
+      "duration": 1.0488159999949858,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 5904.516203,
+      "duration": 0.36750500003108755,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 6068.653645,
+      "duration": 2.379657999961637,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 6666.313699,
+      "duration": 4.329687000019476,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 6670.648494,
+      "duration": 0.5719649999518879,
+      "kind": 8,
+      "flags": 0
+    },
+    {
+      "startTime": 6973.436521,
+      "duration": 10.424050999979954,
+      "kind": 4,
+      "flags": 64
+    },
+    {
+      "startTime": 7735.874671,
+      "duration": 3.511739999987185,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 7739.947479,
+      "duration": 0.29327399999601766,
+      "kind": 8,
+      "flags": 0
+    },
+    {
+      "startTime": 7944.279727,
+      "duration": 7.291435000021011,
+      "kind": 4,
+      "flags": 104
+    },
+    {
+      "startTime": 8623.952834,
+      "duration": 23.422686000005342,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 8953.880847,
+      "duration": 19.799953999987338,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 9538.88485,
+      "duration": 19.444280999945477,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 9879.122913,
+      "duration": 19.69537999999011,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 10237.919332,
+      "duration": 14.40804599999683,
+      "kind": 1,
+      "flags": 0
+    },
+    {
+      "startTime": 10423.848564,
+      "duration": 15.739589000004344,
+      "kind": 1,
+      "flags": 0
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "acceptanceSource": {
+    "revision": "cea34c01c8b8eb55e952a76543df107e29aa5a30",
+    "journalSha256": "02ef57c024a19d33f4f3b52ceff09ce03d7f513e639bc344461a48b8b5a60886",
+    "productionSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+    "harnessSha256": "523265979266ee9625ca4478a13afd9f99d53a0eb1e51664b2773fdf21a544df"
+  },
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "acceptanceSamples": 6,
+  "order": [
+    "legacy-store",
+    "journal",
+    "journal",
+    "legacy-store",
+    "legacy-store",
+    "journal"
+  ],
+  "config": {
+    "orders": 100000,
+    "scenario": "steady",
+    "batchSize": 250,
+    "snapshotEvery": 64
+  },
+  "sameFixtureTraceOutputAsOriginal": true,
+  "acceptanceExecArgv": [],
+  "NODE_OPTIONS": null,
+  "forcedGc": false,
+  "profiler": false,
+  "freshProcesses": true,
+  "filesystem": [
+    "/tmp tmpfs",
+    "/workspace overlayfs"
+  ],
+  "fullConnectorCampaign": "not-run",
+  "largeSplitRetryCampaign": "not-run",
+  "rssRegressionPercent": 13.015187875469092,
+  "rssRegressionAccepted": false,
+  "productionGainAccepted": false,
+  "lock": [
+    "flock",
+    "-n",
+    "-E",
+    "75",
+    "/tmp/buyerlog-performance-measurement.lock"
+  ]
+}

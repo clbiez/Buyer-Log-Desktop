@@ -1,0 +1,49 @@
+{
+  "stage": "isolated-checkpoint-replay",
+  "productionGainAccepted": false,
+  "parity": true,
+  "config": {
+    "arm": "journal",
+    "orders": 100000,
+    "scenario": "steady",
+    "batchSize": 250,
+    "output": "docs/performance-program/contrib-int06-checkpoint-journal-20261108/rss-followup/diagnostics/before-natural-unsandboxed-measure.json"
+  },
+  "traceBatches": 400,
+  "transport": {
+    "queries": 400,
+    "splitRejections": 0,
+    "transientFailures": 0,
+    "terminalFailures": 0
+  },
+  "traceSha256": "27d5d251218d188018124d7a2117875fd7af721810143a075c16aee02b39bfef",
+  "fixtureSha256": "ec444e07a3ced97eac68cd2aa63821ecff4ef7050da13288403f4f327adfac56",
+  "outputSha256": "98264b7df975ab65f90badaa6b2347f2a614ae95731da5ced9ed68bacd2ef34f",
+  "metrics": {
+    "checkpointBytes": 193920022,
+    "payloadWriteCalls": 416,
+    "checkpointWallMs": 7594.970577999995,
+    "checkpointCpuMs": 8176.221,
+    "peakRssBytes": 775733248,
+    "committedBatches": 400
+  },
+  "source": {
+    "revision": "9e966b1fcbe6974b60def70503aae13ff56c7319",
+    "journalSha256": "ff2ed4b246650a27c7b1a5e59f7efa3de821820df2a2c60e6e5dc43d79f0f4bf",
+    "productionSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+    "harnessSha256": "523265979266ee9625ca4478a13afd9f99d53a0eb1e51664b2773fdf21a544df"
+  },
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "limitations": [
+    "Synthetic fixture/mock transport; no real Power BI, credentials, Windows, Electron or SMB.",
+    "Checkpoint-only trace replay. No total refresh timing and no production integration gain.",
+    "Legacy input counters/compatibility sets prepared incrementally outside timer; current production full state rescans/normalization excluded.",
+    "Legacy copy/compatibility-list/store path versus journal initialization/commit/final compaction, not durability-equivalent: legacy has no fsync.",
+    "Logical payload bytes (unchanged #890 observer); not physical I/O, metadata or device writes.",
+    "OS process-lifetime maxRSS before load/oracle, including trace generation; no forced GC/cold-cache claim."
+  ]
+}
