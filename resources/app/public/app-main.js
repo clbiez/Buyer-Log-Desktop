@@ -2060,6 +2060,54 @@ window.BLRetireOrdersProjectionSource=retireOrdersProjectionSource;
 // Polling a changed profile is a source/access change, not evidence of a new
 // authenticated session. Real login/switch navigation destroys this page.
 window.BLBeforeIamProfileApply=()=>retireOrdersProjectionSource('orders.iam.before-profile');
+function ordersConfigurationLifecycleInvolved(){
+  return Boolean(_ordersProjectionClient||_ordersAcceptedReceipt||_ordersRetiredFiniteView||_ordersColdFiniteClosed
+    ||ordersProjectionIsThin()||window.BLOrdersFiniteLifecycleRequired===true);
+}
+function captureOrdersConfigurationIntent(){
+  return {finiteInvolved:ordersConfigurationLifecycleInvolved(),epoch:_ordersProjectionSourceEpoch,sessionEpoch:_ordersUiSessionEpoch,profile:state.currentUser,userContext:window.BL_USER_CONTEXT};
+}
+function ordersConfigurationIntentInvolved(intent){
+  return Boolean(intent&&(intent.finiteInvolved||ordersConfigurationLifecycleInvolved()));
+}
+function ordersConfigurationIntentCurrent(intent){
+  if(!intent)return false;
+  // Compatibility is limited to requests that began AND remain outside the
+  // finite lifecycle. A later activation cannot adopt an old full request.
+  if(!intent.finiteInvolved)return !ordersConfigurationLifecycleInvolved();
+  return intent.epoch===_ordersProjectionSourceEpoch&&intent.sessionEpoch===_ordersUiSessionEpoch
+    &&intent.profile===state.currentUser&&intent.userContext===window.BL_USER_CONTEXT;
+}
+function assertOrdersConfigurationIntent(intent){
+  if(!ordersConfigurationIntentCurrent(intent))throw ordersFullActionError('ORDERS_FULL_STALE');
+}
+function beginOrdersConfigurationApply(intent,reason){
+  assertOrdersConfigurationIntent(intent);
+  if(!ordersConfigurationIntentInvolved(intent))return {intent,token:null,needsFull:false};
+  const needsFull=ordersProjectionIsThin()||Boolean(_ordersRetiredFiniteView);
+  if(needsFull&&(!(state.ordersSelected instanceof Set)||state.ordersSelected.size!==0))throw ordersFullActionError('ORDERS_FULL_STALE');
+  const token=beginOrdersGlobalUpdate(reason);
+  try{prepareOrdersGlobalApply(token,reason);intent.epoch=token.epoch;return {intent,token,needsFull};}
+  catch(error){endOrdersGlobalUpdate(token);throw error;}
+}
+async function loadOrdersForConfigurationApply(change){
+  assertOrdersGlobalUpdate(change.token);assertOrdersConfigurationIntent(change.intent);
+  if(change.needsFull){
+    if(!await ensureOrdersLoaded({force:true,fullOnly:true,deferRender:true,deferPricing:true}))throw ordersFullActionError('ORDERS_FULL_STALE');
+    if(!state.orders||ordersProjectionIsThin())throw ordersFullActionError('ORDERS_FULL_STALE');
+  }
+  assertOrdersGlobalUpdate(change.token);assertOrdersConfigurationIntent(change.intent);
+}
+function endOrdersConfigurationApply(change){if(change)endOrdersGlobalUpdate(change.token);}
+function modelConnectionPayloadChanged(next){
+  return Object.keys(next).some(key=>JSON.stringify(next[key])!==JSON.stringify(modelConnState[key]));
+}
+function pricingConfigurationWouldChange(rules,revision,merges){
+  if(merges&&Array.isArray(merges.split)&&JSON.stringify({split:merges.split.map(String).sort()})!==JSON.stringify(state.licensorMerges||{split:[]}))return true;
+  const current=Number(state.storeRevisions.pricingRules)||0,incoming=Number(revision),next=normalizePricingRules(rules);
+  if(Number.isFinite(incoming)&&current>0&&incoming<current&&((state.overrides.pricingRules||[]).length>0||!next.length))return false;
+  return incoming!==current||JSON.stringify(next)!==JSON.stringify(state.overrides.pricingRules||[]);
+}
 let cpLoadPromise=null;
 let overviewLoadPromise=null;
 let startupReadySignaled=false;
@@ -2305,7 +2353,7 @@ async function ensureOrdersLoaded(options={}){
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
       // tutulan lisans royalty kuralları da aynı satırlara yeniden uygulanmalı.
       // Çizim aşağıda tek kez yapılır; burada yalnız türetilmiş fiyatlar hesaplanır.
-      applyPricingRulesToLoadedRows({render:false});
+      if(!options.deferPricing)applyPricingRulesToLoadedRows({render:false});
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
       buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender)renderOrders();
@@ -12136,17 +12184,31 @@ function syncPricingRulesToAllLoadedViews({saveCollection=true,renderCollection=
   return {cpChanged,collectionChanged};
 }
 async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.pricingRules||0}={}){
+  const intent=captureOrdersConfigurationIntent();
   const clean=normalizePricingRules(rules);
   const previous=normalizePricingRules(state.overrides.pricingRules||[]);
-  state.overrides.pricingRules=clean; saveLocalPricingRules(clean);
-  // Kural değişikliği ağ çağrısını beklemeden CP + Koleksiyon'daki türetilmiş alanlara
-  // birlikte uygulanır. Böylece Source ekranındaki değişiklik Koleksiyon'a anında yansır.
-  let syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+  let change=null,applied=false,syncResult;
   try{
+    if(ordersConfigurationIntentInvolved(intent)&&(JSON.stringify(clean)!==JSON.stringify(previous)||ordersProjectionIsThin()||_ordersRetiredFiniteView)){
+      change=beginOrdersConfigurationApply(intent,'orders.config.pricing-optimistic');
+      if(change.needsFull)await loadOrdersForConfigurationApply(change);
+    }
+    assertOrdersConfigurationIntent(intent);
+    state.overrides.pricingRules=clean;saveLocalPricingRules(clean);applied=true;
+    // Retain optimistic application before the original single PUT. Finite
+    // Orders first obtains current ordinary full rows, never an old parent.
+    syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     if(window.SERVER_BACKED){
       const res=await fetch('/api/pricing-rules',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(expectedRevision),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{})},body:JSON.stringify({rules:clean,categorySchemaVersion:1})});
       const data=await res.json().catch(()=>({}));
       if(!res.ok){ const err=new Error(res.status===409?(appLang==='en'?'Royalty rules changed while this window was open. Your draft is preserved; close and reopen to edit the current rules.':'Bu pencere açıkken royalty kuralları değişti. Taslağınız korunuyor; güncel kuralları düzenlemek için pencereyi kapatıp yeniden açın.'):(data.error||res.statusText));err.code=data.code;err.status=res.status;throw err; }
+      assertOrdersConfigurationIntent(intent);
+      endOrdersConfigurationApply(change);change=null;
+      if(ordersConfigurationIntentInvolved(intent)&&pricingConfigurationWouldChange(data.rules||clean,data.revision)){
+        change=beginOrdersConfigurationApply(intent,'orders.config.pricing-confirmed');
+        if(change.needsFull)await loadOrdersForConfigurationApply(change);
+      }
+      assertOrdersConfigurationIntent(intent);
       applyIncomingPricingRules(data.rules||clean,data.revision);
       // Sunucunun normalize ettiği son kural setini de tekrar uygula. Böylece client/server
       // normalizasyon farkı yüzünden Koleksiyon eski Royalty/Hologram/FOB ile kalmaz.
@@ -12155,12 +12217,20 @@ async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.
     window.BLLicenseCardsPage?.invalidate?.();
     return syncResult;
   }catch(err){
+    assertOrdersConfigurationIntent(intent);
+    if(!applied)throw err;
     // Kaydetme başarısızsa ekranda geçici olarak uygulanan kuralları geri al; CP ve
     // Koleksiyon aynı kural setini kullanmaya devam etsin.
-    if(state.overrides.pricingRules===clean){state.overrides.pricingRules=previous;saveLocalPricingRules(previous);}
+    if(state.overrides.pricingRules===clean){
+      endOrdersConfigurationApply(change);change=null;
+      change=beginOrdersConfigurationApply(intent,'orders.config.pricing-rollback');
+      if(change.needsFull)await loadOrdersForConfigurationApply(change);
+      assertOrdersConfigurationIntent(intent);
+      state.overrides.pricingRules=previous;saveLocalPricingRules(previous);
+    }
     syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     throw err;
-  }
+  }finally{endOrdersConfigurationApply(change);}
 }
 /* v10.24 — License Royalty kurallarının açılıştan kısa süre sonra kaybolması.
    Kural seti iki ayrı asenkron yoldan hidrate ediliyor: açılıştaki /api/data ve
@@ -12197,17 +12267,30 @@ function applyIncomingPricingRules(rules,revision,{knownRevision=null}={}){
 }
 async function refreshPricingRulesFromServer(){
   if(!window.SERVER_BACKED)return null;
-  if(refreshPricingRulesFromServer.pending)return refreshPricingRulesFromServer.pending;
-  refreshPricingRulesFromServer.pending=(async()=>{
+  if(refreshPricingRulesFromServer.pending&&ordersConfigurationIntentCurrent(refreshPricingRulesFromServer.pendingIntent))return refreshPricingRulesFromServer.pending;
+  const intent=captureOrdersConfigurationIntent();
+  const pending=(async()=>{
     const res=await fetch(`/api/pricing-rules?_=${Date.now()}`,{cache:'no-store'});
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||res.statusText);
-    const mergesChanged=applyLicensorMerges(data.licensorMerges);
-    const rulesChanged=applyIncomingPricingRules(data.rules||[],data.revision);
-    if(!rulesChanged&&!mergesChanged)return null;
-    return syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
-  })().finally(()=>{refreshPricingRulesFromServer.pending=null;});
-  return refreshPricingRulesFromServer.pending;
+    assertOrdersConfigurationIntent(intent);
+    let change=null;
+    try{
+      if(ordersConfigurationIntentInvolved(intent)&&pricingConfigurationWouldChange(data.rules||[],data.revision,data.licensorMerges)){
+        change=beginOrdersConfigurationApply(intent,'orders.config.pricing-remote');
+        if(change.needsFull)await loadOrdersForConfigurationApply(change);
+      }
+      assertOrdersConfigurationIntent(intent);
+      const mergesChanged=applyLicensorMerges(data.licensorMerges);
+      const rulesChanged=applyIncomingPricingRules(data.rules||[],data.revision);
+      if(!rulesChanged&&!mergesChanged)return null;
+      return syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+    }finally{endOrdersConfigurationApply(change);}
+  })().finally(()=>{
+    if(refreshPricingRulesFromServer.pending===pending){refreshPricingRulesFromServer.pending=null;refreshPricingRulesFromServer.pendingIntent=null;}
+  });
+  refreshPricingRulesFromServer.pending=pending;refreshPricingRulesFromServer.pendingIntent=intent;
+  return pending;
 }
 function pricingRuleMatchCount(rule){ return (state.cp&&state.cp.rows||[]).filter(r=>pricingRuleMatchesRow(rule,r)).length; }
 async function applySuppFobRuleToMatchingOrders(rule){
@@ -12796,30 +12879,56 @@ function modelConnectionApiAvailable(){
 }
 
 async function modelConnLoad(){
+  const intent=captureOrdersConfigurationIntent();
   if(!modelConnectionApiAvailable()){ modelConnState.loaded=true; return modelConnState; }
   const res=await fetch('/api/model-connections');
   const data=await res.json().catch(()=>({}));
   if(!res.ok) throw new Error(data.error||res.statusText);
-  modelConnState.items=(Array.isArray(data.items)?data.items:[]).filter(item=>item&&item.role!=='fabric');
-  modelConnState.revision=Number(data.revision)||0;
-  modelConnState.supported=data.supported!==false;
-  modelConnState.exportFolder=String(data.exportFolder||'');
-  modelConnState.loaded=true;
-  void refreshFieldMappingReadinessUI(modelConnState.items);
-  return modelConnState;
+  assertOrdersConfigurationIntent(intent);
+  const next={items:(Array.isArray(data.items)?data.items:[]).filter(item=>item&&item.role!=='fabric'),revision:Number(data.revision)||0,supported:data.supported!==false,exportFolder:String(data.exportFolder||'')};
+  let change=null;
+  try{
+    if(ordersConfigurationIntentInvolved(intent)&&modelConnectionPayloadChanged(next)){
+      change=beginOrdersConfigurationApply(intent,'orders.config.model-load');
+      if(change.needsFull)await loadOrdersForConfigurationApply(change);
+    }
+    assertOrdersConfigurationIntent(intent);
+    Object.assign(modelConnState,next);modelConnState.loaded=true;
+    void refreshFieldMappingReadinessUI(modelConnState.items);
+    return modelConnState;
+  }finally{endOrdersConfigurationApply(change);}
 }
 
 async function modelConnSave(items){
-  if(!modelConnectionApiAvailable()){ modelConnState.items=items; void refreshFieldMappingReadinessUI(items); return items; }
+  const intent=captureOrdersConfigurationIntent();
+  if(!modelConnectionApiAvailable()){
+    let change=null;
+    try{
+      if(ordersConfigurationIntentInvolved(intent)&&modelConnectionPayloadChanged({items})){
+        change=beginOrdersConfigurationApply(intent,'orders.config.model-save-local');
+        if(change.needsFull)await loadOrdersForConfigurationApply(change);
+      }
+      assertOrdersConfigurationIntent(intent);
+      modelConnState.items=items;void refreshFieldMappingReadinessUI(items);return items;
+    }finally{endOrdersConfigurationApply(change);}
+  }
   const res=await fetch('/api/model-connections',{method:'PUT',
     headers:{'Content-Type':'application/json','If-Match':String(modelConnState.revision||0)},
     body:JSON.stringify({items})});
   const data=await res.json().catch(()=>({}));
   if(!res.ok) throw new Error(data.error||res.statusText);
-  modelConnState.items=Array.isArray(data.items)?data.items:items;
-  modelConnState.revision=Number(data.revision)||modelConnState.revision;
-  void refreshFieldMappingReadinessUI(modelConnState.items);
-  return modelConnState.items;
+  assertOrdersConfigurationIntent(intent);
+  const next={items:Array.isArray(data.items)?data.items:items,revision:Number(data.revision)||modelConnState.revision};
+  let change=null;
+  try{
+    if(ordersConfigurationIntentInvolved(intent)&&modelConnectionPayloadChanged(next)){
+      change=beginOrdersConfigurationApply(intent,'orders.config.model-save');
+      if(change.needsFull)await loadOrdersForConfigurationApply(change);
+    }
+    assertOrdersConfigurationIntent(intent);
+    Object.assign(modelConnState,next);
+    void refreshFieldMappingReadinessUI(modelConnState.items);return modelConnState.items;
+  }finally{endOrdersConfigurationApply(change);}
 }
 
 function modelConnDurationLabel(ms){ return fmtDurationSn(ms); }

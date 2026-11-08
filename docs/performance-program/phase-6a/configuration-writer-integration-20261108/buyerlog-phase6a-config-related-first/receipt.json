@@ -1,0 +1,38 @@
+{
+  "scope": "configuration writer integration targeted only; final full/browser/firstCP acceptance pending",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "orders-",
+        "cp-orders",
+        "cp-decision-input-revision",
+        "partial-refresh",
+        "user-storage",
+        "profile-rejection",
+        "partial-view",
+        "filter-context",
+        "quick-filter",
+        "selection",
+        "header-filter",
+        "license-royalty",
+        "license-cards-royalty-hydration",
+        "model-connections",
+        "model-source"
+      ],
+      "exitCode": 1,
+      "counts": {
+        "tests": 657,
+        "pass": 654,
+        "fail": 3,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "tmpdir": "/tmp/bl6-config-xx_vbdyb",
+      "rawSha256": "1cf0e8aeffb483e57fd63de8dbdb34241a6a8a847afada4fe99dd464396f5e3a"
+    }
+  ]
+}

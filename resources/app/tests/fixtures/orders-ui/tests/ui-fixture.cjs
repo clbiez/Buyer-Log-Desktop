@@ -2,7 +2,7 @@
 // UNRUN V3: exact UI(corrected retirement), actual lexical lifecycle + native promotion.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const composition=require('./composed-source.cjs');
-const {APP,hash,source,patched,quickSource,quickPatched,barSource,barPatched,selectedSource,baseline,seam,api,extractFunction,installLifecycle}=composition;
+const {APP,hash,preUiSource:source,patched,quickSource,quickPatched,barSource,barPatched,selectedSource,baseline,seam,api,extractFunction,installLifecycle}=composition;
 assert.equal(hash(fs.readFileSync(path.join(APP,'public/orders-full-promotion.js'))),'8e22220709e3352e6e12d12c2f8d61b1ace10aa2844b69e2172e5cdb882e5841');
 const promotion=require(path.join(APP,'public/orders-full-promotion.js'));
 function between(text,start,end){const at=text.indexOf(start),stop=text.indexOf(end,at);assert.ok(at>=0&&stop>at,start);return text.slice(at,stop);}

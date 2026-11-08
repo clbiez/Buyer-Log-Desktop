@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),
 const sha=text=>crypto.createHash('sha256').update(text).digest('hex');
 const legacySha='ad985cfd3345de35a8c105539d430fa11f1bbd329cedcd3b3896efdcc989a515';
 const retiredSha='d0885781d9b9a5e88135a1fd7a7c9c309603d4f4484191219079408ad1237810';
-let legacy,retired;
+let legacy,retired,configured;
 function forward(source,patch){
  const input=source.split('\n'),lines=patch.split('\n'),output=[];let cursor=0,hunks=0;
  for(let index=0;index<lines.length;index++){
@@ -44,4 +44,13 @@ function read(ref,file){
  const names={'public/quick-filter-groups.js':'quick-filter-groups-before.js','public/selection-action-bar.js':'selection-action-bar-before.js'};
  assert.ok(Object.hasOwn(names,file),'known bounded UI fixture');return fs.readFileSync(path.join(__dirname,names[file]),'utf8');
 }
-module.exports=Object.freeze({read});
+function configurationBase(){
+ if(!configured){
+  const origin=read('5829fcf4fa4ec9b7bfb1815bb43577943177dd38','public/app-main.js');
+  const delta=zlib.gunzipSync(fs.readFileSync(path.join(__dirname,'configuration-forward.patch.gz'))).toString('utf8');
+  configured=forward(origin,delta);
+  assert.equal(sha(configured),'54f6484b4582fbcff16fd033fa61a048da53f239664a61196d70c5345e462f99','exact reviewed configuration delta before the unchanged UI recipe');
+ }
+ return configured;
+}
+module.exports=Object.freeze({read,configurationBase});

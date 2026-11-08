@@ -1,0 +1,46 @@
+{
+  "baseCommit": "3302bb62b200df4fc1c1f3944f30da00ced0a7a5",
+  "beforeAppSha256": "46a05e7073a761a7f311457e94ea7afc022c0b37b24d1b60398d41870b235f5a",
+  "afterAppSha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+  "exactReverseEquality": true,
+  "changedWriters": [
+    "modelConnLoad",
+    "modelConnSave",
+    "refreshPricingRulesFromServer",
+    "persistPricingRules"
+  ],
+  "loaderDelta": "if(!options.deferPricing)applyPricingRulesToLoadedRows({render:false});",
+  "compositionReceipt": {
+    "retirementGitRef": "5829fcf4fa4ec9b7bfb1815bb43577943177dd38",
+    "retirementSha256": "d0885781d9b9a5e88135a1fd7a7c9c309603d4f4484191219079408ad1237810",
+    "preUiSourceSha256": "54f6484b4582fbcff16fd033fa61a048da53f239664a61196d70c5345e462f99",
+    "uiAppSha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+    "quickSha256": "e5b821b6c232e8f247fa902eea67c6aa1048ddd9c6e5ff1f9ba66a3791d17fab",
+    "barSha256": "6a1abdc462ed75846b62af5b5822e124dce7374d3a69178842bfa42150391436",
+    "lifecycleSha256": "9fcc9f18a3d6206b9bd8479e19d13ae457d02c895edb774ce139a38304e2c556"
+  },
+  "protectedFunctions": {
+    "ensureCpLoaded": "6c1f1e8ed53e702a88ba39e682ad3f90e929d007dce34c832f9adb28163fcca9",
+    "registerManagedGridClipboard": "14c5e03fdd44be5d41f562fe54b40604b36cd8a45c97dc8000ab49baa9a9c5d8",
+    "switchTab": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2",
+    "normalizeCPDates": "f89c9ed58b8353792517202a30aff803ae762b4202e266ab4d76b3062e57e29a",
+    "rebuildCpLogisticCaches": "d90c8f12276aeb92ff5647dc577dc6faa453711450a9ae7bba0362a4d17bcb98",
+    "loadFromServer": "daac6e8173f14419cc2d737a07da3351bcba5bec7e44dfbffcbc67dd09101119",
+    "hydrateUserPreferencesAfterUi": "4f03805a6665bb2fe725830ca36f019162e8de9864c69749a1566deb99db51a6",
+    "applyIncomingPricingRules": "2209ea5aa82fa5647262375d523141428f64e7fe925e6e67f9ca71428a19d215",
+    "normalizePricingRules": "e91e7511586841eb18c5e9cb9a63cdd9f651947e78cef0a29468ab696b0cbdf5",
+    "syncPricingRulesToAllLoadedViews": "93547874715bf53cd545d77a444b8312d025e8fe2e6c04bc2edca308629d9bf9"
+  },
+  "protected916": {
+    "resources/app/public/checklist-components-engine.js": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216",
+    "resources/app/public/cp-overview-assistant.js": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e",
+    "resources/app/public/checklist-supplier-sync.js": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc",
+    "resources/app/tests/checklist-components-row-cache.test.js": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e",
+    ".github/workflows/buyerlog-pr-fast-checks.yml": "c8b8a16bbbd4b7a2078febca76e4b200feaf24e91eaa213cb7a76a2f9d639429"
+  },
+  "outsideSwitchSha256": "336ce29a0252b2181b0ee1c0a7adf01e88f4368e786f5302dd70729834bbe0f7",
+  "publicThinEnabled": false,
+  "royaltyFixtureAssertionBodiesUnchanged": true,
+  "royaltyFixtureChange": "Three extracted writer VM contexts now install the real actual production lifecycle. No assertion or timeout changes.",
+  "configurationPatchSha256": "a56db11bd1e53cf66f3dcf545b31160a461da9890e97f71917d98e2393acd881"
+}

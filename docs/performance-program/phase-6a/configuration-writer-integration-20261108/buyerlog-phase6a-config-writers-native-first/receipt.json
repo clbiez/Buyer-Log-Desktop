@@ -1,0 +1,45 @@
+{
+  "candidateSha256": "ee50b8b649e5c2797470d13feb919ea5befc5f03d15823b4ae34d5f08363d04b",
+  "commands": [
+    {
+      "mode": "baseline",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-orders-config-writers-v2/tests/orders-config-writers.test.js"
+      ],
+      "exitCode": 1,
+      "counts": {
+        "tests": 29,
+        "pass": 11,
+        "fail": 18,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "039375106564928ff9a54d0a10676d7c4e221cdc6c9c7ec81cf2c5432cb566b3",
+      "setupError": false
+    },
+    {
+      "mode": "candidate",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-orders-config-writers-v2/tests/orders-config-writers.test.js"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 29,
+        "pass": 29,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "49972d0028468fbefd62667bdad8318ec4e4ec71ac55b021dac0a7f1bce5ce98",
+      "setupError": false
+    }
+  ]
+}

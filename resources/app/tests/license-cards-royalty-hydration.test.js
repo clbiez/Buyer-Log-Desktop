@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const {installLifecycle}=require('./helpers/orders-retirement-source');
 const APP = fs.readFileSync(require('node:path').join(__dirname, '../public/app-main.js'), 'utf8');
 function block(start, end) { return APP.slice(APP.indexOf(start), APP.indexOf(end, APP.indexOf(start))); }
 
@@ -39,6 +40,7 @@ test('identical royalty revisions do not trigger another whole-view recalculatio
     fetch:async()=>({ok:true,json:async()=>({revision:9,rules:[]})}),applyLicensorMerges:()=>false,applyIncomingPricingRules:()=>false,
     syncPricingRulesToAllLoadedViews:()=>{recalculations++;return {};}};
   vm.createContext(context);
+  installLifecycle(context);
   vm.runInContext(block('async function refreshPricingRulesFromServer', 'function pricingRuleMatchCount'),context);
   await context.refreshPricingRulesFromServer();
   assert.equal(recalculations,0);
@@ -71,7 +73,7 @@ test('a complete card response hydrates the same canonical royalty rules even wh
 test('royalty saves use the editor revision and notify card caches only after a successful commit', async () => {
   const requests=[],invalidations=[];
   const context={window:{SERVER_BACKED:true,BL_CLIENT_ID:'royalty-tab',BLLicenseCardsPage:{invalidate:()=>invalidations.push('saved')}},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:16}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async(url,options)=>{requests.push(options);return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en',applyLicensorMerges:()=>false,applyIncomingPricingRules:(rules,revision)=>{context.state.overrides.pricingRules=rules;context.state.storeRevisions.pricingRules=revision;}};
-  vm.createContext(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
+  vm.createContext(context);installLifecycle(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
   await assert.rejects(context.persistPricingRules([{royalty:13}],{expectedRevision:8}));
   assert.equal(requests[0].headers['If-Match'],'8');assert.equal(requests[0].headers['X-Client-Id'],'royalty-tab');
   assert.equal(context.state.overrides.pricingRules[0].royalty,16);assert.equal(invalidations.length,0);
@@ -83,7 +85,7 @@ test('royalty saves use the editor revision and notify card caches only after a 
 test('a delayed failed royalty write cannot roll back a newer canonical response received meanwhile', async () => {
   const fresh=[{royalty:19}];
   const context={window:{SERVER_BACKED:true},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:13}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async()=>{context.state.overrides.pricingRules=fresh;context.state.storeRevisions.pricingRules=10;return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en'};
-  vm.createContext(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
+  vm.createContext(context);installLifecycle(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
   await assert.rejects(context.persistPricingRules([{royalty:16}],{expectedRevision:9}));
   assert.equal(context.state.overrides.pricingRules,fresh);assert.equal(context.state.storeRevisions.pricingRules,10);
 });

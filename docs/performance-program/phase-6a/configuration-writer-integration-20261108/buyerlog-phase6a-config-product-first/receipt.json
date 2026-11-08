@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-config-writers",
+    "orders-ui-command",
+    "orders-source-retirement",
+    "orders-iam-before-apply"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 114,
+    "pass": 114,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "492cc46895dd809bf4a3f03cc182ff789aabe8321e77ca624e6bcc5b77cec180"
+}

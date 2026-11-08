@@ -1,0 +1,67 @@
+[
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-writers-native-first/candidate.tap.gz",
+    "rawSha256": "49972d0028468fbefd62667bdad8318ec4e4ec71ac55b021dac0a7f1bce5ce98",
+    "rawBytes": 7345
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-writers-native-first/receipt.json",
+    "rawSha256": "faf2cdbe3bf018c282b2aa51592e016a41b5669ad3f4b20211c15f72e543cbb1",
+    "rawBytes": 1288
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-writers-native-first/baseline.tap.gz",
+    "rawSha256": "039375106564928ff9a54d0a10676d7c4e221cdc6c9c7ec81cf2c5432cb566b3",
+    "rawBytes": 17656
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-product-first/receipt.json",
+    "rawSha256": "11f56f5da5a32c22b0c807f57153ed4c5687d278c4db522c26c78dc5300b936a",
+    "rawBytes": 375
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-product-first/native.log.gz",
+    "rawSha256": "492cc46895dd809bf4a3f03cc182ff789aabe8321e77ca624e6bcc5b77cec180",
+    "rawBytes": 12776
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-first/receipt.json",
+    "rawSha256": "07765ddae1ae795373d235e93e2c7767da739dc97ada040c149e59292fddd74a",
+    "rawBytes": 927
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-first/related.log.gz",
+    "rawSha256": "1cf0e8aeffb483e57fd63de8dbdb34241a6a8a847afada4fe99dd464396f5e3a",
+    "rawBytes": 70829
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/release.log.gz",
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e",
+    "rawBytes": 126
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/i18n.log.gz",
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+    "rawBytes": 125
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/syntax.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rawBytes": 0
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/protected916.log.gz",
+    "rawSha256": "132d4fc1bcf58dfe4e2cae8c0dee8c62306c601d0d5a27ab963630e3b57a6184",
+    "rawBytes": 2028
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/receipt.json",
+    "rawSha256": "1880a939f8b87165d10f8833015012de47947254f3069f96fe13fad1b4594793",
+    "rawBytes": 3021
+  },
+  {
+    "path": "docs/performance-program/phase-6a/configuration-writer-integration-20261108/buyerlog-phase6a-config-related-green/related.log.gz",
+    "rawSha256": "728716f6f4ef8ddf774030d63e2954f9386ce7653c5432efaff5c7dbbfe59220",
+    "rawBytes": 68479
+  }
+]
