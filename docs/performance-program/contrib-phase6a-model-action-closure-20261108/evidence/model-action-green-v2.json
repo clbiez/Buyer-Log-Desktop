@@ -1,0 +1,17 @@
+{
+  "started": "2026-11-08T11:09:17.517Z",
+  "finished": "2026-11-08T11:09:18.323Z",
+  "command": [
+    "node",
+    "--test",
+    "scripts/prototypes/phase6a-model-action-closure-20261108/model-action.test.cjs",
+    "scripts/prototypes/phase6a-model-action-closure-20261108/remaining-consumer-gates.test.cjs"
+  ],
+  "exitCode": 0,
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64"
+  }
+}

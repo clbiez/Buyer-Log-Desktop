@@ -1,0 +1,15 @@
+{
+  "started": "2026-11-08T11:10:24.284Z",
+  "finished": "2026-11-08T11:10:29.751Z",
+  "command": [
+    "node",
+    "scripts/prototypes/phase6a-model-action-closure-20261108/validate-native.cjs"
+  ],
+  "exitCode": 0,
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64"
+  }
+}

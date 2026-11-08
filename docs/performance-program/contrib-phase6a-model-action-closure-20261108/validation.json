@@ -1,0 +1,166 @@
+{
+  "baseBranch": "prep/phase6a-wiring-handoff-20261108",
+  "baseCommit": "ea49389836dba23f0970a974b4c0185f1b36ec0e",
+  "deliveryBranch": "contrib/phase6a-model-action-closure-20261108",
+  "baseIsMain": false,
+  "productionIntegrated": false,
+  "applicationAccepted": false,
+  "publicThinEnabled": false,
+  "codeAndAssertionsUnchangedSinceAcceptedRun": true,
+  "source": {
+    "baseSha256": "b6659e5c522d8584cceaf5414e4f70e0e30b7ffc24d3d2de9c0bf5b6469bf666",
+    "candidateSha256": "253c6471d5952206e5118b60edb6b0d38fc99e2e314fd243449fef1a88963327",
+    "functions": [
+      "removeCpModelColumn",
+      "openCpModelColumnModal",
+      "writeCpModelColumn",
+      "modelConnLoad"
+    ],
+    "patch": "scripts/prototypes/phase6a-model-action-closure-20261108/app-main.patch",
+    "exactRecipe": "scripts/prototypes/phase6a-model-action-closure-20261108/patch-recipe.json",
+    "exactReverseProven": true,
+    "otherFunctionBytesPreserved": true
+  },
+  "results": {
+    "ownershipRed": [
+      {
+        "tests": 146,
+        "pass": 36,
+        "fail": 110,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    ],
+    "ownershipGreenAnd19Consumers": [
+      {
+        "tests": 165,
+        "pass": 165,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    ],
+    "nativeSections": {
+      "labels": [
+        "candidate actual config writer bodies",
+        "readonly standard native runner (12 files)",
+        "unchanged protected #916 fast check"
+      ],
+      "counts": [
+        {
+          "tests": 29,
+          "pass": 29,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 266,
+          "pass": 266,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 23,
+          "pass": 23,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    "independentKnownBug": {
+      "baseline": [
+        {
+          "tests": 1,
+          "pass": 0,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0
+        }
+      ],
+      "candidate": [
+        {
+          "tests": 1,
+          "pass": 0,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0
+        }
+      ],
+      "fixed": false
+    },
+    "i18n": {
+      "nativeFresh": 0,
+      "nativeBaseline": 0,
+      "candidateFresh": 0
+    },
+    "syntax": "pass",
+    "patchApplyCheck": "pass",
+    "protected916": "byte-exact"
+  },
+  "evidence": [
+    {
+      "name": "ownership-red-accepted",
+      "exitCode": 1,
+      "baseline": true,
+      "rawLogSha256": "2e6ddb4ba9bd87d34882e1cc385b611277b211e4f4e32c9ca16f3e4eed5173f9",
+      "archiveSha256": "315de1782cf47825a3674cc8149e384fab5a28603ff0990178be51a51837dc20"
+    },
+    {
+      "name": "ownership-green-accepted",
+      "exitCode": 0,
+      "baseline": false,
+      "rawLogSha256": "dbd41d9a8984d55a0f3ae1e171b9ed193fb71ca399f63afd06603f614f5bd6de",
+      "archiveSha256": "90b995f9f638eb8a79783821e4e8f127ed26469f12a9bb9cb962dc6dffca491b"
+    },
+    {
+      "name": "native-accepted",
+      "exitCode": 0,
+      "baseline": false,
+      "rawLogSha256": "567b3116015f13b021514a67a9ae98618b05e25a841998182411c8628e6a89a1",
+      "archiveSha256": "c2c8fdaaf7b282cc8635463219295573786d72017236382971c58121330012b9"
+    },
+    {
+      "name": "move-schema-baseline-diagnostic",
+      "exitCode": 1,
+      "baseline": true,
+      "rawLogSha256": "cbe3752127997bd1608ea1e6b0b1f422f2ee98e07693633c93c177ed1970eb56",
+      "archiveSha256": "d6df476243b45f710fb61020e3f68599abc2e481277ee9207c8e3e6cd0ddd1ac"
+    },
+    {
+      "name": "move-schema-candidate-diagnostic",
+      "exitCode": 1,
+      "baseline": false,
+      "rawLogSha256": "5bfc8a0818c8ef02eb26f55260228fff65f6b1396418d088d6a62bd12a1ddaac",
+      "archiveSha256": "23c3f8823fb1ff237054b41ad5ad6a5fa8f42a28f5db4908e8b18dcac9a3cfed"
+    }
+  ],
+  "constraints": {
+    "lockCommand": "flock -n -E 75 /tmp/buyerlog-performance-measurement.lock",
+    "onlySyntheticData": true,
+    "realServiceOrCredential": false,
+    "existingAssertionsAndTimeoutsPreserved": true,
+    "existingPinsChanged": false,
+    "independentReviewStarted": false,
+    "prCreated": false,
+    "merged": false,
+    "testRelease": false,
+    "stableRelease": false
+  },
+  "pendingMainChat": [
+    "production/import composition",
+    "full integrated npm test",
+    "real browser thin/full shadow and CP/Faz0 comparison",
+    "visual/release-note acceptance",
+    "independent P1 review"
+  ],
+  "finalPatchProof": {
+    "receipt": "evidence/patch-final-proof.json",
+    "exitCode": 0,
+    "sourceBytesUnchanged": true,
+    "stagedWhitespace": "pass",
+    "initialWhitespaceFailure": "evidence/patch-format-initial.json"
+  }
+}

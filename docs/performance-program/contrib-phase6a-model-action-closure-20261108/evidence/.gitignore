@@ -1,0 +1,2 @@
+# Raw logs remain locally; their lossless gzip copies are the delivery evidence.
+*.log

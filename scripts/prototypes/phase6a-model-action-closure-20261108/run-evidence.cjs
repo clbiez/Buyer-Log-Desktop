@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),zlib=require('node:zlib'),{spawnSync}=require('node:child_process');
+const [label,...command]=process.argv.slice(2),root=path.resolve(__dirname,'../../..');
+if(!/^[a-z0-9-]+$/.test(label)||!command.length)throw Error('label and command required');
+const dir=path.join(root,'docs/performance-program/contrib-phase6a-model-action-closure-20261108/evidence');
+const log=path.join(dir,label+'.log'),receipt=path.join(dir,label+'.json');
+if(fs.existsSync(log)||fs.existsSync(log+'.gz')||fs.existsSync(receipt))throw Error('evidence is immutable; use a new label');
+const started=new Date().toISOString(),fd=fs.openSync(log,'wx');
+const hash=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const prototypeSha256=Object.fromEntries(fs.readdirSync(__dirname).filter(file=>/\.(?:cjs|js|json)$/.test(file)).sort().map(file=>[file,hash(path.join(__dirname,file))]));
+const r=spawnSync('flock',['-n','-E','75','/tmp/buyerlog-performance-measurement.lock',...command],{cwd:root,env:process.env,stdio:['ignore',fd,fd]});fs.closeSync(fd);
+fs.writeFileSync(log+'.gz',zlib.gzipSync(fs.readFileSync(log)),{flag:'wx'});
+const result={started,finished:new Date().toISOString(),command,baseline:process.env.BL_MODEL_ACTION_BASELINE==='1',prototypeSha256,logSha256:hash(log),exitCode:r.status,error:r.error?.message,lock:'/tmp/buyerlog-performance-measurement.lock',environment:{node:process.version,platform:process.platform,arch:process.arch}};
+fs.writeFileSync(receipt,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({label,baseline:result.baseline,exitCode:result.exitCode,logSha256:result.logSha256}));process.exitCode=r.status??1;
