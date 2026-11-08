@@ -1,0 +1,18 @@
+[
+  {
+    "path": "release.log.gz",
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "path": "i18n.log.gz",
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "path": "full.log.gz",
+    "rawSha256": "49e4f6cad9035083c63ae8750d0de4367b21e6f274973a8a9614992a1366123f"
+  },
+  {
+    "path": "receipt.json",
+    "rawSha256": "0e44472ee7d7e63c9440f28de146844cfd47d1ab291382d513d0e0abccaa13d2"
+  }
+]
