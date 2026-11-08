@@ -1,0 +1,315 @@
+{
+  "base": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "files": [
+    {
+      "path": "resources/app/public/app-main.js",
+      "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/public/canonical-fields.js",
+      "sha256": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/canonical-fields.js",
+      "sha256": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-access-middleware.js",
+      "sha256": "bb04b2d98b52d34d7e7023337cc59debe3e2bd2dd8913271dbdf3740ae3c541e",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-access.js",
+      "sha256": "5bd06a034763838bf310f6d5ee23497e57848b87dd3c027668e5e01966863424",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-authority-codec.js",
+      "sha256": "f7ef23ffdc3bd1d82cf67b28016622a22c6511fbd822deb699c4a9c4819dbb99",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-collection-lfl-reference.js",
+      "sha256": "42dc666878225772861a2480f1bff26d3d16e7102d6f80c64c110ee449ae670c",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-ipc.js",
+      "sha256": "c3aa4272f3391c07ba450d378f9f64b9119e6c7451f8a36b493ae4d5f8db8537",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-pool.js",
+      "sha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-read-guard.js",
+      "sha256": "aea78f24f7b3608816b8bd131070d58442685a6bf04c0ea5c341a7edbd57fae5",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-read-service.js",
+      "sha256": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-response.js",
+      "sha256": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-runtime.js",
+      "sha256": "b061ae60ad8e605007c615c8ebe0f8c5018042950f3d5f5ea662bbb2bf856699",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-service.js",
+      "sha256": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-snapshot-descriptor.js",
+      "sha256": "bc288f1577681a8793d6399785ad321b632104da36775199788dc068d63d278a",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-source-cache.js",
+      "sha256": "97d9204ac4a07b3a26e9dad08397c2274329c67960e72bc2854592d96c66028a",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-source-codec.js",
+      "sha256": "8f5f7a417f7943da456f7bade606600e23cf2a6d47d5b0d9a5a52649aec91959",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-task-access.js",
+      "sha256": "4f047c3f49ad40aebde578def0e86d64056f156f7329cf4faca7249f09bc4cf2",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-tasks.js",
+      "sha256": "1a9b0b2b934e15aa6d837f03944f54d6ea11919986f5a9a7d5130e6873893609",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/lib/power-bi-import-dashboard.js",
+      "sha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/server/workers/compute-worker.js",
+      "sha256": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-access-equivalence.test.js",
+      "sha256": "473cac11134fd49df8246c16509164f4e31c58486849ac9ee840fc6ee7ea9f77",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-access-middleware.test.js",
+      "sha256": "36531ed255273eb026424b8b5280e9e7ac90e6fc8534d59d666f5a7ba660d360",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-authority-codec.test.js",
+      "sha256": "22fdaa0d928029d8d97f1dba68f270d16429c5a0641db7d882e985a03cedc304",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-authority-prepare.test.js",
+      "sha256": "d9e41cc91a4b8187535ff13340e9f5558cbba6ffecc48ea96c31b3518e659a2f",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-backlog-cold-publication.test.js",
+      "sha256": "5821ebf445bf5aeae3240cd165a49e4d4b808f6b9e96b7284f8086313e89c86d",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-backlog-route-wiring.test.js",
+      "sha256": "60e624b7c44068af0f02d5f835aa396df38e57060ef9af84ab5ea17720cdc7e3",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-bulk-projection-wiring.test.js",
+      "sha256": "f21af1c553364f67c2beca34604d07a9e8dca287bcffea49f01a69469891ff7f",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-cold-source-recovery.test.js",
+      "sha256": "1c3317ee1d87d7060a963bc42c27a867177dc2aa52e03e21c83839ac7a17da0c",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-collection-lfl-reference.test.js",
+      "sha256": "74c7696b2e0bfaf266cc761aa47ff93e88723185f53ce820dcd8a73d1c4cf65a",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-collection-lfl-source-version.test.js",
+      "sha256": "6ac232a60c733eda30c1106c8f6b8871c9cc5897424e5006916508b769ce28bb",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-compressed-publication.test.js",
+      "sha256": "1f62b28b6727e8edc6e097a01efb212aa48d55c62e7d65069d934750d8fb488e",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-endeksmatik-route.test.js",
+      "sha256": "6647b607a178f4fdc4aeca7ce4266f013e6850e661658361cf07db433e24b54b",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-endeksmatik-status.test.js",
+      "sha256": "fc21a38c507e3356770f39472187071cde56081d9aaf25293bba400204e11222",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-fx-wiring.test.js",
+      "sha256": "60a08b54fa22a0587a1f21ab6c14b7ea0ef3d1c1b1add7b91c80d11528a03c91",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-global-flow-projection.test.js",
+      "sha256": "ecb2eefb4fc3e5895b8b010693ba7985caa916155f11d2d052585a53fae255a6",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-global-flow-route.test.js",
+      "sha256": "11785d70df04b410dfc2792fafbe1b8c913a4d1938ad9660b31cd7a13faed681",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-health-endpoint.test.js",
+      "sha256": "12b392efe5483d5a08173ca81889cf3aef29243ff5f286e54a22162242db953b",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-image-registry-params.test.js",
+      "sha256": "33151c37854613f7d7a972f41dd8e26d4fb75739ce100f5cfe6a975faf58dfc7",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-ipc.test.js",
+      "sha256": "9fe2e043781d332e794de4a58d81fe02b4c36dc12f2b26932bac71dd74d560f2",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-office-render.test.js",
+      "sha256": "b04e1cfb1d9e3075afc2c15b292a1fa022c2623324157002096d0ca91f8c66ad",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-output-async-store.test.js",
+      "sha256": "7b7a496dd5b08a4cb2c0b3aac814539a741ce24200421437586a5be79ce9cafd",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-output-route-await.test.js",
+      "sha256": "7109ed7f4330c9d64df7b5b07d9105dd65f8e1d95de3df7851c8858889fb4e73",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-page-context.test.js",
+      "sha256": "564a81664d9d39e4119ed6acb814dd4f1411ee9ff87cbcf58d0817814d3162f7",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-projection-route-wiring.test.js",
+      "sha256": "0c6c0ff65e7e9f8ffc318780d6ce2bd312e7fbd6d5fbbad2e158ebd50fc4059d",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-projection-source-validation.test.js",
+      "sha256": "01a189eae7486ebf20a48f3767e274794e03f666d14eae6ed6d8e71fab821076",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-read-guard.test.js",
+      "sha256": "9e53aa8cac673342aa9fe3186848357888605d7b2f5384b5f38d1b40efefa6be",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-read-service.test.js",
+      "sha256": "fb4f092b491be96bf00ef2471d1dd9dc1cb00b74827bd6b8109f21e2ab7b9234",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-response.test.js",
+      "sha256": "f74651716daf6c7976d494569cfd9efb8d3c916f099978ff9d52ffc71bfb4b1a",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-shared-edit-codes.test.js",
+      "sha256": "3d0d2e82ae7f4cda937b539adf6c8b82da9c4c6a4de3b94bad5dd0b3cac8eed8",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-shutdown.test.js",
+      "sha256": "93bd64d4d16a05879022db8550be45cfb6a8262a02b6afe0815cb3168e4186f4",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-source-cache.test.js",
+      "sha256": "280ce029174e47245ae1a6fe86f24d43abb465aed454671ac45327de25d98fd5",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-source-codec.test.js",
+      "sha256": "b667badaaecb52759a29ca52336678f2ec14ca1a53b299841b1716661fb8da19",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-source-publication-wiring.test.js",
+      "sha256": "ba6edaccd5b70609743fe4ad810ae3b8eb21dbcaefd28a3cd0a849a75c0a5fbf",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-source-token.test.js",
+      "sha256": "4dfe2f325bb147a366fd9f2b48d01914c48580698ef7379707dea0f56b0b202f",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-task-access.test.js",
+      "sha256": "5997246c365b0906ade561e262b2086ccbea408148fbfcd793f572a8785a3efb",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-tasks-equivalence.test.js",
+      "sha256": "fa3f45be934122ca66726140826742dfbaa33eb4d7582d7ee98cc0734c7dfce7",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-utility-workbook.test.js",
+      "sha256": "725e2d0e9c9b7f23551dbbd74dd0fd41cd5ff95021acb68530680f90be2b9469",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/compute-worker-integration.test.js",
+      "sha256": "f1286a19422bef014838c89912396ee24db40b7f322295c0e5eddfaf704f13c0",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/fixtures/compute-pool-worker.js",
+      "sha256": "a41342ec78dd2467cf1b1555cbad22f207c42a2a40ab41fd0bdb59368f0d100c",
+      "equalsBase": true
+    },
+    {
+      "path": "resources/app/tests/helpers/computed-backlog-request.js",
+      "sha256": "de720aec0ca19d953aa08770b506dd55290a74a7cfaa904cf8f5fd183cf6a622",
+      "equalsBase": true
+    }
+  ]
+}

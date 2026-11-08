@@ -1,0 +1,17 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "filesystem": [
+    "/tmp tmpfs",
+    "/workspace overlayfs"
+  ],
+  "node": "v24.19.0",
+  "tempRoot": "/tmp",
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "lockArguments": [
+    "flock",
+    "-n",
+    "-E",
+    "75"
+  ],
+  "powerLossTested": false
+}

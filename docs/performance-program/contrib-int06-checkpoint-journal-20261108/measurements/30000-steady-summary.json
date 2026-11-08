@@ -1,0 +1,62 @@
+{
+  "stage": "isolated-checkpoint-replay",
+  "productionGainAccepted": false,
+  "orders": 30000,
+  "scenario": "steady",
+  "order": [
+    "legacy-store",
+    "journal",
+    "journal",
+    "legacy-store",
+    "legacy-store",
+    "journal"
+  ],
+  "arms": {
+    "legacy-store": {
+      "checkpointBytes": {
+        "median": 612126625,
+        "min": 612126625,
+        "max": 612126625
+      },
+      "checkpointWallMs": {
+        "median": 4240.202178000001,
+        "min": 4171.683772999998,
+        "max": 4359.955620999999
+      },
+      "checkpointCpuMs": {
+        "median": 4276.101,
+        "min": 4183.089,
+        "max": 4378.985999999998
+      },
+      "peakRssBytes": {
+        "median": 254427136,
+        "min": 216125440,
+        "max": 255291392
+      }
+    },
+    "journal": {
+      "checkpointBytes": {
+        "median": 26873686,
+        "min": 26873686,
+        "max": 26873686
+      },
+      "checkpointWallMs": {
+        "median": 1130.9276669999997,
+        "min": 1092.451895000001,
+        "max": 1287.1731730000006
+      },
+      "checkpointCpuMs": {
+        "median": 1181.0989999999995,
+        "min": 1141.578,
+        "max": 1367.534
+      },
+      "peakRssBytes": {
+        "median": 246403072,
+        "min": 246071296,
+        "max": 246644736
+      }
+    }
+  },
+  "traceSha256": "715f3a4f99b1b66e47098a2add80cae63dfa6595267a78ecee06f23b4371efaf",
+  "outputSha256": "3bd684a5c8ef5942cdaf2c9945ac77ee1fef1bff8fbc817b413f7115980df28a"
+}

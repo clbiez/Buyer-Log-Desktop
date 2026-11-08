@@ -1,0 +1,213 @@
+TAP version 13
+# TAP version 13
+# \# Subtest: INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+# ok 1 - INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+#   ---
+#   duration_ms: 6.743836
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+# ok 2 - INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+#   ---
+#   duration_ms: 1.835936
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark transport uses connector attempt metadata without retaining query history
+# ok 3 - INT-06 benchmark transport uses connector attempt metadata without retaining query history
+#   ---
+#   duration_ms: 0.682933
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+# ok 4 - INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+#   ---
+#   duration_ms: 148.073581
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 failed benchmark preserves structured failure evidence
+# ok 5 - INT-06 failed benchmark preserves structured failure evidence
+#   ---
+#   duration_ms: 40.066821
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 paired preparation reports enforce source/fixture parity and use three medians
+# ok 6 - INT-06 paired preparation reports enforce source/fixture parity and use three medians
+#   ---
+#   duration_ms: 8.638231
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+# ok 7 - INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+#   ---
+#   duration_ms: 41.842404
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+# ok 8 - INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+#   ---
+#   duration_ms: 102.760121
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+# ok 9 - INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+#   ---
+#   duration_ms: 948.525089
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 repeated batch/state transitions never double count terminal orders
+# ok 10 - INT-06 repeated batch/state transitions never double count terminal orders
+#   ---
+#   duration_ms: 17.319526
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+# ok 11 - INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 627.042608
+#   type: 'test'
+#   ...
+# \# steady: SIGKILL/resume checked at all 3 committed boundaries
+# \# Subtest: INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+# ok 12 - INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 280.11162
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+# ok 13 - INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 1337.152988
+#   type: 'test'
+#   ...
+# \# split-retry: SIGKILL/resume checked at all 7 committed boundaries
+# \# Subtest: INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+# ok 14 - INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 562.094777
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation before query and between split batches persists then resumes identically
+# ok 15 - INT-06 cancellation before query and between split batches persists then resumes identically
+#   ---
+#   duration_ms: 572.010222
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation inside query/retry never marks unfinished orders terminal
+# ok 16 - INT-06 cancellation inside query/retry never marks unfinished orders terminal
+#   ---
+#   duration_ms: 265.873958
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+# ok 17 - INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+#   ---
+#   duration_ms: 65.487564
+#   type: 'test'
+#   ...
+# 1..17
+# \# tests 17
+# \# suites 0
+# \# pass 17
+# \# fail 0
+# \# cancelled 0
+# \# skipped 0
+# \# todo 0
+# \# duration_ms 5051.984408
+# Subtest: INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+ok 1 - INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+  ---
+  duration_ms: 5129.591829
+  type: 'test'
+  ...
+# Subtest: INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 2 - INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 902.04991
+  type: 'test'
+  ...
+# Subtest: INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 3 - INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 1533.685222
+  type: 'test'
+  ...
+# Subtest: INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+ok 4 - INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+  ---
+  duration_ms: 1713.285427
+  type: 'test'
+  ...
+# SIGKILL/resume journal:written: complete oracle parity
+# SIGKILL/resume journal:durable: complete oracle parity
+# SIGKILL/resume commit:applied: complete oracle parity
+# SIGKILL/resume snapshot:written: complete oracle parity
+# SIGKILL/resume snapshot:synced: complete oracle parity
+# SIGKILL/resume snapshot:renamed: complete oracle parity
+# SIGKILL/resume snapshot:durable: complete oracle parity
+# SIGKILL/resume retirement:written: complete oracle parity
+# SIGKILL/resume retirement:synced: complete oracle parity
+# SIGKILL/resume retirement:renamed: complete oracle parity
+# SIGKILL/resume retirement:durable: complete oracle parity
+# Subtest: INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+ok 5 - INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+  ---
+  duration_ms: 340.703363
+  type: 'test'
+  ...
+# Subtest: INT-06 incremental counters, transitions, replay and owned delta copies
+ok 6 - INT-06 incremental counters, transitions, replay and owned delta copies
+  ---
+  duration_ms: 9.019788
+  type: 'test'
+  ...
+# Subtest: INT-06 partial tail is truncated before another append; complete corruption fails closed
+ok 7 - INT-06 partial tail is truncated before another append; complete corruption fails closed
+  ---
+  duration_ms: 1.94441
+  type: 'test'
+  ...
+# Subtest: INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+ok 8 - INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+  ---
+  duration_ms: 1.187996
+  type: 'test'
+  ...
+# Subtest: INT-06 periodic snapshot only, no growing graph serialization per commit
+ok 9 - INT-06 periodic snapshot only, no growing graph serialization per commit
+  ---
+  duration_ms: 1.490995
+  type: 'test'
+  ...
+# Subtest: INT-06 unknown orders/states and invalid sequence cannot mutate disk
+ok 10 - INT-06 unknown orders/states and invalid sequence cannot mutate disk
+  ---
+  duration_ms: 1.252954
+  type: 'test'
+  ...
+# Subtest: INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+ok 11 - INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+  ---
+  duration_ms: 2.91684
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot and retirement I/O errors preserve all durable batches
+ok 12 - INT-06 snapshot and retirement I/O errors preserve all durable batches
+  ---
+  duration_ms: 7.873645
+  type: 'test'
+  ...
+# Subtest: INT-06 growing prior rows and states are never visited by the commit hot path
+ok 13 - INT-06 growing prior rows and states are never visited by the commit hot path
+  ---
+  duration_ms: 1.005911
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5205.55426

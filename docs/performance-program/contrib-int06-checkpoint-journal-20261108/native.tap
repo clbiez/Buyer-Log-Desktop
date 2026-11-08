@@ -1,0 +1,741 @@
+TAP version 13
+# Subtest: async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+ok 1 - async replacement recovers an unfinished prior intent without synchronous filesystem I/O
+  ---
+  duration_ms: 23.031147
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+ok 2 - async replacement preserves an unresolved missing recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 9.243298
+  type: 'test'
+  ...
+# Subtest: async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+ok 3 - async replacement preserves an unresolved corrupt recovery payload rather than overwriting its intent
+  ---
+  duration_ms: 5.322218
+  type: 'test'
+  ...
+# Subtest: async prior-intent conflict preserves the external target and quarantines recovery evidence
+ok 4 - async prior-intent conflict preserves the external target and quarantines recovery evidence
+  ---
+  duration_ms: 7.316965
+  type: 'test'
+  ...
+# TAP version 13
+# \# Subtest: INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+# ok 1 - INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage
+#   ---
+#   duration_ms: 4.346713
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+# ok 2 - INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files
+#   ---
+#   duration_ms: 1.309911
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark transport uses connector attempt metadata without retaining query history
+# ok 3 - INT-06 benchmark transport uses connector attempt metadata without retaining query history
+#   ---
+#   duration_ms: 0.545075
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+# ok 4 - INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget
+#   ---
+#   duration_ms: 155.88269
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 failed benchmark preserves structured failure evidence
+# ok 5 - INT-06 failed benchmark preserves structured failure evidence
+#   ---
+#   duration_ms: 40.485756
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 paired preparation reports enforce source/fixture parity and use three medians
+# ok 6 - INT-06 paired preparation reports enforce source/fixture parity and use three medians
+#   ---
+#   duration_ms: 5.180283
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+# ok 7 - INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection
+#   ---
+#   duration_ms: 40.069196
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+# ok 8 - INT-06 source snapshot detects integration, canonical and \\\#892 working-tree changes
+#   ---
+#   duration_ms: 115.699819
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+# ok 9 - INT-06 cohort CLI requires \\\#892 ancestry, retains samples and refuses to overwrite evidence
+#   ---
+#   duration_ms: 906.435684
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 repeated batch/state transitions never double count terminal orders
+# ok 10 - INT-06 repeated batch/state transitions never double count terminal orders
+#   ---
+#   duration_ms: 9.065467
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+# ok 11 - INT-06 steady: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 706.400627
+#   type: 'test'
+#   ...
+# \# steady: SIGKILL/resume checked at all 3 committed boundaries
+# \# Subtest: INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+# ok 12 - INT-06 steady: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 323.512585
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+# ok 13 - INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary
+#   ---
+#   duration_ms: 1395.872138
+#   type: 'test'
+#   ...
+# \# split-retry: SIGKILL/resume checked at all 7 committed boundaries
+# \# Subtest: INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+# ok 14 - INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch
+#   ---
+#   duration_ms: 503.628976
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation before query and between split batches persists then resumes identically
+# ok 15 - INT-06 cancellation before query and between split batches persists then resumes identically
+#   ---
+#   duration_ms: 518.446195
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 cancellation inside query/retry never marks unfinished orders terminal
+# ok 16 - INT-06 cancellation inside query/retry never marks unfinished orders terminal
+#   ---
+#   duration_ms: 243.31574
+#   type: 'test'
+#   ...
+# \# Subtest: INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+# ok 17 - INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation
+#   ---
+#   duration_ms: 65.969287
+#   type: 'test'
+#   ...
+# 1..17
+# \# tests 17
+# \# suites 0
+# \# pass 17
+# \# fail 0
+# \# cancelled 0
+# \# skipped 0
+# \# todo 0
+# \# duration_ms 5062.067835
+# Subtest: INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+ok 5 - INT-06 unchanged \#890 preparation and SIGKILL/resume assertions against current production source
+  ---
+  duration_ms: 5133.242391
+  type: 'test'
+  ...
+# Subtest: INT-06 checkpoint-only replay preserves the \#890 oracle and reports separate checkpoint costs
+ok 6 - INT-06 checkpoint-only replay preserves the \#890 oracle and reports separate checkpoint costs
+  ---
+  duration_ms: 95.197511
+  type: 'test'
+  ...
+# Subtest: INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 7 - INT-06 journal steady: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 774.561529
+  type: 'test'
+  ...
+# Subtest: INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+ok 8 - INT-06 journal split-retry: SIGKILL at EVERY ACK and repeated disk-only continuation
+  ---
+  duration_ms: 1524.755138
+  type: 'test'
+  ...
+# Subtest: INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+ok 9 - INT-06 real SIGKILL during append, snapshot write/rename and journal retirement
+  ---
+  duration_ms: 1584.576745
+  type: 'test'
+  ...
+# SIGKILL/resume journal:written: complete oracle parity
+# SIGKILL/resume journal:durable: complete oracle parity
+# SIGKILL/resume commit:applied: complete oracle parity
+# SIGKILL/resume snapshot:written: complete oracle parity
+# SIGKILL/resume snapshot:synced: complete oracle parity
+# SIGKILL/resume snapshot:renamed: complete oracle parity
+# SIGKILL/resume snapshot:durable: complete oracle parity
+# SIGKILL/resume retirement:written: complete oracle parity
+# SIGKILL/resume retirement:synced: complete oracle parity
+# SIGKILL/resume retirement:renamed: complete oracle parity
+# SIGKILL/resume retirement:durable: complete oracle parity
+# Subtest: INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+ok 10 - INT-06 journal cancellation and frozen v1 migration/export preserve full oracle
+  ---
+  duration_ms: 323.958314
+  type: 'test'
+  ...
+# Subtest: INT-06 incremental counters, transitions, replay and owned delta copies
+ok 11 - INT-06 incremental counters, transitions, replay and owned delta copies
+  ---
+  duration_ms: 7.444887
+  type: 'test'
+  ...
+# Subtest: INT-06 partial tail is truncated before another append; complete corruption fails closed
+ok 12 - INT-06 partial tail is truncated before another append; complete corruption fails closed
+  ---
+  duration_ms: 1.999534
+  type: 'test'
+  ...
+# Subtest: INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+ok 13 - INT-06 journal fsync failure never returns ACK or publishes memory; reopen resolves uncertainty
+  ---
+  duration_ms: 1.241196
+  type: 'test'
+  ...
+# Subtest: INT-06 periodic snapshot only, no growing graph serialization per commit
+ok 14 - INT-06 periodic snapshot only, no growing graph serialization per commit
+  ---
+  duration_ms: 1.547489
+  type: 'test'
+  ...
+# Subtest: INT-06 unknown orders/states and invalid sequence cannot mutate disk
+ok 15 - INT-06 unknown orders/states and invalid sequence cannot mutate disk
+  ---
+  duration_ms: 1.306426
+  type: 'test'
+  ...
+# Subtest: INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+ok 16 - INT-06 duplicate disk records replay once; checksum, sequence and refresh corruption retain evidence
+  ---
+  duration_ms: 2.776999
+  type: 'test'
+  ...
+# Subtest: INT-06 snapshot and retirement I/O errors preserve all durable batches
+ok 17 - INT-06 snapshot and retirement I/O errors preserve all durable batches
+  ---
+  duration_ms: 6.450664
+  type: 'test'
+  ...
+# Subtest: INT-06 growing prior rows and states are never visited by the commit hot path
+ok 18 - INT-06 growing prior rows and states are never visited by the commit hot path
+  ---
+  duration_ms: 11.050248
+  type: 'test'
+  ...
+# Subtest: Power BI decoder resolves descriptor columns, dictionaries and null bitmap
+ok 19 - Power BI decoder resolves descriptor columns, dictionaries and null bitmap
+  ---
+  duration_ms: 2.345997
+  type: 'test'
+  ...
+# Subtest: Dashboard rows normalize to the existing IAS field names and preserve nulls
+ok 20 - Dashboard rows normalize to the existing IAS field names and preserve nulls
+  ---
+  duration_ms: 5.9057
+  type: 'test'
+  ...
+# Subtest: Dashboard schema discovery also reads fields from the semantic query request
+ok 21 - Dashboard schema discovery also reads fields from the semantic query request
+  ---
+  duration_ms: 0.428388
+  type: 'test'
+  ...
+# Subtest: Dashboard refresh selects the query template carrying the most IAS fields
+ok 22 - Dashboard refresh selects the query template carrying the most IAS fields
+  ---
+  duration_ms: 0.684335
+  type: 'test'
+  ...
+# Subtest: Dashboard schema validation reports every missing required IAS field
+ok 23 - Dashboard schema validation reports every missing required IAS field
+  ---
+  duration_ms: 1.104581
+  type: 'test'
+  ...
+# Subtest: Dashboard schema requires Renk Tanım and does not require Renk Kod
+ok 24 - Dashboard schema requires Renk Tanım and does not require Renk Kod
+  ---
+  duration_ms: 2.006414
+  type: 'test'
+  ...
+# Subtest: Dashboard color adapter matches ASAS Renk without mixing same-order colors
+ok 25 - Dashboard color adapter matches ASAS Renk without mixing same-order colors
+  ---
+  duration_ms: 10.879409
+  type: 'test'
+  ...
+# Subtest: Dashboard batches unique order codes without visible-row limits
+ok 26 - Dashboard batches unique order codes without visible-row limits
+  ---
+  duration_ms: 26.223301
+  type: 'test'
+  ...
+# Subtest: Dashboard manifest accounts for success, not-found and failed orders exactly once
+ok 27 - Dashboard manifest accounts for success, not-found and failed orders exactly once
+  ---
+  duration_ms: 1.981686
+  type: 'test'
+  ...
+# Subtest: Dashboard connector retries a failed batch and checkpoints terminal states
+ok 28 - Dashboard connector retries a failed batch and checkpoints terminal states
+  ---
+  duration_ms: 506.528389
+  type: 'test'
+  ...
+# Subtest: Dashboard connector adaptively splits a permanently failing batch
+ok 29 - Dashboard connector adaptively splits a permanently failing batch
+  ---
+  duration_ms: 4513.179106
+  type: 'test'
+  ...
+# Subtest: Dashboard connector resumes terminal checkpoint rows and queries only remaining orders
+ok 30 - Dashboard connector resumes terminal checkpoint rows and queries only remaining orders
+  ---
+  duration_ms: 5.430381
+  type: 'test'
+  ...
+# Subtest: Dashboard query filter is added to the semantic query by field name, not column index
+ok 31 - Dashboard query filter is added to the semantic query by field name, not column index
+  ---
+  duration_ms: 0.519265
+  type: 'test'
+  ...
+# Subtest: Dashboard is a persisted third Antrepo source in the existing source flow
+ok 32 - Dashboard is a persisted third Antrepo source in the existing source flow
+  ---
+  duration_ms: 14.231138
+  type: 'test'
+  ...
+# Subtest: Dashboard batch and retry limits are configurable and bounded
+ok 33 - Dashboard batch and retry limits are configurable and bounded
+  ---
+  duration_ms: 0.653638
+  type: 'test'
+  ...
+# Subtest: Power BI navigation abort yalnız güvenli SSO redirectinde recover edilir
+ok 34 - Power BI navigation abort yalnız güvenli SSO redirectinde recover edilir
+  ---
+  duration_ms: 0.455819
+  type: 'test'
+  ...
+# Subtest: Power BI navigation failures are classified instead of flattened to one error
+ok 35 - Power BI navigation failures are classified instead of flattened to one error
+  ---
+  duration_ms: 0.541548
+  type: 'test'
+  ...
+# Subtest: Power BI diagnostik URL query ve token bilgisini loga taşımaz
+ok 36 - Power BI diagnostik URL query ve token bilgisini loga taşımaz
+  ---
+  duration_ms: 0.097507
+  type: 'test'
+  ...
+# Subtest: Power BI bağlantısı güvenli navigation recovery ve tekrar kullanılabilir session cache içerir
+ok 37 - Power BI bağlantısı güvenli navigation recovery ve tekrar kullanılabilir session cache içerir
+  ---
+  duration_ms: 1.014264
+  type: 'test'
+  ...
+# Subtest: tam şema Antrepo için yeterli sayılır
+ok 38 - tam şema Antrepo için yeterli sayılır
+  ---
+  duration_ms: 2.67823
+  type: 'test'
+  ...
+# Subtest: dashboardSchemaMissingFields ile validateDashboardSchema aynı listeyi üretir
+ok 39 - dashboardSchemaMissingFields ile validateDashboardSchema aynı listeyi üretir
+  ---
+  duration_ms: 1.637075
+  type: 'test'
+  ...
+# Subtest: REGRESYON: ilk görselin yanıtı geldi diye "hazır" denmez
+ok 40 - REGRESYON: ilk görselin yanıtı geldi diye "hazır" denmez
+  ---
+  duration_ms: 0.695351
+  type: 'test'
+  ...
+# Subtest: gerekli alanların TAMAMI toplanınca hazır olunur
+ok 41 - gerekli alanların TAMAMI toplanınca hazır olunur
+  ---
+  duration_ms: 0.371852
+  type: 'test'
+  ...
+# Subtest: görseller sırayla geldikçe karar wait → wait → ready ilerler
+ok 42 - görseller sırayla geldikçe karar wait → wait → ready ilerler
+  ---
+  duration_ms: 1.737798
+  type: 'test'
+  ...
+# Subtest: görsellerin GELİŞ SIRASI sonucu değiştirmez (eksik listesinin oynamasının sebebi buydu)
+ok 43 - görsellerin GELİŞ SIRASI sonucu değiştirmez (eksik listesinin oynamasının sebebi buydu)
+  ---
+  duration_ms: 5.749804
+  type: 'test'
+  ...
+# Subtest: uçuşta okuma varken sessizlik penceresi dolsa bile pes edilmez
+ok 44 - uçuşta okuma varken sessizlik penceresi dolsa bile pes edilmez
+  ---
+  duration_ms: 0.618735
+  type: 'test'
+  ...
+# Subtest: akış gerçekten durduysa "incomplete" ile çıkılır — sonsuza kadar beklenmez
+ok 45 - akış gerçekten durduysa "incomplete" ile çıkılır — sonsuza kadar beklenmez
+  ---
+  duration_ms: 1.188066
+  type: 'test'
+  ...
+# Subtest: querydata şablonu veya kolon henüz yokken beklenir
+ok 46 - querydata şablonu veya kolon henüz yokken beklenir
+  ---
+  duration_ms: 0.124669
+  type: 'test'
+  ...
+# Subtest: bekleme döngüsü artık "ilk yanıt" koşulunu kullanmıyor
+ok 47 - bekleme döngüsü artık "ilk yanıt" koşulunu kullanmıyor
+  ---
+  duration_ms: 0.31738
+  type: 'test'
+  ...
+# Subtest: Sipariş Kod taşıyan şablon tanınır, taşımayan tanınmaz
+ok 48 - Sipariş Kod taşıyan şablon tanınır, taşımayan tanınmaz
+  ---
+  duration_ms: 0.504773
+  type: 'test'
+  ...
+# Subtest: REGRESYON: şema TAM olsa bile kullanılabilir şablon yoksa hazır denmez
+ok 49 - REGRESYON: şema TAM olsa bile kullanılabilir şablon yoksa hazır denmez
+  ---
+  duration_ms: 0.388237
+  type: 'test'
+  ...
+# Subtest: şema TAM ve kullanılabilir şablon geldiyse hazır olunur
+ok 50 - şema TAM ve kullanılabilir şablon geldiyse hazır olunur
+  ---
+  duration_ms: 0.302117
+  type: 'test'
+  ...
+# Subtest: şablon hiç gelmeyecekse sonsuza kadar beklenmez
+ok 51 - şablon hiç gelmeyecekse sonsuza kadar beklenmez
+  ---
+  duration_ms: 0.292933
+  type: 'test'
+  ...
+# Subtest: hata, görülen Select adlarını taşır — bir dahakine tahmin gerekmesin
+ok 52 - hata, görülen Select adlarını taşır — bir dahakine tahmin gerekmesin
+  ---
+  duration_ms: 0.453025
+  type: 'test'
+  ...
+# Subtest: şablon bulununca sorguya Sipariş Kod filtresi eklenir
+ok 53 - şablon bulununca sorguya Sipariş Kod filtresi eklenir
+  ---
+  duration_ms: 0.300375
+  type: 'test'
+  ...
+# Subtest: tırnak içeren sipariş kodu SQL benzeri kaçışla korunur
+ok 54 - tırnak içeren sipariş kodu SQL benzeri kaçışla korunur
+  ---
+  duration_ms: 0.13928
+  type: 'test'
+  ...
+# Subtest: CDP büyük gövdeleri ayrıca istenir — sessizce elenmez
+ok 55 - CDP büyük gövdeleri ayrıca istenir — sessizce elenmez
+  ---
+  duration_ms: 0.109445
+  type: 'test'
+  ...
+# Subtest: REGRESYON: Name "Sum(...)" ile süslenmişse bile Sipariş Kod tanınır
+ok 56 - REGRESYON: Name "Sum(...)" ile süslenmişse bile Sipariş Kod tanınır
+  ---
+  duration_ms: 0.364742
+  type: 'test'
+  ...
+# Subtest: gerçek şablondan doğru Column ifadesiyle Where kurulur
+ok 57 - gerçek şablondan doğru Column ifadesiyle Where kurulur
+  ---
+  duration_ms: 0.331932
+  type: 'test'
+  ...
+# Subtest: Aggregation ile sarılmış kolon da tanınır ve içindeki kolonla filtrelenir
+ok 58 - Aggregation ile sarılmış kolon da tanınır ve içindeki kolonla filtrelenir
+  ---
+  duration_ms: 0.092539
+  type: 'test'
+  ...
+# Subtest: ölçüm (Measure) Sipariş Kod sanılıp filtre kurulmaz
+ok 59 - ölçüm (Measure) Sipariş Kod sanılıp filtre kurulmaz
+  ---
+  duration_ms: 0.213443
+  type: 'test'
+  ...
+# Subtest: gerçek sayfadaki DİĞER üç sorgu Sipariş Kod taşımaz — yanlış şablon seçilmez
+ok 60 - gerçek sayfadaki DİĞER üç sorgu Sipariş Kod taşımaz — yanlış şablon seçilmez
+  ---
+  duration_ms: 1.219023
+  type: 'test'
+  ...
+# Subtest: REGRESYON: ürettiğimiz filtre Power BI'nin kendi filtresiyle BİREBİR aynı
+ok 61 - REGRESYON: ürettiğimiz filtre Power BI'nin kendi filtresiyle BİREBİR aynı
+  ---
+  duration_ms: 0.286503
+  type: 'test'
+  ...
+# Subtest: kodlar tamamen rakam olsa bile TIRNAKLI metin literali gönderilir
+ok 62 - kodlar tamamen rakam olsa bile TIRNAKLI metin literali gönderilir
+  ---
+  duration_ms: 0.287114
+  type: 'test'
+  ...
+# Subtest: çoklu arama gerçekten çoklu: tüm kodlar TEK In koşuluna girer
+ok 63 - çoklu arama gerçekten çoklu: tüm kodlar TEK In koşuluna girer
+  ---
+  duration_ms: 0.986912
+  type: 'test'
+  ...
+# Subtest: parti boyutu: 7192 sipariş 250'şerlik partilere bölünür, tek tek değil
+ok 64 - parti boyutu: 7192 sipariş 250'şerlik partilere bölünür, tek tek değil
+  ---
+  duration_ms: 17.401341
+  type: 'test'
+  ...
+# Subtest: kalıcı hatalar tekrar denenmez ve parti bölünmez
+ok 65 - kalıcı hatalar tekrar denenmez ve parti bölünmez
+  ---
+  duration_ms: 0.149206
+  type: 'test'
+  ...
+# Subtest: bölme 1'e kadar inebilir — bu KASITLI; çözüm kalıcı hataları ayırmakta
+ok 66 - bölme 1'e kadar inebilir — bu KASITLI; çözüm kalıcı hataları ayırmakta
+  ---
+  duration_ms: 0.245762
+  type: 'test'
+  ...
+# Subtest: connector 4xx ile 5xx'i ayırır (429 ve 408 geçici sayılır)
+ok 67 - connector 4xx ile 5xx'i ayırır (429 ve 408 geçici sayılır)
+  ---
+  duration_ms: 0.235777
+  type: 'test'
+  ...
+# Subtest: REGRESYON: "Sum(...)" ile süslü satır anahtarından Sipariş Kod okunur
+ok 68 - REGRESYON: "Sum(...)" ile süslü satır anahtarından Sipariş Kod okunur
+  ---
+  duration_ms: 6.713882
+  type: 'test'
+  ...
+# Subtest: bütünlük kontrolünün aradığı üçlü artık birlikte bulunur
+ok 69 - bütünlük kontrolünün aradığı üçlü artık birlikte bulunur
+  ---
+  duration_ms: 5.937633
+  type: 'test'
+  ...
+# Subtest: süsleme soyma yalnız gerçek sarmalayıcıya uygulanır
+ok 70 - süsleme soyma yalnız gerçek sarmalayıcıya uygulanır
+  ---
+  duration_ms: 0.151689
+  type: 'test'
+  ...
+# Subtest: süslü ad, adı ÇAKIŞAN temiz bir kolonu gölgelemez
+ok 71 - süslü ad, adı ÇAKIŞAN temiz bir kolonu gölgelemez
+  ---
+  duration_ms: 3.904864
+  type: 'test'
+  ...
+# Subtest: üç eşleştirme noktası da aynı soyma kuralını paylaşır
+ok 72 - üç eşleştirme noktası da aynı soyma kuralını paylaşır
+  ---
+  duration_ms: 5.829695
+  type: 'test'
+  ...
+# Subtest: REGRESYON: her sonuç kümesi KENDİ descriptor'ıyla çözülür
+ok 73 - REGRESYON: her sonuç kümesi KENDİ descriptor'ıyla çözülür
+  ---
+  duration_ms: 0.833981
+  type: 'test'
+  ...
+# Subtest: çok sonuçlu yanıttan sipariş kodları okunabilir (NOT_FOUND selinin sebebi)
+ok 74 - çok sonuçlu yanıttan sipariş kodları okunabilir (NOT_FOUND selinin sebebi)
+  ---
+  duration_ms: 7.785962
+  type: 'test'
+  ...
+# Subtest: tek sonuç kümeli yanıtlar eskisi gibi çalışmaya devam eder
+ok 75 - tek sonuç kümeli yanıtlar eskisi gibi çalışmaya devam eder
+  ---
+  duration_ms: 0.210528
+  type: 'test'
+  ...
+# Subtest: descriptor hiç yoksa yine net bir hata verilir
+ok 76 - descriptor hiç yoksa yine net bir hata verilir
+  ---
+  duration_ms: 0.209206
+  type: 'test'
+  ...
+# Subtest: uçtan uca: ölçülen yanıt anahtarlarından üretilen IAS kaydı ASAS siparişiyle eşleşir
+ok 77 - uçtan uca: ölçülen yanıt anahtarlarından üretilen IAS kaydı ASAS siparişiyle eşleşir
+  ---
+  duration_ms: 10.005989
+  type: 'test'
+  ...
+# Subtest: eşleşmeyen değer sessizce geçmez: diag sayacı sebebi ayırt eder
+ok 78 - eşleşmeyen değer sessizce geçmez: diag sayacı sebebi ayırt eder
+  ---
+  duration_ms: 4.439383
+  type: 'test'
+  ...
+# Subtest: sıfır eşleşme artık uyarı üretir — sessizce başarılı sayılmaz
+ok 79 - sıfır eşleşme artık uyarı üretir — sessizce başarılı sayılmaz
+  ---
+  duration_ms: 0.694029
+  type: 'test'
+  ...
+# Subtest: Sipariş Kod taşıyan en iyi şablon sabitlenir ve eskitilmez
+ok 80 - Sipariş Kod taşıyan en iyi şablon sabitlenir ve eskitilmez
+  ---
+  duration_ms: 0.175846
+  type: 'test'
+  ...
+# Subtest: seçim, sabitlenmiş şablonu da aday olarak değerlendirir
+ok 81 - seçim, sabitlenmiş şablonu da aday olarak değerlendirir
+  ---
+  duration_ms: 0.149266
+  type: 'test'
+  ...
+# Subtest: kart görselinin şablonu Sipariş Kod taşımaz — sabitlenmeye aday değildir
+ok 82 - kart görselinin şablonu Sipariş Kod taşımaz — sabitlenmeye aday değildir
+  ---
+  duration_ms: 0.417381
+  type: 'test'
+  ...
+# Subtest: REGRESYON: sayfadaki Sipariş Kod filtresi bizimkiyle VE'lenmez
+ok 83 - REGRESYON: sayfadaki Sipariş Kod filtresi bizimkiyle VE'lenmez
+  ---
+  duration_ms: 0.446776
+  type: 'test'
+  ...
+# Subtest: raporun DİĞER filtreleri korunur — kapsam daraltmaları meşrudur
+ok 84 - raporun DİĞER filtreleri korunur — kapsam daraltmaları meşrudur
+  ---
+  duration_ms: 0.354966
+  type: 'test'
+  ...
+# Subtest: filtre yokken davranış değişmez
+ok 85 - filtre yokken davranış değişmez
+  ---
+  duration_ms: 0.26492
+  type: 'test'
+  ...
+# Subtest: aynı adlı ama BAŞKA tablodan gelen kolon yanlışlıkla silinmez
+ok 86 - aynı adlı ama BAŞKA tablodan gelen kolon yanlışlıkla silinmez
+  ---
+  duration_ms: 0.225561
+  type: 'test'
+  ...
+# Subtest: REGRESYON: sözlüklü hücreler indis değil GERÇEK değer olarak çözülür
+ok 87 - REGRESYON: sözlüklü hücreler indis değil GERÇEK değer olarak çözülür
+  ---
+  duration_ms: 0.417611
+  type: 'test'
+  ...
+# Subtest: şema yalnız ilk satırda gelir, sonraki satırlar onu yeniden kullanır
+ok 88 - şema yalnız ilk satırda gelir, sonraki satırlar onu yeniden kullanır
+  ---
+  duration_ms: 0.241445
+  type: 'test'
+  ...
+# Subtest: DN taşımayan kolon (tarih/ölçüm) ham değeriyle kalır
+ok 89 - DN taşımayan kolon (tarih/ölçüm) ham değeriyle kalır
+  ---
+  duration_ms: 0.225912
+  type: 'test'
+  ...
+# Subtest: "S" varlığı ara toplam sanılmaz — yalnız ölçüm yuvalı satır toplamdır
+ok 90 - "S" varlığı ara toplam sanılmaz — yalnız ölçüm yuvalı satır toplamdır
+  ---
+  duration_ms: 0.195215
+  type: 'test'
+  ...
+# Subtest: çözülen satırlar ASAS anahtarıyla BİREBİR eşleşir (uçtan uca)
+ok 91 - çözülen satırlar ASAS anahtarıyla BİREBİR eşleşir (uçtan uca)
+  ---
+  duration_ms: 16.708814
+  type: 'test'
+  ...
+# Subtest: REGRESYON: 32. bitten sonraki null biti okunur (maske taşması)
+ok 92 - REGRESYON: 32. bitten sonraki null biti okunur (maske taşması)
+  ---
+  duration_ms: 0.117227
+  type: 'test'
+  ...
+# Subtest: 38 kolonlu satırda ölçüm alanları doğru hücreyi alır
+ok 93 - 38 kolonlu satırda ölçüm alanları doğru hücreyi alır
+  ---
+  duration_ms: 0.4959
+  type: 'test'
+  ...
+# Subtest: tekrar (R) maskesi de 32 bit üstünde doğru çalışır
+ok 94 - tekrar (R) maskesi de 32 bit üstünde doğru çalışır
+  ---
+  duration_ms: 0.531053
+  type: 'test'
+  ...
+# Subtest: REGRESYON: kolon adı yuva adından çözülür, descriptor sırasından değil
+ok 95 - REGRESYON: kolon adı yuva adından çözülür, descriptor sırasından değil
+  ---
+  duration_ms: 0.1921
+  type: 'test'
+  ...
+# Subtest: miktar alanına tarih/başka kolon değeri düşmez
+ok 96 - miktar alanına tarih/başka kolon değeri düşmez
+  ---
+  duration_ms: 0.136326
+  type: 'test'
+  ...
+# Subtest: yuva haritası yokken eski konumsal davranış korunur
+ok 97 - yuva haritası yokken eski konumsal davranış korunur
+  ---
+  duration_ms: 0.116015
+  type: 'test'
+  ...
+# Subtest: yuva eşlemesi null maskesiyle birlikte doğru çalışır
+ok 98 - yuva eşlemesi null maskesiyle birlikte doğru çalışır
+  ---
+  duration_ms: 0.201565
+  type: 'test'
+  ...
+# Subtest: aynı sipariş birden çok parsiyelle eşleşir ve hepsi korunur
+ok 99 - aynı sipariş birden çok parsiyelle eşleşir ve hepsi korunur
+  ---
+  duration_ms: 11.092722
+  type: 'test'
+  ...
+# Subtest: "ambiguous" sayacı hata değil, çoklu parsiyelin göstergesidir
+ok 100 - "ambiguous" sayacı hata değil, çoklu parsiyelin göstergesidir
+  ---
+  duration_ms: 9.145238
+  type: 'test'
+  ...
+# Subtest: dashboard'da bulunmayan sipariş üretimde sayılır — hata üretilmez
+ok 101 - dashboard'da bulunmayan sipariş üretimde sayılır — hata üretilmez
+  ---
+  duration_ms: 4.91335
+  type: 'test'
+  ...
+1..101
+# tests 101
+# suites 0
+# pass 101
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15244.848768
