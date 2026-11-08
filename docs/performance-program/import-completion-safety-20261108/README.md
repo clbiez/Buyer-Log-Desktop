@@ -56,3 +56,16 @@ Tarayıcı için `PLAYWRIGHT_MODULE` bu dizindeki `playwright-ui-wrapper.cjs` do
 ## Son sabit kod doğrulaması / Final local validation
 
 Standart tam `npm test`: **1302 dosya; 10/10 batch tek invocation, concurrency=4; 8952 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 210,0 sn. Yeni native 21/21; ilgili import paketi 123 PASS; #916 hızlı paket 23/23. i18n yeni/baseline 0/0; 51 release-note kaydı geçerli, Main'in 50 kaydı korunur. Son testten sonra runtime/test kodu değiştirilmedi. Ayrı resmi 30k üç çift kampanya çalıştırılmadı; yerel GREEN, genel program/performans kabulü değildir. GitHub/merge/yayın durumu PR'da gerçek head ile ayrıca takip edilir.
+
+## Güncel Main entegrasyonu / Current Main integration — 2026-11-09
+
+Kullanıcı #918'in güvenli biçimde Main'e alınmasını ve kapatılmasını istedi. Main `3d464cc0dc3db9eef7824e1deeaf559f26d175ea`, normal merge commit'i `b04a49248458d5feba2736b252a7f04dec424246` ile alındı; çakışma, rebase veya force-push yok. İçe aktarma düzeltmesine yeni runtime/test değişikliği eklenmedi. Önceki incelemede son delta ve güncel Main ile deneme birleşimi incelendi; 21 yeni testin dahil olduğu 123 ilgili test geçti. Önceki bağımsız incelemenin kapsamı yukarıda korunur; yeni bir bağımsız model turu iddia edilmez.
+
+- Standart, filtresiz tek `npm test`: **1.311 dosya, 10/10 batch, concurrency=4; 9.010 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 104,6 sn. Test, assertion, süre sınırı veya runner değiştirilmedi; BUYER_LOG/HOME/TMPDIR override'ı yok. Eksik varsayılan `/home/agent/.buyer-log` dizini oluşturuldu ve yalnız test profilinin yazma erişimi sağlandı.
+- i18n: **0 yeni / 0 baseline**. Mevcut dört Main notu ve bu PR'ın tek kaydıyla **5 görsel sürüm notu PASS**; orijinal gerçek sentetik demo PNG yeniden gözle incelendi. Eski 7.0.342 arşivi değiştirilmedi.
+- Üretim sunucusu/PLM Sync, korunan checklist motorları/testi ve CI workflow'ları Main ile aynı. Tam testten sonra yalnız doküman/kanıt değişti. Main dal koruması etkin değildir; son head'in gerçek CI sonucu merge öncesinde ayrıca kontrol edilir.
+- Eski test ve tarayıcı kanıtları kendi kaynaklarında korunur. Yeni tarayıcı/30k performans kampanyası veya Windows/Electron kabulü çalıştırılmadı. Kullanılmayan yeni sütunların hata halinde korunması bilinçli veri güvenliği ödünleşimidir.
+
+**EN:** The user authorized merging this separate correctness fix. Current Main was merged normally without conflicts; the unchanged import delta passed the standard full regression on the integrated source. All 10 batches passed with 9,010 tests, zero failures, 65 existing skips and zero cancellations; bilingual coverage and all five visual notes passed. The missing default test-profile directory was created without changing runtime environment variables or test guards. Protected server/checklist/CI sources remain unchanged. Original evidence is retained; no new browser/performance or Windows acceptance is claimed. Actual final-head CI and merge status are recorded in [#918](https://github.com/clbiez/Buyer-Log-Desktop/pull/918). No TEST/STABLE publication is requested or triggered.
+
+Güncel makine kaydı: `validation.json` içindeki `currentMainIntegration`; ham loglar `main-integration-20261109/*.log.gz` altında korunur. Eski üst düzey kayıt, orijinal yerel teslimin tarihsel sonucudur.
