@@ -99,8 +99,11 @@ Her dal arşiv olarak korundu / All branches remain available as archives.
 | #905 | Faz 3 yeniden ölçümü arşivlendi; ilk CP ödünleşimi sonuçları yukarıda korunur / Remeasurement archived; first-CP tradeoff retained above. |
 | #907 | Tarihsel/güncel FX tanısı arşivlendi; queue-BUSY/parse-failed ayrımı ve kaçırılan güncelleme üretimde düzeltilmedi / Diagnostics archived; remaining FX behavior deferred. |
 
-#918 açık ve merge edilmemiştir; açıklamasında **performans programı dışı** yazar;
-kullanıcı ayrıca karar verecektir / Remains open, unmerged and outside this program for a separate decision.
+#918 **performans programı dışındaki ayrı bir doğruluk düzeltmesidir**. Kapanış sonrasında kullanıcı,
+güncel Main ile güvenli entegrasyon ve merge talimatı verdi; güncel doğrulama kaydı
+[buradadır](../performance-program/import-completion-safety-20261108/README.md), gerçek merge durumu
+[#918](https://github.com/clbiez/Buyer-Log-Desktop/pull/918) üzerinden izlenir.
+**EN:** After program closure, the user authorized safe current-Main integration and merge of this separate correctness fix; validation is linked above and the PR records the actual merge status.
 
 ## ERTELENEN İŞ — kapanış sonuçları ve kapsam dışı işler / DEFERRED — closure outcomes and exclusions
 

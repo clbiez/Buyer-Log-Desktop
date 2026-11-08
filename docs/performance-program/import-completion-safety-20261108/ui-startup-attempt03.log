@@ -1,0 +1,4 @@
+cp BENCHMARK_LIFECYCLE {"event":"bl:primary-screen-ready","key":"primaryScreenReadyMs","ms":3596.0999999940395}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-ready","key":"startupReadyMs","ms":3625.800000011921}
+cp BENCHMARK_LIFECYCLE {"event":"bl:startup-complete","key":"startupCompleteMs","ms":3984}
+Report: /tmp/buyerlog-import-completion-safety/ui-startup-attempt03.json; retained diagnostics: /tmp/buyerlog-startup-import-safety-ui-20261108-03

@@ -1,0 +1,27 @@
+TAP version 13
+# Subtest: actual CP refresh cannot silently report completion when the real loader returns false
+not ok 1 - actual CP refresh cannot silently report completion when the real loader returns false
+  ---
+  duration_ms: 79.245499
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:115:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:117:2)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 273.847792

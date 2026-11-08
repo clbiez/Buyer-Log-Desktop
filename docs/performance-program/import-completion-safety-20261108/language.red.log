@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: changing language after a failed import redraws the new outcome explanation in the selected language
+not ok 1 - changing language after a failed import redraws the new outcome explanation in the selected language
+  ---
+  duration_ms: 9.451136
+  type: 'test'
+  location: '/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:122:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /Sunucu aktarım yanıtı alındı/. Input:
+    
+    '<div class="ximPane"><div class="ximStats"><div class="ximStat"><span>Oluşturulan</span><strong>0</strong></div><div class="ximStat"><span>Güncellenen</span><strong>1</strong></div><div class="ximStat"><span>Atlanan</span><strong>0</strong></div><div class="ximStat"><span>Başarısız</span><strong>0</strong></div><div class="ximStat"><span>Uyarı</span><strong></strong></div><div class="ximStat"><span>Çözülen çakışma</span><strong>0</strong></div><div class="ximStat"><span>Oluşturulan özel alan</span><strong>1</strong></div></div><p class="ximNotice is-bad">The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. synthetic refresh failed</p></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="ximPane"><div class="ximStats"><div class="ximStat"><span>Oluşturulan</span><strong>0</strong></div><div class="ximStat"><span>Güncellenen</span><strong>1</strong></div><div class="ximStat"><span>Atlanan</span><strong>0</strong></div><div class="ximStat"><span>Başarısız</span><strong>0</strong></div><div class="ximStat"><span>Uyarı</span><strong></strong></div><div class="ximStat"><span>Çözülen çakışma</span><strong>0</strong></div><div class="ximStat"><span>Oluşturulan özel alan</span><strong>1</strong></div></div><p class="ximNotice is-bad">The server acknowledged the import, but screen verification could not finish. Created columns were retained; check server data before writing again. synthetic refresh failed</p></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-analytics904/resources/app/tests/excel-import-completion-safety.test.js:127:9)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 146.80438

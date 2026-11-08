@@ -1,0 +1,202 @@
+{
+  "baseMain": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "independentReviewThrough": "244085ecfece32f1c47c1e1699475f52a3109ae5",
+  "reviewRounds": 1,
+  "reviewFindings": "R1/R2 root-fixed; final delta not second-reviewed",
+  "full": {
+    "status": "passed",
+    "runner": "unmodified npm test; default concurrency=4; one invocation; private TMPDIR",
+    "files": 1302,
+    "batchesPassed": 10,
+    "seconds": 210.0,
+    "tests": 9017,
+    "pass": 8952,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0,
+    "rawLogSha256": "a309336809fa3e81c0a2b4277d9cace65a3cf4fb9e78746f68f473c254c1d5d9"
+  },
+  "nativeNewPass": 21,
+  "relatedPass": 123,
+  "protected916Pass": 23,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 51,
+  "originalMainEntriesPreserved": 50,
+  "browser": {
+    "platform": "Linux Chromium",
+    "syntheticSourceRows": 30,
+    "cpRows": 27,
+    "postAckFailure": "passed; real note PUT/row POST; full CP projection retains column and value",
+    "normalSuccess": "passed; real new note and same-actor refresh",
+    "uploadPicker": "not exercised; existing _state sets workbook/table/mapping",
+    "screenshotsInspected": true
+  },
+  "measurement": "correctness-only probes; official 30k three-pair campaign not run for this new fix; no speed claim or phase acceptance",
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "44c78db14bb26dc25f5dae935a1de5acf2271cd0f95ac347f48f78050cf905fe",
+    "resources/app/public/excel-import-wizard.js": "ec68b89b8f8e672caddaad16362b33a99e9fd1b094cab45c2b484fd1c1fdf8c1",
+    "resources/app/tests/excel-import-completion-safety.test.js": "cfd1e3a8670ac1ccb4b04fb281a93620442e3b9522776b517e4e2c611e2c0145",
+    "resources/app/public/release-notes/next.json": "aa8639fd570bf30b7a46a0212d816ec5b6e30881aa039253b9003426a69b131c"
+  },
+  "activation": {
+    "phase6aThin": false,
+    "phase6c": false
+  },
+  "github": "not pushed or checked when this local receipt was generated; see PR for actual final-head status",
+  "merge": "not done",
+  "TEST": "not published",
+  "STABLE": "not published",
+  "currentMainIntegration": {
+    "date": "2026-11-09",
+    "userAuthorization": "Safe merge into main and close PR #918; no release requested",
+    "baseMain": "75d2c5dfc33574f8fac57b8d7e16e11a3470f655",
+    "testedCommit": "3fd0a13fe186c0f6a4e556520d35f6d7585f5543",
+    "testedTree": "4bb207f4246f801083765c1bc578d595b69e36bf",
+    "integration": "Normal merge includes #935; release-note conflict resolved preserving all five main entries and own entry; no rebase or force-push",
+    "full": {
+      "status": "passed",
+      "runner": "unmodified npm test; one invocation; default concurrency=4; no BUYER_LOG/HOME/TMPDIR overrides",
+      "files": 1314,
+      "batchesPassed": 10,
+      "seconds": 107.3,
+      "tests": 9086,
+      "pass": 9021,
+      "fail": 0,
+      "skipped": 65,
+      "cancelled": 0
+    },
+    "i18n": {
+      "new": 0,
+      "baseline": 0
+    },
+    "releaseNotes": {
+      "valid": 6,
+      "existingMainEntriesPreserved": 5,
+      "actualSyntheticScreenshotInspected": true
+    },
+    "mainBaselineFailure": {
+      "test": "model-snapshot-memory.test.js",
+      "assertion": "fixture must exceed its actual V8 heap limit",
+      "unchangedMainReproduced": true,
+      "node": "24.19.0",
+      "oldSpaceMiB": 96,
+      "previousActualHeapMiB": 288,
+      "correctedActualHeapMiB": 99,
+      "fix": "Only add --max-semi-space-size=1 to the child test process; all size/checksum/alias assertions and timeout unchanged",
+      "targetedRedGreen": "passed"
+    },
+    "protectedSources": "Production server/PLM Sync, protected checklist engines/test and CI workflows match integrated main",
+    "branchProtection": false,
+    "postTestChanges": "documentation and evidence only",
+    "sourceSha256": {
+      "resources/app/public/app-main.js": "0c8f58de80392366088aaafc9bd962b1724530100d5999a0d88ed9a9e2ed89f7",
+      "resources/app/public/excel-import-wizard.js": "ec68b89b8f8e672caddaad16362b33a99e9fd1b094cab45c2b484fd1c1fdf8c1",
+      "resources/app/tests/excel-import-completion-safety.test.js": "cfd1e3a8670ac1ccb4b04fb281a93620442e3b9522776b517e4e2c611e2c0145",
+      "resources/app/tests/model-snapshot-memory.test.js": "05954e883bf328b67445d516e0dc28683e6534103d2847af59ecd21dbb0df749",
+      "resources/app/public/release-notes/next.json": "420cce18ead293eed235b1677610317a0ef8444432736e6f81dd384f39829cd5"
+    },
+    "logs": {
+      "full": {
+        "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/final-full.log.gz",
+        "rawSha256": "972d145ec934ce84a068c4e753a9af30386a1107d5f6271e1dadbadbd2a4547a",
+        "gzipSha256": "a0e1e2cec18d9aef1072b29a78b4a58a2f57965832deae0a44f410f5bbcff0b1"
+      },
+      "i18n": {
+        "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/final-i18n.log.gz",
+        "rawSha256": "d920441d0520a3b6655ed28211bc70fc3a9eaad8e9858887a64131e9ac588c7c",
+        "gzipSha256": "424782cd1d4ffb0434bad335182f763f8da9289cd10e2fca08cf6389e9a01306"
+      },
+      "release": {
+        "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/final-release.log.gz",
+        "rawSha256": "cda39d9e62b261f7d6d296b917f7d4d2a189af40766a6c2958f175e6f7ba53cc",
+        "gzipSha256": "9bcf1187bfead0b73f7862fcde73a1982d65ae47caae0fa8e7640e070d17a909"
+      }
+    },
+    "github": "Actual final-head CI and merge status tracked in PR #918",
+    "TEST": "not triggered",
+    "STABLE": "not triggered",
+    "metadataOnlyMainUpdate": {
+      "main": "94eeeaca56e91285190dbe1a8cf67be968549c27",
+      "mergeCommit": "0cbd5c7b3ca1ed391ec6ff93776bca6459afcaf8",
+      "version": "7.0.343",
+      "changed": [
+        "resources/app/package.json",
+        "resources/app/package-lock.json",
+        "docs/dependencies/sbom.cdx.json"
+      ],
+      "runtimeAndTestsByteIdenticalToFullTest": true,
+      "versionAssert": "passed",
+      "dependencyInventoryCheck": "passed"
+    }
+  },
+  "earlierMainIntegrations": [
+    {
+      "date": "2026-11-09",
+      "userAuthorization": "Safe merge into main and close PR #918; no release requested",
+      "baseMain": "3d464cc0dc3db9eef7824e1deeaf559f26d175ea",
+      "testedCommit": "b04a49248458d5feba2736b252a7f04dec424246",
+      "testedTree": "c008154f6a3a3dcdae8e17d24f74c8e42a8bf24d",
+      "integration": "normal merge; no conflicts, rebase or force-push; no new import runtime/test changes",
+      "full": {
+        "status": "passed",
+        "runner": "unmodified npm test; one invocation; default concurrency=4; no BUYER_LOG/HOME/TMPDIR overrides",
+        "files": 1311,
+        "batchesPassed": 10,
+        "seconds": 104.6,
+        "tests": 9075,
+        "pass": 9010,
+        "fail": 0,
+        "skipped": 65,
+        "cancelled": 0
+      },
+      "environmentPreparation": "Created the absent default /home/agent/.buyer-log test-profile directory and granted scoped filesystem writes; no runtime variable or test guard changed",
+      "relatedReview": {
+        "tests": 123,
+        "pass": 123,
+        "fail": 0,
+        "includesNewNativeTests": 21
+      },
+      "i18n": {
+        "new": 0,
+        "baseline": 0
+      },
+      "releaseNotes": {
+        "valid": 5,
+        "existingMainEntriesPreserved": 4,
+        "actualSyntheticScreenshotInspected": true
+      },
+      "protectedSources": "Production server/PLM Sync, protected checklist engines/test and CI workflows match integrated main",
+      "branchProtection": false,
+      "postTestChanges": "documentation and evidence only",
+      "sourceSha256": {
+        "resources/app/public/app-main.js": "0c8f58de80392366088aaafc9bd962b1724530100d5999a0d88ed9a9e2ed89f7",
+        "resources/app/public/excel-import-wizard.js": "ec68b89b8f8e672caddaad16362b33a99e9fd1b094cab45c2b484fd1c1fdf8c1",
+        "resources/app/tests/excel-import-completion-safety.test.js": "cfd1e3a8670ac1ccb4b04fb281a93620442e3b9522776b517e4e2c611e2c0145",
+        "resources/app/public/release-notes/next.json": "02f344a75381825f657f1048608d69ee975360f49f383912f1d0e7b6e5e70f9c"
+      },
+      "logs": {
+        "full": {
+          "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/full.log.gz",
+          "rawSha256": "c69cd02876ab7d8d56bbbc67902dbb7e8228cedf5cba7688f97f9eac92a8f347",
+          "gzipSha256": "c985f5e9d0b09549eaf824c6ff5051ca69b35c5dec15c212a13caa096fafd367"
+        },
+        "i18n": {
+          "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/i18n.log.gz",
+          "rawSha256": "d920441d0520a3b6655ed28211bc70fc3a9eaad8e9858887a64131e9ac588c7c",
+          "gzipSha256": "424782cd1d4ffb0434bad335182f763f8da9289cd10e2fca08cf6389e9a01306"
+        },
+        "release": {
+          "path": "docs/performance-program/import-completion-safety-20261108/main-integration-20261109/release.log.gz",
+          "rawSha256": "6a9bc976903e7a00d72cc9d9cac4599ffbe0c74ec863b4858fc54b03746493d0",
+          "gzipSha256": "5f4046a92a1e1c7a00335d5059f9951cd415eb32cc299739717f581d868e2f92"
+        }
+      },
+      "github": "Actual final-head CI and merge status are tracked in PR #918; previous top-level receipt remains historical",
+      "TEST": "not triggered",
+      "STABLE": "not triggered"
+    }
+  ]
+}
