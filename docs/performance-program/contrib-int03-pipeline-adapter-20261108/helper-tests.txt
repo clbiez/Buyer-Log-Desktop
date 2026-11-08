@@ -1,0 +1,37 @@
+✔ slow commit retains its permit and backpressures the next download (5.923435ms)
+✔ download, validation, queued commit and commit all stay charged until buffers drop (1.120353ms)
+✔ partial failure at each stage leaves successful siblings and no leaked permit (2.529054ms)
+✔ cancelling a queued sync does not dispatch its transport or affect another sync (1.497283ms)
+✔ abort during a non-interruptible commit waits for quiescence before release (0.870706ms)
+✔ abort before commit releases only after active callback stops using buffers (0.715321ms)
+✔ two concurrent sync jobs share one total and both make progress (38.547533ms)
+✔ false Content-Length and unknown overflow release their full reservation (0.53595ms)
+✔ 2048 inherited variable-size PNGs leave only metadata in bounded queue results (4017.000133ms)
+✔ shared total admits only fitting requests and release wakes a waiter (5.057435ms)
+✔ FIFO prevents a small newcomer from bypassing an older large waiter (0.77363ms)
+✔ double release cannot refund somebody else’s active bytes (0.343149ms)
+✔ oversized requests fail immediately even when other work is active (0.670644ms)
+✔ invalid byte counts and invalid signals never mutate the budget (0.52277ms)
+✔ already cancelled work never receives admission (0.26437ms)
+✔ cancelling the head waiter unblocks a fitting follower without a release (0.360404ms)
+✔ cancelling a non-head waiter leaves the other waiter intact (0.37698ms)
+✔ abort after admission does not refund buffers that are still live (0.234184ms)
+✔ abort listeners are removed on grant and cancellation (0.369809ms)
+✔ release/abort races settle each waiter once without leaking reservations (0.366794ms)
+✔ known length includes chunks/concat plus explicit validation and commit copies (0.261425ms)
+✔ missing length reserves the whole per-image cap, including concat headroom (0.177889ms)
+✔ malformed, empty and excessive Content-Length fail closed (0.453435ms)
+✔ invalid headroom and unsafe reservation arithmetic are rejected (0.195626ms)
+✔ image larger than the whole budget is rejected including all copies (0.393745ms)
+✔ body guards reject false lengths and unknown-length overflow before retaining a chunk (0.353314ms)
+✔ withImage releases after success, synchronous throw and asynchronous failure (4.184997ms)
+✔ withImage suppresses dispatch if cancelled between grant and callback (0.283719ms)
+✔ snapshot and permits cannot be used to change accounting (0.218069ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4141.868208

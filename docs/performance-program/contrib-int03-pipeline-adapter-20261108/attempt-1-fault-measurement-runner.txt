@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/int03-pipeline-adapter-20261108/scripts/prototypes/int03-pipeline-adapter-20261108/measure-faults.py", line 15, in <module>
+    assert proc.returncode == 0, (scenario, arm, proc.stderr)
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('cancel', 'before', b'Error: Fault oracle failed\n    at /workspace/int03-pipeline-adapter-20261108/scripts/prototypes/int03-pipeline-adapter-20261108/measure-faults.js:28:188\n')

@@ -1,0 +1,28 @@
+✔ RED/GREEN: shared admission precedes any transport, both sync jobs finish with one envelope (106.141089ms)
+✔ source lifecycle proof: onWritten is unused and bounded results retain buffers (0.410751ms)
+✔ slow canonical consumer keeps permit, a second sync waits without blocking the commit (57.741841ms)
+✔ chunked unknown length, false lengths, MIME, encoding and malformed headers fail closed (178.57385ms)
+✔ existing 20 MiB image cap is accepted intact, no lower acceptance limit (422.345756ms)
+✔ retry settles the failed stream and clears its body before the next attempt, one reservation (33.07381ms)
+✔ abort removes a queued sync without dispatching or affecting the active sync (21.999818ms)
+✔ active abort retains reservation until transport and Buffer users actually settle (9.04271ms)
+✔ abort during a non-interruptible canonical consumer waits and commits completed downloads (30.733812ms)
+✔ manual ownership, URL/content dedup, source cache and no-op revision survive staging (66.606683ms)
+✔ partial download failure checkpoints only durable successes; retry can resume the failed identity (72.956342ms)
+✔ single patch failure rolls back all new files, preserves owners and revision, no completed checkpoint (49.446311ms)
+✔ manual writer during async staged commit causes CAS conflict and rollback instead of overwrite (38.803441ms)
+✔ dropOldFiles true/false keeps aliased and future referenced old files until the single patch succeeds (139.649976ms)
+✔ staging quota fails closed without waiting for all downloads or changing per-image acceptance (323.910332ms)
+✔ timeout destroys transport but does not refund before the producer settles (1102.124021ms)
+✔ fatal staged-read failure after saving a predecessor rolls back the entire unpatched group (21.129864ms)
+✔ entry storage failure stays partial and explicit overwriteManual remains effective (64.800432ms)
+✔ Node HTTPS request adapter uses bounded streams, identity encoding, and waits for both close events (5.572595ms)
+✔ abort before headers does not return until request close, without starting any retry (1.651977ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2887.287765

@@ -1,0 +1,15 @@
+{
+  "scopeOnly": true,
+  "protectedUnchanged": true,
+  "baselineEmpty": true,
+  "pairedSuccessRuns": 6,
+  "pairedFaultRuns": 12,
+  "equivalent": true,
+  "noRetention": true,
+  "prototypeTests": 23,
+  "inheritedHelperTests": 29,
+  "inheritedPreparationTests": 10,
+  "nativeTests": 99,
+  "i18nGuardTests": 5,
+  "i18nNew": 0
+}

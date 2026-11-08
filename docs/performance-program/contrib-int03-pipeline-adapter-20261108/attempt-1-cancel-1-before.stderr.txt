@@ -1,0 +1,2 @@
+Error: Fault oracle failed
+    at /workspace/int03-pipeline-adapter-20261108/scripts/prototypes/int03-pipeline-adapter-20261108/measure-faults.js:28:188

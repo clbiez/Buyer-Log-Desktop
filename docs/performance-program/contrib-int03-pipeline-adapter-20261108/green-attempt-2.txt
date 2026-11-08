@@ -1,0 +1,26 @@
+✔ RED/GREEN: shared admission precedes any transport, both sync jobs finish with one envelope (111.184479ms)
+✔ source lifecycle proof: onWritten is unused and bounded results retain buffers (0.579896ms)
+✔ slow canonical consumer keeps permit, a second sync waits without blocking the commit (67.555695ms)
+✔ chunked unknown length, false lengths, MIME, encoding and malformed headers fail closed (181.434848ms)
+✔ existing 20 MiB image cap is accepted intact, no lower acceptance limit (421.775876ms)
+✔ retry settles the failed stream and clears its body before the next attempt, one reservation (29.483195ms)
+✔ abort removes a queued sync without dispatching or affecting the active sync (19.466211ms)
+✔ active abort retains reservation until transport and Buffer users actually settle (7.346017ms)
+✔ abort during a non-interruptible canonical consumer waits and commits completed downloads (27.977709ms)
+✔ manual ownership, URL/content dedup, source cache and no-op revision survive staging (55.443093ms)
+✔ partial download failure checkpoints only durable successes; retry can resume the failed identity (83.582948ms)
+✔ single patch failure rolls back all new files, preserves owners and revision, no completed checkpoint (56.073476ms)
+✔ manual writer during async staged commit causes CAS conflict and rollback instead of overwrite (43.05256ms)
+✔ dropOldFiles true/false keeps aliased and future referenced old files until the single patch succeeds (163.982003ms)
+✔ staging quota fails closed without waiting for all downloads or changing per-image acceptance (351.133282ms)
+✔ timeout destroys transport but does not refund before the producer settles (1102.521054ms)
+✔ fatal staged-read failure after saving a predecessor rolls back the entire unpatched group (22.400246ms)
+✔ entry storage failure stays partial and explicit overwriteManual remains effective (72.07506ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2994.14663

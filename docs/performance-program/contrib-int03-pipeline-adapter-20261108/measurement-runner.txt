@@ -1,0 +1,7 @@
+{"index": 1, "arm": "before", "exitCode": 0, "wallSeconds": 40.71612310409546, "rawSha256": "d8aec564c1986ed75f900b334c444420473b4364b32947eabd8c94ea4896b526"}
+{"index": 2, "arm": "after", "exitCode": 0, "wallSeconds": 43.42901659011841, "rawSha256": "bde9d93316429de0fb9edbc207ed74821c04e07db8a7ce3c04d8bb2d284febca"}
+{"index": 3, "arm": "after", "exitCode": 0, "wallSeconds": 43.60463070869446, "rawSha256": "d3e11e68b93b21071335711ef51845ca1b7c6beb773d372cbe97fc2dd2e7bd79"}
+{"index": 4, "arm": "before", "exitCode": 0, "wallSeconds": 42.24125599861145, "rawSha256": "d7ca867adf534d277014b5e3666f4d5d8502f272d7d0ecc9a4e2664d7f20d24f"}
+{"index": 5, "arm": "before", "exitCode": 0, "wallSeconds": 38.67955708503723, "rawSha256": "116f941746b092487afc68955f845433df2e672b8afe1a28ec550bbe1489e275"}
+{"index": 6, "arm": "after", "exitCode": 0, "wallSeconds": 41.459094762802124, "rawSha256": "f9af0793d77c0dba8685b4768348da1df2f22227b5c3b0e52508313f77244a07"}
+{"before": {"osPeakRssBytes": 677957632, "sampledPeakExternalBytes": 412344801, "sampledPeakArrayBufferBytes": 409743521, "peakReservationBytes": 0, "peakStagedBytes": 0, "firstCanonicalLinkMs": 11639.885705, "totalMs": 34646.802653}, "after": {"osPeakRssBytes": 373272576, "sampledPeakExternalBytes": 77475923, "sampledPeakArrayBufferBytes": 74874675, "peakReservationBytes": 344631984, "peakStagedBytes": 356515840, "firstCanonicalLinkMs": 12895.549657000001, "totalMs": 37402.212314}}

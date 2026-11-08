@@ -1,0 +1,45 @@
+{
+  "order": [
+    "before",
+    "after",
+    "after",
+    "before",
+    "before",
+    "after"
+  ],
+  "equivalent": true,
+  "medians": {
+    "partial": {
+      "before": {
+        "osPeakRssBytes": 104435712,
+        "sampledPeakExternalBytes": 45770647,
+        "peakReservationBytes": 0,
+        "firstCanonicalLinkMs": 416.777448,
+        "totalMs": 440.010673
+      },
+      "after": {
+        "osPeakRssBytes": 98168832,
+        "sampledPeakExternalBytes": 38044961,
+        "peakReservationBytes": 344631984,
+        "firstCanonicalLinkMs": 465.613244,
+        "totalMs": 491.31222
+      }
+    },
+    "cancel": {
+      "before": {
+        "osPeakRssBytes": 105705472,
+        "sampledPeakExternalBytes": 46491543,
+        "peakReservationBytes": 0,
+        "firstCanonicalLinkMs": 441.89275599999996,
+        "totalMs": 463.752652
+      },
+      "after": {
+        "osPeakRssBytes": 104169472,
+        "sampledPeakExternalBytes": 38045793,
+        "peakReservationBytes": 344631984,
+        "firstCanonicalLinkMs": 475.209682,
+        "totalMs": 519.207815
+      }
+    }
+  }
+}

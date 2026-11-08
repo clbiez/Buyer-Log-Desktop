@@ -1,0 +1,156 @@
+{
+  "order": [
+    "before",
+    "after",
+    "after",
+    "before",
+    "before",
+    "after"
+  ],
+  "medians": {
+    "before": {
+      "osPeakRssBytes": 684679168,
+      "sampledPeakExternalBytes": 420768571,
+      "sampledPeakArrayBufferBytes": 418167503,
+      "peakReservationBytes": 0,
+      "peakStagedBytes": 0,
+      "firstCanonicalLinkMs": 11918.092637,
+      "totalMs": 35303.698623
+    },
+    "after": {
+      "osPeakRssBytes": 350433280,
+      "sampledPeakExternalBytes": 75639156,
+      "sampledPeakArrayBufferBytes": 73037852,
+      "peakReservationBytes": 344631984,
+      "peakStagedBytes": 356515840,
+      "firstCanonicalLinkMs": 12092.049619,
+      "totalMs": 34710.845037
+    }
+  },
+  "equivalent": true,
+  "notes": [
+    "prototype only; canonical link is not UI visibility",
+    "reservation is not RSS",
+    "both arms use the identical strict stream transport",
+    "both arms inject one shared initial mutable ownership snapshot",
+    "canonical first link intentionally waits until staging is complete to preserve one patch per job"
+  ],
+  "fixtureSha256": "3777e69f44a79aaac8f0bf204dfdabde6ccc258cc4a1da7e7e5d52b449a4e07d",
+  "outputSha256": "9406c05f9959417b6b3698be6fcfadbcb1b477f4e1be87850b607dbd62f7402a",
+  "runs": [
+    {
+      "arm": "before",
+      "osPeakRssBytes": 712921088,
+      "sampledPeakExternalBytes": 420768571,
+      "sampledPeakArrayBufferBytes": 418167503,
+      "peakReservationBytes": 0,
+      "peakStagedBytes": 0,
+      "firstCanonicalLinkMs": 11918.092637,
+      "totalMs": 35608.564821,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    },
+    {
+      "arm": "after",
+      "osPeakRssBytes": 330436608,
+      "sampledPeakExternalBytes": 75482661,
+      "sampledPeakArrayBufferBytes": 72881361,
+      "peakReservationBytes": 344631984,
+      "peakStagedBytes": 356515840,
+      "firstCanonicalLinkMs": 12092.049619,
+      "totalMs": 34710.845037,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    },
+    {
+      "arm": "after",
+      "osPeakRssBytes": 350433280,
+      "sampledPeakExternalBytes": 75639156,
+      "sampledPeakArrayBufferBytes": 73037852,
+      "peakReservationBytes": 344631984,
+      "peakStagedBytes": 356515840,
+      "firstCanonicalLinkMs": 13440.318775000002,
+      "totalMs": 36185.219018,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    },
+    {
+      "arm": "before",
+      "osPeakRssBytes": 682872832,
+      "sampledPeakExternalBytes": 433099373,
+      "sampledPeakArrayBufferBytes": 430498153,
+      "peakReservationBytes": 0,
+      "peakStagedBytes": 0,
+      "firstCanonicalLinkMs": 11586.967262,
+      "totalMs": 35303.698623,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    },
+    {
+      "arm": "before",
+      "osPeakRssBytes": 684679168,
+      "sampledPeakExternalBytes": 419965755,
+      "sampledPeakArrayBufferBytes": 417364687,
+      "peakReservationBytes": 0,
+      "peakStagedBytes": 0,
+      "firstCanonicalLinkMs": 11965.432338,
+      "totalMs": 35303.367071,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    },
+    {
+      "arm": "after",
+      "osPeakRssBytes": 371130368,
+      "sampledPeakExternalBytes": 77091884,
+      "sampledPeakArrayBufferBytes": 74490580,
+      "peakReservationBytes": 344631984,
+      "peakStagedBytes": 356515840,
+      "firstCanonicalLinkMs": 11965.746812000001,
+      "totalMs": 34657.182866999996,
+      "outputMatches": true,
+      "ownerMatches": true,
+      "noRetention": true,
+      "revisionDelta": 2,
+      "files": 2048,
+      "statuses": [
+        "completed",
+        "completed"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+✔ i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder (49.246856ms)
+✔ i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok (1185.051295ms)
+✔ i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli) (1172.784809ms)
+✔ i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez (0.333394ms)
+✔ i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde (0.374687ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2469.742457

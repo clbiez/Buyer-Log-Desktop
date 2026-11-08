@@ -1,0 +1,47 @@
+[
+  {
+    "sha": "b2a4a579c5369f59e5cfb9181140a00176d944ef",
+    "file": "resources/app/scripts/lib/plm-image-memory-fixture.js",
+    "sha256": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87"
+  },
+  {
+    "sha": "b2a4a579c5369f59e5cfb9181140a00176d944ef",
+    "file": "resources/app/scripts/lib/plm-image-memory-probe.js",
+    "sha256": "bf747b5c2b9c968197613d6d12409797a11c817b5c049fee1d1ce873f1925ad5"
+  },
+  {
+    "sha": "b2a4a579c5369f59e5cfb9181140a00176d944ef",
+    "file": "resources/app/scripts/benchmark-plm-image-memory.js",
+    "sha256": "4e0b22086a8036c99155822ae16884469f931a72f91d7b3aedc706413c1225da"
+  },
+  {
+    "sha": "b2a4a579c5369f59e5cfb9181140a00176d944ef",
+    "file": "resources/app/tests/plm-image-memory-preparation.test.js",
+    "sha256": "f0e921d90fa10b780e4126f1404856c02884bbd8d1445d7292a7cfe65b738d32"
+  },
+  {
+    "sha": "5a5b4f5e2b82d3f4584a818221b7d27a1c487d8a",
+    "file": "resources/app/tests/int03-byte-budget-unit.test.js",
+    "sha256": "6dd6e71d0f21ba06416f5e7f6acaab09b3dd33204b59c74a82f4035a7dee3bbb"
+  },
+  {
+    "sha": "5a5b4f5e2b82d3f4584a818221b7d27a1c487d8a",
+    "file": "resources/app/tests/int03-byte-budget-pipeline.test.js",
+    "sha256": "4eea384558693e2d8dbe0488755c124c258bc9bca31cc122daf8ed039b8d7d13"
+  },
+  {
+    "sha": "5a5b4f5e2b82d3f4584a818221b7d27a1c487d8a",
+    "file": "resources/app/tests/fixtures/int03-byte-budget/mock-pipeline.js",
+    "sha256": "d92e9bb24564756e5122660861ee9d7b8082491891f5721f370bed2685ecc5e1"
+  },
+  {
+    "sha": "5a5b4f5e2b82d3f4584a818221b7d27a1c487d8a",
+    "file": "resources/app/tests/fixtures/int03-byte-budget/plm-image-memory-fixture.js",
+    "sha256": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87"
+  },
+  {
+    "sha": "5a5b4f5e2b82d3f4584a818221b7d27a1c487d8a",
+    "file": "resources/app/tests/fixtures/int03-byte-budget/measure.js",
+    "sha256": "31efff90a41c69361e438f56c70ec89d9a1038189ce8145a96cf74292c9263f7"
+  }
+]
