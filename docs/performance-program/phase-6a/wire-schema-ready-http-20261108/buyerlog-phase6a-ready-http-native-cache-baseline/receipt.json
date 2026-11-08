@@ -1,0 +1,17 @@
+{
+  "exitCode": 1,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs"
+  ],
+  "counts": {
+    "pass": 17,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "79c6796c1de4ff9f866173b4e6f3921d80a7e8cf7ea9f4adb3f8410bf3d1e93f"
+}

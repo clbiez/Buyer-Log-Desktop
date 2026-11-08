@@ -74,6 +74,22 @@
       // No header/id/role/group/dataType/percentage normalization, deduplication or defaulting.
     }
   }
+  // Only the application's projection serializer is covered: Dates become a
+  // defined JSON value, while undefined/function/symbol own properties vanish.
+  // Inspect presence without copying rows or invoking arbitrary value hooks.
+  function projectionPropertyPresent(value) {
+    const type = typeof value;
+    if (type === 'undefined' || type === 'function' || type === 'symbol') return false;
+    check(type !== 'bigint');
+    if (value === null || type !== 'object') return true;
+    check(!(isProxy && isProxy(value)));
+    const prototype = Object.getPrototypeOf(value);
+    check(prototype === Object.prototype || prototype === null || prototype === Date.prototype
+      || (Array.isArray(value) && prototype === Array.prototype));
+    const hook = Object.getOwnPropertyDescriptor(value, 'toJSON');
+    check(!hook || (own(hook, 'value') && typeof hook.value !== 'function'));
+    return true;
+  }
   function knownShape(value, expectedModule, maxRowKeys) {
     const keys = plainKeys(value); check(keys.length === FIELDS.length && FIELDS.every(key => own(value, key)));
     check(get(value, 'schemaVersion') === SCHEMA_VERSION && get(value, 'status') === 'known' && get(value, 'module') === expectedModule);
@@ -92,7 +108,11 @@
       && Number.isSafeInteger(maxRowKeys) && maxRowKeys > 0 && maxRowKeys <= MAX_ROW_KEYS);
     function build(input) {
       try {
-        check(plainKeys(input).every(key => ['module', 'rows', 'modelColumns', 'modelSchemaKnown', 'canExpose', 'scopePolicy'].includes(key)));
+        check(plainKeys(input).every(key => ['module', 'rows', 'modelColumns', 'modelSchemaKnown', 'canExpose', 'scopePolicy', 'keyMode'].includes(key)));
+        const keyMode = own(input, 'keyMode') ? get(input, 'keyMode') : 'source';
+        check(keyMode === 'source' || keyMode === 'projection-json');
+        if (keyMode === 'projection-json') check(!Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON')
+          && !Object.getOwnPropertyDescriptor(Array.prototype, 'toJSON'));
         const module = get(input, 'module'); check(['cp', 'orders'].includes(module));
         if (get(input, 'modelSchemaKnown') !== true || get(input, 'canExpose') !== true) return null;
         const policy = get(input, 'scopePolicy'); check(plainKeys(policy).every(key => ['schemaSource', 'targetKnown', 'bindingsKnown', 'cpSchemaAllowed', 'sameRows', 'sameAntrepo'].includes(key)));
@@ -107,6 +127,7 @@
           const hook = Object.getOwnPropertyDescriptor(row, 'toJSON'); check(!hook || (own(hook, 'value') && typeof hook.value !== 'function'));
           for (const key of Object.keys(row)) {
             const d = Object.getOwnPropertyDescriptor(row, key); check(d && own(d, 'value'));
+            if (keyMode === 'projection-json' && !projectionPropertyPresent(d.value)) continue;
             if (!seen.has(key)) { check(rowKeys.length < maxRowKeys); seen.add(key); rowKeys.push(key); }
           }
         }

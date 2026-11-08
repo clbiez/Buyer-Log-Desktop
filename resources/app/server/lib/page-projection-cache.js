@@ -505,8 +505,10 @@ async function writeViewCompressed(userId, module, request, entry, options = {})
   const hasInfo = viewData(entry) && Object.hasOwn(entry, 'info');
   if (typeof userId !== 'string' || !userId.length || userId.length > 512 || module !== 'orders' || !pin || !viewData(entry)
     || Object.keys(entry).length !== (hasInfo ? 6 : 5) || !['buffer','bytes','uncompressedBytes','checksum','registryKeys'].every(key => Object.hasOwn(entry, key))
-    || !viewData(options) || Object.keys(options).some(key => key !== 'limits')) return null;
+    || !viewData(options) || Object.keys(options).some(key => !['limits','assertCurrent'].includes(key))
+    || Object.hasOwn(options, 'assertCurrent') && typeof options.assertCurrent !== 'function') return null;
   const limits = viewLimits(options.limits); if (!limits) return null;
+  const assertCurrent = options.assertCurrent; // Own callback captured before queueing.
   const info = hasInfo ? viewInfoSnapshot(entry.info, limits.maxMetadataBytes) : null;
   if (hasInfo && !info) return null;
   const registryKeys = viewKeys(entry.registryKeys, limits.maxRegistryKeys);
@@ -524,7 +526,19 @@ async function writeViewCompressed(userId, module, request, entry, options = {})
   return enqueueUserMutation(userId, async () => {
     let file, committed = false;
     try {
-      const current = () => loadManifestFile(manifestPath(userId)), guard = () => primaryViewMatches(current(), module, pin);
+      const current = () => loadManifestFile(manifestPath(userId));
+      const guard = () => {
+        const result = assertCurrent?.();
+        if (result === false) return false;
+        if (result && typeof result.then === 'function') {
+          // Reject asynchronous authority. Drain its invalid return value only;
+          // neither fulfillment nor rejection can authorize publication.
+          void Promise.resolve(result).catch(() => {});
+          return false;
+        }
+        return primaryViewMatches(current(), module, pin);
+      };
+      if (!guard()) return null;
       const manifest = current(); if (!primaryViewMatches(manifest, module, pin)) return null;
       const prior = manifest.derivedViews?.[module], catalog = {};
       if (viewData(prior) && Object.keys(prior).length <= VIEW_LIMITS.maxEntries
@@ -550,7 +564,7 @@ async function writeViewCompressed(userId, module, request, entry, options = {})
       lruForgetFile(file);
       const verified = await readCompressed(file, meta.checksum);
       if (verified.buffer.length !== meta.bytes || checksum(verified.buffer) !== meta.checksum || !guard()) return null;
-      const fresh = current(); if (!primaryViewMatches(fresh, module, pin)) return null;
+      const fresh = current(); if (!guard() || !primaryViewMatches(fresh, module, pin)) return null;
       const next = { ...fresh, derivedViews: { ...(fresh.derivedViews || {}), [module]: catalog } };
       if (!await writeViewFile(manifestPath(userId), Buffer.from(JSON.stringify(next, null, 2)), guard)) return null;
       committed = true; return meta; // activeGeneration and .bak are unchanged

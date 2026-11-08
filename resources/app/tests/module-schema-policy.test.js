@@ -98,7 +98,7 @@ test('personal horizon split is valid target metadata but actual worker row/Antr
 test('actual Orders-only projection emits own schema without CP output and retains raw legacy definitions',()=>{
  const f=fixture(),before=f.source.asasOrders.map(r=>r._cpExtra),result=f.project();assert.equal(Object.hasOwn(result.output,'cp'),false);
  assert.equal(result.schemas.cp,null);assert.equal(result.schemas.orders.status,'known');assert.equal(result.schemas.orders.rowCount,2);
- assert.deepEqual(result.schemas.orders.rowKeys,[...new Set(result.output.orders.rows.flatMap(Object.keys))]);
+ assert.deepEqual(result.schemas.orders.rowKeys,[...new Set(JSON.parse(tasks.serialize(result.output.orders,'projection')).rows.flatMap(Object.keys))]);
  assert.equal(JSON.stringify(result.schemas.orders.modelColumns),JSON.stringify(f.columns()));assert.equal(result.output.orders.rows[0].__CPX_ZERO,0);
  assert.equal(result.output.orders.rows[0].__CPX_FALSE,false);assert.strictEqual(f.source.asasOrders[0]._cpExtra,before[0]);
  const legacy=tasks.buildProjections(f.source,{modules:['orders'],overrides:{},horizons:{},cpAllowed:true,summaryAllowed:true,cpModelColumns:f.columns()});

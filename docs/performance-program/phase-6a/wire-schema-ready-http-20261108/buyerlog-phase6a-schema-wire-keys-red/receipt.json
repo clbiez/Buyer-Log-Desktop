@@ -1,0 +1,16 @@
+{
+  "exitCode": 1,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/module-schema-wire-keys.test.js"
+  ],
+  "counts": {
+    "pass": 2,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "93fb019793fb3e4e4ce1e1a0d6cf8bab4745f6250344b6bcac9cc054c07a3c33"
+}

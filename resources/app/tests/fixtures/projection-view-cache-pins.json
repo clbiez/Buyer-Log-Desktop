@@ -5,9 +5,9 @@
     "bytes": 22196
   },
   "candidate": {
-    "sha256": "9bf6c459e9fad7a99d9a424217c904d7febc075337e684f4787c1a9623aa8bab",
-    "gitBlob": "a6d607b1e602ff814487b63f43a00e2f4cd60d39",
-    "bytes": 39881
+    "sha256": "4edfdff1b22877ddb35b4ea0feb741729b7761ca314f5b0012fd629e7deb7b43",
+    "bytes": 40562,
+    "gitBlob": "6916e0663ea1eca7e1eabde9fb5a298f077d6bda"
   },
   "scope": "Literal checked-in cache and frozen full-cache predecessor; v2 fixture assertions unchanged",
   "descriptorExtension": {
@@ -39,5 +39,11 @@
       "fail": 33
     },
     "cause": "All33preexisting cache tests stopped at exactsourcepin; actual17binding+12nativecache newtests passed. New literal dependency resolved to actual production helper; all old behavioral assertions retained. Followup oldcache tests pending."
+  },
+  "liveGuardExtension": {
+    "source": "optional trusted assertCurrent captured beforequeue; syncauthority at native final-commit guard; rejectedthenables drained but cannot authorize",
+    "nativeHttp": "/tmp/buyerlog-phase6a-ready-http-product-first/receipt.json",
+    "nativeHttpPass": 22,
+    "ordinaryFullWriterUnchanged": true
   }
 }

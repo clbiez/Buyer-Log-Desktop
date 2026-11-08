@@ -28,5 +28,7 @@
   },
   "productionWrites": false,
   "workerServerCacheClientWiring": false,
-  "adoptionNote": "Only compute optional callback added; app-main differences are full-before-use gates. Actual syncCpModelColumns must remain exact f076; root extraction proof archived separately. Price-source loader stays in its existing branch, followed by the new full barrier; real behavioral tests retained."
+  "adoptionNote": "Only compute optional callback added; app-main differences are full-before-use gates. Actual syncCpModelColumns must remain exact f076; root extraction proof archived separately. Price-source loader stays in its existing branch, followed by the new full barrier; real behavioral tests retained.",
+  "runtimeSchemaSha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390",
+  "frozenSchemaFixture": "tests/fixtures/compute-module-schema/module-projection-schema-before-wire.js"
 }

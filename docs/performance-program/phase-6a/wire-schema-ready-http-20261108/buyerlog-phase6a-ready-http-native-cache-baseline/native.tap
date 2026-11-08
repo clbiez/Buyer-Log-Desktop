@@ -1,0 +1,216 @@
+TAP version 13
+# Subtest: schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+ok 1 - schema GET is hit-only own metadata; PAGE context differs from separately live broad guard
+  ---
+  duration_ms: 352.779372
+  type: 'test'
+  ...
+# Subtest: cold POST returns ordinary full before actual background job is allowed to execute
+not ok 2 - cold POST returns ordinary full before actual background job is allowed to execute
+  ---
+  duration_ms: 228.209719
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:116:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'full' !== 'ready'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'ready'
+  actual: 'full'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:120:77)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ready cache hits require info, preserve stable body across nonces and do not start another worker
+not ok 3 - ready cache hits require info, preserve stable body across nonces and do not start another worker
+  ---
+  duration_ms: 183.08939
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:125:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'full' !== 'ready'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'ready'
+  actual: 'full'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:128:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: legacy ready metadata without producer info is a full fallback, never a thin cache hit
+not ok 4 - legacy ready metadata without producer info is a full fallback, never a thin cache hit
+  ---
+  duration_ms: 143.16903
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:145:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'orders')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:147:58)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: actual session, role, view scope and source-filter authority reject before data/worker admission
+ok 5 - actual session, role, view scope and source-filter authority reject before data/worker admission
+  ---
+  duration_ms: 170.309998
+  type: 'test'
+  ...
+# Subtest: strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+ok 6 - strict 64KiB DTO, unknown raw keys, token/plan tamper and canonical requests cannot schedule work
+  ---
+  duration_ms: 178.159369
+  type: 'test'
+  ...
+# Subtest: legacy or backup own-schema absence returns full mode without creating a schema or ready view
+ok 7 - legacy or backup own-schema absence returns full mode without creating a schema or ready view
+  ---
+  duration_ms: 143.557264
+  type: 'test'
+  ...
+# Subtest: real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+ok 8 - real native canonical guard can decline a registered model plan; full fallback never publishes ready bytes
+  ---
+  duration_ms: 143.665467
+  type: 'test'
+  ...
+# Subtest: unknown or other-module schema cannot authorize a ready request
+ok 9 - unknown or other-module schema cannot authorize a ready request
+  ---
+  duration_ms: 361.821132
+  type: 'test'
+  ...
+# Subtest: same owner+plan deduplicates and process-wide background admission never exceeds two
+ok 10 - same owner+plan deduplicates and process-wide background admission never exceeds two
+  ---
+  duration_ms: 498.227462
+  type: 'test'
+  ...
+# Subtest: session/access/source/schema changes during deferred native work discard and release the result
+ok 11 - session/access/source/schema changes during deferred native work discard and release the result
+  ---
+  duration_ms: 651.112248
+  type: 'test'
+  ...
+# Subtest: same-generation full rewrite during deferred work invalidates the exact body/schema pin
+ok 12 - same-generation full rewrite during deferred work invalidates the exact body/schema pin
+  ---
+  duration_ms: 132.836591
+  type: 'test'
+  ...
+# Subtest: live guard after awaiting a cached hit prevents delivery after actor/role revocation
+ok 13 - live guard after awaiting a cached hit prevents delivery after actor/role revocation
+  ---
+  duration_ms: 137.242326
+  type: 'test'
+  ...
+# Subtest: another actor or broader guard revision cannot adopt an earlier ready entry
+ok 14 - another actor or broader guard revision cannot adopt an earlier ready entry
+  ---
+  duration_ms: 150.056595
+  type: 'test'
+  ...
+# Subtest: revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+not ok 15 - revoke before the native final manifest guard prevents publication; never rewinds the full manifest
+  ---
+  duration_ms: 136.3257
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:229:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    actual native writer must reach the final manifest commit guard
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:242:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+ok 16 - router shutdown aborts only its admitted jobs and leaves the existing shared pool usable
+  ---
+  duration_ms: 194.766522
+  type: 'test'
+  ...
+# Subtest: same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+ok 17 - same endpoint: old-owner schema then new-owner session POST returns newly authorized full identity
+  ---
+  duration_ms: 273.024657
+  type: 'test'
+  ...
+# Subtest: changed full body with old token reports the new exact full checksum without adopting the old ready identity
+ok 18 - changed full body with old token reports the new exact full checksum without adopting the old ready identity
+  ---
+  duration_ms: 133.753501
+  type: 'test'
+  ...
+# Subtest: actual native final response guard runs before identity headers or full data are sent
+ok 19 - actual native final response guard runs before identity headers or full data are sent
+  ---
+  duration_ms: 131.818416
+  type: 'test'
+  ...
+# Subtest: response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+ok 20 - response identity encoding is bounded, lossless and header-safe; invalid metadata fails closed
+  ---
+  duration_ms: 1.748008
+  type: 'test'
+  ...
+# Subtest: native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+not ok 21 - native guarded cache declines and drains invalid asynchronous callbacks, including rejected promises
+  ---
+  duration_ms: 141.270046
+  type: 'test'
+  location: '/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:328:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'full' !== 'ready'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'ready'
+  actual: 'full'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/buyerlog-phase6a-ready-http-native-root-v1/orders-ready-http.test.cjs:333:36)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+ok 22 - revoked CP area cannot reuse earlier CP-derived own schema while Orders area remains granted
+  ---
+  duration_ms: 137.015742
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 17
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4936.994822

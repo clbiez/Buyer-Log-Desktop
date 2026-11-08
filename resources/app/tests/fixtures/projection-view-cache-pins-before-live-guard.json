@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "sha256": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+    "gitBlob": "2c09b29e8fe936f3d229a45c1616366096f297d0",
+    "bytes": 22196
+  },
+  "candidate": {
+    "sha256": "9bf6c459e9fad7a99d9a424217c904d7febc075337e684f4787c1a9623aa8bab",
+    "gitBlob": "a6d607b1e602ff814487b63f43a00e2f4cd60d39",
+    "bytes": 39881
+  },
+  "scope": "Literal checked-in cache and frozen full-cache predecessor; v2 fixture assertions unchanged",
+  "descriptorExtension": {
+    "preparationBaselineSha256": "cb0123c09194cf7c48c39f1c1bab0756f2bebec8060f2bedea3aa45a196f7222",
+    "rootNativeReceipt": "/tmp/buyerlog-phase6a-ready-units-first/receipt.json",
+    "baseline": {
+      "pass": 2,
+      "fail": 10
+    },
+    "candidate": {
+      "pass": 12,
+      "fail": 0
+    },
+    "legacy20": {
+      "pass": 20,
+      "fail": 0
+    }
+  },
+  "schemaBindingExtension": {
+    "predecessorPin": "projection-view-cache-pins-before-schema.json",
+    "nativeBaseline": "/tmp/buyerlog-phase6a-schema-cache-red/receipt.json",
+    "baseline": {
+      "pass": 0,
+      "fail": 12
+    },
+    "firstNative": "/tmp/buyerlog-phase6a-schema-cache-first-green/receipt.json",
+    "firstRun": {
+      "pass": 37,
+      "fail": 33
+    },
+    "cause": "All33preexisting cache tests stopped at exactsourcepin; actual17binding+12nativecache newtests passed. New literal dependency resolved to actual production helper; all old behavioral assertions retained. Followup oldcache tests pending."
+  }
+}

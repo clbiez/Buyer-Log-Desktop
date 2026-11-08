@@ -79,7 +79,7 @@ function legacyRegistration(defs) {
   return Function('defs', 'return (' + match[1] + ');')(defs);
 }
 
-test('runtime sources and unchanged frozen schema helper match the declared pins', () => {
+test('runtime sources and original frozen schema lineage match the declared pins', () => {
   const pins = require('./fixtures/compute-module-schema/source-pins.json');
   for (const [relative, expected] of Object.entries(pins.runtimeBlobs)) {
     const content = fs.readFileSync(path.join(APP, relative));
@@ -87,7 +87,9 @@ test('runtime sources and unchanged frozen schema helper match the declared pins
     assert.equal(actual, expected, relative + ' changed since preparation');
   }
   const digest = crypto.createHash('sha256').update(fs.readFileSync(path.join(APP, 'public/module-projection-schema.js'))).digest('hex');
-  assert.equal(digest, pins.frozenSchemaSha256);
+  assert.equal(digest, pins.runtimeSchemaSha256);
+  const before=fs.readFileSync(path.join(APP,pins.frozenSchemaFixture));
+  assert.equal(crypto.createHash('sha256').update(before).digest('hex'),pins.frozenSchemaSha256);
 });
 
 test('default path has byte-identical full output and does not load or scan schema metadata', () => {
@@ -118,7 +120,8 @@ test('explicit hook sees schemas without changing return JSON, canonical values 
   assert.equal(output.orders.rows[1]['Order Quantity'], 0);
   for (const module of ['cp', 'orders']) {
     assert.equal(schemas[module].module, module); assert.equal(schemas[module].status, 'known');
-    assert.deepEqual(schemas[module].rowKeys, [...new Set(output[module].rows.flatMap(Object.keys))]);
+    const wire=JSON.parse(h.tasks.serialize(output[module],'projection'));
+    assert.deepEqual(schemas[module].rowKeys, [...new Set(wire.rows.flatMap(Object.keys))]);
     assert.equal(output[module].rows[0].__CPX_ZERO, 0); assert.equal(output[module].rows[0].__CPX_FALSE, false); assert.equal(output[module].rows[0].__CPX_NULL, null);
     assert.ok(output[module].rows[0].OPD instanceof Date);
     assert.equal(schemas[module].rowKeys.includes('__sourceOrder'), false);

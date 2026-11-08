@@ -1,0 +1,22 @@
+{
+  "exitCode": 0,
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "module-schema",
+    "module-projection-schema",
+    "compute-module-schemas",
+    "projection-schema-output",
+    "page-projection",
+    "projection-ready-worker",
+    "orders-ready-http"
+  ],
+  "counts": {
+    "pass": 169,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "82f464b3c8d6122a3e1ed753dc34293bae3ad929bf220b909ce23a6a563be2c1"
+}

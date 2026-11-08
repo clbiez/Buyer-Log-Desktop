@@ -19,9 +19,9 @@
       "bytes": 7767
     },
     "server/lib/compute-module-schemas.js": {
-      "sha256": "ef311b08b6cfd6f7547d852fcb6587bd11e4af636be41138cb4b6978c7981a6d",
-      "gitBlob": "1ea774b236b7d5adb41d914f8a612837adedf75f",
-      "bytes": 3321
+      "sha256": "e51d54e87ba2dccf57ad966ec658b1f831730422a6d75c7649ad78fa2030ad1a",
+      "bytes": 3502,
+      "gitBlob": "06c749c140202f685c4afca74bb036ca4ebb9978"
     },
     "server/lib/parse.js": {
       "sha256": "554c4a2360516955f0443bfa76efe43c85fd295182df39ccdb67c8d843e2d2d5",
@@ -64,9 +64,9 @@
       "bytes": 4888
     },
     "public/module-projection-schema.js": {
-      "sha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
-      "gitBlob": "7b8585c3f912c5cf3ee9bbc8f1f2afa9c5dd4926",
-      "bytes": 9192
+      "sha256": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390",
+      "bytes": 10545,
+      "gitBlob": "3dfa985be610337c8b9b5385d7b195b75927c0ab"
     }
   },
   "observedSourcesNotRuntimeLoaderAssertions": {
@@ -146,5 +146,6 @@
     "globallyRemovable": 0,
     "regenerated": false
   },
-  "execution": "NONE by preparing agent; hashes/source provenance only"
+  "execution": "NONE by preparing agent; hashes/source provenance only",
+  "wireKeyReview": "Only new explicit projection-json presence mode and common producer optin; defaultsource semantics retained. Native6RED2/4->shared21PASS, realHTTP22PASS."
 }

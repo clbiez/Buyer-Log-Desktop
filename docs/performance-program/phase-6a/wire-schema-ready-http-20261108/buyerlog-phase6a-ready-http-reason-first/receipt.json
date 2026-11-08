@@ -1,0 +1,20 @@
+{
+  "scope": "Single filtered diagnostic, not acceptance. Other cases intentionally not run. Original22case failure retained.",
+  "exitCode": 1,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "--test-name-pattern",
+    "native guarded cache declines",
+    "/tmp/buyerlog-phase6a-ready-http-reason-probe/orders-ready-http.test.cjs"
+  ],
+  "counts": {
+    "pass": 0,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "454d98d9b5e4bbcdd68db51443bfd553772ba5303783821d68283ded77f1a76f"
+}

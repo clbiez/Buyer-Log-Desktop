@@ -1,0 +1,136 @@
+TAP version 13
+# Subtest: Orders own-target schema needs no CP object and preserves complete actual legacy-shaped raw definitions
+ok 1 - Orders own-target schema needs no CP object and preserves complete actual legacy-shaped raw definitions
+  ---
+  duration_ms: 19.286107
+  type: 'test'
+  ...
+# Subtest: raw definitions retain duplicates, missing optional legacy ID and unknown custom fields without normalization
+ok 2 - raw definitions retain duplicates, missing optional legacy ID and unknown custom fields without normalization
+  ---
+  duration_ms: 1.988876
+  type: 'test'
+  ...
+# Subtest: metadata snapshot copies only bounded definitions and cannot be changed by later definition mutation
+ok 3 - metadata snapshot copies only bounded definitions and cannot be changed by later definition mutation
+  ---
+  duration_ms: 2.592318
+  type: 'test'
+  ...
+# Subtest: row-key universe scans the entire same snapshot, retains exact first-seen order and duplicate business rows
+ok 4 - row-key universe scans the entire same snapshot, retains exact first-seen order and duplicate business rows
+  ---
+  duration_ms: 23.608016
+  type: 'test'
+  ...
+# Subtest: row scan reads no cell graph, preserves Date data values, and ignores nonenumerable source linkage
+ok 5 - row scan reads no cell graph, preserves Date data values, and ignores nonenumerable source linkage
+  ---
+  duration_ms: 0.996561
+  type: 'test'
+  ...
+# Subtest: authoritative zero rows/empty definitions is known; missing/null/false flags never become []
+ok 6 - authoritative zero rows/empty definitions is known; missing/null/false flags never become []
+  ---
+  duration_ms: 1.564099
+  type: 'test'
+  ...
+# Subtest: shared CP schema for Orders requires explicit sameRows and sameAntrepo plus independent target/binding/exposure knowledge
+ok 7 - shared CP schema for Orders requires explicit sameRows and sameAntrepo plus independent target/binding/exposure knowledge
+  ---
+  duration_ms: 2.971861
+  type: 'test'
+  ...
+# Subtest: CP and Orders use their own schemas; v1 CP-schema denied and target-unknown fail closed
+ok 8 - CP and Orders use their own schemas; v1 CP-schema denied and target-unknown fail closed
+  ---
+  duration_ms: 0.662909
+  type: 'test'
+  ...
+# Subtest: undefined/nonboolean policy is unknown and the broader compute data.cpAllowed is not a schema exposure substitute
+ok 9 - undefined/nonboolean policy is unknown and the broader compute data.cpAllowed is not a schema exposure substitute
+  ---
+  duration_ms: 1.117233
+  type: 'test'
+  ...
+# Subtest: unknown policy and direct row/metadata getters are never invoked
+ok 10 - unknown policy and direct row/metadata getters are never invoked
+  ---
+  duration_ms: 1.252498
+  type: 'test'
+  ...
+# Subtest: nonplain objects, Node proxies, sparse rows, model toJSON and cyclic metadata are unknown without callbacks
+ok 11 - nonplain objects, Node proxies, sparse rows, model toJSON and cyclic metadata are unknown without callbacks
+  ---
+  duration_ms: 2.24978
+  type: 'test'
+  ...
+# Subtest: version/missing/malformed/unknown status/different-module metadata yields unknown/null without layout-destructive []
+ok 12 - version/missing/malformed/unknown status/different-module metadata yields unknown/null without layout-destructive []
+  ---
+  duration_ms: 3.175618
+  type: 'test'
+  ...
+# Subtest: public metadata has exact UTF8 byte admission at64KiB hard cap and caller-only lower configuration
+ok 13 - public metadata has exact UTF8 byte admission at64KiB hard cap and caller-only lower configuration
+  ---
+  duration_ms: 4.998454
+  type: 'test'
+  ...
+# Subtest: source key universe512 is complete; key513 produces unknown rather than truncation or firstN sampling
+ok 14 - source key universe512 is complete; key513 produces unknown rather than truncation or firstN sampling
+  ---
+  duration_ms: 8.029833
+  type: 'test'
+  ...
+# Subtest: same UMD source validates JSON transport in a browser realm without Node imports
+ok 15 - same UMD source validates JSON transport in a browser realm without Node imports
+  ---
+  duration_ms: 7.756917
+  type: 'test'
+  ...
+# Subtest: explicit projection-JSON schema uses exact serialized own-key union and keeps source mode unchanged
+ok 16 - explicit projection-JSON schema uses exact serialized own-key union and keeps source mode unchanged
+  ---
+  duration_ms: 7.446956
+  type: 'test'
+  ...
+# Subtest: projection-JSON presence keeps own proto keys, constructor and nested arrays without copying row graphs
+ok 17 - projection-JSON presence keeps own proto keys, constructor and nested arrays without copying row graphs
+  ---
+  duration_ms: 0.559889
+  type: 'test'
+  ...
+# Subtest: projection-JSON metadata declines custom value toJSON hooks and accessors without invoking them
+ok 18 - projection-JSON metadata declines custom value toJSON hooks and accessors without invoking them
+  ---
+  duration_ms: 1.077598
+  type: 'test'
+  ...
+# Subtest: unsupported projection key modes and BigInt are unknown; zero-row mode keeps an empty universe
+ok 19 - unsupported projection key modes and BigInt are unknown; zero-row mode keeps an empty universe
+  ---
+  duration_ms: 1.826745
+  type: 'test'
+  ...
+# Subtest: projection-JSON key capture rejects inherited serialization hooks without running them
+ok 20 - projection-JSON key capture rejects inherited serialization hooks without running them
+  ---
+  duration_ms: 0.427924
+  type: 'test'
+  ...
+# Subtest: actual CP and Orders producer schemas match their untouched native serialized projections
+ok 21 - actual CP and Orders producer schemas match their untouched native serialized projections
+  ---
+  duration_ms: 25.334626
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 246.139804

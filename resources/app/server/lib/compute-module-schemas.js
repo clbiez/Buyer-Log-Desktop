@@ -37,7 +37,9 @@ function buildModuleSchemas({ data, cpRows, ordersRows, sameRows, sameAntrepo })
   if (types.isProxy(rawDefinitions) || !Array.isArray(rawDefinitions)) return result;
   const definitions = legacyRegisteredDefinitions(rawDefinitions);
   if (definitions === null) return result;
-  const common = { modelColumns: definitions, modelSchemaKnown: true, canExpose: true };
+  // The owner schema describes the client-visible JSON boundary. Raw parser
+  // records can own undefined fields that never reach that representation.
+  const common = { modelColumns: definitions, modelSchemaKnown: true, canExpose: true, keyMode: 'projection-json' };
   if (Array.isArray(cpRows)) result.cp = schema.build({
     ...common, module: 'cp', rows: cpRows,
     scopePolicy: { schemaSource: 'target', targetKnown: true, bindingsKnown: true, cpSchemaAllowed: true },

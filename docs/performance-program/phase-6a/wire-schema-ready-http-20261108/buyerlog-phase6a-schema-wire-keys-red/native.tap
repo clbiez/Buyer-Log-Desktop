@@ -1,0 +1,342 @@
+TAP version 13
+# Subtest: explicit projection-JSON schema uses exact serialized own-key union and keeps source mode unchanged
+not ok 1 - explicit projection-JSON schema uses exact serialized own-key union and keeps source mode unchanged
+  ---
+  duration_ms: 11.767217
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:9:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(actual)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:13:79)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: projection-JSON presence keeps own proto keys, constructor and nested arrays without copying row graphs
+not ok 2 - projection-JSON presence keeps own proto keys, constructor and nested arrays without copying row graphs
+  ---
+  duration_ms: 0.724576
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:17:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(actual)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:19:99)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: projection-JSON metadata declines custom value toJSON hooks and accessors without invoking them
+ok 3 - projection-JSON metadata declines custom value toJSON hooks and accessors without invoking them
+  ---
+  duration_ms: 0.539267
+  type: 'test'
+  ...
+# Subtest: unsupported projection key modes and BigInt are unknown; zero-row mode keeps an empty universe
+not ok 4 - unsupported projection key modes and BigInt are unknown; zero-row mode keeps an empty universe
+  ---
+  duration_ms: 0.82691
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(actual)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:31:77)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: projection-JSON key capture rejects inherited serialization hooks without running them
+ok 5 - projection-JSON key capture rejects inherited serialization hooks without running them
+  ---
+  duration_ms: 0.338222
+  type: 'test'
+  ...
+# Subtest: actual CP and Orders producer schemas match their untouched native serialized projections
+not ok 6 - actual CP and Orders producer schemas match their untouched native serialized projections
+  ---
+  duration_ms: 19.002365
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:38:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    cp key universe must match actual JSON, not raw undefined properties
+    + actual - expected
+    ... Skipped lines
+    
+      [
+        '_id',
+        '_matchOcode',
+        '_isActive',
+        'Active/Inactive',
+    ...
+        'Country',
+    +   'Manufacturer',
+        'Sub-Manufacturer',
+        'Licensor',
+    +   'License',
+    +   'Category',
+    +   'Special Code',
+        'PLM ID',
+        'Model Name',
+        'Ürün Tanım',
+        'C.Code',
+        'Colour',
+    ...
+        '_nonDtrManufacturerRule',
+    +   'OPD',
+        'Original Ex-factory',
+        'Ex-factory',
+        '_asasExFactory',
+        '_exFactoryRevision',
+        '_asasRetailDate',
+    ...
+        'Ex→Retail',
+    +   'Buying Son Onay Tarihi',
+        'In-Store (Model Budget)',
+        '_initialInspection',
+        'Order Quantity',
+        'Shipment Quantity',
+        'Remaining Units',
+    ...
+        'Buyer Grup (TR)',
+    +   'Line',
+    +   'Kumaş Kategorisi',
+    +   'Kumaşçı Ülkesi',
+    +   'Kumaşçı',
+    +   'Kumaş Tipi',
+    +   'İplik No',
+    +   'Gramaj',
+    +   'Karışım',
+        '__CPX_WIRE_KEY',
+        'Importance',
+        '_importanceId',
+        '_importanceSource',
+        'LT',
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: '_id'
+    1: '_matchOcode'
+    2: '_isActive'
+    3: 'Active/Inactive'
+    4: '_imageKey'
+    5: '_imageRef'
+    6: '_imageUrl'
+    7: 'Priority'
+    8: 'Season'
+    9: 'Country'
+    10: 'Sub-Manufacturer'
+    11: 'Licensor'
+    12: 'PLM ID'
+    13: 'Model Name'
+    14: 'Ürün Tanım'
+    15: 'C.Code'
+    16: 'Colour'
+    17: 'Order Code'
+    18: 'FOB ($)'
+    19: 'Supp. FOB'
+    20: '_suppFobManual'
+    21: '_suppFobRule'
+    22: '_suppFobMeta'
+    23: '_suppFobImported'
+    24: '_suppFobOverride'
+    25: '_licensorManual'
+    26: '_licensorSource'
+    27: '_nonDtrManufacturerRule'
+    28: 'Original Ex-factory'
+    29: 'Ex-factory'
+    30: '_asasExFactory'
+    31: '_exFactoryRevision'
+    32: '_asasRetailDate'
+    33: '_asasInStore'
+    34: 'HANDOVER Tarihi'
+    35: 'Retail Date'
+    36: 'Ex→Retail'
+    37: 'In-Store (Model Budget)'
+    38: '_initialInspection'
+    39: 'Order Quantity'
+    40: 'Shipment Quantity'
+    41: 'Remaining Units'
+    42: '%'
+    43: 'STATUS'
+    44: 'Ant. Arrival'
+    45: 'Del. Type'
+    46: '_logisticSegments'
+    47: '_logisticStatusValues'
+    48: '_logisticDelTypeValues'
+    49: '_logisticArrivalValues'
+    50: '_logisticProductionQty'
+    51: '_logisticShortageQty'
+    52: '_logisticRemainingQty'
+    53: '_logisticLoadedQty'
+    54: '_logisticPartialCount'
+    55: '_logisticAllPartialsInWarehouse'
+    56: '_logisticTotalQty'
+    57: 'Notes'
+    58: 'Ek Not'
+    59: 'NotesHtml'
+    60: 'Ek NotHtml'
+    61: '_notesAt'
+    62: '_ekNotAt'
+    63: '_notesBy'
+    64: '_notesByName'
+    65: '_ekNotBy'
+    66: '_ekNotByName'
+    67: 'Merch Marka Yaş Grup Kod'
+    68: 'Merch Alt Grup Kod'
+    69: 'Buyer'
+    70: 'Buyer Grup (TR)'
+    71: '__CPX_WIRE_KEY'
+    72: 'Importance'
+    73: '_importanceId'
+    74: '_importanceSource'
+    75: 'LT'
+    76: '_canEdit'
+  actual:
+    0: '_id'
+    1: '_matchOcode'
+    2: '_isActive'
+    3: 'Active/Inactive'
+    4: '_imageKey'
+    5: '_imageRef'
+    6: '_imageUrl'
+    7: 'Priority'
+    8: 'Season'
+    9: 'Country'
+    10: 'Manufacturer'
+    11: 'Sub-Manufacturer'
+    12: 'Licensor'
+    13: 'License'
+    14: 'Category'
+    15: 'Special Code'
+    16: 'PLM ID'
+    17: 'Model Name'
+    18: 'Ürün Tanım'
+    19: 'C.Code'
+    20: 'Colour'
+    21: 'Order Code'
+    22: 'FOB ($)'
+    23: 'Supp. FOB'
+    24: '_suppFobManual'
+    25: '_suppFobRule'
+    26: '_suppFobMeta'
+    27: '_suppFobImported'
+    28: '_suppFobOverride'
+    29: '_licensorManual'
+    30: '_licensorSource'
+    31: '_nonDtrManufacturerRule'
+    32: 'OPD'
+    33: 'Original Ex-factory'
+    34: 'Ex-factory'
+    35: '_asasExFactory'
+    36: '_exFactoryRevision'
+    37: '_asasRetailDate'
+    38: '_asasInStore'
+    39: 'HANDOVER Tarihi'
+    40: 'Retail Date'
+    41: 'Ex→Retail'
+    42: 'Buying Son Onay Tarihi'
+    43: 'In-Store (Model Budget)'
+    44: '_initialInspection'
+    45: 'Order Quantity'
+    46: 'Shipment Quantity'
+    47: 'Remaining Units'
+    48: '%'
+    49: 'STATUS'
+    50: 'Ant. Arrival'
+    51: 'Del. Type'
+    52: '_logisticSegments'
+    53: '_logisticStatusValues'
+    54: '_logisticDelTypeValues'
+    55: '_logisticArrivalValues'
+    56: '_logisticProductionQty'
+    57: '_logisticShortageQty'
+    58: '_logisticRemainingQty'
+    59: '_logisticLoadedQty'
+    60: '_logisticPartialCount'
+    61: '_logisticAllPartialsInWarehouse'
+    62: '_logisticTotalQty'
+    63: 'Notes'
+    64: 'Ek Not'
+    65: 'NotesHtml'
+    66: 'Ek NotHtml'
+    67: '_notesAt'
+    68: '_ekNotAt'
+    69: '_notesBy'
+    70: '_notesByName'
+    71: '_ekNotBy'
+    72: '_ekNotByName'
+    73: 'Merch Marka Yaş Grup Kod'
+    74: 'Merch Alt Grup Kod'
+    75: 'Buyer'
+    76: 'Buyer Grup (TR)'
+    77: 'Line'
+    78: 'Kumaş Kategorisi'
+    79: 'Kumaşçı Ülkesi'
+    80: 'Kumaşçı'
+    81: 'Kumaş Tipi'
+    82: 'İplik No'
+    83: 'Gramaj'
+    84: 'Karışım'
+    85: '__CPX_WIRE_KEY'
+    86: 'Importance'
+    87: '_importanceId'
+    88: '_importanceSource'
+    89: 'LT'
+    90: '_canEdit'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/module-schema-wire-keys.test.js:46:138)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 2
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 241.385512

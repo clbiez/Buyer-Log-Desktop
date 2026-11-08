@@ -1,0 +1,27 @@
+[
+  {
+    "path": "resources/app/public/checklist-components-engine.js",
+    "sha256": "5f0e472c7f745cf1495dea68721bc085c785c5c4988a57eb1a6f32996a046216",
+    "byteExactMain917Including916": true
+  },
+  {
+    "path": "resources/app/public/cp-overview-assistant.js",
+    "sha256": "fa349ca59d7344759942f1f9b1bd96aa7c5fc6c913dba448209e4f6ab7200e9e",
+    "byteExactMain917Including916": true
+  },
+  {
+    "path": "resources/app/public/checklist-supplier-sync.js",
+    "sha256": "5f8e6fa8664a60b46b8bc2fbe7f6dc475aae78e44dcbb2aed55eaf27778632bc",
+    "byteExactMain917Including916": true
+  },
+  {
+    "path": "resources/app/tests/checklist-components-row-cache.test.js",
+    "sha256": "e5b6a9912907b9daa6a3e860231cef688bea4a4aa3af08ca544a64d60614d72e",
+    "byteExactMain917Including916": true
+  },
+  {
+    "path": ".github/workflows/buyerlog-pr-fast-checks.yml",
+    "sha256": "c8b8a16bbbd4b7a2078febca76e4b200feaf24e91eaa213cb7a76a2f9d639429",
+    "byteExactMain917Including916": true
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "scope": "Actual product module in private native HTTP fixture; main server route not installed yet",
+  "exitCode": 0,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/orders-ready-http.test.js"
+  ],
+  "counts": {
+    "pass": 22,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "f80acf3212645a2546a79b52c8901d3c34d6cc683bdcbd1f56be9087bd8ba413"
+}
