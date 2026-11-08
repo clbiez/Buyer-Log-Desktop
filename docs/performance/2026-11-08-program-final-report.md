@@ -102,47 +102,60 @@ Her dal arşiv olarak korundu / All branches remain available as archives.
 #918 açık ve merge edilmemiştir; açıklamasında **performans programı dışı** yazar;
 kullanıcı ayrıca karar verecektir / Remains open, unmerged and outside this program for a separate decision.
 
-## ERTELENEN İŞ — uygulanmadı / DEFERRED — not implemented
+## ERTELENEN İŞ — kapanış sonuçları ve kapsam dışı işler / DEFERRED — closure outcomes and exclusions
 
-A/B/C kaynak incelemesindeki öncelik düzeyleridir; erteleme maliyetsizlik veya başarı demek değildir.
-**EN:** Priority A/B/C follows the review; deferral is neither a zero-cost finding nor completion.
+A/B/C kaynak incelemesindeki öncelik düzeyleridir. Sohbet 1–8 için gerçek sonuçlar aşağıdadır;
+uygulandı durumu merge edilmiş üretim PR’ı gerektirir. Atlanan adaylar üretim kazanımı değildir.
+**EN:** Priority A/B/C follows the review. Sessions 1–8 are recorded below; implementation requires a merged production PR. Skipped candidates are not shipped gains.
 
-| Öncelik / Priority | Madde / Item | Gerekçe / Reason |
+Sohbet 1–8 tamamlandı: 13 maddeden ANA-09 uygulandı ve merge edildi; diğer 12 madde
+aşağıdaki nedenlerle atlandı. Sohbetlerin ölçüm/eşdeğerlik sonuçları ve GitHub PR durumları
+işlendi; bu rapor güncellemesinde yeni performans ölçümü yapılmadı.
+**EN:** All eight sessions are closed: ANA-09 shipped; the other 12 items were skipped for
+the stated reasons. This update reconciles final session evidence and actual PR states without new measurements.
+
+| Öncelik / Priority | Madde / Item | Sonuç ve gerekçe / Outcome and reason |
 | --- | --- | --- |
-| A | ANA-02 | Orders arama/predicate tekrarını kaldıran uygulama yok / Search/predicate caching not implemented. |
-| A | ANA-03 | Kapalı pivot dallarını DOM'dan ayırma uygulanmadı / Collapsed-branch DOM pruning not implemented. |
-| A | ANA-04 | Backlog detay/Intake ortak sanal tabloya geçirilmedi / Shared virtualization not implemented. |
-| A | CPR-04 | Render sırasında tam kural sync/save yan etkilerini ayırma uygulanmadı / Render-side rule sync/save separation deferred. |
-| A | CPR-08 | Dirty-row/formül bağımlılık grafiği üretime bağlanmadı / Dirty-row dependency graph not integrated. |
-| B | ANA-08 | Overview yalnız aktif kırılımı hazırlamıyor / Active-breakdown-only preparation deferred. |
-| C | ANA-09 | Freeze-picker global flush davranışı değiştirilmedi / Global flush behavior unchanged. |
-| B | ANA-10 | Bulk CP kimlik indeksli güncelleme uygulanmadı / Indexed bulk updates deferred. |
-| B | DS-01 | Delta/legacy çift kalıcılık yolu korunuyor / Duplicate persistence path remains. |
-| A | DS-02 | Kaynak cache-key hashing maliyeti için ayrı üretim düzeltmesi yok / Source-key hashing not independently optimized. |
-| A | DS-03 | Override hash/modül cache kapsamı daraltılmadı / Override hashing/cache scope unchanged. |
-| A | DS-04 | loadOverrides normalizasyon/overlay maliyeti kaldırılmadı / Repeated normalization/overlay remains. |
-| B | DS-10 | No-change sync sonrası hydrate kaldırılmadı / Post-sync hydration unchanged. |
-| B | 6b: SHELL-05 | Native sekmenin yalnız kendi modülünü hazırlaması uygulanmadı / Native module-only preparation deferred. |
-| B | 6b: SHELL-06 | Helper 73 test ve Chromium'da doğrulandı; context/asset/caller bağlantısı ve Electron kabulü yok / Helper verified but unwired. |
-| B | 6b: app-main yaşam döngüsü / lifecycle | load/mount/activate/deactivate/dispose entegrasyonu tamamlanmadı / Lifecycle integration incomplete. |
-| A | 6a ince projeksiyon / thin projection | Yerel aday kapalı; full-data tüketici ve son üretim kabulü tamamlanmadı / Candidate disabled; consumer and production acceptance incomplete. |
-| A | 6c delta kalıcılık / persistence | CPR-02/03, DS-07/09, WAL/undo/owner kaynak sahipliği adaptörleri üretimde etkin değil / Delta/WAL/undo/owner adapters not activated. |
-| A | INT-01 | Tam grafik kopyası yavaşladı; immutable kaynak sahipliği tasarımı bekliyor / Full copying regressed; ownership design remains pending. |
-| A | INT-03 | Byte-budget helper var; PLM Sync'e dokunulmuyor, üretim pipeline'ı bağlanmadı / Helper exists; production pipeline untouched. |
-| B | INT-06 | Prototip yazım tasarrufuna karşın son RSS +%5,85; kabul edilmedi / Final prototype RSS regression rejected. |
-| B | ANA-12 | İstemci/backend helper var; gerçek HTTP→job iptali ve üretim CPU kabulü yok / Helpers exist; real route cancellation unintegrated. |
-| B | INT-08 | Main179 tanısı 12/12 ve 32 sentetik orijinalde ~459 MiB decoded cache'i doğruladı; preview uygulaması, kalite ve native ürün kabulü yok / Measured need, no preview implementation or acceptance. |
-| C | DS-11 | Gerçek SMB/peer RTT ortamı yok / Real SMB/peer RTT environment unavailable. |
-| B | INT-07 | Gerçek PLM kapasite/retry kabul ortamı yok / Real PLM capacity/retry acceptance unavailable. |
-| C | INT-10 | Upstream upload kapasitesi ve kazancı doğrulanmadı / Upstream upload capacity and benefit unverified. |
-| C | ADMIN-02 | Güvenli disk geçişi azaltımı kanıtlanmadı / Safe reduction of disk passes unproven. |
-| C | ADMIN-01 | Gerçek demo tanısı worker faydasını kanıtlamadı / Real demo-server diagnostic did not prove offload benefit. |
-| B | ADMIN-03 | Yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu yapılmadı / Hierarchy optimization not implemented. |
-| C | INT-12 | Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk unresolved. |
-| B | CPR-06 kalan / remainder | Hesap kazanımı var; büyük ilk DOM için pencereleme yok / Computation improved; initial DOM windowing absent. |
-| B | CPR-09 / CP ilk açılış worker'ı | #916 satır cache'i korunuyor; CP kişisel katman/ilk hesap worker'a taşınmadı / Row cache retained; initial/personal computation not offloaded. |
-| A | CPR-10 kalan / remainder | Önceki batch kazanımları var; tam delta/WAL entegrasyonu uygulanmadı / Earlier batching retained; full delta integration deferred. |
-| C | CARD-01 lisans / license | +%24,42 arama p95 gerilemesi nedeniyle parça ayrıldı / Portion excluded for search regression. |
+| A | ANA-02 | Atlandı: arama kazancı 100 ms kapısının altında; çıktı hash’leri aynı, PR/merge yok / Skipped: search gain below the 100 ms gate; equal output hashes, no PR or merge. |
+| A | ANA-03 | Atlandı: üç A/B çiftinde pivot çizimi ve dal açma kazancı ile hash eşdeğerliği geçti; tek ortam düzeltmesinden sonra tam test batch 2/10'da iki IAM hatasıyla durdu. [#923](https://github.com/clbiez/Buyer-Log-Desktop/pull/923) kapatıldı, merge edilmedi / Skipped: rendering gains and hash parity passed, but full regression remained red after one environment correction; PR closed unmerged. |
+| A | ANA-04 | Atlandı: normal detay yolu izin verilen dosyalar dışındaki detail-drawer.js değişikliğini gerektiriyor; geçiş ölçümü ve hash eşdeğerliği yapılmadı. Sohbetin [#923](https://github.com/clbiez/Buyer-Log-Desktop/pull/923) PR'ı kapatıldı, merge edilmedi / Skipped: required drawer changes exceed scope; transition measurement/parity were not run; chat PR closed unmerged. |
+| A | CPR-04 | Atlandı: açılış, filtre ve sıralama kazançlarının tümü %10 kapısının altında; hash’ler aynı, yüklü fiyat kuralı ve render kayıt çağrısı yok; PR/merge yok / Skipped: all gains below 10%; equal hashes, no loaded pricing rules or render saves, no PR or merge. |
+| A | CPR-08 | Atlandı: tek hücre → formül süresi geriledi; formül hücreleri ve hata özetleri eşdeğer, PR/merge yok / Skipped: single-cell formula timing regressed; equivalent formula cells and error summaries, no PR or merge. |
+| B | ANA-08 | Atlandı: üç A/B çiftinde Overview uzun görev kazancı %10 ve 100 ms kapılarının altında; çıktı hash'leri aynı, kod değişikliği yok / Skipped: Overview long-task gain misses both gates; equal hashes, no code change. |
+| C | ANA-09 | Uygulandı: freeze değişikliği yalnız etkilenen tabloyu yeniler ve sanallaştırmayı korur; 30k satır/510k hücre hash'i aynı. [#924](https://github.com/clbiez/Buyer-Log-Desktop/pull/924) main'e merge edildi; 10/10 batch, 0 FAIL, i18n 0/0, release notes ve PR checks PASS / Implemented and merged: table-local freeze refresh preserves virtualization and full output parity; all gates passed. |
+| B | ANA-10 | Atlandı: ilk A/B çiftinde çıktı hash’i farklı; toplu güncelleme eşdeğerlik kapısı geçmedi, PR/merge yok / Skipped: bulk-update output hashes differ in the first pair; equivalence failed, no PR or merge. |
+| B | DS-01 | Kapsam dışı: 6c kalıcılık/sahiplik entegrasyonu bu sekiz sohbete atanmadı / Phase-6c persistence/ownership integration was not assigned. Önceki durum / Prior status: Delta/legacy çift kalıcılık yolu korunuyor / Duplicate persistence path remains. |
+| A | DS-02 | Atlandı: üç A/B çiftinde API süresi geriledi, event-loop gap tasarrufu 100 ms kapısının altında; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: API timing regressed and loop-gap savings missed 100 ms; equal output hashes, no production change, PR or merge. |
+| A | DS-03 | Atlandı: üç A/B çiftinde API kazancı %7,4 ile %10 kapısının altında, açılış geriledi; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: API gain below 10% and opening regressed; equal output hashes, no production change, PR or merge. |
+| A | DS-04 | Atlandı: üç A/B çiftinde override okuma tasarrufu 100 ms kapısının altında; çıktı hash'leri eşit, üretim değişikliği/PR/merge yok / Skipped: override-read savings below 100 ms; equal output hashes, no production change, PR or merge. |
+| B | DS-10 | Kapsam dışı: Senkron/delta-store değişiklikleri yasak / Sync/delta-store changes are excluded. Önceki durum / Prior status: No-change sync sonrası hydrate kaldırılmadı / Post-sync hydration unchanged. |
+| B | 6b: SHELL-05 | Kapsam dışı: Native modül hazırlığı ayrı Electron/shell entegrasyonu ve ürün kabulü gerektirir / Requires separate Electron/shell integration and acceptance. Önceki durum / Prior status: Native sekmenin yalnız kendi modülünü hazırlaması uygulanmadı / Native module-only preparation deferred. |
+| B | 6b: SHELL-06 | Kapsam dışı: Context/asset/caller bağlantısı ve Electron kabulü bu sekiz sohbete atanmadı / Caller integration and Electron acceptance were not assigned. Önceki durum / Prior status: Helper 73 test ve Chromium'da doğrulandı; context/asset/caller bağlantısı ve Electron kabulü yok / Helper verified but unwired. |
+| B | 6b: app-main yaşam döngüsü / lifecycle | Kapsam dışı: Yaşam döngüsü entegrasyonu dar fonksiyon izinlerini aşan mimari değişikliktir / Lifecycle integration exceeds permitted function-level changes. Önceki durum / Prior status: load/mount/activate/deactivate/dispose entegrasyonu tamamlanmadı / Lifecycle integration incomplete. |
+| A | 6a ince projeksiyon / thin projection | Kapsam dışı: Full-data tüketicilerinin dönüşümü ve thin üretim kabulü ayrı iş / Consumer migration and production thin-mode acceptance are separate work. Önceki durum / Prior status: Yerel aday kapalı; full-data tüketici ve son üretim kabulü tamamlanmadı / Candidate disabled; consumer and production acceptance incomplete. |
+| A | 6c delta kalıcılık / persistence | Kapsam dışı: WAL/undo/owner adaptörleri ayrı kalıcılık/senkron entegrasyonu / WAL/undo/owner adapters require separate persistence/sync integration. Önceki durum / Prior status: CPR-02/03, DS-07/09, WAL/undo/owner kaynak sahipliği adaptörleri üretimde etkin değil / Delta/WAL/undo/owner adapters not activated. |
+| A | INT-01 | Kapsam dışı: Immutable kaynak sahipliğini yeniden tasarlamak verilen dar kapsamı aşar / Immutable source ownership redesign exceeds this scope. Önceki durum / Prior status: Tam grafik kopyası yavaşladı; immutable kaynak sahipliği tasarımı bekliyor / Full copying regressed; ownership design remains pending. |
+| A | INT-03 | Kapsam dışı: Üretime bağlantı korunan PLM indirme/Sync pipeline’ına dokunur / Production integration touches protected PLM download/Sync paths. Önceki durum / Prior status: Byte-budget helper var; PLM Sync'e dokunulmuyor, üretim pipeline'ı bağlanmadı / Helper exists; production pipeline untouched. |
+| B | INT-06 | Kapsam dışı: Üretim journal/snapshot entegrasyonu ayrı kalıcılık işi / Production journal/snapshot integration is separate persistence work. Önceki durum / Prior status: Prototip yazım tasarrufuna karşın son RSS +%5,85; kabul edilmedi / Final prototype RSS regression rejected. |
+| B | ANA-12 | Kapsam dışı: Gerçek HTTP → job iptali atanmış dosyalar dışındaki backend/worker bağlantısını gerektirir / Real route cancellation needs unassigned backend/worker integration. Önceki durum / Prior status: İstemci/backend helper var; gerçek HTTP→job iptali ve üretim CPU kabulü yok / Helpers exist; real route cancellation unintegrated. |
+| B | INT-08 | Atlandı: yalnız model-image-cache.js izni, app-main.js warmup ve prior/loaded yollarının orijinali doğrudan yüklemesini kapsamıyor; A/B ve hash karşılaştırması yapılmadı, PR/merge yok / Skipped: allowed file cannot cover direct-original loading paths; no A/B, hash comparison, PR or merge. |
+| C | DS-11 | Kapsam dışı: Gerçek SMB/peer RTT kabul ortamı yok / Real SMB/peer RTT acceptance environment is unavailable. Önceki durum / Prior status: Gerçek SMB/peer RTT ortamı yok / Real SMB/peer RTT environment unavailable. |
+| B | INT-07 | Kapsam dışı: Korunan PLM akışına girer; gerçek kapasite/retry kabul ortamı yok / Touches protected PLM flows; real capacity/retry acceptance is unavailable. Önceki durum / Prior status: Gerçek PLM kapasite/retry kabul ortamı yok / Real PLM capacity/retry acceptance unavailable. |
+| C | INT-10 | Kapsam dışı: Gerçek upstream kapasite/kazanç kabulü doğrulanmadı / Real upstream capacity/benefit acceptance is unverified. Önceki durum / Prior status: Upstream upload kapasitesi ve kazancı doğrulanmadı / Upstream upload capacity and benefit unverified. |
+| C | ADMIN-02 | Kapsam dışı: Güvenli disk geçişi azaltımı kanıtlanmadı; yedekleme/bütünlük işi atanmadı / Safe pass reduction is unproven; backup/integrity changes were not assigned. Önceki durum / Prior status: Güvenli disk geçişi azaltımı kanıtlanmadı / Safe reduction of disk passes unproven. |
+| C | ADMIN-01 | Kapsam dışı: Mevcut tanı worker faydasını kanıtlamadı; yeni yedekleme/offload işi atanmadı / Existing diagnostics did not prove worker benefit; new backup/offload work was not assigned. Önceki durum / Prior status: Gerçek demo tanısı worker faydasını kanıtlamadı / Real demo-server diagnostic did not prove offload benefit. |
+| B | ADMIN-03 | Kapsam dışı: #915 yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu atanmadı / Hierarchy optimization beyond the separate #915 authority fix was not assigned. Önceki durum / Prior status: Yetki düzeltmesinden ayrı hiyerarşi/public-profile optimizasyonu yapılmadı / Hierarchy optimization not implemented. |
+| C | INT-12 | Kapsam dışı: Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk remain unresolved. Önceki durum / Prior status: Kurumsal kapasite ve spekülatif istek riski çözülmedi / Enterprise capacity and speculative-load risk unresolved. |
+| B | CPR-06 kalan / remainder | Atlandı: yerel kopyalamada main’in tüm satırları yerine yalnız çizilen pencere kopyalandı; eşdeğerlik geçmedi, aday geri alındı, PR/merge yok / Skipped: native copy omitted rows outside the rendered window; equivalence failed, candidate reverted, no PR or merge. |
+| B | CPR-09 / CP ilk açılış worker'ı | Kapsam dışı: Kişisel karar/checklist motorları ve #916 korumaları açıkça kapsam dışı / Personal/checklist engines and #916 guards are explicitly protected. Önceki durum / Prior status: #916 satır cache'i korunuyor; CP kişisel katman/ilk hesap worker'a taşınmadı / Row cache retained; initial/personal computation not offloaded. |
+| A | CPR-10 kalan / remainder | Kapsam dışı: Tam delta/WAL bağlantısı ayrı 6c kalıcılık işi / Full delta/WAL integration belongs to separate phase-6c persistence work. Önceki durum / Prior status: Önceki batch kazanımları var; tam delta/WAL entegrasyonu uygulanmadı / Earlier batching retained; full delta integration deferred. |
+| C | CARD-01 lisans / license | Kapsam dışı: Lisans parçası arama gerilemesiyle ayrıldı; yeniden optimizasyon atanmadı / License portion was excluded after regression and was not reassigned. Önceki durum / Prior status: +%24,42 arama p95 gerilemesi nedeniyle parça ayrıldı / Portion excluded for search regression. |
+
+**Yapılmayacaklar — kapsam dışı / Out of scope:** Yukarıdaki “kapsam dışı” satırları bu sekiz sohbetin uygulama kapsamına alınmadı;
+önceki prototip/ölçümler uygulama veya merge sayılmaz. PLM Sync/BOM, #916 hızlı kontrolü,
+`checklist-components-row-cache` testi, `withRowCache`, `cp-overview-assistant.js`,
+`checklist-supplier-sync.js` ve `checklist-components-engine.js` korunan kapsamdır.
+**EN:** Excluded rows are not implementation commitments; protected PLM/#916/checklist paths remain untouched.
 
 INT-08 için Linux tanı ortamı vardı; eksik olan preview/native üretim kabulüdür.
 **EN:** INT-08 is not “unmeasured for lack of any environment”; the missing part is implementation and product acceptance.

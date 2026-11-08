@@ -108,3 +108,29 @@ test('seçim kipi sıralama/sürükleme/filtreyi yutar ve Esc ile kapanır', () 
   assert.match(ENGINE, /if \(pick && event\.key === 'Escape'\) \{ event\.preventDefault\(\); cancelPick\(\); \}/);
   assert.match(ENGINE, /cell\.classList\.toggle\('freezePreview', index != null && i <= index\);/);
 });
+
+function picker(){
+ const tables={cpTable:{virtual:true},ordersTable:{virtual:true}},calls=[],freeze={},trigger={classList:{toggle(){}},setAttribute(){}};
+ const context={appLang:'en',CSS:{escape:x=>x},document:{getElementById:id=>id==='navFreezeBtn'?trigger:tables[id],querySelector:()=>null},
+  getFreeze:key=>({left:freeze[key]||0}),setFreeze:(key,n)=>freeze[key]=n,showToast(){},
+  activeTableInfo:()=>({tableKey:'cp',tableSel:'#cpTable',rerender:()=>calls.push('render:cp')}),
+  flushPendingTableRenders(){calls.push('flush:all');Object.values(tables).forEach(t=>t.virtual=false);},
+  window:{BLTableFreeze:{startPick:(table,handlers)=>{calls.push('pick');context.handlers=handlers;},cancelPick:()=>calls.push('cancel'),info:()=>({suspended:false})}},
+  applyFreeze:(id,key)=>calls.push('apply:'+key)};
+ vm.createContext(context);vm.runInContext(APP.slice(APP.indexOf('let _freezePick ='),APP.indexOf('function freezeStart(){')),context);
+ return {context,tables,calls,freeze};
+}
+test('freeze picker preserves virtual windows and does not flush pending tables',()=>{
+ const p=picker();assert.equal(p.context.freezeStartFor('cpTable','cp'),true);
+ assert.equal(p.tables.cpTable.virtual,true);assert.equal(p.tables.ordersTable.virtual,true);assert.deepEqual(p.calls,['pick']);
+});
+test('freeze commit and removal refresh only the selected table',()=>{
+ const p=picker();p.context.freezeStartFor('cpTable','cp');p.context.freezeCommitPick(2);
+ assert.equal(p.freeze.cp,2);assert.deepEqual(p.calls,['pick','render:cp']);
+ p.context.freezeStartFor('cpTable','cp');assert.equal(p.freeze.cp,0);assert.deepEqual(p.calls,['pick','render:cp','render:cp']);
+ assert.equal(p.tables.ordersTable.virtual,true);
+});
+test('cancelling the picker preserves both virtual windows without rendering',()=>{
+ const p=picker();p.context.freezeStartFor('cpTable','cp');p.context.freezeCancel();
+ assert.deepEqual(p.calls,['pick','cancel']);assert.equal(p.tables.cpTable.virtual,true);assert.equal(p.tables.ordersTable.virtual,true);
+});

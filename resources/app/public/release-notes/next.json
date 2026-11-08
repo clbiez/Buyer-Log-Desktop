@@ -1578,6 +1578,35 @@
       }
     },
     {
+      "id": "ana09-freeze-picker-virtualization",
+      "type": "fix",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Sütun dondururken büyük tablolar hafif kalır",
+        "en": "Large tables stay responsive when freezing columns"
+      },
+      "body": {
+        "tr": "Sütun dondurma seçicisi artık tüm tabloların satırlarını DOM’a yüklemez. Yalnız seçilen tablo yenilenir; diğer tablolar ve sanal kaydırma korunur.",
+        "en": "The Freeze Columns picker no longer loads every table’s rows into the DOM. Only the selected table refreshes; other tables and virtual scrolling are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana09-freeze-picker-virtualization.png",
+        "alt": {
+          "tr": "30.000 demo siparişli gerçek Buyer Log tablosunda ilk iki sütun dondurulmuş",
+          "en": "Actual Buyer Log table with 30,000 demo orders and the first two columns frozen"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, sentetik veri. Sanal satır penceresi, kaydırma ve diğer tablonun korunması çalışma zamanı kontrolleriyle doğrulandı.",
+          "en": "Actual application after the change, using synthetic data. Runtime checks verify the virtual row window, scrolling and preservation of the other table."
+        }
+      }
+    },
+    {
       "id": "ana03-backlog-on-demand",
       "type": "improvement",
       "module": {
