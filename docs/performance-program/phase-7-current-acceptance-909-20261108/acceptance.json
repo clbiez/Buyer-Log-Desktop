@@ -1,0 +1,73 @@
+{
+  "pr": 909,
+  "revision": "f947fed0f3245104e6e9496fb73c0291fb681efd",
+  "appTree": "7f84d209b784e5926f877dd6c63dfba9b0b5dc90",
+  "mainIncluded": "1796193f0a57c7785e7bf9fdb3557e33c550b25e",
+  "startedAt": "2026-11-08T01:31:55.378238+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "phase7-snapshot",
+        "local-db",
+        "compute"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-leaf909-related-6mi7ya9z",
+      "startedAt": "2026-11-08T01:31:55.378778+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T01:32:16.558842+00:00",
+      "rawSha256": "4bff25db95d0ab329e29f1f5cb0e93c34693b0ac1432fbbe3c18bb4f73152145",
+      "gzipSha256": "962a9e96915cf52ebccfd245159cf7ec94bff3ba38c2725c2e2b38bd4ef8cd1f"
+    },
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-leaf909-full-v9peywku",
+      "startedAt": "2026-11-08T01:32:16.560285+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T01:35:45.276551+00:00",
+      "rawSha256": "339d68697a06c2518438d54d00109c6d7cfc188178c4ab365e98de146f344b68",
+      "gzipSha256": "8cad9c0c01ca6d3ca05eb429a9e267386bc1083d31c8952b990e4032e92efe74"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-leaf909-i18n-ins_ly8k",
+      "startedAt": "2026-11-08T01:35:45.296398+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T01:35:47.797022+00:00",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-leaf909-release-1mn_nv6a",
+      "startedAt": "2026-11-08T01:35:47.797443+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-08T01:35:48.798547+00:00",
+      "rawSha256": "a5e1ca123e9ba0108410ec1dcd118ffd265c026437e7c2e8852f38bc27c6c66e",
+      "gzipSha256": "3e22855bee9e9fa982d7c506a5d20692789b4a09fa712f443b4817865a63e1ad"
+    }
+  ],
+  "finishedAt": "2026-11-08T01:35:48.798887+00:00"
+}
