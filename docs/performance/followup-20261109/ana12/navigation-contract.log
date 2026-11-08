@@ -1,0 +1,15 @@
+✔ CP tab revisits reuse the checklist runtime instead of re-downloading and re-rendering (2.127529ms)
+✔ map loading uses the Working orb only while the operation is active (0.989541ms)
+✔ working orb stops by itself once its canvas leaves the document (2.490097ms)
+✔ identical Backlog requests reuse one computation keyed by every input (52.444713ms)
+✔ deferred UI scripts download in parallel and the profile gate loads early (0.590294ms)
+✔ the 5 s IAM session check does not re-render the UI when the profile is unchanged (0.333213ms)
+✔ memoized text normalizers return exactly the same tokens (5.849061ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137.305752
