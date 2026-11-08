@@ -1,0 +1,17 @@
+{
+  "kind": "static-source-and-arithmetic-review-not-generated-image-measurement",
+  "historicalSourceRevision": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+  "rawOriginalCapBytes": 52428800,
+  "effectiveGlobalJsonCapBytes": 104857600,
+  "collectionNominalJsonCapBytes": 73400320,
+  "bodyParserSkipsAlreadyParsedBody": true,
+  "largestPngFilteredScanlinesBytes": 37752832,
+  "largestPngConservativeEncodedUpperBytes": 37771470,
+  "largestPngUpperMiB": 36.02168083190918,
+  "base64AtRawCapBytes": 69905068,
+  "base64Plus4096HeaderBytes": 69909164,
+  "fitsNominal70MiB": true,
+  "fitsEffective100MiB": true,
+  "jpegTheoreticalSizeClaim": null,
+  "jpegRuntimePreparationRequirement": "Every actual generated JPEG must decode, hash and fit raw/body budgets; whole fixture fails if any does not."
+}

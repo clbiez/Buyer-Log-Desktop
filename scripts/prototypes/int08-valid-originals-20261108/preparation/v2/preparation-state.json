@@ -1,0 +1,10 @@
+{
+  "kind": "preparation-only-disk-metadata-check-not-app-admission",
+  "checkedAt": "2026-11-07T23:46:31.532355+00:00",
+  "freeBytes": 883011584,
+  "v1ReferenceUnchanged": true,
+  "approvedRevisionStaged": false,
+  "originalsGenerated": false,
+  "runsExecuted": false,
+  "actualCohortAdmission": "Deferred until selected approved revision and actual generated file sizes exist; script declines before app start if insufficient."
+}

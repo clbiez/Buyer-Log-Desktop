@@ -1,0 +1,49 @@
+{
+  "kind": "read-only-review-context-not-approved-staging",
+  "revision": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+  "appTree": "044c2d8d6c8fc4336675a8e0e45e2c566492bebe",
+  "capturedAt": "2026-11-07T23:38:26.405524+00:00",
+  "files": {
+    "public/model-image-cache.js": {
+      "gitBlob": "b8e952b9181cb7ce20e6efe0949e83b1ee8b2d5e",
+      "sha256": "7179b1ddd7eb5eed98487a91045866c9370c94a86881d0944fded4c7ed5a2e22"
+    },
+    "public/app-main.js": {
+      "gitBlob": "1311e659e818e8227840a6258498f98283897e91",
+      "sha256": "3cf55dba638ffc1a38ab664bc6af3aa85178fe0c0de334f0d3515e635beba605"
+    },
+    "public/detail-drawer.js": {
+      "gitBlob": "6147788213dbd771d70b31f74f66a56d1dd4fd14",
+      "sha256": "7be31393af72adcfffe16a8670514a86b8fc04eb4f98862496816a13028218f3"
+    },
+    "public/perf-runtime.js": {
+      "gitBlob": "02889cd46b2c07dc3d74dfcf86c2231b12143600",
+      "sha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
+    },
+    "public/vendor/exceljs.min.js": {
+      "gitBlob": "0b07c1ee50eefd56c0f363540750bbcc6225b75b",
+      "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9"
+    },
+    "server/user-data.js": {
+      "gitBlob": "94c18475fb731a29ca83515d88c1ecc17e6ab9c5",
+      "sha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+    },
+    "server/server.js": {
+      "gitBlob": "b815f0c2efcce896b56b172b6e19c18f5113005a",
+      "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+    },
+    "server/routes/cp-image-routes.js": {
+      "gitBlob": "3e0daeffe3540ad0acaea99a58aca0ca058b2429",
+      "sha256": "559c2790b170dca20761e91c1cc643404262edd449dd7a23449e3d22a2082784"
+    },
+    "server/routes/collection-image-routes.js": {
+      "gitBlob": "c97ebdd2581f6ef958b4c277bbd7dfdc6a6c1350",
+      "sha256": "514c840c652f914f1aaeaec6c095895d3fd25ca694a8f0726ce7018359db08be"
+    }
+  },
+  "dependencyJsonParser": {
+    "path": "node_modules/body-parser/lib/types/json.js",
+    "sha256": "3b19e93395f011b99a31e5c16086eeaa9e52acdc6a680191c1ceaeab31b15fc4",
+    "observation": "jsonParser returns next() when req._body is already true; global100MiB parsing precedes collection nominal70MiB middleware."
+  }
+}
