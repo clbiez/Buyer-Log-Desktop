@@ -463,6 +463,12 @@ function bindTableSearchClipboardPaste(el){
   el.addEventListener('paste',e=>{
     const text=(e.clipboardData||window.clipboardData)?.getData('text/plain');
     if(text==null||!/\t|\r\n|\n|\r/.test(text))return;
+    if(el.id==='ordersSearch'&&ordersProjectionIsThin()){
+      e.preventDefault();const values=parseTableSearchClipboardMatrix(text),value=el.value;
+      return ordersUiChange('orders','orders.filter.paste',el,
+        ()=>ordersUiIntent([el],()=>[el.value],()=>document.getElementById(el.id)===el&&el.value===value),
+        ()=>{el.value=values.join(', ');renderOrdersDebounced();});
+    }
     e.preventDefault();
     const values=parseTableSearchClipboardMatrix(text);
     el.value=values.join(', ');
@@ -2682,6 +2688,37 @@ function activeTableFilterTokens(tableKey){
   if(tableKey==='orders'&&norm(state.ordersQuickExf))tokens.push({kind:'quickExf',key:'',label:'Ex-Factory',detail:state.ordersQuickExf});
   return tokens;
 }
+// New proposed private declarations; none is an existing product export.
+let _ordersUiCommandGate=null;
+function ordersUiChange(tableKey,reason,lane,inspect,change){
+  if(tableKey!=='orders'||!ordersProjectionIsThin())return change(null);
+  const api=window.BLOrdersUiCommand;
+  if(!api){showToast(ordersFullActionError('ORDERS_FULL_STALE').message,{kind:'error'});return Promise.resolve(false);}
+  if(!_ordersUiCommandGate)_ordersUiCommandGate=api.create({
+    isThin:ordersProjectionIsThin,activeTab:()=>currentActiveTab(),
+    captureSource:()=>{
+      const controller=_ordersFullViewControllers.get(state.orders);
+      if(!controller||typeof controller.captureUiSource!=='function')throw ordersFullActionError('ORDERS_FULL_STALE');
+      return controller.captureUiSource();
+    },
+    ensureFull:reason=>ensureOrdersFullForAction(reason),
+    onError:error=>showToast(ordersFullActionError(error?.code==='ORDERS_FULL_FORBIDDEN'?'ORDERS_FULL_FORBIDDEN':'ORDERS_FULL_STALE').message,{kind:'error'}),
+  });
+  return _ordersUiCommandGate.run({reason,lane,inspect,change});
+}
+function ordersUiIntent(nodes,read,extra){return window.BLOrdersUiCommand.intent(nodes,read,extra);}
+function ordersUiControlsIntent(){
+  const ids=['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'];
+  const nodes=ids.map(id=>document.getElementById(id));
+  return ordersUiIntent(nodes,()=>nodes.map(node=>node&&node.value),()=>ids.every((id,i)=>document.getElementById(id)===nodes[i]));
+}
+function ordersUiPanelIntent(panel,extraNodes=[]){
+  const nodes=[...panel.querySelectorAll('input,select,textarea')],targets=[panel,...extraNodes];
+  return ordersUiIntent([...targets,...nodes],()=>[...nodes,...extraNodes].map(node=>[node.value,node.checked,node.dataset?.id||'',node.dataset?.dir||'']),
+    ()=>{const live=[...panel.querySelectorAll('input,select,textarea')];return _openFilterPanel===panel&&live.length===nodes.length&&live.every((node,index)=>node===nodes[index]);});
+}
+window.BLOrdersUiChange=ordersUiChange;
+
 function renderActiveFilterContext(tableKey){
   if(tableKey!=='cp'&&tableKey!=='orders'&&tableKey!=='koleksiyon')return;
   const prefix=tableKey==='koleksiyon'?'kol':tableKey;
@@ -2695,9 +2732,10 @@ function renderActiveFilterContext(tableKey){
   }).join(''):`<span class="activeFilterEmpty">${escapeHtml(appLang==='en'?'No active table filters':'Aktif tablo filtresi yok')}</span>`;
   bar.dataset.activeCount=String(tokens.length);
   const clear=bar.querySelector('[data-active-filter-clear]');if(clear)clear.hidden=!tokens.length;
-  wrap.querySelectorAll('[data-filter-remove]').forEach(button=>button.addEventListener('click',()=>removeActiveFilterToken(tableKey,button.dataset.filterKind,button.dataset.filterKey)));
+  wrap.querySelectorAll('[data-filter-remove]').forEach(button=>button.addEventListener('click',()=>ordersUiChange(tableKey,'orders.filter.remove',button,()=>ordersUiIntent([button],()=>[button.dataset.filterKind,button.dataset.filterKey]),()=>removeActiveFilterToken(tableKey,button.dataset.filterKind,button.dataset.filterKey))));
 }
 function removeActiveFilterToken(tableKey,kind,key){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','removeActiveFilterToken','orders-command',ordersUiControlsIntent,()=>removeActiveFilterToken(tableKey,kind,key));
   if(kind==='search'||kind==='select'){const input=document.getElementById(key);if(input)input.value='';}
   else if(kind==='column'){
     if(tableKey==='koleksiyon'){delete kolColFilters[key];saveKolColState();}
@@ -2714,6 +2752,7 @@ function removeActiveFilterToken(tableKey,kind,key){
   if(tableKey==='cp')renderCP();else if(tableKey==='orders')renderOrders();else if(tableKey==='koleksiyon')renderKol();
 }
 function clearTableFilters(tableKey,{announce=true}={}){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','clearTableFilters','orders-command',ordersUiControlsIntent,()=>clearTableFilters(tableKey,{announce}));
   const filterIds={
     cp:['cpSearch','cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason'],
     orders:['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'],
@@ -2736,9 +2775,9 @@ function clearTableFilters(tableKey,{announce=true}={}){
   saveCoreAutoFilterState();
   if(announce)showToast(appLang==='en'?'Table filters cleared; page scope preserved.':'Tablo filtreleri temizlendi; sayfa kapsamı korundu.');
 }
-document.querySelectorAll('[data-active-filter-clear]').forEach(button=>button.addEventListener('click',()=>clearTableFilters(button.dataset.activeFilterClear)));
+document.querySelectorAll('[data-active-filter-clear]').forEach(button=>button.addEventListener('click',()=>ordersUiChange(button.dataset.activeFilterClear,'orders.filter.clear',button,()=>ordersUiIntent([button],()=>[button.dataset.activeFilterClear]),()=>clearTableFilters(button.dataset.activeFilterClear))));
 document.getElementById('navClearFilters').addEventListener('click', ()=>{
-  const info=activeTableInfo();if(info)clearTableFilters(info.tableKey);
+  const info=activeTableInfo();if(info)return ordersUiChange(info.tableKey,'orders.filter.nav-clear','orders-nav-clear',ordersUiControlsIntent,()=>clearTableFilters(info.tableKey));
 });
 // CTRL+C (macOS'ta CMD+C): etkin sayfanın Kopyala düğmesini çalıştırır.
 // Metin seçiliyse ya da bir alana yazılıyorsa araya girilmez — orada tarayıcının
@@ -2769,6 +2808,7 @@ function managedSelectionSourceRows(tableKey){
   return sort?.key?sortRows(rows,sort.key,sort.dir):rows;
 }
 function managedSelectionSnapshot(tableKey){
+  if(tableKey==='orders'&&ordersProjectionIsThin())throw Object.assign(ordersFullActionError('ORDERS_FULL_STALE'),{code:'ORDERS_FULL_REQUIRED'});
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
   const visible=tableKey==='orders'?filteredOrders():filteredCP();
   const ids=new Set(visible.map(row=>String(row._id)));
@@ -2776,11 +2816,13 @@ function managedSelectionSnapshot(tableKey){
   return {rows,hidden:rows.filter(row=>!ids.has(String(row._id))),selected};
 }
 function managedSelectionChange(tableKey,change){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','managedSelectionChange','orders-selection',()=>()=>true,()=>managedSelectionChange(tableKey,change));
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected,before=[...selected];
   change(selected);
   const render=tableKey==='orders'?renderOrders:renderCP;render();window.BLSelectionBar?.refresh();
   showToast(appLang==='en'?'Selection updated.':'Seçim güncellendi.',{actions:[{id:'undo',label:appLang==='en'?'Undo':'Geri al'}],onAction:id=>{
     if(id!=='undo')return;
+    if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','orders.selection.undo','orders-selection',()=>()=>true,()=>{throw ordersFullActionError('ORDERS_FULL_STALE');});
     const allowed=new Set(managedSelectionSourceRows(tableKey).map(row=>String(row._id)));
     selected.clear();before.forEach(value=>{if(allowed.has(String(value)))selected.add(value);});render();window.BLSelectionBar?.refresh();
   }});
@@ -4505,6 +4547,7 @@ const tableViewLastAppliedPreset=Object.create(null);
 const partialViewState={cp:false,orders:false};
 function partialViewEnabled(tableKey){return (tableKey==='cp'||tableKey==='orders')&&partialViewState[tableKey]===true;}
 function setPartialView(tableKey,enabled){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','setPartialView','orders-command',ordersUiControlsIntent,()=>setPartialView(tableKey,enabled));
   if(tableKey!=='cp'&&tableKey!=='orders')return false;
   partialViewState[tableKey]=!!enabled;
   cpLogisticExpandedSet(tableKey).clear();
@@ -5102,7 +5145,7 @@ document.addEventListener('click',async event=>{
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
   const tableKey=button.dataset.partialViewToggle;
-  setPartialView(tableKey,!partialViewEnabled(tableKey));
+  return ordersUiChange(tableKey,'orders.partial',button,()=>ordersUiIntent([button],()=>[button.dataset.partialViewToggle]),()=>setPartialView(tableKey,!partialViewEnabled(tableKey)));
 });
 document.addEventListener('dblclick',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button||!TABLE_VIEW_EDITABLE_PRESETS.includes(button.dataset.tableViewPreset))return;
@@ -6699,6 +6742,7 @@ function hasMirroredHeaderFilter(tableKey, keys){
   return (keys||[]).some(key=>!!state.colFilters?.[tableKey]?.[key]);
 }
 function clearColumnFilters(tableKey, keys){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','clearColumnFilters','orders-command',ordersUiControlsIntent,()=>clearColumnFilters(tableKey,keys));
   const bucket = state.colFilters?.[tableKey]; if(!bucket) return;
   (keys||[]).forEach(key=>delete bucket[key]);
 }
@@ -6712,6 +6756,7 @@ function normalizeUnifiedPriorityFilter(tableKey){
 // Hızlı filtre çipleri aynı sütunun çoklu değer kümesini kullanır.
 // Aynı grupta VEYA, farklı gruplarda VE mantığı uygulanır.
 function toggleMirroredQuickFilter(tableKey,key,controlId,candidate,rerender){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','toggleMirroredQuickFilter','orders-command',ordersUiControlsIntent,()=>toggleMirroredQuickFilter(tableKey,key,controlId,candidate,rerender));
   const control=document.getElementById(controlId), wanted=comparableColumnFilterValue(key,candidate); if(!wanted)return;
   if(control) control.value='';
   if(!state.colFilters[tableKey]) state.colFilters[tableKey]={};
@@ -7049,6 +7094,7 @@ document.addEventListener('mousedown', e=>{
   if(_openFilterPanel && !_openFilterPanel.contains(e.target) && !e.target.classList.contains('thFilterBtn')) closeHeaderFilter();
 });
 function openCheckFilter(tableKey, anchorEl, rerenderOuter){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','openCheckFilter',anchorEl,()=>ordersUiIntent([anchorEl],()=>[],()=>anchorEl.isConnected!==false),()=>openCheckFilter(tableKey,anchorEl,rerenderOuter));
   closeHeaderFilter();
   const selSetMap = {cp:state.cpSelected, orders:state.ordersSelected};
   const selSet = selSetMap[tableKey];
@@ -7070,11 +7116,11 @@ function openCheckFilter(tableKey, anchorEl, rerenderOuter){
       <label class="cfpItem"><input type="radio" name="chkf" value="checked" ${active==='checked'?'checked':''}> ${en?'Checked only':'Sadece işaretlenenler'} (${selSet.size})</label>
       <label class="cfpItem"><input type="radio" name="chkf" value="unchecked" ${active==='unchecked'?'checked':''}> ${en?'Unchecked only':'Sadece işaretsizler'} (${uncheckedCount})</label>
     </div>`;
-  panel.querySelectorAll('input[name=chkf]').forEach(r=> r.addEventListener('change', ()=>{
+  panel.querySelectorAll('input[name=chkf]').forEach(r=> r.addEventListener('change', ()=>ordersUiChange(tableKey,'orders.check-filter',r,()=>ordersUiPanelIntent(panel,[r]),()=>{
     state.checkFilter[tableKey] = normalizeCheckFilterMode(r.value);
     if(rerenderOuter) rerenderOuter();
     closeHeaderFilter();
-  }));
+  })));
 }
 /* -------------------------------------------------------------------
    v6.34 — ÜÇ DURUMLU İŞARET FİLTRESİ
@@ -7092,6 +7138,7 @@ const CHECK_FILTER_CYCLE = Object.freeze(['','checked','unchecked']);
 // Başlıktaki "hepsini seç" kutusuna sağ tık: her tıklamada Tümü → İşaretliler →
 // İşaretsizler sırasıyla döner. Sol tık davranışı (hepsini seç/bırak) korunur.
 function cycleCheckFilter(tableKey, rerenderOuter){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','cycleCheckFilter','orders-command',ordersUiControlsIntent,()=>cycleCheckFilter(tableKey,rerenderOuter));
   const current = normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const next = CHECK_FILTER_CYCLE[(CHECK_FILTER_CYCLE.indexOf(current)+1) % CHECK_FILTER_CYCLE.length];
   state.checkFilter[tableKey] = next;
@@ -7104,6 +7151,7 @@ function cycleCheckFilter(tableKey, rerenderOuter){
   return next;
 }
 function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
+  if(tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','openHeaderFilter',anchorEl,()=>ordersUiIntent([anchorEl],()=>[key],()=>anchorEl.isConnected!==false),()=>openHeaderFilter(tableKey,key,anchorEl,rerenderOuter));
   closeHeaderFilter();
   const cols = COLS_BY_TABLE[tableKey];
   const col = cols.find(c=>c.k===key) || {k:key, type:'ro'};
@@ -7117,6 +7165,8 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
   panel.style.top = (rect.bottom+4)+'px';
   document.body.appendChild(panel);
   _openFilterPanel = panel;
+  const changeHeader=(reason,change,node)=>ordersUiChange(tableKey,reason,panel,
+    ()=>ordersUiPanelIntent(panel,node?[node]:[]),change);
   const GRAN_LABELS = {year:'Yıl', month:'Ay', week:'Hafta', day:'Gün'};
   function currentAllVals(){ return isDate ? uniqueDateBuckets(tableKey, key, currentGran) : uniqueColValues(tableKey, key); }
   function checklistHtml(gran){
@@ -7156,15 +7206,16 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
       searchInp.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();applyFromBody(bodyEl,gran,false);} });
     }
     bodyEl.querySelector('.cfpApplySelection')?.addEventListener('click',()=>applyFromBody(bodyEl,gran,false));
-    bodyEl.querySelector('.cfpRemoveSelection')?.addEventListener('click',()=>{
+    bodyEl.querySelector('.cfpRemoveSelection')?.addEventListener('click',()=>changeHeader('orders.header.remove',()=>{
       delete state.colFilters[tableKey][key];
       if(rerenderOuter) rerenderOuter();
       updateDrawerSummaries();
       closeHeaderFilter();
-    });
+    }));
     bodyEl.querySelector('.cfpAddSelection')?.addEventListener('click',()=>applyFromBody(bodyEl,gran,true));
   }
   function applyFromBody(bodyEl, gran, addToCurrent=false){
+    if(tableKey==='orders'&&ordersProjectionIsThin())return changeHeader('orders.header.apply',()=>applyFromBody(bodyEl,gran,addToCurrent));
     currentGran = gran;
     // Yalnız değer listesi; kumaş kartı alan süzgeci kutuları (.kolFabricFacetPanel) ayrı okunur.
     const boxes = [...bodyEl.querySelectorAll('.cfpList input[type=checkbox]')];
@@ -7218,17 +7269,17 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
     </div>`;
   }
   function wireSortBar(){
-    panel.querySelectorAll('.cfpSortBtn').forEach(b=>b.addEventListener('click', ()=>{
+    panel.querySelectorAll('.cfpSortBtn').forEach(b=>b.addEventListener('click', ()=>changeHeader('orders.header.sort',()=>{
       if(SORT_STATE_KEY && state[SORT_STATE_KEY]){ state[SORT_STATE_KEY] = {key, dir: Number(b.dataset.dir)||1}; }
       if(rerenderOuter) rerenderOuter();
       closeHeaderFilter();
-    }));
+    },b)));
     const clr = panel.querySelector('.cfpClearCol');
-    if(clr) clr.addEventListener('click', ()=>{
+    if(clr) clr.addEventListener('click', ()=>changeHeader('orders.header.clear',()=>{
       delete state.colFilters[tableKey][key];
       if(rerenderOuter) rerenderOuter();
       closeHeaderFilter();
-    });
+    },clr));
   }
   /* Yüzde sütununda değer listesi yerine ARALIK kutuları (v5.95).
      İstenen okuma yönü: ÜST % > mevcut % > ALT %. Girilen değerler yüzdedir;
@@ -7260,7 +7311,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
       const n=Number(text);
       return Number.isFinite(n)?n/100:null;
     };
-    panel.querySelector('.cfpRangeApply')?.addEventListener('click',()=>{
+    panel.querySelector('.cfpRangeApply')?.addEventListener('click',()=>changeHeader('orders.header.range',()=>{
       let min=readPct(minInp), max=readPct(maxInp);
       if(min==null&&max==null){ delete state.colFilters[tableKey][key]; }
       else {
@@ -7271,12 +7322,12 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
       }
       if(rerenderOuter) rerenderOuter();
       closeHeaderFilter();
-    });
-    panel.querySelector('.cfpRangeClear')?.addEventListener('click',()=>{
+    }));
+    panel.querySelector('.cfpRangeClear')?.addEventListener('click',()=>changeHeader('orders.header.range-clear',()=>{
       delete state.colFilters[tableKey][key];
       if(rerenderOuter) rerenderOuter();
       closeHeaderFilter();
-    });
+    }));
     [minInp,maxInp].forEach(input=>input?.addEventListener('keydown',e=>{
       if(e.key==='Enter'){ e.preventDefault(); panel.querySelector('.cfpRangeApply')?.click(); }
     }));
@@ -7300,7 +7351,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
   }
   function wireRevisionSection(){
     if(!canFilterRevision) return;
-    panel.querySelectorAll('input[name="cfpRev"]').forEach(radio=>radio.addEventListener('change',()=>{
+    panel.querySelectorAll('input[name="cfpRev"]').forEach(radio=>radio.addEventListener('change',()=>changeHeader('orders.header.revision',()=>{
       const bucket = state.colFilters[tableKey];
       const entry = bucket[key];
       const mode = radio.value;
@@ -7313,7 +7364,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
       }
       if(rerenderOuter) rerenderOuter();
       closeHeaderFilter();
-    }));
+    },radio)));
   }
   function renderNonDate(){
     if(isPct){
@@ -7897,8 +7948,8 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   table._blRenderedColumns=cols;
   if(!pageOnly)resolveTableColumnSchemas(tableKey,fullRows);
   const selSet = opts.selectedSet;
-  const notifySelectionChange = ()=>{
-    if(typeof opts.onSelectionChange==='function') opts.onSelectionChange(selSet,fullRows);
+  const notifySelectionChange = (selected=selSet,records=fullRows)=>{
+    if(typeof opts.onSelectionChange==='function') opts.onSelectionChange(selected,records);
     else if((tableKey==='cp'||tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
   };
   const groupBoundaryKeys=opts.withGroups?groupedColumnBoundaryKeys(cols):new Set();
@@ -7954,7 +8005,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     const col=(COLS_BY_TABLE[tableKey]||[]).find(item=>item.k===key);
     const label = th.querySelector('.thLabel');
     if(col?.type==='cpImage')label.addEventListener('click',e=>{e.stopPropagation();openTableImageSizePopover(th,tableKey);});
-    else label.addEventListener('click', e=>{ e.stopPropagation(); onSort(key); });
+    else label.addEventListener('click', e=>{ e.stopPropagation();return ordersUiChange(tableKey,'orders.sort.header',label,()=>ordersUiIntent([table,label],()=>[key],()=>document.getElementById(tableId)===table&&table.contains(label)),()=>onSort(key)); });
     const fbtn = th.querySelector('.thFilterBtn');
     if(fbtn)fbtn.addEventListener('click', e=>{ e.stopPropagation(); openHeaderFilter(tableKey, key, fbtn, opts.rerenderOuter); });
     th.addEventListener('contextmenu',e=>openManagedTableColumnMenu(e,tableKey,key,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,opts)));
@@ -7966,14 +8017,23 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     const allChecked = fullRows.length>0 && fullRows.every(r=>selectionHasId(selSet,r._id));
     selAll.checked = allChecked;
     selAll.setAttribute('aria-label',appLang==='en'?'Select all matching rows':'Tüm eşleşen satırları seç');
-    selAll.addEventListener('change', ()=>{
+    selAll.addEventListener('change', ()=>ordersUiChange(tableKey,'orders.selection.all',selAll,
+      ()=>ordersUiIntent([table,selAll],()=>[selAll.checked],()=>document.getElementById(tableId)===table&&table.contains(selAll)),full=>{
+      if(full){
+        const liveRows=full.remapRows(fullRows),liveSet=state.ordersSelected;
+        liveRows.forEach(row=>selectionSetId(liveSet,row._id,selAll.checked));
+        if(liveSet.size>0)window.BLGridClipboard?.clear?.(tableId);
+        renderOrders();
+        if(typeof opts.onSelectionChange==='function')opts.onSelectionChange(liveSet,liveRows);else updateShippingBtnVisibility();
+        return;
+      }
       fullRows.forEach(r=>selectionSetId(selSet,r._id,selAll.checked));
       // Satır seçimi elle işaretlenince eski hücre/aralık seçimi otomatik geçersiz
       // sayılır: aksi halde Kopyala hâlâ bayat tek hücreyi kopyalar (bkz. clear()).
       if(selSet.size>0) window.BLGridClipboard?.clear?.(tableId);
       renderFullTable(tableId, tableKey, fullRows, sortState, onSort, opts);
       notifySelectionChange();
-    });
+    }));
     const chkFilterBtn = thead.querySelector('.chkFilterBtn');
     if(chkFilterBtn) chkFilterBtn.addEventListener('click', e=>{
       e.stopPropagation();
@@ -8075,6 +8135,14 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
+        if(meta.tableKey==='orders'&&ordersProjectionIsThin())return ordersUiChange('orders','orders.selection.row',chk,
+          ()=>ordersUiIntent([tbody,chk],()=>[chk.dataset.id,chk.checked],()=>tbody._chkMeta===meta&&tbody.contains(chk)&&document.getElementById(meta.tableId)===meta.table),full=>{
+          const liveRows=full.remapRows(meta.rows),liveSet=state.ordersSelected,id=selectionActualId(liveRows,meta.getId,chk.dataset.id);
+          selectionSetId(liveSet,id,chk.checked);
+          if(liveSet.size>0)window.BLGridClipboard?.clear?.(meta.tableId);
+          renderOrders();
+          if(typeof meta.onSelectionChange==='function')meta.onSelectionChange(liveSet,liveRows);else updateShippingBtnVisibility();
+        });
         const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
         selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
@@ -9128,20 +9196,22 @@ function renderOrdersDimPanel(dim){
   panel.innerHTML=`<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:0;margin-bottom:4px;">
     <input type="checkbox" class="ordersDimAll" ${selected.size===0?'checked':''}> ${appLang==='en'?'All':'Hepsi'}
   </label>`+facetChecklistHtml(vals,validSet,selected,'ordersDimChk');
-  panel.querySelector('.ordersDimAll')?.addEventListener('change',e=>{
+  panel.querySelector('.ordersDimAll')?.addEventListener('change',e=>ordersUiChange('orders','orders.dim.all',e.target,
+    ()=>ordersUiIntent([panel,e.target],()=>[e.target.checked],()=>document.getElementById('ordersDimPanel_'+dim)===panel&&panel.contains(e.target)),()=>{
     if(e.target.checked){
       delete ordersDimFilters[dim];
       panel.querySelectorAll('.ordersDimChk').forEach(c=>c.checked=false);
       updateOrdersDimBtnLabels();saveOrdersDimFilters();renderOrders();
     }else e.target.checked=true;
-  });
-  panel.querySelectorAll('.ordersDimChk').forEach(chk=>chk.addEventListener('change',()=>{
+  }));
+  panel.querySelectorAll('.ordersDimChk').forEach(chk=>chk.addEventListener('change',()=>ordersUiChange('orders','orders.dim.value',chk,
+    ()=>ordersUiIntent([panel,chk],()=>[chk.value,chk.checked],()=>document.getElementById('ordersDimPanel_'+dim)===panel&&panel.contains(chk)),()=>{
     if(!ordersDimFilters[dim])ordersDimFilters[dim]=new Set();
     if(chk.checked)ordersDimFilters[dim].add(chk.value);else ordersDimFilters[dim].delete(chk.value);
     if(!ordersDimFilters[dim].size)delete ordersDimFilters[dim];
     const all=panel.querySelector('.ordersDimAll');if(all)all.checked=!ordersDimFilters[dim];
     updateOrdersDimBtnLabels();saveOrdersDimFilters();renderOrders();
-  }));
+  })));
 }
 document.querySelectorAll('.ordersDimFilterGroup [data-ordersdim]').forEach(btn=>{
   btn.addEventListener('click',e=>{
@@ -9268,8 +9338,10 @@ bindTableSearchClipboardPaste(document.getElementById('cpSearch'));
 const renderOrdersDebounced=debounce(renderOrders,150);
 ['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'].forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
-  if(el.tagName==='INPUT')el.addEventListener('input',renderOrdersDebounced);
-  el.addEventListener('change',renderOrders);
+  const run=(render,event)=>ordersUiChange('orders','orders.filter.control',el,
+    ()=>ordersUiIntent([el],()=>[el.value],()=>document.getElementById(id)===el),()=>render.call(el,event));
+  if(el.tagName==='INPUT')el.addEventListener('input',event=>run(renderOrdersDebounced,event));
+  el.addEventListener('change',event=>run(renderOrders,event));
 });
 bindTableSearchClipboardPaste(document.getElementById('ordersSearch'));
 
@@ -9698,6 +9770,7 @@ function migrateLegacyOrdersQuickFilters(){
   }
 }
 function toggleOrdersQuickExFactory(candidate,rerender){
+  if(true&&ordersProjectionIsThin())return ordersUiChange('orders','toggleOrdersQuickExFactory','orders-command',ordersUiControlsIntent,()=>toggleOrdersQuickExFactory(candidate,rerender));
   const wanted=norm(candidate);if(!wanted)return;
   if(!state.colFilters.orders)state.colFilters.orders={};
   const current=state.colFilters.orders['Ex-factory'];
@@ -9708,6 +9781,7 @@ function toggleOrdersQuickExFactory(candidate,rerender){
   state.ordersQuickExf='';if(rerender)rerender();
 }
 function toggleOrdersActiveQuick(value){
+  if(true&&ordersProjectionIsThin())return ordersUiChange('orders','toggleOrdersActiveQuick','orders-command',ordersUiControlsIntent,()=>toggleOrdersActiveQuick(value));
   const wanted=norm(value);if(!wanted)return;
   const set=state.ordersQuickActive||(state.ordersQuickActive=new Set());
   if(set.size===0){set.add(wanted);}
@@ -9918,7 +9992,7 @@ function renderOrdersNow(){
   qfgFinish('orders','ordersKpi',renderOrders);
   kpi.querySelectorAll('[data-order-active]').forEach(el=>{
     if(selectedActive.has(el.dataset.orderActive))el.classList.add('active');
-    el.addEventListener('click',()=>toggleOrdersActiveQuick(el.dataset.orderActive));
+    el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.active',el,()=>ordersUiIntent([el],()=>[el.dataset.orderActive]),()=>toggleOrdersActiveQuick(el.dataset.orderActive)));
   });
   const curStatus=state.colFilters.orders?.STATUS?.values||new Set(),curDel=state.colFilters.orders?.['Del. Type']?.values||new Set(),curSeason=state.colFilters.orders?.Season?.values||new Set(),curExf=state.colFilters.orders?.['Ex-factory']?.quickExf?state.colFilters.orders['Ex-factory'].values:new Set();
   kpi.querySelectorAll('[data-status]').forEach(el=>{if(mirroredQuickValueActive('orders','STATUS',curStatus,el.dataset.status))el.classList.add('active');});
@@ -9926,11 +10000,11 @@ function renderOrdersNow(){
   kpi.querySelectorAll('[data-season]').forEach(el=>{if(mirroredQuickValueActive('orders','Season',curSeason,el.dataset.season))el.classList.add('active');});
   kpi.querySelectorAll('[data-exf]').forEach(el=>{if([...curExf].some(v=>norm(v)===norm(el.dataset.exf)))el.classList.add('active');});
   kpi.querySelectorAll('.kpi:not([data-qfg-col])').forEach(el=>{
-    if(el.dataset.act==='clearAll')el.addEventListener('click',()=>{['ordersFStatus','ordersFDelType','ordersFSeason'].forEach(id=>{const node=document.getElementById(id);if(node)node.value='';});state.ordersQuickActive.clear();clearColumnFilters('orders',mirrored);renderOrders();});
-    else if(el.dataset.status!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','STATUS','ordersFStatus',el.dataset.status,renderOrders));
-    else if(el.dataset.deltype!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','Del. Type','ordersFDelType',el.dataset.deltype,renderOrders));
-    else if(el.dataset.season!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','Season','ordersFSeason',el.dataset.season,renderOrders));
-    else if(el.dataset.exf!=null)el.addEventListener('click',()=>toggleOrdersQuickExFactory(el.dataset.exf,renderOrders));
+    if(el.dataset.act==='clearAll')el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.clear',el,()=>ordersUiIntent([el],()=>[el.dataset.act]),()=>{['ordersFStatus','ordersFDelType','ordersFSeason'].forEach(id=>{const node=document.getElementById(id);if(node)node.value='';});state.ordersQuickActive.clear();clearColumnFilters('orders',mirrored);renderOrders();}));
+    else if(el.dataset.status!=null)el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.status',el,()=>ordersUiIntent([el],()=>[el.dataset.status]),()=>toggleMirroredQuickFilter('orders','STATUS','ordersFStatus',el.dataset.status,renderOrders)));
+    else if(el.dataset.deltype!=null)el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.del',el,()=>ordersUiIntent([el],()=>[el.dataset.deltype]),()=>toggleMirroredQuickFilter('orders','Del. Type','ordersFDelType',el.dataset.deltype,renderOrders)));
+    else if(el.dataset.season!=null)el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.season',el,()=>ordersUiIntent([el],()=>[el.dataset.season]),()=>toggleMirroredQuickFilter('orders','Season','ordersFSeason',el.dataset.season,renderOrders)));
+    else if(el.dataset.exf!=null)el.addEventListener('click',()=>ordersUiChange('orders','orders.quick.exf',el,()=>ordersUiIntent([el],()=>[el.dataset.exf]),()=>toggleOrdersQuickExFactory(el.dataset.exf,renderOrders)));
   });
   scheduleCoreAutoFilterSave();
   renderFullTable('ordersTable','orders',rows,state.ordersSort,key=>{

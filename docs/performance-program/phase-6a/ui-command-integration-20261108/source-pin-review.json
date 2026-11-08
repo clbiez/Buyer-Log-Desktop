@@ -1,0 +1,29 @@
+{
+  "retirementGitRef": "5829fcf4fa4ec9b7bfb1815bb43577943177dd38",
+  "retirementSha256": "d0885781d9b9a5e88135a1fd7a7c9c309603d4f4484191219079408ad1237810",
+  "uiAppSha256": "46a05e7073a761a7f311457e94ea7afc022c0b37b24d1b60398d41870b235f5a",
+  "quickSha256": "e5b821b6c232e8f247fa902eea67c6aa1048ddd9c6e5ff1f9ba66a3791d17fab",
+  "barSha256": "6a1abdc462ed75846b62af5b5822e124dce7374d3a69178842bfa42150391436",
+  "lifecycleSha256": "64935361de4061daec8060bf40de71fe1ea6631f45b3151cbe3091ffd755f995",
+  "portableSourceReplay": true,
+  "newWholeAppSnapshot": false,
+  "unchangedFunctions": [
+    "ensureCpLoaded",
+    "registerManagedGridClipboard",
+    "switchTab",
+    "normalizeCPDates",
+    "rebuildCpLogisticCaches",
+    "loadFromServer",
+    "hydrateUserPreferencesAfterUi"
+  ],
+  "unchangedHashes": {
+    "ensureCpLoaded": "6c1f1e8ed53e702a88ba39e682ad3f90e929d007dce34c832f9adb28163fcca9",
+    "registerManagedGridClipboard": "14c5e03fdd44be5d41f562fe54b40604b36cd8a45c97dc8000ab49baa9a9c5d8",
+    "switchTab": "4a8623a2f0dd72d198404a5e34bffb410f176d452187eecaa6878e3814ee4ef2",
+    "normalizeCPDates": "f89c9ed58b8353792517202a30aff803ae762b4202e266ab4d76b3062e57e29a",
+    "rebuildCpLogisticCaches": "d90c8f12276aeb92ff5647dc577dc6faa453711450a9ae7bba0362a4d17bcb98",
+    "loadFromServer": "daac6e8173f14419cc2d737a07da3351bcba5bec7e44dfbffcbc67dd09101119",
+    "hydrateUserPreferencesAfterUi": "4f03805a6665bb2fe725830ca36f019162e8de9864c69749a1566deb99db51a6"
+  },
+  "outsideSwitchSha256": "f00e7daf52ccd0f0908091001e9adf0ab93bd343c113459faf1ad476a8163c0b"
+}

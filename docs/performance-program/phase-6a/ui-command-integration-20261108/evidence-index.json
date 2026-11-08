@@ -1,0 +1,86 @@
+[
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v3-native-first/baseline.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v3-native-first/baseline.tap.gz",
+    "rawBytes": 80876,
+    "rawSha256": "d282dcf193daa539a83f430173c151473412935b5478fc7135f26698cf56a29b"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v4-native-first/candidate.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v4-native-first/candidate.tap.gz",
+    "rawBytes": 14835,
+    "rawSha256": "58762e547b628ce72b28996b8eca99b4a13519f68b5864423e64ae1496cc755a"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v4-native-first/baseline.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v4-native-first/baseline.tap.gz",
+    "rawBytes": 38846,
+    "rawSha256": "57fb8ce4f4380e11ff5c51d3c8a6c94e471088d9a72a7138a35b11644dad71bc"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v5-native-first/candidate.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v5-native-first/candidate.tap.gz",
+    "rawBytes": 14062,
+    "rawSha256": "d44eb6598f8d51245232061f25cc8d026266e3acc82219e35b2833e35a9517c3"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v5-native-first/baseline.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v5-native-first/baseline.tap.gz",
+    "rawBytes": 38075,
+    "rawSha256": "5ecd6ddad3e89c8dcb7ae8c89c201845361398563dea6de60b31d54896ff8c03"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v5-product-green/native.tap",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v5-product-green/native.tap.gz",
+    "rawBytes": 14058,
+    "rawSha256": "96506fc29d842d1aff03d2637ec2775770c2f17577dbf2c8becf543ea4066513"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-v5-standard-first/native.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-v5-standard-first/native.log.gz",
+    "rawBytes": 6409,
+    "rawSha256": "f85e566d806777d757fd12fa30820c7ffec51a2492102479f9826cce21929d18"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-first/native.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-first/native.log.gz",
+    "rawBytes": 57195,
+    "rawSha256": "52620e5e479e4d4d73141afcf9923182e05f3b753d2392955c4bd622fcfb9832"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-green/release.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-green/release.log.gz",
+    "rawBytes": 126,
+    "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-green/i18n.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-green/i18n.log.gz",
+    "rawBytes": 125,
+    "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-green/syntax.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-green/syntax.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-green/protected916.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-green/protected916.log.gz",
+    "rawBytes": 2025,
+    "rawSha256": "01d73131a6fc46ce4d2e0b214bc6033ac5a32a761d246ddba1a9f96e6bc70629"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-related-green/related.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/buyerlog-phase6a-ui-related-green/related.log.gz",
+    "rawBytes": 55244,
+    "rawSha256": "b1c79a9af09de34a8ad4e34d11c20eca40ebc4079cf185ec9767c7efdda58ef9"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ui-portable-gzip-green/native.log",
+    "archive": "docs/performance-program/phase-6a/ui-command-integration-20261108/portable-gzip-green/native.log.gz",
+    "rawBytes": 6411,
+    "rawSha256": "1ca5dba2562fa9449e7e6f4b441539654a457201f4c63ab928e9492c2293115b"
+  }
+]

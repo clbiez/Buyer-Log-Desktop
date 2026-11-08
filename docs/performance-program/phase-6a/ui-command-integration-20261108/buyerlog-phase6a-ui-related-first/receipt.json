@@ -1,0 +1,27 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-",
+    "cp-orders",
+    "cp-decision-input-revision",
+    "partial-refresh",
+    "user-storage",
+    "profile-rejection",
+    "partial-view",
+    "filter-context",
+    "quick-filter",
+    "selection",
+    "header-filter"
+  ],
+  "exitCode": 1,
+  "counts": {
+    "tests": 533,
+    "pass": 531,
+    "fail": 2,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "52620e5e479e4d4d73141afcf9923182e05f3b753d2392955c4bd622fcfb9832"
+}

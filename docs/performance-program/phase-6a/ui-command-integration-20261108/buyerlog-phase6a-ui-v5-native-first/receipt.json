@@ -1,0 +1,49 @@
+{
+  "source": "5829fcf4fa4ec9b7bfb1815bb43577943177dd38",
+  "commands": [
+    {
+      "mode": "baseline",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-command.test.cjs",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-lifecycle-composition.test.cjs",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-corrected-retirement.test.cjs"
+      ],
+      "exitCode": 1,
+      "counts": {
+        "tests": 54,
+        "pass": 15,
+        "fail": 39,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "5ecd6ddad3e89c8dcb7ae8c89c201845361398563dea6de60b31d54896ff8c03",
+      "setupError": false
+    },
+    {
+      "mode": "candidate",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-command.test.cjs",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-lifecycle-composition.test.cjs",
+        "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-corrected-retirement.test.cjs"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 54,
+        "pass": 54,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "d44eb6598f8d51245232061f25cc8d026266e3acc82219e35b2833e35a9517c3",
+      "setupError": false
+    }
+  ]
+}

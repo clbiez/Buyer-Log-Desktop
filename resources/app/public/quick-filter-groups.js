@@ -186,6 +186,7 @@
     host.querySelectorAll('[data-qfg-col]').forEach(el => {
       el.style.cursor = 'pointer';
       el.addEventListener('click', () => {
+        const change=()=>{
         const module = MODULES[moduleKey];
         const key = el.dataset.qfgCol, value = el.dataset.qfgValue;
         if (typeof window.toggleMirroredQuickFilter === 'function') {
@@ -197,6 +198,10 @@
           return;
         }
         if (typeof rerender === 'function') rerender();
+        };
+        if(moduleKey==='orders'&&typeof window.BLOrdersUiChange==='function')return window.BLOrdersUiChange('orders','orders.quick.extra',el,
+          ()=>window.BLOrdersUiCommand.intent([el],()=>[el.dataset.qfgCol,el.dataset.qfgValue]),change);
+        return change();
       });
     });
   }

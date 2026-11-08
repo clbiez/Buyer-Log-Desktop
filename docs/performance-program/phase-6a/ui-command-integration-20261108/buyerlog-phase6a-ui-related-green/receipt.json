@@ -1,0 +1,109 @@
+{
+  "scope": "UI integration targeted only; final full/CP intent/browser/phase6a acceptance pending",
+  "commands": [
+    {
+      "name": "related",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "orders-",
+        "cp-orders",
+        "cp-decision-input-revision",
+        "partial-refresh",
+        "user-storage",
+        "profile-rejection",
+        "partial-view",
+        "filter-context",
+        "quick-filter",
+        "selection",
+        "header-filter"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 534,
+        "pass": 534,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "b1c79a9af09de34a8ad4e34d11c20eca40ebc4079cf185ec9767c7efdda58ef9"
+    },
+    {
+      "name": "protected916",
+      "command": [
+        "node",
+        "--test",
+        "tests/checklist-components-row-cache.test.js",
+        "tests/cp-personal-layer-delta.test.js",
+        "tests/checklist-columns-delta.test.js",
+        "tests/checklist-summary-contribution-cache.test.js",
+        "tests/checklist-applies-row-memo.test.js",
+        "tests/checklist-answer-batch-notify.test.js",
+        "tests/checklist-assistant-view-reuse.test.js",
+        "tests/checklist-remote-merge-noop.test.js",
+        "tests/checklist-components-count-lookups.test.js"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 23,
+        "pass": 23,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "01d73131a6fc46ce4d2e0b214bc6033ac5a32a761d246ddba1a9f96e6bc70629"
+    },
+    {
+      "name": "syntax",
+      "command": [
+        "node",
+        "--check",
+        "public/app-main.js"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+    },
+    {
+      "name": "release",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "exitCode": 0,
+      "counts": {
+        "tests": 0,
+        "pass": 0,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "rawSha256": "bf1dc1a5dcae3f9f5a435e92dc7b675a3eb413d7c3a0ee1a9f7c0ce649842f5e"
+    }
+  ]
+}

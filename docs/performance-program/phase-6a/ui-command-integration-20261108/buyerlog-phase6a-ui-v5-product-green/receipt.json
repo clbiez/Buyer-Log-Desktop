@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-command.test.cjs",
+    "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-lifecycle-composition.test.cjs",
+    "/tmp/buyerlog-phase6a-ui-root-v5/tests/orders-ui-corrected-retirement.test.cjs"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 54,
+    "pass": 54,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "96506fc29d842d1aff03d2637ec2775770c2f17577dbf2c8becf543ea4066513"
+}

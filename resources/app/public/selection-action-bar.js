@@ -38,8 +38,13 @@
     panel=doc.createElement('div');panel.className='blSelectionPopover';panel.hidden=true;host.appendChild(panel);
     panel.addEventListener('click',event=>{
       event.stopPropagation();const button=event.target.closest('button');if(!button)return;
+      const change=()=>{
       if(button.dataset.selectionRemove!==undefined){root.BLManagedSelection?.remove(lastKey,button.dataset.selectionRemove);drawPanel();schedule();}
       if(button.dataset.selectionClose!==undefined)closePanel(true);
+      };
+      if(lastKey==='orders'&&button.dataset.selectionRemove!==undefined&&typeof root.BLOrdersUiChange==='function')return root.BLOrdersUiChange('orders','orders.selection.popover',button,
+        ()=>root.BLOrdersUiCommand.intent([button],()=>[button.dataset.selectionRemove,button.dataset.selectionClose]),change);
+      return change();
     });
     doc.addEventListener('click',event=>{if(!host.contains(event.target))closePanel();});
     doc.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden){event.preventDefault();closePanel(true);}});
@@ -48,6 +53,7 @@
       if(!button)return;
       // Menü tetikleyicileri belge tıklamasıyla kapanmasın diye olay burada durur.
       event.stopPropagation();
+      const change=()=>{
       if(button.dataset.selectionDetails!==undefined){
         if(panel.hidden){drawPanel();panel.hidden=false;bar.querySelector('[data-selection-details]')?.setAttribute('aria-expanded','true');root.BLMotionPlus?.play?.('overlay',panel);panel.querySelector('button')?.focus();}else closePanel(true);
         return;
@@ -56,6 +62,11 @@
       const target=doc.getElementById(button.dataset.selectionTarget||'');
       if(target&&!target.disabled)target.click();
       schedule();
+      };
+      const needsFull=button.dataset.selectionDismiss!==undefined||(button.dataset.selectionDetails!==undefined&&panel.hidden);
+      if(lastKey==='orders'&&needsFull&&typeof root.BLOrdersUiChange==='function')return root.BLOrdersUiChange('orders','orders.selection.bar',button,
+        ()=>root.BLOrdersUiCommand.intent([button],()=>[button.dataset.selectionDetails,button.dataset.selectionDismiss,button.dataset.selectionTarget]),change);
+      return change();
     });
   }
   function closePanel(focus=false){

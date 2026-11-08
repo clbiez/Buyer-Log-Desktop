@@ -9,8 +9,8 @@
   "captures": {
     "app-main.js": {
       "path": "public/app-main.js",
-      "sha256": "d0885781d9b9a5e88135a1fd7a7c9c309603d4f4484191219079408ad1237810",
-      "gitBlob": "fb87e0120a4d70ab77b49b836e0eeeb42f457138"
+      "sha256": "46a05e7073a761a7f311457e94ea7afc022c0b37b24d1b60398d41870b235f5a",
+      "gitBlob": "a9b6945aeffd85524a2aad9e1fffcf4aafe7ccfa"
     },
     "business-rules.js": {
       "path": "public/business-rules.js",

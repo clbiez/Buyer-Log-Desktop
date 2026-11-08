@@ -1,0 +1,17 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "orders-ui-command"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 54,
+    "pass": 54,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "f85e566d806777d757fd12fa30820c7ffec51a2492102479f9826cce21929d18"
+}
