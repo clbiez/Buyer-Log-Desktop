@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "projection-ready-json",
+    "module-schema-wire-keys",
+    "module-projection-schema",
+    "compute-module-schemas"
+  ],
+  "exitCode": 0,
+  "counts": {
+    "tests": 61,
+    "pass": 61,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "sha256": "42e85774a1c5c489726bbb849de9d5f7acd41ea34200b1586d212a26402636da"
+}

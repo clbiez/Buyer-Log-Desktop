@@ -22,5 +22,53 @@
     "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/provider-fixtures-green/native.log.gz",
     "rawBytes": 10046,
     "rawSha256": "8c8ab9963b530839d72874bc739f1c9bbf3ddd8af45a14b0a36d683c48434e65"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-server-foundation-full-15987279/full.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/full-red-15987279/full.log.gz",
+    "rawBytes": 830564,
+    "rawSha256": "b740b2bdf43c56d396f9d84ec17542824a19a21671c2c8ce61f9d3f4e2212de0"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-10.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-10.log.gz",
+    "rawBytes": 2679,
+    "rawSha256": "46bc1769f6fd7f840c5249387e403c186940eb1286c9175cfb5b673216475de2"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-9.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-9.log.gz",
+    "rawBytes": 924,
+    "rawSha256": "6cb8211bfde89e4f9a11d958d763b5c20a3ecac19e5a22ac344a7ab853bb6321"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-8.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-8.log.gz",
+    "rawBytes": 855,
+    "rawSha256": "39dce88d16afa0b336230b59ae9028943bc2491317b58dc3c1d48dac1664aff4"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-7.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-7.log.gz",
+    "rawBytes": 1523,
+    "rawSha256": "d580464a69bf8e110fff62a6aa4fc498902b7113b4bf22feb91123dbdcb42ef3"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-6.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-6.log.gz",
+    "rawBytes": 512,
+    "rawSha256": "a1525639141269e99e258408bbec0d7d39c899e4a93816ba7dd29d02d976ae99"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-15987279-remaining-batches/batch-5.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/remaining-batches-15987279/batch-5.log.gz",
+    "rawBytes": 87023,
+    "rawSha256": "67ec6b58d4fb29cc7022c74d6b5a6ca3e4bd5c8ff02032f0c1e2d95c2513871b"
+  },
+  {
+    "source": "/tmp/buyerlog-phase6a-ready-schema-pin-green/native.log",
+    "archive": "docs/performance-program/phase-6a/server-foundation-regression-20261108/ready-schema-pin-green/native.log.gz",
+    "rawBytes": 7016,
+    "rawSha256": "42e85774a1c5c489726bbb849de9d5f7acd41ea34200b1586d212a26402636da"
   }
 ]

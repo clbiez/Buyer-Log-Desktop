@@ -4,7 +4,7 @@
   "sourceRepository": "/workspace/buyerlog-post-main-acceptance",
   "sha256": {
     "../server/lib/projection-native-json.js": "f4a1d0691d16bfbddedd4a64fd66c2b47705ce1d4276553b70e2d82d73365b9e",
-    "../public/module-projection-schema.js": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a"
+    "../public/module-projection-schema.js": "1693e6a09426c7acf0c4cf07fe005e58e3824183a84ef82cdf952aed57d67390"
   },
   "canonicalBlobs": {
     "../server/lib/canonical-fields.js": "34f954e0ab66948e23ae90825e85ca84fcd10004",
@@ -24,5 +24,12 @@
     "originalBuilderSha256": "02664e78892b8d3399edde6ad2e76e32a2e705282d8d6adb3992ff60fce95719",
     "productionBuilderSha256": "02723a8bc1ea56e95711d2f90070493e7c3bf4424604feea359cef2f1d86df32",
     "changes": "Three require paths only; native/schema/canonical assertions retained."
+  },
+  "schemaCompatibility": {
+    "sourceCommit": "ef6c64dc90bd1e053743043c8d3e170fa710a4ec",
+    "originalSha256": "8fe23ec826137676fd4053c08c54d9aa3fe145ef976ab1bf6ce17eb93451ee9a",
+    "delta": "Explicit projection-json presence mode only; default source-mode metadata and ready-builder behavior remain tested against original implementation.",
+    "originalSource": "fixtures/compute-module-schema/module-projection-schema-before-wire.js",
+    "regression": "module-schema-wire-keys.test.js"
   }
 }

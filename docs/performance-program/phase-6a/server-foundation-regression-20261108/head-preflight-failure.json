@@ -1,0 +1,6 @@
+{
+  "stage": "preflight",
+  "testsStarted": false,
+  "reason": "Caller passed literal HEAD to a script requiring an actual SHA prefix; assertion stopped before test dispatch.",
+  "actualHead": "159872795cc05afa8ca5cd6ffb44fd5e8d0c44dc"
+}

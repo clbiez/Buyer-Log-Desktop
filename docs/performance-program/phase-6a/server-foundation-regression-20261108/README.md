@@ -50,3 +50,29 @@ koruduğu davranışı değiştirmiyor. Kaynak eşitliği yalnız ayrı testlerd
 sayım adaptörünün tam metnine izin veriyor. Hedefli dört dosya **94 PASS**, sıfır
 hata/atlama/iptal. Tam paket sonucu hâlâ yukarıdaki başarısız koşudur; yeni tam
 koşu tamamlanmadan başarı iddia edilmiyor.
+
+## Wire-schema provenance / Şema kaynak sabitlemesi
+
+At `15987279`, the default run passed batches 1–3 and stopped in batch 4:
+**8492 PASS / 1 FAIL / 64 SKIP**. The remaining original batches 5–10 were
+then executed separately, with the exact real runner plan, unchanged source,
+`BUYER_LOG_TEST_SUITE=1` and default concurrency=4: **962 PASS / 0 FAIL / 1 SKIP**.
+Combined diagnostic totals are **9454 PASS / 1 FAIL / 65 SKIP**. They are not
+a passing default full invocation.
+
+The sole failure was `projection-ready-json`'s schema pin from before
+`ef6c64dc`. Current schema bytes were checked byte-for-byte against that exact
+commit before updating this pin. The original pin file is retained beside the
+new one. The original schema implementation also has an independent frozen
+SHA assertion; source-mode equivalence and the explicit projection-JSON key
+presence behavior remain covered. No canonical/native serializer pin changed,
+and no ready-JSON assertion was removed or relaxed.
+
+**[Doğrulandı]** İlgili dört dosya **61 PASS**. Tam paketteki tek hata eski şema
+SHA'sıydı; kalan altı batch'in ayrı başarıları standart tam koşunun başarısız
+sonucunu kapatmaz. Bütün batch'lerin tek standart komutta yeniden geçmesi gerekir.
+
+A separate invocation passed the literal `HEAD` to a checkpoint script that
+requires a SHA prefix. It failed its preflight before any test started. This
+caller mistake is retained in `head-preflight-failure.json`, separately from
+actual regression failures.

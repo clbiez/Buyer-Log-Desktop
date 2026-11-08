@@ -1,0 +1,92 @@
+{
+  "head": "159872795cc05afa8ca5cd6ffb44fd5e8d0c44dc",
+  "runnerSha256": "e1fc5914a854f2d19708fc34c761c720e119621603a3699a523e5ab7bc339cad",
+  "scope": "Remaining original batches 5-10 after default run stopped in batch4; NOT a passing default full invocation",
+  "commands": [
+    {
+      "batch": 5,
+      "startedAt": "2026-11-08T08:02:33.389499+00:00",
+      "finishedAt": "2026-11-08T08:03:02.066139+00:00",
+      "exitCode": 0,
+      "rawSha256": "67ec6b58d4fb29cc7022c74d6b5a6ca3e4bd5c8ff02032f0c1e2d95c2513871b",
+      "counts": {
+        "tests": 916,
+        "pass": 916,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 6,
+      "startedAt": "2026-11-08T08:03:02.070087+00:00",
+      "finishedAt": "2026-11-08T08:03:02.283849+00:00",
+      "exitCode": 0,
+      "rawSha256": "a1525639141269e99e258408bbec0d7d39c899e4a93816ba7dd29d02d976ae99",
+      "counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 7,
+      "startedAt": "2026-11-08T08:03:02.284129+00:00",
+      "finishedAt": "2026-11-08T08:03:04.649433+00:00",
+      "exitCode": 0,
+      "rawSha256": "d580464a69bf8e110fff62a6aa4fc498902b7113b4bf22feb91123dbdcb42ef3",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 8,
+      "startedAt": "2026-11-08T08:03:04.650485+00:00",
+      "finishedAt": "2026-11-08T08:03:04.809961+00:00",
+      "exitCode": 0,
+      "rawSha256": "39dce88d16afa0b336230b59ae9028943bc2491317b58dc3c1d48dac1664aff4",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 9,
+      "startedAt": "2026-11-08T08:03:04.810229+00:00",
+      "finishedAt": "2026-11-08T08:03:12.738492+00:00",
+      "exitCode": 0,
+      "rawSha256": "6cb8211bfde89e4f9a11d958d763b5c20a3ecac19e5a22ac344a7ab853bb6321",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "batch": 10,
+      "startedAt": "2026-11-08T08:03:12.739103+00:00",
+      "finishedAt": "2026-11-08T08:03:29.721600+00:00",
+      "exitCode": 0,
+      "rawSha256": "46bc1769f6fd7f840c5249387e403c186940eb1286c9175cfb5b673216475de2",
+      "counts": {
+        "tests": 15,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 1
+      }
+    }
+  ],
+  "appUnchangedAfterRun": true
+}

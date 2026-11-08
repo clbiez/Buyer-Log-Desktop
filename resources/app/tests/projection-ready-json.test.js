@@ -44,9 +44,11 @@ function isolatedCanonicalBuilder() {
   return { canonical: registry, builder: compile(file, name => name === './canonical-fields' ? registry : normalRequire(name)) };
 }
 
-test('native f4a, schema 8fe and actual canonical source copies match frozen pins', () => {
+test('native f4a, reviewed wire-presence schema and actual canonical source copies match frozen pins', () => {
   const pins = require('./fixtures/projection-ready-json-pins.json');
   for (const [file, expected] of Object.entries(pins.sha256)) assert.equal(sha(fs.readFileSync(path.join(__dirname, file))), expected, file);
+  assert.equal(sha(fs.readFileSync(path.join(__dirname, pins.schemaCompatibility.originalSource))), pins.schemaCompatibility.originalSha256,
+    'original source-mode schema remains frozen independently of the reviewed opt-in JSON presence mode');
   for (const [file, expected] of Object.entries(pins.canonicalBlobs)) {
     const bytes = fs.readFileSync(path.join(__dirname, file));
     assert.equal(crypto.createHash('sha1').update('blob ' + bytes.length + '\0').update(bytes).digest('hex'), expected, file);

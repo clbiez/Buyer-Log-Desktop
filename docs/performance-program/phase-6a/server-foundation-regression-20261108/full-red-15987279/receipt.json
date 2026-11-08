@@ -1,0 +1,49 @@
+{
+  "source": "159872795cc05afa8ca5cd6ffb44fd5e8d0c44dc",
+  "appTree": "1df03d3dc93068cfb548ace46675493308340fb7",
+  "scope": "current full-data gates/schema/ready-cache foundation; defaultthin still disabled",
+  "startedAt": "2026-11-08T07:58:43.674468+00:00",
+  "commands": [
+    {
+      "name": "full",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "tmpdir": "/tmp/bl6-full-5knez4k4",
+      "startedAt": "2026-11-08T07:58:43.675001+00:00",
+      "exitCode": 1,
+      "finishedAt": "2026-11-08T08:01:56.538422+00:00",
+      "rawLog": "/tmp/buyerlog-phase6a-server-foundation-full-15987279/full.log",
+      "rawSha256": "b740b2bdf43c56d396f9d84ec17542824a19a21671c2c8ce61f9d3f4e2212de0",
+      "batchTimers": [
+        [
+          "1",
+          "10"
+        ],
+        [
+          "2",
+          "10"
+        ],
+        [
+          "3",
+          "10"
+        ],
+        [
+          "4",
+          "10"
+        ]
+      ],
+      "counts": {
+        "tests": 8557,
+        "pass": 8492,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 64
+      }
+    }
+  ],
+  "status": "failed",
+  "appUnchangedAfterRun": true,
+  "finishedAt": "2026-11-08T08:01:56.622987+00:00"
+}
