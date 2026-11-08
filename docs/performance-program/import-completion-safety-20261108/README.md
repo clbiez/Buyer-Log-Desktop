@@ -57,7 +57,7 @@ Tarayıcı için `PLAYWRIGHT_MODULE` bu dizindeki `playwright-ui-wrapper.cjs` do
 
 Standart tam `npm test`: **1302 dosya; 10/10 batch tek invocation, concurrency=4; 8952 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 210,0 sn. Yeni native 21/21; ilgili import paketi 123 PASS; #916 hızlı paket 23/23. i18n yeni/baseline 0/0; 51 release-note kaydı geçerli, Main'in 50 kaydı korunur. Son testten sonra runtime/test kodu değiştirilmedi. Ayrı resmi 30k üç çift kampanya çalıştırılmadı; yerel GREEN, genel program/performans kabulü değildir. GitHub/merge/yayın durumu PR'da gerçek head ile ayrıca takip edilir.
 
-## Güncel Main entegrasyonu / Current Main integration — 2026-11-09
+## Önceki Main entegrasyonu / Earlier Main integration — 2026-11-09
 
 Kullanıcı #918'in güvenli biçimde Main'e alınmasını ve kapatılmasını istedi. Main `3d464cc0dc3db9eef7824e1deeaf559f26d175ea`, normal merge commit'i `b04a49248458d5feba2736b252a7f04dec424246` ile alındı; çakışma, rebase veya force-push yok. İçe aktarma düzeltmesine yeni runtime/test değişikliği eklenmedi. Önceki incelemede son delta ve güncel Main ile deneme birleşimi incelendi; 21 yeni testin dahil olduğu 123 ilgili test geçti. Önceki bağımsız incelemenin kapsamı yukarıda korunur; yeni bir bağımsız model turu iddia edilmez.
 
@@ -69,3 +69,15 @@ Kullanıcı #918'in güvenli biçimde Main'e alınmasını ve kapatılmasını i
 **EN:** The user authorized merging this separate correctness fix. Current Main was merged normally without conflicts; the unchanged import delta passed the standard full regression on the integrated source. All 10 batches passed with 9,010 tests, zero failures, 65 existing skips and zero cancellations; bilingual coverage and all five visual notes passed. The missing default test-profile directory was created without changing runtime environment variables or test guards. Protected server/checklist/CI sources remain unchanged. Original evidence is retained; no new browser/performance or Windows acceptance is claimed. Actual final-head CI and merge status are recorded in [#918](https://github.com/clbiez/Buyer-Log-Desktop/pull/918). No TEST/STABLE publication is requested or triggered.
 
 Güncel makine kaydı: `validation.json` içindeki `currentMainIntegration`; ham loglar `main-integration-20261109/*.log.gz` altında korunur. Eski üst düzey kayıt, orijinal yerel teslimin tarihsel sonucudur.
+
+## Son Main entegrasyonu / Final Main integration — 2026-11-09
+
+İlk tam test sırasında Main'e #935 (`75d2c5dfc33574f8fac57b8d7e16e11a3470f655`) geldi. Main, `bd947ff543aba41efd4c9ddfd94db340d5da98e0` ile normal merge edildi; tek çakışma pending sürüm notlarında iki PR'ın kayıtları da korunarak çözüldü. Main'in beş kaydı ve bu PR'ın bir kaydıyla toplam altı kayıt geçerlidir.
+
+İlk post-#935 tam koşu batch 3'te yeni `model-snapshot-memory` testinde durdu. Aynı değişikliksiz test, ayrı temiz Main worktree'sinde de aynı assertion ile RED verdi. Node 24.19.0/V8, `--max-old-space-size=96` için toplam **288 MiB** heap sınırı ayırıyordu; veri bu gerçek sınırdan küçük kalıyordu. `3fd0a13fe186c0f6a4e556520d35f6d7585f5543` yalnız test alt sürecine `--max-semi-space-size=1` ekleyerek toplam sınırı **99 MiB** yaptı. 96 MiB old-space sınırı, gerçek heap'ten büyük veri assertion'ı, 120 MiB alt boyut kapısı, checksum, alias, timeout ve üretim kodu korundu. Hedefli test RED→GREEN geçti; bu bir test düzeneği düzeltmesidir, #935 üretim mantığı değişmedi.
+
+Son kaynakta standart tek `npm test`: **1.314 dosya, 10/10 batch, concurrency=4; 9.021 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 107,3 sn. i18n **0/0**; **6 görsel sürüm notu PASS**. Tam testten sonra yalnız doküman/kanıt değişti. Korunan sunucu/PLM/checklist/CI kaynakları son Main ile aynı. Önceki GREEN, başarısız post-#935 koşusu ve baseline RED logları ayrı ve kayıpsız korunur; eski sonuçlar yeni kaynağın sonucu sayılmaz.
+
+**EN:** Main advanced with #935 during validation, so it was merged normally and the full regression was repeated. A new snapshot-memory test failed identically on unchanged Main because Node 24 gave the child 288 MiB total heap despite its 96 MiB old-space cap. Bounding only the child's young generation makes the actual total 99 MiB while retaining every size/checksum/alias assertion and timeout; production code is unchanged. The final source passed all 10 standard batches: 9,021 passed, zero failed, 65 existing skips, zero cancelled; bilingual coverage and six visual notes passed. All earlier successful and failed evidence is retained. No TEST/STABLE workflow was triggered.
+
+Son kayıt `validation.json/currentMainIntegration`, önceki başarılı entegrasyon kaydı `earlierMainIntegrations` içindedir; son ve başarısız loglar `main-integration-20261109/final-*.log.gz` ve `post935-*.log.gz` dosyalarındadır. Gerçek son-head CI/merge durumu #918'de izlenir.
