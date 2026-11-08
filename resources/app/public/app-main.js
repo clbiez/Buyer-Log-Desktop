@@ -18558,7 +18558,7 @@ function renderBacklog(data){
 function renderBacklogFlatRows(flat){
   recomputeBacklogRowVisibility(flat);
   const body = document.getElementById('backlogTreeBody');
-  body.innerHTML = flat.map(r=>{
+  body.innerHTML = flat.filter(r=>r.visible).map(r=>{
     const isOpen = backlogExpanded.has(r.path);
     const arrow = r.hasChildren
       ? `<button type="button" class="backlogToggle" data-path="${r.path}" aria-label="${isOpen?'Daralt':'Genişlet'}" aria-expanded="${isOpen?'true':'false'}"><svg class="ic"><use href="#i-chevron-${isOpen?'down':'right'}"/></svg></button>`

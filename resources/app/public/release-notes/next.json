@@ -1605,6 +1605,35 @@
           "en": "Actual application after the change, using synthetic data. Runtime checks verify the virtual row window, scrolling and preservation of the other table."
         }
       }
+    },
+    {
+      "id": "ana03-backlog-on-demand",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Kapalı Backlog dalları açılınca çizilir",
+        "en": "Collapsed Backlog branches render when opened"
+      },
+      "body": {
+        "tr": "Kapalı pivot dallarının satırları artık yalnız dal açıldığında çizilir; ilk çizim ve dal açma hızlanır. Açık dal durumu, toplamlar, seçimler ve Excel çıktısı korunur.",
+        "en": "Rows in collapsed pivot branches now render only when the branch opens, speeding up initial rendering and expansion. Expanded state, totals, selections and Excel output are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana03-backlog-on-demand.png",
+        "alt": {
+          "tr": "Demo verilerle gerçek Buyer Log Backlog pivotu ve açılan dal",
+          "en": "Actual Buyer Log Backlog pivot and expanded branch with demo data"
+        },
+        "caption": {
+          "tr": "30.000 sentetik siparişten hazırlanan pivot: kapalı dallar açılınca çizilir.",
+          "en": "Pivot prepared from 30,000 synthetic orders: collapsed branches render when opened."
+        }
+      }
     }
   ]
 }

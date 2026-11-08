@@ -108,16 +108,16 @@ A/B/C kaynak incelemesindeki öncelik düzeyleridir. Sohbet 1–8 için gerçek 
 uygulandı durumu merge edilmiş üretim PR’ı gerektirir. Atlanan adaylar üretim kazanımı değildir.
 **EN:** Priority A/B/C follows the review. Sessions 1–8 are recorded below; implementation requires a merged production PR. Skipped candidates are not shipped gains.
 
-Sohbet 1–8 tamamlandı: 13 maddeden ANA-09 uygulandı ve merge edildi; diğer 12 madde
+Sohbet 1–8 ve ANA-03 kurtarması tamamlandı: 13 maddeden ANA-03 ve ANA-09 uygulandı; diğer 11 madde
 aşağıdaki nedenlerle atlandı. Sohbetlerin ölçüm/eşdeğerlik sonuçları ve GitHub PR durumları
 işlendi; bu rapor güncellemesinde yeni performans ölçümü yapılmadı.
-**EN:** All eight sessions are closed: ANA-09 shipped; the other 12 items were skipped for
+**EN:** All eight sessions and the ANA-03 recovery are complete: ANA-03 and ANA-09 shipped; the other 11 items were skipped for
 the stated reasons. This update reconciles final session evidence and actual PR states without new measurements.
 
 | Öncelik / Priority | Madde / Item | Sonuç ve gerekçe / Outcome and reason |
 | --- | --- | --- |
 | A | ANA-02 | Atlandı: arama kazancı 100 ms kapısının altında; çıktı hash’leri aynı, PR/merge yok / Skipped: search gain below the 100 ms gate; equal output hashes, no PR or merge. |
-| A | ANA-03 | Atlandı: üç A/B çiftinde pivot çizimi ve dal açma kazancı ile hash eşdeğerliği geçti; tek ortam düzeltmesinden sonra tam test batch 2/10'da iki IAM hatasıyla durdu. [#923](https://github.com/clbiez/Buyer-Log-Desktop/pull/923) kapatıldı, merge edilmedi / Skipped: rendering gains and hash parity passed, but full regression remained red after one environment correction; PR closed unmerged. |
+| A | ANA-03 | Uygulandı: [#923](https://github.com/clbiez/Buyer-Log-Desktop/pull/923) dalındaki yalnız görünür pivot satırlarını çizen değişiklik [#927](https://github.com/clbiez/Buyer-Log-Desktop/pull/927) ile kurtarıldı; ANA-04 kodu yok. Güncel main normal merge ile alındı. Repo /tmp dışında, ortam override'ı olmadan tek tam npm test: 10/10 batch, 1.306 dosya, 8.963 PASS, 0 FAIL, 65 SKIP, 0 CANCEL; önceki iki IAM vakası PASS, main karşılaştırması gerekmedi. i18n 0/0, 56 sürüm notu + gerçek PNG ve PR checks PASS. [Doğrulama kanıtı](ana03-recovery-20261108/validation.json) / Implemented: recovered only ANA-03; normal main merge, unchanged full runner outside /tmp without environment overrides, all ten batches and prior IAM cases pass; i18n, real visual notes and PR checks pass. |
 | A | ANA-04 | Atlandı: normal detay yolu izin verilen dosyalar dışındaki detail-drawer.js değişikliğini gerektiriyor; geçiş ölçümü ve hash eşdeğerliği yapılmadı. Sohbetin [#923](https://github.com/clbiez/Buyer-Log-Desktop/pull/923) PR'ı kapatıldı, merge edilmedi / Skipped: required drawer changes exceed scope; transition measurement/parity were not run; chat PR closed unmerged. |
 | A | CPR-04 | Atlandı: açılış, filtre ve sıralama kazançlarının tümü %10 kapısının altında; hash’ler aynı, yüklü fiyat kuralı ve render kayıt çağrısı yok; PR/merge yok / Skipped: all gains below 10%; equal hashes, no loaded pricing rules or render saves, no PR or merge. |
 | A | CPR-08 | Atlandı: tek hücre → formül süresi geriledi; formül hücreleri ve hata özetleri eşdeğer, PR/merge yok / Skipped: single-cell formula timing regressed; equivalent formula cells and error summaries, no PR or merge. |
