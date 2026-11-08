@@ -1,0 +1,72 @@
+TAP version 13
+# Subtest: actual current native API commits row, head, receipt and inverse in one frame; exact checksum changes
+ok 1 - actual current native API commits row, head, receipt and inverse in one frame; exact checksum changes
+  ---
+  duration_ms: 43.48006
+  type: 'test'
+  ...
+# Subtest: failed fsync leaves outcome unknown; retry verifies durability instead of trusting replayed receipt
+ok 2 - failed fsync leaves outcome unknown; retry verifies durability instead of trusting replayed receipt
+  ---
+  duration_ms: 24.101154
+  type: 'test'
+  ...
+# Subtest: unverified duplicate cannot report durable success after restart or lost ACK
+ok 3 - unverified duplicate cannot report durable success after restart or lost ACK
+  ---
+  duration_ms: 18.428559
+  type: 'test'
+  ...
+# Subtest: retired transaction receipt cannot acknowledge or reapply an old transaction id
+ok 4 - retired transaction receipt cannot acknowledge or reapply an old transaction id
+  ---
+  duration_ms: 15.089171
+  type: 'test'
+  ...
+# Subtest: malformed native receipt cannot be returned as a durable duplicate
+ok 5 - malformed native receipt cannot be returned as a durable duplicate
+  ---
+  duration_ms: 16.917855
+  type: 'test'
+  ...
+# Subtest: legacy adapter rejects property-order-only changes that alter full JSON source identity
+ok 6 - legacy adapter rejects property-order-only changes that alter full JSON source identity
+  ---
+  duration_ms: 8.345216
+  type: 'test'
+  ...
+# Subtest: private row tombstone and retirement remain authoritative through checkpoint and previous-WAL replay
+ok 7 - private row tombstone and retirement remain authoritative through checkpoint and previous-WAL replay
+  ---
+  duration_ms: 30.853652
+  type: 'test'
+  ...
+# Subtest: owner/source/client generation and pre-append authority recheck reject stale intent without effects
+ok 8 - owner/source/client generation and pre-append authority recheck reject stale intent without effects
+  ---
+  duration_ms: 18.411373
+  type: 'test'
+  ...
+[LEASE] stale:recovered instanceId=10edaad0-9ff4-4cce-a036-8017c908a1fd pid=2424 resource=/tmp/buyerlog-committed-test-RdzKEU/BuyerLogLocal.db currentOwner=c98feeb7-b77d-4220-914c-70bb85d1b670 leaseAgeMs=12 reason=dead-pid
+[LEASE] stale:recovered instanceId=10edaad0-9ff4-4cce-a036-8017c908a1fd pid=2424 resource=/tmp/buyerlog-committed-test-WyJIen/BuyerLogLocal.db currentOwner=bf758c79-564f-40ba-a290-9bb2a59c89a0 leaseAgeMs=12 reason=dead-pid
+# Subtest: real child SIGKILL before native append or after fsync preserves atomic row/receipt replay
+ok 9 - real child SIGKILL before native append or after fsync preserves atomic row/receipt replay
+  ---
+  duration_ms: 173.867341
+  type: 'test'
+  ...
+# Subtest: synthetic torn frame cuts replay row and receipt together through current native backend
+ok 10 - synthetic torn frame cuts replay row and receipt together through current native backend
+  ---
+  duration_ms: 33.888471
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 388.815053

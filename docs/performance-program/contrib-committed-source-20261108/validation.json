@@ -1,0 +1,377 @@
+{
+  "base": "d66c1f803097af5991616f0420392e1027888f2e",
+  "branch": "contrib/phase6c-committed-source-20261108",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "kernel": "6.18.57"
+  },
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "startedAt": "2026-11-08T07:56:11.198Z",
+  "sha256": {
+    "resources/app/server/lib/collection-committed-source.js": "994658b7fe2a0d9eefe48589958cae5cfd10d1cc375ee492e5786d6dda45859c",
+    "resources/app/server/lib/collection-delta-commit.js": "d98d6ed76beee0283ee082cbec1ec8cf4ee8c7e0cd99655150c5e41adb70f997",
+    "resources/app/tests/collection-committed-source.test.js": "694a43d2edfd16ffb539815e6852e7c6cf0c36830db9bbd603a67d58d8f24a36",
+    "resources/app/tests/collection-delta-commit.test.js": "095a094df1698826eb9cd08cf7be77d701a81d2402e52137331c4be6b92da3c1",
+    "resources/app/tests/collection-delta-native27.test.js": "d842d463859fe70e5885753f683fe3d57d1c9ddaba6c76e5c1ce2ebec416839e",
+    "resources/app/tests/local-db-wal-v807.test.js": "65481f894dd4e48f43826e4e891cd644291fadad529e733b79c4649eaa37d6b6",
+    "resources/app/tests/local-db-wal-tail-recovery.test.js": "aa9b12fe2dd6b27a8f51b9706bd7ddbd9191bf54fde0e157042d3702c721047f",
+    "resources/app/tests/local-db-wal-metadata.test.js": "d81e9ae343f76b3b6b647960a11edada2bffb1445fe46f296ccbceb370dd2fa6",
+    "resources/app/tests/local-db-compaction.test.js": "5a67578993578e93b794992ecc1a36aa4d37e9ee0b315a9c9222772e6c30b60a",
+    "resources/app/tests/local-db-crash-recovery.test.js": "cf7a4477f870f6ea1e0b9482a540d89bdd1cc8c834841af6e9f3f44d4c042200",
+    "resources/app/tests/local-db-business-integrity.test.js": "ab93294c134ef82f4d33dc85860d551065a96e53b4a62859122f0596c99f9ee9",
+    "resources/app/tests/i18n-coverage-guard.test.js": "939d202165ebc49eeecd2c63b43173025db701f0a3067b7ccffe461221cd9bbe",
+    "resources/app/tests/fixtures/collection-committed-native.cjs": "73b9566edc2a3008352bac7e23c2eb627a499890e35669e60f4cb5d80292caf3",
+    "resources/app/tests/fixtures/collection-commit-crash-child.cjs": "e3c41144eb25ab300419efc85589af99197f09249fe496cbee8dfe599e3f3a2c",
+    "resources/app/tests/fixtures/collection-native27-binding.cjs": "d4ec2dab0990e64d951ca46182b3a8c3940d6f8960c22e8bc882750ea98eeec7",
+    "resources/app/server/lib/local-db.js": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141",
+    "docs/performance-program/parallel-handoff-20261108/03-collection-server/native/collection-delta-service.cjs": "e27d69c6686f3f8fcdd121749b0bff969a9af2e1cd1bc9ba75800ce5687979e1",
+    "docs/performance-program/parallel-handoff-20261108/03-collection-server/native/collection-delta-service.test.cjs": "f281babf50d4edf7856a1556524fb4e4a573897ffa9304ba719b8b7ec26d8d05"
+  },
+  "checks": [
+    {
+      "name": "collection-committed-source",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/collection-committed-source.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:11.200Z",
+      "finishedAt": "2026-11-08T07:56:11.579Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-committed-source.tap"
+    },
+    {
+      "name": "collection-delta-commit",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/collection-delta-commit.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:11.581Z",
+      "finishedAt": "2026-11-08T07:56:12.017Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-delta-commit.tap"
+    },
+    {
+      "name": "collection-delta-native27",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/collection-delta-native27.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:12.017Z",
+      "finishedAt": "2026-11-08T07:56:12.607Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 27,
+      "pass": 27,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-delta-native27.tap"
+    },
+    {
+      "name": "local-db-wal-v807",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-wal-v807.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:12.608Z",
+      "finishedAt": "2026-11-08T07:56:13.209Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-wal-v807.tap"
+    },
+    {
+      "name": "local-db-wal-tail-recovery",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-wal-tail-recovery.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:13.209Z",
+      "finishedAt": "2026-11-08T07:56:13.527Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 13,
+      "pass": 13,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-wal-tail-recovery.tap"
+    },
+    {
+      "name": "local-db-wal-metadata",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-wal-metadata.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:13.527Z",
+      "finishedAt": "2026-11-08T07:56:19.338Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-wal-metadata.tap"
+    },
+    {
+      "name": "local-db-compaction",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-compaction.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:19.338Z",
+      "finishedAt": "2026-11-08T07:56:19.502Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-compaction.tap"
+    },
+    {
+      "name": "local-db-crash-recovery",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-crash-recovery.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:19.502Z",
+      "finishedAt": "2026-11-08T07:56:19.597Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-crash-recovery.tap"
+    },
+    {
+      "name": "local-db-business-integrity",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/local-db-business-integrity.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:19.597Z",
+      "finishedAt": "2026-11-08T07:56:19.734Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/local-db-business-integrity.tap"
+    },
+    {
+      "name": "i18n-coverage-guard",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test-reporter=tap",
+        "tests/i18n-coverage-guard.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:19.734Z",
+      "finishedAt": "2026-11-08T07:56:21.898Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/i18n-coverage-guard.tap"
+    },
+    {
+      "name": "i18n:check",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "scripts/i18n-coverage.js"
+      ],
+      "startedAt": "2026-11-08T07:56:21.898Z",
+      "finishedAt": "2026-11-08T07:56:23.035Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/i18n-check.log"
+    },
+    {
+      "name": "syntax:resources/app/server/lib/collection-committed-source.js",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/server/lib/collection-committed-source.js"
+      ],
+      "startedAt": "2026-11-08T07:56:23.036Z",
+      "finishedAt": "2026-11-08T07:56:23.059Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-committed-source.js.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/server/lib/collection-delta-commit.js",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/server/lib/collection-delta-commit.js"
+      ],
+      "startedAt": "2026-11-08T07:56:23.059Z",
+      "finishedAt": "2026-11-08T07:56:23.080Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-delta-commit.js.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/collection-committed-source.test.js",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/collection-committed-source.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:23.080Z",
+      "finishedAt": "2026-11-08T07:56:23.101Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-committed-source.test.js.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/collection-delta-commit.test.js",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/collection-delta-commit.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:23.101Z",
+      "finishedAt": "2026-11-08T07:56:23.124Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-delta-commit.test.js.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/collection-delta-native27.test.js",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/collection-delta-native27.test.js"
+      ],
+      "startedAt": "2026-11-08T07:56:23.124Z",
+      "finishedAt": "2026-11-08T07:56:23.145Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-delta-native27.test.js.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/fixtures/collection-committed-native.cjs",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-committed-native.cjs"
+      ],
+      "startedAt": "2026-11-08T07:56:23.146Z",
+      "finishedAt": "2026-11-08T07:56:23.168Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-committed-native.cjs.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/fixtures/collection-commit-crash-child.cjs",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-commit-crash-child.cjs"
+      ],
+      "startedAt": "2026-11-08T07:56:23.169Z",
+      "finishedAt": "2026-11-08T07:56:23.190Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-commit-crash-child.cjs.syntax.log"
+    },
+    {
+      "name": "syntax:resources/app/tests/fixtures/collection-native27-binding.cjs",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "/workspace/Buyer-Log-Desktop/resources/app/tests/fixtures/collection-native27-binding.cjs"
+      ],
+      "startedAt": "2026-11-08T07:56:23.190Z",
+      "finishedAt": "2026-11-08T07:56:23.213Z",
+      "exitCode": 0,
+      "signal": null,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "evidence/final/collection-native27-binding.cjs.syntax.log"
+    }
+  ],
+  "finishedAt": "2026-11-08T07:56:23.213Z",
+  "passed": true
+}

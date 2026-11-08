@@ -1,0 +1,172 @@
+TAP version 13
+# Subtest: one native private frame contains touched rows plus receipt; legacy mirror and journal survive
+ok 1 - one native private frame contains touched rows plus receipt; legacy mirror and journal survive
+  ---
+  duration_ms: 40.396739
+  type: 'test'
+  ...
+# Subtest: actual existing peer and checkpoint policy excludes the new private owner records
+ok 2 - actual existing peer and checkpoint policy excludes the new private owner records
+  ---
+  duration_ms: 20.297464
+  type: 'test'
+  ...
+# Subtest: absence, explicit null, zero and false remain distinct through real disk replay
+ok 3 - absence, explicit null, zero and false remain distinct through real disk replay
+  ---
+  duration_ms: 35.458143
+  type: 'test'
+  ...
+# Subtest: batch changes row revision once; legacy missing _rev starts at zero
+ok 4 - batch changes row revision once; legacy missing _rev starts at zero
+  ---
+  duration_ms: 20.722597
+  type: 'test'
+  ...
+# Subtest: row-CAS adaptation rejects stale disjoint field; explicit field merge can accept it
+ok 5 - row-CAS adaptation rejects stale disjoint field; explicit field merge can accept it
+  ---
+  duration_ms: 20.28764
+  type: 'test'
+  ...
+# Subtest: three-way conflict keeps current and all intent evidence; atomic peer fields do not leak
+ok 6 - three-way conflict keeps current and all intent evidence; atomic peer fields do not leak
+  ---
+  duration_ms: 19.312706
+  type: 'test'
+  ...
+# Subtest: converged incoming and no incoming delta preserve current row revision
+ok 7 - converged incoming and no incoming delta preserve current row revision
+  ---
+  duration_ms: 17.797165
+  type: 'test'
+  ...
+# Subtest: inverse preserves a newer unrelated field
+ok 8 - inverse preserves a newer unrelated field
+  ---
+  duration_ms: 18.380997
+  type: 'test'
+  ...
+# Subtest: inverse rejects a same-field ABA even when after value matches again
+ok 9 - inverse rejects a same-field ABA even when after value matches again
+  ---
+  duration_ms: 22.677452
+  type: 'test'
+  ...
+# Subtest: stale owner, source generation and structure fail before a service append
+ok 10 - stale owner, source generation and structure fail before a service append
+  ---
+  duration_ms: 16.482978
+  type: 'test'
+  ...
+# Subtest: fresh asynchronous pre-append authority denial leaves no transaction or row effects
+ok 11 - fresh asynchronous pre-append authority denial leaves no transaction or row effects
+  ---
+  duration_ms: 11.316167
+  type: 'test'
+  ...
+# Subtest: revocation after durable append withholds projection; it does not claim rollback
+ok 12 - revocation after durable append withholds projection; it does not claim rollback
+  ---
+  duration_ms: 15.479541
+  type: 'test'
+  ...
+# Subtest: concurrent duplicate replay appends once and returns the original durable receipt
+ok 13 - concurrent duplicate replay appends once and returns the original durable receipt
+  ---
+  duration_ms: 19.805941
+  type: 'test'
+  ...
+# Subtest: same transaction ID with different intent is rejected without rewriting history
+ok 14 - same transaction ID with different intent is rejected without rewriting history
+  ---
+  duration_ms: 12.840351
+  type: 'test'
+  ...
+# Subtest: lost acknowledgment after actual native fsync retries the same transaction exactly once
+ok 15 - lost acknowledgment after actual native fsync retries the same transaction exactly once
+  ---
+  duration_ms: 17.797099
+  type: 'test'
+  ...
+# Subtest: service promise does not report durable success before actual WAL fsync settles
+ok 16 - service promise does not report durable success before actual WAL fsync settles
+  ---
+  duration_ms: 11.225429
+  type: 'test'
+  ...
+# Subtest: native WAL write failure invalidates mutated cache and leaves no partial row/receipt
+ok 17 - native WAL write failure invalidates mutated cache and leaves no partial row/receipt
+  ---
+  duration_ms: 14.839333
+  type: 'test'
+  ...
+# Subtest: real replay exposes neither half of a torn private frame and accepts complete frame without newline
+ok 18 - real replay exposes neither half of a torn private frame and accepts complete frame without newline
+  ---
+  duration_ms: 31.5536
+  type: 'test'
+  ...
+# Subtest: checksum corruption blocks append without replacing historical WAL bytes
+ok 19 - checksum corruption blocks append without replacing historical WAL bytes
+  ---
+  duration_ms: 12.294977
+  type: 'test'
+  ...
+# Subtest: legacy full-state adapter keeps unknown structure, captures row-CAS and blocks structural edits
+ok 20 - legacy full-state adapter keeps unknown structure, captures row-CAS and blocks structural edits
+  ---
+  duration_ms: 15.918785
+  type: 'test'
+  ...
+# Subtest: old full-state expected workspace CAS is not weakened to disjoint-row acceptance
+ok 21 - old full-state expected workspace CAS is not weakened to disjoint-row acceptance
+  ---
+  duration_ms: 14.938944
+  type: 'test'
+  ...
+# Subtest: group and coupled fields fail closed; no scalar substitution into shared/override state
+ok 22 - group and coupled fields fail closed; no scalar substitution into shared/override state
+  ---
+  duration_ms: 19.661893
+  type: 'test'
+  ...
+# Subtest: missing adopted source is explicit; existing generic full-state mirror is not silently imported
+ok 23 - missing adopted source is explicit; existing generic full-state mirror is not silently imported
+  ---
+  duration_ms: 13.191962
+  type: 'test'
+  ...
+# Subtest: existing snapshot/WAL rotation preserves transaction receipt and inverse field clock on cold replay
+ok 24 - existing snapshot/WAL rotation preserves transaction receipt and inverse field clock on cold replay
+  ---
+  duration_ms: 28.504571
+  type: 'test'
+  ...
+# Subtest: source handoff membership stamp mismatch fails before scalar field mutation
+ok 25 - source handoff membership stamp mismatch fails before scalar field mutation
+  ---
+  duration_ms: 13.619649
+  type: 'test'
+  ...
+# Subtest: unsupported checklist/coupled companion payload is rejected rather than silently acknowledged
+ok 26 - unsupported checklist/coupled companion payload is rejected rather than silently acknowledged
+  ---
+  duration_ms: 8.925343
+  type: 'test'
+  ...
+# Subtest: Collection batch does not clear separately owned checklist JSON/evidence or pending journal
+ok 27 - Collection batch does not clear separately owned checklist JSON/evidence or pending journal
+  ---
+  duration_ms: 30.277041
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 531.516703

@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder
+ok 1 - i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder
+  ---
+  duration_ms: 46.655337
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok
+ok 2 - i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok
+  ---
+  duration_ms: 1032.143801
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli)
+ok 3 - i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli)
+  ---
+  duration_ms: 1022.145125
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez
+ok 4 - i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez
+  ---
+  duration_ms: 0.329368
+  type: 'test'
+  ...
+# Subtest: i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde
+ok 5 - i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde
+  ---
+  duration_ms: 0.486516
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2115.672169

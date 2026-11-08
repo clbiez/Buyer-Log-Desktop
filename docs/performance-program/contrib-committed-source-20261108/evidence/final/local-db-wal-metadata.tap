@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: warm single-writer appends never reread the accumulated WAL to count entries
+ok 1 - warm single-writer appends never reread the accumulated WAL to count entries
+  ---
+  duration_ms: 312.224939
+  type: 'test'
+  ...
+# Subtest: external writer invalidates both counters and cached business state
+ok 2 - external writer invalidates both counters and cached business state
+  ---
+  duration_ms: 12.396601
+  type: 'test'
+  ...
+# Subtest: a failed partial append invalidates metadata and the next save repairs the actual tail
+ok 3 - a failed partial append invalidates metadata and the next save repairs the actual tail
+  ---
+  duration_ms: 20.349673
+  type: 'test'
+  ...
+# Subtest: same-size WAL replacement with restored mtime cannot reuse stale counters or records
+ok 4 - same-size WAL replacement with restored mtime cannot reuse stale counters or records
+  ---
+  duration_ms: 8.92312
+  type: 'test'
+  ...
+# Subtest: entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+ok 5 - entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+  ---
+  duration_ms: 5398.38257
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5759.092375

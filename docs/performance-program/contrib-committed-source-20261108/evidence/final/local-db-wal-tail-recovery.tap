@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (warm writer)
+ok 1 - ND-003: acknowledged write survives a torn WAL tail (warm writer)
+  ---
+  duration_ms: 47.046251
+  type: 'test'
+  ...
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (cold writer)
+ok 2 - ND-003: acknowledged write survives a torn WAL tail (cold writer)
+  ---
+  duration_ms: 30.097068
+  type: 'test'
+  ...
+# Subtest: complete checksummed final entry without a newline remains replayable after append
+ok 3 - complete checksummed final entry without a newline remains replayable after append
+  ---
+  duration_ms: 17.306553
+  type: 'test'
+  ...
+# Subtest: non-tail checksum corruption rejects writes without modifying the WAL
+ok 4 - non-tail checksum corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 11.870115
+  type: 'test'
+  ...
+# Subtest: non-tail middle corruption rejects writes without modifying the WAL
+ok 5 - non-tail middle corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 10.241552
+  type: 'test'
+  ...
+# Subtest: non-tail version corruption rejects writes without modifying the WAL
+ok 6 - non-tail version corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 13.908726
+  type: 'test'
+  ...
+# Subtest: failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+ok 7 - failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+  ---
+  duration_ms: 13.807032
+  type: 'test'
+  ...
+# Subtest: transaction cannot checkpoint past checksum corruption
+ok 8 - transaction cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 10.872576
+  type: 'test'
+  ...
+# Subtest: compact cannot checkpoint past checksum corruption
+ok 9 - compact cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 11.036945
+  type: 'test'
+  ...
+# Subtest: rotateDeviceId cannot checkpoint past checksum corruption
+ok 10 - rotateDeviceId cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 10.511551
+  type: 'test'
+  ...
+# Subtest: torn-tail recovery preserves the prior WAL generation and backup fallback
+ok 11 - torn-tail recovery preserves the prior WAL generation and backup fallback
+  ---
+  duration_ms: 31.332516
+  type: 'test'
+  ...
+# Subtest: failure during snapshot keeps evidence and allows a safe retry
+ok 12 - failure during snapshot keeps evidence and allows a safe retry
+  ---
+  duration_ms: 30.368959
+  type: 'test'
+  ...
+# Subtest: failure during rotation keeps evidence and allows a safe retry
+ok 13 - failure during rotation keeps evidence and allows a safe retry
+  ---
+  duration_ms: 27.424489
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 272.021603
