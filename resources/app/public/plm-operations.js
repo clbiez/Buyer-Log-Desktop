@@ -334,7 +334,7 @@
     const modal = document.createElement('div');
     modal.id = 'plmOpsPanel';
     modal.className = 'warnOverlay';
-    modal.innerHTML = `<div class="modalCard verHistCard plmOpsCard" role="dialog" aria-modal="true" aria-label="${esc(t('PLM Operasyon Merkezi', 'PLM Operations Center'))}">
+    modal.innerHTML = `<div class="modalCard verHistCard plmOpsCard blMotionOverlay" role="dialog" aria-modal="true" aria-label="${esc(t('PLM Operasyon Merkezi', 'PLM Operations Center'))}">
       <div class="verHistHead"><div>
         <strong>${esc(t('PLM Operasyon Merkezi', 'PLM Operations Center'))}</strong>
         <div class="muted">${esc(t('Tüm ekranlardaki PLM işleri. İşler arka planda sürer; sayfa değiştirmek onları durdurmaz.', 'PLM jobs across all screens. Jobs continue in the background; changing pages does not stop them.'))}</div>
@@ -346,7 +346,6 @@
         <button type="button" class="tbtn" data-plmops-close>${esc(t('Kapat', 'Close'))}</button>
       </div></div>`;
     document.body.appendChild(modal);
-    window.BLMotionPlus?.play?.('overlay', modal.querySelector('.plmOpsCard'));
     state.panelOpen = true;
     renderPanel();
     syncPolling();
