@@ -187,4 +187,50 @@ function parseJsonBuffer(buffer, { directMaxBytes = DIRECT_PARSE_MAX_BYTES } = {
   return parseRange(data, start, data.length, Math.max(1, Number(directMaxBytes) || DIRECT_PARSE_MAX_BYTES));
 }
 
-module.exports = { jsonChunks, jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES };
+// The serial recovery lane must also yield while decoding a large snapshot.
+// Small complete values still use the native parser; object keys retain JSON
+// semantics, including own __proto__ properties and duplicate-key replacement.
+async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
+  if(typeof yieldControl!=='function')throw new TypeError('A cooperative yield callback is required');
+  const data=Buffer.isBuffer(buffer)?buffer:Buffer.from(String(buffer||''),'utf8');
+  let deadline=performance.now()+8;
+  function* scan(index,end){
+    let depth=0,inString=false,escaped=false;
+    for(let i=index;i<end;i++){
+      if((i&1023)===0)yield;
+      const byte=data[i];
+      if(inString){if(escaped)escaped=false;else if(byte===0x5c)escaped=true;else if(byte===0x22){inString=false;if(!depth)return i+1;}continue;}
+      if(byte===0x22){inString=true;continue;}
+      if(byte===0x7b||byte===0x5b)depth++;
+      else if(byte===0x7d||byte===0x5d){if(!depth)return i;if(!--depth)return i+1;}
+      else if(!depth&&(WS.has(byte)||byte===0x2c))return i;
+    }
+    if(inString||depth)throw new SyntaxError('Unterminated JSON value');return end;
+  }
+  function* parse(start,end){
+    yield;start=skipWs(data,start,end);
+    let stop=end;while(stop>start&&WS.has(data[stop-1]))stop--;
+    const open=data[start];
+    if(stop-start<=64*1024||(open!==0x7b&&open!==0x5b))return JSON.parse(data.toString('utf8',start,stop));
+    const array=open===0x5b,out=array?[]:{};let i=skipWs(data,start+1,stop);
+    if(data[i]===(array?0x5d:0x7d)){if(skipWs(data,i+1,stop)!==stop)throw new SyntaxError('Unexpected data after JSON value');return out;}
+    for(;;){
+      let name;
+      if(!array){
+        if(data[i]!==0x22)throw new SyntaxError('Expected property name in JSON');
+        const keyEnd=yield* scan(i,stop);name=JSON.parse(data.toString('utf8',i,keyEnd));
+        i=skipWs(data,keyEnd,stop);if(data[i]!==0x3a)throw new SyntaxError('Expected colon in JSON');i=skipWs(data,i+1,stop);
+      }
+      const childEnd=yield* scan(i,stop),child=yield* parse(i,childEnd);
+      if(array)out.push(child);else Object.defineProperty(out,name,{value:child,enumerable:true,writable:true,configurable:true});
+      i=skipWs(data,childEnd,stop);
+      if(data[i]===0x2c){i=skipWs(data,i+1,stop);continue;}
+      if(data[i]===(array?0x5d:0x7d)){if(skipWs(data,i+1,stop)!==stop)throw new SyntaxError('Unexpected data after JSON value');return out;}
+      throw new SyntaxError('Unexpected token in JSON');
+    }
+  }
+  const start=data[0]===0xef&&data[1]===0xbb&&data[2]===0xbf?3:0,steps=parse(start,data.length);
+  for(;;){const step=steps.next();if(step.done)return step.value;if(performance.now()>=deadline){await yieldControl();deadline=performance.now()+8;}}
+}
+
+module.exports = { jsonChunks, jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, parseJsonBufferAsync, DIRECT_PARSE_MAX_BYTES };

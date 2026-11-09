@@ -3,7 +3,13 @@
   else root.BLCollectionLflEngine=factory(root.BLCanonicalFields,root.BLLflCalculationEngine,root.BLCollectionModelGroups,root.BLOverviewCollectionSummary,root.BLDateDimension);
 })(typeof globalThis!=='undefined'?globalThis:this,function(fields,lfl,groups,summary,dates){
   'use strict';
-  const normalize=value=>String(value??'').trim().toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ');
+  const normalize=value=>{
+    const text=String(value??'').trim();
+    // ASCII i becomes Turkish İ and is folded back to I below; the native
+    // uppercase result is identical without per-field locale setup.
+    const upper=/^[\x00-\x7f]*$/.test(text)?text.toUpperCase():text.toLocaleUpperCase('tr-TR');
+    return upper.replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ');
+  };
   const key=(season,mag,category,currency,month='')=>JSON.stringify([season,mag,category,currency,month].map(normalize));
   function monthKey(value){const parts=summary.monthParts(value);return parts?`${parts.year}-${String(parts.month).padStart(2,'0')}`:'';}
   function budgetMonth(row,module){
@@ -54,9 +60,10 @@
       ...(reference.throughMonth?{firstMonth:firstMonths[0]||reference.firstMonth,undatedCount:sum('undatedCount')}:{}),
       average:weightedTotal/quantity,byCountry:kept,excludedCountries:codes.filter(code=>reference.byCountry.some(item=>item.country===code))};
   }
-  function buildReferences(rows){
+  function* referenceSteps(rows){
     const buckets=new Map();
     for(const row of rows||[]){
+      yield;
       const facts=sourceFacts(row);if(!facts)continue;
       const {season,mag,category,price,quantity,currency,month,order,country}=facts;
       // Build seasonal and monthly summaries together in one pass over the source snapshot.
@@ -92,6 +99,21 @@
       }
     }
     return references;
+  }
+  // Both drivers consume the same arithmetic and insertion order. Only the
+  // admission-recovery driver yields so it cannot monopolize the server thread.
+  function buildReferences(rows){
+    const steps=referenceSteps(rows);let step;
+    do{step=steps.next();}while(!step.done);
+    return step.value;
+  }
+  async function buildReferencesAsync(rows,yieldControl){
+    if(typeof yieldControl!=='function')throw new TypeError('A cooperative yield callback is required');
+    const steps=referenceSteps(rows);let deadline=performance.now()+8;
+    for(;;){
+      const step=steps.next();if(step.done)return step.value;
+      if(performance.now()>=deadline){await yieldControl();deadline=performance.now()+8;}
+    }
   }
   // Called only for an explicitly opened report. Summary and detail share all source eligibility rules.
   function referenceDetails(rows,stored,excluded){
@@ -160,5 +182,5 @@
     const weightedBefore=quantity?beforeValue/quantity:null,weightedAfter=pairedQuantity?afterValue/pairedQuantity:null,pairedBefore=pairedQuantity?pairedBeforeValue/pairedQuantity:null;
     return {weightedBefore,weightedAfter,arithmeticBefore:beforeCount?beforeTotal/beforeCount:null,arithmeticAfter:afterCount?afterTotal/afterCount:null,percent:changePercent(weightedAfter,pairedBefore),quantity,pairedQuantity,usedRows,pairedRows,totalRows:(items||[]).length};
   }
-  return {buildReferences,reference,referenceDetails,excludeCountries,countryList,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact,summarizeComparisons};
+  return {buildReferences,buildReferencesAsync,reference,referenceDetails,excludeCountries,countryList,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact,summarizeComparisons};
 });

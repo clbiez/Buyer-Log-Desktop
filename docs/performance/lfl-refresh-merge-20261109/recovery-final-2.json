@@ -1,0 +1,705 @@
+{
+  "app": "/workspace/work/buyerlog-pr944/resources/app",
+  "budget": 160,
+  "root": "/tmp/bl944-http-Wn7Ivu",
+  "node": "v24.19.0",
+  "samples": [
+    {
+      "kind": "cold",
+      "elapsedMs": 1752.7272639999992,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 663957504,
+          "heapTotal": 212680704,
+          "heapUsed": 77233360,
+          "external": 62111413,
+          "arrayBuffers": 3230162
+        },
+        "peakRss": 794439680,
+        "peakHeap": 151415976,
+        "maxGapMs": 1489.2688659999994,
+        "cpu": {
+          "user": 6212130,
+          "system": 523949
+        },
+        "pools": [
+          {
+            "queued": 1,
+            "completed": 1,
+            "failed": 0,
+            "rejected": 1,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 100663296,
+            "totalQueueWaitMs": 0.2442270000000235,
+            "totalDurationMs": 165.81722399999995,
+            "totalPostMessageMs": 0.023335999999972046,
+            "lastQueueWaitMs": 0.2442270000000235,
+            "lastDurationMs": 165.81722399999995,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8596915,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42151347,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 674168832,
+          "heapTotal": 253788160,
+          "heapUsed": 133581648,
+          "external": 61384813,
+          "arrayBuffers": 58695441
+        },
+        "peakRss": 674971648,
+        "peakHeap": 174391392,
+        "maxGapMs": 16.726629000000685,
+        "cpu": {
+          "user": 1906286,
+          "system": 67524
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 3,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "saved",
+      "elapsedMs": 6.309124000001248,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 667664384,
+          "heapTotal": 218185728,
+          "heapUsed": 75911536,
+          "external": 61380220,
+          "arrayBuffers": 3230162
+        },
+        "peakRss": 674971648,
+        "peakHeap": 174391392,
+        "maxGapMs": 16.726629000000685,
+        "cpu": {
+          "user": 1959333,
+          "system": 67619
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 3,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 667664384,
+          "heapTotal": 218185728,
+          "heapUsed": 77069544,
+          "external": 5980645,
+          "arrayBuffers": 3295866
+        },
+        "peakRss": 667664384,
+        "peakHeap": 77148648,
+        "maxGapMs": 0.22051699999974517,
+        "cpu": {
+          "user": 5385,
+          "system": 100
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 3,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "rebuild",
+      "elapsedMs": 1790.680778,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 667664384,
+          "heapTotal": 213729280,
+          "heapUsed": 75989256,
+          "external": 5980645,
+          "arrayBuffers": 3230162
+        },
+        "peakRss": 667664384,
+        "peakHeap": 77148648,
+        "maxGapMs": 0.24395200000071782,
+        "cpu": {
+          "user": 56219,
+          "system": 3509
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 3,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 699912192,
+          "heapTotal": 288800768,
+          "heapUsed": 195700568,
+          "external": 89383016,
+          "arrayBuffers": 86699686
+        },
+        "peakRss": 699912192,
+        "peakHeap": 205965600,
+        "maxGapMs": 21.654607000000397,
+        "cpu": {
+          "user": 1990184,
+          "system": 54560
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 5,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "rebuild",
+      "elapsedMs": 1887.4949350000006,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 692043776,
+          "heapTotal": 217661440,
+          "heapUsed": 75179240,
+          "external": 89383016,
+          "arrayBuffers": 52849010
+        },
+        "peakRss": 699912192,
+        "peakHeap": 205965600,
+        "maxGapMs": 21.654607000000397,
+        "cpu": {
+          "user": 2045813,
+          "system": 59175
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 5,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 550408192,
+          "heapTotal": 290111488,
+          "heapUsed": 177653552,
+          "external": 89383016,
+          "arrayBuffers": 86699686
+        },
+        "peakRss": 701325312,
+        "peakHeap": 207589360,
+        "maxGapMs": 17.40904600000067,
+        "cpu": {
+          "user": 2129896,
+          "system": 82512
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 7,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "rebuild",
+      "elapsedMs": 1858.9583219999986,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 542183424,
+          "heapTotal": 215826432,
+          "heapUsed": 75281688,
+          "external": 89383016,
+          "arrayBuffers": 86693060
+        },
+        "peakRss": 701325312,
+        "peakHeap": 207589360,
+        "maxGapMs": 17.40904600000067,
+        "cpu": {
+          "user": 2190795,
+          "system": 86673
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 7,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 550141952,
+          "heapTotal": 289849344,
+          "heapUsed": 186292624,
+          "external": 89383016,
+          "arrayBuffers": 86699686
+        },
+        "peakRss": 550141952,
+        "peakHeap": 209753432,
+        "maxGapMs": 19.083835000001272,
+        "cpu": {
+          "user": 2088601,
+          "system": 82815
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 9,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "rebuild",
+      "elapsedMs": 1891.2219339999992,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 542208000,
+          "heapTotal": 217399296,
+          "heapUsed": 75380376,
+          "external": 89383016,
+          "arrayBuffers": 3230162
+        },
+        "peakRss": 550141952,
+        "peakHeap": 209753432,
+        "maxGapMs": 19.083835000001272,
+        "cpu": {
+          "user": 2143513,
+          "system": 82892
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 9,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 550203392,
+          "heapTotal": 290373632,
+          "heapUsed": 185130672,
+          "external": 89383016,
+          "arrayBuffers": 86699686
+        },
+        "peakRss": 550203392,
+        "peakHeap": 209070144,
+        "maxGapMs": 26.398917000000438,
+        "cpu": {
+          "user": 2079841,
+          "system": 83384
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 11,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    },
+    {
+      "kind": "rebuild",
+      "elapsedMs": 1915.6361809999999,
+      "status": 200,
+      "summaryHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+      "referenceCount": 3,
+      "before": {
+        "memory": {
+          "rss": 542265344,
+          "heapTotal": 217137152,
+          "heapUsed": 75503768,
+          "external": 89383016,
+          "arrayBuffers": 86690152
+        },
+        "peakRss": 550203392,
+        "peakHeap": 209070144,
+        "maxGapMs": 26.398917000000438,
+        "cpu": {
+          "user": 2145115,
+          "system": 83384
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 11,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      },
+      "metrics": {
+        "memory": {
+          "rss": 550375424,
+          "heapTotal": 290373632,
+          "heapUsed": 188959728,
+          "external": 89383016,
+          "arrayBuffers": 86699686
+        },
+        "peakRss": 550375424,
+        "peakHeap": 206532000,
+        "maxGapMs": 25.75369199999841,
+        "cpu": {
+          "user": 2164218,
+          "system": 51195
+        },
+        "pools": [
+          {
+            "queued": 2,
+            "completed": 2,
+            "failed": 0,
+            "rejected": 13,
+            "peakActiveWorkers": 1,
+            "peakReservedBytes": 142822867,
+            "totalQueueWaitMs": 0.2803910000001224,
+            "totalDurationMs": 167.68978899999962,
+            "totalPostMessageMs": 0.07633599999985563,
+            "lastQueueWaitMs": 0.036164000000098895,
+            "lastDurationMs": 1.8725649999996676,
+            "maxQueueWaitMs": 0.2442270000000235,
+            "maxWorkers": 1,
+            "workerCount": 1,
+            "activeWorkers": 0,
+            "pending": 0,
+            "memoryBudgetBytes": 167772160,
+            "estimatedActiveBytes": 0,
+            "retainedWorkerBytes": 8650603,
+            "queuedInputBytes": 0,
+            "leasedOutputBytes": 0,
+            "reservedBytes": 42205035,
+            "maxPendingBytes": 536870912
+          }
+        ]
+      }
+    }
+  ],
+  "rowCount": 30000,
+  "fixtureHash": "2af71db498bb86d79d19f70802bd6ff06fca90b729ec1a304b4e181500f48d23",
+  "postGc": {
+    "memory": {
+      "rss": 542441472,
+      "heapTotal": 217399296,
+      "heapUsed": 75558944,
+      "external": 89383016,
+      "arrayBuffers": 40331634
+    },
+    "peakRss": 550375424,
+    "peakHeap": 206532000,
+    "maxGapMs": 25.75369199999841,
+    "cpu": {
+      "user": 2218755,
+      "system": 54752
+    },
+    "pools": [
+      {
+        "queued": 2,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 13,
+        "peakActiveWorkers": 1,
+        "peakReservedBytes": 142822867,
+        "totalQueueWaitMs": 0.2803910000001224,
+        "totalDurationMs": 167.68978899999962,
+        "totalPostMessageMs": 0.07633599999985563,
+        "lastQueueWaitMs": 0.036164000000098895,
+        "lastDurationMs": 1.8725649999996676,
+        "maxQueueWaitMs": 0.2442270000000235,
+        "maxWorkers": 1,
+        "workerCount": 1,
+        "activeWorkers": 0,
+        "pending": 0,
+        "memoryBudgetBytes": 167772160,
+        "estimatedActiveBytes": 0,
+        "retainedWorkerBytes": 8650603,
+        "queuedInputBytes": 0,
+        "leasedOutputBytes": 0,
+        "reservedBytes": 42205035,
+        "maxPendingBytes": 536870912
+      }
+    ]
+  },
+  "ok": true
+}

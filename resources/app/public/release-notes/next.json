@@ -12,6 +12,61 @@
   },
   "changes": [
     {
+      "id": "shipping-theme-token-recovery-20261109",
+      "type": "fix",
+      "module": {
+        "tr": "Nakliye kıyaslama",
+        "en": "Shipping comparison"
+      },
+      "title": {
+        "tr": "Nakliye tablosu açık ve koyu tema sınırlarını kullanır",
+        "en": "Shipping table uses light and dark theme borders"
+      },
+      "body": {
+        "tr": "Kıyaslama tablosunun sınırları ve köşeleri ortak tasarım token’larına bağlandı. Tasarruf vurgusu ve sütun ayraçları korunur.",
+        "en": "Comparison table borders and corners now use shared design tokens. Savings emphasis and column separators are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shipping-theme-token-recovery-20261109.png",
+        "alt": {
+          "tr": "Koyu temada sentetik modelle Nakliye kıyaslama tablosu",
+          "en": "Shipping comparison table with a synthetic model in dark theme"
+        },
+        "caption": {
+          "tr": "Demo kıyaslama, ortak koyu tema ayraçlarını ve köşeli tabloyu gösterir.",
+          "en": "The demo comparison shows shared dark theme dividers and square table corners."
+        }
+      }
+    },
+    {
+      "id": "collection-lfl-refresh-capacity-recovery",
+      "type": "fix",
+      "module": { "tr": "Koleksiyon · LFL", "en": "Collection · LFL" },
+      "title": {
+        "tr": "LFL referans yenilemesi bellek sınırından sonra da tamamlanır",
+        "en": "LFL references refresh after worker memory admission is declined"
+      },
+      "body": {
+        "tr": "Hesaplama işçisinin bellek bütçesine sığmayan LFL referansları, aynı kullanıcı kapsamı ve kaynak sürümü kontrolleriyle yerel olarak hesaplanır. Başarılı yenilemeden sonra güncel sipariş detayları açılır; başarısız yenilemeler kayıtlı değerleri korur. Eksik kaynak, tamamlanmamış LFL filtresi, işlem sırasında değişen kaynak ve dolu kuyruk için ayrı açıklamalar gösterilir. Büyük LFL kaynaklarında yerel okuma ve hesaplama küçük dilimler hâlinde yürütülür; sunucu diğer isteklere yanıt vermeye devam eder.",
+        "en": "When LFL references exceed the compute worker's admission budget, they are calculated locally with the same user scope and source-version checks. Current order details open after a successful refresh; failed refreshes preserve saved values. Missing sources, incomplete LFL filters, sources changed during refresh and a full queue each receive a specific explanation. For large LFL sources, local reading and calculation run in small slices so the server remains responsive to other requests."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-refresh-recovery-20261109.png",
+        "alt": {
+          "tr": "Bellek bütçesi sınırlı demo uygulamada yenilemeden sonra açılan güncel LFL sipariş detayı ve 20 USD FOB",
+          "en": "Current LFL order details with a 20 USD FOB after refreshing in the demo app with a constrained compute budget"
+        },
+        "caption": {
+          "tr": "Demo kaynak 10 USD'den 20 USD'ye değiştirildi; eski detay uyarısının ardından referanslar yenilenip güncel sipariş detayı açıldı.",
+          "en": "The demo source changed from 10 USD to 20 USD; after the stale-detail warning, references were refreshed and the current order details opened."
+        }
+      }
+    },
+    {
       "id": "backlog-date-panel-collapse-position",
       "type": "improvement",
       "module": {

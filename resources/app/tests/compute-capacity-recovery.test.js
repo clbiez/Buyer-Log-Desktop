@@ -18,6 +18,36 @@ function source(label='CURRENT'){
 const context=()=>access.createAccessContext({userId:'a',systemRole:'buyer',viewScope:{buyers:['Alice']},editScopes:{buyers:['Alice']},authority:{123:[{buyer:'Alice'}]},profiles:[]});
 const params=()=>({access:context(),overrides:{},horizons:{},modules:['cp','orders'],calendar:{configured:false}});
 const unpack=entry=>JSON.parse(zlib.gunzipSync(Buffer.from(entry.buffer)));
+test('LFL reference refresh survives worker admission limits with the same scoped summaries and source version',async t=>{
+  const {service,pool}=setup(t),snapshots=require('../server/lib/model-snapshot'),Engine=require('../public/collection-lfl-engine');
+  const row={orderCode:'DEMO-LFL',buyer:'Alice',season:'S6',mag:'CU4E',classification:'K',inStoreMonth:'2026-02',fob:10,quantity:100,country:'CHINA'};
+  const raw={...source(),lflRows:[row,{...row,orderCode:'FOREIGN',buyer:'Bob',fob:999}],lflLoadedAt:'lfl-v1'};
+  await snapshots.saveModelSnapshotAsync('a',raw);
+  const descriptor=await service.collectionLflSource('a');
+  const info=await service.runCollectionLfl('collection-lfl-source-info',descriptor,params());
+  try{assert.deepEqual(info.value,{available:true,version:'lfl-v1'});assert.equal(info.metrics.fallbackReason,'COMPUTE_JOB_TOO_LARGE');}finally{info.release();}
+  const lease=await service.runCollectionLfl('collection-lfl-references',descriptor,params());
+  try{assert.deepEqual(unpack(lease.value),{references:Engine.buildReferences([row])});}finally{lease.release();}
+  assert.equal(pool.stats().workerCount,0);assert.equal(pool.stats().leasedOutputBytes,0);
+  await assert.rejects(service.runCollectionLfl('collection-lfl-references',descriptor,{...params(),access:{...context(),userId:'b'}}),{code:'COMPUTE_SOURCE_OWNER_MISMATCH'});
+  await snapshots.saveModelSnapshotAsync('a',{...raw,lflLoadedAt:'lfl-v2'});
+  await assert.rejects(service.runCollectionLfl('collection-lfl-references',descriptor,params()),{code:'COMPUTE_STALE_GENERATION'});
+  const latest=await service.collectionLflSource('a'),updated=await service.runCollectionLfl('collection-lfl-source-info',latest,params());
+  try{assert.equal(updated.value.version,'lfl-v2');}finally{updated.release();}
+});
+test('LFL capacity recovery rejects a source replaced during the disk read and does not hide execution failures',async t=>{
+  const {service}=setup(t),snapshots=require('../server/lib/model-snapshot');
+  await snapshots.saveModelSnapshotAsync('a',{...source(),lflLoadedAt:'v1'});
+  const descriptor=await service.collectionLflSource('a'),load=snapshots.loadModelSnapshotAsync;
+  snapshots.loadModelSnapshotAsync=async(...args)=>{const saved=await load(...args);await snapshots.saveModelSnapshotAsync('a',{...source(),lflLoadedAt:'v2'});return saved;};
+  try{await assert.rejects(service.runCollectionLfl('collection-lfl-references',descriptor,params()),{code:'COMPUTE_STALE_GENERATION'});}
+  finally{snapshots.loadModelSnapshotAsync=load;}
+  const failed=createComputeService({root,pool:{setGeneration(){},run:async()=>{throw Object.assign(Error('failed'),{code:'COMPUTE_WORKER_FAILED'});},close:async()=>{}}});t.after(()=>failed.close());
+  const latest=await failed.collectionLflSource('a');
+  snapshots.loadModelSnapshotAsync=()=>{throw Error('execution failures must not hydrate a fallback');};
+  try{await assert.rejects(failed.runCollectionLfl('collection-lfl-references',latest,params()),{code:'COMPUTE_WORKER_FAILED'});}
+  finally{snapshots.loadModelSnapshotAsync=load;}
+});
 test('a source copy exceeding the worker budget still prepares and publishes the exact refresh',async t=>{
   const {service,pool}=setup(t),raw=source();
   const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:raw,uncompressedBytes:8*MiB,publish:false});

@@ -262,7 +262,27 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     lflAdmissions.set(ownerKey,admission);
     let admitted;
     try{admitted=await admission;}finally{if(lflAdmissions.get(ownerKey)===admission)lflAdmissions.delete(ownerKey);}
-    const lease=await admitted.promise;
+    let lease;
+    try{lease=await admitted.promise;}
+    catch(error){
+      // Admission rejected before a worker was allocated. Use the same serial
+      // compatibility lane as other oversized reads, without a second source copy.
+      if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+      lease=await locally(async()=>{
+        const assertCurrent=async()=>{
+          if(closed)throw failure('COMPUTE_POOL_CLOSED');
+          await require('./compute-snapshot-descriptor').assertCollectionLflDescriptor(descriptor);
+        };
+        await assertCurrent();const started=performance.now(),transfer=[];
+        const yieldControl=async()=>{await new Promise(setImmediate);if(closed)throw failure('COMPUTE_POOL_CLOSED');};
+        const source=await require('./model-snapshot').loadModelSnapshotAsync(descriptor.ownerId,{yieldControl});
+        await assertCurrent();
+        const value=await require('../workers/compute-worker').execute(task,{ownerId:descriptor.ownerId,source:descriptor,
+          params:{...params,access:accessForTask(params.access,task)}},transfer,source,{yieldControl});
+        await assertCurrent();
+        return {value,metrics:{threadId:0,fallbackReason:'COMPUTE_JOB_TOO_LARGE',durationMs:performance.now()-started},release(){}};
+      });
+    }
     try{await require('./compute-snapshot-descriptor').assertCollectionLflDescriptor(descriptor);}
     catch(error){lease.release();throw error;}
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs:admitted.paramsSerializeMs,paramsBytes:admitted.inputBytes-1024}};

@@ -1,0 +1,25 @@
+{
+  "baseline": "a83da490c9689b8fee2a15eec1e41aeb5789f663",
+  "runtimeFiles": {
+    "public/app.css": "7364856d0f8a362af09bb920e2e9e8b3ba523abac074303c61e73c2a936c93bf",
+    "public/collection-lfl-engine.js": "4a3907b4b19e21c53f98736c1dd3aeabf7515f379973491c808a89af9d1f263e",
+    "public/collection-lfl.js": "e61c7ad25b875d2e79a098099f6ba720672b6cf6f8fadabc693b9fe98bf85329",
+    "server/lib/compute-service.js": "c5a3da418a41ee01fad830fbcb41fcfe54084bcb38dd1e4dd9bc85456b439475",
+    "server/lib/large-json.js": "6d177cab9d77803bf03881e177224dbe0b46d1285f346b6bdeb75627326e92d3",
+    "server/lib/model-snapshot.js": "c409018e31b9b137dc36e23ad0515df1e1af93e59d829b9701f5b4efd6aff36e",
+    "server/workers/compute-worker.js": "c320c3fbd1a4eec93a01b7a823c148ad7fa3a37a9d1fbc67d01b9065113feb42",
+    "public/ui-components.css": "bf8124eff4d98dfb5f7b5054e16960f4f41393e6072f83e38b531c0a6e91f9e1"
+  },
+  "node": "v24.19.0",
+  "uiFeedbackMs": 84.53158500000063,
+  "uiVerified": [
+    "stale source rejection",
+    "saved reference retained",
+    "explicit refresh to FOB 20",
+    "current detail in TR and EN",
+    "shipping light/dark theme; actual final screenshots inspected"
+  ],
+  "lflMeasuredRuntimeCommit": "21da755c3053e7b42f5974089191dbecb5c4e07b",
+  "finalRuntimeCommit": "08d56fd8b4cdcf5c03482941d8c62c193281f3d9",
+  "lflRuntimeUnchangedSinceMeasuredCommit": true
+}
