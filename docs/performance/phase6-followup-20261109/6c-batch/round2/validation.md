@@ -54,7 +54,7 @@ listen access. The actual successful data is not relabeled from a failed run.
   `9e667430e3ac7ca30b321f06893d53f24d6ed5a3` on its original branch.
 
 The evaluated three product files exactly match the archived candidate hashes;
-`measured-source.json` and `candidate.patch` reconstruct the experiment on pinned
+`measured-source.json` and `candidate.patch.gz` reconstruct the experiment on pinned
 Main. Only the allowed dispatch, CP adapter and opt-in delta adapter were changed
 temporarily. The final R2 additions are solely under this `round2/` directory.
 No blanket formatter or unrelated fix was introduced.
@@ -79,7 +79,7 @@ deletion/pilot/migration or issue closure.
 
 ## Reproduce without changing production protocols
 
-Use fresh separate worktrees at the pinned Main and apply `candidate.patch` only
+Use fresh separate worktrees at the pinned Main and apply `candidate.patch.gz` only
 to the candidate worktree. Provide the repository's usual dependencies (no package
 or lock changes). All harnesses live in this evidence directory. With `R2` set to
 its absolute path and application roots supplied explicitly:

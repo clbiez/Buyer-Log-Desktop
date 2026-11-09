@@ -20,7 +20,7 @@ against the archive before applying its three-file patch; all three evaluated
 source SHA-256 values exactly match round one's candidate. Read-only local-db,
 HLC, routes, renderer, package and test runner were unchanged.
 [measured-source.json](measured-source.json) pins the merged source commit, base,
-exact file hashes and target runtime; [candidate.patch](candidate.patch) is the
+exact file hashes and target runtime; [candidate.patch.gz](candidate.patch.gz) is the
 reconciled complete product patch. The patch was applied only temporarily and
 all three product files were restored after rejection.
 
@@ -51,9 +51,9 @@ The initial sandbox `listen EPERM` failure is preserved in [failures/](failures/
 ## Result and equivalence
 
 See [decision.md](decision.md) for the narrow-boundary proof, actual byte/% cost,
-CPU/flush benefit and rejected alternatives. [wal-analysis.json](wal-analysis.json)
+CPU/flush benefit and rejected alternatives. [wal-analysis.json.gz](wal-analysis.json.gz)
 contains all pair deltas, per-field accounting, counter histograms, medians and
-raw sample references. [wal-analysis.log](wal-analysis.log) is its concise output.
+raw sample references. [wal-analysis.log.gz](wal-analysis.log.gz) is its concise output.
 
 **11/12 raw byte deltas are positive; one is zero. Every delta is exactly the
 HLC counter-width delta; every non-counter delta is zero.** Main counters are 0;
@@ -81,7 +81,7 @@ fully accounted for.
 Original meaningful adapter tests were relocated here with only application-root
 resolution adapted. Direct invocation reproduces **Main RED: 0 PASS / 5 FAIL**,
 **candidate GREEN: 5 PASS / 0 FAIL / 0 SKIP / 0 CANCEL**; see
-`contracts-direct-*.log` and `contracts-direct-status.json`. They cover metadata,
+`contracts-direct-*.log.gz` and `contracts-direct-status.json`. They cover metadata,
 no-op, owner-denied valid-row preservation, delay/error/rollback, two local writers,
 duplicate delivery and real patchOrderOverrides 1/100/1000, primary-save failure
 and shadow-error isolation. An earlier `node --test` invocation reported only a
@@ -114,3 +114,5 @@ Only `round2/` is newly owned. Original checkout, round-one files, other two wor
 areas, agent/program contracts and protected production/test/CI sources remain
 unchanged relative to Main. No release, TEST/STABLE, PR merge, branch deletion,
 pilot/migration, mode/feature/threshold change or issue closure.
+
+Archived patch, analysis JSON and raw logs use lossless gzip as well; the analyzer writes plain JSON/log output when rerun. The archived unified patch preserves context whitespace exactly.
