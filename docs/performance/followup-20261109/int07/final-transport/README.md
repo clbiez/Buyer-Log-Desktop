@@ -166,3 +166,74 @@ concurrency=4, 9089 PASS, 0 FAIL, 65 existing SKIP, 0 CANCEL**,
 9154 total tests, 201.2 seconds. See `full-test.log` and
 `full-test-summary.json`. All 3338 input hashes match after this uninterrupted
 full run. Only evidence text/log/summary files are completed afterward.
+
+## Latest Main contract integration
+
+Before push Main advanced to `62f2153d` (#945, instructions/docs only). It was
+integrated by normal merge `6a577fa42eae3881c92a5178ae68dc75d981594e`. All 3338
+product/test/package hashes still match. Agent contract, i18n and note checks
+pass after merge. The earlier successful full run is retained as
+`full-test-pre-contract-main.log` / `full-test-pre-contract-main-summary.json`;
+`full-test.log` / `full-test-summary.json` record the subsequent full run on
+this latest Main integration. Narrow comparative HTTP/cleanup evidence is in
+`comparison-*.json` and `comparison-probe.cjs`. There are no product changes
+after the measured product commit `8c2b1f6e`.
+
+## Narrow performance acceptance after #945
+
+Decision: **PASS for the requested INT07 budgets and local cleanup/cancellation**.
+The budgets are the original #937 limits (5 owner slots, 4 total read attempts,
+240000 ms per target), plus the existing HTTP acceptance's 2500 ms observation
+safety bound; no production threshold is raised. `comparison-budget.json` records
+these before the comparative runs. This is a functional cancellation/deadline
+change, not a claim of a generally faster or lower-RSS BOM engine.
+
+`comparison-summary.json` and all `comparison-{main,candidate,aa}-N.json` files
+retain three alternating Main/candidate pairs, then three controlled Main A/A
+processes. Same Node v24.19.0/Linux runtime and synthetic fixture; cold/warm
+calls are separate. The fixture definition SHA-256 is in the summary. Each
+process warms one cancellation, then measures five further start/cancel cycles.
+No production upstream is called. Default identical overlapping reads remain
+one network request with independent result clones, and normal BOM fingerprints
+are identical. Candidate cancel-to-HTTP-close median: 7.42 ms; worst observed
+of 15: 9.10 ms. Main median: 509.50 ms (the synthetic response naturally ends
+after 500 ms). This is a local cancellation observation, not production speedup
+or p95. The separate real streamed-body test establishes the shortened deadline.
+
+Normal cold/warm medians: Main 155.81/57.34 ms; candidate 160.18/58.68 ms.
+Default shared-client cold/warm medians: Main 54.85/55.79 ms; candidate
+56.01/54.26 ms. Main A/A observed ranges are 123.74–184.72 / 54.86–62.74 ms
+(normal) and 54.37–57.08 / 52.54–57.23 ms (default client). Candidate medians
+fall within these measured ranges; there is no arbitrary percentage tolerance
+and no general latency improvement claim.
+
+All measured cycles end with 0 active requests, 0 job signal listeners and 0
+job timers. Raw samples include actual RSS, GC heap and normal-call CPU (not
+reservation bytes). Largest post-cycle RSS samples: Main 67383296 bytes,
+candidate 67665920 bytes; corresponding heap samples: 11439952 / 11616608.
+These are process samples, not a measured peak of a production BOM workload.
+Heap changes across five cycles: Main 427840–429600 bytes, candidate
+395088–400016 bytes; the common undici/allocator warmup is retained in the raw
+data. No claim of reduced or equal RSS is made. No active request/permit/signal/
+timer growth remains; the unchanged-source full suite also exits normally.
+The authorized sharing tradeoff remains explicit: overlapping opt-in BOM
+consumers send two requests instead of one; default consumers do not change.
+
+UI/render, native Electron, polling/SSE and module warmup gates are N/A by
+changed call path: only server-side BOM reads opt in; no renderer/native,
+startup request or module scheduling code changes. Timers are created only
+for an actual BOM target and disposed at its terminal result. This evidence
+does not establish corporate capacity, Windows/SMB, production RSS or universal
+performance acceptance. The coordinator can review the raw samples and limits.
+
+Reproduce the comparison by archiving `resources/app` from the pinned Main to
+`/tmp/int07-main-probe` (the same installed dependency tree is linked), then
+run `node --expose-gc comparison-probe.cjs <source-root>` alternately for Main
+and candidate under the shared flock lock. Initial incomplete snapshot setup
+failed before measurement because public/shared helpers were missing; the
+complete archived app supplies both. No product code was changed for the probe.
+
+Latest-Main standard full run: **1324 files, 10/10 batches, 9089 PASS,
+0 FAIL, 65 existing SKIP, 0 CANCEL, 9154 total tests**, default concurrency=4,
+195.6 seconds. All product/test and latest contract hashes match afterward.
+Final head adds only these evidence files after the tested merge head.

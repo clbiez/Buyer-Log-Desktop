@@ -1,7 +1,7 @@
 {
-  "baseMain": "5740964180eba32a41316e2970b969f3d8359d99",
+  "baseMain": "62f2153d258374e98f5582994042119c6b6cc495",
   "priorPrHead": "0b2edb6610e8cb90f44881c5e1a873b4b316713a",
-  "mainMergeCommit": "4078c0fc",
+  "mainMergeCommit": "6a577fa42eae3881c92a5178ae68dc75d981594e",
   "runtime": "Node v24.19.0",
   "os": "Linux-6.18.57-x86_64-with-glibc2.41",
   "runner": "npm test -> tests/run-tests.js; default concurrency=4; flock /tmp/buyerlog-performance-measurement.lock",
@@ -3358,5 +3358,12 @@
     "skip": 0,
     "cancel": 0
   },
-  "postFullTestHashVerification": "PASS: all 3338 product/test/package inputs unchanged"
+  "postFullTestHashVerification": "PASS after latest Main full run: all 3338 product/test/package inputs and current contract inputs unchanged",
+  "priorRuntimeEquivalentMain": "5740964180eba32a41316e2970b969f3d8359d99",
+  "contractSha256": {
+    "AGENTS.md": "df70a925a13194067eb1621cb1276113828461b4ee636619aea52fb16c253aef",
+    "CLAUDE.md": "25fb886d69acf4d2c38ffc5e941b1b1dcb79fa9e17421a2cef133a65a40bcbeb",
+    "docs/PERFORMANCE_ACCEPTANCE.md": "917320e8936be5a2a2f4ece9689fcf63c8bf19d581e7366969dd334b1a3e968f",
+    ".github/pull_request_template.md": "22e1abcd16bd9aaa7db90f5e7c3478474f1661d12b9f02cde785cf4671413d2f"
+  }
 }
