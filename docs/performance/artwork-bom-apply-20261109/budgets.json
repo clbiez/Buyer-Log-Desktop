@@ -11,5 +11,7 @@
     "lifecycle": "0 retained modal roots after each of 5 closes; no new listener/timer/cache type",
     "startup": "no new eager fetch, heavy dependency or startup work"
   },
-  "scope": "Client JS only; no Electron/preload/native or Windows/SMB/upstream changes. Chromium verifies affected web flow."
+  "scope": "Client JS only; no Electron/preload/native or Windows/SMB/upstream changes. Chromium verifies affected web flow.",
+  "integrationBase": "fad8578308c527274ab762b9ed8f371e8e033d99",
+  "integrationNote": "Original budgets unchanged after integrating Main; final modal latency also checked in three alternating pairs within one settled workspace."
 }
