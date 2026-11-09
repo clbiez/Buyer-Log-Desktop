@@ -15818,3 +15818,14 @@ html[data-ui-system="manifest"] .lcQuick small{font-size:var(--ui-font-xs) !impo
 html[data-ui-system="manifest"] .lcContractFilters{z-index:var(--ui-z-data);background:var(--ui-surface) !important}
 html[data-ui-system="manifest"] .lcContractIdentity>span{color:var(--ui-text-muted) !important}
 .orderAtlasPreview{border:none;background:var(--ui-surface)}
+
+/* Shipping comparison uses the existing shared header dividers. Only the
+   savings emphasis and resizer layer need their own shared appearance rule. */
+html[data-ui-system="manifest"] .shipCompare thead th .colResizer{z-index:var(--ui-z-raised);}
+html[data-ui-system="manifest"] .shipCompare .shipCardMetrics [data-ship-pct]{
+  font-size:clamp(var(--ui-font-lg),1.5vw,var(--ui-font-xl));
+  font-weight:800;
+  line-height:1.1;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+}
