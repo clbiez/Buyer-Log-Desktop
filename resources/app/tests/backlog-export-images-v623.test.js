@@ -42,7 +42,7 @@ test('v6.23 Backlog export options allow ASAS-IAS source columns and formulas',a
   assert.doesNotMatch(APP,/value="image:model"/);
   assert.match(APP,/function backlogExcelColumnCatalog\(\)/);
   assert.match(APP,/backlogExportSourceCatalog\(\)\.forEach\(item=>\{/);
-  assert.match(APP,/data-col-add>/);
+  assert.match(APP,/data-col-add-id=/);
   assert.match(APP,/data-col-selected/);
   for(const [format,task]of [['json','backlog-export'],['xlsx','backlog-workbook']]){
     const result=await require('./helpers/computed-backlog-request')({format,sourceColumns:'asas:Demo, antrepo:Other ,'});

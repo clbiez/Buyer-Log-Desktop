@@ -45,11 +45,15 @@ test('v6.32 Backlog Excel export skips image embedding for speed and integrity',
   assert.match(block,/saveWorkbookWithValidations/);
 });
 
-test('v6.26 Backlog Excel column dialog always has a visible fixed catalog',()=>{
+test('Backlog Excel column dialog keeps a searchable catalog and bounded scroll area',()=>{
   assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY='bl\.backlog\.excelColumns\.v4'/);
   assert.match(APP,/BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl\.backlog\.excelColumns\.v3'/);
   assert.match(APP,/function backlogExportSourceCatalog\(\)/);
   assert.match(APP,/BACKLOG_DEFAULT_EXPORT_HEADERS\.map/);
   assert.match(APP,/role="dialog" aria-modal="true"/);
-  assert.match(CSS,/\.backlogExportColumnsBody\{[^}]*flex:1 1 auto;[^}]*min-height:260px/);
+  assert.match(APP,/data-col-toggle-add aria-expanded="false"/);
+  assert.match(APP,/id="backlogExcelAddColumns"[^>]*hidden/);
+  assert.match(APP,/data-col-search/);
+  assert.match(CSS,/\.backlogExportColumnsBody\{[^}]*overflow:auto;[^}]*min-height:0/);
+  assert.match(CSS,/\.backlogColSelectedList\{[^}]*max-height:42vh/);
 });

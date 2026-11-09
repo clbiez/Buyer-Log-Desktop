@@ -184,6 +184,35 @@
           "en": "Actual post-change application with synthetic images. Byte reservations, RSS and content equivalence are verified in separate tests and measurements."
         }
       }
+    },
+    {
+      "id": "backlog-excel-columns-simple-20261109",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog Excel",
+        "en": "Backlog Excel"
+      },
+      "title": {
+        "tr": "Excel sütunlarını daha sade ayarlarla yönetin",
+        "en": "Manage Excel columns with simpler settings"
+      },
+      "body": {
+        "tr": "Rapordaki sütunlar tek listede gösterilir. Sütun ekle ile ASAS ve Antrepo alanlarını arayıp ekleyebilir, varsayılan sütunları çıkarabilir ve sıralamayı değiştirebilirsiniz. Seçimler Uygula ile kaydedilir; Varsayılana dön başlangıç listesini geri getirir. Formüller Gelişmiş ayarlar altında açılır. Seçilen rapor sütunları Legacy ve V3 Excel dosyalarında görünür kalır; formül yardımcıları gizli tutulur.",
+        "en": "Report columns appear in one list. Use Add column to search and add ASAS and warehouse fields, remove default columns and change their order. Apply saves your choices; Restore defaults brings back the initial list. Formulas open under Advanced settings. Selected report columns remain visible in Legacy and V3 Excel files; formula helpers stay hidden."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-excel-columns-simple-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo uygulamasında sade Backlog Excel ayarları, sütun arama ve çıkarma düğmeleri",
+          "en": "Simplified Backlog Excel settings, column search and remove buttons in the actual Buyer Log demo app"
+        },
+        "caption": {
+          "tr": "Demo verilerle değişiklik sonrası ekran: çıkarılmış Sezon sütunu yeniden eklenebilir; rapor sütunları ve kapalı gelişmiş ayarlar tek pencerededir.",
+          "en": "Post-change screen with demo data: the removed Season column can be added again; report columns and collapsed advanced settings share one dialog."
+        }
+      }
     }
   ]
 }
