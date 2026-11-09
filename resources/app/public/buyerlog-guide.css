@@ -80,9 +80,10 @@
 .blTriviaBtn,#blBootGuard.blBootWithGuide .blTriviaBtn{width:36px;height:36px;display:grid;place-items:center;margin:0;padding:0;cursor:pointer}
 .blTriviaBtn:active:not(:disabled){transform:scale(.94)}
 .blTriviaBtn:disabled,#blBootGuard.blBootWithGuide .blTriviaBtn:disabled{opacity:.35;cursor:default}
-.blTriviaCard--compact{grid-template-columns:minmax(220px,.85fr) minmax(260px,1.15fr);gap:22px}
+.blTriviaCard--compact{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:22px}
 .uiState.hasTrivia{width:min(1040px,calc(100% - 24px));max-width:none;flex-wrap:wrap}
-.blTriviaPanel{flex:1 0 100%;min-width:0;margin-top:14px;padding-top:18px}
+.blTriviaPanel{flex:1 0 100%;min-width:0;margin-top:14px;padding-top:18px;container-type:inline-size}
+@container(max-width:600px){.blTriviaCard--compact{grid-template-columns:minmax(0,1fr);gap:16px}.blTriviaCard--compact .blTriviaFigure{max-width:440px}}
 /* Açılış: alt satırda rehber bağlantısı ve hazır olunca Devam düğmesi */
 .blBootTipFooter{align-items:center}
 #blBootGuard.blBootWithGuide .blBootLink{padding:4px 0;cursor:pointer}
@@ -92,12 +93,14 @@
 @media(max-width:900px){.blTriviaCard,.blTriviaCard--compact{grid-template-columns:1fr;gap:16px}.blTriviaFigure{max-width:560px}}
 @media(max-width:760px){.blTriviaIcon{width:44px;height:44px}}
 /* Modül hazır: kart bir anda kapanmaz, "<Modül> ekranına devam et" ile kapanır. */
-.blTriviaHold{position:fixed;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:28px 16px;box-sizing:border-box}
+.blTriviaHold{position:fixed;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;padding:28px 16px;box-sizing:border-box}
 .blTriviaHold[hidden]{display:none}
 .blTriviaHold[data-leaving="1"]{opacity:0;pointer-events:none}
-.blTriviaHoldCard{width:min(1040px,100%);padding:22px 24px;display:grid;gap:18px}
-.blTriviaHoldHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding-bottom:14px}
+.blTriviaHoldCard{width:min(1040px,100%);max-height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:22px 24px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:18px}
+.blTriviaHold [data-hold-slot]{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain}
+.blTriviaHoldHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding-bottom:14px;overflow-wrap:anywhere}
 .blTriviaHoldReady::before{content:'✓ '}
 .blTriviaHold .blTriviaPanel{margin:0;padding:0}
 .blTriviaHoldFoot{display:flex;justify-content:flex-end;padding-top:14px}
-.blTriviaHoldContinue{padding:11px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.blTriviaHoldContinue{max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:11px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+@media(max-height:480px){.blTriviaHold{padding:12px}.blTriviaHoldCard{padding:12px;gap:10px}.blTriviaHoldHead,.blTriviaHoldFoot{padding:0}}
