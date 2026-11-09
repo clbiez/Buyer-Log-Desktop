@@ -1,0 +1,12 @@
+{
+  "main": {
+    "exitCode": 1,
+    "app": "/tmp/buyerlog-6c-r2-main/resources/app",
+    "invocation": "node adapter-contract.test.cjs (direct, as archived original)"
+  },
+  "candidate": {
+    "exitCode": 0,
+    "app": "/workspace/Buyer-Log-6c-r2/resources/app",
+    "invocation": "node adapter-contract.test.cjs (direct, as archived original)"
+  }
+}

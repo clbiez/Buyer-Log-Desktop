@@ -1,0 +1,74 @@
+[
+  {
+    "count": 100,
+    "pair": 1,
+    "arm": "main",
+    "file": "ab-100-1-main.json"
+  },
+  {
+    "count": 100,
+    "pair": 1,
+    "arm": "candidate",
+    "file": "ab-100-1-candidate.json"
+  },
+  {
+    "count": 100,
+    "pair": 2,
+    "arm": "candidate",
+    "file": "ab-100-2-candidate.json"
+  },
+  {
+    "count": 100,
+    "pair": 2,
+    "arm": "main",
+    "file": "ab-100-2-main.json"
+  },
+  {
+    "count": 100,
+    "pair": 3,
+    "arm": "main",
+    "file": "ab-100-3-main.json"
+  },
+  {
+    "count": 100,
+    "pair": 3,
+    "arm": "candidate",
+    "file": "ab-100-3-candidate.json"
+  },
+  {
+    "count": 1000,
+    "pair": 1,
+    "arm": "main",
+    "file": "ab-1000-1-main.json"
+  },
+  {
+    "count": 1000,
+    "pair": 1,
+    "arm": "candidate",
+    "file": "ab-1000-1-candidate.json"
+  },
+  {
+    "count": 1000,
+    "pair": 2,
+    "arm": "candidate",
+    "file": "ab-1000-2-candidate.json"
+  },
+  {
+    "count": 1000,
+    "pair": 2,
+    "arm": "main",
+    "file": "ab-1000-2-main.json"
+  },
+  {
+    "count": 1000,
+    "pair": 3,
+    "arm": "main",
+    "file": "ab-1000-3-main.json"
+  },
+  {
+    "count": 1000,
+    "pair": 3,
+    "arm": "candidate",
+    "file": "ab-1000-3-candidate.json"
+  }
+]

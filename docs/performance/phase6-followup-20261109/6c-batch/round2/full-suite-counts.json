@@ -1,0 +1,107 @@
+{
+  "command": "flock /tmp/buyerlog-performance-measurement.lock npm test",
+  "cwd": "resources/app",
+  "exitCode": 0,
+  "productSource": "current Main; candidate reverted before run",
+  "files": 1331,
+  "batches": 10,
+  "concurrency": 4,
+  "perBatch": {
+    "tests": [
+      1820,
+      2309,
+      2056,
+      2074,
+      911,
+      4,
+      12,
+      8,
+      8,
+      15
+    ],
+    "suites": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "pass": [
+      1760,
+      2306,
+      2056,
+      2073,
+      911,
+      4,
+      12,
+      8,
+      8,
+      14
+    ],
+    "fail": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "cancelled": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "skipped": [
+      60,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "todo": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "totals": {
+    "tests": 9217,
+    "suites": 0,
+    "pass": 9152,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0
+  },
+  "completion": [
+    "[Buyer Log tests] PASS \u2014 1331 test dosyas\u0131 (225.8s)."
+  ]
+}

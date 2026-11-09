@@ -1,0 +1,10 @@
+{
+  "main": {
+    "exitCode": 1,
+    "app": "/tmp/buyerlog-6c-r2-main/resources/app"
+  },
+  "candidate": {
+    "exitCode": 0,
+    "app": "/workspace/Buyer-Log-6c-r2/resources/app"
+  }
+}

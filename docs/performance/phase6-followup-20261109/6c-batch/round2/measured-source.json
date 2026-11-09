@@ -1,0 +1,48 @@
+{
+  "baseMain": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "mergedHead": "a09786753da1e0476f656ea9b967957ac81c946e",
+  "runtime": "v24.19.0",
+  "electronTarget": "44.3.0",
+  "files": {
+    "resources/app/server/db.js": {
+      "candidateSha256": "ec1297f7a2ca3c08d7731fd9b6f9601dbd0bb3731e4b3bb7c731628bed2a2cfe",
+      "mainSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360"
+    },
+    "resources/app/server/lib/cp-shared-store.js": {
+      "candidateSha256": "0d3f55be0c361a6b505ffdb75f6183de27a2f1dffb6e0fa8f5516d7b2a939a64",
+      "mainSha256": "83349e8ffb6d5c4c7d3bfde63548e206ce265cadb8f998b1bc7d7e965661d2f8"
+    },
+    "resources/app/server/lib/delta-store.js": {
+      "candidateSha256": "af1e78b8250768cd0e1442b7db8f3c59e29ffaffe720dc28a5eed207b9b980ed",
+      "mainSha256": "3349ba70f425d34e193b39b03c25972e1aeebbc56a3f9515d0ff4a3cac2fb16c"
+    },
+    "resources/app/server/lib/local-db.js": {
+      "candidateSha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+      "mainSha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269"
+    },
+    "resources/app/server/lib/hlc.js": {
+      "candidateSha256": "6916172daca8a0775e6c475ace3e75f2994bc67612e759d43bb11924f9f4cd52",
+      "mainSha256": "6916172daca8a0775e6c475ace3e75f2994bc67612e759d43bb11924f9f4cd52"
+    },
+    "resources/app/server/server.js": {
+      "candidateSha256": "d60baa8cb64783df27d50b02c25b116496a44d7a619b257b3b4bfc66788aa6ea",
+      "mainSha256": "d60baa8cb64783df27d50b02c25b116496a44d7a619b257b3b4bfc66788aa6ea"
+    },
+    "resources/app/public/app-main.js": {
+      "candidateSha256": "a94fce3189b660294535279e02fad42bc06a65e8d9204bcef0b512c45aa9b652",
+      "mainSha256": "a94fce3189b660294535279e02fad42bc06a65e8d9204bcef0b512c45aa9b652"
+    },
+    "resources/app/package.json": {
+      "candidateSha256": "816129d9ea8db566546b02b61d6340d16b9fe62cf43bd1d15343115e2fbb6f57",
+      "mainSha256": "816129d9ea8db566546b02b61d6340d16b9fe62cf43bd1d15343115e2fbb6f57"
+    },
+    "resources/app/package-lock.json": {
+      "candidateSha256": "eb0fa3be78d79d68fa85fca21b365d0de1004a13ac652412770dd9349497cc90",
+      "mainSha256": "eb0fa3be78d79d68fa85fca21b365d0de1004a13ac652412770dd9349497cc90"
+    },
+    "resources/app/tests/run-tests.js": {
+      "candidateSha256": "e1fc5914a854f2d19708fc34c761c720e119621603a3699a523e5ab7bc339cad",
+      "mainSha256": "e1fc5914a854f2d19708fc34c761c720e119621603a3699a523e5ab7bc339cad"
+    }
+  }
+}

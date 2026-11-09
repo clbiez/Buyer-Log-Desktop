@@ -1,0 +1,2 @@
+Lossless gzip mtime=0; every decompressed file verified byte-for-byte before removing its plain duplicate.
+wal-analysis.json pre-compression sha256: de1b9200e23c4b3924495c747d92e74dd78e02b1a0ba5ab1ec4596bdc5b06b4a

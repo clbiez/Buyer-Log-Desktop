@@ -1,0 +1,12 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "logicalCpus": 5,
+  "node": "v24.19.0",
+  "tempFilesystem": "tmpfs",
+  "httpConcurrency": 1,
+  "testConcurrency": "default=4 (verify npm log)",
+  "measurementLock": "/tmp/buyerlog-performance-measurement.lock",
+  "noClockControl": true,
+  "fixtureHash": "62c11497340bca91621c02cdfafb1eb8ccd12ddc162376eaa759d820de552ce6"
+}
