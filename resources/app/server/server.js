@@ -6976,7 +6976,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
     if (!parsed.found) { folderFxSyncStatus = null; return parsed; }
-    if (!parsed.updated && parsed.reason !== 'parse-failed') return parsed;
+    if (!parsed.updated && parsed.reason !== 'parse-failed') { folderFxSyncStatus = null; return parsed; }
     for (let attempt = 0; attempt < 2; attempt += 1) {
       let decision = decideFolderKurApply(current, parsed);
       const reason = decision.reason || 'apply';
@@ -6993,10 +6993,13 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       }
     }
   } catch (err) {
+    // Ayrıştırma hatasını worker sonuç olarak döndürür. Kuyruğa kabul edilmeyen
+    // veya tamamlanamayan iş dosyanın bozuk olduğunu göstermez; kimlik kaydetme.
+    const reason = err.code === 'EXCEL_WORKER_BUSY' ? 'worker-busy' : 'sync-failed';
+    if (err.code !== 'REVISION_CONFLICT') remember({}, reason);
     if (explicit || err.code === 'REVISION_CONFLICT') throw err;
-    remember({}, 'parse-failed');
-    logRuntimeFailure('fxWorkbookRead', err);
-    return { found: false, updated: false, reason: 'parse-failed' };
+    if (reason !== 'worker-busy') logRuntimeFailure('fxWorkbookRead', err);
+    return { found: false, updated: false, reason };
   }
 }
 
@@ -8837,27 +8840,43 @@ function backlogQueryForRequest(req,options={},includeWindowed=false,context=nul
   });
 }
 
+// Only these Backlog reads opt into consumer cancellation. IncomingMessage
+// 'close' also fires for a normally received GET; use response completion instead.
+function backlogReadConsumer(req,res){
+  const controller=new AbortController();
+  const dispose=()=>{req.removeListener('aborted',abort);res.removeListener('close',closed);res.removeListener('finish',dispose);};
+  const abort=()=>{controller.abort();dispose();};
+  const closed=()=>{if(!res.writableFinished)abort();else dispose();};
+  req.once('aborted',abort);res.once('close',closed);res.once('finish',dispose);
+  if(req.aborted||res.destroyed)abort();
+  return {signal:controller.signal,dispose};
+}
+
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
+  const consumer=backlogReadConsumer(req,res);
   try{
     assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    if(consumer.signal.aborted)return;
     const q=req.query;let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
     const options={retailFrom:q.retailFrom,retailTo:q.retailTo,inStoreFrom:q.inStoreFrom,inStoreTo:q.inStoreTo,exFactoryFrom:q.exFactoryFrom,exFactoryTo:q.exFactoryTo,buyerGrup:q.buyerGrup,groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom,antrepoTo:q.antrepoTo,antrepoDateLevels:q.antrepoDateLevels?String(q.antrepoDateLevels).split(',').filter(Boolean):undefined};
     const json=q.format==='json',task=json?'backlog-export':'backlog-workbook';
-    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json});
+    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json,signal:consumer.signal});
     if(json)return sendComputedResponse(req,res,lease);
     const d=new Date(),pad=value=>String(value).padStart(2,'0'),filename=`Backlog_Report_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
     return sendComputedResponse(req,res,lease,{contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',filename,gzip:false});
-  }catch(err){apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}
+  }catch(err){if(!consumer.signal.aborted)apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}finally{consumer.dispose();}
 });
 
 app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req,res)=>{
+  const consumer=backlogReadConsumer(req,res);
   try{
     assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    if(consumer.signal.aborted)return;
     let dimFilters={};try{dimFilters=JSON.parse(req.query.dimFilters||'{}');}catch{}
     const options={...req.query,dimFilters,analysisFilters:undefined};
-    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')});
+    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')},{signal:consumer.signal});
     return sendComputedResponse(req,res,lease);
-  }catch(err){apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}
+  }catch(err){if(!consumer.signal.aborted)apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}finally{consumer.dispose();}
 });
 
 // Backlog pivot'unda bir düğüme tıklanınca veya CP/Siparişler sayfasında seçili

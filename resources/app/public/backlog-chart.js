@@ -43,7 +43,9 @@
   let state = Object.assign({}, DEFAULT_STATE);
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
-  let renderGeneration=0,sourceRevision='';
+  let renderGeneration=0,sourceRevision='',renderRequest=null,settingsClose=null;
+  function cancelRender(){++renderGeneration;renderRequest?.abort();renderRequest=null;}
+  function assertRequest(signal){if(signal?.aborted)throw new DOMException('Aborted','AbortError');}
   let chartView = { signature:'', start:0, end:0 };
   let wheelZoomActive = false;
 
@@ -886,22 +888,23 @@
       return ctx && typeof ctx.queryParams==='function' ? (ctx.queryParams(allColumns)||{}) : {};
     } catch (_) { return {}; }
   }
-  async function loadDetail(force,allColumns=false) {
+  async function loadDetail(force,allColumns=false,signal) {
     try {
       const ctx=root.BLBacklogChartContext;
       if(ctx&&typeof ctx.prepareQuery==='function')await ctx.prepareQuery();
     } catch (_) {}
-    const params=queryParams(allColumns), sig=cacheSignature(params);
+    assertRequest(signal);const params=queryParams(allColumns), sig=cacheSignature(params);
     if (!force && cache.signature===sig && cache.rows.length) return cache;
     const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
     let data;
-    if(root.BLBacklogRows?.loadData)data=await root.BLBacklogRows.loadData(params);
+    if(root.BLBacklogRows?.loadData)data=await root.BLBacklogRows.loadData(params,{signal});
     else{
-      const res=await root.fetch('/api/backlog-export'+(qs?'?'+qs:''));
+      const res=await root.fetch('/api/backlog-export'+(qs?'?'+qs:''),{signal});
       if(!res.ok){ let msg=res.statusText; try{const e=await res.json();msg=e.error||msg;}catch(_){} throw new Error(msg); }
       data=await res.json();
     }
     await root.BLMerchCalendarReady;
+    assertRequest(signal);if(sig!==cacheSignature(queryParams(allColumns)))throw new DOMException('Aborted','AbortError');
     if(data.merchCalendar)root.BLMerchCalendarRuntime?.apply?.(data.merchCalendar);
     cache={signature:sig,headers:normalizeHeaders(data.headers||[],data.rows||[]),rows:Array.isArray(data.rows)?data.rows:[]};
     return cache;
@@ -910,14 +913,15 @@
 
   function panel() { return root.document && root.document.getElementById('backlogChartPanel'); }
   async function render(force,detailOverride) {
-    const generation=++renderGeneration;
-    const host=panel(); if(!host || !state.enabled) { if(host)host.hidden=true; return; }
+    cancelRender();const generation=renderGeneration;
+    const host=panel(); if(!host || !state.enabled || (root.document.body?.dataset.activeTab&&root.document.body.dataset.activeTab!=='backlog')) { if(host)host.hidden=true; return; }
+    const request=new AbortController();renderRequest=request;
     host.hidden=false;
     host.innerHTML='<div class="backlogChartLoading">'+esc(tr('Grafik hazırlanıyor…','Preparing chart…'))+'</div>';
     try {
       if(force)root.BLBacklogRows?.invalidate?.();
-      const detail=detailOverride||await loadDetail(!!force);
-      if(generation!==renderGeneration)return;
+      const detail=detailOverride||await loadDetail(!!force,false,request.signal);
+      if(generation!==renderGeneration||request.signal.aborted)return;
       const inferred=inferState(detail.headers,detail.rows,state);
       if(!inferred.timeField) throw new Error(tr('Grafik için tarih alanı bulunamadı.','No date field was found for the chart.'));
       if(inferred.timeField!==state.timeField || inferred.metricField!==state.metricField || inferred.seriesField!==state.seriesField) {
@@ -935,11 +939,11 @@
       mountInteractiveChart(host,model,detail);
       host.querySelector('[data-backlog-chart-edit]')?.addEventListener('click',openSettings);
       host.querySelector('[data-backlog-chart-refresh]')?.addEventListener('click',()=>{invalidate();render(true);});
-      host.querySelector('[data-backlog-chart-disable]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));host.hidden=true;});
+      host.querySelector('[data-backlog-chart-disable]')?.addEventListener('click',()=>{cancelRender();saveState(Object.assign({},state,{enabled:false}));host.hidden=true;});
     } catch(err) {
-      if(generation!==renderGeneration)return;
+      if(generation!==renderGeneration||request.signal.aborted||err.name==='AbortError')return;
       host.innerHTML='<div class="backlogChartError">'+esc(tr('Grafik oluşturulamadı: ','Chart could not be created: ')+err.message)+'</div>';
-    }
+    } finally {if(renderRequest===request)renderRequest=null;}
   }
   function optionHtml(values,selected,blankLabel) {
     let html=blankLabel!=null?'<option value="">'+esc(blankLabel)+'</option>':'';
@@ -947,11 +951,13 @@
   }
   async function openSettings() {
     if(!root.document)return;
-    root.document.getElementById('_backlogChartSettingsModal')?.remove();
+    settingsClose?.();root.document.getElementById('_backlogChartSettingsModal')?.remove();
+    const request=new AbortController();
     const overlay=root.document.createElement('div');overlay.id='_backlogChartSettingsModal';overlay.className='autoModalOverlay';
     overlay.innerHTML='<div class="autoModal backlogChartSettingsModal" role="dialog" aria-modal="true" aria-labelledby="backlogChartSettingsTitle"><header><h3 id="backlogChartSettingsTitle">'+esc(tr('Backlog Grafik Ayarları','Backlog Chart Settings'))+'</h3><button type="button" data-chart-close>×</button></header><div class="autoModalBody"><div class="backlogChartLoading">'+esc(tr('Alanlar yükleniyor…','Loading fields…'))+'</div></div></div>';
-    root.document.body.appendChild(overlay);let releaseKeyboard=()=>{};const close=()=>{releaseKeyboard();overlay.remove();};releaseKeyboard=root.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
-    let detail;try{detail=await loadDetail(false,true);}catch(err){overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
+    root.document.body.appendChild(overlay);let releaseKeyboard=()=>{};const close=()=>{request.abort();releaseKeyboard();overlay.remove();if(settingsClose===close)settingsClose=null;};settingsClose=close;releaseKeyboard=root.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
+    let detail;try{detail=await loadDetail(false,true,request.signal);}catch(err){if(request.signal.aborted)return;overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
+    if(request.signal.aborted||!overlay.isConnected)return;
     const headers=normalizeHeaders(detail.headers,detail.rows),dates=detectDateHeaders(headers,detail.rows),draft=inferState(headers,detail.rows,state),body=overlay.querySelector('.autoModalBody');
     body.innerHTML='<div class="backlogChartSettingsGrid">'
       +'<label><span>'+esc(tr('Zaman alanı 1','Time field 1'))+'</span><select id="backlogChartTime">'+optionHtml(dates,draft.timeField,null)+'</select></label>'
@@ -972,7 +978,7 @@
     const set=(id,val)=>{const el=overlay.querySelector('#'+id);if(el)el.value=val;};
     set('backlogChartGran',draft.granularity);set('backlogChartAgg',draft.aggregation);set('backlogChartType',draft.chartType);set('backlogChartBarLayout',draft.barLayout);set('backlogChartLimit',draft.seriesLimit);
     overlay.querySelector('[data-chart-cancel]')?.addEventListener('click',close);
-    overlay.querySelector('[data-chart-remove]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));const p=panel();if(p)p.hidden=true;close();});
+    overlay.querySelector('[data-chart-remove]')?.addEventListener('click',()=>{cancelRender();saveState(Object.assign({},state,{enabled:false}));const p=panel();if(p)p.hidden=true;close();});
     overlay.querySelector('[data-chart-save]')?.addEventListener('click',()=>{
       const seriesField=overlay.querySelector('#backlogChartSeries')?.value;
       const next=sanitizeState({enabled:true,timeField:overlay.querySelector('#backlogChartTime')?.value,timeField2:overlay.querySelector('#backlogChartTime2')?.value,granularity:overlay.querySelector('#backlogChartGran')?.value,metricField:overlay.querySelector('#backlogChartMetric')?.value,aggregation:overlay.querySelector('#backlogChartAgg')?.value,seriesField,seriesFilter:seriesField===state.seriesField?state.seriesFilter:[],chartType:overlay.querySelector('#backlogChartType')?.value,barLayout:overlay.querySelector('#backlogChartBarLayout')?.value,seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,title:overlay.querySelector('#backlogChartTitle')?.value,showAverage:!!overlay.querySelector('#backlogChartAverage')?.checked});
@@ -1163,10 +1169,18 @@
       const target=event&&event.target;
       if(wheelZoomActive&&!(target&&typeof target.closest==='function'&&target.closest('.backlogChartCanvas')))setWheelZoomActive(false);
     });
+    const content=root.document.getElementById('backlogContent');
+    if(content&&root.MutationObserver)new root.MutationObserver(()=>{if(content.hidden||content.style.display==='none'){cancelRender();settingsClose?.();}}).observe(content,{attributes:true,attributeFilter:['style','hidden']});
+    if(root.MutationObserver){
+      new root.MutationObserver(()=>{if(root.document.body.dataset.activeTab!=='backlog'){cancelRender();settingsClose?.();}else if(state.enabled)render(false);}).observe(root.document.body,{attributes:true,attributeFilter:['data-active-tab']});
+      const range=root.document.getElementById('backlogDateRange');if(range)new root.MutationObserver(()=>{if(range.getAttribute('aria-busy')==='true'){cancelRender();settingsClose?.();}}).observe(range,{attributes:true,attributeFilter:['aria-busy']});
+    }
+    root.addEventListener?.('pagehide',()=>{cancelRender();settingsClose?.();});
     root.document.getElementById('backlogChartBtn')?.addEventListener('click',openSettings);
     const host=panel(); if(host&&state.enabled)host.hidden=false;
   }
   function onBacklogRendered(data) {
+    cancelRender();settingsClose?.();
     if(!data?.rowsInputRevision || sourceRevision!==data.rowsInputRevision){sourceRevision=data?.rowsInputRevision||'';invalidate();}
     if(data&&state.enabled)render(false);
   }

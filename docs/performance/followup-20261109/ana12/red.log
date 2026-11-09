@@ -1,0 +1,48 @@
+✖ single opted-in consumer abort reaches compute and retry starts a fresh flight (9.957486ms)
+✖ one shared consumer leaves; only the last departure aborts, exactly once (2000.547458ms)
+✖ live shared and non-opted-in consumers retain completion and cache leases (2002.969105ms)
+✖ late completion after cancellation is released once and cannot enter cache (2002.274516ms)
+✖ abort before dispatch admits no compute job; errors release subscribers for retry (2002.631795ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 4
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8087.205232
+
+✖ failing tests:
+
+test at ../../tmp/ana12-red.test.cjs:2:53
+✖ single opted-in consumer abort reaches compute and retry starts a fresh flight (9.957486ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(f.jobs[0].signal)
+  
+      at TestContext.<anonymous> (/tmp/ana12-red.test.cjs:16:81)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../../tmp/ana12-red.test.cjs:2:53
+✖ one shared consumer leaves; only the last departure aborts, exactly once (2000.547458ms)
+  'test timed out after 2000ms'
+
+test at ../../tmp/ana12-red.test.cjs:2:53
+✖ live shared and non-opted-in consumers retain completion and cache leases (2002.969105ms)
+  'test timed out after 2000ms'
+
+test at ../../tmp/ana12-red.test.cjs:2:53
+✖ late completion after cancellation is released once and cannot enter cache (2002.274516ms)
+  'test timed out after 2000ms'
+
+test at ../../tmp/ana12-red.test.cjs:2:53
+✖ abort before dispatch admits no compute job; errors release subscribers for retry (2002.631795ms)
+  'test timed out after 2000ms'

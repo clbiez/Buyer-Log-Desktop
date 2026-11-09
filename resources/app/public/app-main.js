@@ -16859,7 +16859,11 @@ function backgroundWarmupMemoryTight(){
   const memory=performance.memory;
   return Boolean(memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>0.6);
 }
+function backgroundWarmupNativeTab(){
+  return Boolean(window.location?.search&&new URLSearchParams(window.location.search).get('workspaceTab'));
+}
 function backgroundWarmupSteps(){
+  const nativeTab=backgroundWarmupNativeTab(),activeModule=currentActiveTab();
   const modelData=!(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false);
   return [
     // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
@@ -16871,7 +16875,7 @@ function backgroundWarmupSteps(){
     }},
     {module:'orders',enabled:modelData&&!backgroundWarmupMemoryTight(),ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
     {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
-  ];
+  ].filter(step=>!nativeTab||step.module===activeModule);
 }
 /* Hazırlık, Continue ve ilk görünür karelerden sonra başlar. Her adımda güncel
    açma niyeti ve kişisel son kullanım yeniden okunur; yetki, kaynak ve bellek
@@ -16885,7 +16889,9 @@ function scheduleBackgroundModuleWarmup(){
   if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
   const steps=backgroundWarmupSteps();
   // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
-  const eligible=step=>step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
+  // Native renderers prepare only their visible module; explicit user navigation
+  // keeps the existing on-demand loaders. Recheck after the idle delay as well.
+  const eligible=step=>(!backgroundWarmupNativeTab()||step.module===currentActiveTab())&&step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
   const total=steps.filter(eligible).length;let index=0;
   const gap=()=>BACKGROUND_WARMUP_GAP_MS;
   const idle=fn=>{

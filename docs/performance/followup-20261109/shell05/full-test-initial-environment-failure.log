@@ -1,0 +1,2382 @@
+
+> buyer-log-desktop@7.0.343 test
+> node tests/run-tests.js
+
+[Buyer Log tests] 1315 test dosyası, 10 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/10 (300 dosya)
+✔ v10.35 Orders ve Collection aktif tablo filtrelerini araç çubuğundan önce görünür kılar (3.257711ms)
+✔ v10.35 ortak özet arama, sütun ve işaretleme filtrelerini tek sözleşmede toplar (0.794745ms)
+✔ v10.35 filtre çipleri tek tek kaldırılabilir ve ilgili kalıcı durum güncellenir (1.233853ms)
+✔ v10.35 tablo filtrelerini temizleme sayfa kapsamını korur ve eski global eylemle aynı yolu kullanır (0.829246ms)
+✔ v10.35 aktif filtre özeti her Orders ve Collection çiziminde güncellenir (2.385688ms)
+✔ v10.35 filtre bağlamı token tabanlı, odak görünür ve dar ekranda taşmadan sarılır (149.003201ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/agent-browser-connector-v554.test.js (117.362288ms)
+✔ agent reference documents listed on demand exist in the repository (4.588056ms)
+✔ Claude and Codex share evidence, PR gates and honest release reporting (1.170423ms)
+✔ lightweight PR checks are distinct from manual full regression (1.100242ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/ai-automation-platform.test.js (94.064882ms)
+✔ analysis cache is bounded LRU and produces stable keys for equivalent filter state (24.128032ms)
+✔ analysis cache is shared by the analysis modules and scoped by dataset/config (1.077041ms)
+✔ performance runtime exposes bounded cache and throttling helpers for hot paths (0.280665ms)
+✔ v9.51 ortak giriş noktası var ve iki analiz ekranı da onu kullanıyor (4.867886ms)
+✔ v9.51 oluşturulan tarif KAPALI, zamanlamasız ve yalnız TASLAK üretir (0.880311ms)
+✔ v9.51 CP düğmesinin koşul alanları sunucunun yazdığı alanlarla birebir aynı (0.864217ms)
+✔ v9.51 Backlog düğmesinin koşul alanları sunucunun yazdığı alanlarla birebir aynı (0.377473ms)
+✔ v9.51 alıcı alanı her iki kaynakta da gerçek bir üretici sütunu (1.865003ms)
+✔ v9.51 düğmeler çiziliyor ve bağlanıyor (0.967944ms)
+✔ v9.51 hedef tarih tercihi tarife taşınır (ekran ile otomasyon aynı hedefe bakar) (0.370466ms)
+✔ v9.51 hata sessiz yutulmuyor: modül yüklenemezse kullanıcıya söyleniyor (1.036614ms)
+✔ ANA-07: sort/filter only renders its table and reuses prepared rows (13.699538ms)
+✔ ANA-11: step country normalization is linear, preserves duplicates and year scope (54.216122ms)
+✔ ANA-07: persistent column/clear tools call the latest analysis closure (3.97291ms)
+✔ ANA-05: worker cancellation/generation guard and dataset reuse (45.458709ms)
+✔ ANA-05: projected transport restores non-enumerable sourceRow and risk aliases; worker error recovers (37.206573ms)
+✔ ANA-05: worker runs canonical engine with caller ordinals and restores filtered order mapping (24.556453ms)
+✔ v6.66 LFL analiz modülü genel section görünürlük kuralına takılmaz (3.589603ms)
+✔ v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür (0.80212ms)
+✔ v6.66 analiz betikleri Overview açılışını bloklamadan lazy feature kaydından yüklenir (1.735135ms)
+✔ v4.45 varsayılan ASAS - IAS kuralı yalnız Sipariş Kod + Model/Ürün Ad + Renk Kod üçlüsüdür (3.13943ms)
+✔ v4.45 Excel ve Data Model sipariş kodu gösterimleri eşleşir, model ve renk kodu birebir kalır (5.868994ms)
+✔ v4.45 Antrepo Excel satırları parsiyel bazında korunur (2.011175ms)
+✔ v4.45 Antrepo ana kaynağı Excel, Database ise açıkça seçilen opsiyondur (10.144738ms)
+✔ v4.45 Source, Matching Rule ve Data Model ekranları pahalı şemayı açılışta taramaz (8.324962ms)
+✔ eski sipariş kodu yardımcı normalizasyonu diğer modüller için korunur (8.525629ms)
+✔ IAS kaydı yalnız aynı ham sipariş kodu + model + renk kodu ile bulunur (17.62088ms)
+✔ sipariş kodunun Excel/DAX gösterim farkları aynı iş kodu olarak eşleşir (2.868686ms)
+✔ CP satırı tam üçlü eşleşmede gerçek IAS durumunu alır (27.005605ms)
+✔ Antrepo rolünde CP sipariş kodu daraltması kalmadı (12.295224ms)
+✔ IAS kimlik sütunları desteklenen ad farklarıyla çözülür (3.4529ms)
+✔ Renk Kod alanı renk tanımı sanılmaz (1.934908ms)
+✔ kimlik sütunları çözülemezse sessiz kalmaz (1.838663ms)
+✔ teşhis tam kimlikli satır ve boş statü sayılarını raporlar (1.70768ms)
+✔ teşhis alanı haritanın enumerable anahtarlarına karışmaz (1.259881ms)
+✔ modelden gelen statü dağılımı yalnız kabul edilen üçlü satırlardan hesaplanır (1.008008ms)
+✔ model veya renk kodu eksik IAS sonucu reddedilir (1.02627ms)
+✔ ölçü içeren SUMMARIZECOLUMNS satır eleme koruması alır (2.699209ms)
+✔ koruma sabit değer değil, varlık ölçüsüdür (0.812912ms)
+✔ koruma, gruplamaya katılan HER tabloyu kapsar (0.714176ms)
+✔ ölçüsüz eşlemede koruma sütunu eklenmez (0.479277ms)
+✔ koruma sütunu Antrepo ayrıştırmasını etkilemez (1.149066ms)
+✔ ufuk koşulları okunabilir metne çevrilir (1.326162ms)
+✔ gruplar arası VEYA olarak yazılır (0.345888ms)
+✔ uzun değer listesi kısaltılır (0.330063ms)
+✔ koşulsuz ufuk sınırsız olarak işaretlenir (0.325891ms)
+✔ v5.16 Antrepo parser does not invent missing pivot identity from the previous row (11.518622ms)
+✔ v5.16 exact identity written by the pivot preserves every independent partial row (2.606114ms)
+✔ v5.16 exact mismatch remains unmatched; no pivot reconstruction is attempted (5.779087ms)
+✔ v5.16 trailing formatted blank rows are ignored without carrying identity into them (5.233774ms)
+✔ v5.10 Excel Antrepo refreshes workbook before parsing and fails closed on refresh error (6.09709ms)
+✔ v5.10 uploaded Antrepo workbook is refreshed in Excel before application data is parsed (1.639724ms)
+✔ Excel automation refreshes workbook once without repeating every PivotTable query (0.605582ms)
+✔ v7.0.250 latest refresh result is kept for toast/history but not rendered on Overview (4.492876ms)
+✔ v5.10 refresh result is persisted in model snapshot and returned by api data (1.854234ms)
+✔ v9.53 Antrepo Excel RİSK(PRIORITY) formülü operasyonel sinyalleri OR'luyor (3.503584ms)
+✔ v9.53 Excel'deki RİSK değeri programın hesabından AYNEN gelir (0.783376ms)
+✔ v9.53 satır numarası formüle doğru yansıyor (0.772227ms)
+✔ v4.40 aynı anahtardaki IAS satırlarını birleştirmez; en yeni antrepo tarihli satırı bütünüyle seçer (13.491386ms)
+✔ v4.43 CP lojistik özeti üretim bakiyesi yoksa depo öncesi parsiyeli ana detay yapar (49.191786ms)
+✔ v4.40 eşit antrepo tarihlerinde kaynakta daha sonra gelen IAS satırını bütünüyle seçer (6.875759ms)
+✔ uygulama simgesi dosyaları doğru boyutlarda ve tek kaynaktan (4.685141ms)
+✔ favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir (3.435186ms)
+✔ Manifest giriş gerçek uygulama logosunu kullanır; paket simgeleri ve masaüstü yolları korunur (6.120912ms)
+✔ kullanıcı avatarı Manifest yüzeyi ve okunur baş harfleri kullanır (239.585716ms)
+✔ yalnız BuyerLog.exe kısayollarının simgesi ve AppUserModelID kimliği eşitlenir (12.698696ms)
+✔ simge doğru olsa bile AppUserModelID eksikse kısayol yeniden yazılır (1.912881ms)
+✔ simge değişince yeni içerik yeni yol alır ve eski kopya temizlenir (3.533273ms)
+✔ shell API veya kaynak simge yoksa hiçbir şey yazılmaz (2.04222ms)
+✔ Excel approval validation is a stop-style required dropdown, not free text (25.24993ms)
+✔ validation injection preserves existing worksheet validations and corrects the count (3.730875ms)
+✔ workbook ZIP patch writes data validation into the requested worksheet XML (59.600066ms)
+✔ month/week and revised Ex-Factory remain direct while Priority follows ANTREPO-RETAIL (1.822858ms)
+✔ Ex-Factory boş renk aynı PO'nun tarihli renginden tarihi alır ve işaret taşır (27.119305ms)
+✔ birden çok tarihli renk varsa en erken tarih alınır; hiç tarih yoksa boş kalır (10.412964ms)
+✔ ASAS "Net Alım Sipariş Miktarı" sütunu bulunamazsa siparişler sessizce elenmez, uyarı üretilir (9.69145ms)
+✔ ASAS "Net Alım Sipariş Miktarı" sütunu bulununca uyarı üretilmez (2.084716ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/asas-order-level-backlog-v20260929.test.js (212.065982ms)
+✔ ASAS alan kataloğu gerçek Teknik Görsel sütununu otomatik eşler (2.581405ms)
+✔ eski eksiksiz Data Model bağlantısı yeni Teknik Resim alanını bir kez öğrenir (2.510798ms)
+✔ ASAS parser Teknik Görsel bağlantısını PLM Kod ile aynı siparişe taşır (5.157795ms)
+✔ ASAS Tümünü Güncelle mevcut görselin üzerine yazar (143.754099ms)
+✔ ASAS Eksikleri Tamamla kayıtlı görseli korur ve yalnız yeni eksiği tamamlar (5.648919ms)
+✔ ASAS görsel adayları aynı PLM ID için renklerden bağımsız tekilleşir (2.683323ms)
+✔ ASAS görsel adayı Teknik Görsel alanı yoksa style ID tahmin etmez (0.367861ms)
+✔ ASAS aynı PLM Kod için çelişkili Teknik Görsel bağlantısını indirmez (1.966981ms)
+✔ ASAS görsel adayları 250 kayıtla sınırlanmaz (118.622942ms)
+✔ yalnız izinli PIM Teknik Resim yolları kabul edilir (0.577446ms)
+✔ PIM görsel fetch betiği doğrulanmış Teknik Resim URL sini kullanır (0.547021ms)
+✔ detail-free LOGIN, LOGOUT and PASSWORD_SETUP append small null details without orderAccess (2.591484ms)
+✔ explicit null details and nested details preserve redaction semantics (1.942123ms)
+✔ no-argument backupSafeStore and backupSnapshot still return the sanitized complete store (386.667703ms)
+✔ append preserves existing audit lines and historical archive bytes (2.575287ms)
+✔ auth: scrypt parola hash doğru/yanlış parolayı ayırt eder (273.330842ms)
+✔ auth: imzalı oturum süresi ve kurcalanması doğrulanır (1.768864ms)
+✔ auth: cookie ayrıştırma (1.089439ms)
+✔ auth: parola yoksa devre dışı (varsayılan) (1.23776ms)
+✔ auth entegrasyon: etkinken korumalı rota oturumsuz reddedilir, giriş sonrası erişilir (74.191512ms)
+✔ auth entegrasyon: devre dışıyken hiçbir rota kilitlenmez (8.532835ms)
+✔ v6.03 aralık seçenekleri ve varsayılan KAPALI (6.710914ms)
+✔ v6.03 seçenekler arayüzde de aynı (4.360693ms)
+✔ v6.03 uygun olmayan anlarda tur atlanıyor (0.67322ms)
+✔ v6.03 atlanan tur kaybolmuyor, tam aralıkla erteleniyor (2.128799ms)
+✔ v6.03 zamanlayıcı üst üste binmiyor (0.754696ms)
+✔ v6.03 elle yenilemeden sonra sayaç baştan başlıyor (0.932304ms)
+✔ otomatik veya manuel veri yenilemesi acik tablo gorunumunu favoriye resetlemez (1.372968ms)
+✔ v6.03 sıradaki tur saati kullanıcıya gösteriliyor (1.13418ms)
+✔ v7.175 · KUSUR KANITI: olmayan alana "Boş" koşulu eskiden TÜM satırları seçerdi (10.634075ms)
+✔ v7.175 · olmayan koşul alanı çalıştırmayı DURDURUR ve en yakın alanı önerir (1.125374ms)
+✔ v7.175 · başlığı değişmiş alan KANONİK kayıttan onarılır ("Sipariş Kodu" → "Order Code") (1.406881ms)
+✔ v7.175 · büyük/küçük harf farkı hata sayılmaz; alıcı alanı da denetlenir (0.367018ms)
+✔ v7.175 · veri yoksa denetim yapılmaz (alanın varlığı bilinemez) (0.222544ms)
+✔ v7.175 · sunucu: denetim filtre uygulanmadan ÖNCE çalışır, önizleme sonucu bildirir (2.456345ms)
+✔ v7.175 · şablonlar gerçek işlere karşılık gelir ve hiçbiri gerçek gönderim kurmaz (0.292642ms)
+✔ v7.175 · gecikme şablonu dilden bağımsız KOD alanıyla eşleşir ve üreticiye böler (0.569115ms)
+✔ v7.175 · CP şablon alanları sunucunun ürettiği alanlardır (0.431728ms)
+✔ v7.175 · özet otomasyonu düz cümleyle anlatır; göreli tarih okunur (1.491863ms)
+✔ v7.175 · "Hazır mı?" eksikleri ve yanlış yazılmış alanı öneriyle bulur (4.925161ms)
+✔ v7.175 · hazır bir otomasyonda HATA yoktur; planlama yalnız e-postada (0.349834ms)
+✔ v7.175 · sözlükteki örnek kod ve her koşul örneği sunucu doğrulamasından GEÇER (25.817201ms)
+✔ v7.175 · AI cevabından kod ayıklanır; açıklama ve kıvrık tırnak sorun olmaz (5.937715ms)
+✔ v7.175 · sunucu hataları düz dille ve öneriyle açıklanır (25.649952ms)
+✔ v7.175 · AI yönergesi kuralları, alan ADLARINI ve isteği içerir; şirket verisi içermez (5.409478ms)
+✔ v7.175 · "Yeni Otomasyon" hazır senaryolarla açılır; eski yollar ikincil olarak durur (0.136533ms)
+✔ v7.175 · editörde özet + "Hazır mı?" paneli var; HATA varken Çalıştır başlamaz (0.344993ms)
+✔ v7.175 · koşullarda tarih kısayolları ve bağlanan ikinci kaynağın alanları var (0.155774ms)
+✔ v7.175 · AI ile oluşturulan taslak listede hemen açılır (olayı dinleyen yoktu) (0.426175ms)
+✔ v7.175 · AI penceresi: yaz → yönergeyi kopyala → yapıştır; kod ayıklanıp denetlenir (0.391761ms)
+✔ v7.176 · EN kipinde sözlük ve örnek kod İngilizce alan adlarıyla gelir ve sunucu doğrulamasından geçer (12.3535ms)
+✔ browser automation checks live authority before connection, after connection and between external steps (5.483025ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automation-manufacturer-recipients.test.js (119.089507ms)
+✔ normal schedule rejects a revoked or stale profile before reserving or reading a protected source (3.992127ms)
+✔ live guard rejects source ownership, scope, deleted recipes and session credentials without tying work to an unrelated IAM revision (6.003463ms)
+✔ INTAKE authority loss during model query never publishes a cache, personal view, snapshot or fallback (4.381418ms)
+✔ executor passes its default or explicit authority into source preparation (5.667238ms)
+✔ automation preview cannot survive a changed source authority or recipe without a numeric revision (5.065358ms)
+✔ foreign preview references do not consume the owners valid snapshot (1.572891ms)
+✔ unchanged previews remain one-shot, expiring and bounded (5.965887ms)
+✔ unchanged profile cannot reuse private previews after authoritative order ownership changes (2.195589ms)
+✔ eşzamanlı yazma penceresinde bir yarışmacının kaydı diğerini sessizce silmez (30.119014ms)
+✔ @today çalışma anındaki takvim gününe çözülür (1.727664ms)
+✔ @today ± gün kaydırması desteklenir (0.414159ms)
+✔ yerel takvim günü kullanılır, UTC değil (0.388629ms)
+✔ statik tarihler ve normal metinler DEĞİŞTİRİLMEZ (0.224794ms)
+✔ yalnız belirteç taşıyan kural kopyalanır; diğerleri aynı nesne kalır (2.450178ms)
+✔ çözüm uygulama anında yapılır, kayıt anında değil (0.444606ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automation-report-columns-ui.test.js (112.809773ms)
+✔ retired grants disable only their schedules across reloads and ordinary native schedules still run (20.604517ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automation-source-chain-v639.test.js (120.362739ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automation-terminal-code-v629.test.js (101.373337ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automations-data-v565.test.js (127.788892ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automations-general-v557.test.js (113.920696ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automations-rebuild-v636.test.js (98.355057ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/automations-v555.test.js (104.847555ms)
+✔ narrow analysis skips operational preparation for rejected orders and does not project risk for a season pivot (11.805549ms)
+✔ raw ASAS predicates run before segmentation; IAS predicates retain complete partials when calculating remainder (9.90193ms)
+✔ lazy dimension values preserve alternatives and active values for the requested field (1.408472ms)
+✔ column facets return values outside the analysis selection without serializing detail rows (32.803743ms)
+✔ date facets, notes, blank selections, unknown fields and revised dates preserve report semantics (4.556684ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/backlog-automation-v947.test.js (160.000025ms)
+✔ v5.86 tarayıcı dışa aktarımı koşullu biçimlendirmeyi boş dizi olarak geçmiyor (5.467595ms)
+✔ v5.86 guard yapılandırması kuralları üretiyor (1.252337ms)
+✔ v5.86 kurallar doğru sütunlara ve doğru koşullarla üretiliyor (2.016987ms)
+✔ v5.86 kurallar gerçekten çalışma kitabı dosyasına yazılıyor (304.946799ms)
+✔ Chart and Overview share one full-row request when the first pivot response establishes its source revision (23.44917ms)
+✔ Chart follows the newest pivot preparation without waiting for an obsolete request to finish (13.553054ms)
+✔ lazy Delivery initialization shares the post-pivot request with Chart and Overview (17.230173ms)
+✔ Backlog default view keeps exactly the requested columns and groups other business columns (7.30324ms)
+✔ Backlog template carries selective header emphasis, hidden outline columns and bold data styles (25.52988ms)
+✔ protected Backlog allows outline column toggling without unlocking formula cells (0.826368ms)
+✔ column outline cleanup removes SheetJS non-standard level attribute (0.696823ms)
+✔ v5.75 Revize Ex-Factory kuralı rapor gününü sabit seri numarası olarak yazar (2.867656ms)
+✔ v5.75 Yükleme Tipi kuralı RİSK hücresine bakar, gömülü değere değil (0.256201ms)
+✔ v5.75 eksik sütunlarda kural üretilmez (2.200658ms)
+✔ v5.75 expression kuralı geçerli cfRule XML üretir (1.612347ms)
+✔ v5.75 cellIs kuralları eskisi gibi çalışmaya devam eder (1.72272ms)
+✔ ASAS ham başlığı dinamik gruplama boyutu olur (14.548673ms)
+✔ Antrepo ham başlığı dinamik gruplama boyutu olur (6.834254ms)
+✔ Ekle düğmesi ve kaynak/başlık seçicisi arayüzde bulunur (30.569881ms)
+✔ v6.30 JSON-restored retail and in-store dates are actually filtered (22.401285ms)
+✔ Pivot Ayarları kaydı tarihleri commit eder ve Excel kanonik filtre sorgusunu kullanır (4.501652ms)
+✔ v6.30 Excel image placement omits invalid editAs on oneCellAnchor (2.644798ms)
+✔ Backlog Excel Ay/Hafta hücreleri orijinal tarih hücresine formülle bağlıdır (4.574131ms)
+✔ date window shifts through month ends, leap years and week boundaries (11.131443ms)
+✔ calendar presets use Monday weeks and inclusive 30-day windows (0.487046ms)
+✔ slider boundaries snap to full calendar periods and support long ranges without truncation (0.583865ms)
+✔ Exfactory boundaries are inclusive, optional and shared by pivot and export detail (17.9413ms)
+✔ Exfactory range is carried by query, export, detail and persisted settings (170.716031ms)
+✔ an older Backlog response cannot replace a newer date selection (30.321524ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/backlog-date-shift-v20261002.test.js (106.96445ms)
+✔ v6.35 Orijinal Exfactory sütunu revizyonu DEĞİL ASAS tarihini gösteriyor (9.459189ms)
+✔ v6.35 üretim satırında revize sütunu CP revizyonundan geliyor (1.033043ms)
+✔ v6.35 revizyon yoksa her iki sütun da ASAS tarihini veriyor (0.762936ms)
+✔ v7.0.201 parsiyel satırında Revised Shipment Date Buyer Log Ex-Factory revizyonunu gösterir (1.098441ms)
+✔ v7.0.201 aynı siparişin tüm Backlog segmentleri aynı kullanıcı Ex-Factory revizyonunu gösterir (1.241351ms)
+✔ v7.0.201 kaydedilmiş kullanıcı Ex-Factory revizyonu IAS HANDOVER eski kalsa da Backlog Revised Shipment Date alanına taşınır (1.414509ms)
+✔ v6.35 handover boş parsiyelde sütun boş kalmıyor (1.105156ms)
+✔ v6.35 eksik yükleme (shortage) satırı parsiyel sayılmıyor (1.748186ms)
+✔ v6.35 son karşılaştırma kaydı silinebiliyor (1.176533ms)
+✔ v6.35 boşaltılan liste kendiliğinden yeniden dolmuyor (0.712707ms)
+✔ v6.35 analiz ızgarasında sürüklenebilir ayırıcı var (0.838303ms)
+✔ v6.35 ayırıcı oranı sınırlanıyor ve saklanıyor (0.533772ms)
+✔ v6.35 ayırıcı klavyeyle de kullanılabiliyor ve bir kez bağlanıyor (0.658641ms)
+✔ v6.35 kayıtlı üretici sırası hiçbir üreticiyi gizlemiyor (2.338322ms)
+✔ v6.35 kayıtlı sıra yoksa alfabetik sıra korunuyor (0.800253ms)
+✔ v6.35 bozuk kayıt uygulamayı düşürmüyor (1.233065ms)
+✔ v6.35 üretici başlıkları sürüklenebilir ve dinleyiciler delege edilmiş (0.533558ms)
+✔ v6.35 sütun taşıma sırayı gerçekten değiştirip kaydediyor (0.517639ms)
+✔ v9.46 analiz KENDİ filtresini kurmaz: Backlog'un kanonik filtre tanımını kullanır (2.435292ms)
+✔ v9.46 toplam eşitliği ölçülür ve sapma gizlenmez (0.457067ms)
+✔ v9.46 Backlog her çizildiğinde analiz haberdar edilir (ayrı fetch döngüsü yok) (4.152048ms)
+✔ v9.46 modül lazy yüklenir; motorlar görünümden ÖNCE gelir (0.532574ms)
+✔ v9.46 panel kabuğu Backlog ile otomatik görünür; ayrı toggle yoktur (0.771037ms)
+✔ v9.46 kullanıcı tercihi hesapla birlikte taşınır (iki listeye de kayıtlı) (0.337265ms)
+✔ v9.46 drill-down mevcut Backlog detay penceresini kullanır, yenisini kurmaz (0.340633ms)
+✔ v9.46 sunucu: MAG/MMYG ve priority analiz için taşınır, Excel şablonu DEĞİŞMEZ (10.275507ms)
+✔ v9.46 iş mantığı görünümde DEĞİL: eşik ve sınıflandırma motorda kalır (0.794029ms)
+✔ v9.46 AI iş mantığı yok: analiz zinciri tamamen deterministik (2.093681ms)
+✔ v9.46 A — zamanında yüklendi, transit plan içinde, hedefe bol süre: ON TRACK (4.901456ms)
+✔ v9.46 B — zamanında yüklendi AMA transit planı aştı: risk sebebi TRANSIT_DELAY (1.26923ms)
+✔ v9.46 C — henüz yüklenmedi ama güvenli yükleme tarihine daha çok var: ON TRACK (1.752759ms)
+✔ v9.46 D — son güvenli yükleme tarihi geçti: EXPECTED LATE + yetersiz transit (0.476535ms)
+✔ v9.46 E — geç yüklendi ama hâlâ yetişebilir: AT RISK + LATE_LOADING (0.403221ms)
+✔ v9.46 F — gümrük/liman aşamasında ve hedef yakın: CUSTOMS_DELAY (0.563927ms)
+✔ v9.46 G — depoya ulaştı, retaile aktarım bekliyor, hedef yakın: RETAIL_TRANSFER_DELAY (0.500426ms)
+✔ v9.46 H — eksik veri UYDURULMAZ: UNKNOWN kalır (0.492529ms)
+✔ v9.46 hedef tarih geçmiş ve sipariş hâlâ varmamışsa ALREADY_LATE (0.440372ms)
+✔ v9.46 In Store hedefi kanonik 14 günlük tamponu uygular (0.595009ms)
+✔ v9.46 KANONİK TUTARLILIK — motorun ETA'sı computePriorityFlags ile birebir aynı (1.139173ms)
+✔ v9.46 toplulaştırma: adet toplanır, sipariş kimliği TEKİLLEŞTİRİLİR (2.301671ms)
+✔ v9.46 Needs Attention: gecikenler bugünkü listeye, sağlıklılar ON_TRACK grubuna (1.208789ms)
+✔ v9.46 veri kalitesi: eksik alanlar sayılır, Unknown ayrı raporlanır (0.88754ms)
+✔ v9.46 yol süresi kuralı TANIMSIZSA hesap yapılmaz, eksik bilgi olarak raporlanır (0.347296ms)
+✔ v9.46 kural yoksa bile GERÇEKTEN varmış sipariş hesaplanabilir (0.275343ms)
+✔ v9.46 kural eksikliği ülke + yükleme tipi kombinasyonuyla raporlanır (1.028336ms)
+✔ v9.46 requireTransitRule kapatılırsa kanonik varsayılan süreyle hesap yapılır (0.354801ms)
+✔ v9.46 Needs Attention SAYILARI liste kısıtından etkilenmez (13.355081ms)
+✔ v9.46 transit gecikmesi yorumu: metindeki sayı ile açılan sipariş listesi AYNI (22.929045ms)
+✔ v9.46 kullanıcı yorum tiplerini kapatabilir (4.378441ms)
+✔ v9.46 olumlu özet varsayılan KAPALI, açılınca üretiliyor (1.211353ms)
+✔ v9.46 yoğunlaşma yorumu yalnız GERÇEKTEN orantısızsa üretilir (2.880367ms)
+✔ v9.46 özel kural: koşullar VE ile birleşir, sonuç yetkili veriyle sınırlı kalır (7.1643ms)
+✔ v9.46 özel kural: eksik sayısal veri koşulu KARŞILAMAZ (sahte eşleşme yok) (1.332112ms)
+✔ v9.46 özel kural: geçersiz alan/operatör sessizce düşürülür (0.390874ms)
+✔ v9.46 yorumlar önem sırasına göre sıralanır (2.482045ms)
+✔ v9.46 İngilizce yorum üretimi TR ile aynı sayıyı verir (2.603484ms)
+✔ v9.46 gerçek üretici satırları motorun beklediği TÜM alanları taşıyor (10.63189ms)
+✔ v9.46 gerçek satırlar analiz edilince UNKNOWN'a düşmüyor (alan eşleşmesi doğru) (10.39705ms)
+✔ v9.46 adet toplamı sunucunun kendi sumQty tanımıyla aynı alandan gelir (1.613631ms)
+✔ v9.46 sunucunun structured operational signals çıktısı analizde risk sebebine dönüşüyor (1.66874ms)
+✔ v9.46 uçtan uca: gerçek satırlardan yorum üretiliyor ve listesi tıklanabilir (23.858576ms)
+✔ Orders/CP Backlog detail uses source-row values as presentation fallback when ASAS fields are blank (7.880618ms)
+✔ v5.83 çift tıklamayla açılan detay satırı Status ve kimlik alanlarını doldurur (16.975903ms)
+✔ v5.83 detay satırının anahtarları başlık listesinin dışına taşmaz (2.719831ms)
+✔ v5.83 başlıkların ezici çoğunluğu gerçekten dolu gelir (1.496514ms)
+✔ v5.83 pivot düğümü ve sipariş kodu seçicileri de aynı eşlemeyi kullanır (10.420849ms)
+✔ v5.83 detay satırı Excel yazıcısının iç alanını taşımaz (3.289345ms)
+✔ v5.83 Backlog Excel satırı ile detay satırı aynı değerleri verir (4.539706ms)
+✔ Backlog chart uses the shared Collection month/week date dimension (7.975174ms)
+✔ Backlog chart filters series inside the chart before applying the series limit (0.956666ms)
+✔ Backlog grafik seri araması gizlenen sonuçları CSS ile tekrar görünür yapmaz (1.661325ms)
+✔ Backlog chart TradingView-style ranges open at a readable window and support presets (5.739042ms)
+✔ Backlog chart zoom range helpers clamp, zoom and pan without losing the data window (1.366477ms)
+✔ Backlog chart renders a current-date marker when today falls inside the visible range (32.003925ms)
+✔ Backlog chart supports a second time field as an overlaid dashed series (0.81196ms)
+✔ Backlog chart uses whole-number nice ticks and compact time labels (0.945497ms)
+✔ Backlog chart average line is calculated from visible plotted data points (1.964238ms)
+✔ Backlog chart average follows the visible window and subtotal is a toggleable dashed line (1.629359ms)
+✔ Backlog chart supports count, distinct count, sum and average aggregations (1.114627ms)
+✔ Chart builder detects date columns and can infer Buyer / quantity defaults (5.629244ms)
+✔ Standalone Backlog chart UI is removed while the chart engine remains for Excel export (3.352127ms)
+✔ Backlog timeline bar layout can switch between side-by-side and stacked and persists the selection (5.81015ms)
+✔ Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view (1.099988ms)
+✔ Backlog overview timeline always shows bucket totals and mirrors the interactive chart hover/today language (0.262045ms)
+✔ Backlog render refreshes chart and Excel export appends chart sheets (12.567106ms)
+✔ Excel chart export keeps the selected visible time range and whole-number axis (1.049346ms)
+✔ Excel chart data stays live against the exported BACKLOG sheet (1.336297ms)
+✔ Excel live chart uses the second time-field bucket for overlay series (2.12196ms)
+✔ Excel export creates Grafik and Grafik Verisi sheets with native chart formulas (0.766262ms)
+✔ native Excel chart package contains drawing relationships and reopens as XLSX (153.214858ms)
+✔ Backlog chart uses compact k axis labels in app and Excel when the scale is thousands (1.186928ms)
+✔ Katalog ASAS şemasındaki HER ham başlığı taşır (hardcoded alan listesi yok) (6.759767ms)
+✔ Benzer isimli iki şema sütunu ayrı kimlik alır ve doğru değere bağlanır (15.350778ms)
+✔ Sunucu katalog uç noktası aktif kaynağın ham başlıklarından üretilir (96.182446ms)
+✔ İstemci kataloğu uç noktadan tazeler ve ona öncelik verir (2.463881ms)
+✔ Export sütunları her zaman kullanıcının seçimi ve sırasıdır (1.298294ms)
+✔ Kaldırılan varsayılan sütun kalıcıdır; yalnız boş kayıt veya "Varsayılana Dön" geri getirir (4.411052ms)
+✔ Aynı başlık export listesine iki kez girmez (1.099465ms)
+✔ v6.23 Backlog rows carry a direct image identity into every drill-down (2.862043ms)
+✔ v6.32 Backlog Excel files no longer embed image columns while LFL still can (1.843673ms)
+✔ v6.23 Backlog export options allow ASAS-IAS source columns and formulas (34.220804ms)
+✔ v6.26 Backlog export no longer renders a preview panel (481.491739ms)
+✔ Backlog row preparation skips CP projection and builds source details only on request (0.894312ms)
+✔ v6.32 Backlog Excel export skips image embedding for speed and integrity (1.033563ms)
+✔ v6.26 Backlog Excel column dialog always has a visible fixed catalog (3.062021ms)
+✔ recovered Backlog export keeps both chart date sources (2.089163ms)
+✔ recovered Backlog export reuses the visible range only for the same chart signature (0.359885ms)
+✔ recovered Backlog live Excel formulas map the displayed blank series back to an empty cell (0.311483ms)
+✔ yanıt her boyut için değer listesi taşır (17.544341ms)
+✔ listeler raporun kendi veri kümesini yansıtır — rapora giren her değer listede var (6.817222ms)
+✔ Buying Group da diğer boyutlar gibi filtrelenebilir (3.651073ms)
+✔ bir boyutu filtrelemek diğer boyutun SEÇENEKLERİNİ kaybettirmez (1.305217ms)
+✔ MAG filtresi rapora gerçekten uygulanır (3.828505ms)
+✔ Buying Group ve boyut filtresi birlikte çalışır (1.3004ms)
+✔ tarih penceresi dışındaki siparişler seçeneklere girmez (1.848458ms)
+✔ Backlog filtre panelleri CP veri kümesini kullanmıyor (38.547582ms)
+✔ Satır/Sütun alanındaki her boyut filtre düğmesi alır (55.560489ms)
+✔ tarih boyutu için her kademede değer listesi döner (1.885109ms)
+✔ ay kovasına göre filtreleme rapora uygulanır (3.187231ms)
+✔ tarih filtresi diğer boyut filtreleriyle birlikte çalışır (2.246127ms)
+✔ geçersiz kademe yok sayılır, rapor boşalmaz (1.298114ms)
+✔ Backlog ve alan eşlemesi ortak filtre bileşenini kullanıyor (39.467878ms)
+✔ browser Backlog styles the two requested headers yellow; all headers including emphasis are bold (40.007359ms)
+✔ server Backlog template has yellow Order Code and Model Name headers (bold, matching all other headers) (25.398561ms)
+✔ Backlog In Store tarih state alanları korunur ve görünür düzenleme Pivot Ayarları modalındadır (8.593055ms)
+✔ v5.66 In Store filtresi Model Bütçe tarihini kullanır ve iki uçlu/tek uçlu çalışır (30.756204ms)
+✔ v5.66 In Store filtresi boş Model Bütçe tarihli satırı yalnız filtre aktifken dışarıda bırakır (2.592572ms)
+✔ v5.66 UI state, API sorgusu, detay ve Excel export aynı In Store aralığını taşır (52.022394ms)
+✔ IAS kaydı yalnız kendi satırına bağlanır; aynı siparişin diğer modeline sıçramaz (12.134998ms)
+✔ IAS tarafında model/renk kodu BOŞ ise hiçbir eşleşme kurulmaz (1.225849ms)
+✔ çelişki kuralı: iki tarafın da dolu olduğu alanda fark varsa eşleşme yok (0.64162ms)
+✔ pivot düğümünün detayı yalnız o düğümdeki satırları döner (16.408578ms)
+✔ pivot ağacı JSON yanıtında satır listesini taşımaz (1.620232ms)
+✔ düğüm yolu çözümlemesi istemcideki indekslemeyle aynı (0.270264ms)
+✔ Backlog şablon satırları kendi sipariş özeti satırından beslenir (2.874441ms)
+✔ birebir kural: IAS kaydında renk kodu farklıysa renk tanımından bağlanmaz (0.615411ms)
+✔ birebir kural: sipariş kodunda tek IAS kaydı olsa bile başka satıra bağlanmaz (0.632805ms)
+✔ ASAS satırında renk kodu boşsa eşleşme kurulmaz ve teşhiste sayılır (0.551705ms)
+✔ birebir eşleşen satır teşhiste gevşek sayılmaz (0.703232ms)
+✔ kumaş kaydı da birebir kurala tabi (2.354659ms)
+✔ IAS sütunları otomatik eşlenirken Ürün Adı, Model Adı alanına bağlanır (3.187717ms)
+✔ model şeması taranırken de Ürün Adı sütunu bulunur (3.892031ms)
+✔ ham sonuçta sütun adı Ürün Adı ise de model okunur ve üçlü anahtar kurulur (5.718359ms)
+✔ ASAS Model Adı alanı da Ürün Adı sütununu tanır (1.371073ms)
+✔ kimlik alanı beklenmedik bir sütuna bağlıysa uyarı üretilir (0.975965ms)
+✔ period suffix overrides Gün/Date in full Backlog headers in TR and EN (14.137456ms)
+✔ SheetJS write hooks preserve LCW period text and formula caches through XLSX round trip (126.308408ms)
+✔ ExcelJS normalizer preserves period values and formulas in generated reports (242.142862ms)
+✔ Backlog sheet keeps each date bound to its LCW month/week after column reorder and serialization (71.479023ms)
+✔ missing numeric values are blank while real zero stays numeric (2.868883ms)
+✔ changing or removing the Merch Calendar invalidates cached Backlog rows immediately (12.635399ms)
+✔ export and analysis consumers apply the server calendar snapshot before deriving periods (2.256951ms)
+✔ server XLSX writer preserves blank numeric caches without losing actual zeros (1.571122ms)
+✔ date header heuristics preserve boolean formula helpers in SheetJS and ExcelJS (107.699248ms)
+✔ Backlog Overview filter script remains syntactically valid (5.169408ms)
+✔ filter button is immediately before refresh in Backlog Overview header (2.957247ms)
+✔ overview filter catalogue exposes CP, ASAS and IAS sources (0.708005ms)
+✔ selected raw source fields are lazily requested from backlog export (0.291297ms)
+✔ overview filters support date ranges and multi-value filters locally (1.018213ms)
+✔ filter editor is not hidden by the global section display rule (0.648425ms)
+✔ filter drawer styling exists (0.241703ms)
+✔ Backlog chart detail drawer shows shared model image thumbnails (1.569143ms)
+✔ Backlog chart detail drawer reuses contextual PLM missing-image action (0.716421ms)
+✔ Backlog Overview timeline chart script remains syntactically valid (4.128665ms)
+✔ timeline chart offers persistent stacked and side-by-side modes (0.587684ms)
+✔ side-by-side mode scales each operational status against stage maximum (0.241515ms)
+✔ timeline receives more vertical room and a local status legend (1.809015ms)
+✔ timeline combines logistics and Buyer breakdown on one shared period axis (0.546662ms)
+✔ overdue subtotal note cannot change timeline column geometry (0.326443ms)
+✔ lower Buyer breakdown follows grouped and stacked chart mode (0.471529ms)
+✔ timeline automatically centers the current period after render (0.179435ms)
+✔ timeline keeps the bottom period labels inside the scrollable chart (0.626105ms)
+✔ Backlog eski sayfa-üstü filtre/gruplama kartını göstermez (2.596577ms)
+✔ Backlog Pivot ayarları düğmesi Excel seçeneklerinin hemen solundadır (1.719299ms)
+✔ Backlog ayarları OAB modal dilini satır, sütun, değer ve ön filtre bölümleriyle kullanır (15.934427ms)
+✔ Vazgeç draft state kullanır; Kaydet kanonik Backlog stateini tek seferde uygular (2.152706ms)
+✔ segments add up to planned quantity for every grouping (2.527509ms)
+✔ daily series and ex-factory revision buckets are deterministic (9.756241ms)
+✔ styled workbook carries dashboard, breakdowns, detail sheets and native charts (305.062668ms)
+✔ excel serial is an integer calendar day without timezone drift (0.457328ms)
+✔ plan actual API is Backlog-authorized and snapshots the Backlog target (2.532498ms)
+✔ every successful refresh records a boundary marker without making analysis failure fatal (1.10798ms)
+✔ Backlog mounts a movable collapsible panel and loads its isolated assets (0.578733ms)
+✔ only changed rows are rendered and intermediate revision traffic remains separate (0.195169ms)
+✔ panel preferences are user scoped and synced like existing Backlog analysis (0.232564ms)
+✔ plan actual module uses shared theme tokens without light-theme fallbacks (2.061649ms)
+✔ plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export (1.27043ms)
+✔ Plan and Actual keeps its linear measure and percentage label (1.168055ms)
+✔ Overview circular loaded share clamps invalid values and preserves the visible percentage (1.788239ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/backlog-plan-actual.test.js (101.313975ms)
+✔ post-production transit: yükleme + plan süresi aşıldı ve ürün depoda değilse Risk VAR olur (6.305253ms)
+✔ post-production transit: depoya ulaşmış satır yeni override nedeniyle Risk VAR olmaz (0.659585ms)
+✔ post-production transit: parsiyelde kullanıcı tanımlı transit kuralı gerçekten uygulanır (0.552997ms)
+✔ Backlog Excel risk formula transit overdue helperını OR ile dikkate alır (0.692171ms)
+✔ Teslimat Analizi hedef hâlâ geniş görünse bile transit overdue satırı ON_TRACK bırakmaz (1.698771ms)
+✔ MB haftaları Pazartesi–Pazar sınırlarıyla yıl geçişini kapsar (5.032286ms)
+✔ Retail ay seçimi takvim aylarını ve boş ayları korur (1.142679ms)
+✔ Ex-Factory gün aralığı iki sınırı da dahil eder; tümü eksik tarihleri korur (2.051951ms)
+✔ Boş, tek tarihli ve bozuk tarihli veri güvenlidir; tutamaklar sınırda kalır (1.918609ms)
+✔ Filtrelenen raporun özeti, aşamaları ve dışa aktarılan kapsamı aynı seçimi taşır (87.61185ms)
+✔ Rapor sayıları Backlog V3 özetiyle birebir aynıdır (78.835064ms)
+✔ Rapor tek dosyadır: dış kaynak yok, katı CSP var, kullanıcı metni kaçışlanır (12.036497ms)
+✔ JS kapalıyken ve baskıda dinlenme hali son haldir (15.901912ms)
+✔ 30 günlük projeksiyon tarih penceresini ve kümülatif toplamı doğru hesaplar (1.654459ms)
+✔ Ülke adları TR/EN ve büyük harf yazımlarında eşleşir; bilinmeyen ülke haritada uydurulmaz (1.071519ms)
+✔ Uygulama içi önizleme izole iframe kullanır, PDF masaüstü JS kapalı penceresinde basılır (41.209997ms)
+✔ Backlog sheet protection unlocks only direct visible cells and keeps formulas/helpers locked (51.978033ms)
+✔ Backlog risk is reduced to the required VAR/YOK business values (87.274076ms)
+✔ browser and worker exports remove sheet protection for sorting while keeping strict validations and hidden helpers (33.812711ms)
+✔ v4.50 Backlog Excel Adet sütunu Net Alım Sipariş Miktarının hemen sağındadır (5.397852ms)
+✔ v4.50 Net Gelen formülü parsiyel miktarını Adet sütunundan alır (0.527447ms)
+✔ v4.51 Backlog Excel Eksik Yükleme satırını sentetik kabul eder ve Ex-Factory öncelik formüllerini kullanır (0.24275ms)
+✔ v4.64 Backlog Excel Shortage Priority geçmiş Ex-Factoryyi TODAY ile değiştirmez ve Discount üretmez (1.417655ms)
+✔ v4.64 Backlog Excel Depoda - Eksik Yükleme durumunu Shortage olarak tanır (0.221374ms)
+✔ query cache separates revisions and evicts by row budget, LRU and TTL (1.980706ms)
+✔ panels share in-flight rows across grouping changes and invalidate on source refresh (7.109522ms)
+✔ returning to a cached filter prevents an older delivery request from replacing the current result (2.327766ms)
+✔ explicit reload reuses row identity only when the server confirms the same query revision (3.781066ms)
+✔ persisted pivot variants expire on a new calendar day even when source data is unchanged (15.855847ms)
+✔ export projects the same override snapshot used to select and cache its query (75.467191ms)
+✔ Backlog chart layout module parses as JavaScript and is loaded by the page (1.768197ms)
+✔ Pivot chart reads only top-level groups and canonical visible quantity column (0.193202ms)
+✔ Delivery Risk chart is no longer injected into Teslimat Riski Analizi (0.294093ms)
+✔ Pivot workspace defaults to half width and supports resize, swap and collapse (0.174916ms)
+✔ Pivot chart keeps filter controls and readable labels (0.213744ms)
+✔ Teslimat Riski Analizi KPI etiketleri tek yatay sırada kalır (0.137975ms)
+✔ Risk nedenleri ve Needs Attention kartları ana KPI tasarımını yeniden kullanır (0.183613ms)
+✔ Teslimat Riski Analizi gövdesi kullanıcı tarafından gizlenip gösterilebilir ve tercih saklanır (0.546413ms)
+✔ Requested legacy sections are absent from the Delivery Risk Analysis UI source (0.77074ms)
+✔ Backlog pivot chart persists radar, bar or line chart type (2.550224ms)
+✔ v4.42 varsayılan kural ASAS Model Adı ile IAS Ürün Ad alanını birebir eşleştirir (16.541579ms)
+✔ v4.50 IAS parsiyellerinden sonra yüzde 5 ve üzeri bakiye için Üretimde satırı oluşturur (7.34257ms)
+✔ v4.42 IAS kaydı yoksa siparişin tamamı Üretimde olur ve antrepo tarihi yol süresinden hesaplanır (2.456709ms)
+✔ v4.50 üretimde bakiye yüzde 5in altındaysa Üretimde satırı oluşturmaz (10.035734ms)
+✔ v4.48 merkez sevke hazır depo bakiyesi siparişin yüzde 5ini aşarsa Depoda parsiyelleri Retaile Aktarım Bekleniyor olur (2.388402ms)
+✔ v4.48 eşik tam yüzde 5 ise Depoda korunur ve diğer IAS statüleri değiştirilmez (3.830696ms)
+✔ v4.48 Backlog Excel statüsü aynı yüzde 5 kuralını kullanır (18.245143ms)
+✔ v4.50 Backlog Excel net sipariş miktarını sabit, satır miktarını Adet sütununda dışa aktarır (9.693223ms)
+✔ v4.50 2000 adet ASAS siparişin 700lük parsiyeline karşı 1300 Üretimde satırı ekler (8.996013ms)
+✔ v4.50 3000 adet ASAS siparişte iki 1200lük parsiyel ve 600 Üretimde satırı üretir (2.715493ms)
+✔ v4.51 bakiye tam yüzde 5 ise sentetik Eksik Yükleme satırı oluşturur (4.235963ms)
+✔ v4.50 Antrepo Net Alım Sipariş Miktarı farklı olsa bile sipariş toplamını yalnız ASAS belirler (6.294504ms)
+✔ v4.42 özel eşleştirme koşullarının tamamı AND mantığıyla birebir eşleşir (2.348446ms)
+✔ v4.42 eski sistem varsayılanındaki IAS Model Adı koşulunu Ürün Ad koşuluna taşır (0.39102ms)
+✔ v4.42 kullanıcının manuel Model Adı koşulunu sistem varsayılanı sanıp değiştirmez (0.254577ms)
+✔ v4.49 aynı siparişteki E R T renklerinin parsiyelleri ve üretim bakiyeleri birbirine karışmaz (4.006026ms)
+✔ v4.51 bakiye tam yüzde 10 ise Eksik Yükleme, yüzde 10u aşarsa Üretimde olur (5.152898ms)
+✔ v4.51 yüzde 5in altındaki fark için sentetik satır oluşturmaz (1.576828ms)
+✔ v4.64 Eksik Yükleme operational hesabı geçmiş Ex-Factoryyi bugüne taşımaz (0.939668ms)
+✔ v4.64 tüm parsiyeller Depoda ve bakiye Shortage ise sentetik durum Depoda - Eksik Yükleme olur (2.511978ms)
+✔ Retaile aktarım bekleyen miktar Kalan_Merkez eksi Kalan Alım: yalnız eksik yükleme kalan siparişte parsiyeller Depoda kalır (4.123145ms)
+✔ v7.0.201 Backlog Focus görünümünde Ex-Factory revizyonunun eski ve yeni tarihi birlikte görünür (3.018466ms)
+✔ v7.0.201 Backlog veri katmanı orijinal ve revize Ex-Factory kaynaklarını ayrı tutar (1.061932ms)
+✔ unified risk: Excel cached value follows canonical runtime Risk, not an independent ANTREPO-RETAIL > 5 rule (2.254018ms)
+✔ v5.75 highlights are no longer frozen into the exported cells (0.525418ms)
+✔ analysis filters constrain pivot, detail and Excel rows and combine with existing dimensions (34.062643ms)
+✔ raw IAS filter selects one partial without bringing back its siblings or production balance (18.735751ms)
+✔ date bounds are inclusive, blanks remain selectable and invalid fields fail closed (9.491864ms)
+✔ all shared client queries serialize saved analysis criteria (22.158952ms)
+✔ historical comparison and activity use the selected Backlog order lines before computing totals (12.886254ms)
+✔ delivery analysis refresh is independent of pivot grouping (24.401296ms)
+✔ shared filter drawer loads column values without fetching overview rows while collapsed (2.69722ms)
+✔ date header classifier excludes month/week fields and recognises operational date columns (3.688362ms)
+✔ SheetJS workbook date normalisation turns textual dates into real date cells without changing month/week text (4.832115ms)
+✔ SheetJS write hooks enforce date typing for every browser workbook write path (0.993954ms)
+✔ Backlog current-status validation options contain canonical and source-specific values (0.574667ms)
+✔ browser, ExcelJS and worker export paths share date typing and strict Backlog status validation (29.888478ms)
+✔ Backlog inserts Alt Üretici immediately after Üretici and keeps it visible (7.257906ms)
+✔ Backlog Alt Üretici: Non-DTR yalnız kullanıcı girdisini kullanır (Manufacturer'a düşmez), DTR ise Manufacturer=Sub Mfr (81.232461ms)
+✔ server template worker clones Manufacturer column styling for Alt Üretici (0.358231ms)
+✔ v5.06 Backlog exposes Sub Mfr as a filter/group dimension (10.766192ms)
+✔ v5.06 Backlog Sub Mfr keeps Non-DTR blank when there is no user entry (1.409954ms)
+✔ v5.06 LFL parser keeps OPD and Ex-Factory from the ASAS row (3.098701ms)
+✔ v5.07 LFL OPD and Ex-F. ignore generic aliases and use only the exact ASAS columns (1.713665ms)
+✔ v5.07 generic OPD / EX-FACTORY columns do not backfill LFL dates when exact ASAS columns are absent (1.411114ms)
+✔ v5.06 LFL detail tables and exports include OPD and Ex-F. (0.530712ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/backlog-synthetic-rows-integrity-v20261002.test.js (176.097673ms)
+✔ v5.87 tablo varsayılanlarla başlar; kullanılan kurallar altına eklenir (2.976822ms)
+✔ v5.87 aynı kural iki kez yazılmaz (0.340225ms)
+✔ v5.87 satır formülü kendi kuralının Gün hücresine bağlanıyor (2.94557ms)
+✔ v5.87 kuralı olmayan satır yükleme tipinin varsayılan hücresine bağlanır (0.501937ms)
+✔ v5.87 yükleme tipi değiştirilince varsayılan hücrelere düşülür (0.526977ms)
+✔ v5.87 Ayarlar tablosu yoksa eski sabitlere düşülür (0.265944ms)
+✔ v5.87 serbest metin yükleme tipi doğru varsayılana indirgenir (0.500539ms)
+✔ v5.87 Ayarlar sayfası tabloyu sayı olarak ve doğru satıra yazıyor (3.153478ms)
+✔ v5.87 tablo BACKLOG sayfasından ÖNCE kurulur (3.886466ms)
+✔ v5.87 hücreye gömülü eski sarı dolgu kodu kaldırıldı (3.318239ms)
+✔ işaretsiz: 1.000 adetlik bakiye Üretimde; işaretli: Eksik Yükleme ve kullanıcı işareti taşır (26.279743ms)
+✔ bütün parsiyeller depodaysa işaretli bakiye "Depoda - Eksik Yükleme" olur; IAS satırlarına dokunulmaz (5.860559ms)
+✔ CP lojistik segmenti aynı işareti taşır ve arayüz geri alma sunar (12.436141ms)
+✔ işaret kalıcı kaydedilir, yazar oturumdan gelir, kaldırılınca silinir; kapsam ve eşitleme listelerinde (59.550895ms)
+✔ stages, loaded share and overdue-not-loaded are derived from canonical Backlog rows (17.488694ms)
+✔ Backlog V3 workbook: V3 sheets first, optional P&A, legacy sheets kept intact as sheet1/sheet2 (426.932291ms)
+✔ Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 with options, shared rows cache (23.643267ms)
+✔ data quality flags blank season, missing dates, retail before Ex-Factory and raw timestamps (1.061579ms)
+✔ V3 detail writes day strings (e.g. order placement date) as real Excel dates (64.511648ms)
+✔ legacy backup restore ayrı worker içinde çalışır ve ana olay döngüsünü serbest bırakır (481.388756ms)
+✔ legacy restore route worker kullanır ve transaction boyunca diğer yazmaları kilitler (4.702435ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/backup-v757.test.js (92.110384ms)
+✔ 7.0.294 Breathing orb is present at boot and stops at readiness (3.018823ms)
+✔ breathing orb geometrisi upstream golden vektörleriyle eşleşir (7.196999ms)
+✔ waiting notices use the original breathing orb with a scoped canvas (0.686592ms)
+✔ inline Thinking orb 20px upstream presetini kullanır (0.7836ms)
+✔ sol üst Buyer Log işareti uygulama simgesini kullanır (2.459289ms)
+✔ v4.86 program bridge links ignore pointer single-click and open on double-click (27.902282ms)
+✔ v4.86 bridge cells explain the double-click behavior (6.39879ms)
+✔ browser approval pauses the operation watchdog and resumes the remaining budget (108.988249ms)
+✔ approval rejection is user_cancelled and never classified as a timeout (1.885366ms)
+✔ timeout budgets expose separate approval, navigation, network and operation values (0.875796ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-binding-ownership-v1112.test.js (155.31284ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-debug-service-v1.test.js (98.543887ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-default-profile-debug-block-v1111.test.js (113.073304ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-existing-profile-v564.test.js (120.559656ms)
+[BROWSER] BROWSER_PRECHECK
+[BROWSER] BROWSER_READY
+[BROWSER] BROWSER_PRECHECK
+[BROWSER] BROWSER_RECONNECT
+[BROWSER] BROWSER_RECONNECT
+[BROWSER] BROWSER_READY
+[BROWSER] BROWSER_PRECHECK
+[BROWSER] BROWSER_WAITING_FOR_USER
+[BROWSER] BROWSER_PRECHECK
+✔ dashboard readiness is single-flight for repeated refresh requests (9.355517ms)
+✔ dashboard reconnect uses bounded backoff and reuses the successful session (1.633691ms)
+✔ missing browser connection opens generic setup and never mentions PLM (1.498078ms)
+✔ user approval wait is separate from operation retries and resumes automatically (0.892072ms)
+✔ authentication errors are not retried or converted to browser setup errors (0.411609ms)
+✔ closed Edge is reported directly and does not open the setup page (1.23925ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-no-version-spawn-v20261001.test.js (134.884119ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-recorder-v556.test.js (70.249452ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/browser-recorder-v559.test.js (111.424912ms)
+✔ a bulk intent sends once, persists pending before send and records only acknowledged items (3.993817ms)
+✔ lost response and restart remain unknown; reading a receipt never replays it (0.608426ms)
+✔ preview guard, current session and receipt storage failure prevent writes (1.379211ms)
+✔ confirmed rejection is retryable; omitted or duplicate item results are unknown (1.823138ms)
+✔ production status normalization preserves current accepted forms (4.935003ms)
+✔ delivery types keep legacy aliases canonical and preserve every other IAS vehicle type (1.09056ms)
+✔ custom IAS vehicle types can have their own transit rules without collapsing into legacy types (1.277963ms)
+✔ transit rule matching is inclusive and selects the most specific rule (1.303534ms)
+✔ non-production status keeps the default transit duration unless rules are forced (1.584303ms)
+✔ half-up rounding handles positive and negative midpoint values consistently (0.511426ms)
+✔ season lists share chronology while LFL keeps same-season previous-year selection (1.73869ms)
+✔ shared operational engine exposes structured signals and no legacy CP Priority text (1.516011ms)
+✔ Supp. FOB formula uses exact decimal half-up arithmetic (5.552144ms)
+✔ Collection defines one Buying Sample column with manufacturer input and approval tick (7.99649ms)
+✔ Buying Sample approval is row-scoped and manufacturer changes clear stale approval (2.118538ms)
+✔ Buying Sample approval requires a manufacturer and stays inside the active editor cell (9.293326ms)
+✔ legacy Non-DTR entry point opens Manufacturers and the card editor suggests exact ASAS names (2.227405ms)
+✔ shared manufacturer suggestions include CP, Non-DTR, quotation and Buying Sample values (0.239463ms)
+✔ ASAS product description headers use one canonical label (1.281546ms)
+✔ category/classification headers use one canonical label (0.431996ms)
+✔ data-verified shared dimensions use canonical labels (0.565883ms)
+✔ Collection shared fields use CP/Orders/LFL display names only (1.192664ms)
+✔ Collection PLM fields verified as different stay visibly distinct (0.263885ms)
+✔ related but different PLM/ASAS fields are not merged (0.4042ms)
+✔ canonicalization never mutates row keys or values (0.291872ms)
+✔ browser and server use one canonical registry (1.00265ms)
+✔ all current data-heavy modules have canonical bindings (0.412505ms)
+✔ verified shared dimensions resolve across Collection, CP, Orders and LFL (0.213967ms)
+✔ OPD resolves through one canonical Order Placement Date field without mutating source keys (0.223474ms)
+✔ same-looking but different PLM/ASAS semantics are protected (0.764801ms)
+✔ Product Description never falls back to Product Main Definition (0.148036ms)
+✔ canonical joins work even when module keys and visible headers differ (0.607399ms)
+✔ canonical enrichment can bring real ASAS Product Description into Collection without renaming source keys (0.311696ms)
+✔ Quotations and OAB module bindings load globally with safe semantics (15.134509ms)
+✔ new modules must explicitly register bindings before safe joins (0.836487ms)
+✔ ASAS compact runtime keys stay canonical across order-backed modules (0.936036ms)
+✔ sutun sozlesmesi: 20 sutun, verilen sirayla (4.36529ms)
+✔ 1 · Koleksiyon normal urun: units ve Garment Qty Quantity ile ayni (4.500697ms)
+✔ 2 · Koleksiyon Takim/Set: Garment Qty = Quantity x 2 (1.820424ms)
+✔ 3 · CP normal urun: units ve Garment Qty Order Quantity ile ayni (1.027261ms)
+✔ 4 · CP Takim/Set: Garment Qty = Order Quantity x 2 (0.422486ms)
+✔ Takim/Set tespiti yalniz klasman alanindan yapilir, model adindan degil (0.47367ms)
+✔ 5-7 · Supplier Name birlesimi (0.884295ms)
+✔ 8 · Ayni PLM altindaki uc renk uc ayri satir olarak kalir (0.768981ms)
+✔ satirlar arasinda tarih/FOB/supplier tasinmaz (1.356815ms)
+✔ 9-11 · Collection PO Issuing Date export gunudur; OPD olsa bile kullanilmaz (0.498068ms)
+✔ Collection disinda PO Issuing Date canonical OPD / Order Placement Date degerinden gelir (0.575265ms)
+✔ Orders gercek ASAS Siparis Yerleştirme MerchTarih alanini kullanir (0.61134ms)
+✔ Collection disinda gecmis/ileri OPD aynen korunur; bos OPD bugune dusmez (0.482857ms)
+✔ 12 · Retail Stock Date yalniz Retail Date kaynagindan gelir (0.354632ms)
+✔ 13 · FOB PRICE yalniz FOB kaynagindan gelir, Supplier FOB degil (0.243088ms)
+✔ 14-16 · uc sutun her zaman bostur (0.21296ms)
+✔ 17-18 · gun farki alanlari (0.368694ms)
+✔ gun farki eksik tarihte bos kalir, dosya uretimini engellemez (0.28315ms)
+✔ 19 · secili satir yoksa workbook modeli bos kalir (0.134186ms)
+✔ adet cozulemeyen satir reddedilir, digerleri sessizce kaybolmaz (1.133718ms)
+✔ eksik opsiyonel alanlar satiri dusurmez (0.264214ms)
+✔ metin adet ve fiyat degerleri numerige cozulur (0.442326ms)
+✔ matrix satir sirasi HEADERS ile hizalidir (0.305822ms)
+✔ dosya adi standardi (0.162086ms)
+✔ 20 · Tools menuleri komutu tasir ve mevcut Tools butonlari korunur (0.36845ms)
+✔ Capacity Request secime baglidir ve secim yokken pasif kalir (3.894133ms)
+✔ export yolu mevcut secim state ve indirme altyapisini kullanir (6.416078ms)
+✔ script index.html icinde yuklenir (0.852535ms)
+✔ saved custom Capacity template recalculates mapped cells after column reordering (143.938954ms)
+✔ saved template formulas do not reference unavailable columns (39.627987ms)
+✔ uretilen workbook geri okundugunda sozlesmeye uyar (126.909536ms)
+✔ Koleksiyon secimi de ayni workbook sozlesmesini uretir (29.416419ms)
+✔ sayfa duzeni: donmus baslik, autofilter ve sutun genislikleri (1.220593ms)
+✔ sayacı ileride olan cihaz, görmediği yerel notu çakışmasız ezemez (688.825312ms)
+✔ karşı cihaz yerel yazımı gördükten sonra yazdıysa sıralı düzenlemedir: çakışma yok (635.88145ms)
+✔ olay yazıldığı andaki sürüm vektörünü taşır; vektörsüz eski olay eski kuralla işlenir (36.452354ms)
+✔ checkpoint onarımıyla alınan değer sürüm vektörüne eklenir: sonraki yazım sahte çakışma üretmez (54.041066ms)
+✔ yerel liste merkezle uyuşmazsa (IAM_MIGRATION_CONFLICT) Moderatör merkezi dizini esas alır; yerel dosya yedeklenir (269.395605ms)
+✔ Shared Hub geri yüklenip revizyon gerilediğinde (IAM_REMOTE_REVISION_REGRESSION) esas alma tabanı bilerek aşar (146.912016ms)
+✔ merkezi dizinde yönetici olmayan kişi esas alamaz; okunamayan merkez hiçbir dosyaya dokunmaz (55.603089ms)
+✔ uç yalnız Moderatöre, açık onay ve gerekçeyle açılır; arayüz yalnız bu üç durumda düğme gösterir (7.573027ms)
+✔ uçtan uca: uyuşmazlıktaki cihazda Moderatör merkezi dizini esas alır ve düzenleme açılır (1715.940822ms)
+✔ Central IAM offline login recovers legacy auth and accepts a credentialed non-Moderator account (475.730461ms)
+✔ packaged desktop recovers user store from data-BACKUP even when SERVER_DATA_ROOT env is set (413.541106ms)
+✔ packaged desktop recovers user store from resources/app/data legacy layout (402.104819ms)
+✔ packaged desktop discovers an older sibling Buyer Log installation even with SERVER_DATA_ROOT set (715.590744ms)
+✔ packaged desktop recursively recovers nested migration-evidence auth copies (508.203818ms)
+✔ Central IAM acceptance: create, second PC login, CP revoke/403, reset, offline login and reconnect (2634.110944ms)
+✔ bulk updates are all-or-none and same-revision stale client cannot overwrite (1594.864027ms)
+✔ a no-cache device imports revision 8 with retired direct, temporary and role permissions (71.150108ms)
+✔ an old verified local cache remains usable without access to the share (22.443533ms)
+✔ retired compatibility cannot bypass snapshot or local-cache integrity checks (20.808924ms)
+✔ only historically emitted permission codes are compatible; malformed and invented grants still fail (32.381875ms)
+✔ retired grants cannot replace a live administrator or carry embedded credentials (7.512982ms)
+✔ the next normal IAM mutation drops retired grants without changing passwords or shared history (102.35678ms)
+✔ central IAM is feature-flagged and exposes health, refresh, migration and bulk routes (9.414848ms)
+✔ sessions carry IAM invalidation revisions and management UI surfaces sync state (6.931505ms)
+✔ migration preserves verifiers, effective access and legacy bindings; excludes local/business data (21.591455ms)
+✔ two isolated caches use central commit, reject stale writes and retain offline login source (239.223419ms)
+✔ concurrent writers commit once with one audit transaction (205.713867ms)
+✔ corrupt cache recovers latest backup; invalid remote never replaces cache (137.170221ms)
+✔ offline write is forbidden, no-cache bootstrap never invents admin (45.658578ms)
+✔ validation rejects identity duplicates, malformed verifier, unknown permissions and last administrator (2.950569ms)
+✔ 100 and 1000 users migrate with unchanged semantic baseline (564.456262ms)
+✔ revision regression, equal revision hash conflict, unsupported schema and revision jumps (283.350527ms)
+✔ crash before commit leaves old canonical; crash after commit is explicitly recoverable (173.872786ms)
+✔ elapsed lease age cannot evict a paused active IAM writer or bypass revision checks (1766.126471ms)
+✔ initialization requires admin and never republishes missing authority from central cache (50.405986ms)
+✔ independent legacy users cannot be overwritten by first remote refresh (65.756899ms)
+✔ first-run single Moderator placeholder can be replaced only by a richer Central IAM (120.459014ms)
+✔ bootstrap placeholder override never replaces a real multi-user local directory (63.379515ms)
+✔ short login preflight timeout leaves the event loop responsive (28.881086ms)
+✔ a batch saves every answer but announces one decision change (26.700037ms)
+✔ a failing batch keeps applied answers and still announces once (9.414373ms)
+✔ outside a batch every answer is announced immediately, and nested batches announce once (8.643004ms)
+✔ applicable checklist items are evaluated once per row, not per row × item (17.171031ms)
+✔ row-level reuse keeps every cell identical to per-item evaluation (2.639814ms)
+✔ an already applied decision is not rewritten by the assistant view refresh (12.993548ms)
+✔ a new decision still triggers a full pass (2.760156ms)
+✔ production checklist resolver uses real IAM authority, handles mixed ownership and reusable option identities (48.23457ms)
+✔ checklist read computes the invocation-wide management permission once, retaining per-code ownership checks (80.543715ms)
+✔ on-demand projection edit hints compute permission once per projection and keep foreign/mixed ownership closed (1.78743ms)
+✔ HTTP reads filter answers and tombstones to live record scope (164.229273ms)
+✔ foreign, nonexistent, view-only and mixed batches are rejected without writes (33.497705ms)
+✔ authority is rechecked after asynchronous preparation and inside the write lease (44.864788ms)
+✔ global definitions require current business-rule permission, including at commit (46.166108ms)
+✔ attachment staging, download, linking and delete enforce owner and live order scope (108.586057ms)
+✔ legacy attachments require authorized answer or test-report linkage; ambiguous files are preserved (28.000343ms)
+✔ authorized supplier import retains conflict timestamps and server-derived audit identity (57.57567ms)
+✔ malformed attachment lists and invalid/future event times fail before any batch effect (11.156687ms)
+✔ revoked global capability fails at the final in-lease check (10.191487ms)
+✔ attachment write area revocation during preparation cannot fall back to overview (3.723519ms)
+✔ checklist batch reports accepted and rejected canonical items without replacing newer answers (128.405943ms)
+✔ unchanged rows keep their cells; a changed answer rewrites only its row (16.970968ms)
+✔ a new analysis object or a changed global input rewrites rows (3.220686ms)
+✔ checklist cells keep their set, part and plain statuses (17.549079ms)
+✔ set identity is derived per row, not per row × checklist item (7.728891ms)
+✔ count reads the row description once, not again through isSet (2.820424ms)
+✔ set identity results are unchanged (1.570698ms)
+✔ inside one pass a row is read once and results equal the uncached ones (5.236174ms)
+✔ outside a pass a changed row is read again; passes nest and end cleanly (1.09973ms)
+✔ the CP decision and checklist column passes run inside one row cache (4.787218ms)
+✔ set parts use canonical product fields; size-set sample text never creates product parts (4.691329ms)
+✔ each part has independent status and parent PLM/legacy approval cannot approve the set (1.531351ms)
+✔ saved roster survives product changes and option approvals remain part-specific (0.815502ms)
+✔ collection part updates preserve siblings, snapshot and legacy status across JSON persistence (0.490019ms)
+✔ native part writer preserves evidence and siblings through offline restart and shared sync (46.257441ms)
+✔ server persists part roster, pending evidence, audit events and independent part decisions (177.277553ms)
+✔ supplier workbook round trip addresses each part and refuses legacy whole-set updates (8160.038668ms)
+✔ Collection native setter journals separate A/B/C decisions without copying a legacy approval (36.856011ms)
+✔ rule evaluation and priority facts use the part aggregate instead of legacy or whole-set automation (7.395498ms)
+✔ test report preview requires an explicit valid set part before linking evidence (27.941662ms)
+✔ supplier first-write roster survives a later product source change (8020.503867ms)
+✔ a skipped stale roster cannot authorize a hidden extra component (161.530672ms)
+✔ every explicit status survives date changes, PLM approval and restart with evidence (67.800609ms)
+✔ shared Pending tombstone restores its evidence and survives a second offline restart (51.862601ms)
+✔ failed startup promotion retries instead of acknowledging unsaved answers (7.209171ms)
+✔ all callers wait for the active save and rapid edits are sent before completion (5.070664ms)
+✔ idle save does not prevent the next edit from reaching the server (5.934578ms)
+✔ unacknowledged Pending survives offline restart and remote stale approval (13.046286ms)
+✔ migrated option approval is not overridden by its removed PO record after restart (13.900039ms)
+✔ late Pending never clears a newer decision and Pending evidence carries into next status (265.307744ms)
+✔ corrupt existing store is never replaced with an empty successful save (140.643098ms)
+✔ last-good recovery restores statuses and all evidence after file corruption (141.119381ms)
+✔ retry of an acknowledged Pending whose response was lost remains successful (175.058517ms)
+✔ one conflict does not starve subsequent batches and a new choice handles server clock skew (44.967223ms)
+✔ a corrupt browser answer store is preserved until authoritative recovery (6.048011ms)
+✔ server refuses excess or malformed attachments without truncating existing evidence (179.703487ms)
+✔ supplier Excel updates preserve server PDFs and multiline notes without a local attachment mirror (179.907033ms)
+✔ option migration retains each PO evidence and never overwrites a newer Pending decision (37.701221ms)
+✔ unreadable preferences and rules cannot be replaced by defaults or shared adoption (33.275513ms)
+✔ failed rule migration retains legacy custom Checklist definitions for restart (15.137652ms)
+✔ damaged settings cannot block authoritative status and PDF recovery (33.807304ms)
+✔ malformed rule metadata is preserved rather than replaced with defaults (15.401239ms)
+✔ Collection Checklist selections are journalled immediately and restored after an offline restart (44.507979ms)
+✔ empty checklist startup skips Orders models and rechecks area after async storage read (106.64584ms)
+✔ checklist evidence fields, lossless sync and supplier e-mail wiring are present (35.608832ms)
+✔ checklist attachment is renamed from order/model/checklist identity and evidence survives partial updates (195.837055ms)
+✔ supplier checklist Excel v2 round-trips optional report/date/attachment metadata (3.003237ms)
+✔ supplier checklist mail groups selected rows per supplier, keeps each Excel direct and adds workbook guidance (40.973383ms)
+✔ checklist evidence checkboxes are not stretched by generic rule input styles (1.658511ms)
+✔ checklist assistant stylesheet cache revision is bumped (0.428492ms)
+✔ one main heading plus one editable column per component (9720.641655ms)
+✔ import reads component cells, derives the main status and keeps other components (9868.23679ms)
+✔ a captured native CP renderer applies checklist fields on its first visible render (4.480894ms)
+✔ hidden CP stays deferred and receives checklist fields when flushed (2.868762ms)
+✔ the actual renderer wrapper preserves receiver/arguments and installs once (1.885393ms)
+✔ older hosts without a deferred native renderer retain the direct render hook (1.500109ms)
+✔ 403 on an old checklist answer preserves the journal and stops automatic retries (65.479606ms)
+✔ a new status choice retries a previously denied key without discarding evidence (9.422421ms)
+✔ initial CP checklist GET no longer waits for a stalled answer POST (24.517416ms)
+✔ a pending write no longer bypasses the CP short freshness window (2.871225ms)
+✔ identical shared answers are not rewritten and do not recompute CP decisions (61.980311ms)
+✔ a newer shared answer is still merged, persisted and announced (10.948816ms)
+✔ an unreadable local record is still recovered even when shared content matches (9.817743ms)
+✔ Priority Catalog: custom priority tags support custom rank, tone, risk flag and TR/EN fallback (7.572255ms)
+✔ Rules, Readiness, Overview Pulse and Automations evaluate custom priority tags end-to-end (9.907367ms)
+✔ Moderator Managed Rules & Preset Share carry Priority Catalog and Checklist Custom Statuses (14.306085ms)
+✔ Checklist custom statuses support bilingual labels, tones, updates and managed merge without breaking legacy callers (1.114343ms)
+✔ Checklist scope presets and basic auto-status conditions round-trip cleanly without forcing raw formulas (1.875809ms)
+✔ Web Worker and synchronous decision runtime match with custom Priority Catalog and managed statuses (294.714391ms)
+✔ Rebuilt Studio UI exposes 3-tab hub, inline priority tags, bulk queue actions, optional reasons and CP shortcut (11.051714ms)
+✔ Priority tag IDs remain unique when labels collide after normalization (0.356995ms)
+✔ Full catalogs retain all built-ins and anchor On Track after custom tags (0.83015ms)
+✔ Moderator browser channel carries both catalogs alongside rules without dropping metadata (3.256425ms)
+✔ checklist status rechecks identity after awaiting its assistant (3.837032ms)
+✔ checklist status rechecks owner after awaiting its assistant (11.212037ms)
+✔ checklist status rechecks view-only after awaiting its assistant (2.813739ms)
+✔ a current checklist trigger still saves and synchronizes its exact canonical order (2.364934ms)
+✔ readonly legacy evidence remains readable while status mutations stay blocked (2.004344ms)
+✔ component configuration rechecks identity after assistant readiness (2.521778ms)
+✔ component configuration rechecks owner after assistant readiness (2.036315ms)
+✔ an open component dialog cannot save after identity changes (3.714326ms)
+✔ an open component dialog cannot save after owner changes (2.220957ms)
+✔ preview separates matching orders from effective changes and detects disabling a rule (26.218706ms)
+✔ explicit tracking tags coexist with critical urgency and preserve legacy non-risk priorities (4.688358ms)
+✔ tracking metadata reaches server automation filters without replacing the urgency code (16.995882ms)
+✔ the compact widget defaults to four rows and preserves custom saved heights (6.459033ms)
+✔ Overview shows the full attention total beyond the displayed list limit (43.411648ms)
+✔ preview ignores checklist key order when a draft keeps the same effective states (3.918781ms)
+✔ preview reports automatic answer writes without changing any stored answer (5.070157ms)
+✔ cached and uncached summaries are identical (7.86809ms)
+✔ dropping a contribution recomputes that order with the current answers (2.402251ms)
+✔ supplier question presets persist per supplier, remain independent, and use general fallback (4.247859ms)
+✔ supplier workbook starts data at row 2 and uses a hidden named status list (8104.132707ms)
+✔ selection passed to the workbook builder omits internal questions without changing supplier identity (9444.439917ms)
+✔ checklist supplier bridge normalizes supplier statuses and answer deltas deterministically (3.98919ms)
+✔ checklist Excel dates normalize to one native Excel date shape (0.643067ms)
+✔ shared checklist store rejects stale supplier Excel and preserves newer Buyer Log answers (360.530364ms)
+✔ wiring loads the bridge after app-main and registers shared checklist routes (11.400475ms)
+✔ Ortak ayar checkpoint kaydı overrides revizyon saatini yalnız ortak alanlar için taşır (6.001663ms)
+✔ Checkpoint birleşimi yerel alanları ve saati korur, checkpoint değerini alır (0.89841ms)
+✔ Onarımdan sonraki yerel yazım checkpoint saatini taban alır (baseRevision 0 değil) (123.940616ms)
+✔ Sunucu checkpoint onarımı kaydı ezmez, birleştirir ve saati ilerletir (22.574376ms)
+✔ all season list policies interleave Summer then Winter by year (6.473022ms)
+✔ month names, abbreviations and stored keys compare by year then month in both directions (1.940924ms)
+✔ season arrays compare by their chronological members without changing stored order (0.972596ms)
+✔ browser and Node load the same comparator and pivot paths preserve hierarchy (9.798836ms)
+✔ strict parsing avoids turning arbitrary codes and invalid months into periods (3.943133ms)
+✔ shared table sorting and header/quick facets use the same chronological values (32.515894ms)
+✔ dynamic price-analysis filters sort source month and season values chronologically (3.646605ms)
+✔ quick filter frequencies and Backlog quantities cannot override period chronology (4.912886ms)
+✔ all tables override obsolete custom checkboxes with native checks and suppress pseudo checkmarks (24.854175ms)
+✔ identity marks share rounded geometry and no outer frame or satin texture (26.756885ms)
+✔ startup orb uses its 7.0.294 inline size and placement while retaining readiness lifecycle (2.078592ms)
+✔ user menu and topbar initials share one appearance rule (21.986224ms)
+✔ classic controls, widgets and table headings retain shared token borders (1.705493ms)
+✔ row checkboxes and selection/edited state stay visible without replacing JS selection (0.284348ms)
+✔ profile control and Buyer Log brand mark use exactly the same corner geometry (0.27178ms)
+✔ OAB and INTAKE show native pivot tables by default but still offer chart toggle (0.266255ms)
+✔ INTAKE renders an initial empty state and recovers when its state request fails (0.657894ms)
+✔ real projection worker and server share complete v3 catalog semantics across canonical fields (595.330717ms)
+✔ shared chronological sorting constructs one Collator and preserves exact stable order (126.903541ms)
+✔ revision readers preserve falsy overrides, first-parent and local structural changes (2.921613ms)
+✔ revision reader builds the parent index only when inheritance is actually needed (0.45946ms)
+✔ Collection consumer uses revision index and invalidates replacement paths before derived reads (6.574395ms)
+✔ navCopy: Orders artık CP ile aynı şekilde yalnız gerçek sütun başlığını kopyalıyor (2.968961ms)
+✔ kolRecordImageCopyCell: görsel DOM değil KAYITTAN çözülür, CP ile aynı dönüştürücüyü kullanır (0.96958ms)
+✔ _copyImageDataUrlFor: CP (DOM) ve Koleksiyon (kayıt) AYNI dönüştürücüyü paylaşıyor (1.695639ms)
+✔ buildCollectionStyledCopy: görsel hücresi TEK <td> içinde gömülür, ekstra <tr> açmaz (7.816226ms)
+✔ görsel eksikse hücre boş kalır, kopyalama durmaz (mevcut davranışla tutarlı) (0.635274ms)
+✔ diğer sütunlar kaçışlı ve tek-satır güvenli: etkileşimli Collection DOM'u clipboard'a girmiyor (0.718493ms)
+✔ v10.66 aktif Collection filtre çipi ikonunu sabit ölçekte tutar (84.446901ms)
+✔ Collection loads Artwork Detail projection after app-main and before spreadsheet wiring (3.956326ms)
+✔ Artwork Detail is a real KOL_COLS column immediately before Fabric (filter, move, edit, AI share one path) (3.810977ms)
+✔ Artwork projection no longer injects its own DOM header/cells or read-only meta (20.830125ms)
+✔ Artwork Detail remains PLM-sourced: reads BOM sidecar, never saves Collection rows itself (0.341557ms)
+✔ PLM value fills empty/PLM-owned cells, keeps manual edits and returns to PLM when cleared (3.07327ms)
+✔ ensureFresh projects BOM summaries into ALL Collection rows (not only visible ones) for filter and LCW AI (4.339675ms)
+✔ refresh() during an in-flight read re-reads the BOM store instead of returning the stale request (2.497586ms)
+✔ Collection PLM SYNC (Model Details) force-refreshes Artwork Detail even when no PLM field changed (4.1458ms)
+✔ LCW AI Collection context refreshes artwork projection before reading rows (1.07651ms)
+✔ BOM detail stays reachable from the cell context menu (double click is the editor now) (0.499814ms)
+✔ visible Collection models read BOM summaries with local batch requests (2.690323ms)
+✔ Set Style Artwork keeps child A/B summary instead of merging placements (0.204416ms)
+✔ Artwork Detail drops All Over (fabric carries it) and writes per-placement technique when front/back differ (2.000499ms)
+✔ v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows (12.085432ms)
+✔ v4.89 Collection cells use ASAS suggestions without an LFL dependency or strict selection (24.445896ms)
+✔ v4.89 Collection grid supports Excel-style navigation, active-cell focus and matrix paste (20.720703ms)
+✔ v4.81 Collection Best Price cell opens Pricing History on double click (16.418056ms)
+✔ v5.63 Collection Best Price footer shows weighted and arithmetic averages (2.862677ms)
+✔ native catalog uses scoped ASAS Orders, reuses verified Orders gzip and preserves denied access (282.358018ms)
+✔ native cached catalog response rejects missing/old/partial schemas and returns exact complete v3 data (173.876096ms)
+✔ Collection business cells are left aligned and vertically centered (4.722615ms)
+✔ Collection editors share left-aligned text geometry (1.323591ms)
+✔ Collection textarea-backed cells center single-line text instead of sitting high (2.022557ms)
+✔ Collection composite cell wrappers keep content vertically centered and left aligned (0.396392ms)
+✔ Collection textarea cells fit wrapped text to the row height in whole lines (1.370146ms)
+✔ checking a Collection row checkbox clears the stale active-cell/range selection (1.997359ms)
+✔ Collection Copy resolves checked models over a stale cell/range selection (0.877402ms)
+✔ modalOpen(): gizli sarmalayıcı içindeki statik pencere AÇIK sayılmaz (3.549966ms)
+✔ modalOpen(): gerçekten açık pencere AÇIK sayılır (0.690708ms)
+✔ modalOpen(): visibility:hidden açık sayılmaz (1.189801ms)
+✔ modalOpen() varlık kontrolüne geri dönmemeli (0.909529ms)
+✔ tehlike gerçek: index.html statik [role=dialog][aria-modal=true] taşıyor (0.410383ms)
+✔ yapıştırma: aynı oturumda kopyalanan başlık satırı ayıklanır (1.832465ms)
+✔ yapıştırma: sayfa yenilendikten sonra da başlık satırı tanınır (0.502418ms)
+✔ yapıştırma: başlık OLMAYAN veri ayıklanmaz (0.190905ms)
+✔ yapıştırma: tek satırlık veriye dokunulmaz (0.325855ms)
+✔ yapıştırma: başlık eşleşmesi harf büyüklüğüne takılmaz (0.458402ms)
+✔ yapıştırma: satırın YALNIZ bir hücresi başlıksa ayıklanmaz (0.238455ms)
+✔ Collection clipboard matrix null/undefined/NaN/object placeholder üretmez (5.503999ms)
+✔ Collection safe HTML özel karakterleri escape eder ve multiline hücreyi br ile taşır (1.385489ms)
+✔ Collection safe HTML düz ve Word-safe table yapısını kullanır (0.899075ms)
+✔ Collection row copy kayıt matrisinden üretilir ve modeli görseliyle birlikte taşır (2.005606ms)
+✔ kolRecordImageCopyCell CP ile aynı dönüştürücüyü kullanır, DOM taramaz (1.084ms)
+✔ ortak clipboard yazıcısı modern yolda HTML ve TSV MIME tiplerini birlikte taşır (0.46677ms)
+✔ Collection hücre içindeki link/action tıklamasını yapıştırma hedefi olarak da seçer (0.30962ms)
+✔ Collection aralığı textarea odağında da Ctrl+C ile kopyalanır (0.248747ms)
+✔ üç yönlü birleşim: farklı alanlar korunur, aynı alanda önce yayımlanan kalır ve çakışma kaydedilir (5.793465ms)
+✔ uzakta değiştirilen satır yerelde silinmişse değişiklik korunur ve bildirilir (0.360008ms)
+✔ iki cihaz aynı anda düzenler: ikinci yayın birleşir, iki cihaz aynı sonuca yakınsar, kaybeden değer çakışma olur (238.642212ms)
+✔ satır/sayfa senkronu sırasında eşzamanlı bekleyen yerel değişiklik birleşimle korunur (REMOTE_NEWER_LOCAL_DIRTY) (142.33537ms)
+✔ sunucu: birleşim canlı yayılır, uzak değişiklik yoklanır, çakışmalar Senkron çakışmalarında listelenip çözülür (28.684626ms)
+✔ istemci: birleşimde korunan değer kullanıcıya bildirilir (58.567117ms)
+✔ izleyici cihazın ayrışmış kopyası birleştirilip yayımlanmaz; uzak kopya benimsenir (61.130133ms)
+✔ replica imported by a read notifies open clients once, before the poll can consume its change (75.566689ms)
+✔ a pull rechecks the local content at commit and polling retries an interrupted import (130.64294ms)
+✔ owner replication operations serialize their remote/base pair; another owner is not blocked (28.676757ms)
+✔ expanded group projects every real colour row (14.985112ms)
+✔ collapsed group projects one row whose exported cells are the canonical Group Summary (20.037157ms)
+✔ hidden selected child maps to its single visible collapsed summary row (4.140878ms)
+✔ Collection copy/export call sites share the projection rather than raw parent rows (10.793079ms)
+✔ spreadsheet Ctrl+C takes the rendered canonical summary display for collapsed cells only (0.670052ms)
+✔ collapsed fabric uses the same tr card summary as expanded rows and keeps raw data (8.806798ms)
+✔ collapsed fabric uses the same en card summary as expanded rows and keeps raw data (4.721171ms)
+✔ collapsed fabric includes distinct effective colour overrides and falls back for a missing card (11.668606ms)
+✔ collapsed multipart fabric preserves part labels and card summaries (4.551574ms)
+✔ explicit override existence beats model inheritance even for falsy values (4.080794ms)
+✔ generic text/notes/price overrides survive parent edits and remain field-scoped (2.185239ms)
+✔ inline and period/custom writes use one grouped write source of truth (3.62273ms)
+✔ manufacturer price projection joins the same persisted pricing override (2.129755ms)
+✔ Endeksmatik and custom/formatted cells remain metadata-driven override candidates (2.20422ms)
+✔ right-click is one delegated grid path and linked native editors pass pointer to td (1.235765ms)
+✔ Notes colour override is local; model-level Notes still retain propagation path (1.637927ms)
+✔ persistence normalizer preserves override metadata across JSON restart round-trip (0.787413ms)
+✔ dependent In Store -> Retail writes respect linked/override ownership (1.9169ms)
+✔ manufacturer price approve cannot bypass pricing override storage (2.269463ms)
+✔ override eligibility is metadata-driven and maps projected cells to persisted storage keys (6.449477ms)
+✔ one colour × one field override survives later parent edits without detaching sibling fields (2.659445ms)
+✔ Endeksmatik and custom fields use the same persisted variantOverrides architecture and survive reload (1.030172ms)
+✔ collapsed summary joins colours/codes/text, sums quantity, and preserves group order (19.684732ms)
+✔ collapsed monetary summary is quantity-weighted, not arithmetic average (3.077966ms)
+✔ missing price quantity is excluded from the weighted denominator (3.341667ms)
+✔ identical prices keep the normal common display instead of inventing a different aggregate (2.65296ms)
+✔ Endeksmatik summary weights colour-level benchmark price/rate by quantity and uses explicit child override (2.905257ms)
+✔ collapsed projection stays display-only while UI and visual export share the canonical summary resolver (7.074524ms)
+✔ explicit Notes override is protected from legacy same-PLM propagation (1.839982ms)
+✔ v10.48 Collection column filter buttons announce both the filter action and their column (3.053088ms)
+✔ Koleksiyon özel sütun adları uygulama içi metin penceresinden alınır (3.602098ms)
+✔ Sütunlar tetikleyicisi aktif tabloyu body durumundan da çözer (0.589633ms)
+✔ Sütun paneli araç çubuğu kabından bağımsız ve ekran içinde konumlanır (0.38512ms)
+✔ v10.63 Koleksiyon ortak alan ve kural geri bildirimleri İngilizce karşılık taşır (4.174572ms)
+✔ v10.63 ortak hücre şablonu seçim yer tutucusunu sözlükten alır (0.484338ms)
+✔ Concept 2 collapse yalnız presentation projection; logical colour records değişmez ve filtered child kaybolmaz (10.265538ms)
+✔ Concept 2 model group override/relink semantiği parent editte korunur (2.811399ms)
+✔ Concept 2 UI hierarchy record-based copy/export contractına sızmaz (2.099299ms)
+✔ Concept 2 gutter hem hierarchy toggle hem görünür row checkbox taşır (4.757664ms)
+✔ Concept 2 checkbox yeni veri sütunu eklemez ve seçim olayı gerçek row id üzerinde kalır (7.074831ms)
+      [ölçüm] eşzamanlı 1288 ms · worker 139 ms · ana iş parçacığı bloğu (paralel paket altında — oran ezilir)
+✔ v7.21 kaydetme ana iş parçacığını bloke etmiyor (16542.739818ms)
+✔ v7.21 farklı Koleksiyon sayfalarına yazanlar birbirini beklemiyor (1053.691445ms)
+✔ v7.21 aynı sayfaya art arda yazmalar sıraya girer, kilit yüzünden düşmez (476.026292ms)
+✔ v7.21 kaydetme değişen satırları döndürür (147.34673ms)
+✔ v7.21 silme satır yamasında taşınır — eksik satır "silinmiş" sanılmaz (166.480753ms)
+✔ v7.21 satır sırası veya sütun değişince yama YERİNE yeniden yükleme istenir (140.165101ms)
+✔ v7.21 çok büyük fark yama olarak taşınmaz (259.644346ms)
+✔ v7.21 satır karşılaştırması JSON.stringify kullanmıyor (1.541537ms)
+✔ v7.21 Koleksiyon satırları yalnız o sayfaya erişimi olana gider (3.088894ms)
+✔ v7.21 Koleksiyon yetkisi SAYFA bazındadır, kısmi süzme yoktur (4.584939ms)
+✔ v7.21 aynı satırın art arda yamaları birleşir, silme kaybolmaz (0.374613ms)
+✔ v7.21 kaydetme gövdesi ana iş parçacığında ayrıştırılmıyor (0.634281ms)
+✔ v7.21 gövde worker'a kopyalanmadan taşınır (0.232149ms)
+✔ v7.21 worker hatası HTTP anlamını koruyor (0.161593ms)
+✔ v7.21 istemci uzak yamayı yerinde uygular, çalışma durumunu silmez (49.885161ms)
+✔ v7.21 yeniden yükleme yolu kaydırma ve seçimi koruyor (5.771046ms)
+✔ v10.60 Koleksiyon onay sütunlarının açıklaması aktif dilde kalır (4.136552ms)
+✔ Collection Conf. Manufacturer exposes a working synthetic value filter (13.689448ms)
+✔ Conf. Manufacturer filtering uses the displayed effective approval, not stale raw row data (1.392507ms)
+✔ Buying Sample approval colours only the tick, not the whole cell (5.891117ms)
+✔ Koleksiyon Model Name hücresi panoya yalnız model adını verir, PLM ↗ simgesini vermez (3.548689ms)
+✔ Genel hücre kopyalama UI buton/ikonlarını metinden temizler (1.413443ms)
+✔ TR Landed HTML clipboard görünümünde dolar işaretini de taşır (1.195273ms)
+✔ v10.46 Collection search names its table in both interface languages (1.523316ms)
+✔ v10.46 Costing Sheets search has a translated accessible name (0.73036ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-delete-license-automation-v831.test.js (218.941019ms)
+✔ stale editor cannot resurrect a deleted row, including legacy revision undefined (459.125797ms)
+✔ stale editor cannot resurrect a deleted row, including legacy revision 7 (31.806699ms)
+✔ a genuine create and explicit recycle-bin restore with a new ID still work (9.539136ms)
+✔ real client diff carries existence expectations only for rows in its baseline (26.464265ms)
+✔ kolSpreadsheetRawValue: Picture artık boş dönmüyor — img URL kopyalanabiliyor (3.02822ms)
+✔ kolSpreadsheetRawValue: Best/Conf/Endeksmatik/TR Landed dalları duruyor (regresyon kilidi) (27.854176ms)
+✔ Best Price / Conf. Manufacturer / Conf. FOB yapıştırma reddedilmeye devam ediyor (15.49254ms)
+✔ TR Landed yapıştırma kararı kaynakta trPrice'a yönlendiriyor (1.811422ms)
+✔ TR Landed yapıştırma sayısal olmayan TL fiyatını reddediyor (1.826074ms)
+✔ Picture yapıştırma kararı kaynakta duruyor: metin eşleşen kaynağın img+imgRef çifti kopyalanıyor (2.848551ms)
+✔ Endeksmatik yapıştırma kararı kaynakta duruyor: kaynak satırın TÜM sonuç nesnesi kopyalanıyor (2.406547ms)
+✔ Endeksmatik eşleşme metni Engine.tsv() ile aynı satır-sonu dönüşümünden geçiyor (1.586915ms)
+✔ Endeksmatik: eşleşen kaynak bulunamazsa reddedilir, uydurma sonuç üretilmez (1.595587ms)
+✔ trLanded/endeksmatik/picture yapıştırması da modele bağlı hücre kilidinden geçiyor (1.340216ms)
+✔ v10.61 Koleksiyon türetilen gün hücresi seçili dili kullanır (2.939721ms)
+✔ a secured browser draft must not claim durable server acceptance (8.145665ms)
+✔ remote change notification cannot replace a rejected save with a saved badge (2.272657ms)
+✔ in-flight save remains distinct from an idle local draft (4.25153ms)
+✔ an uncommitted DOM editor cannot inherit a background save acknowledgement (3.065292ms)
+✔ copied single MB month has no header and retains its exact period value (10.793368ms)
+✔ copied MB week keeps full business-week code instead of displayed week number (4.740216ms)
+✔ status paste from focused native dropdown is intercepted and canonicalized (4.31925ms)
+✔ invalid status paste never reaches the batch write (0.827511ms)
+✔ MB Month and MB Week paste from grid surface use spreadsheet transaction (1.088903ms)
+✔ regular text editor scalar paste remains native (0.889613ms)
+✔ multiline notes paste without tabs remains native (0.937525ms)
+✔ dropdown resolver accepts canonical, translated and case/diacritic variants (0.681098ms)
+✔ dropdown resolver rejects unknown or ambiguous status labels, preserving empty-cell clear (0.461695ms)
+✔ single status cell copy exports canonical stored value, not its localized label (4.428575ms)
+✔ explicit Copy with Headers still includes a header for a single cell (2.831976ms)
+✔ canonical statuses take precedence over ambiguous accent-insensitive matches (0.604156ms)
+✔ invalid pasted status explains rejection instead of silently replacing a selection (0.806455ms)
+✔ v4.94 quick suggestion dropdowns close when the table or page scrolls (54.8583ms)
+✔ v4.91 Collection uses one Excel-like active-cell frame without a second input box (15.930965ms)
+✔ empty editable Collection starts the existing guarded Add Model flow in both languages (10.954851ms)
+✔ filtered Collection clears filters; read-only empty Collection does not offer an edit (9.351116ms)
+✔ v10.39 Collection zero-result state explains filtered versus truly empty data (7.161992ms)
+✔ v10.39 Collection zero-result state uses the shared primitive and only offers a real recovery action (2.698396ms)
+✔ v10.39 Collection empty state is contained in the table surface and stays usable on narrow screens (1.147052ms)
+✔ Collection Sütunlar adımı dört aksiyonlu ve varsayılanı yalnız canonical identity sütunlarında Match (1.979492ms)
+✔ Match yalnız identity bulur; Update yalnız seçili hedefi yazar; Ignore hiçbir alana yazılmaz (18.769131ms)
+✔ Explicit colour-level aynı değer bile override niyeti olarak plana girebilir; blank hücre mevcut semantiği korur (4.941601ms)
+✔ Eşleşme alanı yoksa ve duplicate update target varsa import validation açıkça bloklar (0.644754ms)
+✔ Create + Update + Match aynı planda çalışır; eşleşmeyen yeni row identity alanlarını Match kaynaklarından alır (2.800705ms)
+✔ v5.52 Collection Excel writes Endeksmatik summary instead of the empty synthetic row field (5.162765ms)
+✔ v5.52 Collection Excel recalculates and exports Overseas/TR Landed as numeric dollar cells (3.214212ms)
+✔ v5.52 exported calculated cells keep audit-friendly calculation context in Excel notes (2.53476ms)
+✔ kayıt sayısı ile dışa aktarım satır sayısı birebir aynı (4.117176ms)
+✔ çok satırlı hücre içeren kayıtlar da tek satır kalır (1.002359ms)
+✔ hücre içindeki satır sonu boşluğa normalize edilir (0.745066ms)
+✔ CR, CRLF, dikey sekme ve satır ayırıcıları da normalize edilir (0.31953ms)
+✔ hücre içindeki SEKME yeni sütun üretmez (0.349922ms)
+✔ TSV: sütunlar TAB, satırlar CRLF, model başına tek satır (0.468887ms)
+✔ TSV başlıksız da üretilebilir ve satır sayısı korunur (0.647785ms)
+✔ Türkçe karakterler bozulmaz (0.277714ms)
+✔ HTML: model başına tam bir tr, sütun başına tam bir td (1.178792ms)
+✔ HTML hiçbir yerde rowspan ya da dikey birleştirme içermez (1.192482ms)
+✔ her td mso-data-placement:same-cell taşır (0.298095ms)
+✔ assertFlat rowspan ve satır sayısını yakalar (0.513444ms)
+✔ hücre içeriği HTML olarak kaçışlanır (0.358894ms)
+✔ yalnız verilen sütunlar aktarılır; gizli sütun sızmaz (1.602788ms)
+✔ kayıt sırası ve sütun sırası olduğu gibi korunur (0.251004ms)
+✔ Koleksiyon kopyalaması DOM üzerinden serialize EDİLMEZ (0.776365ms)
+✔ Koleksiyon dışa aktarım değeri kayıttan üretilir (0.875478ms)
+✔ Koleksiyon spreadsheet Ctrl+C rich HTML satır sonlarını yeniden üretmez (0.332467ms)
+✔ TSV ve HTML üreten bütün yollar merkezî serializer üzerinden geçer (1.139355ms)
+✔ Ctrl+C aralık kopyalaması da merkezî serializer üzerinden geçer (0.851015ms)
+✔ DOM yolundaki her hücreye same-cell eklenir (1.090218ms)
+✔ Excel görsel aktarımı model başına tek satır yazar (10.763662ms)
+✔ normal metin kopyalaması körlemesine ele geçirilmez (1.112835ms)
+✔ serializer açılışta yüklenir (2.526575ms)
+✔ uygulama içi yapıştırma kart özeti yerine kopyalanan ham kumaş metnini yazar (2.598618ms)
+✔ kopyalama ham kumaş matrisini hatırlar; yapıştırma ve Ctrl+D ham değeri kullanır (0.579963ms)
+✔ selectedMatrix keeps raw fabric cards alongside TR Landed source tokens (3.785136ms)
+✔ v10.57 Collection temel sütun filtresinin yardım metni aktif dilde kalır (3.409491ms)
+✔ v6.42 "Dummy PO Placed" canonical status kataloğunda ve İngilizce karşılığı var (7.894553ms)
+✔ v6.42 status Excel rengi artık canonical katalog resolverından gelir (4.116111ms)
+✔ v6.42 duplicate sonrası hiçbir satır seçili kalmıyor (1.586594ms)
+✔ v7.81 Endeksmatik sürükle-kopyala tutamacı geri gelmedi (36.30623ms)
+✔ v6.42 Endeksmatik Excel export verisi korunur ve hücre tek satıra normalize edilir (3.316409ms)
+✔ v6.42 kâr yüzdesi kopyalama metnine ekleniyor, sayısal yapıştırmaya karışmıyor (0.868135ms)
+✔ v6.42 Overseas Landed çağrısı kâr argümanını geçiyor, TR Landed geçmiyor (2.446116ms)
+✔ v6.42 Excel notunda da kâr yüzdesi yer alıyor (1.834048ms)
+✔ v6.42 kâr metni kesme işaretiyle dizgiyi bozmuyor (2.406082ms)
+✔ v4.83 Collection FOB uses Confirmed, then Best Price, then Target Price (20.280143ms)
+✔ v4.83 fallback FOB is visibly marked and Target Price edits recalculate immediately (10.85058ms)
+✔ v4.83 right-button hand pan supports horizontal, vertical and diagonal movement everywhere (3.310044ms)
+✔ Collection header drops legacy letter references without altering the selection engine (1.945304ms)
+✔ Collection reapplies sticky freeze after removing letter headers (2.431903ms)
+✔ Data Health chips no longer occupy space in the Collection workspace (0.438486ms)
+✔ Collection spreadsheet positioning does not override frozen body cells (3.012885ms)
+✔ Collection summary hides only the duplicate count text, preserving the footer cell paint (41.224085ms)
+✔ Collection izin kontrolü üst başlıkta, tablo akışının dışında durur (2.958364ms)
+✔ Görünüm ve Yetkiler çubuğu yalnız Collection ekranında görünür (11.682616ms)
+✔ Collection açıldığında Görünüm ve Yetkiler popoverı otomatik açılmaz (1.27574ms)
+✔ Collection üst başlığı tek satırda kalır ve izin popoverı akışı bozmaz (0.817571ms)
+✔ Collection izin popoverı dışarı tıklanınca kapanır (5.805999ms)
+✔ Koleksiyon görseli kanonik kayda TEK çıkıştan bağlanır (10.006735ms)
+✔ Detay görsel dizini Koleksiyon satırlarını türetilmiş projeksiyonlardan ÖNCE indeksler (0.780562ms)
+✔ Bağ kaldırıldığında CP/Orders satırındaki görsel projeksiyonu da düşer (1.508694ms)
+✔ v4.95 Collection picture cell opens the same anchored delete confirmation as CP (11.117768ms)
+✔ v4.95 Collection model images are centered inside Picture cells (1.521263ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-image-sharing-v20260926.test.js (108.924926ms)
+✔ Shared Hub model images are enabled only for Collection scope (2.311143ms)
+✔ workspaceImageItems returns only Collection rows with persistent image ref and PLM identity (2.221056ms)
+✔ Collection images are published only when owner granted view or edit access (0.529092ms)
+✔ v4.89 Excel Category birleşik değeri ASAS kataloğuna indirger, bilinmeyen serbest metni korur (8.772096ms)
+✔ v4.89 Excel import Category alanını LFL doğrulamasına bağlamaz (1.683755ms)
+✔ v4.84 Duplicate plan kaynak satırdaki Conf. FOB ve fiyat verilerini değiştirmez (2.847513ms)
+✔ v5.28 Model Budget Month invalid/full-date values render blank instead of Date.toString text (2.855665ms)
+✔ v5.28 Model Budget Month suggestion catalog does not read CP/Orders Model Budget full dates (1.208654ms)
+✔ v4.90 Non-DTR landed calculation divides by one minus royalty and adds hologram before multiplier (22.026027ms)
+✔ v4.88 Add New Model row is temporarily pinned to the first table position (6.753938ms)
+✔ v4.88 new row returns to normal sort/filter flow after editing or filter changes (11.769643ms)
+✔ v4.90 Collection landed formulas follow the approved DTR and Non-DTR rules (13.486486ms)
+✔ v5.53 Overseas Landed fiyat avantajı yüzdesi tekrar görünür (4.719612ms)
+✔ v5.62 yüzde avantajı sade metin olarak Endeksmatik yüksekliğindeki Landed kartta kalır (5.631347ms)
+✔ v5.53 kaldırılan tekrar çarpan rozetleri geri gelmez (2.373644ms)
+✔ v5.49 Source Ayarları içinde Landed Çarpanları bulunur ve ortak kaydetme API kullanılır (4.36633ms)
+✔ v5.49 boş satır çarpanı Source varsayılanını kullanır (6.809189ms)
+✔ v5.49 model içindeki manuel çarpan ortak varsayılanı ezer (6.065734ms)
+✔ v5.49 server store Landed çarpanlarını revision ile kalıcı tutar (0.955606ms)
+✔ v5.51 Landed hücreleri kompakt tek satır düzeninde gereksiz rozetleri kaldırır (77.198557ms)
+✔ önce Confirmed fiyat kullanılır (17.398188ms)
+✔ Confirmed yoksa en iyi (en düşük) fiyat (9.31419ms)
+✔ hiç fiyat yoksa Target Price (8.372143ms)
+✔ hiçbiri yoksa boş döner (8.286713ms)
+✔ TR landed = TL ÷ kur × çarpan (9.510232ms)
+✔ YD landed = Supp. FOB × çarpan (8.845929ms)
+✔ Non-DTR landed fiyatları royalty bölme formülü ve hologram maliyetini uygular (8.781911ms)
+✔ DTR landed fiyatlarında royalty ve hologram tekrar eklenmez (8.861743ms)
+✔ kâr oranı TR landed üzerinden hesaplanır (8.286239ms)
+✔ yurt dışı pahalıysa kâr negatiftir (10.585691ms)
+✔ elle girilen kur ve çarpanlar otomatiği ezer (9.405633ms)
+✔ kur bulunamazsa TR landed boş kalır, YD landed etkilenmez (10.654469ms)
+✔ sıfır ve geçersiz değerler varsayılana düşer (19.926851ms)
+✔ iki sütun eklendi, fazladan sütun açılmadı (2.850048ms)
+✔ girdiler hücrenin içinde ve kaydediliyor (6.90716ms)
+✔ kullanılan Supp. FOB kaynağı hücre içinde gösterilmiyor (5.197238ms)
+✔ sütun sırası Overseas Landed → TR Landed ve ikisi tablonun en sağında (3.507307ms)
+✔ v5.62 landed hücreleri Endeksmatik ile aynı minimum yükseklikte kompakt kart kullanıyor (62.659996ms)
+✔ landed alanı değişince satır yeniden çizilir (5.730752ms)
+✔ girdiler kutu gibi durmuyor, tıklanınca düzenleniyor (114.520926ms)
+✔ Landed hücreleri Overseas fiyat avantajını gösterir, tekrar eden çarpan rozetlerini göstermez (5.191361ms)
+✔ v10.33 Collection spreadsheet görünür belge dilini kullanır (2.06764ms)
+✔ v10.33 görünüm ve yetki panelinin tüm görünür metinleri ortak sözlükten gelir (60.79544ms)
+✔ v10.33 Collection kapsamı aria etiketi ve boş seçim uyarısı seçili dile uyar (3.260925ms)
+✔ old GET that finishes after a durable save cannot move the UI backwards (3.463841ms)
+✔ local unsaved edit made while GET was in flight is preserved (1.270851ms)
+✔ an unchanged clean workspace still accepts the fetched remote state (1.392252ms)
+✔ automatic remote reload requests the local-state guard (1.918593ms)
+✔ a delayed SSE revision cannot reduce the workspace revision after a newer ACK (3.28034ms)
+✔ a read discarded after a local edit schedules a fresh bounded-delay reload (2.884861ms)
+✔ a clean focused editor defers reload without polling full workspace HTTP (3.366759ms)
+✔ country exclusion recomputes season, same-month and cumulative references from per-country sums (30.015702ms)
+✔ country codes are normalised once for rules and requests (0.278378ms)
+✔ cells, footer and details follow the row owner rule, not the viewer (36.38447ms)
+✔ drawer toggles countries in one collapsed checkbox list, including saved countries absent from the source (11.919477ms)
+✔ owner workspace keeps the rule across full saves, row saves, structure changes and replication merges (288.90096ms)
+✔ app-main persists the owner rule through every Collection structure path (27.613116ms)
+✔ saved schema-4 summaries stay available and upgrade only from the same complete source revision (24.241015ms)
+✔ reference endpoint returns a saved legacy summary when its source cannot upgrade it (2.461815ms)
+✔ legacy summaries without country sums are never presented as filtered (6.836389ms)
+✔ every Collection baseline structure carries the country rule, so a save never leaves the workspace dirty (28.323428ms)
+✔ a schema-4 upgrade keeps the saved values when the same-key source no longer reproduces them (8.966138ms)
+✔ returning country choices to the saved state clears the redundant draft without a server write (22.80878ms)
+✔ detail rows reproduce each cached reference exactly, including cumulative MB boundaries and source exclusions (11.387293ms)
+✔ detail endpoint requires both areas, source readiness, the current version and a scoped reference key (3.450643ms)
+✔ detail reports load on click, coalesce by reference and reuse the shared report UI with numeric contribution columns (38.946628ms)
+✔ stale details preserve saved references until explicit refresh, and failed detail requests remain retryable (9.522136ms)
+✔ an in-flight detail response cannot cross a user change or a reference refresh (11.284068ms)
+✔ reference values remain visible during refresh, failed refresh and source invalidation (6.378794ms)
+✔ refreshing only CP leaves the LFL payload absent so the published source snapshot is preserved (2.312475ms)
+✔ references survive source revisions and process restarts until an explicit refresh (15.224717ms)
+✔ empty, incomplete and failed refreshes never replace the last saved references (17.146728ms)
+✔ an empty initial read is not persisted and cannot prevent later source recovery (9.077133ms)
+✔ a computed summary never loads raw rows and retains durable refresh and legacy upgrade rules (12.746416ms)
+✔ computed publication rechecks authority and queued revisions keep their own summary builder (10.850935ms)
+✔ a failed durable write is reported and leaves the previous reference available (6.022853ms)
+✔ saved endpoint references are readable without a loaded source, and remain isolated by access scope (11.080357ms)
+✔ LFL upload saves source rows before publishing them and retains old rows on a write failure (1.169979ms)
+✔ summary cache misses use the computed provider and recheck both live areas after async reads (1.361886ms)
+✔ season impact adds a single prospective row to prior MB months of the same season and group (22.758044ms)
+✔ sample size counts distinct source orders per reference, never colour/source rows (7.270497ms)
+✔ MB month references match the same month one year earlier, independently of the full season (6.529973ms)
+✔ quantity weighted references share normalized canonical dimensions and keep seasons/currencies separate (6.765193ms)
+✔ Price uses live confirmed/best/target values, grouped dimensions and one request across renders (32.48676ms)
+✔ reference endpoint checks Collection/LFL permissions and filters rows before aggregating (2.67032ms)
+✔ cache coalesces concurrent requests, persists aggregates and replaces them only on explicit refresh (11.408189ms)
+✔ older disk caches are rebuilt once to include cumulative season summaries (5.355136ms)
+✔ varyantın miras alınan hücresi BAĞLI sayılır (2.971829ms)
+✔ override konmuş hücre bağlı değildir — kullanıcı bağı zaten koparmış (1.840484ms)
+✔ renk özelindeki alanlar hiçbir zaman bağlı değildir (1.537888ms)
+✔ model (parent) satırı kilitlenmez — paylaşılan değeri o düzenler (1.003342ms)
+✔ gruba girmemiş tek satır kilitlenmez (1.454319ms)
+✔ kapı 1 — satır içi düzenleyici reddediyor ve bunu undo yazmadan ÖNCE yapıyor (1.371427ms)
+✔ kapı 2 — yapıştırma reddediyor (1.317413ms)
+✔ 'linked' geçersiz değer değil, salt okunur sayılır (0.207783ms)
+✔ kapı 3 — çizim bağlı hücrenin düzenleyicisini kapatıyor (9.232772ms)
+✔ sessizce override yaratan eski dal kaldırıldı (26.431278ms)
+✔ Collection reload fails closed without an owner authorizer (457.648239ms)
+✔ reload authorization is fresh at delivery; permission-change recipient survives revocation (900.854013ms)
+✔ a reload authorization failure cannot leak an event or stop other recipients (451.227397ms)
+✔ different revoked recipients cannot coalesce into one permission invalidation (451.063842ms)
+✔ ana katalog ASAS modelinden ufuk/kaynak filtresi OLMADAN DISTINCT okunur ve kimlikle tekilleşir (5.644426ms)
+✔ okunamayan alan önceki listesini korur, diğer alanlar yine tazelenir; bağlantı yoksa 409 (1.306703ms)
+✔ depo anlık görüntüyü yazar, eskimişse arka planda bir kez tazeler ve başarısız denemeden sonra geri çekilir (15.159073ms)
+✔ sunucu ana katalog uçlarını Koleksiyon yetkisiyle açar ve ülkeyi sipariş satırlarıyla aynı dönüştürür (1.306771ms)
+✔ istemci kataloğu ASAS ana kataloğunu sipariş kataloğuyla birleştirir; ana yazım önceliklidir (11.440281ms)
+✔ Licensor önerileri License Royalty kurallarını ve açık License → Licensor seçimlerini içerir (2.489214ms)
+✔ öğrenilmiş PLM → ASAS eşanlamı elle girişte kanonik ASAS değerine çevrilir (2.321683ms)
+✔ hücre kaydı, çizim, sekme açılışı ve içe aktarmalar ana kataloğa bağlıdır (18.34464ms)
+✔ MB month keys and labels are locale-independent for filters (7.991919ms)
+✔ Mixed historical names merge into one facet and preserve selected filters (7.08798ms)
+✔ MB month sorting and filter/quick-filter UIs use stable period keys (8.494718ms)
+✔ Models with same PLM, model and budget month share a grouping identity across languages (2.28603ms)
+✔ single clipboard value expands across the selected rectangle (3.781323ms)
+✔ field metadata distinguishes color-specific and model-inherited fields (0.424143ms)
+✔ all color overrides can be re-linked without touching color identity (4.409345ms)
+✔ linked child reads the parent value even when older rows lack shared metadata (0.581996ms)
+✔ repairs legacy all-variant groups so parent edits propagate (0.671374ms)
+✔ collapsed groups hide only child rows while preserving the parent (0.653986ms)
+✔ Collection exposes relink and non-emoji group controls (6.683185ms)
+✔ Concept 2 keeps model-group toggle in the row gutter, not inside the model cell (3.477996ms)
+✔ Collection View controls can show or hide all colour variants at once (3.434654ms)
+✔ row-gutter colour hierarchy is theme-safe and visually explicit (5.561061ms)
+✔ Collection loads the model-group compatibility layer before the app (3.007889ms)
+✔ Collection keeps grouping metadata in the flat table and persistence path (27.491837ms)
+✔ Spreadsheet context menu reuses the existing bridge for model actions (0.60209ms)
+✔ groups only exact PLM + normalized model + exact in-store month rows (1.964041ms)
+✔ does not auto-group incomplete or ambiguous identities (0.742897ms)
+✔ shared values inherit until a variant override is set (0.986836ms)
+✔ detaching and relinking preserve row data while changing membership (0.715263ms)
+✔ pricing fields can be made color-specific without changing unrelated fields (1.495504ms)
+✔ v6.65 ortak motor temel istatistikleri ve ağırlıklı ortalamayı üretir (4.390505ms)
+✔ v6.65 IQR aykırı değer anahtarı aynı gözlem setinde çalışır (2.493919ms)
+✔ v6.65 matris hücreleri veri kaybetmeden ortak gözlemleri kullanır (0.686864ms)
+✔ v6.65 üretici benchmarkı sınıf kontrollü ve ±5 eşikli (0.716331ms)
+✔ v6.65 batch endpoint mevcut erişimi kesiştirir ve salt okunurdur (8.242907ms)
+✔ v6.65 birleşik görünüm yazmayı kapatır ve kaynak kimliğini korur (23.660509ms)
+✔ v7.64 bağımsız analiz Collection kapsamını köprüden seçer (23.497386ms)
+✔ v6.65 para türleri USD ile TRY değerlerini karıştırmaz (19.297583ms)
+✔ v7.64 Collection görünümü, kullanıcı tercihi ve sahip-bazlı izin paneli bulunur (22.210094ms)
+✔ v7.64 analiz kaynak seçimi, drilldown ve dataset Excel export sunar (4.181017ms)
+✔ Yerel Koleksiyon kopyası yoksa örnek modeller yüklenmez; koleksiyon boş başlar (32.060214ms)
+✔ Yerel kopya varsa aynen yüklenir (eski tarayıcı verisinin taşınması korunur) (11.298511ms)
+✔ same PLM + colour + MB month aggregates orders into one new row with Supp. FOB as the confirmed price (6.582932ms)
+✔ different colours, PLM IDs or MB months stay separate rows (0.988251ms)
+✔ existing record is updated in place, not duplicated, and keeps pricing history inputs (1.307063ms)
+✔ different confirmed manufacturer or Supp. FOB requires explicit approval (1.19483ms)
+✔ orders with conflicting prices or without Supp. FOB never change the price automatically (0.958786ms)
+✔ re-importing the same order replaces its quantity instead of double counting and reports unchanged rows (1.118372ms)
+✔ blank source values never clear existing Collection values (0.502602ms)
+✔ legacy duplicated records: the record with the richest pricing history is updated, others are untouched (0.630989ms)
+✔ custom month and grouped-value readers are honoured (1.768786ms)
+✔ records without PLM, colour or MB month are not matched and previously imported lines are skipped (0.96944ms)
+✔ duplicate input lines are counted once (0.414504ms)
+✔ orders already imported into a legacy multi-colour row are not reopened as new rows (0.319016ms)
+✔ re-importing one of several same-order same-colour lines keeps the other lines (0.831848ms)
+✔ v5.69 Overseas Landed footer shows quantity-weighted percentage change versus TR Landed (8.276617ms)
+✔ legacy shared/alias Collection recovery deduplicates safely and remains idempotent (101.283897ms)
+✔ Shared Hub transports owner workspaces and never replaces them with Shared Collection (1.079601ms)
+✔ Permissions and multi-owner Collection view remain the canonical UI flow (1.882778ms)
+✔ granting Collection access publishes the owner workspace as well as images (0.245269ms)
+✔ recycle bin deletion follows the real owner workspace instead of shared-collection (1.426869ms)
+✔ personal backup restore writes back to the signed-in owner workspace (0.370236ms)
+✔ manual editors, pricing editors and clipboard batch share one Collection cell-change dispatcher (8.774895ms)
+✔ period picker enters the same batch pipeline used by clipboard paste (1.264217ms)
+✔ period paste is normalized and cannot bypass the picker linked-field ownership rule (1.302617ms)
+✔ multi-cell paste applies explicit values first, recomputes dependencies after, and preserves explicit Retail (2.899483ms)
+✔ period helper makes manual Month and pasted Month converge to the same final date state (3.831689ms)
+✔ explicit multi-column Retail wins over period recomputation (2.22374ms)
+✔ pricing paste uses the exact manual price commit path so FOB/rule pricing is recomputed (7.722512ms)
+✔ bind/inheritance state remains identical for manual and paste because both use canonical grouped storage (2.649392ms)
+✔ batch transaction still has one undo, one persistence cycle and one final render on success (1.524648ms)
+✔ hidden In Store column stays writable so a picked week moves the In Store date (2.34309ms)
+✔ write-side Collection lookups resolve hidden columns; only rendering follows visibility (2.750994ms)
+✔ offline edit + peer delete + refresh retains existence intent and remote-only additions (59.34175ms)
+✔ an unchanged draft row deleted remotely stays deleted (7.874593ms)
+✔ pending delete retains the original row CAS instead of deleting a newer peer edit (7.560136ms)
+✔ a new draft ID colliding with an unversioned peer row is a create conflict (8.98805ms)
+✔ legacy drafts retain unknown original intent conservatively across repeated reloads (14.633761ms)
+✔ bootstrap loads the saved authorized shared scope before initializing the personal workspace (2.827379ms)
+✔ workspace application restores pending intent before a pricing render may persist it (3.745325ms)
+✔ Hub sonradan bağlanınca ilk yetki geçiş işaretini düşürmez; karşı cihazda etkili olur (103.850423ms)
+✔ İşaretsiz oluşmuş mevcut hub belgesi eşitlemede kendiliğinden onarılır, verilmiş yetkiler korunur (36.600041ms)
+✔ gerçek Hot Wheels drag URLsi attachment kimliğine ayrılır (2.573635ms)
+✔ Chromium DownloadURL ve HTML/CSS payloadları URLyi gömülü metinden bulur (0.626999ms)
+✔ DataTransferItem.getAsString fallbackı cross-window drag payloadını çözer (6.662076ms)
+✔ attachment reverse index Hot Wheels görselini PLM 2131790 ile eşler ve cache kullanır (4.920792ms)
+✔ reverse index totalCount bitmeden sonraki sayfayı tarar (1.056056ms)
+✔ aynı attachment iki farklı PLMye bağlıysa keyfi model seçilmez (1.110088ms)
+✔ yakalanan canlı Style List template request semantiğini korur; yalnız sırları ve sayfalamayı değiştirir (0.935766ms)
+✔ reverse index template yoksa CoreNectum 400 göndermek yerine açık preflight hatası verir (0.373096ms)
+✔ Electron SSO gerçek GetStyleList POST body şablonunu internal bridge ile yakalar (2.676046ms)
+✔ Collection drag preflight template hazır değilse otomatik SSO yenilemesini ister (22.921929ms)
+✔ drag/drop document capture seviyesinde yalnız Collection için kurulur (0.597896ms)
+✔ drag import CoreNectum preflight yapar ve mevcut PLMyi update etmez (0.296537ms)
+✔ server reverse lookup route yalnız Collection yetkisiyle ve direct resolver ile çalışır (5.679916ms)
+✔ CoreNectum browser drag global Excel dropzone yerine Collection importerına yönlenir (0.635762ms)
+✔ legacy global dropzone Collection PLM draginde geri çekilir (17.629318ms)
+✔ PLM drag capture target dropzone olsa bile aktif kalır ve eski overlayi kapatır (0.434492ms)
+✔ v6.54 Special Code boşken isim eşleşmesi PLM linki üretmiyor (2.941329ms)
+✔ v6.54 Special Code doluyken isim eşleşmesi hâlâ çalışıyor (davranış korunuyor) (0.804706ms)
+✔ v6.54 gerçek PLM ID varsa isim eşleşmesi ayarından bağımsız çalışır (0.22859ms)
+✔ Collection PLM context action Special Code varlığını allowNameMatch kuralına geçiriyor (3.587177ms)
+✔ v6.54 hücreye odaklanınca görünüm de kaydırılıyor (3.482068ms)
+✔ v6.54 PLM ID yoksa yeni model "Pending File" durumunda başlıyor (0.584041ms)
+✔ v6.54 PLM ID varsa mevcut durum değişmiyor (0.256614ms)
+✔ v6.54 kural, PLM ID sıfır/boşluk gibi sahte değerlerde de doğru çalışıyor (0.264681ms)
+✔ v6.54 PLM Excel başlık takma adlarında Licensor tanınıyor (5.153187ms)
+✔ v6.54 licensor "dokunulan alanlar" listesinde (satıra gerçekten yazılır) (29.94276ms)
+✔ v6.54 satır objesine licensor GERÇEKTEN yazılıyor (yalnız alias yetmez) (1.056174ms)
+✔ v6.54 uçtan uca: PLM excel matrisinden Licensor değeri satıra ulaşıyor (3.946397ms)
+✔ v6.54 import önizlemesinde Licensor eşlemesi gösteriliyor (0.962104ms)
+✔ PLM-only colourless registry survives hydration without leaking to coloured variants (64.068933ms)
+✔ Collection render/clipboard/Excel all prefer scoped persisted registry, then local image/ref (7.47019ms)
+✔ Saved PLM image fallback loads valid asset after stale preferred URL (2.57ms)
+✔ Collection server rehydrates ONLY accessible workspace row assets and strips transient fields on save (1.850498ms)
+✔ detail anchors preserve order, folds, hidden anchors and avoid duplicate input columns (10.522791ms)
+✔ copy money uses two decimals and leaves missing/nonfinite values empty (6.35955ms)
+✔ internal TR Landed paste/fill copies all three inputs even when no landed value can be calculated (6.212878ms)
+✔ external TR Landed single value changes TRY input only; invalid tokens and linked inputs are rejected (4.636912ms)
+✔ row exports expand price details without changing the grid column metadata (3.743863ms)
+✔ overlapping TR Landed block paste snapshots sources before writing targets (3.832287ms)
+✔ quotations workbook exports numeric values, real approvals and coverage/win ordered suppliers in TR/EN (24.465337ms)
+✔ cost FX and multipliers reject nonnumeric paste before changing stored values (2.852615ms)
+✔ drawer script still removes the original price group (precondition) (2.040247ms)
+✔ price view buttons work without #kolPriceViewActions in the DOM (5.126816ms)
+✔ compact folds Previous Season, monthly LFL and Season Impact together; detail/cost keep separate columns (34.186483ms)
+✔ Kompakt varsayılandır ve teklif/FOB ile landed sütunlarını kaynak yerinde toplar (4.683219ms)
+✔ gizli kaynak sütunlar özet sütunu doğurmaz; Detay hiçbir şeyi değiştirmez (6.937022ms)
+✔ Maliyet teklifleri şeritte toplar, FOB ve landed sütunlarını ayrı bırakır (4.594683ms)
+✔ görünüm kalıcı sütun durumunu değiştirmez; Excel ayrıntılı sütunlarla aktarır (2.4608ms)
+✔ özet hücreleri kopyalama/hücre okuma yollarında metin üretir, çökmeden (2.499679ms)
+✔ Veri Sağlığı filtresi tablo filtresidir: belirteç olarak görünür ve temizlenir (1.484694ms)
+✔ Fiyat Çekmecesi yalnız kanonik yazım yollarını kullanır (0.819665ms)
+✔ Fiyat Çekmecesi drag-release ile kapanmaz, gerçek dış tıklamayla kapanır (1.718861ms)
+✔ v4.66 quotation-only confirmed columns and column dragging are removed (1.329469ms)
+✔ v4.66 collection confirmed columns show muted Best Price fallback (12.454146ms)
+✔ v4.66 collection synthetic pricing columns join persistent move and resize order (5.691824ms)
+✔ v4.66 landed columns remain at the far right after collection column moves (2.518081ms)
+✔ CP pricing context preserves numeric order matching and first-partial precedence (1.738134ms)
+✔ a warm context lookup visits only its candidate rather than scanning the CP projection (8.861969ms)
+✔ scope/source revisions, array replacement and length changes invalidate the context (0.554802ms)
+✔ in-place CP field updates stay live and stale identity candidates never match the old key (0.676078ms)
+✔ the actual Collection helper binds the CP index to owner, authority and source revisions (33.628138ms)
+✔ rule lookup memo preserves latest/future contract, country commission and missing results (1.390675ms)
+✔ rule/source/scope revisions and explicit local invalidation refresh cached selections (1.147877ms)
+✔ the selected-rule cache is bounded when many different missing contexts are visited (3.482098ms)
+✔ actual installed UI helpers and server produce the same native landed values and warnings (648.423043ms)
+✔ FX uses nearest previous month, earliest fallback, manual override and native base direction (1.703592ms)
+✔ latest native contract ignores Collection OPD and respects season, side, legacy hologram and unresolved licensor (3.054564ms)
+✔ CP fallback consumes only the passed authorized canonical snapshot and records unavailable scope (2.424521ms)
+✔ native grouped effective values retain child overrides and calculation fingerprint includes FX and royalty changes (1.425881ms)
+✔ DTR royalty contracts and authorized CP licensor fallback preserve native FOB separately from landed costs (57.383581ms)
+✔ an invalid DTR Final FOB contract stays invalid without changing its intentional landed treatment (84.129414ms)
+✔ installed cached lookup refreshes merge decisions and preserves exact-licensor precedence (16.061823ms)
+✔ cached selections never cache prices, manual FX, supplier values or changing automatic FX (17.88457ms)
+✔ fractional contract royalty keeps full precision and Collection FOB matches the exact CP Final FOB (17.773911ms)
+✔ category overrides match UI/server and never share cached contracts across categories (19.751272ms)
+✔ Collection erişimi varsayılan olarak yalnız sahibidir; hiyerarşi veya yönetici rolü otomatik kapsam açmaz (39.627795ms)
+✔ sahibin açık VIEW/EDIT granti yalnız hedef kullanıcıya gelir ve revoke ile kaybolur (51.783577ms)
+✔ genel delta paketindeki Collection belgeleri uygulanmadan önce ayıklanır; yetkili belge de yeni sahip-bazlı akışa bırakılır (0.661718ms)
+✔ geçmişteki açık inbound grantler yalnız birebir kayda dönüştürülür; tüm kullanıcılar için genişletilmez (74.525542ms)
+✔ geçmişteki silinmiş kullanıcı grantı migrationı durdurmaz veya erişim açmaz (20.0633ms)
+✔ geçersiz owner/grantee veya self-grant kabul edilmez (12.995475ms)
+✔ yetkili sahip belgesi ayrı taşıma yolundan gelir; yetkisiz kullanıcıda uzaktaki belge hiç okunmaz (100.35821ms)
+✔ aynı revizyondaki farklı Collection kopyası sessizce yerel verinin üstüne yazılmaz (60.214509ms)
+✔ daha eski yerel Collection revizyonu uzaktaki yeni kopyayı geri alamaz (28.577803ms)
+✔ yalnız son görülen uzak SHA üzerinden türeyen daha yüksek revizyon yayınlanır ve parent zinciri korunur (206.504606ms)
+✔ uzak revizyon ilerlediğinde yayımlanmamış yerel değişiklik indirme sırasında ezilmez (151.932686ms)
+✔ replikasyon sağlığı save/load yanıtından kullanıcıya görünür biçimde taşınır (9.844622ms)
+✔ eski genel delta kaydı yalnız kanonik çalışma alanı doğrulanınca aktif yerel DBden kaldırılır (48.385922ms)
+✔ doğrulanmamış veya bekleyen eski Collection verisi silinmez; erişilemeyen recovery alanına alınır (118.805062ms)
+✔ eski genel Collection delta olayı ortak sync paketine yüklenmez veya diğer cihazın local DBsine düşmez (886.99436ms)
+✔ Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir (4.744221ms)
+✔ Collection Product Main Definition Category ile aynı suggestion editor ve serbest kayıt yolunu kullanır (6.932295ms)
+✔ Collection suggestion dropdown keyboard navigation selects exact ASAS value while custom Enter remains allowed (2.443301ms)
+✔ Collection Product Main Definition suggestion cache is not fetched per cell edit (1.019939ms)
+✔ raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez (3.032414ms)
+✔ client partial Collection catalog cache hazır sayılmaz, tam catalog tekrar fetch gerektirmez (1.353221ms)
+✔ server eski/partial collection-catalog projection cache şemasını reddeder (2.213431ms)
+✔ projection worker da Product Main Definition catalogunu canonical productDescription üzerinden üretir (0.390904ms)
+✔ v10.49 Collection quick filters are keyboard-operable toggle buttons with a clear state (17.111677ms)
+✔ Collection quick-filter settings button is the first item in the strip (2.111743ms)
+✔ Collection quick filter colors follow CP selection and the collection status catalog (1.68225ms)
+✔ Collection quick-filter selection uses CP palette without overriding status tones (4.195724ms)
+✔ v5.97 silinen satır TÜM alanlarıyla saklanıyor (9.370663ms)
+✔ v5.97 kayıt kimliği satır kimliğinden ayrı (18.523663ms)
+✔ v5.97 30 günü geçen kayıt okuma anında düşüyor (14.205375ms)
+✔ v5.97 sınır tam 30 günde henüz dolmuyor (0.397398ms)
+✔ v5.97 en son silinen en üstte listeleniyor (2.60234ms)
+✔ v5.97 geri yükleme kaydı kutudan çıkarıyor ve içeriği döndürüyor (8.005356ms)
+✔ v5.97 kutular sahibe göre ayrı (1.119107ms)
+✔ v5.97 silme yalnız geri dönüşüm kaydı güvenceye alındıktan sonra tamamlanıyor (21.086941ms)
+✔ v5.97 çakışmada engelleme değil UYARI var (6.459408ms)
+✔ v5.97 uç noktalar ve düğme yerinde (6.218447ms)
+✔ reference footer weights by filtered model quantity and compares weighted amounts on matched rows (3.018791ms)
+✔ footer cells use effective fields, preserve compact folds and summarize independent season simulations (24.724246ms)
+✔ unrelated remote patches update data and baseline without detaching an active row editor (13.600397ms)
+✔ focused Collection search is not replaced by a remote redraw (2.576612ms)
+✔ idle Collection still renders incoming changes immediately (2.425432ms)
+✔ background render recalculates the model but leaves the active editor DOM intact (33.02641ms)
+✔ deferred focusout refresh waits for pointer release before replacing its click target (13.033653ms)
+✔ deferred remote paint still refreshes automatic rule fields before another calculation can open (3.018892ms)
+✔ remote parent replacement invalidates inherited values before deferred pricing reads (115.964655ms)
+✔ own-row rebase invalidates parent index before persisting the rebased draft (39.637567ms)
+✔ hydrated empty canonical text is not an edit competing with another device false (2.281201ms)
+✔ hydrated empty canonical text is not an edit competing with another device true (0.372164ms)
+✔ empty financial intent and nested override values retain their conflict semantics (0.347071ms)
+✔ live poll preserves a pending merged publication when the exact remote head returns after I/O failure (187.187802ms)
+✔ unchanged remote stamp cannot suppress retry of a locally accepted failed publication (232.069804ms)
+✔ Collection replication state transient EPERM rename kilidini retry ederek tamamlar (147.698717ms)
+✔ Collection JSON yazımı Windows fsync EPERM durumunda gerçek yazmayı kaybetmez (27.12358ms)
+✔ Collection rows use a compact baseline regardless of image presence or dimensions (7.814261ms)
+✔ Collection row height is fixed per size mode, not per image aspect ratio (1.416036ms)
+✔ Collection image-size modes remain progressively compact (large/medium, small removed) (2.873905ms)
+✔ Collection renderer applies row-scoped height after each thumbnail load (669.150796ms)
+✔ Collection image resizing writes width and height from one shared scale factor (13.055494ms)
+✔ Collection Status keeps native select lifecycle while rendering shared catalog pill semantics (133.981504ms)
+✔ v7.22 farklı satırları düzenleyen iki kullanıcının İKİSİ de kaydeder (1068.713019ms)
+✔ v7.22 aynı satıra ikinci yazma ezmiyor, sessizce de atılmıyor (205.770343ms)
+✔ v7.22 çakışan satır varken çakışmayanlar yine uygulanır (119.057999ms)
+✔ v7.22 hiçbir satır uygulanmadıysa dosyaya dokunulmuyor (79.405652ms)
+✔ v7.22 silme açık kayıt olarak taşınır (65.410692ms)
+✔ v7.22 başkası düzenlemişse silme sessizce uygulanmaz (224.902669ms)
+✔ v7.22 zaten silinmiş satırın silinmesi hata değildir (52.729299ms)
+✔ v7.22 sütun/üretici değişikliği sayfa revizyonuyla kilitlenir (82.452191ms)
+✔ v7.22 yapısal değişiklikte yama değil yeniden yükleme istenir (89.391694ms)
+✔ v7.22 sıralamada listelenmeyen satır DÜŞÜRÜLMEZ (40.890886ms)
+✔ v7.22 _rev taşımayan eski dosyalar veri kaybı olmadan yükseltilir (269.583451ms)
+✔ v7.22 eski tam sayfa yolu çalışmaya devam ediyor (81.722351ms)
+✔ v7.22 PATCH ucu var, kısmi başarı 200 döner (7.192866ms)
+✔ v7.22 istemci yalnız değişen satırları gönderiyor (18.550949ms)
+✔ v7.22 değişen satır kümesi mutasyon noktalarından değil TEMELDEN çıkarılıyor (15.172139ms)
+✔ v7.22 istemci kendi yazdığı satırın yeni revizyonunu saklıyor (5.053872ms)
+✔ v7.22 uzaktan gelen satır temele de işleniyor (10.989216ms)
+✔ v7.22 çakışan satırlar kullanıcıya bildirilir ve yerel giriş korunur (1.87475ms)
+✔ v7.0.111 kendi satırındaki eşzamanlı değişiklik üç yönlü birleştirilir (6.068961ms)
+✔ v7.0.111 kendi Koleksiyonunda revizyon çakışması kullanıcıyı durdurmadan otomatik yeniden tabanlanır (5.402304ms)
+✔ v7.0.111 düzenlenen Koleksiyon satırını bekleyen uzak yama ezemez (7.54296ms)
+✔ a shared-row rejection keeps its original CAS token, so background pricing cannot silently retry stale fields (13.403468ms)
+✔ v10.47 Collection View & Permissions disclosure keeps an explicit translated accessible name (15.477094ms)
+✔ v7.14 Collection View/Scope bar is a compact single-row ERP toolbar (47.156755ms)
+✔ v7.14 Collection preset buttons use the same compact square control language as quick filters (51.615678ms)
+✔ v7.14 Collection scope dimension chips match preset height and active state (92.904428ms)
+✔ v7.14 nested preset card styling is removed and dropdown stays compact (37.897696ms)
+✔ v7.14 responsive rules avoid summary-driven wrapping and keep controlled toolbar wrapping (1.797861ms)
+✔ v7.14 Collection toolbar CSS is cache-busted in the app shell (0.298919ms)
+✔ v4.85 Collection suspends expensive hover hit-testing while wheel or drag scrolling (22.576364ms)
+✔ v4.85 right-button hand pan binds table surfaces and applies both axes from the drag origin (1.825808ms)
+✔ Collection clipboard reads current bridge rows instead of stale render cache (2.664514ms)
+✔ native select cells copy their current selected value before any delayed rerender (0.311923ms)
+✔ explicit right-click Copy stays cell-scoped even when business rows are checked (0.354627ms)
+✔ v10.41 workspace access must not re-enable Collection actions that still need a row selection (6.68907ms)
+✔ v10.41 selection-only Collection actions start disabled before asynchronous workspace rendering (1.503384ms)
+✔ cancelled recovery preserves the draft without fetching or applying (7.685768ms)
+✔ draft is cleared only after native response and immediately before apply (4.272864ms)
+✔ failed native read preserves rejected local data (4.768777ms)
+✔ new local input while recovery reads cannot be discarded (3.522021ms)
+✔ late recovery cannot replace an advanced workspace revision or changed owner (3.889506ms)
+✔ shared conflict feedback offers the real recovery button with both languages (4.897611ms)
+✔ an incomplete or wrong-owner HTTP 200 cannot discard the draft (5.639364ms)
+✔ v7.12 Collection View workspace keeps image pointer events for large hover preview (3.616284ms)
+✔ v7.12 Collection View workspace does not expose image edit/delete actions (1.644975ms)
+✔ v7.23 ağ hatası ile HTTP hatası birbirinden ayrılır (2.301726ms)
+✔ v7.23 geçici ağ hatası yeniden denenir ve iş tamamlanır (2.449546ms)
+✔ v7.23 HTTP hatası yeniden DENENMEZ; olduğu gibi bildirilir (2.296883ms)
+✔ v7.23 sunucu hiç dönmezse deneme sayısı SINIRLIDIR (1.153735ms)
+✔ v7.23 ağ hatasında mesaj sebebi söyler ve arka planda kurtarma başlatılır (2.505875ms)
+✔ v7.23 kurtarma yoklaması sonsuza kadar sürmez ve tek zamanlayıcı kullanır (0.897764ms)
+✔ Collection shipping transfer uses stable model identity and existing ingestion (8.562197ms)
+✔ server shipping ingestion deduplicates by canonical model and preserves existing rows (1.553594ms)
+✔ calculated Collection cells are flat, hide Overseas FOB, and make symbols non-interactive (9.342303ms)
+✔ Landed compound-cell inputs stay editable through the shared spreadsheet pointer handler (1.210368ms)
+✔ Landed manual input metadata is editable while calculated output metadata stays read-only (1.450854ms)
+✔ Endeksmatik date labels are presentation-only and retain technical In Store keys (13.250707ms)
+✔ plain left click uses the single-click pointer edit controller (4.739768ms)
+✔ single-click edit keeps native editors pointer-addressable for first-click caret/select behavior (0.505957ms)
+✔ Shift click remains range selection and cannot enter edit mode (0.628294ms)
+✔ read-only/calculated cells select only and do not call beginEdit (1.484957ms)
+✔ buttons links pictures and row numbers retain special non-edit behavior (2.270114ms)
+✔ pointer edit does not select-all while keyboard F2 keeps existing select behavior (0.293203ms)
+✔ pointer target is stored by rowId/key and resumed after a rerender (0.239504ms)
+✔ focus transitions clear editing state but preserve the stable spreadsheet selection (0.440734ms)
+✔ Ctrl+C from a focused Collection editor copies spreadsheet cell/range unless text is explicitly selected (3.414198ms)
+✔ matrix paste is intercepted from a focused editor while a single scalar paste stays native (0.561482ms)
+✔ legacy Collection matrix paste is bypassed whenever Spreadsheet V3 is active (1.394943ms)
+✔ compound label clicks preserve the native target editor instead of forcing the first cell editor (0.303528ms)
+✔ multiline Collection notes keep native newline paste unless the clipboard is tabular (0.241773ms)
+✔ single click itself has no persistence/calculation calls (0.194447ms)
+✔ column letters follow visible order and cross Z safely (3.11431ms)
+✔ clipboard matrix parses Excel TSV and trailing CRLF without phantom row (2.437997ms)
+✔ single-cell paste text collapses CR/LF/CRLF line breaks into single spaces without extra whitespace (0.632677ms)
+✔ rectangular ranges normalize anchor/focus in every direction (0.592089ms)
+✔ TSV serialization keeps one selected grid row per line and removes embedded tabs/newlines (0.678195ms)
+✔ multi-cell paste repeats a copied row across every selected row (2.084249ms)
+✔ multi-cell paste repeats a copied matrix across the selected rectangle (0.360106ms)
+✔ paste geometry rejects incompatible clipboard and selection rectangles (0.713819ms)
+✔ status statistics calculate Count/Sum/Average only from numeric values (1.461877ms)
+✔ paste preview summary and undo metadata contain geometry but no clipboard values (1.117481ms)
+✔ 100 ArrowDown events stay on lightweight cell-navigation path (4.157837ms)
+✔ normal active-cell movement uses cached grid coordinates rather than scanning table DOM (2.804949ms)
+✔ column resize mousemove changes width only and never recalculates business pricing (1.700046ms)
+✔ spreadsheet controller does not attach scroll work that can save, sync, or recalculate (0.478221ms)
+✔ transient spreadsheet state is isolated from shared Collection persistence (0.486751ms)
+✔ multi-cell batch edit persists once and quotation sync happens only for changed canonical model fields (2.129918ms)
+✔ read-only calculated field metadata covers the canonical Collection derived classes (2.277334ms)
+✔ 100x100 Excel clipboard parsing/serialization remains comfortably sub-frame in pure engine (10.019676ms)
+✔ 1000-row range math is linear and bounded without materializing unrelated business state (4.460399ms)
+✔ Collection has no pricing KPI/selection-summary DOM and remains full-width (4.996262ms)
+✔ Send to Pricing is the first Tools action and Quotations/Pricing History stay out of Tools (4.804625ms)
+✔ Collection keeps the compact selection helper but removes Formula/fx and View UI completely (2.291984ms)
+✔ active-cell navigation is independent from business checkbox selection and does not render on Arrow keys (0.654812ms)
+✔ single click enters editable Collection cells while F2 remains a keyboard edit entry (1.738897ms)
+✔ column metadata protects calculated/derived fields and keeps calculation explanations for read-only tooltips (5.756197ms)
+✔ multi-cell paste validates first and uses one undo + one save + one render transaction (2.352689ms)
+✔ single-cell paste with no TAB is treated as scalar text and never expands into extra rows (0.526405ms)
+✔ document-level paste handler only treats grid-editor input as matrix-like when TAB is present, so plain multiline text reaches native editors untouched (0.364917ms)
+✔ Ctrl+C gives spreadsheet range priority before business-row Copy button (0.449047ms)
+✔ row numbers and column letters are transient UI, not persisted schema fields (7.554415ms)
+✔ resize double click AutoFits and freeze reuses existing sticky freeze implementation (4.969199ms)
+✔ Tab skips calculated cells while read-only workspaces keep visible-cell navigation (0.243473ms)
+✔ validated dropdown paste uses the existing input commit path without detached-select value loss (9.039457ms)
+✔ Collection filter dropdown adds Excel-like sort/search/select-all controls without replacing filter semantics (3.385142ms)
+✔ completed cell edits clear edit styling without losing clipboard selection identity (7.094938ms)
+✔ new Collection CSS is namespaced and uses Buyer Log accent rather than Excel green branding (21.82475ms)
+✔ paste sonrası yeniden çizim çoklu/aralık seçimini tek hücreye düşürmez (4.387559ms)
+✔ Collection status catalog seeds the legacy 12-status order including Capacity Request (3.709298ms)
+✔ custom status color resolves to grid and Excel without source-code palette edits (25.530866ms)
+✔ Turkish and English built-in status names resolve to one canonical color identity (35.938186ms)
+✔ legacy unknown row statuses are preserved into the normalized catalog (4.457752ms)
+✔ Collection dashboard/status scripts remain syntactically valid (334.608648ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/collection-status-catalog-shared-v1091.test.js (165.556447ms)
+✔ Collection Status appearance helper updates both select and owning cell immediately (2.367198ms)
+✔ native Collection Status change repaints without waiting for a table refresh (1.26013ms)
+✔ status commits and Escape rollback keep the live color synchronized with the visible value (1.715781ms)
+✔ new status persists catalog-only and immediately re-renders Collection (5.751626ms)
+✔ status color change is structural and does not rewrite Collection business rows (1.839102ms)
+✔ status rename migrates existing string values before saving (1.023839ms)
+✔ used status deletion requires a replacement and migrates rows; unused deletion stays catalog-only (1.2441ms)
+✔ Excel status validation and colors resolve from the canonical catalog (7.112854ms)
+✔ status pill/dashboard styling is theme-token based and uses status color only as semantic accent (5.930214ms)
+✔ a 50-row paint normalizes once and labels each catalog entry once (7.745385ms)
+✔ render snapshots retain language, custom labels, row-only statuses and fresh catalog changes (3.170695ms)
+✔ Collection creates the snapshot before rows and status cells consume it without rescanning the catalog (1.447973ms)
+✔ Duplicate Model yeni kopyanın ticari geçmişini temizlerken kaynak modeli korur (18.188649ms)
+✔ Add New Model açılır pencere olmadan tabloya boş satır ekler (10.003081ms)
+✔ Style Management Excel düğmesi kalıcı olarak kaldırıldı, Export to Excel Recycle Bin'in yanında (3.091822ms)
+✔ Style Management Excel yalnız düzenlenebilir alanları kullanır ve görsel/fiyat geçmişini dışarıda bırakır (3.45732ms)
+✔ Style Management import satır notuyla mevcut modeli bulur ve değişiklikleri onaydan sonra uygular (7.292026ms)
+✔ Overseas Landed ve TR Landed kaydedilmiş ve sürüklenen düzenlerde en sağda kalır (5.371724ms)
+✔ v4.92 Collection footer shows weighted and arithmetic averages for price and landed columns (17.791066ms)
+✔ v4.92 Collection suggestion dropdown is a singleton and generic suggestion panels ignore Collection cells (3.45748ms)
+✔ v4.92 image removal uses an anchored confirmation popover in Collection, CP and Open Costing (3.70957ms)
+✔ v4.92 Collection body values are left-aligned and vertically centered (0.947138ms)
+✔ v4.92 License Royalty Rules lives under Source Settings and is removed from the CP action bar (5.874268ms)
+✔ Collection uses the same persisted visible-row range controls as CP and Orders (4.005518ms)
+✔ v10.42 Collection selected-row actions stay compact without a redundant Selected Models label (6.02594ms)
+✔ v10.42 compact Collection actions retain a text alternative through their existing tooltip contract (2.85914ms)
+✔ v10.58 Collection araç çubuğu başlangıç başlıklarını ve görünür metnini seçili dile çevirir (2.070701ms)
+✔ v10.58 Collection seçime bağlı araç ipuçları İngilizce görünümde Türkçe kalmaz (1.807181ms)
+✔ v5.62 Collection cells are vertically centered and use consistent typography with requested exceptions (9.34995ms)
+✔ v5.62 truncated Collection text gets a hover preview (4.341449ms)
+✔ v5.62 Collection image right click bypasses right-drag and opens CP-style confirmation (1.48777ms)
+✔ v5.62 Landed cards match Endeksmatik height and Overseas advantage is plain leftmost text (4.117493ms)
+✔ v5.62 Endeksmatik money is Excel-like rounded to exactly two decimals (3.711811ms)
+✔ v5.62 multi-line Notes paste stays in the same textarea (3.079616ms)
+✔ v5.62 transient menus are mutually exclusive and text size cycles 0..3 under Theme (3.668658ms)
+✔ rows save checks revoked actor after waiting on the real file lease (764.387977ms)
+✔ full save checks revoked actor after waiting on the real file lease (367.121083ms)
+✔ native PATCH and PUT pass actor guards to the worker (30.568099ms)
+✔ kişisel ad EN/TR ayrı saklanır ve yalnız o dilde sistem adının önüne geçer (10.315189ms)
+✔ sistem adıyla aynı yazılan dil saklanmaz; ikisi de aynıysa kayıt silinir (0.439566ms)
+✔ tablolar birbirinden bağımsızdır; tanımsız tablo ve bozuk kayıt yok sayılır (0.545675ms)
+✔ depo dışarıdan (hesap eşitlemesi) değişince yeni değer okunur (0.3195ms)
+✔ ortak tanım EN/TR taşır; label geriye dönük kimlik olarak TR (yoksa EN) olur (2.430576ms)
+✔ sunucu: not sütunu ve DB sütunu EN/TR adlarını kaydeder (93.824777ms)
+✔ PATCH ucu cpColumn.labelEn/labelTr alanlarını yazıcıya geçirir (20.635393ms)
+✔ "In Store" (MB) sütununun ASAS alanı ve Veri Yönetimi eşlemesindeki fiziksel sütunu gösterilir (1.105615ms)
+✔ DB sütunu, Koleksiyon alanı ve formül sütunu kendi kaynağını anlatır (0.51559ms)
+✔ kaynak kataloğu CP sistem sütunlarının tamamını kapsar (4.158513ms)
+✔ CP/Orders başlığı kişisel adı ve sonradan eklenen sütunun EN/TR adını kullanır (2.190928ms)
+✔ Columns paneli: sistem sütunları kalem düğmesiyle düzenlenir (CP/Orders ve Koleksiyon) (8.033388ms)
+✔ sonradan eklenen sütunlar EN/TR adla oluşturulur (3.287972ms)
+✔ kanonik etiket katmanı kullanıcı adlı başlığı yeniden yazmaz (2.314315ms)
+✔ modül app-main.js'ten önce yüklenir (41.224338ms)
+✔ v7.42 · "Order Info" seçilen sütun O BANDIN İÇİNE girer, ikinci bant açılmaz (6.332684ms)
+✔ v7.42 · ortadaki bir gruba eklemek sonraki grupları bozmaz (24.335759ms)
+✔ v7.42 · başlık adı büyük/küçük harften bağımsız eşleşir (TR duyarlı) (8.374698ms)
+✔ v7.42 · bilinmeyen başlık kendi bandını açar (sütun sonda kalır) (0.759528ms)
+✔ v7.42 · aynı yeni başlığı alan ikinci sütun BİRİNCİNİN yanına gider (0.462153ms)
+✔ v7.42 · seçenek listesi başlıkları EKRANDAKİ sırayla ve tekrarsız verir (0.558972ms)
+✔ v7.42 · sıra kullanıcının sürüklediği hâlde ise liste de o sırayı izler (3.473229ms)
+✔ v7.42 · sırada olmayan (gizlenmiş/yeni) sütunun grubu da listede kalır (0.488156ms)
+✔ v7.42 · grupsuz sütun listeye boş bir başlık eklemez (1.518514ms)
+✔ v7.42 · hesaplanan sütun grubu tanımdan gelir, seçilmemişse Hesaplanan (2.679956ms)
+✔ v7.42 · syncColumns sütuna seçilen grubu verir (0.496402ms)
+✔ v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişikliğinde kurulur (2.355323ms)
+✔ v7.42 · son yerleştirilen grup tanımın yanında saklanır, gereksiz yazma yok (0.276218ms)
+✔ v7.42 · pencerede başlık seçimi ve yeni başlık kutusu var (1.950203ms)
+✔ v7.42 · yeni başlık seçilip adı boş bırakılırsa kaydedilmez (0.31841ms)
+✔ v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi kullanır (0.216375ms)
+✔ v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database (0.212713ms)
+✔ v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır (0.351826ms)
+✔ v7.42 · sunucu grubu saklar; uydurmaz (§152) (1.878387ms)
+✖ v7.42 · sunucu grubu kaydeder ve uzunluğu sınırlar (33.574408ms)
+✔ v7.42 · veri tabanı sütunu penceresinde başlık seçimi var (0.829198ms)
+✔ v7.42 · düzenlemede sütunun kayıtlı başlığı seçili gelir (0.35118ms)
+✔ v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır (1.183877ms)
+✔ v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz) (0.296518ms)
+✔ v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir (96.756097ms)
+✔ v7.42 · veri tabanı penceresinde tam genişlik alan SIRAYLA değil adıyla seçilir (68.066191ms)
+✔ v7.42/v7.43 · sürüm tek canonical kaynaktan runtime türetilir (13.017814ms)
+✔ schema cache reuses all-source inference across filtered renders and invalidates changed sources (151.163354ms)
+✔ metadata, definition edits and replaced custom functions cannot reuse a stale schema (82.367669ms)
+✔ v7.65 · valid source dates use the BL display standard and invalid dates stay raw (21.227159ms)
+✔ v7.65 · datetime keeps the time component (0.831132ms)
+✔ v7.65 · schema priority is explicit schema, metadata, alias, safe inference, text (7.574501ms)
+✔ v7.65 · quantity/decimal preserve zero, false and code leading zeroes (3.427806ms)
+✔ v7.65 · typed sort and date filtering are chronological, not lexical (10.291615ms)
+✔ v7.65 · dynamic CP/Collection paths use the central registry (139.005808ms)
+✔ Palet Ctrl+Shift+K ile açılır ve mevcut Ctrl+K CP aramasını korur (3.569109ms)
+✔ Palet görünür arama kutusu eklemez, katman sistemine ve overlay listesine kayıtlıdır (35.891178ms)
+✔ Palet araması Türkçe karakterlerden bağımsız eşleşir ve önce baş eşleşmeyi gösterir (6.918843ms)
+✔ Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır (120.922997ms)
+✔ KPI sayacı özgün metne döner, yeniden çizimde durur ve azaltılmış harekete uyar (1.575567ms)
+✔ palette modules and recent destinations use current access and recheck before native navigation (6.694369ms)
+✔ cp: selection follows the latest sort column/direction without mutating records or selection (21.51128ms)
+✔ cp: projected rows retain stable ties and current sort across the whole source (1.091361ms)
+✔ orders: selection follows the latest sort column/direction without mutating records or selection (0.711002ms)
+✔ orders: projected rows retain stable ties and current sort across the whole source (0.236904ms)
+✔ cp: filtered-out rows stay in selected copy source and current scope is preserved (0.791662ms)
+✔ orders: filtered-out rows stay in selected copy source and current scope is preserved (0.299503ms)
+✔ record-based clipboard and Excel use the full scoped source only when rows are selected (0.985395ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/compute-access-equivalence.test.js (129.069223ms)
+✔ compute requests wait for prepared authority and revalidate the live session; health/status bypass it (2.356817ms)
+✔ production installs readiness after authentication and prepares refresh caches before synchronous context reads (22.009591ms)
+✔ direct CP ownership hints and case-insensitive Express paths also await authority readiness (0.325939ms)
+✔ incremental authority encoding preserves exact JSON, special keys, Date values and shared row identity (13.6789ms)
+✔ empty authority has an exact empty digest input and obsolete preparation stops at the first handoff (2.318413ms)
+✔ authority preparation shares one promise, yields by rows, redacts before worker handoff and preserves exact context hashes (113.754935ms)
+✔ failed preparation can retry and never publishes a half-built authority snapshot (5.425601ms)
+✔ obsolete authority preparation stops before hashing and cannot publish its partial directory (6.106389ms)
+✔ snapshot-free Excel fallback is published even when parsers already supplied all source fields (5.737104ms)
+✔ /api/backlog delegates its heavy computation and ready response to the common pool (4.730347ms)
+✔ /api/backlog-source-columns delegates its heavy computation and ready response to the common pool (5.581342ms)
+✔ /api/backlog-export delegates its heavy computation and ready response to the common pool (2.039908ms)
+✔ /api/backlog-filter-values delegates its heavy computation and ready response to the common pool (1.676467ms)
+✔ refresh delegates missing projections without traversing source records on the main thread (8.757341ms)
+✔ a source or authority-context change cannot publish completed worker projections (6.682015ms)
+✔ a fully reusable cache still rejects source changes, changed permissions and disabled profiles during queued publication (12.306256ms)
+✔ a source copy exceeding the worker budget still prepares and publishes the exact refresh (50.184127ms)
+✔ oversized reads recover with the same CP, Orders and Backlog engines and row scope (200.391601ms)
+✔ capacity recovery preserves owner, generation and cancellation gates (14.537886ms)
+✔ cold oversized reads verify the persisted personal snapshot and reject a replaced snapshot (160.779233ms)
+✔ authority hashing survives oversized admission and retains the exact authority digest (13.620528ms)
+✔ worker execution failures remain failures and never silently use the capacity path (2.529856ms)
+✔ cached output leases do not retain old resident sources after the next refresh (9.623288ms)
+✔ a successful worker replica releases its strong source reference (372.24419ms)
+✔ idle-owner retirement releases inline sources despite cached outputs and permits a fresh source (139.997882ms)
+✔ cold recovery verifies disk snapshot identity instead of permanently binding an obsolete manifest timestamp (12.885302ms)
+✔ concurrent cold readers wait for one verified identity before exposing a descriptor (5.327711ms)
+✔ native snapshots recover an obsolete manifest and publish snapshot-free Excel fallback without empty or foreign Backlog rows (1041.970174ms)
+✔ the readonly summary prepares authority, checks both areas and releases every native output lease (81.384458ms)
+✔ snapshot presence without LFL retains the same version/availability in MAIN and the native worker (981.182746ms)
+✔ MAIN hydration and worker source-info resolve the version with one shared helper (10.719605ms)
+✔ compressed publication rejects stale work before creating or replacing the manifest (19.997644ms)
+✔ a source change during async writes does not publish the prepared generation (23.326845ms)
+✔ on-demand compressed publication preserves other modules only from the same source and context (63.622755ms)
+✔ a late source change after manifest rename never leaves a manifest pointing to a deleted generation (16.853821ms)
+✔ reused generations enforce the live guard before and after asynchronous cache reads (20.381562ms)
+✔ metadata uses the common pool without depending on CP sources, and releases its lease (5.526669ms)
+✔ logout or a disabled account during metadata work cannot publish the result (3.933724ms)
+✔ status reads exact metadata without building calculation indexes; first lookup builds the same indexes lazily (6.129008ms)
+✔ legacy disk status delegates decompression to the supplied reader and keeps the exact existing schema (1.456325ms)
+✔ a changed legacy snapshot cannot publish metadata computed for the previous file generation (8.785009ms)
+✔ authoritative shared metadata stays on its canonical document path and cannot be replaced by the disk reader (9.251602ms)
+✔ a newly authoritative shared snapshot invalidates an in-flight legacy disk status (3.340023ms)
+✔ independent imported sets preserve the existing list, active selection and metadata (119.493253ms)
+✔ automatic folder FX uses the dedicated Excel worker and is not starved by a saturated compute pool (19.129644ms)
+✔ thin map projection preserves every shipment/filter/priority value while excluding source detail columns (365.141419ms)
+✔ lazy map details come only from selected identities in the Backlog target and reject stale source revisions (7.126132ms)
+✔ drawer detail loading starts on demand, preserves partial identity, and never borrows CP target rows (6.756422ms)
+✔ map detail route requires Backlog authority, bounds selection and delegates an exact identity request (5.488435ms)
+✔ health is a small non-cached liveness response and never reads user/source stores (7.998839ms)
+✔ idle cache eviction retires only that owner and removes published and pending compute descriptors (8.994438ms)
+✔ image registry sends only the verified cached CP, access context and image map without preparing unrelated projections (3.92474ms)
+✔ owned V8 encodings retain exact values and transfer without touching caller buffers (10.274907ms)
+✔ sliced and explicitly non-transferable encodings copy only their visible bytes (0.815925ms)
+✔ shared encodings and runtimes without a transferability query preserve the copying fallback (0.621066ms)
+✔ Office generation uses the common persistent pool and preserves canonical XLSX/PPTX bytes (241.359999ms)
+✔ output service keeps the Office lease through async save and checks current authorization before writing (3.291068ms)
+✔ async Office save keeps collision/owner/metadata rules and removes only its rejected new file (50.633752ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/compute-output-route-await.test.js (112.635691ms)
+ℹ tests 1600
+ℹ suites 0
+ℹ pass 1571
+ℹ fail 29
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45126.69857
+
+✖ failing tests:
+
+test at tests/agent-browser-connector-v554.test.js:1:1
+✖ tests/agent-browser-connector-v554.test.js (117.362288ms)
+  'test failed'
+
+test at tests/ai-automation-platform.test.js:1:1
+✖ tests/ai-automation-platform.test.js (94.064882ms)
+  'test failed'
+
+test at tests/asas-order-level-backlog-v20260929.test.js:1:1
+✖ tests/asas-order-level-backlog-v20260929.test.js (212.065982ms)
+  'test failed'
+
+test at tests/automation-manufacturer-recipients.test.js:1:1
+✖ tests/automation-manufacturer-recipients.test.js (119.089507ms)
+  'test failed'
+
+test at tests/automation-report-columns-ui.test.js:1:1
+✖ tests/automation-report-columns-ui.test.js (112.809773ms)
+  'test failed'
+
+test at tests/automation-source-chain-v639.test.js:1:1
+✖ tests/automation-source-chain-v639.test.js (120.362739ms)
+  'test failed'
+
+test at tests/automation-terminal-code-v629.test.js:1:1
+✖ tests/automation-terminal-code-v629.test.js (101.373337ms)
+  'test failed'
+
+test at tests/automations-data-v565.test.js:1:1
+✖ tests/automations-data-v565.test.js (127.788892ms)
+  'test failed'
+
+test at tests/automations-general-v557.test.js:1:1
+✖ tests/automations-general-v557.test.js (113.920696ms)
+  'test failed'
+
+test at tests/automations-rebuild-v636.test.js:1:1
+✖ tests/automations-rebuild-v636.test.js (98.355057ms)
+  'test failed'
+
+test at tests/automations-v555.test.js:1:1
+✖ tests/automations-v555.test.js (104.847555ms)
+  'test failed'
+
+test at tests/backlog-automation-v947.test.js:1:1
+✖ tests/backlog-automation-v947.test.js (160.000025ms)
+  'test failed'
+
+test at tests/backlog-date-shift-v20261002.test.js:1:1
+✖ tests/backlog-date-shift-v20261002.test.js (106.96445ms)
+  'test failed'
+
+test at tests/backlog-plan-actual.test.js:1:1
+✖ tests/backlog-plan-actual.test.js (101.313975ms)
+  'test failed'
+
+test at tests/backlog-synthetic-rows-integrity-v20261002.test.js:1:1
+✖ tests/backlog-synthetic-rows-integrity-v20261002.test.js (176.097673ms)
+  'test failed'
+
+test at tests/backup-v757.test.js:1:1
+✖ tests/backup-v757.test.js (92.110384ms)
+  'test failed'
+
+test at tests/browser-binding-ownership-v1112.test.js:1:1
+✖ tests/browser-binding-ownership-v1112.test.js (155.31284ms)
+  'test failed'
+
+test at tests/browser-debug-service-v1.test.js:1:1
+✖ tests/browser-debug-service-v1.test.js (98.543887ms)
+  'test failed'
+
+test at tests/browser-default-profile-debug-block-v1111.test.js:1:1
+✖ tests/browser-default-profile-debug-block-v1111.test.js (113.073304ms)
+  'test failed'
+
+test at tests/browser-existing-profile-v564.test.js:1:1
+✖ tests/browser-existing-profile-v564.test.js (120.559656ms)
+  'test failed'
+
+test at tests/browser-no-version-spawn-v20261001.test.js:1:1
+✖ tests/browser-no-version-spawn-v20261001.test.js (134.884119ms)
+  'test failed'
+
+test at tests/browser-recorder-v556.test.js:1:1
+✖ tests/browser-recorder-v556.test.js (70.249452ms)
+  'test failed'
+
+test at tests/browser-recorder-v559.test.js:1:1
+✖ tests/browser-recorder-v559.test.js (111.424912ms)
+  'test failed'
+
+test at tests/collection-delete-license-automation-v831.test.js:1:1
+✖ tests/collection-delete-license-automation-v831.test.js (218.941019ms)
+  'test failed'
+
+test at tests/collection-image-sharing-v20260926.test.js:1:1
+✖ tests/collection-image-sharing-v20260926.test.js (108.924926ms)
+  'test failed'
+
+test at tests/collection-status-catalog-shared-v1091.test.js:1:1
+✖ tests/collection-status-catalog-shared-v1091.test.js (165.556447ms)
+  'test failed'
+
+test at tests/column-group-v742.test.js:269:1
+✖ v7.42 · sunucu grubu kaydeder ve uzunluğu sınırlar (33.574408ms)
+  Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+      at Object.mkdirSync (node:fs:1411:26)
+      at Object.recoverSync (/workspace/shell05/resources/app/server/lib/durable-file-recovery.js:321:8)
+      at Object.<anonymous> (/workspace/shell05/resources/app/server/user-data.js:91:50)
+      at Module._compile (node:internal/modules/cjs/loader:1872:14)
+      at Object..js (node:internal/modules/cjs/loader:2003:10)
+      at Module.load (node:internal/modules/cjs/loader:1594:32)
+      at Module._load (node:internal/modules/cjs/loader:1396:12)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+      at Module.require (node:internal/modules/cjs/loader:1617:12)
+      at require (node:internal/modules/helpers:153:16) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'mkdir',
+    path: '/home/agent/.buyer-log/write-recovery'
+  }
+
+test at tests/compute-access-equivalence.test.js:1:1
+✖ tests/compute-access-equivalence.test.js (129.069223ms)
+  'test failed'
+
+test at tests/compute-output-route-await.test.js:1:1
+✖ tests/compute-output-route-await.test.js (112.635691ms)
+  'test failed'
+[Buyer Log tests] Batch 1/10 süresi: 45.2s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

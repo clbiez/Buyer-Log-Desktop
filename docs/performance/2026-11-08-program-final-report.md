@@ -5,6 +5,10 @@ Bu kapanış, başlangıçtaki bütün mimari hedeflerin uygulandığı anlamın
 **EN:** User-authorized scope freeze and closure; unfinished architecture is explicitly deferred.
 TEST ve STABLE yayımlanmadı / Neither TEST nor STABLE was published.
 
+**2026-11-09 takip notu / Follow-up:** Bu tarihsel kapanışın ardından seçili dar işler
+uygulandı; güncel farklar aşağıdaki [takip ekindedir](#2026-11-09-dar-takip--scoped-follow-up).
+**EN:** The original closure remains a historical snapshot; the dated addendum records subsequent scoped work.
+
 ## Kanıtın sınırı / Evidence boundary
 
 [Doğrulandı / Verified] Aşağıdaki süreler mevcut raporlardaki medyanlardır;
@@ -168,6 +172,36 @@ SHELL-07 ölçülen düşük pay nedeniyle atlandı; SHELL-08/workspace-blur #90
 **EN:** SQLite remains **wait**; no migration, pilot or SQLite-on-SMB deployment.
 SQLite açılışı tüm state'i yüklemez; yedekleme güvenceleri eşit değildir ve SIGKILL güç kesintisi dayanıklılığını kanıtlamaz.
 **EN:** SQLite open excludes full materialization; backup guarantees differ and SIGKILL does not prove power-loss durability.
+
+## 2026-11-09 dar takip / Scoped follow-up
+
+Kullanıcının sonraki görevlendirmesiyle aşağıdaki dar parçalar uygulandı. Bu ek,
+yukarıdaki tarihsel ertelenme kayıtlarını yalnız bu parçalar için günceller;
+geniş mimari hedeflerin tamamlandığı anlamına gelmez.
+**EN:** Subsequent authorization delivered the scopes below; this supersedes their historical deferral only within these boundaries.
+
+| İş / Work | PR | Uygulanan sınır / Delivered boundary |
+| --- | --- | --- |
+| FX | [#938](https://github.com/clbiez/Buyer-Log-Desktop/pull/938) | Klasör bazlı admission ve queue-BUSY/parse-failed ayrımı; genel havuz davranışı değişmez / Per-folder admission and distinct BUSY/parse-failed outcomes; shared pool unchanged. |
+| ANA-12 | [#941](https://github.com/clbiez/Buyer-Log-Desktop/pull/941) | Backlog export/facet tüketicisinin iptali gerçek job'a bağlandı; diğer canlı tüketici korunur / Backlog export/facet consumer cancellation reaches its job without cancelling another live consumer. |
+| SHELL-05 | [#942](https://github.com/clbiez/Buyer-Log-Desktop/pull/942) | Native sekmenin kendi modülüne sınırlı hazırlık; mevcut Electron kabul kanıtı korunur / Native-tab warmup is limited to its module, retaining recorded Electron acceptance. |
+| INT-03 | [#943](https://github.com/clbiez/Buyer-Log-Desktop/pull/943) | Canlı PLM görsel sync işlerinde ortak byte rezervasyonu ve özel geçici dosyalar; kanonik tek commit korunur / Live image sync shares byte reservations and private staging while retaining one canonical commit. |
+
+Güncel Main entegrasyonu kanıtları: [ANA-12](followup-20261109/ana12/main-integration-20261109/summary.json),
+[SHELL-05](followup-20261109/shell05/main-integration-20261109/summary.json),
+[dört parçanın birlikte tam regresyonu](followup-20261109/int03/main-integration-20261109/summary.json).
+Özgün kabul/ölçümler ilgili PR ve kanıt dizinlerinde kalır; farklı iş yükleri toplanarak genel hızlanma çıkarılmaz.
+**EN:** Current-main regression receipts are linked; original acceptance retains its workload and platform boundaries.
+
+**Açık / Open:** [#939](https://github.com/clbiez/Buyer-Log-Desktop/pull/939) için gerçek hedef Electron/native sekme kabulü;
+[#940](https://github.com/clbiez/Buyer-Log-Desktop/pull/940) için aktif fetch/body iptali ve gerçek toplam hedef okuma deadline'ı.
+Bu iki PR bu takipte merge edilmedi ve tamamlandı sayılmadı; paralel tamamlama talimatı ve ortak rapor alanı
+[#937 / Paket 3](https://github.com/clbiez/Buyer-Log-Desktop/issues/937) içindedir.
+**EN:** Native acceptance and active transport cancellation/total deadline remain explicit open gates in the two unmerged PRs.
+
+Bu takip TEST veya STABLE yayını tetiklemedi. 6a/6c ve diğer atanmadık kapsam dışı işler uygulanmış sayılmaz;
+SQLite kararı **bekle** olarak kalır.
+**EN:** No release was triggered by this follow-up; unassigned architecture remains deferred and SQLite remains **wait**.
 
 ## Kaynaklar / Sources
 
