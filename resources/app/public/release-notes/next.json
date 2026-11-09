@@ -12,6 +12,64 @@
   },
   "changes": [
     {
+      "id": "backlog-date-panel-collapse-position",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Tarih aralığını daraltın ve paneli taşıyın",
+        "en": "Collapse and move the date range panel"
+      },
+      "body": {
+        "tr": "Tarih aralığı açılıp kapatılabilir ve yukarı/aşağı taşınabilir. Dar başlık yalnız uygulanmış dönemleri gösterir. Panel konumu ve açık/kapalı tercihi hatırlanır; taslak tarihler açıp kapatırken ve taşırken korunur.",
+        "en": "The date range panel can be collapsed and moved up or down. Its compact heading shows applied ranges only. Panel position and disclosure preference are remembered; draft dates survive collapsing and moving."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-date-range-collapse.png",
+        "alt": {
+          "tr": "Uygulanmış dönem özetini gösteren daraltılmış tarih paneli",
+          "en": "Collapsed date panel showing the applied range summary"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız üretilmiş demo verisi.",
+          "en": "Actual post-change Buyer Log using generated demo data only."
+        }
+      }
+    },
+    {
+      "id": "backlog-empty-scope-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Boş Backlog sonucunda filtrelerden geri dönün",
+        "en": "Recover from an empty Backlog result"
+      },
+      "body": {
+        "tr": "Özel veya Regular kapsamı boş kalsa, veri yüklenirken veya hata oluştuğunda Tümü seçimi ve analiz filtresi kontrolleri erişilebilir kalır. Analiz filtreleri açıkça düzenlenebilir veya temizlenebilir; seçimler kendiliğinden sıfırlanmaz.",
+        "en": "All and the analysis filter controls remain available when Special or Regular has no matching orders, while loading, or after an error. Analysis filters can be explicitly edited or cleared; selections are never reset automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-empty-scope-recovery.png",
+        "alt": {
+          "tr": "Boş Özel sipariş kapsamındaki Tümü ve analiz filtresi kontrolleri",
+          "en": "All and analysis filter controls in an empty Special scope"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız üretilmiş demo verisi.",
+          "en": "Actual post-change Buyer Log using generated demo data only."
+        }
+      }
+    },
+    {
       "id": "plm-image-accurate-stage-progress",
       "type": "fix",
       "module": {

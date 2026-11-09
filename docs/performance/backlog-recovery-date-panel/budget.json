@@ -12,5 +12,5 @@
     "data": "Same filters, totals and unsaved date drafts; no automatic filter reset"
   },
   "runtime": "Chromium web; no Electron/native behavior changed",
-  "fixture": "isolated generated demo data; normal and 30000-row workload"
+  "fixture": "Isolated 220-order generated demo model; 30000 synthetic Backlog report rows served through the existing JSON report endpoint for large UI workload. The full 30k model import was blocked by demo-server process termination and is not a claimed acceptance result."
 }
