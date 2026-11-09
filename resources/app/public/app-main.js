@@ -29607,7 +29607,8 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   return {ok:true,value,meta};
 }
 function kolSpreadsheetMakeEditor(rowId,key,value){
-  const meta=kolSpreadsheetColumnMeta(key),c=meta.col,el=document.createElement('input');
+  const meta=kolSpreadsheetColumnMeta(key),c=meta.col,el=key==='artworkDetail'?document.createElement('textarea'):document.createElement('input');
+  // Set Style Artwork A/B satırlarını input.value satır sonu temizliğiyle kaybetme.
   // Validation already canonicalizes select/dropdown text before this synthetic
   // editor reaches commitKolEditor(). A detached <select> without option nodes
   // would coerce its .value to an empty string and silently erase valid pasted
