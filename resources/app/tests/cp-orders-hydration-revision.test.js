@@ -24,6 +24,7 @@ function load() {
   const context = {
     state: fixture.state, appLang: 'en', sourceName: 'Synthetic demo',
     force: false, leanReload: true, keepOrdersForPartialRefresh: false,
+    retainPreparedData:true,reloadPreparedOrders:true,backgroundWarmupUnrendered:new Set(),
     CustomEvent: class {constructor(type, options) {this.type = type; this.detail = options.detail;}},
     window: {
       dispatchEvent: event => events.push(event),
@@ -189,6 +190,8 @@ function fullLoader() {
     cpClientWorkInProgress: () => c.state.cpDirty.size > 0,
     CP_NOTE_COLUMN_DEFS: [], CP_NOTE_COLUMN_DEFS_REVISION: 0,
     _deferredTabRenders: new Set(),
+    backlogPrefetch:null,backlogFetchGeneration:0,
+    prefetchBacklogForRefresh:async()=>true,ensureOrdersLoaded:async()=>true,
     undoStack: [{fixture: 'local undo'}], redoStack: [{fixture: 'local redo'}],
     renderStartupActiveModule: () => 'cp',
     fetch: async (url, options) => {
