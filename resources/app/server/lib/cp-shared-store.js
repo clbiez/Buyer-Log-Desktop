@@ -137,6 +137,17 @@ function mirrorPatchDetached(id, patch, options) {
   void mirrorPatch(id, patch, options).catch(() => {});
 }
 
+async function mirrorPatches(items, { actor = null } = {}) {
+  if (!deltaStore) return [];
+  const patches = (Array.isArray(items) ? items : []).filter(item => item && String(item.id ?? '').trim() && item.patch && Object.keys(item.patch).length);
+  if (typeof deltaStore.mirrorBatch !== 'function') return Promise.all(patches.map(item => mirrorPatch(item.id, item.patch, { actor, subfields: item.subfields })));
+  return deltaStore.mirrorBatch(COLLECTION, patches.map(item => ({ ...item, userId: actorIdOf(actor) })));
+}
+
+function mirrorPatchesDetached(items, options) {
+  void mirrorPatches(items, options).catch(() => {});
+}
+
 async function seedFromOverrides(overrides, { actor = null } = {}) {
   if (!deltaStore) return { seeded: 0, ids: [] };
   const entries = {};
@@ -180,6 +191,7 @@ function readAllSync() {
 module.exports = {
   COLLECTION, FIELDS, attachDeltaStore, attached, authoritative, legacyKeys,
   recordFromOverrides, patchFromOrderPatch, subfieldsFromOrderPatch, mirrorPatch, mirrorPatchDetached,
+  mirrorPatches, mirrorPatchesDetached,
   notesExplicitlyCleared, legacyNoteTombstoneProjection,
   seedFromOverrides, overlay, readAllSync,
 };
