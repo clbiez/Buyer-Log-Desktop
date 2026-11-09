@@ -16,5 +16,7 @@
   "initialBase": "9e667430",
   "measurementNote": "Long-task window ends before forced post-cycle GC. Overview animation frames settle between samples. Numeric acceptance budgets unchanged.",
   "comparableMainFlows": "Overview disclosure and Plan & Actual panel reordering use the same Backlog document and shared Motion+ layout path. New date interactions retain their independent 200ms/zero-extra-Backlog-request budget.",
-  "previousMeasuredBase": "fad8578308c527274ab762b9ed8f371e8e033d99"
+  "previousMeasuredBase": "fad8578308c527274ab762b9ed8f371e8e033d99",
+  "inputCadenceMs": 100,
+  "activeMeasurementReadiness": "bl:background-warmup-done, followed by settled paint; startup and first Overview recorded separately"
 }

@@ -12,7 +12,7 @@ function fixture(collapsed){
 }
 for(const collapsed of [false,true])test('initial date panel state avoids measuring layout: collapsed='+collapsed,()=>{
  const f=fixture(collapsed);vm.runInNewContext(source.slice(start,end)+'\nsyncDisclosure(true);',f.context);
- assert.equal(f.calls.length,0);assert.equal(f.body.hidden,collapsed);
+ assert.equal(f.calls.length,0);assert.equal(f.body.hidden,collapsed);assert.notEqual(f.body.inert,true);
  assert.equal(f.attributes['aria-hidden'],String(collapsed));assert.equal(f.attributes['aria-expanded'],String(!collapsed));
 });
 test('interactive date disclosure still uses shared Motion+',()=>{
