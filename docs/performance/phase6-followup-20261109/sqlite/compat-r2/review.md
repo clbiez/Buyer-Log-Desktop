@@ -32,3 +32,7 @@ Single-agent source review (no independent reviewer claimed).
   UUIDs avoid artificial ID collisions; Electron child uses a real script plus
   synchronous output file (eval stdout in test context yielded empty output).
   No acceptance assertion was weakened. Historical fail logs are preserved.
+- Sandbox process probe exposed spawnSync EPERM even with status=0; final
+  fresh-child assertion also requires no spawn error. All final tests rerun
+  outside that restriction with synthetic data roots. Receipt/call comparisons
+  use structuredClone to preserve every property, including undefined keys.

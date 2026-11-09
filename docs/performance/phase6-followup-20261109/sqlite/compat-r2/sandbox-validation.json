@@ -50,7 +50,7 @@
       "officialRuntime": true,
       "exitCode": 0,
       "seconds": 0.6223116750001054,
-      "log": "gates-green.log"
+      "log": "sandbox-gates-green.log.gz"
     },
     {
       "name": "prototype-green",
@@ -65,7 +65,7 @@
       "officialRuntime": true,
       "exitCode": 0,
       "seconds": 2.5780329330000313,
-      "log": "prototype-green.log"
+      "log": "sandbox-prototype-green.log.gz"
     },
     {
       "name": "behavior-green",
@@ -81,7 +81,7 @@
       "officialRuntime": true,
       "exitCode": 0,
       "seconds": 4.295805760999997,
-      "log": "behavior-green.log"
+      "log": "sandbox-behavior-green.log.gz"
     },
     {
       "name": "related-runtime",
@@ -112,7 +112,9 @@
       "officialRuntime": true,
       "exitCode": 0,
       "seconds": 85.76223754299997,
-      "log": "related-runtime.log"
+      "log": "sandbox-related-runtime.log.gz"
     }
-  ]
+  ],
+  "status": "Supplementary sandbox run; full suite terminated in batch 1. Not used for final acceptance.",
+  "incompleteFullSuiteLog": "sandbox-npm-test.log.gz"
 }

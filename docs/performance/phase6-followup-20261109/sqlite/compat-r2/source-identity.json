@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "4427be14f23d82aacf853b0780f79a7b8444de0b",
+  "sourceCommit": "f9d2dc55ceeccb98e43d14527bfe8d7accd82feb",
   "baseMain": "2cb965f74af807fcf94231644e01ca2c671ba656",
   "startingDraftHead": "87effc5c16435e199005c367abfbd34eb3a1f498",
   "mainIntegrationCommit": "441b3c30792211a173d9e3b1d6df816411b5810e",
@@ -32,7 +32,7 @@
     "scripts/prototypes/sqlite-decision-20261109/backup.cjs": "8a46c0cdbad7fbf5cfb6c7b898fd4724153be7ede94828d95e55c18f88f73aa5",
     "scripts/prototypes/sqlite-decision-20261109/benchmark.cjs": "88bd1b279ac2c77d08b44a9118af0ffcc722d88dfd0ee7d48e45a55a5e985c0a",
     "scripts/prototypes/sqlite-decision-20261109/boundary-probes.cjs": "b50a24af9a9bef90083e86a0560e13922372e5eb35b04676578020bc08af2efa",
-    "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs": "0c022abce5513450ff7ee90e9bff58028a71fb9bff6dfa571c017a72cc245661",
+    "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs": "efcb910c78b0aac262720f314d476daea0dad7cbc90e33c12d83c1f6a2494455",
     "scripts/prototypes/sqlite-decision-20261109/compat-transitions.cjs": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e",
     "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
     "scripts/prototypes/sqlite-decision-20261109/fixture-hashes.cjs": "68de787f256cd895aee11262e9831de61165baa5c0f6ce08b0988e253f8527e9",
@@ -47,5 +47,13 @@
   },
   "productWorkingDiff": "",
   "originalCheckout": "## work",
-  "originalCheckoutHead": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3"
+  "originalCheckoutHead": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3",
+  "runtimeZipSha256": "8b49b9efdd73c0f467edc3c1cd5678392c384ccf224f34ff54179f736e2f384b",
+  "verifiedExactPureSourceBlocks": 21,
+  "originalContractAssertionsUnchanged": true,
+  "sourceAfterValidation": "Only evidence files will be committed; runtime and test files stay byte-identical to this sourceCommit.",
+  "testedProductTree": "0826dc06f9cba1c095f212985b3ae8fdd465821f",
+  "testedPrototypeTree": "94b98e80b28247180bf46b30386a2851396e8f6f",
+  "finalMainRecheck": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "r2ChangedPathsWithinAllowedScope": true
 }

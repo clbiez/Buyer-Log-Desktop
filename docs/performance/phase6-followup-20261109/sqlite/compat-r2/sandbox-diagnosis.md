@@ -17,3 +17,24 @@ silently dropped by the comparison harness. No original assertion changed.
 Final official and full standard commands are rerun outside the restricted
 child-process sandbox, with synthetic app/local/server/auth/config/temp roots
 under this worktree. Concurrency, limits, runner and product sources unchanged.
+
+
+The first unsandboxed full attempt stopped at batch 2 with 6 FAIL. Its explicit
+BUYER_LOG_TEMP_ROOT narrowed TEMPORARY_WRITE_ROOT to one directory, while tests
+created their own os.tmpdir fixtures elsewhere. Four restore tests raised
+DATA_INTEGRITY_ERROR; two IAM tests then returned 500/undefined instead of their
+expected user. This is a harness environment conflict, not a prototype change.
+Keep npm-test-root-failed.log. Unset BUYER_LOG_TEMP_ROOT and set TMPDIR to the
+worktree .scratch for the new complete attempt, preserving the default owned-temp
+and test-created fixture rules. Target those same 5 files first, then restart
+unfiltered npm test from batch 1. No test assertions, production guards or batch
+settings are changed, and no batch results from attempts are combined.
+
+The first targeted retest fixed all four restore tests but retained 2 IAM FAIL:
+the inherited BUYER_LOG_AUTH_DATA_ROOT overrode iam-v672's own SERVER_DATA_ROOT
+fixture and caused IAM_LOCAL_INVALID. That test intentionally relies on the
+standard auth-root derivation. Unset AUTH_DATA_ROOT as well and use a fresh
+synthetic default root; retain data-root-targeted-auth-failed.log. This is an
+environment correction, not changing IAM, test fixtures or assertions.
+
+All raw .log/.tap output is retained byte-for-byte as .gz archives; see log-hashes.json.

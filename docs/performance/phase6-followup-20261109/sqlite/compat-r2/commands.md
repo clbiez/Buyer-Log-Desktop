@@ -35,3 +35,34 @@ No filters/concurrency overrides on npm test. Retain complete failed/success
 logs; do not combine batch fragments. Exact source SHA/hashes, exit codes,
 runtime/FS and results recorded in validation.json and source-identity.json.
 No new large benchmark, migration, production pilot, PR merge or publication.
+
+## Standard suite environment correction
+
+Final complete npm invocation runs outside the restricted process sandbox, using
+only synthetic paths; a minimal spawnSync probe must return no error and output
+123. Do not override the runner or set test isolation/concurrency options.
+For reproduction, from repository root:
+
+```sh
+r2_scratch="$PWD/scripts/prototypes/sqlite-decision-20261109/.scratch"
+r2_data="$r2_scratch/repro-default-data"
+mkdir -p "$r2_data"
+export TMPDIR="$r2_scratch"
+export BUYER_LOG_DATA_ROOT="$r2_data/app"
+export BUYER_LOG_LOCAL_DATA_ROOT="$r2_data/local"
+export BUYER_LOG_SERVER_DATA_ROOT="$r2_data/server"
+export BUYER_LOG_CONFIG_PATH="$r2_data/config.json"
+unset BUYER_LOG_TEMP_ROOT BUYER_LOG_AUTH_DATA_ROOT
+cd resources/app
+flock /tmp/buyerlog-performance-measurement.lock npm test
+npm run i18n:check
+npm run release:notes:validate
+```
+
+The unsets retain standard owned-temp and auth-root derivation for tests that
+supply their own os.tmpdir/SERVER_DATA_ROOT fixtures. No real home data is used.
+See sandbox-diagnosis.md and retained failed attempts. They do not contribute
+tests/batches to the final complete PASS. Official targeted commands remain
+independent invocations, with their exact source/runtime/FS in validation.json.
+
+All raw .log/.tap output is retained byte-for-byte as .gz archives; see log-hashes.json.
