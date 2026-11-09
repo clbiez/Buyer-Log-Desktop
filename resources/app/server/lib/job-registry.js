@@ -43,6 +43,10 @@ function describeJob(job, now) {
     label: job.label,
     status: job.status,
     phase: job.phase,
+    stage: job.stage || '',
+    stageCurrent: count(job.stageCurrent),
+    stageTotal: count(job.stageTotal),
+    stageElapsedMs: job.stage ? Math.max(0, endedAt - job.stageStartedAt) : 0,
     total,
     processed,
     succeeded: count(job.succeeded),
@@ -132,6 +136,18 @@ function createJobRegistry(options = {}) {
   function update(userId, jobId, patch = {}) {
     const job = get(userId, jobId);
     if (!job) return null;
+    if (patch.stage !== undefined) {
+      const stage = clean(patch.stage);
+      if (stage !== job.stage) {
+        job.stageStartedAt = clock();
+        job.stageCurrent = 0;
+        job.stageTotal = 0;
+        job.activeModel = '';
+      }
+      job.stage = stage;
+    }
+    if (patch.stageCurrent !== undefined) job.stageCurrent = count(patch.stageCurrent);
+    if (patch.stageTotal !== undefined) job.stageTotal = count(patch.stageTotal);
     if (patch.phase !== undefined) job.phase = clean(patch.phase);
     if (patch.total !== undefined) job.total = count(patch.total);
     if (patch.processed !== undefined) job.processed = count(patch.processed);
