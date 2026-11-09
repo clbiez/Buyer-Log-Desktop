@@ -70,6 +70,35 @@
       }
     },
     {
+      "id": "notification-record-navigation",
+      "type": "feature",
+      "module": {
+        "tr": "Bildirimler / CP",
+        "en": "Notifications / CP"
+      },
+      "title": {
+        "tr": "Uyarıdan ilgili sipariş ve checklist alanına gidin",
+        "en": "Open the related order and checklist field from a notice"
+      },
+      "body": {
+        "tr": "Set parçası kayıt hatalarında bildirim ilgili sipariş, model, renk ve checklist parçasını gösterir. İlgili kayda git düğmesi hem anlık bildirimde hem bildirim geçmişinde çalışır; güncel sipariş ve doğru parça açılır. Kayıt artık yoksa veya erişim kaldırılmışsa açıklama gösterilir. Diğer bildirimler de ortak modül ve kayıt hedeflerini kullanabilir.",
+        "en": "Set component save errors show the related order, model, colour and checklist part. Open related record works from both the live notice and notification history, opening the current order and exact part. Missing records and revoked access show an explanation. Other notices can reuse the shared module and record targets."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "notification-record-navigation.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo CP ekranında sipariş ve Testler B parçasını gösteren tıklanabilir bildirim",
+          "en": "Clickable notification showing the order and Tests B part in the actual Buyer Log demo CP screen"
+        },
+        "caption": {
+          "tr": "30 bin sentetik satırlı CP oturumunda uyarı ilgili kaydın kimliğini ve yönlendirme düğmesini gösterir.",
+          "en": "In a CP session with 30,000 synthetic rows, the notice shows the related record identity and navigation action."
+        }
+      }
+    },
+    {
       "id": "plm-image-accurate-stage-progress",
       "type": "fix",
       "module": {
