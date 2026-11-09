@@ -1227,18 +1227,68 @@
     });
   }
 
+  /* Arama kutusunu her tuşta host.innerHTML ile sökmek odağı/IME imlecini
+     kaybettirir. Yalnız sonuçlar ve ipuçları yenilenir; aktif input DOM'da kalır. */
+  function refreshSearchResults(input) {
+    if (!input || !host || !host.contains(input)) return false;
+    if (input.matches('[data-dmf-col-search]')) {
+      const catalog = input.closest('.dmfCatalogue');
+      const current = catalog && catalog.querySelector('.blvFilterColumns');
+      if (!current) return false;
+      const staging = document.createElement('div');
+      staging.innerHTML = catalogHtml();
+      const next = staging.querySelector('.blvFilterColumns');
+      if (!next) return false;
+      const scrollTop = current.scrollTop;
+      current.replaceWith(next);
+      next.scrollTop = scrollTop;
+      catalog.querySelectorAll(':scope > .blvFilterRangeHint').forEach(hint => hint.remove());
+      staging.firstElementChild.querySelectorAll(':scope > .blvFilterRangeHint')
+        .forEach(hint => catalog.append(hint));
+      return true;
+    }
+    if (input.matches('[data-dmf-value-search]')) {
+      const key = input.dataset.dmfValueSearch;
+      const ref = resolveKey(key);
+      const tools = input.closest('.blvFilterValueTools');
+      const current = tools && tools.nextElementSibling;
+      const free = current && current.nextElementSibling;
+      if (!ref || !current?.matches('.dmfValueList') || !free?.matches('.dmfFreeValue')) return false;
+      const staging = document.createElement('div');
+      staging.innerHTML = valueListHtml(key, ref.condition, ref.sourceId);
+      const next = staging.querySelector('.dmfValueList');
+      if (!next) return false;
+      const scrollTop = current.scrollTop;
+      current.replaceWith(next);
+      next.scrollTop = scrollTop;
+      let hint = free.nextElementSibling;
+      while (hint?.matches('.blvFilterRangeHint')) {
+        const following = hint.nextElementSibling;
+        hint.remove();
+        hint = following;
+      }
+      free.after(...[...staging.children].filter(element => element.matches('.blvFilterRangeHint')));
+      return true;
+    }
+    return false;
+  }
+
   function onSimpleInput(event) {
     if (event.target.matches && event.target.matches('[data-dmf-col-search]')) {
       catalogSearch = event.target.value || '';
-      render();
+      if (!refreshSearchResults(event.target)) render();
       return true;
     }
     if (event.target.matches && event.target.matches('[data-dmf-value-search]')) {
       valueSearches.set(event.target.dataset.dmfValueSearch, event.target.value || '');
-      render();
-      // Her tuşta değil, duraksayınca.
+      if (!refreshSearchResults(event.target)) render();
+      // Sunucu araması yalnız duraksayınca başlar; kutu her tuşta yeniden yaratılmaz.
       clearTimeout(valueSearchTimer);
-      valueSearchTimer = setTimeout(() => { if (host) { runPendingSearches(); render(); } }, 350);
+      valueSearchTimer = setTimeout(() => {
+        if (!host) return;
+        runPendingSearches();
+        if (!refreshSearchResults(document.activeElement)) render();
+      }, 350);
       return true;
     }
     return false;
