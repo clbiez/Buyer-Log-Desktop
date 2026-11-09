@@ -10,7 +10,7 @@ const password=crypto.randomBytes(24).toString('hex'),salt=crypto.randomBytes(16
 const iam=require(path.join(app,'server/lib/iam-core'));fs.writeFileSync(path.join(env.BUYER_LOG_AUTH_DATA_ROOT,'user-access.json'),JSON.stringify(iam.migrateStore({_revision:1,users:[],moderator:{id:'moderator',username:'demo-admin',displayName:'Demo Administrator',role:'moderator',enabled:true,passwordHash:hash,pinHash:hash,credentialRevision:1}})));
 const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ignore',log,log]});
 let browser,page;const results=[];
-const baseFiles=new Map(['backlog-overview.js','backlog-date-range.js','backlog-date-range.css','backlog-plan-actual.js'].map(file=>[file,execFileSync('git',['show','9e667430:resources/app/public/'+file],{cwd:repo,encoding:'utf8',maxBuffer:8000000})]));
+const baseFiles=new Map(['backlog-overview.js','backlog-date-range.js','backlog-date-range.css','backlog-plan-actual.js'].map(file=>[file,execFileSync('git',['show','fad8578308c527274ab762b9ed8f371e8e033d99:resources/app/public/'+file],{cwd:repo,encoding:'utf8',maxBuffer:8000000})]));
 const functional=process.argv.includes('--functional'),control=process.argv.includes('--control'),largeOnly=process.argv.includes('--large');
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
@@ -75,5 +75,5 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
   await context.close();
  }
 }
-fs.writeFileSync(path.join(out,functional?'functional-results.json':control?(largeOnly?'control-large-results.json':'control-results.json'):'browser-results.json'),JSON.stringify({base:'9e667430',candidate:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runtime:await browser.version(),results},null,2));
+fs.writeFileSync(path.join(out,functional?'functional-results.json':control?(largeOnly?'control-large-results.json':'control-results.json'):'browser-results.json'),JSON.stringify({base:'fad8578308c527274ab762b9ed8f371e8e033d99',candidate:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runtime:await browser.version(),results},null,2));
 })().catch(async e=>{console.error(e);if(page)await page.screenshot({path:path.join(root,'failure.png')}).catch(()=>{});console.error('Evidence:',root);if(page)console.error(await page.evaluate(()=>({date:(window.BLStorage||localStorage).getItem('lcw.backlog.dateRange.v1'),html:document.getElementById('backlogDateRange')?.outerHTML.slice(0,1200),parent:document.getElementById('backlogDateRange')?.parentElement.id})).catch(()=>null));fs.writeFileSync(path.join(out,'browser-partial.json'),JSON.stringify(results,null,2));process.exitCode=1;}).finally(async()=>{await browser?.close();server.kill('SIGTERM');});

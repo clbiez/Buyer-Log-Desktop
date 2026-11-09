@@ -1,5 +1,5 @@
 {
-  "base": "9e667430",
+  "base": "fad8578308c527274ab762b9ed8f371e8e033d99",
   "risk": "P2",
   "scope": "Backlog Overview empty/error recovery and date panel disclosure/position",
   "budgets": {
@@ -12,5 +12,7 @@
     "data": "Same filters, totals and unsaved date drafts; no automatic filter reset"
   },
   "runtime": "Chromium web; no Electron/native behavior changed",
-  "fixture": "Isolated 220-order generated demo model; 30000 synthetic Backlog report rows served through the existing JSON report endpoint for large UI workload. The full 30k model import was blocked by demo-server process termination and is not a claimed acceptance result."
+  "fixture": "Isolated 220-order generated demo model; 30000 synthetic Backlog report rows served through the existing JSON report endpoint for large UI workload. The full 30k model import was blocked by demo-server process termination and is not a claimed acceptance result.",
+  "initialBase": "9e667430",
+  "measurementNote": "Long-task window ends before forced post-cycle GC. Overview animation frames settle between samples. Numeric acceptance budgets unchanged."
 }
