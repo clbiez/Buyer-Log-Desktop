@@ -72,7 +72,7 @@ test('identical Backlog requests reuse one computation keyed by every input', as
   // Keep testing reuse/invalidation on the live route, not its unused predecessor.
   const route = server.slice(server.indexOf("app.get('/api/backlog-export'"), server.indexOf("app.get('/api/backlog-filter-values'"));
   assert.match(route, /computeReads\.run\(req,'backlog',task,/);
-  assert.match(route, /\{cache:json\}\)/);
+  assert.match(route, /\{cache:json,signal:consumer\.signal\}\)/);
   assert.doesNotMatch(route, /buildBacklogTemplateRows|cachedBacklogTemplateRows/);
   const capture = require('./helpers/computed-backlog-request');
   const query = {format:'json',retailFrom:'2026-01-01',retailTo:'2026-12-31',inStoreFrom:'2026-02-01',inStoreTo:'2026-11-30',exFactoryFrom:'2026-03-01',exFactoryTo:'2026-10-31',buyerGrup:'DEMO',groupBy:'buyer,season',dimFilters:'{"Sezon":["S7"]}',analysisFilters:'late',antrepoFrom:'2026-04-01',antrepoTo:'2026-09-30',antrepoDateLevels:'month,week',sourceColumns:'DEMO_A,DEMO_B',previewLimit:'10',includeSourceDetails:'1',projection:'global-flow'};

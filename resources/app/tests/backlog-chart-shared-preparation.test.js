@@ -5,7 +5,7 @@ const main=fs.readFileSync(require.resolve('../public/app-main.js'),'utf8'),over
 const flush=()=>new Promise(setImmediate);
 function setup(){
   const grouped=[],exports=[],applied=[],requestUrls=[],query={format:'json',groupBy:'status',analysisFilters:'synthetic-filter'};let fetches=0;
-  const window={BLBacklogDateRange:{requestState(){}}},c={window,root:window,JSON,Map,URLSearchParams,Promise,
+  const window={BLBacklogDateRange:{requestState(){}}},c={window,root:window,JSON,Map,URLSearchParams,AbortController,Set,assertRequest(signal){if(signal?.aborted)throw new DOMException("Aborted","AbortError");},cancelOverviewRequest(){},cancelFilterValues(){},Promise,
     fetch:async url=>{requestUrls.push(url);fetches++;return {ok:true,json:()=>new Promise(resolve=>exports.push(resolve))};},
     fetchJSON:()=>new Promise(resolve=>grouped.push(resolve)),fetchBacklogSourceColumns:()=>Promise.resolve([]),backlogQueryString:()=>'',showBacklogLoadingState(){},
     backlogExportQueryParams:()=>({...query}),backlogExportSourceCatalog:()=>[],normalizeHeaders:headers=>headers,showToast(){},appLang:'tr',cache:{signature:'',headers:[],rows:[]},
