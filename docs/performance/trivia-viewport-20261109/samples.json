@@ -1,0 +1,3899 @@
+{
+  "baseRef": "62f2153d258374e98f5582994042119c6b6cc495",
+  "source": "62f2153d258374e98f5582994042119c6b6cc495",
+  "assetHashes": {
+    "buyerlog-trivia.js": "17a338a62cf4ee0a65447d4b388fb83b6e8eaab6d2657a7be648dd387b7490f2",
+    "buyerlog-guide.css": "ce0bae1f3d00e591a939eb70ad19cd18b8eb3dbe452d6fccbbb9a2d07fcc393b"
+  },
+  "node": "v24.19.0",
+  "runs": [
+    {
+      "variant": "base",
+      "startupMs": 2598.8064489999997,
+      "startupGateMs": 1858,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 11.683638000000428,
+          "taskMs": 94.95600000000002,
+          "layoutMs": 13.846,
+          "heap": 15804144,
+          "dom": {
+            "documents": 1,
+            "nodes": 7642,
+            "jsEventListeners": 1637
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 22.8999330000006,
+          "taskMs": 46.66899999999999,
+          "layoutMs": 2.7149999999999985,
+          "heap": 15826864,
+          "dom": {
+            "documents": 1,
+            "nodes": 7642,
+            "jsEventListeners": 1637
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 10.534018999999716,
+          "taskMs": 34.762000000000015,
+          "layoutMs": 2.204000000000001,
+          "heap": 15835968,
+          "dom": {
+            "documents": 1,
+            "nodes": 7642,
+            "jsEventListeners": 1637
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 18.714646000000357,
+          "taskMs": 44.096000000000025,
+          "layoutMs": 2.0820000000000007,
+          "heap": 15860912,
+          "dom": {
+            "documents": 1,
+            "nodes": 7704,
+            "jsEventListeners": 1642
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 16.797717000000375,
+          "taskMs": 62.76700000000002,
+          "layoutMs": 2.7889999999999997,
+          "heap": 15872468,
+          "dom": {
+            "documents": 1,
+            "nodes": 7642,
+            "jsEventListeners": 1637
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "base",
+      "startupMs": 3105.659834,
+      "startupGateMs": 2334,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 62.593417999998564,
+          "taskMs": 130.855,
+          "layoutMs": 7.329,
+          "heap": 16077596,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 32.522100999998656,
+          "taskMs": 55.12799999999996,
+          "layoutMs": 3.0350000000000006,
+          "heap": 16134636,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 19.05458499999986,
+          "taskMs": 51.60199999999998,
+          "layoutMs": 4.687,
+          "heap": 16120848,
+          "dom": {
+            "documents": 1,
+            "nodes": 8204,
+            "jsEventListeners": 2005
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 12.796807000000626,
+          "taskMs": 43.698999999999934,
+          "layoutMs": 1.987000000000001,
+          "heap": 16139524,
+          "dom": {
+            "documents": 1,
+            "nodes": 8204,
+            "jsEventListeners": 2005
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 7.479921000000104,
+          "taskMs": 37.12000000000004,
+          "layoutMs": 2.152000000000001,
+          "heap": 16147616,
+          "dom": {
+            "documents": 1,
+            "nodes": 8209,
+            "jsEventListeners": 2005
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "base",
+      "startupMs": 2423.5956859999988,
+      "startupGateMs": 1633,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 6.852963000001182,
+          "taskMs": 75.09200000000001,
+          "layoutMs": 7.593,
+          "heap": 16136860,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 6.628110999998171,
+          "taskMs": 34.40600000000002,
+          "layoutMs": 2.0809999999999995,
+          "heap": 16154444,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 16.31615000000238,
+          "taskMs": 27.90400000000004,
+          "layoutMs": 1.934,
+          "heap": 16165328,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 10.560480999996798,
+          "taskMs": 42.47499999999999,
+          "layoutMs": 2.3799999999999986,
+          "heap": 16220020,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 5.1658060000008845,
+          "taskMs": 30.78000000000003,
+          "layoutMs": 2.1309999999999993,
+          "heap": 16196756,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "base",
+      "startupMs": 2146.016653999999,
+      "startupGateMs": 1461,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 10.893016999998508,
+          "taskMs": 66.454,
+          "layoutMs": 6.5440000000000005,
+          "heap": 16187816,
+          "dom": {
+            "documents": 1,
+            "nodes": 8229,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 10.595030000000406,
+          "taskMs": 29.089000000000002,
+          "layoutMs": 1.8509999999999993,
+          "heap": 16197724,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 5.2628829999994196,
+          "taskMs": 25.76700000000004,
+          "layoutMs": 1.9800000000000009,
+          "heap": 16215000,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 7.758303999999043,
+          "taskMs": 30.891000000000002,
+          "layoutMs": 1.8840000000000003,
+          "heap": 16226000,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 7.987418000000616,
+          "taskMs": 35.08,
+          "layoutMs": 1.9490000000000012,
+          "heap": 16236456,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "candidate",
+      "startupMs": 2079.5727990000014,
+      "startupGateMs": 1375,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 7.239043000001402,
+          "taskMs": 79.06400000000001,
+          "layoutMs": 7.256,
+          "heap": 16184744,
+          "dom": {
+            "documents": 1,
+            "nodes": 8264,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 15.387914999999339,
+          "taskMs": 40.548,
+          "layoutMs": 2.496,
+          "heap": 16205844,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 5.962493999999424,
+          "taskMs": 25.866999999999972,
+          "layoutMs": 2.360000000000001,
+          "heap": 16214824,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 5.07634699999835,
+          "taskMs": 28.458000000000037,
+          "layoutMs": 2.463,
+          "heap": 16238340,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 51.746117999999115,
+          "taskMs": 72.79600000000002,
+          "layoutMs": 3.4709999999999983,
+          "heap": 16237528,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "base",
+      "startupMs": 2277.487240999999,
+      "startupGateMs": 1573,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 13.598681999999826,
+          "taskMs": 82.293,
+          "layoutMs": 7.813000000000001,
+          "heap": 16078336,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 13.508841999999277,
+          "taskMs": 41.950999999999986,
+          "layoutMs": 2.2189999999999985,
+          "heap": 16092412,
+          "dom": {
+            "documents": 1,
+            "nodes": 8204,
+            "jsEventListeners": 2005
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 8.87560300000041,
+          "taskMs": 43.933,
+          "layoutMs": 2.581,
+          "heap": 16095880,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 21.11099899999681,
+          "taskMs": 37.221000000000004,
+          "layoutMs": 2.1719999999999984,
+          "heap": 16113380,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 5.6434750000007625,
+          "taskMs": 29.93699999999999,
+          "layoutMs": 2.2979999999999996,
+          "heap": 16136992,
+          "dom": {
+            "documents": 1,
+            "nodes": 8142,
+            "jsEventListeners": 2000
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "candidate",
+      "startupMs": 2096.325687000004,
+      "startupGateMs": 1420,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 13.407167000004847,
+          "taskMs": 79.19599999999998,
+          "layoutMs": 7.680000000000001,
+          "heap": 16163336,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 18.372861000003468,
+          "taskMs": 38.34500000000002,
+          "layoutMs": 2.6699999999999995,
+          "heap": 16180400,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 5.159773999999743,
+          "taskMs": 27.884999999999994,
+          "layoutMs": 2.176000000000001,
+          "heap": 16192736,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 5.285534000002372,
+          "taskMs": 30.501999999999974,
+          "layoutMs": 2.3499999999999996,
+          "heap": 16214596,
+          "dom": {
+            "documents": 1,
+            "nodes": 8227,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 5.46208900000056,
+          "taskMs": 25.64099999999997,
+          "layoutMs": 2.1189999999999993,
+          "heap": 16223304,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "base",
+      "startupMs": 2106.9024710000012,
+      "startupGateMs": 1449,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 10.582856000000902,
+          "taskMs": 71.669,
+          "layoutMs": 6.116,
+          "heap": 16142376,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 7.9573249999957625,
+          "taskMs": 33.555,
+          "layoutMs": 1.9640000000000004,
+          "heap": 16168712,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 14.354932999995071,
+          "taskMs": 30.242000000000047,
+          "layoutMs": 2.8199999999999994,
+          "heap": 16169068,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 7.269548999996914,
+          "taskMs": 29.62300000000001,
+          "layoutMs": 1.6430000000000005,
+          "heap": 16188620,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 14.625007999995432,
+          "taskMs": 31.825999999999965,
+          "layoutMs": 2.092,
+          "heap": 16198516,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 430,
+              "top": 60,
+              "right": 1779,
+              "bottom": 490,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": false,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    },
+    {
+      "variant": "candidate",
+      "startupMs": 2164.3192830000044,
+      "startupGateMs": 1418,
+      "cycles": [
+        {
+          "cycle": 0,
+          "closeMs": 8.148846000003687,
+          "taskMs": 83.12,
+          "layoutMs": 6.029999999999999,
+          "heap": 16224144,
+          "dom": {
+            "documents": 1,
+            "nodes": 8265,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 1,
+          "closeMs": 4.843124999999418,
+          "taskMs": 25.88399999999999,
+          "layoutMs": 2.3560000000000003,
+          "heap": 16211148,
+          "dom": {
+            "documents": 1,
+            "nodes": 8166,
+            "jsEventListeners": 2055
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 2,
+          "closeMs": 8.392550999997184,
+          "taskMs": 26.90300000000001,
+          "layoutMs": 2.0890000000000004,
+          "heap": 16213584,
+          "dom": {
+            "documents": 1,
+            "nodes": 8264,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 3,
+          "closeMs": 9.657313999996404,
+          "taskMs": 35.90099999999996,
+          "layoutMs": 2.479,
+          "heap": 16233052,
+          "dom": {
+            "documents": 1,
+            "nodes": 8264,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        },
+        {
+          "cycle": 4,
+          "closeMs": 6.226133000003756,
+          "taskMs": 36.497,
+          "layoutMs": 2.927999999999998,
+          "heap": 16245432,
+          "dom": {
+            "documents": 1,
+            "nodes": 8264,
+            "jsEventListeners": 2060
+          },
+          "longTasks": [],
+          "geometry": {
+            "visible": true,
+            "button": {
+              "x": 1225.53125,
+              "y": 484.90625,
+              "width": 267.96875,
+              "height": 40,
+              "top": 484.90625,
+              "right": 1493.5,
+              "bottom": 524.90625,
+              "left": 1225.53125
+            },
+            "hold": {
+              "x": 216,
+              "y": 60,
+              "width": 1563,
+              "height": 753,
+              "top": 60,
+              "right": 1779,
+              "bottom": 813,
+              "left": 216
+            },
+            "slot": {
+              "x": 501.5,
+              "y": 178,
+              "width": 992,
+              "height": 274.90625,
+              "top": 178,
+              "right": 1493.5,
+              "bottom": 452.90625,
+              "left": 501.5
+            },
+            "hit": true,
+            "horizontalOverflow": 0,
+            "scrollable": false,
+            "slotHeight": 275
+          }
+        }
+      ]
+    }
+  ],
+  "matrix": [
+    {
+      "label": "cp/tr/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 108,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 108,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "cp/tr/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "cp/tr/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 233,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 244,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 90,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 233,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 244,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 90,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "cp/en/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "cp/en/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 233,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 244,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 108,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 61,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 233,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 244,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 108,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "orders/tr/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "orders/tr/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 61,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 127,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 83,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 127,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "orders/en/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "orders/en/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 83,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 70,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 249,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 162,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 149,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 70,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/tr/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/tr/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 127,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/light/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/light/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/compact/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 272,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/compact/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 226,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/compact/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 258,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/compact/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 179,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/standard/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 275,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/standard/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/standard/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 250,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/standard/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 167,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/large/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 279,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/large/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 266,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/large/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 238,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/large/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 127,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/xl/1787x813",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 284,
+      "scrollable": false
+    },
+    {
+      "label": "koleksiyon/en/dark/xl/960x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 257,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/xl/640x480",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 202,
+      "scrollable": true
+    },
+    {
+      "label": "koleksiyon/en/dark/xl/320x568",
+      "visible": true,
+      "hit": true,
+      "horizontalOverflow": 0,
+      "slotHeight": 22,
+      "scrollable": true
+    }
+  ],
+  "runtimeSourceCommit": "a04831d14fcf18a4eed71978afb2b80417e88706",
+  "sourceNote": "Collector started before the runtime commit; assetHashes above verify exact production-source equivalence to runtimeSourceCommit and final working tree.",
+  "chromium": "151.0.7922.173 Debian Linux headless",
+  "matrixSummary": {
+    "cases": 192,
+    "errors": 0,
+    "viewports": [
+      "1787x813",
+      "960x480",
+      "640x480",
+      "320x568 (collapsed sidebar)"
+    ],
+    "modules": [
+      "cp",
+      "orders",
+      "koleksiyon"
+    ],
+    "languages": [
+      "tr",
+      "en"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "scales": [
+      "compact",
+      "standard",
+      "large",
+      "xl"
+    ]
+  },
+  "initialGeometryChecks": 432,
+  "fixture": {
+    "businessData": "empty isolated server; synthetic loading state; built-in trivia; Math.random fixed to 0.25",
+    "loadingMarkupSha256": "8e8a61198e6289e7163441caed900a70e2302d3995a8c5500ce42ee11dd68f3d"
+  }
+}

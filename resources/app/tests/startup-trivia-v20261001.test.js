@@ -168,6 +168,19 @@ test('when a page finishes loading the card stays with a "Continue to <module>" 
   assert.ok(String(hold.innerHTML).includes('Siparişler ekranına devam et'));assert.ok(String(hold.innerHTML).includes('Siparişler hazır'));
   hold.querySelector('[data-hold-continue]').click();assert.equal(hold.dataset.leaving,'1');
 });
+test('ready trivia uses the remaining viewport even when module content collapses',()=>{
+  const h=pageHarness(),st=h.state();h.add(st);h.advance(4000);
+  h.section.getBoundingClientRect=()=>({top:60,left:200,bottom:60,right:1400,width:1200,height:0});
+  st.isConnected=false;h.advance(800);
+  const hold=h.appended.find(e=>e.className==='blTriviaHold');assert.ok(hold);
+  assert.equal(hold.hidden,false,'an empty ready module still has a usable Continue layer');
+  assert.equal(hold.style.height,'940px');
+  h.win.innerHeight=480;h.win.BLTrivia._holds.get(h.section).position();
+  assert.equal(hold.style.height,'420px','resize follows the viewport, not content height');
+  h.section.visible=false;h.win.BLTrivia._holds.get(h.section).position();assert.equal(hold.hidden,true);
+  h.section.visible=true;h.win.BLTrivia._holds.get(h.section).position();assert.equal(hold.hidden,false);
+  hold.querySelector('[data-hold-continue]').click();assert.equal(h.win.BLTrivia._holds.size,0);
+});
 test('short loads and multi-stage loads do not force a Continue click',()=>{
   const quick=pageHarness();const a=quick.state();quick.add(a);quick.advance(1200);assert.equal(a.children.length,1);
   a.isConnected=false;quick.advance(800);assert.ok(!quick.appended.some(e=>e.className==='blTriviaHold'),'under 2.5s the card simply closes');
