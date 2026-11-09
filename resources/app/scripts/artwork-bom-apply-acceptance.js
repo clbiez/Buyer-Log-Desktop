@@ -63,7 +63,7 @@ async function open(page,rowId=1,moduleId='collection'){
  for(let i=0;i<160;i++){try{if((await fetch(base+'/api/user-profiles')).ok)break;}catch{}await sleep(250);}
  const password=crypto.randomBytes(20).toString('hex');const login=await api('/api/user-login',{method:'POST',body:JSON.stringify({userId:'moderator',password,newPassword:password})});cookie=login.headers.get('set-cookie').split(';')[0];await persistRows();
  browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH||undefined,headless:true,args:['--no-sandbox']});
- for(let pair=0;pair<3;pair++)for(const mode of (process.env.BL_ARTWORK_ORDER||'base,base-control,candidate').split(',')){
+ for(let pair=0;pair<(process.env.BL_ARTWORK_STEADY_ONLY?0:3);pair++)for(const mode of (process.env.BL_ARTWORK_ORDER||'base,base-control,candidate').split(',')){
   const {page,context,errors,requests}=await boot(mode),run={pair,mode,openMs:[],heaps:[],modalRoots:[]};
   const cdp=await context.newCDPSession(page);
   for(let i=0;i<5;i++){
@@ -79,6 +79,17 @@ async function open(page,rowId=1,moduleId='collection'){
   assert.deepEqual(errors,[]);run.bomGets=requests.filter(r=>/\/api\/plm-sync\/bom\/900001$/.test(r.url)).length;results.runs.push(run);console.log(JSON.stringify(run));await context.close();
  }
  const {page,context,errors,requests}=await boot('candidate');
+ // Recheck modal latency in one settled workspace to remove context/startup
+ // variation. Only the modal implementation differs; projection is inactive.
+ results.steadyRuns=[];
+ await page.route('**/plm-bom.js?ab=*',route=>route.fulfill({contentType:'application/javascript',body:fs.readFileSync(route.request().url().includes('ab=base')?path.join(work,'base-plm-bom.js'):path.join(app,'public/plm-bom.js'),'utf8')}));
+ for(let pair=0;pair<3;pair++)for(const mode of (pair===1?['candidate','base']:['base','candidate'])){
+  await page.evaluate(()=>{delete window.BLPlmBom;});await page.addScriptTag({url:base+'/plm-bom.js?ab='+mode+'&pair='+pair});
+  const run={pair,mode,openMs:[]};
+  for(let i=0;i<5;i++){run.openMs.push(await open(page));await page.locator('.cpaModal footer [data-bom-close]').click();}
+  results.steadyRuns.push(run);console.log('steady',JSON.stringify(run));
+ }
+ await page.evaluate(()=>{delete window.BLPlmBom;});await page.addScriptTag({url:base+'/plm-bom.js?ab=candidate&final=1'});
  const assets=path.join(app,'public/release-notes/next-assets');
  for(const lang of ['tr','en']){
   await page.evaluate(lang=>applyLanguage(lang),lang);await open(page,2);

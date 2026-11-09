@@ -54,11 +54,13 @@
 
   function openForPlm(plmId, title, context = {}) {
     const id = numericId(plmId);
+    // Yerel BOM okuması, dialogun odak/layout hazırlığını beklemez.
+    const entryPromise = id ? entryForPlm(id) : Promise.resolve(null);
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
-    const trigger = document.activeElement;
-    const close = () => { window.BLLayerSystem?.closeDialog?.(modal); modal.remove(); };
-    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-label="${esc(L('PLM BOM · Baskı Detayı', 'PLM BOM · Print Details'))}"><header>
+    let releaseKeyboard = () => {};
+    const close = () => { releaseKeyboard(); modal.remove(); };
+    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true" aria-label="${esc(L('PLM BOM · Baskı Detayı', 'PLM BOM · Print Details'))}"><header>
       <div><b>${esc(L('PLM BOM · Baskı Detayı', 'PLM BOM · Print Details'))}</b><small>${esc([id && 'PLM ' + id, title].filter(Boolean).join(' · '))}</small></div>
       <button type="button" data-bom-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
       <div class="cpaModalBody"><p class="cpaEmpty">${esc(L('BOM bilgisi yükleniyor…', 'Loading BOM data…'))}</p></div>
@@ -67,8 +69,8 @@
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
     modal.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
     document.body.appendChild(modal);
-    window.BLLayerSystem?.openDialog?.(modal, { trigger, onClose: close, initialFocus: '[data-bom-close]', elevate: false });
-    window.BLMotionPlus?.play?.('overlay', modal.querySelector('.cpaModal'));
+    releaseKeyboard = window.BLUI?.bindDialogKeyboard?.(modal, { onEscape: close }) || (() => {});
+    if (window.BLMotionPlus?.enabled?.()) window.BLMotionPlus.play('overlay', modal.querySelector('.cpaModal'));
 
     const body = modal.querySelector('.cpaModalBody');
     (async () => {
@@ -77,7 +79,7 @@
         return;
       }
       try {
-        const entry = await entryForPlm(id);
+        const entry = await entryPromise;
         if (!modal.isConnected) return;
         if (!entry) {
           body.innerHTML = `<p class="cpaEmpty">${esc(L('Bu model için henüz BOM kaydı yok. PLM SYNC çalıştırıldığında BOM da otomatik okunur.', 'No BOM record exists for this style yet. BOM is read automatically during PLM SYNC.'))}</p>`;
@@ -109,7 +111,6 @@
         </tr>`).join('');
         body.innerHTML = `
           <div class="cpaChips">
-            ${artwork && context.row ? `<div class="cpaChip is-static"><span class="l">${esc(L('Mevcut Artwork Detayı', 'Current Artwork Detail'))}</span><span class="q">${esc(window.BLCollectionSpreadsheetBridge?.rawValue?.(context.row, 'artworkDetail') ?? context.row.artworkDetail ?? '—')}</span></div>` : ''}
             <div class="cpaChip is-static"><span class="l">${esc(L('Baskı', 'Print'))}</span><b>${esc(summary)}</b></div>
             ${isSet && entry.fabricSummary ? `<div class="cpaChip is-static"><span class="l">${esc(L('Kumaş', 'Fabric'))}</span><span class="q">${esc(entry.fabricSummary)}</span></div>` : ''}
             <div class="cpaChip is-static"><span class="l">${esc(L('Kaynak', 'Source'))}</span><span class="q">CoreNectum BOM · ${esc(dateTime(entry.fetchedAt))}</span></div>

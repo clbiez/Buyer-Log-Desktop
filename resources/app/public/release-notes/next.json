@@ -23,16 +23,16 @@
         "en": "Replace a manual Artwork note with the BOM value"
       },
       "body": {
-        "tr": "Artwork Detayı hücresine sağ tıklayıp BOM Detayını Aç seçeneğini kullanın. Pencere mevcut hücre değerini ve BOM baskı özetini birlikte gösterir. BOM değerini Artwork Detayına uygula düğmesi manuel notu bu özetle değiştirir; değişiklik kaydedilir ve Geri Al ile eski nota dönülebilir. Takım modellerinde A/B parça ayrımı korunur. BOM kaydı olmayan veya düzenleme izni bulunmayan hücreler değiştirilmez. PLM SYNC manuel notları siz bu işlemi seçene kadar korumaya devam eder.",
-        "en": "Right-click the Artwork Detail cell and choose Open BOM Detail. The window shows the current cell value alongside the BOM print summary. Apply BOM value to Artwork Detail replaces the manual note with that summary; the change is saved and Undo restores the previous note. Set styles keep their A/B part breakdown. Cells without a BOM record or edit permission are not changed. PLM SYNC continues to preserve manual notes until you choose this action."
+        "tr": "Artwork Detayı hücresine sağ tıklayıp BOM Detayını Aç seçeneğini kullanın. Pencere uygulanacak BOM baskı özetini gösterir. BOM değerini Artwork Detayına uygula düğmesi manuel notu bu özetle değiştirir; değişiklik kaydedilir ve Geri Al ile eski nota dönülebilir. Takım modellerinde A/B parça ayrımı korunur. BOM kaydı olmayan veya düzenleme izni bulunmayan hücreler değiştirilmez. PLM SYNC manuel notları siz bu işlemi seçene kadar korumaya devam eder.",
+        "en": "Right-click the Artwork Detail cell and choose Open BOM Detail. The window shows the BOM print summary that will be applied. Apply BOM value to Artwork Detail replaces the manual note with that summary; the change is saved and Undo restores the previous note. Set styles keep their A/B part breakdown. Cells without a BOM record or edit permission are not changed. PLM SYNC continues to preserve manual notes until you choose this action."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "artwork-apply-bom.png",
         "alt": {
-          "tr": "Gerçek Buyer Log demo oturumunda manuel Artwork notu, A/B BOM özeti ve uygulama düğmesi",
-          "en": "Manual Artwork note, A/B BOM summary and apply button in a real Buyer Log demo session"
+          "tr": "Gerçek Buyer Log demo oturumunda A/B BOM özeti ve Artwork uygulama düğmesi",
+          "en": "A/B BOM summary and Artwork apply button in a real Buyer Log demo session"
         },
         "caption": {
           "tr": "Mevcut manuel notu BOM baskı özetiyle değiştirmek için pencerenin altındaki uygulama düğmesini kullanın.",
