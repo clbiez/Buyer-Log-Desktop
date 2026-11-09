@@ -6,7 +6,15 @@ const {performance}=require('node:perf_hooks');
 const {event,query,CLOCK,DEVICE,projection,hash}=require('./workload.cjs');
 const {oracle}=require('./oracle.cjs');
 const RealDate=Date;
-global.Date=class extends RealDate{constructor(...args){super(...(args.length?args:[CLOCK]));}static now(){return CLOCK;}};
+// Fix generated persistence metadata only. Lease/recovery Date and Date.now
+// retain real wall time; freezing those would invalidate production controls.
+global.Date=class extends RealDate{constructor(...args){
+ const caller=new Error().stack.split('\n')[2]||'';
+ const metadata=/local-db\.js:|compat-transitions\.cjs:|sqlite-compat\.cjs:|r2-pinned\.cjs:/.test(caller);
+ super(...(args.length?args:metadata?[CLOCK]:[]));
+}};
+assert.equal(Date.now,RealDate.now,'real lease timeout clock');
+assert(new Date().getTime()>CLOCK,'unrelated wall time remains real');
 const args=JSON.parse(process.argv[2]);
 let sqlStats={rows:0,allMs:0,envelopeMs:0,envelopeBytes:0};
 const {DatabaseSync}=require('node:sqlite'),originalPrepare=DatabaseSync.prototype.prepare;
