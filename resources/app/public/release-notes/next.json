@@ -126,6 +126,35 @@
           "en": "Actual post-change Electron tab: Orders is ready, CP waits for on-demand navigation."
         }
       }
+    },
+    {
+      "id": "int03-shared-image-byte-budget-20261109",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM görselleri",
+        "en": "PLM images"
+      },
+      "title": {
+        "tr": "PLM görsellerinde ortak bellek bütçesi",
+        "en": "Shared memory budget for PLM images"
+      },
+      "body": {
+        "tr": "PLM görsel güncellemesi, eşzamanlı işler için ortak bir bayt bütçesi kullanır. İndirilen görseller iş boyunca bellekte birikmez; kanonik kayıt, görsel paylaşımı ve eski dosya temizliği tek son adımda korunur.",
+        "en": "PLM image updates share a byte budget across concurrent jobs. Downloaded images no longer accumulate in memory throughout the job; canonical registration, image sharing and old-file cleanup remain in one final step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "int03-shared-image-byte-budget-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında sentetik PLM görselleri",
+          "en": "Synthetic PLM images in the actual Buyer Log CP Tracker"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama ve sentetik görseller. Bayt rezervasyonu, RSS ve içerik eşdeğerliği ayrı test ve ölçümlerle doğrulanır.",
+          "en": "Actual post-change application with synthetic images. Byte reservations, RSS and content equivalence are verified in separate tests and measurements."
+        }
+      }
     }
   ]
 }

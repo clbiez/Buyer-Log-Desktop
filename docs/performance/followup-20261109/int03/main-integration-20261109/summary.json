@@ -1,0 +1,97 @@
+{
+  "pr": 943,
+  "baseMain": "dcd78a309173b7de165871b1a7f98f154081b00d",
+  "testedCommit": "1abfc46774ee1f3d7765640e6805fd39f4550444",
+  "testedTree": "c0ba717af10742bf1ca8cfad7282a6e2d1b919d5",
+  "noteIds": [
+    "excel-import-acknowledged-outcome-safety",
+    "fx-folder-admission-status-20261109",
+    "ana12-backlog-consumer-cancel-20261109",
+    "shell05-native-module-warmup-20261109",
+    "int03-shared-image-byte-budget-20261109"
+  ],
+  "date": "2026-11-09",
+  "full": {
+    "runner": "unmodified npm test; one invocation; default concurrency=4; flock; scoped default-profile writes; no BUYER_LOG/HOME/TMPDIR overrides",
+    "files": 1321,
+    "batchesPassed": 10,
+    "seconds": 111.6,
+    "tests": 9123,
+    "pass": 9058,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 5,
+  "protectedSourcesUnchanged": [
+    "resources/app/server/lib/compute-pool.js",
+    "resources/app/server/lib/compute-service.js",
+    "resources/app/server/lib/corenectum-api-client.js",
+    "resources/app/server/lib/plm-image-ingest.js",
+    "resources/app/public/checklist-components-engine.js",
+    "resources/app/public/checklist-supplier-sync.js",
+    "resources/app/public/cp-overview-assistant.js",
+    "resources/app/tests/checklist-components-row-cache.test.js",
+    ".github/workflows"
+  ],
+  "sourceSha256": {
+    "resources/app/public/release-notes/next.json": "18d2e52f7f8618e3e4026c56f960189db90162568e5a0badf2b6ec50123ba353",
+    "resources/app/server/lib/plm-image-byte-budget-int03.js": "afde8caff6610976dd225c92bfcef7c5f8111781c81d8e5ccf0ada1cae448363",
+    "resources/app/server/lib/plm-image-download-queue.js": "3358ed769bf2f6f400088d2b54c3ddc90f37c4520004bbd4d15af810c532df20",
+    "resources/app/server/lib/plm-image-sync-service.js": "16fcbcadd88922ddd47812dee811a4211b99a6c9cbe9d270ecb97640dd7ec269",
+    "resources/app/tests/plm-image-byte-budget-int03.test.js": "2d92111b76d38fbcff36ab1647d1849a1f41a5eece2cd8bd1fd6aec3b3efe9f3"
+  },
+  "logs": {
+    "full": {
+      "path": "docs/performance/followup-20261109/int03/main-integration-20261109/full.log.gz",
+      "rawSha256": "7a727332eb8055ea20ba9b00dc0bbc840eaa301aa524cba80029528c3d5caad7",
+      "gzipSha256": "70aec9af045a174784ea504fcb58166e223970d774d33456986b0c2537177016"
+    },
+    "i18n": {
+      "path": "docs/performance/followup-20261109/int03/main-integration-20261109/i18n.log.gz",
+      "rawSha256": "f47a45a40313890c19c6796e09c9af1792758b17fdbf33a8b035291ef8705fb3",
+      "gzipSha256": "ecf0c274e5e2a77b42f760bbde06d2de4ea4cab3417f3757929054596e8195e3"
+    },
+    "release": {
+      "path": "docs/performance/followup-20261109/int03/main-integration-20261109/release.log.gz",
+      "rawSha256": "c34f9f63ade26e4bb29c014caf40dcead0229760776ed2e0347cd1bd5c8e679b",
+      "gzipSha256": "cd87f43f56e37d34c7c0f1c1c7a5c5f7b89b60dec01781c5d4109b6e2b5a845b"
+    }
+  },
+  "postTestChanges": "documentation/evidence only",
+  "github": "actual final-head CI and merge status tracked in PR #943",
+  "TEST": "not triggered",
+  "STABLE": "not triggered",
+  "testIsolationCorrection": {
+    "productionChanges": false,
+    "description": "The original global tmpdir before/after assertion observed an unrelated parallel test directory. This one test now uses its own private temp root; all budget, cancellation and cleanup assertions remain.",
+    "red": "Foreign global staging reproduced the original false failure. A separate injected leak inside the private root still fails the same cleanup assertion after the fix.",
+    "green": "All 11 INT-03 tests pass, followed by a fresh complete standard regression.",
+    "diagnostics": {
+      "full-initial-staging-isolation": {
+        "path": "docs/performance/followup-20261109/int03/main-integration-20261109/full-initial-staging-isolation.log.gz",
+        "rawSha256": "16449430fcc6b7af47f940561a66cf9490ffcdb4ffef8a8f182011c48b77e75e",
+        "gzipSha256": "f309eb89199e0aaa2bb9b5ec397f78cf502e94f96ddf36463f46f1560977e0aa"
+      },
+      "staging-isolation-red": {
+        "path": "docs/performance/followup-20261109/int03/main-integration-20261109/staging-isolation-red.log.gz",
+        "rawSha256": "605064a992ebcc16c40f67f6a52dc3656e840d1128f81b5b7f8ba118e3e5096b",
+        "gzipSha256": "7c0590f616dc33ec5464a6836ed2b7e8bf4ded6456c30efb913663bd0730d70d"
+      },
+      "staging-owned-leak-red": {
+        "path": "docs/performance/followup-20261109/int03/main-integration-20261109/staging-owned-leak-red.log.gz",
+        "rawSha256": "841f776aec5c33b19f3d368b53cf1c0a9702c831feb6d2774d5ee4a96b3d4125",
+        "gzipSha256": "2c93e2861c4c91dc6cb4a9b4f99f6ec9cbc4a44523ccaa4a093bf3744cc14d6c"
+      },
+      "staging-isolation-green": {
+        "path": "docs/performance/followup-20261109/int03/main-integration-20261109/staging-isolation-green.log.gz",
+        "rawSha256": "e7e546cf3a7ab5ebdad1e638de296c292f99760aeafdc38a9c82afcb4ff397fa",
+        "gzipSha256": "cbcd975365d883e69e7db20ec96a1628be2d1e4915e91d65a8f6e854d75a1811"
+      }
+    }
+  }
+}
