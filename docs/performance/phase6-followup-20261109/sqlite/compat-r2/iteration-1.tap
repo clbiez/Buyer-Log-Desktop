@@ -1,0 +1,174 @@
+TAP version 13
+# Subtest: complete empty and populated envelope, scalar/missing values, batch receipts and explicit revisions persist
+ok 1 - complete empty and populated envelope, scalar/missing values, batch receipts and explicit revisions persist
+  ---
+  duration_ms: 173.597187
+  type: 'test'
+  ...
+# Subtest: delete, duplicate delete, repeated delete, resurrection and remote tombstone persist
+ok 2 - delete, duplicate delete, repeated delete, resurrection and remote tombstone persist
+  ---
+  duration_ms: 165.419836
+  type: 'test'
+  ...
+# Subtest: remote field/delete conflicts resolve with durable IDs, receipts, HLC and checkpoints
+not ok 3 - remote field/delete conflicts resolve with durable IDs, receipts, HLC and checkpoints
+  ---
+  duration_ms: 793.330603
+  type: 'test'
+  location: '/workspace/sqlite-compat-r2/scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs:91:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    resolveConflict receipt step 8
+    + actual - expected
+    
+      {
+    +   at: '2026-10-01T08:01:10.000Z',
+    -   at: '2026-10-01T08:00:20.000Z',
+        baseRevision: 0,
+        conflictId: '00000000-0000-4000-8000-000000000001',
+    +   currentRevision: 8,
+    +   eventId: 'r2-10',
+    -   currentRevision: 1,
+    -   eventId: 'r2-2',
+    -   field: 'value',
+        id: 'record:r2',
+        resolution: 'current',
+        resolved: true,
+        resolvedAt: '2026-10-01T08:01:20.000Z',
+    +   type: 'delete',
+    -   type: 'field',
+        valuesPruned: true
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    conflictId: '00000000-0000-4000-8000-000000000001'
+    eventId: 'r2-2'
+    id: 'record:r2'
+    type: 'field'
+    field: 'value'
+    currentRevision: 1
+    baseRevision: 0
+    at: '2026-10-01T08:00:20.000Z'
+    resolved: true
+    resolvedAt: '2026-10-01T08:01:20.000Z'
+    resolution: 'current'
+    valuesPruned: true
+  actual:
+    conflictId: '00000000-0000-4000-8000-000000000001'
+    eventId: 'r2-10'
+    id: 'record:r2'
+    type: 'delete'
+    currentRevision: 8
+    baseRevision: 0
+    at: '2026-10-01T08:01:10.000Z'
+    resolved: true
+    resolvedAt: '2026-10-01T08:01:20.000Z'
+    resolution: 'current'
+    valuesPruned: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    Object.both (/workspace/sqlite-compat-r2/scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs:43:51)
+    async TestContext.<anonymous> (/workspace/sqlite-compat-r2/scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs:105:3)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: owner denial, same-owner ordering, composite subfields, different-owner conflicts and receipt-only
+ok 4 - owner denial, same-owner ordering, composite subfields, different-owner conflicts and receipt-only
+  ---
+  duration_ms: 197.72487
+  type: 'test'
+  ...
+# Subtest: ACK/upload order, partial through, foreign events and compacted ACK exceptions persist
+ok 5 - ACK/upload order, partial through, foreign events and compacted ACK exceptions persist
+  ---
+  duration_ms: 2456.553663
+  type: 'test'
+  ...
+# Subtest: SQLite-only fresh process reconstructs full state without JSON control files
+not ok 6 - SQLite-only fresh process reconstructs full state without JSON control files
+  ---
+  duration_ms: 154.243255
+  type: 'test'
+  location: '/workspace/sqlite-compat-r2/scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs:147:1'
+  failureType: 'testCodeFailure'
+  error: 'Unexpected end of JSON input'
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    JSON.parse (<anonymous>)
+    TestContext.<anonymous> (/workspace/sqlite-compat-r2/scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs:152:69)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: SQL abort rolls back record/event/revision/HLC/conflict/ACK metadata; five reopen cycles release handles
+ok 7 - SQL abort rolls back record/event/revision/HLC/conflict/ACK metadata; five reopen cycles release handles
+  ---
+  duration_ms: 70.529787
+  type: 'test'
+  ...
+# Subtest: returned read/record/receipt/pending/conflict objects and input patches cannot mutate SQLite state
+ok 8 - returned read/record/receipt/pending/conflict objects and input patches cannot mutate SQLite state
+  ---
+  duration_ms: 46.464319
+  type: 'test'
+  ...
+# Subtest: scalar null/zero/false/empty preserve business patch values
+ok 9 - scalar null/zero/false/empty preserve business patch values
+  ---
+  duration_ms: 50.38051
+  type: 'test'
+  ...
+# Subtest: full read envelope API must exist on SQLite
+ok 10 - full read envelope API must exist on SQLite
+  ---
+  duration_ms: 42.896749
+  type: 'test'
+  ...
+# Subtest: delete/tombstone API must exist on SQLite
+ok 11 - delete/tombstone API must exist on SQLite
+  ---
+  duration_ms: 43.204775
+  type: 'test'
+  ...
+# Subtest: remote conflict/owner API must exist on SQLite
+ok 12 - remote conflict/owner API must exist on SQLite
+  ---
+  duration_ms: 41.037384
+  type: 'test'
+  ...
+# Subtest: ACK is distinct from upload and must exist on SQLite
+ok 13 - ACK is distinct from upload and must exist on SQLite
+  ---
+  duration_ms: 38.655719
+  type: 'test'
+  ...
+# Subtest: explicit baseRevision changes global revision identically
+ok 14 - explicit baseRevision changes global revision identically
+  ---
+  duration_ms: 41.998124
+  type: 'test'
+  ...
+# Subtest: API receipt conflict metadata is identical
+ok 15 - API receipt conflict metadata is identical
+  ---
+  duration_ms: 41.036129
+  type: 'test'
+  ...
+# Subtest: uploaded journal metadata survives persistence identically
+ok 16 - uploaded journal metadata survives persistence identically
+  ---
+  duration_ms: 62.937816
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 14
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4463.812889

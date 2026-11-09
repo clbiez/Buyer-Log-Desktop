@@ -1,0 +1,148 @@
+TAP version 13
+# Subtest: complete empty and populated envelope, scalar/missing values, batch receipts and explicit revisions persist
+ok 1 - complete empty and populated envelope, scalar/missing values, batch receipts and explicit revisions persist
+  ---
+  duration_ms: 224.309303
+  type: 'test'
+  ...
+# Subtest: delete, duplicate delete, repeated delete, resurrection and remote tombstone persist
+ok 2 - delete, duplicate delete, repeated delete, resurrection and remote tombstone persist
+  ---
+  duration_ms: 187.201995
+  type: 'test'
+  ...
+# Subtest: remote field/delete conflicts resolve with durable IDs, receipts, HLC and checkpoints
+ok 3 - remote field/delete conflicts resolve with durable IDs, receipts, HLC and checkpoints
+  ---
+  duration_ms: 205.164054
+  type: 'test'
+  ...
+# Subtest: owner denial, same-owner ordering, composite subfields, different-owner conflicts and receipt-only
+ok 4 - owner denial, same-owner ordering, composite subfields, different-owner conflicts and receipt-only
+  ---
+  duration_ms: 142.402735
+  type: 'test'
+  ...
+# Subtest: ACK/upload order, partial through, foreign events and compacted ACK exceptions persist
+ok 5 - ACK/upload order, partial through, foreign events and compacted ACK exceptions persist
+  ---
+  duration_ms: 2280.897533
+  type: 'test'
+  ...
+# Subtest: SQLite-only fresh process reconstructs full state without JSON control files
+ok 6 - SQLite-only fresh process reconstructs full state without JSON control files
+  ---
+  duration_ms: 292.037529
+  type: 'test'
+  ...
+# Subtest: SQL abort rolls back record/event/revision/HLC/conflict/ACK metadata; five reopen cycles release handles
+ok 7 - SQL abort rolls back record/event/revision/HLC/conflict/ACK metadata; five reopen cycles release handles
+  ---
+  duration_ms: 43.099931
+  type: 'test'
+  ...
+# Subtest: returned read/record/receipt/pending/conflict objects and input patches cannot mutate SQLite state
+ok 8 - returned read/record/receipt/pending/conflict objects and input patches cannot mutate SQLite state
+  ---
+  duration_ms: 48.997782
+  type: 'test'
+  ...
+# Subtest: different authorized owners conflict; current/custom/delete resolutions and rejected deltas preserve state
+ok 9 - different authorized owners conflict; current/custom/delete resolutions and rejected deltas preserve state
+  ---
+  duration_ms: 234.703162
+  type: 'test'
+  ...
+# Subtest: SQL failure during conflict, upload, ACK or resolution leaves all tables and receipts unchanged
+ok 10 - SQL failure during conflict, upload, ACK or resolution leaves all tables and receipts unchanged
+  ---
+  duration_ms: 47.455504
+  type: 'test'
+  ...
+# Subtest: two SQLite handles observe committed state and duplicate receipts without stale in-memory metadata
+ok 11 - two SQLite handles observe committed state and duplicate receipts without stale in-memory metadata
+  ---
+  duration_ms: 42.686835
+  type: 'test'
+  ...
+# Subtest: scalar null/zero/false/empty preserve business patch values
+ok 12 - scalar null/zero/false/empty preserve business patch values
+  ---
+  duration_ms: 49.754516
+  type: 'test'
+  ...
+# Subtest: full read envelope API must exist on SQLite
+ok 13 - full read envelope API must exist on SQLite
+  ---
+  duration_ms: 56.676067
+  type: 'test'
+  ...
+# Subtest: delete/tombstone API must exist on SQLite
+ok 14 - delete/tombstone API must exist on SQLite
+  ---
+  duration_ms: 44.594529
+  type: 'test'
+  ...
+# Subtest: remote conflict/owner API must exist on SQLite
+ok 15 - remote conflict/owner API must exist on SQLite
+  ---
+  duration_ms: 42.825813
+  type: 'test'
+  ...
+# Subtest: ACK is distinct from upload and must exist on SQLite
+ok 16 - ACK is distinct from upload and must exist on SQLite
+  ---
+  duration_ms: 37.542769
+  type: 'test'
+  ...
+# Subtest: explicit baseRevision changes global revision identically
+ok 17 - explicit baseRevision changes global revision identically
+  ---
+  duration_ms: 49.22286
+  type: 'test'
+  ...
+# Subtest: API receipt conflict metadata is identical
+ok 18 - API receipt conflict metadata is identical
+  ---
+  duration_ms: 53.352963
+  type: 'test'
+  ...
+# Subtest: uploaded journal metadata survives persistence identically
+ok 19 - uploaded journal metadata survives persistence identically
+  ---
+  duration_ms: 85.693947
+  type: 'test'
+  ...
+# Subtest: local patch subset: records, field writers, HLC, journal checksums, filters and compaction agree
+ok 20 - local patch subset: records, field writers, HLC, journal checksums, filters and compaction agree
+  ---
+  duration_ms: 1547.621154
+  type: 'test'
+  ...
+# Subtest: local torn final append is repaired; checksum corruption blocks further writes
+ok 21 - local torn final append is repaired; checksum corruption blocks further writes
+  ---
+  duration_ms: 82.347972
+  type: 'test'
+  ...
+# Subtest: SIGKILL retains acknowledged writes in both engines
+ok 22 - SIGKILL retains acknowledged writes in both engines
+  ---
+  duration_ms: 626.4065
+  type: 'test'
+  ...
+# Subtest: SQLite rolls back earlier rows and sequence when a later batch member fails
+ok 23 - SQLite rolls back earlier rows and sequence when a later batch member fails
+  ---
+  duration_ms: 65.978602
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6549.588247
