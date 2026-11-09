@@ -78,7 +78,9 @@ test('INT-03: weighted FIFO budget, queued cancellation and idempotent release',
   await assert.rejects(budget.acquire(11), RangeError);
 });
 
-test('INT-03: multiple jobs share the reservation through slow commit and clean private staging', async () => {
+test('INT-03: multiple jobs share the reservation through slow commit and clean private staging', async t => {
+  // Inspect this test's staging files, independently of parallel test processes.
+  t.mock.method(os, 'tmpdir', () => root);
   const before = fs.readdirSync(os.tmpdir()).filter(name => name.startsWith('buyerlog-plm-int03-'));
   let finishCommit;
   let commitStarted;
