@@ -42,7 +42,8 @@ function sharedBrowser() {
   const waiters = [];
   let holder = null;
   const locks = {
-    request(name, callback) {
+    request(name, options, callback) {
+      if (typeof options === 'function') callback = options;
       return new Promise(resolve => {
         const grant = () => { holder = { release: resolve }; Promise.resolve(callback({ name })); };
         if (!holder) grant(); else waiters.push(grant);
@@ -61,7 +62,11 @@ function sharedBrowser() {
 function tab(browser, id) {
   const calls = { collection: [], resync: 0, orders: [] };
   const globals = {
-    window: { BL_CLIENT_ID: id, dispatchEvent() {} },
+    window: { BL_CLIENT_ID: id, BL_USER_CONTEXT: { id: 'shared-user' }, dispatchEvent() {}, addEventListener() {}, removeEventListener() {} },
+    document: { addEventListener() {}, removeEventListener() {} }, AbortController,
+    // These existing cases isolate SSE. Actual polling runs in shared-revision-leader.test.js.
+    createSharedRevisionPoller: () => ({ start() {}, stop() {}, wake() {}, snapshot() {} }),
+    sharedRevisionContext: null, sharedRevisionSnapshot: null,
     navigator: { locks: browser.locks },
     BroadcastChannel: browser.FakeChannel,
     EventSource: browser.FakeEventSource,
@@ -130,7 +135,10 @@ test('BroadcastChannel/Web Locks yoksa sekme kendi bağlantısıyla eski davran�
   const browser = sharedBrowser();
   const calls = [];
   const fns = loadAppMainFunctions(['initLiveSync'], {
-    window: { BL_CLIENT_ID: 'solo', dispatchEvent() {} }, navigator: {}, EventSource: browser.FakeEventSource,
+    window: { BL_CLIENT_ID: 'solo', dispatchEvent() {}, addEventListener() {}, removeEventListener() {} }, navigator: {}, EventSource: browser.FakeEventSource,
+    document: { addEventListener() {}, removeEventListener() {} }, AbortController,
+    createSharedRevisionPoller: () => ({ start() {}, stop() {}, wake() {}, snapshot() {} }),
+    sharedRevisionContext: null, sharedRevisionSnapshot: null,
     setTimeout: fn => { queueMicrotask(fn); return 1; }, clearTimeout() {}, liveSyncConnected: false,
     kolHandleRemoteChange: async owner => { calls.push(owner); }, liveSyncResyncAfterGap() {},
   });

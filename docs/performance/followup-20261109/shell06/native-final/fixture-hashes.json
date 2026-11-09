@@ -1,0 +1,30 @@
+{
+  "generator": "generate-demo-data.js --rows 20 --seed 7",
+  "method": "Sorted workbook names; ordered sheet names; sheet_to_json(header:1,defval:null,raw:true); SHA256 of JSON",
+  "runs": [
+    {
+      "run": "pair-1-main",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    },
+    {
+      "run": "pair-1-candidate",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    },
+    {
+      "run": "pair-2-main",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    },
+    {
+      "run": "pair-2-candidate",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    },
+    {
+      "run": "pair-3-main",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    },
+    {
+      "run": "pair-3-candidate",
+      "semanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a"
+    }
+  ]
+}

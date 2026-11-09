@@ -1466,6 +1466,24 @@ const _favoritesAppliedPages = new Set();
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
 const _selectionActionIds=['cpCopyToKolBtn','cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.addEventListener('click',async()=>{
+  const moduleId=button.dataset.orderLicenseAtlas;
+  if(document.body.dataset.activeTab!==moduleId)return;
+  // Atlas generation only reads visible selected rows, including view-only orders.
+  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
+    license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
+    licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
+  }));
+  if(!rows.length){showToast(appLang==='en'?'Select at least one visible order first.':'Önce görünür en az bir sipariş seçin.');return;}
+  button.disabled=true;button.dataset.atlasLoading='1';
+  const menu=document.getElementById(moduleId+'ToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById(moduleId+'ToolsBtn')?.setAttribute('aria-expanded','false');
+  try{
+    await window.BLPerf.ensureFeature('orderLicenseAtlas');
+    if(document.body.dataset.activeTab===moduleId)window.BLOrderLicenseAtlas.open({rows,moduleId});
+  }catch(_){showToast(appLang==='en'?'The license atlas module could not be loaded. Please retry.':'Lisans atlası modülü yüklenemedi. Yeniden deneyin.');}
+  finally{delete button.dataset.atlasLoading;updateShippingBtnVisibility();}
+}));
 document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async event=>{
   const button=event.currentTarget;button.disabled=true;
   const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
@@ -15315,16 +15333,47 @@ async function waitForRefreshJob(expectedJob=null){
   }
 }
 
-let sharedRevisionSnapshot=null,sharedRevisionTimer=0;
-async function pollSharedRevisions(){
-  try{
-    const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store'});if(!response.ok)return;const next=await response.json(),previous=sharedRevisionSnapshot;sharedRevisionSnapshot=next;
+let sharedRevisionSnapshot=null,sharedRevisionContext=null;
+// Revision timer'ı yalnız mevcut canlı bağlantı liderinin ömründe çalışır.
+function createSharedRevisionPoller({isCurrent,announce}){
+  let active=false,timer=0,request=null,retryMs=7000;
+  function accept(next){
+    if(!isCurrent()||!next||!next.entities||typeof next.entities!=='object')return;
+    const previous=sharedRevisionSnapshot;
+    // Devir sırasında kuyruğa girmiş eski bir yayın baseline'ı geriye götürmez.
+    if(previous&&Number(next.revision)<Number(previous.revision))return;
+    sharedRevisionSnapshot=next;
     if(!previous)return;
-    const changed=[];for(const [entity,item] of Object.entries(next.entities||{}))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
+    const changed=[];for(const [entity,item] of Object.entries(next.entities))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
     if(changed.length)window.dispatchEvent(new CustomEvent('bl-shared-revision',{detail:{changed,revisions:next}}));
-  }catch(_){/* lightweight polling must not disturb the user */}
+  }
+  function schedule(ms){clearTimeout(timer);timer=setTimeout(pollSharedRevisions,ms);}
+  async function pollSharedRevisions(){
+    if(!active||!isCurrent()||request||navigator.onLine===false)return;
+    clearTimeout(timer);
+    const controller=new AbortController();request=controller;
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error('Revision poll failed');
+      const next=await response.json();
+      if(!active||controller.signal.aborted||!isCurrent())return;
+      accept(next);announce({type:'revisions',revisions:next});retryMs=7000;
+    }catch(_){retryMs=Math.min(retryMs*2,30000);/* background failure stays quiet */}
+    finally{
+      clearTimeout(timeout);if(request===controller)request=null;
+      if(active&&isCurrent()&&navigator.onLine!==false)schedule(Math.max(retryMs,document.visibilityState==='hidden'?30000:0));
+    }
+  }
+  return {
+    accept,
+    snapshot:()=>sharedRevisionSnapshot,
+    start(ms=2500){active=true;schedule(ms);},
+    wake(){if(active&&!request)void pollSharedRevisions();},
+    pause(){clearTimeout(timer);request?.abort();},
+    stop(){active=false;clearTimeout(timer);request?.abort();}
+  };
 }
-setTimeout(()=>{void pollSharedRevisions();sharedRevisionTimer=window.setInterval(pollSharedRevisions,7000);},2500);
 
 // Yenile: ASAS aktif Data Model bağlantısından gelir. Antrepo varsayılan olarak
 // kaynak klasöründeki Excel'den okunur; yalnız Database modu seçilmişse IAS model
@@ -17701,6 +17750,8 @@ function backlogExcelColumnCatalog(){
   const catalog=new Map();
   BACKLOG_DEFAULT_EXPORT_HEADERS.forEach((header,index)=>{
     const id=backlogFieldId(index);
+    // Legacy month/week fields are already derived from the selected date.
+    if(backlogIsLegacyDateDerivedId(id))return;
     catalog.set(id,{id,header,display:header.replace(/\n/g,' '),group:'field'});
   });
   backlogExportSourceCatalog().forEach(item=>{
@@ -17721,21 +17772,24 @@ function openBacklogExportColumns(){
   let workingSelected=dedupe(backlogExcelColumns());
   const workingFormulas={...backlogExcelFormulaOverrides()};
   const defaultPlan=window.BLBacklogExcel?.formulaPlan?.(BACKLOG_DEFAULT_EXPORT_HEADERS,{},2)||{formulas:{}};
-  const availableChecked=new Set(),selectedChecked=new Set();
   let searchQuery='';
   const tr=(en,tk)=>appLang==='en'?en:tk;
-  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
-  modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle"><div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${escapeHtml(tr('Excel options','Excel seçenekleri'))}</div><div class="backlogDetailMeta">${escapeHtml(tr('Manage exported columns and edit formula cells. Use {row} for the current Excel row.','Aktarılacak sütunları yönetin ve formül hücrelerini düzenleyin. Güncel Excel satırı için {row} kullanın.'))}</div></div><button type="button" class="backlogDetailClose" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="backlogExportColumnsBody"><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Columns','Sütunlar'))}</h3><div class="backlogColManager">
-    <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Available columns','Kullanılabilir sütunlar'))}</span></div><input type="text" class="backlogColSearch" data-col-search placeholder="${escapeHtml(tr('Search…','Ara…'))}"><div class="backlogColList" data-col-available></div></div>
-    <div class="backlogColManagerActions">
-      <button type="button" class="tbtn" data-col-add>${escapeHtml(tr('Add →','Ekle →'))}</button>
-      <button type="button" class="tbtn" data-col-remove>${escapeHtml(tr('← Remove','← Çıkar'))}</button>
-      <button type="button" class="tbtn" data-col-add-all>${escapeHtml(tr('Add all','Tümünü Ekle'))}</button>
-      <button type="button" class="tbtn" data-col-remove-all>${escapeHtml(tr('Remove all','Tümünü Çıkar'))}</button>
-      <button type="button" class="tbtn" data-col-reset-selection>${escapeHtml(tr('Restore defaults','Varsayılana Dön'))}</button>
+  // All labels own TR/EN pairs; source headers must retain their canonical text.
+  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.dataset.noI18n='';
+  const text=(en,tk)=>`<span data-i18n-tr="${escapeHtml(tk)}" data-i18n-en="${escapeHtml(en)}">${escapeHtml(tr(en,tk))}</span>`;
+  modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle">
+    <div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${text('Backlog Excel settings','Backlog Excel ayarları')}</div><div class="backlogDetailMeta">${text('Add, remove or reorder the columns in your report. Applies to Legacy and V3.','Raporunuzdaki sütunları ekleyin, çıkarın veya sıralayın. Legacy ve V3 için geçerlidir.')}</div></div><button type="button" class="backlogDetailClose" data-close data-close-icon><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="backlogExportColumnsBody">
+      <div class="backlogColPaneHead"><h3>${text('Report columns','Rapordaki sütunlar')} <span class="backlogColCount" data-col-count aria-live="polite"></span></h3><div class="backlogColTools"><button type="button" class="tbtn" data-col-reset-selection>${text('Restore defaults','Varsayılana dön')}</button><button type="button" class="tbtn primary" data-col-toggle-add aria-expanded="false" aria-controls="backlogExcelAddColumns">${text('Add column','Sütun ekle')}</button></div></div>
+      <div id="backlogExcelAddColumns" class="backlogColPane" hidden>
+        <label class="backlogColSearchLabel">${text('Find a column','Sütun ara')}<input type="search" class="backlogColSearch" data-col-search></label>
+        <div class="backlogColList backlogColAvailableList" data-col-available></div>
+      </div>
+      <div class="backlogColList backlogColSelectedList" data-col-selected></div>
+      <details class="backlogExportColumnsGroup" data-formula-settings><summary>${text('Advanced settings · formulas','Gelişmiş ayarlar · formüller')}</summary><p>${text('Leave the default formulas unchanged unless needed. Use {row} for the current Excel row.','Gerekmedikçe varsayılan formülleri değiştirmeyin. Güncel Excel satırı için {row} kullanın.')}</p><div class="backlogExportFormulaList" data-formula-list></div></details>
     </div>
-    <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Columns in Excel','Excel’de yer alacak sütunlar'))}</span><span class="backlogColCount" data-col-count></span></div><div class="backlogColList" data-col-selected></div></div>
-  </div></div><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Formula cells','Formül hücreleri'))}</h3><div class="backlogExportFormulaList" data-formula-list></div></div></div><div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(tr('Cancel','İptal'))}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(tr('Apply','Uygula'))}</button></div></div>`;
+    <div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${text('Cancel','İptal')}</button><button type="button" class="tbtn primary" data-save>${text('Apply','Uygula')}</button></div>
+  </div>`;
   document.body.appendChild(modal);
   let releaseKeyboard=()=>{};
   const close=()=>{releaseKeyboard();modal.remove();};
@@ -17746,6 +17800,16 @@ function openBacklogExportColumns(){
   const selectedEl=modal.querySelector('[data-col-selected]');
   const formulaEl=modal.querySelector('[data-formula-list]');
   const countEl=modal.querySelector('[data-col-count]');
+  const addPanel=modal.querySelector('#backlogExcelAddColumns');
+  const addToggle=modal.querySelector('[data-col-toggle-add]');
+  const searchEl=modal.querySelector('[data-col-search]');
+  const formulaSettings=modal.querySelector('[data-formula-settings]');
+  addToggle.addEventListener('click',()=>{
+    const open=addToggle.getAttribute('aria-expanded')!=='true';
+    addToggle.setAttribute('aria-expanded',String(open));
+    if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(addPanel,open,{trigger:addToggle});else addPanel.hidden=!open;
+    if(open)searchEl.focus();
+  });
   const norm=text=>String(text||'').toLocaleLowerCase('tr');
   function renderAvailable(){
     const q=norm(searchQuery);
@@ -17755,18 +17819,19 @@ function openBacklogExportColumns(){
       const items=[...catalog.values()].filter(item=>item.group===group&&!workingSelected.includes(item.id)&&(!q||norm(item.display).includes(q)));
       if(!items.length)return;
       html+=`<div class="backlogColGroupLabel">${escapeHtml(groupLabel)}</div>`;
-      html+=items.map(item=>`<label class="backlogColRow backlogColAvailRow" data-avail-row="${escapeHtml(item.id)}"><input type="checkbox" data-avail-id="${escapeHtml(item.id)}" ${availableChecked.has(item.id)?'checked':''}><span class="backlogColRowLabel">${escapeHtml(item.display)}</span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}</label>`).join('');
+      html+=items.map(item=>`<button type="button" class="tbtn backlogColRow backlogColAvailRow" data-col-add-id="${escapeHtml(item.id)}"><span class="backlogColRowLabel">${escapeHtml(item.display)}</span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}<span>+ ${escapeHtml(tr('Add','Ekle'))}</span></button>`).join('');
     });
     availableEl.innerHTML=html||`<div class="backlogColEmpty">${escapeHtml(searchQuery?tr('No matches.','Eşleşme yok.'):tr('No columns.','Sütun yok.'))}</div>`;
   }
   function renderSelected(){
     if(countEl)countEl.textContent=String(workingSelected.length);
-    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('No columns.','Sütun yok.'))}</div>`;return;}
+    modal.querySelector('[data-save]').disabled=!workingSelected.length;
+    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('Add at least one column to your report.','Raporunuza en az bir sütun ekleyin.'))}</div>`;return;}
     selectedEl.innerHTML=workingSelected.map((id,index)=>{
       const item=catalog.get(id);
       const label=item?item.display:id;
       const tag=item&&item.group!=='field'?backlogColumnGroupTag(item.group):'';
-      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
+      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" aria-label="${escapeHtml(tr('Remove','Çıkar')+': '+label)}">${escapeHtml(tr('Remove','Çıkar'))}</button></div>`;
     }).join('');
   }
   function currentFormulaHeaders(){
@@ -17777,61 +17842,46 @@ function openBacklogExportColumns(){
   function renderFormulas(){
     formulaEl.innerHTML=currentFormulaHeaders().map(header=>{
       const current=workingFormulas[header]!=null?workingFormulas[header]:(defaultPlan.formulas?.[header]?.formula||'');
-      return `<label class="backlogExcelFormulaField"><span>${escapeHtml(header.replace(/\n/g,' '))}</span><input type="text" data-formula-header="${escapeHtml(header)}" value="${escapeHtml(current)}" placeholder="=IF(...) — {row} satır numarası"></label>`;
+      return `<label class="backlogExcelFormulaField"><span>${escapeHtml(header.replace(/\n/g,' '))}</span><input type="text" data-formula-header="${escapeHtml(header)}" value="${escapeHtml(current)}" placeholder="${escapeHtml(tr('=IF(...) — {row} row number','=IF(...) — {row} satır numarası'))}"></label>`;
     }).join('');
   }
-  function renderAll(){renderAvailable();renderSelected();renderFormulas();}
+  function renderAll(){renderAvailable();renderSelected();if(formulaSettings.open)renderFormulas();}
+  formulaSettings.addEventListener('toggle',()=>{if(formulaSettings.open)renderFormulas();});
   modal.querySelector('[data-col-search]').addEventListener('input',event=>{searchQuery=event.target.value;renderAvailable();});
-  availableEl.addEventListener('change',event=>{
-    const box=event.target.closest('[data-avail-id]');if(!box)return;
-    if(box.checked)availableChecked.add(box.dataset.availId);else availableChecked.delete(box.dataset.availId);
-  });
-  availableEl.addEventListener('dblclick',event=>{
-    const row=event.target.closest('[data-avail-row]');if(!row)return;
-    const id=row.dataset.availRow;availableChecked.delete(id);
+  availableEl.addEventListener('click',event=>{
+    const button=event.target.closest('[data-col-add-id]');if(!button)return;
+    const id=button.dataset.colAddId;
     if(!workingSelected.includes(id))workingSelected.push(id);
     renderAll();
-  });
-  selectedEl.addEventListener('change',event=>{
-    const box=event.target.closest('[data-sel-id]');if(!box)return;
-    if(box.checked)selectedChecked.add(box.dataset.selId);else selectedChecked.delete(box.dataset.selId);
-  });
-  selectedEl.addEventListener('dblclick',event=>{
-    if(event.target.closest('button')||event.target.closest('input'))return;
-    const row=event.target.closest('[data-col-id]');if(!row)return;
-    const id=row.dataset.colId;selectedChecked.delete(id);
-    workingSelected=workingSelected.filter(x=>x!==id);
-    renderAll();
+    // Keep keyboard focus in the picker after the clicked row is removed.
+    const next=availableEl.querySelector('[data-col-add-id]');
+    (next||searchEl).focus({preventScroll:true});
   });
   selectedEl.addEventListener('click',event=>{
     const up=event.target.closest('[data-col-up]'),down=event.target.closest('[data-col-down]'),remove=event.target.closest('[data-col-remove]');
-    if(up){const id=up.dataset.colUp,i=workingSelected.indexOf(id);if(i>0){[workingSelected[i-1],workingSelected[i]]=[workingSelected[i],workingSelected[i-1]];renderAll();}return;}
-    if(down){const id=down.dataset.colDown,i=workingSelected.indexOf(id);if(i>-1&&i<workingSelected.length-1){[workingSelected[i+1],workingSelected[i]]=[workingSelected[i],workingSelected[i+1]];renderAll();}return;}
-    if(remove){const id=remove.dataset.colRemove;selectedChecked.delete(id);workingSelected=workingSelected.filter(x=>x!==id);renderAll();return;}
+    if(up||down){
+      const id=up?up.dataset.colUp:down.dataset.colDown,i=workingSelected.indexOf(id),next=i+(up?-1:1);
+      if(i<0||next<0||next>=workingSelected.length)return;
+      [workingSelected[i],workingSelected[next]]=[workingSelected[next],workingSelected[i]];
+      renderAll();
+      const row=[...selectedEl.querySelectorAll('[data-col-id]')].find(el=>el.dataset.colId===id);
+      const action=row?.querySelector(up?'[data-col-up]':'[data-col-down]');
+      (action?.disabled?row.querySelector('[data-col-remove]'):action)?.focus({preventScroll:true});
+      return;
+    }
+    if(remove){
+      const id=remove.dataset.colRemove,index=workingSelected.indexOf(id);
+      workingSelected=workingSelected.filter(x=>x!==id);renderAll();
+      const rows=selectedEl.querySelectorAll('[data-col-id]');
+      (rows[Math.min(index,rows.length-1)]?.querySelector('[data-col-remove]')||addToggle).focus({preventScroll:true});
+    }
   });
   formulaEl.addEventListener('input',event=>{
     const input=event.target.closest('[data-formula-header]');if(!input)return;
     workingFormulas[input.dataset.formulaHeader]=input.value;
   });
-  modal.querySelector('[data-col-add]').addEventListener('click',()=>{
-    if(!availableChecked.size)return;
-    [...catalog.values()].forEach(item=>{if(availableChecked.has(item.id)&&!workingSelected.includes(item.id))workingSelected.push(item.id);});
-    availableChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-remove]').addEventListener('click',()=>{
-    if(!selectedChecked.size)return;
-    workingSelected=workingSelected.filter(id=>!selectedChecked.has(id));
-    selectedChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-add-all]').addEventListener('click',()=>{
-    [...catalog.keys()].forEach(id=>{if(!workingSelected.includes(id))workingSelected.push(id);});
-    availableChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-remove-all]').addEventListener('click',()=>{
-    workingSelected=[];selectedChecked.clear();renderAll();
-  });
   modal.querySelector('[data-col-reset-selection]').addEventListener('click',()=>{
-    workingSelected=backlogDefaultExcelColumns();availableChecked.clear();selectedChecked.clear();renderAll();
+    workingSelected=backlogDefaultExcelColumns();renderAll();
   });
   let dragId=null;
   const clearDragMarks=()=>selectedEl.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));
@@ -17870,7 +17920,13 @@ function openBacklogExportColumns(){
     saveBacklogExcelFormulaOverrides(formulas);
     close();
   });
-  renderAll();
+  modal.refreshLanguage=()=>{
+    searchEl.placeholder=tr('Search by column name…','Sütun adıyla ara…');
+    const closeLabel=tr('Close','Kapat');
+    modal.querySelector('[data-close-icon]').setAttribute('aria-label',closeLabel);
+    renderAll();
+  };
+  modal.refreshLanguage();
   // Katalog aktif ASAS/Antrepo şemasından tazelenir; modal bu istek dönmeden de
   // kullanılabilir kalsın diye render bloke edilmez, liste geldiğinde yenilenir.
   fetchBacklogSourceColumns().then(()=>{
@@ -19547,8 +19603,9 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   });
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,rows.length),c:allHeaders.length-1}});
   ws['!autofilter']={ref:ws['!ref']};
+  // Explicit report selections override the old collapsed column preset.
   ws['!cols']=[
-    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
+    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),...(options.showSelectedColumns===true?{hidden:false,level:0}:{}),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
     ...chartHelperHeaders.map(()=>({hidden:true,wch:2})),
   ];
@@ -19639,7 +19696,7 @@ async function exportBacklogToExcel(_event,options={}){
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
     const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
     const chartState=window.BLBacklogChart?.getState?.()||null;
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState});
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState,showSelectedColumns:true});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     // Excel Backlog V3 legacy sayfaları yerel grafik eklemeden alır (V3 kendi grafiklerini yazar).
     const chartExport=options.onLegacyWorkbook?null:window.BLBacklogChart?.appendWorkbookSheets?.(
@@ -20218,8 +20275,10 @@ function updateShippingBtnVisibility(){
       :(appLang==='en'? `Copy ${count} selected order(s) to Collection`:`${count} seçili siparişi Koleksiyona kopyala`);
   }
   for(const mode of ['cp','orders']){
-    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
+    const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
+    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
+    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
       ?(appLang==='en'?'Calculate Endeksmatik one year before or after the selected order':'Seçili siparişin bir yıl öncesi veya sonrası için Endeksmatik hesapla')
@@ -38890,7 +38949,12 @@ function refreshSharedMasterClient(area){
    yeniden kurulur; boşlukta kaçırılmış olabilecek değişiklikler için açık veri
    hafif yoldan yeniden okunur. API yoksa eski davranış: sekme kendi bağlantısı. */
 function initLiveSync(){
-  if(!window.BL_CLIENT_ID)return;
+  const contextKey=()=>{
+    const user=window.BL_USER_CONTEXT||(typeof state!=='undefined'&&state.currentUser)||{};
+    return JSON.stringify([user.id||null,user.iamRevision,user.role,user.systemRole,user.enabled,user.status,user.dataScope,user.scopes,user.permissions,user.accessAreas,user.capabilities,user.collectionAccess,user.delegatedUserIds]);
+  };
+  const context=contextKey();
+  if(sharedRevisionContext!==context){sharedRevisionSnapshot=null;sharedRevisionContext=context;}
   const url=`/api/live-events?clientId=${encodeURIComponent(window.BL_CLIENT_ID)}`;
   const handle=payload=>{
     if(!payload||!payload.area)return;
@@ -38929,51 +38993,103 @@ function initLiveSync(){
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
     }
   };
-  const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('buyerlog-live-sync'):null;
+  let channel=null;
+  try{if(typeof BroadcastChannel==='function')channel=new BroadcastChannel('buyerlog-live-sync:'+context);}catch(_){/* disabled API: local fallback */}
   const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
-  const shared=Boolean(channel&&locks);
-  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false;
-  const announce=message=>{if(shared)channel.postMessage(message);};
+  // Kimlik belirlenemiyorsa başka bir oturumun süzülmüş SSE verisi paylaşılmaz.
+  let shared=Boolean(channel&&locks&&JSON.parse(context)[0]&&window.BL_CLIENT_ID);
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false,stopped=false,leader=false,releaseLeadership=null,removeNativeActivity=null;
+  const lockController=new AbortController();
+  function stop(){
+    stopped=true;liveSyncConnected=false;
+    clearTimeout(retryTimer);source?.close();poller.stop();
+    lockController.abort();releaseLeadership?.();channel?.close();
+    window.removeEventListener('pagehide',onPageHide);
+    window.removeEventListener('bl:user-access-applied',onAccess);
+    window.removeEventListener('online',onWake);window.removeEventListener('offline',onOffline);
+    document.removeEventListener('visibilitychange',onVisible);
+    removeNativeActivity?.();removeNativeActivity=null;
+  }
+  function isCurrent(){
+    if(stopped)return false;
+    if(contextKey()!==context){stop();sharedRevisionSnapshot=null;initLiveSync();return false;}
+    return true;
+  }
+  const announce=message=>{if(shared&&isCurrent())channel.postMessage({...message,context});};
+  const poller=createSharedRevisionPoller({isCurrent,announce});
+  function onAccess(){isCurrent();}
+  function onWake(){if(!isCurrent())return;if(shared&&!leader)announce({type:'revisions?'});else poller.wake();}
+  function onOffline(){poller.pause();}
+  function onVisible(){if(document.visibilityState!=='hidden')onWake();}
+  function onPageHide(event){
+    stop();
+    if(event.persisted)window.addEventListener('pageshow',()=>{
+      initLiveSync();
+      // BFCache veriyi bellekte tutar; takipçi kalsak da aradaki değişiklikleri oku.
+      liveSyncResyncAfterGap();
+    },{once:true});
+  }
+  window.addEventListener('pagehide',onPageHide);
+  window.addEventListener('bl:user-access-applied',onAccess);
+  window.addEventListener('online',onWake);window.addEventListener('offline',onOffline);
+  document.addEventListener('visibilitychange',onVisible);
+  // Native View yeniden eklenince DOM görünürlüğü hidden kalabilir; mevcut
+  // preload aktivasyonu da aynı liderin catch-up yolunu uyandırsın.
+  try{removeNativeActivity=window.buyerLogDesktop?.workspace?.onTabActivity?.(payload=>{if(payload?.active)onWake();})||null;}catch(_){/* optional desktop bridge */}
   function connect(){
-    if(typeof EventSource==='undefined')return;
-    source=new EventSource(url);
+    if(!isCurrent()||!window.BL_CLIENT_ID||typeof EventSource==='undefined')return;
+    source?.close();
+    const opened=new EventSource(url);source=opened;
     source.onopen=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=true;retryMs=1000;announce({type:'status',connected:true});
-      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();}
+      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();poller.wake();}
     };
     source.onmessage=event=>{
+      if(!isCurrent()||source!==opened)return;
       let payload=null;
       try{payload=JSON.parse(event.data);}catch(_){return;}
       if(!payload||!payload.area)return;
       announce({type:'event',payload});
       handle(payload);
     };
-    // Geçici hatada EventSource kendiliğinden yeniden dener; kalıcı kapanmada
-    // (readyState CLOSED, ör. 401) denemez: yeniden kurulur.
+    // EventSource açıkken kendi retry yolunu kullanır; CLOSED ayrıca kurulur.
     source.onerror=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=false;gap=true;announce({type:'status',connected:false});
-      if(source&&source.readyState===2){
+      if(source.readyState===2){
         clearTimeout(retryTimer);
         retryTimer=setTimeout(connect,retryMs);
         retryMs=Math.min(retryMs*2,30000);
       }
     };
   }
-  if(!shared){connect();return;}
+  function localFallback(){shared=false;leader=true;channel?.close();poller.start();connect();}
+  if(!shared){localFallback();return;}
   channel.onmessage=event=>{
+    if(!isCurrent())return;
     const message=event&&event.data||{};
+    if(message.context!==context)return;
     if(message.type==='event'&&message.payload)handle(message.payload);
     else if(message.type==='status'){followed=true;liveSyncConnected=Boolean(message.connected);}
+    else if(message.type==='revisions'){followed=true;poller.accept(message.revisions);}
     else if(message.type==='resync')liveSyncResyncAfterGap();
-    else if(message.type==='status?'&&source)announce({type:'status',connected:liveSyncConnected});
+    else if(message.type==='revisions?'&&leader){
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+      poller.wake();
+    }else if(message.type==='status?'&&leader){
+      announce({type:'status',connected:liveSyncConnected});
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+    }
   };
   announce({type:'status?'});
-  // Kilit sekme açık kaldığı sürece tutulur (dönen söz hiç çözülmez).
-  locks.request('buyerlog-live-sync-leader',()=>new Promise(()=>{
-    // Önceki liderden devralındıysa arada kaçırılmış olay olabilir.
+  // Aynı kilit hem SSE'yi hem revision polling'i yönetir; ikinci seçim yoktur.
+  locks.request('buyerlog-live-sync-leader:'+context,{signal:lockController.signal},()=>new Promise(resolve=>{
+    if(stopped){resolve();return;}
+    releaseLeadership=resolve;leader=true;
     if(followed)gap=true;
-    connect();
-  }));
+    poller.start(followed?0:2500);connect();
+  })).catch(()=>{if(!stopped&&isCurrent())localFallback();});
 }
 /* Canlı bağlantı boşluğundan sonra açık veriler hafif yoldan yeniden okunur
    (tam kaynak yenilemesi değil). */
@@ -40498,6 +40614,7 @@ function applyLanguage(lang){
   window.BLExcelImportWizard?.refreshLanguage();
   saveLang();
   applyStaticI18n();
+  document.getElementById('backlogExportColumnsModal')?.refreshLanguage?.();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
   if(typeof applyUiFontStep==='function') applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
   translateSubtree(document.querySelector('.sourcebar'));

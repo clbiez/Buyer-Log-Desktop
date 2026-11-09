@@ -290,7 +290,8 @@
       if(closed)return;
       if(!section.isConnected){close(true);return;}
       const r=section.getBoundingClientRect(),vw=global.innerWidth||0,vh=global.innerHeight||0;
-      const top=Math.max(r.top,0),left=Math.max(r.left,0),bottom=Math.min(r.bottom,vh),right=Math.min(r.right,vw);
+      // Hazır içerik kısa veya boş olabilir; okuma alanı pencerenin kalanını kullanır.
+      const top=Math.max(r.top,0),left=Math.max(r.left,0),bottom=vh,right=Math.min(r.right,vw);
       // Modül sekmesi görünmüyorsa (başka sekme açık) beklet; geri dönünce yine gösterilir.
       if(!visible(section)||bottom-top<80||right-left<200){hold.hidden=true;return;}
       hold.hidden=false;hold.style.top=top+'px';hold.style.left=left+'px';hold.style.width=(right-left)+'px';hold.style.height=(bottom-top)+'px';
