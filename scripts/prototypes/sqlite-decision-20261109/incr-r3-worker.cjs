@@ -44,7 +44,8 @@ async function run(){
  global.gc?.();const memoryBefore=process.memoryUsage(),cpuStart=process.cpuUsage(),ioStart=io(),start=performance.now();
  // Includes ensure/replay and complete state. SQLite connection construction is
  // already complete above; connectionMs is recorded separately by caller below.
- let state=await measure('coldFullReady',async()=>{await s.ensure();return s.read();});const initialHash=fullHash(state);state=null;
+ let ensureReplayMs=0,firstFullReadMs=0;
+ let state=await measure('coldFullReady',async()=>{const a=performance.now();await s.ensure();ensureReplayMs=performance.now()-a;const b=performance.now();const state=await s.read();firstFullReadMs=performance.now()-b;return state;});const initialHash=fullHash(state);state=null;
  let eventIndex=args.size,checksum=0;
  const mixedStart=performance.now();
  for(let i=0;i<300;i++){
@@ -72,6 +73,6 @@ async function run(){
  global.gc?.();const memoryAfter=process.memoryUsage(),peakRssBytes=process.resourceUsage().maxRSS*1024;
  state=await s.read();assert.equal(hash(projection(state.records)),oracle(args.size,630));
  const stateHash=fullHash(state),businessHash=hash(projection(state.records));const integrity=s.db?s.db.prepare('PRAGMA integrity_check').get().integrity_check:null;
- close();return {connectionMs,coldOpenToFullReadyMs:connectionMs+samples.coldFullReady[0].ms,initialHash,stateHash,businessHash,receiptHash:receipts.digest('hex'),checksum,samples,mixedMs,elapsedMs,timedCpu,timedIo,memoryBefore,memoryAfter,peakHeap,peakRssBytes,maxEventLoopGapMs:gap,beforeCompactDisk,disk:disk(args.folder),integrity,versions:process.versions};
+ close();return {connectionMs,ensureReplayMs,firstFullReadMs,coldOpenToFullReadyMs:connectionMs+samples.coldFullReady[0].ms,initialHash,stateHash,businessHash,receiptHash:receipts.digest('hex'),checksum,samples,mixedMs,elapsedMs,timedCpu,timedIo,memoryBefore,memoryAfter,peakHeap,peakRssBytes,maxEventLoopGapMs:gap,beforeCompactDisk,disk:disk(args.folder),integrity,versions:process.versions};
 }
 const begin=performance.now();run().then(result=>{result.workerMs=performance.now()-begin;process.send?.({result});process.disconnect?.();}).catch(error=>{console.error(error.stack);process.exitCode=1;process.disconnect?.();});
