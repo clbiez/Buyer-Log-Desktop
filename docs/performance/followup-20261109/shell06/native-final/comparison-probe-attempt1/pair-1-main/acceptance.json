@@ -1,0 +1,347 @@
+{
+  "synthetic": true,
+  "platform": "linux",
+  "arch": "x64",
+  "versions": {
+    "node": "24.20.0",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.8",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "149",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.6",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2025c",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.2.124.19-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "44.3.0",
+    "chrome": "152.0.7977.78"
+  },
+  "sourceSha": "497464758a58e3636e67dddc45124fe067e57cf1",
+  "baseMain": "57409641",
+  "scenarios": [
+    {
+      "name": "first-tab-startup-gate",
+      "wc": 2,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 3,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 4,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "production-native-runtime",
+      "runtime": "44.3.0",
+      "diagnostics": {
+        "windowCount": 1,
+        "tabCount": 3,
+        "windows": [
+          {
+            "windowId": 1,
+            "activeTabId": "7b395a8a-1d29-4d01-996f-e495bb181b1f",
+            "shellPid": 21587
+          }
+        ],
+        "tabs": [
+          {
+            "tabId": "f08f1e9d-772c-45fe-84da-0a647e3457ac",
+            "module": "orders",
+            "active": false,
+            "pid": 21600
+          },
+          {
+            "tabId": "8c88a6d7-b241-4b6b-801c-03942b4dcd95",
+            "module": "orders",
+            "active": false,
+            "pid": 21624
+          },
+          {
+            "tabId": "7b395a8a-1d29-4d01-996f-e495bb181b1f",
+            "module": "orders",
+            "active": true,
+            "pid": 21640
+          }
+        ]
+      },
+      "preferences": [
+        {
+          "wc": 2,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        },
+        {
+          "wc": 3,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        },
+        {
+          "wc": 4,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        }
+      ],
+      "preload": [
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "f08f1e9d-772c-45fe-84da-0a647e3457ac",
+          "visibility": "hidden"
+        },
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "8c88a6d7-b241-4b6b-801c-03942b4dcd95",
+          "visibility": "hidden"
+        },
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "7b395a8a-1d29-4d01-996f-e495bb181b1f",
+          "visibility": "visible"
+        }
+      ]
+    },
+    {
+      "name": "comparison-steady",
+      "variant": "main",
+      "durationMs": 21000,
+      "revisionRequests": 9,
+      "requestingTabs": [
+        2,
+        3,
+        4
+      ],
+      "SSE": 1,
+      "revisionBytes": 1998,
+      "maxActive": 2
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 5,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    }
+  ],
+  "requests": [
+    {
+      "at": 1794199974476,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/live-events",
+      "requestId": 170
+    },
+    {
+      "at": 1794199977889,
+      "phase": "steady",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 711
+    },
+    {
+      "at": 1794199977889,
+      "phase": "steady",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 712
+    },
+    {
+      "at": 1794199978663,
+      "phase": "steady",
+      "wc": 4,
+      "url": "/api/shared-revisions",
+      "requestId": 714
+    },
+    {
+      "at": 1794199984889,
+      "phase": "steady",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 724
+    },
+    {
+      "at": 1794199985663,
+      "phase": "steady",
+      "wc": 4,
+      "url": "/api/shared-revisions",
+      "requestId": 725
+    },
+    {
+      "at": 1794199985888,
+      "phase": "steady",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 726
+    },
+    {
+      "at": 1794199992663,
+      "phase": "steady",
+      "wc": 4,
+      "url": "/api/shared-revisions",
+      "requestId": 727
+    },
+    {
+      "at": 1794199992889,
+      "phase": "steady",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 728
+    },
+    {
+      "at": 1794199992889,
+      "phase": "steady",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 729
+    }
+  ],
+  "windowEvents": [
+    {
+      "event": "first-renderer-ready",
+      "wc": 2
+    }
+  ],
+  "errors": [],
+  "steadyRevisionBytes": 1998,
+  "status": "FAIL",
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1\n\n    at /workspace/buyerlog-shell06-native/docs/performance/followup-20261109/shell06/native-final/acceptance.cjs:111:269"
+}
