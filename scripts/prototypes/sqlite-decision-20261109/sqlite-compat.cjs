@@ -36,9 +36,9 @@ function sqlite(file) {
       const state=normalizeState(row?JSON.parse(row.value):emptyState(DEVICE),DEVICE);
       state.records=Object.fromEntries(db.prepare('SELECT id,body FROM records ORDER BY rowid').all().map(r=>[r.id,JSON.parse(r.body)]));
       state.events=Object.fromEntries(db.prepare('SELECT event_id,receipt FROM events WHERE receipt IS NOT NULL ORDER BY rowid').all().map(r=>[r.event_id,JSON.parse(r.receipt)]));
-      const journalIndex=new Map();
-      state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>{const e=JSON.parse(r.body);journalIndex.set(e.eventId,e);return e;});
-      journalIndexes.set(state,journalIndex);
+      const journalIndex=writes?new Map():null;
+      state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>{const e=JSON.parse(r.body);journalIndex?.set(e.eventId,e);return e;});
+      if(journalIndex)journalIndexes.set(state,journalIndex);
       if(owned)db.exec('COMMIT');return state;
     }catch(e){if(owned&&db.isTransaction)db.exec('ROLLBACK');throw e;}
   }
@@ -47,7 +47,8 @@ function sqlite(file) {
     const getRecord=db.prepare('SELECT * FROM records WHERE id=?');
     const putRecord=db.prepare('INSERT INTO records VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body,kind=excluded.kind,state=excluded.state,owner=excluded.owner');
     // TEXT affinity normalizes numeric metadata in the persisted columns.
-    const text=value=>value==null?null:String(value);
+    const affinity=db.prepare('SELECT CAST(? AS TEXT) value');
+    const text=value=>value==null?null:typeof value==='string'?value:affinity.get(value).value;
     for(const id of writes.records) {
       const record=own(state.records,id),old=getRecord.get(id);
       if(record===undefined){if(old)db.prepare('DELETE FROM records WHERE id=?').run(id);continue;}

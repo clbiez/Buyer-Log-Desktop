@@ -34,6 +34,7 @@ test('multirow SQL failure rolls back record, event, envelope and audit then ret
 });
 test('inherited keys are never persisted as candidate rows and TEXT-affinity metadata does not trigger no-op writes',t=>{
  const {s,changes,clear}=fixture(t,20);
- const item={id:'r:0',eventId:'numeric',patch:{kind:0,state:false,owner:0}};s.queuePatch(item);clear();s.queuePatch(item);assert.equal(changes().length,0);
+ const item={id:'r:0',eventId:'numeric',patch:{kind:0,state:0,owner:0}};s.queuePatch(item);clear();s.queuePatch(item);assert.equal(changes().length,0);
+ assert.throws(()=>s.queuePatch({id:'invalid',eventId:'invalid',patch:{kind:false}}),/bind|type/i);assert.equal(changes().length,0);
  s.markAcknowledged(['constructor','toString']);assert.equal(changes().length,0);assert.equal(s.db.prepare("SELECT count(*) n FROM events WHERE event_id IN ('constructor','toString')").get().n,0);
 });
