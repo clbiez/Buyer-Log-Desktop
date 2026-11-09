@@ -1,0 +1,15 @@
+{
+  "base": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3",
+  "risk": "P2: explicit local Collection cell action through existing validation/save/undo; no sync, server or authority contract change",
+  "scenario": "Real Buyer Log Chromium, isolated synthetic persisted Collection/BOM, 20 rows; three alternating base/candidate contexts, first/repeated BOM open, five open/close cycles, refresh projection, apply/undo/reload",
+  "budgets": {
+    "existingFlow": "No repeatable regression versus base; investigate noise with A/A if necessary",
+    "newActionFeedbackMs": 200,
+    "newBlockingTaskMs": 50,
+    "applyNetwork": "0 additional remote PLM/AI requests, no new poller; existing Collection save only",
+    "openNetwork": "1 local BOM GET per open, unchanged",
+    "lifecycle": "0 retained modal roots after each of 5 closes; no new listener/timer/cache type",
+    "startup": "no new eager fetch, heavy dependency or startup work"
+  },
+  "scope": "Client JS only; no Electron/preload/native or Windows/SMB/upstream changes. Chromium verifies affected web flow."
+}
