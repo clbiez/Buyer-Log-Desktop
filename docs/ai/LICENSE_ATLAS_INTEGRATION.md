@@ -23,6 +23,16 @@ its start date is edited, the closed period's end follows so no OPD range is lef
 Supplier export contains only the selected rows. Cards without a map export as a plain entry;
 licenses switched off in the map (“Include in supplier atlas”) are skipped and reported.
 
+CP / Orders › Tools › Create License Atlas uses the lazy `orderLicenseAtlas` feature
+without mounting the License Cards page. `order-license-atlas-engine.js` matches a
+snapshot of selected, currently filtered rows through canonical license / licensor
+fields and deduplicates cards. Missing or ambiguous pairs are reported, never
+replaced with unrelated licensors. `order-license-atlas.js` uses the same supplier
+projection, embedded assets and email-safe HTML builder for its sandboxed preview
+and offline download. Read-only rows are supported; no order fields are written.
+Run `node scripts/order-license-atlas-ui-acceptance.js` for isolated demo checks of
+both menus, filters, TR/EN, mobile, sharing, failed loading and file privacy.
+
 Supplier file: each license is a native `<details class="lic">` drawer (map opens in place, no
 jump links; animated with `::details-content`, printed open). Route rows use fixed columns
 (method 180px · recipient · tags 200px right-aligned) so every step lines up.

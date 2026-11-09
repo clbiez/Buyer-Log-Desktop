@@ -218,6 +218,11 @@ body[data-active-tab="licensecards"] main{height:calc(100dvh - var(--ui-topbar-h
 /* Card editing owns a compact dialog; the list never grows an inline form. */
 .lcEditor.lcDetail{width:min(920px,calc(100vw - 32px));min-width:0;max-width:none;max-height:calc(100dvh - 48px);padding:0;box-sizing:border-box}
 .lcEditor:not([open]){display:none}
+.orderLicenseAtlas .orderAtlasBody{padding:0 var(--ui-space-4);overflow:auto;min-height:0}
+.orderLicenseAtlas .orderAtlasList{display:grid;gap:var(--ui-space-2)}
+.orderLicenseAtlas .lcNotice{margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:var(--ui-space-1)}
+.orderLicenseAtlas .lcDetailFoot{gap:var(--ui-space-2);justify-content:flex-end}
+.orderAtlasPreview{width:100%;height:360px;border:1px solid var(--ui-row-divider);background:var(--ui-surface);box-sizing:border-box}
 .lcEditor[open]{display:flex;flex-direction:column}
 .lcEditorHead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--ui-space-3);padding:var(--ui-space-3) var(--ui-space-4);flex:none}
 .lcEditorHead h2{margin:2px 0}

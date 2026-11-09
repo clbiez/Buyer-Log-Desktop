@@ -1466,6 +1466,24 @@ const _favoritesAppliedPages = new Set();
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
 const _selectionActionIds=['cpCopyToKolBtn','cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.addEventListener('click',async()=>{
+  const moduleId=button.dataset.orderLicenseAtlas;
+  if(document.body.dataset.activeTab!==moduleId)return;
+  // Atlas generation only reads visible selected rows, including view-only orders.
+  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
+    license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
+    licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
+  }));
+  if(!rows.length){showToast(appLang==='en'?'Select at least one visible order first.':'Önce görünür en az bir sipariş seçin.');return;}
+  button.disabled=true;button.dataset.atlasLoading='1';
+  const menu=document.getElementById(moduleId+'ToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById(moduleId+'ToolsBtn')?.setAttribute('aria-expanded','false');
+  try{
+    await window.BLPerf.ensureFeature('orderLicenseAtlas');
+    if(document.body.dataset.activeTab===moduleId)window.BLOrderLicenseAtlas.open({rows,moduleId});
+  }catch(_){showToast(appLang==='en'?'The license atlas module could not be loaded. Please retry.':'Lisans atlası modülü yüklenemedi. Yeniden deneyin.');}
+  finally{delete button.dataset.atlasLoading;updateShippingBtnVisibility();}
+}));
 document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async event=>{
   const button=event.currentTarget;button.disabled=true;
   const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
@@ -20218,8 +20236,10 @@ function updateShippingBtnVisibility(){
       :(appLang==='en'? `Copy ${count} selected order(s) to Collection`:`${count} seçili siparişi Koleksiyona kopyala`);
   }
   for(const mode of ['cp','orders']){
-    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
+    const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
+    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
+    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
       ?(appLang==='en'?'Calculate Endeksmatik one year before or after the selected order':'Seçili siparişin bir yıl öncesi veya sonrası için Endeksmatik hesapla')
