@@ -332,11 +332,11 @@ function applyEntries(entries, actor, options = {}) {
       if (!entry || entry.itemId !== '@set-components') continue;
       const order = text(entry.orderKey, 300), key = answerKey(order, '@set-components');
       const previous = store.answers[key] || store.tombstones[key];
-      if (entry.deleted === true) throw Object.assign(new Error('Existing set parts must be preserved.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:409});
+      if (entry.deleted === true) throw Object.assign(new Error('Existing set parts must be preserved.'), {orderKey:text(entry.orderKey,300),itemId:text(entry.itemId,200),code:'CHECKLIST_COMPONENTS_INVALID',statusCode:409});
       const previousAt = previous && text(previous.at, 80), at = iso(entry.at), baseAt = text(entry.baseAt, 80);
       // A stale/skipped roster cannot authorize a new part in the same batch.
       if (previousAt && (previousAt > at || (source === 'supplier_excel' && baseAt && previousAt > baseAt))) continue;
-      if (normalizeState(entry.state) !== 'open' || !Number.isInteger(entry.componentCount) || entry.componentCount < 2 || entry.componentCount > 26) throw Object.assign(new Error('Invalid set component count.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
+      if (normalizeState(entry.state) !== 'open' || !Number.isInteger(entry.componentCount) || entry.componentCount < 2 || entry.componentCount > 26) throw Object.assign(new Error('Invalid set component count.'), {orderKey:text(entry.orderKey,300),itemId:text(entry.itemId,200),code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
       pendingRosters.set(order, Math.max(pendingRosters.get(order) || 0, entry.componentCount));
     }
     // Validate every part against the saved roster or a roster in this same
@@ -347,7 +347,7 @@ function applyEntries(entries, actor, options = {}) {
       const order = text(entry.orderKey, 300), rosterKey = answerKey(order, '@set-components');
       const saved = store.answers[rosterKey] || store.tombstones[rosterKey];
       const count = Math.max(saved && saved.componentCount || 0, pendingRosters.get(order) || 0);
-      if (!Number.isInteger(count) || count < 2 || count > 26 || part[1].charCodeAt(0) - 64 > count) throw Object.assign(new Error('Define the set roster before updating a component.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
+      if (!Number.isInteger(count) || count < 2 || count > 26 || part[1].charCodeAt(0) - 64 > count) throw Object.assign(new Error('Define the set roster before updating a component.'), {orderKey:text(entry.orderKey,300),itemId:text(entry.itemId,200),code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
     }
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
     const changedKeys = [], rejectedAt = {},outcomes=[];
@@ -380,8 +380,8 @@ function applyEntries(entries, actor, options = {}) {
       if (Object.prototype.hasOwnProperty.call(raw, 'attachments') && !Array.isArray(raw.attachments)) throw Object.assign(new Error('Checklist attachments must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       if (String(raw.note || '').length > 2000 || String(raw.reportNumber || '').length > 300) throw Object.assign(new Error('Checklist evidence exceeds the allowed field length.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       const componentCount = Object.prototype.hasOwnProperty.call(raw, 'componentCount') ? raw.componentCount : previousEvidence && previousEvidence.componentCount;
-      if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 2 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
-      if (itemId === '@set-components' && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
+      if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 2 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
+      if (itemId === '@set-components' && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
       // v7.0.290 — bileşen sonuçları (Main Fabric / Neck RIB …); gönderilmezse korunur.
       if (Object.prototype.hasOwnProperty.call(raw, 'elements') && raw.elements != null && !Array.isArray(raw.elements)) throw Object.assign(new Error('Checklist components must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       let elements = ElementParts.normalizeElements(Object.prototype.hasOwnProperty.call(raw, 'elements') ? raw.elements : previousEvidence && previousEvidence.elements, value => normalizeState(value) || 'open');

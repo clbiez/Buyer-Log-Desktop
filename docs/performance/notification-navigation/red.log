@@ -1,0 +1,68 @@
+✖ target survives history persistence without row IDs, URLs or functions; legacy notices still load (4.028728ms)
+✖ navigation uses current canonical line after IDs/order/filter change, including the exact part (1.087195ms)
+✖ missing orders, revoked area, different user and session changes never open a record (0.96449ms)
+✖ records replaced during lazy loading are re-resolved and read-only rows open details (1.714968ms)
+✖ target actions preserve unrelated callbacks and close only after successful navigation (0.995146ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76.521428
+
+✖ failing tests:
+
+test at resources/app/tests/notification-navigation.test.js:19:1
+✖ target survives history persistence without row IDs, URLs or functions; legacy notices still load (4.028728ms)
+  TypeError: Cannot read properties of undefined (reading 'lineKey')
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/notification-navigation.test.js:21:84)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at resources/app/tests/notification-navigation.test.js:27:1
+✖ navigation uses current canonical line after IDs/order/filter change, including the exact part (1.087195ms)
+  TypeError: f.ctx.openNotificationTarget is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/notification-navigation.test.js:29:27)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at resources/app/tests/notification-navigation.test.js:31:1
+✖ missing orders, revoked area, different user and session changes never open a record (0.96449ms)
+  TypeError: f.ctx.openNotificationTarget is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/notification-navigation.test.js:32:45)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at resources/app/tests/notification-navigation.test.js:37:1
+✖ records replaced during lazy loading are re-resolved and read-only rows open details (1.714968ms)
+  TypeError: f.ctx.openNotificationTarget is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/notification-navigation.test.js:39:27)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at resources/app/tests/notification-navigation.test.js:41:1
+✖ target actions preserve unrelated callbacks and close only after successful navigation (0.995146ms)
+  TypeError: f.ctx.notificationOptions is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/notification-navigation.test.js:42:51)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
