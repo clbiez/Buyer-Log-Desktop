@@ -1,0 +1,10 @@
+{
+  "testedBaseMain": "ef2999fc7b3b2cd029e79639dcbcdf5554acb363",
+  "testedSourceCommit": "7ec7ff765db38100bbf84e19e12988f840fded7b",
+  "acceptedPrHead": "501df9cecd3c254a1d8ca8b944181dd6628dd68a",
+  "mergeCommit": "7a0600080ebe42f80660ee2cc7bec524d431cc44",
+  "electron": "44.3.0",
+  "zipSha256": "8b49b9efdd73c0f467edc3c1cd5678392c384ccf224f34ff54179f736e2f384b",
+  "result": "18 native scenarios PASS; activation 555 ms; 0 errors",
+  "rawJson": "../shell06/main-integration-20261109/native-current-main/acceptance.json"
+}

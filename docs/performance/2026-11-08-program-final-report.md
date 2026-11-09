@@ -187,17 +187,27 @@ geniş mimari hedeflerin tamamlandığı anlamına gelmez.
 | SHELL-05 | [#942](https://github.com/clbiez/Buyer-Log-Desktop/pull/942) | Native sekmenin kendi modülüne sınırlı hazırlık; mevcut Electron kabul kanıtı korunur / Native-tab warmup is limited to its module, retaining recorded Electron acceptance. |
 | INT-03 | [#943](https://github.com/clbiez/Buyer-Log-Desktop/pull/943) | Canlı PLM görsel sync işlerinde ortak byte rezervasyonu ve özel geçici dosyalar; kanonik tek commit korunur / Live image sync shares byte reservations and private staging while retaining one canonical commit. |
 
+| SHELL-06 | [#939](https://github.com/clbiez/Buyer-Log-Desktop/pull/939) | Aynı kullanıcı/erişim bağlamında tek SSE/revision lideri; hedef Electron 44.3.0 üzerinde gerçek native sekme, devir ve aktivasyon kabulü / One scoped SSE/revision leader with actual target-Electron native-tab, handoff and activation acceptance. |
+| INT-07 | [#940](https://github.com/clbiez/Buyer-Log-Desktop/pull/940) | Opt-in BOM fetch/body iptali ve kuyruk/retry/auth/body dahil 240 s toplam target okuma deadline'ı; 5 owner slotu/4 attempt korunur / Opt-in BOM cancellation and total read deadline retain owner/attempt limits. |
+
 Güncel Main entegrasyonu kanıtları: [ANA-12](followup-20261109/ana12/main-integration-20261109/summary.json),
 [SHELL-05](followup-20261109/shell05/main-integration-20261109/summary.json),
-[dört parçanın birlikte tam regresyonu](followup-20261109/int03/main-integration-20261109/summary.json).
+[ilk dört parçanın tam regresyonu](followup-20261109/int03/main-integration-20261109/summary.json),
+[SHELL-06 güncel Main/native kontrolü](followup-20261109/shell06/main-integration-20261109/summary.json),
+[altı dar parçanın son birleşik tam regresyonu](followup-20261109/int07/main-integration-20261109/summary.json).
 Özgün kabul/ölçümler ilgili PR ve kanıt dizinlerinde kalır; farklı iş yükleri toplanarak genel hızlanma çıkarılmaz.
 **EN:** Current-main regression receipts are linked; original acceptance retains its workload and platform boundaries.
 
-**Açık / Open:** [#939](https://github.com/clbiez/Buyer-Log-Desktop/pull/939) için gerçek hedef Electron/native sekme kabulü;
-[#940](https://github.com/clbiez/Buyer-Log-Desktop/pull/940) için aktif fetch/body iptali ve gerçek toplam hedef okuma deadline'ı.
-Bu iki PR bu takipte merge edilmedi ve tamamlandı sayılmadı; paralel tamamlama talimatı ve ortak rapor alanı
-[#937 / Paket 3](https://github.com/clbiez/Buyer-Log-Desktop/issues/937) içindedir.
-**EN:** Native acceptance and active transport cancellation/total deadline remain explicit open gates in the two unmerged PRs.
+**Paket 3 kabulü / Acceptance:** #939'un gerçek hedef Electron/Linux native sekme kapısı ve
+#940'ın gerçek aktif fetch/body iptali + toplam okuma deadline'ı kapıları tamamlandı.
+Koordinatör güncel Main üzerinde native kabulü yeniden çalıştırdı ve birleşik tam regresyonu doğruladı;
+son head CI ve merge kayıtları ortak [#937 raporundadır](https://github.com/clbiez/Buyer-Log-Desktop/issues/937).
+**EN:** Both scoped gates are verified; final integration, current-source native evidence and exact-head CI/merge receipts are recorded centrally.
+
+INT-07'de iki örtüşen opt-in BOM tüketicisi iki ayrı HTTP isteği yapar; birinin iptali diğerini kesmez.
+Varsayılan ortak okumalar tek isteği paylaşmaya devam eder. Bu izinli ağ ödünleşimi,
+kurumsal kapasite veya genel RSS/hızlanma kabulü değildir. Windows/SMB/kurumsal upstream ölçülmedi.
+**EN:** Opt-in BOM isolation intentionally duplicates overlapping reads; default coalescing is retained. No enterprise capacity, global RSS/speed or Windows/SMB acceptance is claimed.
 
 Bu takip TEST veya STABLE yayını tetiklemedi. 6a/6c ve diğer atanmadık kapsam dışı işler uygulanmış sayılmaz;
 SQLite kararı **bekle** olarak kalır.
