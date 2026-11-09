@@ -12,151 +12,6 @@
   },
   "changes": [
     {
-      "id": "int08-table-image-previews",
-      "type": "improvement",
-      "module": {
-        "tr": "Model görselleri",
-        "en": "Model images"
-      },
-      "title": {
-        "tr": "Tablo görselleri küçük önizlemelerden yüklenir",
-        "en": "Table images load from small previews"
-      },
-      "body": {
-        "tr": "Model görseli tablolarda en uzun kenarı 256 piksel olan bir önizlemeden gösterilir. Önizleme cihazda saklanır ve sayfaya dönüşte yeniden kullanılır. Büyük önizleme, detay çekmecesi, pano ve Excel dışa aktarma orijinal görseli kullanır.",
-        "en": "Tables display model images from a preview with a maximum edge of 256 pixels. The preview is stored on the device and reused when returning to the page. Large previews, the detail drawer, clipboard and Excel exports use the original image."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "int08-table-image-previews.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log Siparişler tablosunda sentetik model görseli önizlemeleri",
-          "en": "Synthetic model image previews in the actual Buyer Log Orders table"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek uygulama, sentetik demo veri. Bellek, decode ve çıktı eşdeğerliği ayrı ölçüm ve testlerle doğrulanır.",
-          "en": "Actual post-change application with synthetic demo data. Memory, decoding and output equivalence are verified separately by measurements and tests."
-        }
-      }
-    },
-    {
-      "id": "ana10-bulk-row-refresh-index",
-      "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "Toplu satır yenilemeleri daha hızlı",
-        "en": "Faster bulk row refreshes"
-      },
-      "body": {
-        "tr": "Çok sayıda sipariş yenilenirken CP satırları tek geçişte bulunur. Öncelik kararları, değişiklik işaretleri, seçim ve satır sırası korunur.",
-        "en": "When many orders refresh, CP rows are located in one pass. Priority decisions, dirty markers, selection and row order are preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "ana10-bulk-row-refresh.png",
-        "alt": {
-          "tr": "Demo siparişlerle toplu yenileme sonrası gerçek CP Tracker tablosu",
-          "en": "Actual CP Tracker table after a bulk refresh of demo orders"
-        },
-        "caption": {
-          "tr": "Gerçek uygulama, değişiklik sonrası demo veri; güncellenen satırlar ve öncelikler korunur.",
-          "en": "Actual post-change application with demo data; refreshed rows and priorities are preserved."
-        }
-      }
-    },
-    {
-      "id": "ana04-windowed-details-intake",
-      "type": "improvement",
-      "module": {
-        "tr": "Backlog ve Intake",
-        "en": "Backlog and Intake"
-      },
-      "title": {
-        "tr": "Büyük detay tabloları daha hızlı açılır",
-        "en": "Large detail tables open faster"
-      },
-      "body": {
-        "tr": "Büyük Backlog detayları ve Intake tabloları daha hızlı açılır. Tam ve kısmi kopyalama, klavye ile gezinme, Daha fazla göster ve Excel çıktısı korunur.",
-        "en": "Large Backlog details and Intake tables open faster. Full and partial copying, keyboard navigation, Show more and Excel output are preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "ana04-windowed-details-intake.png",
-        "alt": {
-          "tr": "30.000 sentetik siparişle gerçek Buyer Log Backlog detay tablosu",
-          "en": "Actual Buyer Log Backlog detail table with 30,000 synthetic orders"
-        },
-        "caption": {
-          "tr": "Demo Backlog detayları: mevcut hücreler, satır yükseklikleri ve seçim davranışı korunur.",
-          "en": "Demo Backlog details: existing cells, row heights and selection behavior are preserved."
-        }
-      }
-    },
-    {
-      "id": "cpr06-model-matrix-window",
-      "type": "improvement",
-      "module": {
-        "tr": "Fiyat Masası",
-        "en": "Pricing Desk"
-      },
-      "title": {
-        "tr": "Büyük fiyat matrisleri daha hızlı açılır",
-        "en": "Large pricing matrices open faster"
-      },
-      "body": {
-        "tr": "Matrisi kopyala ve blok yapıştırma ekran dışındaki modelleri de kapsar. Excel aktarımı tüm modelleri korur; kaydırma sırasında düzenlenen hücre ve klavye konumu korunur.",
-        "en": "Copy matrix and block paste include models outside the screen. Excel export keeps all models, and scrolling preserves the cell being edited and keyboard position."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "cpr06-model-matrix-window.png",
-        "alt": {
-          "tr": "Gerçek Fiyat Masası ekranında demo modelleri ve Matrisi kopyala düğmesi",
-          "en": "Demo models and the Copy matrix button in the actual Pricing Desk"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek uygulama, 150 demo model ve 20 üretici; tüm modeller kopyalama ve Excel aktarımında korunur.",
-          "en": "Actual post-change application with 150 demo models and 20 manufacturers; copy and Excel export retain every model."
-        }
-      }
-    },
-    {
-      "id": "compute-capacity-refresh-recovery",
-      "type": "fix",
-      "module": {
-        "tr": "Veri yenileme",
-        "en": "Data refresh"
-      },
-      "title": {
-        "tr": "Büyük veride yenileme ve sayfa açılışı korunur",
-        "en": "Refresh and page loading remain available for large datasets"
-      },
-      "body": {
-        "tr": "Büyük kaynak verisi kaydedilirken tüm JSON tek metne çevrilmez; parçalarla yazma ve okuma sunucunun bellek taşmasıyla kapanmasını önler. Hesaplama havuzunun bellek sınırına takılan kaynak kopyası hazırlığı yenilemeyi durdurmaz. CP, Siparişler ve Backlog aynı doğrulanmış veriyi, kullanıcı kapsamını ve hesaplama kurallarını koruyarak sırayla hazırlanır. Büyük veri işlenirken ekran kısa süre bekleyebilir.",
-        "en": "Large source snapshots are written and read in chunks instead of converting the entire JSON to one string, avoiding the out-of-memory server crash. Source-copy preparation that exceeds the compute pool memory limit no longer stops refresh. CP, Orders and Backlog are prepared sequentially from the same verified data, preserving user scope and calculation rules. The interface may briefly wait while a large dataset is processed."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "compute-capacity-refresh-recovery.png",
-        "alt": {
-          "tr": "Düşük hesaplama belleği sınırında yenileme sonrası güncel 24 demo sipariş",
-          "en": "24 current demo orders after refresh under a low compute memory limit"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log arayüzü; 112 MiB hesaplama havuzunda yenileme, CP, Siparişler ve Backlog okumaları doğrulandı. Sentetik veri kullanıldı.",
-          "en": "Actual Buyer Log UI; refresh and CP, Orders and Backlog reads verified with a 112 MiB compute pool. Synthetic data only."
-        }
-      }
-    },
-    {
       "id": "excel-import-acknowledged-outcome-safety",
       "type": "fix",
       "module": {
@@ -182,6 +37,35 @@
         "caption": {
           "tr": "Gerçek demo sunucusunda satır yanıtından sonra yenileme hatası üretildi; sütun ve değer tam CP projeksiyonundan yeniden doğrulandı.",
           "en": "A refresh failure was injected after the row response on the actual demo server; the column and value were verified from the full CP projection."
+        }
+      }
+    },
+    {
+      "id": "fx-folder-admission-status-20261109",
+      "type": "fix",
+      "module": {
+        "tr": "Döviz kurları",
+        "en": "FX rates"
+      },
+      "title": {
+        "tr": "Excel kuyruğu doluyken geçerli kur dosyası korunur",
+        "en": "Valid FX files remain usable when the Excel queue is full"
+      },
+      "body": {
+        "tr": "KUR.xlsx işleme kuyruğuna alınamadığında kuyruk doluluğu ayrı gösterilir; dosya bozuk sayılmaz ve LCW AI ile onarım önerilmez. Mevcut kurlar korunur. Kuyruk boşaldıktan sonraki normal denemede aynı geçerli dosya uygulanabilir; eski raporlar için onay ve veri çakışması kontrolleri korunur.",
+        "en": "When KUR.xlsx cannot enter the processing queue, queue saturation is shown separately; the file is not marked corrupt and LCW AI repair is not offered. Current rates are preserved. The same valid file can be applied on the next normal attempt after the queue drains; confirmation for older reports and data conflict checks remain in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fx-admission-busy-tr-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log kur penceresinde kuyruk doluluğu durumu ve korunmuş sentetik kurlar",
+          "en": "Queue saturation status and preserved synthetic rates in the actual Buyer Log FX dialog"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; varsayılan Excel kuyruğu sentetik işlerle dolduruldu. Dosya onarımı önerilmeden mevcut kurlar gösterilir.",
+          "en": "Actual post-change application; the default Excel queue was saturated with synthetic tasks. Current rates are displayed without offering file repair."
         }
       }
     },
