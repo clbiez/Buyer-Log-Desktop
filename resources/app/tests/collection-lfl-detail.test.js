@@ -132,3 +132,18 @@ test('reference values remain visible during refresh, failed refresh and source 
  state.referenceFailure=null;await ui.ensure({rebuild:true});assert.equal(ui.model(candidate).reference.average,average);
  state.referenceFailure='FORBIDDEN';await ui.ensure({rebuild:true});assert.equal(ui.model(candidate).reference,null,'revoked permissions hide saved data');
 });
+
+test('refresh feedback identifies a missing source or filter and retains the saved comparison in both languages',async()=>{
+ const {ui,context,state}=uiHarness();await ui.ensure();const average=ui.model(candidate).reference.average;
+ for(const [code,tr,en] of [
+  ['SOURCE_FILTER_REQUIRED','Kaynak Veri','Source Data'],
+  ['LFL_SOURCE_UNAVAILABLE','LFL kaynağı yüklenmemiş','LFL source is not loaded'],
+  ['COMPUTE_STALE_GENERATION','Kaynak işlem sırasında değişti','source changed during refresh'],
+  ['COMPUTE_QUEUE_BUSY','Hesaplama kuyruğu dolu','compute queue is full'],
+ ]){
+  state.referenceFailure=code;await ui.ensure({rebuild:true});
+  assert.equal(ui.model(candidate).reference.average,average);
+  context.appLang='tr';assert.ok(ui.drawer(candidate).includes(tr));
+  context.appLang='en';assert.ok(ui.drawer(candidate).includes(en));
+ }
+});

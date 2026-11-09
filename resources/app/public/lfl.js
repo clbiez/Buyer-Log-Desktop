@@ -115,7 +115,7 @@
     filters:Object.fromEntries(FILTER_DIMS.map(k=>[k,new Set()])),
     periods:{current:{dateField:'inStore'},compare:{dateField:'inStore'}},
     showFabricDetails:false,
-    breakdown:['mag','mmyg','classification'],
+    breakdown:[...window.BLLflCalculationEngine.DEFAULT_BREAKDOWN],
     sort:{key:'qty',dir:-1},analysis:null,
     tableViews:{group:emptyTableView('qty',-1),manufacturer:emptyTableView('currentQty',-1),customCompare:emptyTableView('currentQty',-1),currentDetail:emptyTableView(),compareDetail:emptyTableView()},
     customCompare:{loaded:false,seeded:false,dimensions:['mag'],values:{},reference:'',sort:'priceChange',dir:1,scenarios:[],editingId:'',legacySaved:null},

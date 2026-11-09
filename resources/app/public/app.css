@@ -1743,6 +1743,23 @@ td.num .revPair{justify-content:flex-end;}
 .shipDecision{display:block; margin-bottom:10px;}
 .shipDecision[hidden]{display:none;}
 
+/* Shipping comparison layout; appearance belongs to shared Manifest rules. */
+.shipCompare thead th{
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  vertical-align:middle;
+}
+.shipCompare thead th>span{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.shipCompare .shipCardMetrics{
+  flex-wrap:wrap;
+  row-gap:2px;
+}
+
 .shipCompareWrap{overflow:auto;}
 .shipCompare{
   width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed;

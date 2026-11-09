@@ -1,0 +1,98 @@
+{
+  "main": {
+    "coldMs": [
+      2515.263546,
+      2007.5527739999998,
+      2174.8705549999995
+    ],
+    "warmProcessMediansMs": [
+      2498.56582,
+      2246.2742739999994,
+      2099.012353
+    ],
+    "peakRssBytes": [
+      719237120,
+      713207808,
+      815013888
+    ],
+    "warmCpuProcessMediansMs": [
+      2749.256,
+      2476.003,
+      2340.394
+    ]
+  },
+  "candidate": {
+    "coldMs": [
+      1217.6477169999998,
+      1142.3554830000012,
+      1159.2353079999993
+    ],
+    "warmProcessMediansMs": [
+      1289.3258479999986,
+      1180.7084240000004,
+      1197.3668780000007
+    ],
+    "peakRssBytes": [
+      733245440,
+      751001600,
+      719028224
+    ],
+    "warmCpuProcessMediansMs": [
+      1580.966,
+      1431.518,
+      1439.456
+    ]
+  },
+  "recovery": {
+    "maxHttpMs": 1915.6361809999999,
+    "maxEventLoopGapMs": 40.750513999999384,
+    "maxIncrementalSampledRssBytes": 62881792,
+    "postGcHeapBytes": [
+      75557720,
+      75558944,
+      75553856
+    ]
+  },
+  "outputHash": "6065c5c8d1ef8955967f714b83b56f8dbbf906c56442272da97f8f118c64547a",
+  "fixtureHashes": [
+    "2af71db498bb86d79d19f70802bd6ff06fca90b729ec1a304b4e181500f48d23"
+  ],
+  "sameMainControls": [
+    {
+      "pair": 1,
+      "peakRssBytes": [
+        731025408,
+        720863232
+      ],
+      "bMinusABytes": -10162176,
+      "warmMs": [
+        2215.924277000002,
+        2186.112443
+      ]
+    },
+    {
+      "pair": 2,
+      "peakRssBytes": [
+        742375424,
+        751525888
+      ],
+      "bMinusABytes": 9150464,
+      "warmMs": [
+        2201.236575000001,
+        2222.476665
+      ]
+    },
+    {
+      "pair": 3,
+      "peakRssBytes": [
+        740470784,
+        718708736
+      ],
+      "bMinusABytes": -21762048,
+      "warmMs": [
+        2250.9276309999987,
+        2220.309894
+      ]
+    }
+  ]
+}

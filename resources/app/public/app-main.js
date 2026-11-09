@@ -13580,6 +13580,12 @@ window.BLAIScreenData = {
     if (!response.ok) throw new Error(body && body.error ? body.error : `HTTP ${response.status}`);
     return Array.isArray(body.rows) ? body.rows : [];
   },
+  lflRows: async () => {
+    const response = await fetch('/api/lfl', { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } });
+    const body = await response.json();
+    if (!response.ok || body.sourceFilterRequired) throw new Error(body.error || body.sourceFilterMessage || (appLang === 'en' ? 'LFL data could not be read.' : 'LFL verisi okunamadı.'));
+    return Array.isArray(body.rows) ? body.rows : [];
+  },
   pageTitle: tab => { const item = APP_PAGE_META[tab]; return item ? (appLang === 'en' ? item.en : item.tr) : tab; },
 };
 // Üst çubuktaki LCW AI düğmesi: her ekrandan genel LCW AI çalışma alanına.

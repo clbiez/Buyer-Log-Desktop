@@ -59,6 +59,8 @@ jobs:
         run: node --test tests/plm-stage-progress.test.js tests/plm-operations-ui-v915.test.js tests/job-registry-v914.test.js tests/plm-image-pipeline-v1100.test.js
       - name: LCW AI embedded session and PLM BOM regression
         run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js tests/plm-sync-two-phase.test.js tests/plm-sync-colours-retry.test.js tests/collection-artwork-detail.test.js
+      - name: LCW AI deterministic metrics, LFL and supplier query regression
+        run: node --test tests/lcwai-data-query.test.js tests/lcwai-weighted-metrics.test.js tests/lcwai-analysis-queries.test.js tests/lcwai-chat-data-query.test.js
       - name: Excel import AI validation and canonical import regression
         run: node --test tests/excel-import-ai.test.js tests/excel-import-plan-v1060.test.js tests/excel-import-mapping-match-v1060.test.js tests/collection-excel-import-actions-v20260920.test.js
       - name: Release version, lock, SBOM and artifact bytes

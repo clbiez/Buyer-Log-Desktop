@@ -21,6 +21,9 @@ test('planlayıcı istemi: dağınık Türkçe, Buyer Log sözlüğü, netleşti
   assert.match(built.prompt, /sıparıs = sipariş, gecme = geçme, butce = bütçe/);
   assert.match(built.prompt, /mode="clarify" ONLY when/);
   assert.match(built.prompt, /never compute, estimate or invent numbers/);
+  assert.match(built.prompt, /include EVERY requested measure/);
+  assert.match(built.prompt, /weighted_avg.*weightField/);
+  assert.match(built.prompt, /MUST NOT replace weighted_avg/);
   assert.match(built.prompt, /=== MODÜL REHBERİ ===\nDATASET "orders"/);
   assert.doesNotMatch(built.prompt, /Soru sorma; en iyi cevabını ver/, 'veri sorgusu gerçekten belirsizse sorabilir');
   // Diğer sözleşmeler soru sormamaya devam eder.
