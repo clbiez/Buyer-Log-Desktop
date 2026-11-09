@@ -154,7 +154,7 @@
       const host=table.closest?.('.tablewrap')?.getBoundingClientRect();
       let scanned=0,index=0;
       for(const row of tbody.rows||tbody.children||[]){
-        if(index>=6||scanned++>=128)break;
+        if(scanned++>=128)break;
         if(row.tagName!=='TR'||!row.isConnected||row.hidden||row.closest?.('[hidden],[aria-hidden="true"]'))continue;
         const bounds=row.getBoundingClientRect();
         if(bounds.width<=0||bounds.height<=0||bounds.bottom<=0||bounds.top>=root.innerHeight||bounds.right<=0||bounds.left>=root.innerWidth||
@@ -172,7 +172,8 @@
     let count=0;
     for(const [row,order] of queue){
       const a=start(row,[{opacity:0,transform:'translate3d(0,'+distance+'px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
-        {duration:ms*.52,delay:ms*(.18+order*.06),fill:'backwards',easing});
+        // Cover the whole visible body without lengthening the shared entrance.
+        {duration:ms*.52,delay:ms*(.18+Math.min(order,5)*.06),fill:'backwards',easing});
       if(a){
         a.id='bl-motion-table-row';count++;pageAnimations.add(a);
         for(const event of ['finish','cancel'])a.addEventListener?.(event,()=>pageAnimations.delete(a),{once:true});
