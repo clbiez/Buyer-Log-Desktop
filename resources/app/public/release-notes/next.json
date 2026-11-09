@@ -168,16 +168,16 @@
         "en": "Tabs share data revision checks"
       },
       "body": {
-        "tr": "Aynı kullanıcı ve erişim kapsamındaki sekmeler, veri revizyonlarını mevcut canlı bağlantı lideri üzerinden denetler. Lider kapanınca başka sekme devralır ve aradaki değişiklikleri yakalar. Yavaş istekler üst üste birikmez; bağlantı kesilince denetim durur, dönüşte yeniden başlar. Eski tarayıcılarda sekme başına güvenli denetim korunur.",
-        "en": "Tabs with the same user and access scope check data revisions through the existing live connection leader. When the leader closes, another tab takes over and catches intervening changes. Slow requests do not overlap; checks pause offline and resume on return. Older browsers retain safe checks per tab."
+        "tr": "Aynı kullanıcı ve erişim kapsamındaki sekmeler, veri revizyonlarını mevcut canlı bağlantı lideri üzerinden denetler. Lider kapanınca başka sekme devralır ve aradaki değişiklikleri yakalar. Yavaş istekler üst üste birikmez; bağlantı kesilince denetim durur, dönüşte yeniden başlar. Eski tarayıcılarda sekme başına güvenli denetim korunur. Masaüstünde yeniden etkinleştirilen native sekme de veri değişikliklerini hemen denetler.",
+        "en": "Tabs with the same user and access scope check data revisions through the existing live connection leader. When the leader closes, another tab takes over and catches intervening changes. Slow requests do not overlap; checks pause offline and resume on return. Older browsers retain safe checks per tab. Reactivating a native desktop tab also checks data revisions immediately."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "shell06-shared-revisions-20261109.png",
         "alt": {
-          "tr": "Paylaşılan revision denetimi sonrasında gerçek Buyer Log Siparişler ekranında sentetik demo kayıtları",
-          "en": "Synthetic demo records in the actual Buyer Log Orders screen after shared revision checks"
+          "tr": "Paylaşılan revision denetimi ve native aktivasyon düzeltmesinden sonra gerçek Electron CP Tracker ekranında sentetik demo kayıtları",
+          "en": "Synthetic demo records in the actual Electron CP Tracker screen after shared revision checks and the native activation fix"
         },
         "caption": {
           "tr": "Değişiklik sonrası gerçek uygulama ve sentetik veri. Üç sekmeli istek sayıları, lider devri ve canlı güncellemeler ayrı ağ ve olay kayıtlarıyla doğrulanır.",

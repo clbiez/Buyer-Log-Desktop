@@ -20,8 +20,8 @@ function browser({channel=true,locks=true,channelThrows=false,lockRejects=false}
   }
   const lockApi={request(name,options,fn){if(typeof options==='function'){fn=options;options={};}if(lockRejects)return Promise.reject(Error('disabled'));return new Promise((resolve,reject)=>{const entry={signal:options.signal,fn:async lock=>{await fn(lock);resolve();}};if(!waiters.has(name))waiters.set(name,[]);waiters.get(name).push(entry);options.signal?.addEventListener('abort',()=>reject(Object.assign(Error('aborted'),{name:'AbortError'})));grant(name);});}};
   function tab(id,user={id:'same-user',iamRevision:1,permissions:{read:true}}){
-    const events=[],patches=[],resync=[],win=new EventTarget(),doc=new EventTarget();doc.visibilityState='visible';
-    Object.assign(win,{BL_CLIENT_ID:id,BL_USER_CONTEXT:user,setTimeout:setTimer,setInterval(fn,ms){const repeat=()=>{fn();setTimer(repeat,ms);};return setTimer(repeat,ms);},dispatchEvent:win.dispatchEvent.bind(win)});
+    const nativeListeners=new Set(),events=[],patches=[],resync=[],win=new EventTarget(),doc=new EventTarget();doc.visibilityState='visible';
+    Object.assign(win,{buyerLogDesktop:{workspace:{onTabActivity(callback){nativeListeners.add(callback);return ()=>nativeListeners.delete(callback);}}},BL_CLIENT_ID:id,BL_USER_CONTEXT:user,setTimeout:setTimer,setInterval(fn,ms){const repeat=()=>{fn();setTimer(repeat,ms);};return setTimer(repeat,ms);},dispatchEvent:win.dispatchEvent.bind(win)});
     const context=vm.createContext({window:win,document:doc,navigator:{onLine:true,...(locks?{locks:lockApi}:{})},state:{currentUser:user},
       ...(channel?{BroadcastChannel:Channel}:{}),AbortController,CustomEvent:class extends Event{constructor(type,options){super(type);this.detail=options?.detail;}},
       EventSource:class{constructor(url){this.url=url;this.tab=id;this.readyState=0;sources.push(this);}close(){this.readyState=2;this.closed=true;}},
@@ -32,7 +32,7 @@ function browser({channel=true,locks=true,channelThrows=false,lockRejects=false}
     });
     win.addEventListener('bl-shared-revision',e=>events.push(structuredClone(e.detail)));
     vm.runInContext(code,context);
-    const result={id,win,doc,context,events,patches,resync,close(){win.dispatchEvent(new Event('pagehide'));},access(profile){win.BL_USER_CONTEXT=profile;context.state.currentUser=profile;win.dispatchEvent(new Event('bl:user-access-applied'));}};
+    const result={id,win,doc,context,events,patches,resync,nativeListeners,nativeActivity(active){for(const callback of nativeListeners)callback({active,tabId:id});},close(){win.dispatchEvent(new Event('pagehide'));},access(profile){win.BL_USER_CONTEXT=profile;context.state.currentUser=profile;win.dispatchEvent(new Event('bl:user-access-applied'));}};
     tabs.push(result);return result;
   }
   async function tick(ms){const end=now+ms;for(let steps=0;steps<10000;steps++){await flush();const next=[...timers].filter(([,t])=>t.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next){now=end;await flush();return;}now=next[1].at;timers.delete(next[0]);next[1].fn();}throw Error('timer loop');}
@@ -113,4 +113,17 @@ test('a missing identity safely polls locally rather than consuming another sess
 });
 for(const config of [{channel:false},{locks:false},{channelThrows:true},{lockRejects:true}])test('safe local fallback '+JSON.stringify(config),async()=>{
   const b=browser(config);b.tab('a');b.tab('b');await b.tick(2500);assert.equal(b.sources.length,2);assert.equal(b.requests.length,2);
+});
+
+// Electron WebContentsView reparenting can leave DOM visibility hidden; the
+// production preload activity signal is the authoritative native activation.
+test('native activation catches revisions up without a DOM visibility event and unsubscribes on cleanup',async()=>{
+  const b=browser(),leader=b.tab('leader'),follower=b.tab('native');
+  leader.doc.visibilityState='hidden';follower.doc.visibilityState='hidden';
+  await b.tick(2500);b.requests[0].resolve(snapshot(1));await b.flush();
+  follower.nativeActivity(false);await b.flush();assert.equal(b.requests.length,1);
+  follower.nativeActivity(true);await b.flush();assert.equal(b.requests.length,2,'native foreground must wake the shared leader');
+  b.requests[1].resolve(snapshot(2));await b.flush();assert.equal(follower.events.at(-1).revisions.revision,2);
+  follower.close();assert.equal(follower.nativeListeners.size,0,'pagehide removes the preload subscription');
+  follower.nativeActivity(true);await b.flush();assert.equal(b.requests.length,2);
 });

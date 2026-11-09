@@ -38970,7 +38970,7 @@ function initLiveSync(){
   const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
   // Kimlik belirlenemiyorsa başka bir oturumun süzülmüş SSE verisi paylaşılmaz.
   let shared=Boolean(channel&&locks&&JSON.parse(context)[0]&&window.BL_CLIENT_ID);
-  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false,stopped=false,leader=false,releaseLeadership=null;
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false,stopped=false,leader=false,releaseLeadership=null,removeNativeActivity=null;
   const lockController=new AbortController();
   function stop(){
     stopped=true;liveSyncConnected=false;
@@ -38980,6 +38980,7 @@ function initLiveSync(){
     window.removeEventListener('bl:user-access-applied',onAccess);
     window.removeEventListener('online',onWake);window.removeEventListener('offline',onOffline);
     document.removeEventListener('visibilitychange',onVisible);
+    removeNativeActivity?.();removeNativeActivity=null;
   }
   function isCurrent(){
     if(stopped)return false;
@@ -39004,6 +39005,9 @@ function initLiveSync(){
   window.addEventListener('bl:user-access-applied',onAccess);
   window.addEventListener('online',onWake);window.addEventListener('offline',onOffline);
   document.addEventListener('visibilitychange',onVisible);
+  // Native View yeniden eklenince DOM görünürlüğü hidden kalabilir; mevcut
+  // preload aktivasyonu da aynı liderin catch-up yolunu uyandırsın.
+  try{removeNativeActivity=window.buyerLogDesktop?.workspace?.onTabActivity?.(payload=>{if(payload?.active)onWake();})||null;}catch(_){/* optional desktop bridge */}
   function connect(){
     if(!isCurrent()||!window.BL_CLIENT_ID||typeof EventSource==='undefined')return;
     source?.close();
