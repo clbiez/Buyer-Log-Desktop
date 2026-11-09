@@ -122,9 +122,34 @@ let browser;
   assert.equal(await drawer.locator('[data-dmh-tab]').count(), 3, 'CP, Diğer modüller ve INTAKE sekmeleri');
   assert.match(await drawer.locator('.dmfActive').textContent(), /IAS: Sezon Kod/, 'mevcut IAS karşılığı kartta görünür');
 
+  // Arama kutusu her tuştan sonra aynı DOM düğümü ve klavye odağını korumalı.
+  // Türkçe karakterler ve sıfır sonuç durumu da yeniden odaklama gerektirmemeli.
+  const colSearch = drawer.locator('[data-dmf-col-search]');
+  await colSearch.focus();
+  await colSearch.evaluate(el => { window.__horizonSearchInput = el; });
+  for (const char of 'Gökberk') {
+    await page.keyboard.type(char);
+    assert.equal(await colSearch.evaluate(el => document.activeElement === el && window.__horizonSearchInput === el), true,
+      'sütun aramasında her harften sonra aynı input odakta kalmalı');
+  }
+  assert.equal(await colSearch.inputValue(), 'Gökberk');
+  await colSearch.fill('');
+
   // Yeni sütun → otomatik IAS eşleme → değer seçimi IAS'a da taşınır.
-  await drawer.locator('[data-dmf-col-search]').fill('Marka');
+  await colSearch.fill('Marka');
   await drawer.locator('[data-dmf-add-field="Marka"]').click();
+  const valueSearch = drawer.locator('.dmfEditorPane > .blvFilterValueTools [data-dmf-value-search]');
+  await valueSearch.focus();
+  await valueSearch.evaluate(el => { window.__horizonValueSearchInput = el; });
+  for (const char of 'DEMO') {
+    await page.keyboard.type(char);
+    assert.equal(await valueSearch.evaluate(el => document.activeElement === el && window.__horizonValueSearchInput === el), true,
+      'değer aramasında her harften sonra aynı input odakta kalmalı');
+  }
+  await page.waitForTimeout(450); // debounce tamamlanınca da odak korunur
+  assert.equal(await valueSearch.inputValue(), 'DEMO');
+  assert.equal(await valueSearch.evaluate(el => document.activeElement === el), true);
+  await valueSearch.fill('');
   await drawer.locator('.blvFilterValue', { hasText: 'DEMO B' }).first().click();
   await settled();
   assert.match(await drawer.locator('.dmfPairBox').textContent(), /Siparis Bilgileri · Marka/);
@@ -136,6 +161,11 @@ let browser;
   await page.keyboard.press('Space');
   assert.equal(await drawer.locator(demoA).isChecked(), false, 'ikinci Space seçimi kaldırmalı');
   await drawer.locator('[data-dmf-pair-custom]').click();
+  const pairSearch = drawer.locator('.dmfPairBox [data-dmf-value-search]');
+  await pairSearch.focus();
+  await page.keyboard.type('DEMO');
+  assert.equal(await pairSearch.evaluate(el => document.activeElement === el), true, 'IAS değer aramasında odak korunmalı');
+  await pairSearch.fill('');
   await drawer.locator('.dmfPairBox .blvFilterValue', { hasText: 'DEMO C' }).click();
   await page.waitForTimeout(300);
   if (process.env.BUYER_LOG_HORIZON_SCREENSHOT === '1') {
