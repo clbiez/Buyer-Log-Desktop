@@ -69,7 +69,9 @@
     summary.hidden=!collapsed||!summary.textContent;
     host.classList.toggle('is-collapsed',collapsed);
     toggle.setAttribute('aria-expanded',String(!collapsed));
-    if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,!collapsed,{trigger:toggle,initial});
+    // İlk DOM kurulumu ölçüm/animasyon istemez; etkileşim ortak Motion+ yolundadır.
+    if(initial){body.hidden=collapsed;body.setAttribute('aria-hidden',String(collapsed));}
+    else if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,!collapsed,{trigger:toggle});
     else body.hidden=collapsed;
   }
   function positionPanel(){
@@ -114,7 +116,7 @@
     host.innerHTML=`<div class="backlogDateHeader">
       <button type="button" class="blvModuleToggle backlogDateToggle" data-range-toggle aria-expanded="${!collapsed}" aria-controls="backlogDateRangeBody"><svg class="ic"><use href="#i-calendar"/></svg><strong>${L('Tarih aralığı','Date range')}</strong><span data-range-summary></span></button>
       ${button('↑',`data-range-move="-1" aria-label="${L('Paneli yukarı taşı','Move panel up')}"`)}${button('↓',`data-range-move="1" aria-label="${L('Paneli aşağı taşı','Move panel down')}"`)}
-    </div><div id="backlogDateRangeBody" data-range-body><div class="backlogDateTop">
+    </div><div id="backlogDateRangeBody" data-range-body ${collapsed?'hidden':''} aria-hidden="${collapsed}"><div class="backlogDateTop">
       <div class="bpaSeg2" role="group" aria-label="${L('Tarih türü','Date field')}">${Object.entries(FIELDS).map(([key,f])=>`<button type="button" data-range-field="${key}" aria-pressed="${selected===key}">${en()?f.en:f.tr}${current(key).from||current(key).to?' •':''}</button>`).join('')}</div>
       <span class="backlogDateSpacer"></span>
       <div class="bpaSeg2" role="group" aria-label="${L('Kaydırma adımı','Shift step')}">${[['day','Gün','Day'],['week','Hafta','Week'],['month','Ay','Month']].map(([key,tr,english])=>`<button type="button" data-range-unit="${key}" aria-pressed="${unit===key}">${L(tr,english)}</button>`).join('')}</div>
