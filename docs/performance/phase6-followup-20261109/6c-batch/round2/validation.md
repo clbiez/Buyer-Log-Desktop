@@ -79,8 +79,10 @@ deletion/pilot/migration or issue closure.
 
 ## Reproduce without changing production protocols
 
-Use fresh separate worktrees at the pinned Main and apply `candidate.patch.gz` only
-to the candidate worktree. Provide the repository's usual dependencies (no package
+Use fresh separate worktrees at the pinned Main and apply the decompressed
+`candidate.patch.gz` only to the candidate worktree, for example
+`gzip -dc "$R2/candidate.patch.gz" | git -C /tmp/candidate apply`.
+Provide the repository's usual dependencies (no package
 or lock changes). All harnesses live in this evidence directory. With `R2` set to
 its absolute path and application roots supplied explicitly:
 
