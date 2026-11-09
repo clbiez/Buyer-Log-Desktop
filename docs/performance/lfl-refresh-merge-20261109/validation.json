@@ -1,0 +1,95 @@
+{
+  "testedCommit": "08d56fd8b4cdcf5c03482941d8c62c193281f3d9",
+  "files": 1335,
+  "batches": 10,
+  "concurrency": 4,
+  "elapsedSeconds": 204.5,
+  "counts": {
+    "tests": 9243,
+    "pass": 9178,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "batchCounts": {
+    "tests": [
+      1824,
+      2307,
+      2058,
+      2075,
+      932,
+      4,
+      12,
+      8,
+      8,
+      15
+    ],
+    "pass": [
+      1764,
+      2304,
+      2058,
+      2074,
+      932,
+      4,
+      12,
+      8,
+      8,
+      14
+    ],
+    "fail": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "cancelled": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "skipped": [
+      60,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  },
+  "fullSuite": "PASS",
+  "targeted": {
+    "files": 13,
+    "pass": 69,
+    "fail": 0
+  },
+  "uiContractChecks": {
+    "files": 3,
+    "pass": 36,
+    "fail": 0
+  },
+  "i18nMissing": 0,
+  "pendingReleaseNotes": 23,
+  "performanceDecision": "PASS \u2014 scoped 30k Linux/Node HTTP and browser acceptance; documented platform limits",
+  "ci": "Final PR head CI will be verified before merge.",
+  "release": {
+    "TEST": "not triggered",
+    "STABLE": "not triggered"
+  }
+}
