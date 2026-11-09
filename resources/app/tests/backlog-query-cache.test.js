@@ -17,7 +17,7 @@ test('panels share in-flight rows across grouping changes and invalidate on sour
  const cache=source.slice(source.indexOf('const rowsCache=new Map()'),source.indexOf('\nfunction queryParams()'));
  const hook=source.slice(source.indexOf('let pendingTimer='),source.indexOf('/* --------------------------------------------------------------- çizim */'));
  let fetches=0;
- const sandbox={window:{},JSON,Map,URLSearchParams,fetch:async()=>{fetches++;return {ok:true,json:async()=>({rows:[{Adet:100}],rowsRevision:'r'+fetches})};},$:()=>({classList:{add(){}}}),filterFacets:new Map(),sourceRevision:'',catalogGeneration:0,filterCatalog:null,filterCatalogPromise:null,signature:'',filterOpen:false,setTimeout:()=>0,clearTimeout(){},visible:()=>false};
+ const sandbox={window:{},JSON,Map,URLSearchParams,AbortController,Set,assertRequest(signal){if(signal?.aborted)throw new DOMException("Aborted","AbortError");},cancelOverviewRequest(){},cancelFilterValues(){},fetch:async()=>{fetches++;return {ok:true,json:async()=>({rows:[{Adet:100}],rowsRevision:'r'+fetches})};},$:()=>({classList:{add(){}}}),filterFacets:new Map(),sourceRevision:'',catalogGeneration:0,filterCatalog:null,filterCatalogPromise:null,signature:'',filterOpen:false,setTimeout:()=>0,clearTimeout(){},visible:()=>false};
  vm.createContext(sandbox);vm.runInContext(cache+'\n'+hook,sandbox);
  vm.runInContext("onBacklogRendered({rowsInputRevision:'source-a'})",sandbox);
  const api=sandbox.window.BLBacklogRows,query={format:'json',analysisFilters:'S7'};
@@ -44,7 +44,7 @@ test('explicit reload reuses row identity only when the server confirms the same
  const source=fs.readFileSync(require.resolve('../public/backlog-overview.js'),'utf8');
  const block=source.slice(source.indexOf('const rowsCache=new Map()'),source.indexOf('\nfunction queryParams()'));
  let revision='a';
- const sandbox={window:{},JSON,Map,URLSearchParams,fetch:async()=>({ok:true,json:async()=>({rows:[{Adet:100}],rowsRevision:revision})})};
+ const sandbox={window:{},JSON,Map,URLSearchParams,AbortController,Set,assertRequest(signal){if(signal?.aborted)throw new DOMException("Aborted","AbortError");},cancelOverviewRequest(){},cancelFilterValues(){},fetch:async()=>({ok:true,json:async()=>({rows:[{Adet:100}],rowsRevision:revision})})};
  vm.createContext(sandbox);vm.runInContext(block,sandbox);
  const api=sandbox.window.BLBacklogRows,a=await api.load({format:'json',analysisFilters:'S7'});
  api.invalidate();assert.equal(await api.load({format:'json',analysisFilters:'S7'}),a);

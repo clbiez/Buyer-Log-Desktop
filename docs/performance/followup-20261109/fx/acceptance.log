@@ -1,0 +1,1 @@
+{"result":"PASS","scenarios":["default-singleton-admission-busy","TR-EN-busy-no-AI-no-write","normal-attempt-applies-once","missing-and-corrupt-distinct","explicit-confirmation-busy-and-conflicts"],"screenshots":["fx-admission-busy-tr-20261109.png","fx-admission-busy-en-20261109.png"]}

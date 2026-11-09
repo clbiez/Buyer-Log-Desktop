@@ -68,6 +68,64 @@
           "en": "A refresh failure was injected after the row response on the actual demo server; the column and value were verified from the full CP projection."
         }
       }
+    },
+    {
+      "id": "fx-folder-admission-status-20261109",
+      "type": "fix",
+      "module": {
+        "tr": "Döviz kurları",
+        "en": "FX rates"
+      },
+      "title": {
+        "tr": "Excel kuyruğu doluyken geçerli kur dosyası korunur",
+        "en": "Valid FX files remain usable when the Excel queue is full"
+      },
+      "body": {
+        "tr": "KUR.xlsx işleme kuyruğuna alınamadığında kuyruk doluluğu ayrı gösterilir; dosya bozuk sayılmaz ve LCW AI ile onarım önerilmez. Mevcut kurlar korunur. Kuyruk boşaldıktan sonraki normal denemede aynı geçerli dosya uygulanabilir; eski raporlar için onay ve veri çakışması kontrolleri korunur.",
+        "en": "When KUR.xlsx cannot enter the processing queue, queue saturation is shown separately; the file is not marked corrupt and LCW AI repair is not offered. Current rates are preserved. The same valid file can be applied on the next normal attempt after the queue drains; confirmation for older reports and data conflict checks remain in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fx-admission-busy-tr-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log kur penceresinde kuyruk doluluğu durumu ve korunmuş sentetik kurlar",
+          "en": "Queue saturation status and preserved synthetic rates in the actual Buyer Log FX dialog"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; varsayılan Excel kuyruğu sentetik işlerle dolduruldu. Dosya onarımı önerilmeden mevcut kurlar gösterilir.",
+          "en": "Actual post-change application; the default Excel queue was saturated with synthetic tasks. Current rates are displayed without offering file repair."
+        }
+      }
+    },
+    {
+      "id": "ana12-backlog-consumer-cancel-20261109",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Gereksiz Backlog sorguları iptal edilir",
+        "en": "Unneeded Backlog queries are cancelled"
+      },
+      "body": {
+        "tr": "Genel bakış, grafik veya filtre görünümü kapandığında ve sorgu değiştiğinde artık gerekmeyen satır ve filtre değeri istekleri durdurulur. Aynı hesaplamayı kullanan başka bir açık istek varsa işlem devam eder. Eski yanıtlar yeni görünümü değiştirmez.",
+        "en": "When the overview, chart or filter view closes or its query changes, row and filter-value requests that are no longer needed are stopped. Computation continues while another active request still uses it. Old responses cannot change the current view."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana12-backlog-consumer-cancel-20261109.png",
+        "alt": {
+          "tr": "Sorgu değiştirip geri döndükten sonra gerçek Buyer Log Backlog genel bakışı; sentetik demo verisi",
+          "en": "Actual Buyer Log Backlog overview after changing the query and returning; synthetic demo data"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada görünüm kapatma, filtre çekmecesini yeniden açma ve sorguyu tekrar çalıştırma doğrulandı. İptal ve ortak tüketici davranışı ayrıca HTTP ve worker testleriyle doğrulandı.",
+          "en": "Closing views, reopening the filter drawer and repeating a query were verified in the actual application. Cancellation and shared-consumer behavior were also verified with HTTP and worker tests."
+        }
+      }
     }
   ]
 }

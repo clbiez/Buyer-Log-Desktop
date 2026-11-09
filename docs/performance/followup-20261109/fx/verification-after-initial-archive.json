@@ -1,0 +1,68 @@
+{
+  "branch": "fix/followup-fx-admission-20261109",
+  "sourceState": "Final staged worktree after metadata-only Main rebase; final commit is identified by PR and #937 comment. Exact tested bytes pinned below.",
+  "testedFilesSha256": {
+    "resources/app/server/server.js": "27d6f46e114fb8a3382574ae3b6036effbaf87f449d6ec3fdd016904528a0bf7",
+    "resources/app/public/fx.js": "8f7c7237ce933dc2e94609bf0e52197959ecd81e1f1b5aa67301f0ead4991e62",
+    "resources/app/tests/fx-folder-admission.test.js": "4c53325a1f8710b464ccd61b21d91f73beb6ced3cc557e4e36434d56fc0edca5",
+    "resources/app/public/release-notes/next.json": "873b5c9d9a236a6a1961613ccfd873ea9505cc6ff12073cd3bd7c8e63bcf1229",
+    "resources/app/public/release-notes/next-assets/fx-admission-busy-tr-20261109.png": "be31aea0f395ade57681fffc9f6757800659d8d93783118f03b6664e7f5a8a1c"
+  },
+  "fullRegression": {
+    "result": "PASS",
+    "files": 1315,
+    "batches": 10,
+    "concurrency": 4,
+    "seconds": 132.0,
+    "tests": 9093,
+    "pass": 9028,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "logSha256": "d5a8089e29bf9a15af78e08dd21e2118d2b9cf5309abbe3f47a9c76dcacaf670",
+    "command": "APPDATA=/tmp/buyerlog-fx-full-regression/appdata LOCALAPPDATA=/tmp/buyerlog-fx-full-regression/localappdata flock /tmp/buyerlog-performance-measurement.lock npm test",
+    "runner": "resources/app/tests/run-tests.js",
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "os": "Linux x86_64"
+  },
+  "initialFullRun": {
+    "result": "FAIL",
+    "completedBatch": 1,
+    "tests": 1600,
+    "pass": 1571,
+    "fail": 29,
+    "skipped": 0,
+    "cancelled": 0,
+    "reason": "Sandbox default /home/agent/.buyer-log/write-recovery inaccessible; supported APPDATA/LOCALAPPDATA relocation fixed it; full run restarted from batch 1."
+  },
+  "targeted": {
+    "tests": 34,
+    "pass": 34,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "redOnMain": {
+    "tests": 5,
+    "pass": 1,
+    "fail": 4,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "i18n": {
+    "newOmissions": 0,
+    "baselineOmissions": 0
+  },
+  "releaseNotes": {
+    "addedId": "fx-folder-admission-status-20261109",
+    "previousEntries": 0,
+    "previousEntriesAndMetadataPreserved": true,
+    "upstreamArchiveUntouched": true,
+    "mainArchiveRebase": "Main independently archived 7.0.343; branch retains only its own pending entry. Earlier seven-entry validation and full PASS retained separately."
+  },
+  "actualApplicationAcceptance": "PASS",
+  "criticalDiffReview": "Implementing agent; no independent review claimed.",
+  "initialBaseMain": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "deliveryBaseMain": "7441c3bc59c87b41d9c0bca1d2b0fde60eda0413"
+}
