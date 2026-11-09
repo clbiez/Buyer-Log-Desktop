@@ -1,0 +1,42 @@
+✔ automatic folder FX uses the dedicated Excel worker and is not starved by a saturated compute pool (13.365659ms)
+✔ independent users bypass a blocked owner while same-owner mutations keep FIFO (7.867374ms)
+✔ large jobs run alone and queue backlog rejects instead of retaining unbounded data (1.920352ms)
+✔ pending buffer admission is bounded and cancelled payloads release queue capacity (1.177192ms)
+✔ cancelled worker stays charged until termination; unrelated queue resumes afterwards (1.207428ms)
+✔ timeout, clean unexpected exit and clone failure release slots and never hang the queue (31.027153ms)
+✔ parallel actual Excel work preserves canonical calculations and user-specific results (428.616581ms)
+✔ successful task settles after termination so completion stats match released resources (1.774429ms)
+✔ real Excel admission BUSY drains, then the same workbook applies once on a normal attempt (1179.481564ms)
+✔ missing, corrupt and valid workbooks remain distinct and preserve rates until valid (483.837085ms)
+✔ timeout, cancellation and worker failure are sync failures, never corrupt-file recovery (3.9666ms)
+✔ an unchanged normal read clears stale BUSY status without writing (1.35774ms)
+✔ explicit confirmation keeps BUSY rejection, fingerprint and revision conflicts (696.672677ms)
+✔ TR/EN status separates BUSY, infrastructure failure and corrupt-file AI recovery (2.144912ms)
+✔ explicit UI application requires confirmation and refreshes BUSY without claiming file conflict (1.710148ms)
+✔ folder decision covers parse failure, identity, older, current newer and apply (1.889514ms)
+✔ startup and force preserve a newer uploaded report and expose older-report (41.682923ms)
+✔ folder merge keeps uncovered cells and saves report provenance (7.744865ms)
+✔ intervening upload is re-read after conflict and cannot be overwritten (7.888955ms)
+✔ explicit source endpoint enforces permission, fingerprint and revision (178.080086ms)
+✔ deterministic detection preserves merged-header, marker and separator behavior (2.819704ms)
+✔ explicit shifted layout reads only cells and converts direction and scale (0.794957ms)
+✔ validation blocks invalid codes, values, months, collisions, small scope and reversed TRY (4.857555ms)
+✔ named threshold rules warn about jumps, changed cells, gaps and missing favorites (0.314989ms)
+✔ LCW AI contract checks layout shape and discards extra rate fields (5.487524ms)
+✔ grid preview is cropped and addresses cells without exposing paths (0.830894ms)
+✔ both adapters delegate and recovery is user initiated with validation before save (2.049594ms)
+✔ report month includes the earliest header even when all its rate cells are blank (4.607988ms)
+✔ KUR upload loads the lazy XLSX library before parsing (159.71972ms)
+✔ KUR upload accepts a currency code moved to column A and text month headers (61.681307ms)
+✔ KUR upload explains a missing Excel library in both languages (53.63049ms)
+✔ FX upload paths load fx.js on demand instead of waiting for deferredUi (18.090837ms)
+✔ browser and server read the same synthetic merged-header workbook with identical months (73.144621ms)
+✔ a preview saves with its captured revision even if the live store has advanced (50.635884ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2592.216663

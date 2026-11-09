@@ -1,0 +1,176 @@
+
+> buyer-log-desktop@7.0.343 test
+> node tests/run-tests.js plm-image plm-colour-image plm-main-option plm-sync-image
+
+[Buyer Log tests] 13 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (13 dosya)
+✔ PLM-only colourless registry survives hydration without leaking to coloured variants (45.130663ms)
+✔ Collection render/clipboard/Excel all prefer scoped persisted registry, then local image/ref (6.584177ms)
+✔ Saved PLM image fallback loads valid asset after stale preferred URL (2.668483ms)
+✔ Collection server rehydrates ONLY accessible workspace row assets and strips transient fields on save (1.825725ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/buyerlog-int03/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/buyerlog-int03/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/plm-colour-image-sync-v1012.test.js (115.936384ms)
+✔ INT-03: successful downloads do not accumulate job-sized Buffer roots before the single canonical commit (97.160268ms)
+✔ INT-03: weighted FIFO budget, queued cancellation and idempotent release (28.222043ms)
+✔ INT-03: multiple jobs share the reservation through slow commit and clean private staging (86.683524ms)
+✔ INT-03: staged single commit preserves exact content, hash dedup, manual ownership, registry revision and deferred deletion (17.233822ms)
+✔ INT-03: failed commit releases budget and staging; registry failure keeps originals (7.353008ms)
+✔ INT-03: download failure and cancellation keep successful partial results without leaking permits (3.853821ms)
+✔ INT-03: real stream rejects large declared/unknown bodies and cancellation destroys the active request (95.133011ms)
+✔ INT-03: staging preserves bytes, bounds lazy cache, detects missing files, and is private (25.057001ms)
+✔ INT-03: reservation copy envelope follows canonical maximum original size (1.111363ms)
+✔ kanonik alım yolunun yazdığı kayıt sunucu çözümleyicisinden okunur (11.772579ms)
+✔ renk ADI bilinmeyen CP/Orders satırı da aynı görseli çözer (1.881743ms)
+✔ istemci görsel önbelleği sunucuyla AYNI anahtar biçimini kullanır (26.861933ms)
+✔ kanonik kayıt ikinci bir görsel deposu üretmez (1.52616ms)
+✔ v6.40 komut üç ekranda da sağ tık penceresine bağlı (7.23954ms)
+✔ v6.40 düğme yalnız onFetch verildiğinde çıkıyor (1.056449ms)
+✔ v6.40 çağırma sırasında düğme kilitleniyor ve hata geri alıyor (0.630208ms)
+✔ v6.40 görsel gelmezse sessiz başarı yok (1.77933ms)
+✔ v7.12 tek model çağrısı dedicated PLM image endpointini kullanıyor (1.225704ms)
+✔ v6.40 kesme işaretli metinler dizgiyi bozmuyor (1.616527ms)
+✔ v6.40 çağır düğmesi silme onayından görsel olarak ayrışıyor (1.744765ms)
+✔ geçerli paket önizlenir ve sayılar gerçeği gösterir (16.232798ms)
+✔ paket türü / biçim sürümü doğrulanmadan hiçbir şey okunmaz (2.021128ms)
+✔ BOM’lu manifest okunabilir (gerçek paket BOM ile yazılıyor) (0.984119ms)
+✔ yol kaçışı (path traversal) her biçimde reddedilir (0.681483ms)
+✔ manifestte geçen ama diskte olmayan dosya reddedilir (1.208444ms)
+✔ görsel olmayan dosya reddedilir; uzantıya değil BAYTLARA bakılır (1.180065ms)
+✔ paket içe aktarması CANLI SENKRONLA AYNI kanonik yolu kullanır ve paket silinse de çalışır (4.181827ms)
+✔ paket içe aktarması kullanıcının ELLE koyduğu görseli varsayılan olarak korur (2.233756ms)
+✔ aynı paket ikinci kez aktarıldığında önbellek isabeti olur (5.693296ms)
+✔ pakette görseli olmayan girdi MEVCUT geçerli görseli silmez (6.481976ms)
+✔ PLM ID ve Renk Kodu kanonik yardımcılarla normalize edilir (0.473683ms)
+✔ adres çubuğu, sondaki ters bölü ve tırnaklı yol aynı paketi açar (2.597634ms)
+✔ paket klasörünün ÜSTÜ seçilirse doğru klasör söylenir (0.746952ms)
+✔ gerçekten var olmayan klasörde ipucu uydurulmaz (0.677823ms)
+✔ sunucu rotası da aynı normalizasyonu uygular (11.976998ms)
+✔ aynı styleId birden çok renkte istense de GetStyleImages BİR kez çağrılır (38.961367ms)
+✔ renk başına Option Image seçilir; GetStyleList görseli yalnız yedektir (10.646904ms)
+✔ aynı kaynak kimliği zaten kayıtlıysa görsel TEKRAR İNDİRİLMEZ (6.517787ms)
+✔ 129 model ölçeğinde eksikleri tamamla hiçbir API indirmesi yapmaz; tümünü yenile değişmeyeni tekrar indirmez (88.228587ms)
+✔ Eksikleri Tamamla ana renkte eski otomatik OPTION kaydını cache saymaz ve ön+arka görsele geçirir (1.182995ms)
+✔ Paylaşılandan gelen PLM/option kimliği ana renkte cache sayılmaz (0.480152ms)
+✔ kullanıcının ELLE koyduğu görsel otomatik senkronda korunur (0.604276ms)
+✔ kullanıcı AÇIKÇA isterse manuel görselin üzerine yazılabilir (5.161382ms)
+✔ otomatik görsel daha yeni bir otomatik görselle güvenle değişir (10.157894ms)
+✔ PLM görseli bulunamazsa MEVCUT geçerli görsel SİLİNMEZ (2.02348ms)
+✔ TEK bir indirmenin başarısızlığı işi düşürmez — iş partial biter (4.822159ms)
+✔ başarısız GetStyleList partisi 100 -> 50 -> 20 bölünür, başarılı PLM tekrar sorulmaz (4.031819ms)
+✔ 401/403 CoreNectum’u yeniden denemelerle dövmez, iş temiz durur (1.870206ms)
+✔ CORENECTUM_API_TOKEN_REQUIRED GetStyleList'te kalem kalem hata olmaz, auth hatası olarak yükselir (0.371818ms)
+✔ CORENECTUM_API_TOKEN_REQUIRED GetStyleImages'ta auth hatası olarak yükselir (0.353647ms)
+✔ CORENECTUM_API_TOKEN_INVALID GetStyleList'te kalem kalem hata olmaz, auth hatası olarak yükselir (0.280399ms)
+✔ CORENECTUM_API_TOKEN_INVALID GetStyleImages'ta auth hatası olarak yükselir (0.700814ms)
+✔ yetki bilgisi yalnız direct API RAM/env state içinde tutulur; dosyaya veya renderer storageına yazılmaz (0.655913ms)
+✔ iptal edilen iş cancelled biter ve yarım yazma bırakmaz (7.089849ms)
+✔ 429/5xx/timeout üstel geri çekilme + jitter ile yeniden denenir (0.838494ms)
+✔ 401/403 indirmede yeniden DENENMEZ (0.221692ms)
+✔ görsel olmayan yanıt reddedilir; uzantıya değil BAYTLARA bakılır (0.376039ms)
+✔ CoreNectum dışındaki bir adres indirilmez (0.162737ms)
+✔ sınırlı kuyruk eşzamanlılık tavanını aşmaz (6.599358ms)
+✔ kontrol noktası diske yazılır; yeniden başlatmadan sonra kalan iş sürer (11.577752ms)
+✔ Retry Failed YALNIZ başarısız kalemleri döndürür (4.596964ms)
+✔ iş kaydı erişim anahtarı TAŞIMAZ (1.243174ms)
+✔ sahiplik kaydı kaybolursa davranış GÜVENLİ tarafa düşer (her şey manuel) (0.343157ms)
+✔ progress sayıları uydurulmaz — her biri gerçekten sayılan iştir (8.180255ms)
+✔ aynı Attachment birden çok renkte seçilse de bayt TEK kez indirilir (5.282057ms)
+✔ v6.38 silinmiş görsel eksik sayılıyor (1.595456ms)
+✔ v6.38 gerçekten var olan görsel eksik sayılmıyor (0.661777ms)
+✔ v6.38 anahtar toplama yalnız o PLM ile sınırlı (0.705208ms)
+✔ v6.38 yeniden yüklenen görsel ekranda görünüyor (0.899372ms)
+✔ v6.38 mezar taşı temizliği yalnız BOŞ kayıtları siliyor (0.586284ms)
+✔ v6.38 sunucu senkronu gösterimle aynı çözümlemeyi kullanıyor (1.158305ms)
+✔ v6.38 yazma yolu mezar taşını temizliyor (0.55451ms)
+✔ görsel güncelleme listesi PLM için renk bazlı, ASAS için model bazlı tekilleşiyor (4.170198ms)
+✔ v6.38 istemci ve sunucu kuralı aynı sonucu veriyor (1.13137ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/buyerlog-int03/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/buyerlog-int03/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/plm-image-refresh-safe-replacement-v966.test.js (133.919773ms)
+✔ canlı PLM görsel rotası kanonik boruyu kullanır, ikinci bir yol açmaz (2.017272ms)
+✔ rota sınırlı eşzamanlılık varsayılanlarını kanonik sabitlerden alır (0.241533ms)
+✔ Style ID istemciden DEĞİL kalıcı PLM link deposundan gelir (0.382388ms)
+✔ istekler API çağrısından ÖNCE tekilleştirilir (0.240369ms)
+✔ iş kaydı kalıcıdır: uygulama yeniden başlayınca sıfırdan başlanmaz (0.622657ms)
+✔ paket uçları ÖNCE önizler, yalnız açık onayla yazar (1.800643ms)
+✔ manuel görsel bağlama otomatik sahipliği düşürür (1.525526ms)
+✔ tam sıfırlama sahiplik kaydını da temizler (1.231691ms)
+✔ PLM Görsel Paketini İçe Aktar mevcut model görsel ayar modalından tek giriş noktasıyla açılır (3.085603ms)
+✔ paket arayüzü lazy modül listesinde kayıtlı (0.329258ms)
+✔ paket arayüzü mevcut bileşen dilini kullanır, paralel sistem kurmaz (0.492924ms)
+✔ paket arayüzü ne kadarının üzerine yazılacağını YAZMADAN ÖNCE gösterir (0.158199ms)
+✔ CoreNectum erişim anahtarı hiçbir ayara/iş kaydına/günlüğe yazılmaz (1.577012ms)
+✔ indirme motoru bağlantıyı yeniden kullanır ve tarayıcı iptal başlığı göndermez (0.947934ms)
+✔ collection parent/single ve variant rolleri PLM görsel isteğine taşınır (5.183232ms)
+✔ imageRole server ve checkpoint/ingest katmanlarında kaybolmaz (0.293181ms)
+✔ PLM image override payload keeps Royalty/Licensor master state (2.083629ms)
+✔ all image/link hydration paths merge partial overrides instead of replacing state.overrides (3.289164ms)
+✔ PLM Sync still recalculates Collection Royalty/Licensor from retained rules on repaint (1.106894ms)
+ℹ tests 99
+ℹ suites 0
+ℹ pass 97
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 811.893819
+
+✖ failing tests:
+
+test at tests/plm-colour-image-sync-v1012.test.js:1:1
+✖ tests/plm-colour-image-sync-v1012.test.js (115.936384ms)
+  'test failed'
+
+test at tests/plm-image-refresh-safe-replacement-v966.test.js:1:1
+✖ tests/plm-image-refresh-safe-replacement-v966.test.js (133.919773ms)
+  'test failed'
+[Buyer Log tests] Batch 1/1 süresi: 0.9s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

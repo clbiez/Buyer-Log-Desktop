@@ -1,0 +1,28 @@
+{
+  "sourceSha256": {
+    "plm-image-sync-service.js": "16fcbcadd88922ddd47812dee811a4211b99a6c9cbe9d270ecb97640dd7ec269",
+    "plm-image-download-queue.js": "3358ed769bf2f6f400088d2b54c3ddc90f37c4520004bbd4d15af810c532df20",
+    "plm-image-byte-budget-int03.js": "afde8caff6610976dd225c92bfcef7c5f8111781c81d8e5ccf0ada1cae448363"
+  },
+  "synthetic": true,
+  "upstream": "loopback metadata and real HTTP stream; actual queue/ingest/server/auth/UI",
+  "status": "passed",
+  "acceptance": {
+    "generatedRows": 24,
+    "requested": 21,
+    "downloaded": 21,
+    "bytes": 13911438,
+    "exactHttpContents": true,
+    "cacheHits": 21,
+    "attempts": 21,
+    "unknown": 11,
+    "budget": {
+      "limit": 268435456,
+      "used": 0,
+      "peak": 251658240,
+      "waiting": 0
+    }
+  },
+  "loadedUiImages": 16,
+  "screenshot": "public/release-notes/next-assets/int03-shared-image-byte-budget-20261109.png"
+}

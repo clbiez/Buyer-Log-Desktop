@@ -47,3 +47,12 @@ test('worker dispatch yields to the event loop and rechecks authority before adm
  try{await new Promise(setImmediate);assert.equal(f.calls(),0,'request preparation must give an actual event-loop turn before worker dispatch');await assert.rejects(pending,{code:'COMPUTE_STALE_GENERATION'});}
  finally{if(f.calls())f.finish();await pending.catch(()=>{});}
 });
+
+test('opt-in cancellation preserves source/access guards and a live peer session',async()=>{
+ for(const change of [f=>f.setSource('g2'),f=>f.profile.access='new-authority']){
+  const f=setup(),controller=new AbortController(),pending=f.service.run({cookie:'one'},'backlog','backlog-export',{}, {signal:controller.signal});pending.catch(()=>{});
+  await turn();change(f);f.finish();await assert.rejects(pending,{code:'COMPUTE_STALE_GENERATION'});assert.equal(f.releases(),1);assert.equal(f.service.stats().bytes,0);
+ }
+ const f=setup(),a=new AbortController(),b=new AbortController(),one=f.service.run({cookie:'one'},'backlog','backlog-export',{}, {signal:a.signal}),two=f.service.run({cookie:'two'},'backlog','backlog-export',{}, {signal:b.signal});one.catch(()=>{});
+ await turn();f.sessions.delete('one');a.abort();await assert.rejects(one,{code:'COMPUTE_ABORTED'});f.finish();const lease=await two;lease.assertResponse();lease.release();f.service.clear();assert.equal(f.releases(),1);
+});

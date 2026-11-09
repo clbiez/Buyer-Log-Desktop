@@ -1,0 +1,25 @@
+✔ date window shifts through month ends, leap years and week boundaries (2.279504ms)
+✔ calendar presets use Monday weeks and inclusive 30-day windows (0.289431ms)
+✔ slider boundaries snap to full calendar periods and support long ranges without truncation (0.489385ms)
+✔ Exfactory boundaries are inclusive, optional and shared by pivot and export detail (13.493018ms)
+✔ Exfactory range is carried by query, export, detail and persisted settings (38.763876ms)
+✔ an older Backlog response cannot replace a newer date selection (11.771598ms)
+✔ v6.23 Backlog rows carry a direct image identity into every drill-down (1.726279ms)
+✔ v6.32 Backlog Excel files no longer embed image columns while LFL still can (0.977889ms)
+✔ v6.23 Backlog export options allow ASAS-IAS source columns and formulas (19.924688ms)
+✔ v6.26 Backlog export no longer renders a preview panel (184.253202ms)
+✔ Backlog row preparation skips CP projection and builds source details only on request (0.52372ms)
+✔ v6.32 Backlog Excel export skips image embedding for speed and integrity (0.550199ms)
+✔ v6.26 Backlog Excel column dialog always has a visible fixed catalog (1.10657ms)
+✔ Backlog In Store tarih state alanları korunur ve görünür düzenleme Pivot Ayarları modalındadır (3.168787ms)
+✔ v5.66 In Store filtresi Model Bütçe tarihini kullanır ve iki uçlu/tek uçlu çalışır (11.290008ms)
+✔ v5.66 In Store filtresi boş Model Bütçe tarihli satırı yalnız filtre aktifken dışarıda bırakır (1.216034ms)
+✔ v5.66 UI state, API sorgusu, detay ve Excel export aynı In Store aralığını taşır (19.633213ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 272.457303

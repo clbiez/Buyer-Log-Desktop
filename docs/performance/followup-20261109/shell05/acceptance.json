@@ -1,0 +1,984 @@
+{
+  "synthetic": true,
+  "mode": "post-change",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "sourceSha256": {
+    "public/app-main.js": "d22b172dc1ef17e0a817812a53bc36daa7abc1b3d96e64372bceff288c77417a",
+    "electron/workspace-manager.js": "7329d1b6e5b63a82da95809fa0133ba3dd08464c0faa3097893a56bb51abaa8f"
+  },
+  "cases": [
+    {
+      "name": "one-native-orders-cold",
+      "before": {
+        "active": "orders",
+        "ready": "1",
+        "probe": {
+          "done": false,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui"
+          ],
+          "errors": []
+        }
+      },
+      "after": {
+        "active": "orders",
+        "cp": null,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "pending",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": []
+      },
+      "requests": [
+        {
+          "url": "/api/merch-calendar",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/lcwai/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/corenectum-api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/oab/auth/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/user-preferences/delete",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/user-preferences/delete",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/model-connections",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/sync-status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/shipping-comparison",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/qtx/saved",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/endeksmatik/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/collection-workspaces",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/live-events",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/collection-permissions",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/data",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/collection-workspaces/moderator",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/views",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/page-projection/orders",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/collection-workspaces/moderator",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/filter-profiles",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/plm-requests",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/plm-jobs",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/plm-sync/bom/batch",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/fabric-cards",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/startup/ready",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/heartbeat",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/model-images/settings",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/lcwai/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/corenectum-api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/oab/auth/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/page-projection/collection-catalog",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/fx",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/user-preferences",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/user-preferences",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/plm-style-links",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/shared-revisions",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        }
+      ]
+    },
+    {
+      "name": "on-demand-user-switch-and-dirty-retention",
+      "after": {
+        "active": "cp",
+        "cp": 17,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "ready",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": [
+          0
+        ]
+      },
+      "requests": [
+        {
+          "url": "/api/email-groups",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/views",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/page-projection/cp",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/test-reports/tasks",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/model-images/registry/cp",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/cp-shared-edit",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/filter-profiles",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/cp-managed-rules",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/checklist-supplier",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/overrides/4100000",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        },
+        {
+          "url": "/api/sync-status",
+          "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+        }
+      ]
+    },
+    {
+      "name": "three-native-cp",
+      "openingModule": "orders",
+      "after": {
+        "active": "cp",
+        "cp": 17,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "ready",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "three-native-orders",
+      "openingModule": "orders",
+      "after": {
+        "active": "orders",
+        "cp": null,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "pending",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": []
+      }
+    },
+    {
+      "name": "three-native-koleksiyon",
+      "openingModule": "koleksiyon",
+      "after": {
+        "active": "koleksiyon",
+        "cp": null,
+        "orders": null,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "pending",
+            "error": ""
+          },
+          "orders": {
+            "status": "pending",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": []
+      }
+    },
+    {
+      "name": "native-orders-snapshot-reopen",
+      "before": {
+        "active": "orders",
+        "ready": "1",
+        "probe": {
+          "done": false,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui"
+          ],
+          "errors": []
+        }
+      },
+      "after": {
+        "active": "orders",
+        "cp": null,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "pending",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": []
+      },
+      "requests": [
+        {
+          "url": "/api/goodbye",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/merch-calendar",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/lcwai/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/corenectum-api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/oab/auth/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/user-preferences/delete",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/user-preferences/delete",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/model-connections",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/sync-status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/shipping-comparison",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/qtx/saved",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/endeksmatik/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/collection-workspaces",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/data",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/collection-permissions",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/views",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/page-projection/orders",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/collection-workspaces/moderator",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/filter-profiles",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/plm-requests",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/plm-sync/bom/batch",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/fabric-cards",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/startup/ready",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/heartbeat",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/plm-jobs",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/sync-status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+        },
+        {
+          "url": "/api/model-images/settings",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/lcwai/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/corenectum-api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/oab/auth/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/page-projection/collection-catalog",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/status",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/fx",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/user-preferences",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/user-preferences",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/plm-style-links",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        },
+        {
+          "url": "/api/shared-revisions",
+          "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+        }
+      ]
+    },
+    {
+      "name": "chromium-browser-control",
+      "after": {
+        "active": "orders",
+        "cp": 17,
+        "orders": 20,
+        "catalog": true,
+        "states": {
+          "cp": {
+            "status": "ready",
+            "error": ""
+          },
+          "orders": {
+            "status": "ready",
+            "error": ""
+          },
+          "koleksiyon": {
+            "status": "ready",
+            "error": ""
+          }
+        },
+        "probe": {
+          "done": true,
+          "starts": [
+            "cp"
+          ],
+          "gates": [
+            null,
+            "data",
+            "ui",
+            "modules"
+          ],
+          "errors": []
+        },
+        "dirty": []
+      }
+    }
+  ],
+  "electron": {
+    "node": "24.22.2",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.9",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "150",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.11",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2026e",
+    "undici": "7.30.1",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.6.75.27-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "45.2.3",
+    "chrome": "156.0.8078.80"
+  },
+  "threeNativeRequests": [
+    {
+      "url": "/api/user-preferences",
+      "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+    },
+    {
+      "url": "/api/merch-calendar",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/lcwai/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/corenectum-api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/oab/auth/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/merch-calendar",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/lcwai/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/corenectum-api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/oab/auth/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/user-preferences/delete",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/user-preferences/delete",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/model-connections",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/sync-status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/shipping-comparison",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/qtx/saved",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/endeksmatik/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/collection-workspaces",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/user-preferences/delete",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/user-preferences/delete",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/model-connections",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/sync-status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/shipping-comparison",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/qtx/saved",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/endeksmatik/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/collection-workspaces",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/collection-permissions",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/data",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/collection-workspaces/moderator",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/data",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/views",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/page-projection/orders",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/collection-lfl-reference",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/collection-permissions",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/views",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/page-projection/collection-catalog",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/plm-translations",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/collection-master-catalog",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/plm-requests",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/plm-jobs",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/collection-workspaces/moderator",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/filter-profiles",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/filter-profiles",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/quotations",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/plm-requests",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/plm-sync/bom/batch",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/fabric-cards",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/plm-jobs",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/startup/ready",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/heartbeat",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/model-images/settings",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/model-images/settings",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/user-preferences",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/lcwai/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/corenectum-api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/oab/auth/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/page-projection/collection-catalog",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/fx",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/user-preferences",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/user-preferences",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/plm-style-links",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/shared-revisions",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/shared-revisions",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/fx",
+      "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+    },
+    {
+      "url": "/api/shared-revisions",
+      "page": "http://127.0.0.1:38707/?launch=1794174773007&workspaceTab=5625f24b-c902-4992-8308-a0e5e6669a2c&module=orders&startup=1"
+    },
+    {
+      "url": "/api/email-groups",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    },
+    {
+      "url": "/api/startup/ready",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/heartbeat",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/email-groups",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/lcwai/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/corenectum-api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/oab/auth/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/fx",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/user-preferences",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/plm-style-links",
+      "page": "http://127.0.0.1:38707/?launch=1794174779050&workspaceTab=4e3d0702-3169-41cd-857d-2c7853f32b2b&module=koleksiyon"
+    },
+    {
+      "url": "/api/sync-status",
+      "page": "http://127.0.0.1:38707/?launch=1794174779042&workspaceTab=5c98d635-dba0-4063-be26-b64295117b4e&module=orders"
+    }
+  ],
+  "status": "passed"
+}
