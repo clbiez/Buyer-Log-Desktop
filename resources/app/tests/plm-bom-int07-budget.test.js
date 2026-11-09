@@ -77,12 +77,12 @@ test('INT07: cancelled queued job never starts HTTP, active calls retain permits
   release(); await active; await after; assert.equal(afterCalls, 5);
 });
 
-test('INT07: admission deadline includes queue and retry waits; it does not launch a replacement fetch', async () => {
+test('INT07: total read deadline includes queue and retry waits; it does not launch a replacement fetch', async () => {
   let calls = 0;
   const result = await syncPlmBoms([{ plmId: '1', styleId: '2' }], { ownerId: 'int07-deadline', store: store(), bomAdmissionMs: 5, retryDelaysMs: [0], postJson: async () => {
     calls++; await pause(15); throw Object.assign(new Error('timeout'), { code: 'CORENECTUM_API_TIMEOUT' });
   } });
-  assert.equal(calls, 1); assert.equal(result.failed[0].code, 'PLM_BOM_ADMISSION_DEADLINE');
+  assert.equal(calls, 1); assert.equal(result.failed[0].code, 'PLM_BOM_READ_DEADLINE');
 });
 
 test('INT07: partial failure preserves last successful model; successful set content is equivalent on retry', async () => {
@@ -102,4 +102,24 @@ test('INT07: partial failure preserves last successful model; successful set con
   const normalize = entry => { const result = structuredClone(entry); delete result.fetchedAt; return result; };
   assert.deepEqual(normalize(r.entries.get('100')), normalize(baseline.entries.get('100')));
   assert.strictEqual(r.entries.get('999'), old); assert.equal(r.failed.length, 1); assert.equal(saved.length, 1);
+});
+
+test('INT07 FINAL: one expired auth consumer detaches without cancelling another live target', async () => {
+  const { createTargetBudget } = require('../server/lib/plm-bom-int07-budget');
+  const first = createTargetBudget('int07-auth-shared', () => {}, { bomAdmissionMs: 50 });
+  const second = createTargetBudget('int07-auth-shared', () => {}, { bomAdmissionMs: 2000 });
+  let resolveAuth;
+  const auth = new Promise(resolve => { resolveAuth = resolve; });
+  try {
+    const expired = assert.rejects(first.wait(auth), { code: 'PLM_BOM_READ_DEADLINE' });
+    const live = second.wait(auth); await expired; resolveAuth(true);
+    assert.equal(await live, true); second.check();
+  } finally { first.dispose(); second.dispose(); }
+});
+
+test('INT07 FINAL: successful target signal is disposed without being aborted later', async () => {
+  let signal;
+  const result = await syncPlmBoms([{ plmId: '1', styleId: '2' }], { ownerId: 'int07-success', store: store(), bomAdmissionMs: 80,
+    postJson: async (_url, _body, opts) => { signal = opts.signal; return payload(2); } });
+  assert.equal(result.fetched, 1); await pause(100); assert.equal(signal.aborted, false);
 });

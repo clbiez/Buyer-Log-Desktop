@@ -1,0 +1,24 @@
+{
+  "status": "PASS_SUCCESSFUL_APPLICATION_EQUIVALENCE",
+  "actualApplication": true,
+  "actualHttpClient": true,
+  "syntheticRemote": true,
+  "sameOwnerConcurrentJobs": 2,
+  "setStylesPerJob": 5,
+  "childrenPerSet": 6,
+  "synthetic": true,
+  "active": 0,
+  "peak": 5,
+  "attempts": 80,
+  "byEndpoint": {
+    "SetStyleChildStyleColorAssociation": 10,
+    "GetStyleList": 10,
+    "GetStyleBomInformation": 60
+  },
+  "persistedSetParts": 6,
+  "persistedPrintCount": 6,
+  "screenshot": "resources/app/public/release-notes/next-assets/int07-bom-owner-read-budget-20261109.png",
+  "activeCancellation": "PASS in separate real local HTTP/stream regression: plm-bom-int07-final-http.test.js",
+  "hardDeadline": "PASS in separate real local HTTP/stream regression: plm-bom-int07-final-http.test.js",
+  "productionCapacityClaim": false
+}

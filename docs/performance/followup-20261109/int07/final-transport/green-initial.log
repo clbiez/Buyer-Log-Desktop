@@ -1,0 +1,27 @@
+✔ INT07: five sets with six children and two jobs share at most five owner reads (145.045486ms)
+✔ INT07: separate owners make progress together without a global serial queue (71.14528ms)
+✔ INT07: transient reads request one client attempt and stop after four total rounds (7.017458ms)
+✔ INT07: permanent HTTP and validation failures do not retry successful read-only POSTs (0.882512ms)
+✔ INT07: cancelled queued job never starts HTTP, active calls retain permits until settled (64.81884ms)
+✔ INT07: total read deadline includes queue and retry waits; it does not launch a replacement fetch (16.050735ms)
+✔ INT07: partial failure preserves last successful model; successful set content is equivalent on retry (93.120673ms)
+✔ INT07 FINAL: real active fetch cancellation closes the HTTP request, releases permits and starts no late writes (71.907621ms)
+✔ INT07 FINAL: real headers then stalled streamed body stops at total target deadline (160.182203ms)
+✔ INT07 FINAL: target deadline also aborts a request before headers (157.790104ms)
+✔ INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live (18.568441ms)
+✔ INT07 FINAL: default consumers still share and clone one read and ignore unsolicited signal (42.02881ms)
+✔ INT07 FINAL: cancel interrupts shared auth wait with no new HTTP or store writes (45.56183ms)
+✔ INT07 FINAL: cancel interrupts retry delay instead of starting another read (5.93964ms)
+✔ INT07 FINAL: deadline interrupts shared auth wait with no new HTTP or store writes (181.367728ms)
+✔ INT07 FINAL: deadline interrupts retry delay instead of starting another read (152.48468ms)
+✔ INT07: real client sends four total HTTP attempts for 429/503/timeout/network, one for 400 (51.157538ms)
+✔ INT07: real client auth recovery rotates generation and resumes within the same attempt budget (8.052393ms)
+✔ INT07: job predicate cancellation reaches the active client fetch and rejects late results (26.936511ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1031.886872

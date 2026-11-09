@@ -19,7 +19,7 @@ const styleApi = require('./corenectum-style-api');
 const setStyleApi = require('./corenectum-set-style-api');
 const defaultStore = require('./plm-bom-store');
 const coreNectumApiClient = require('./corenectum-api-client');
-const { createTargetBudget, isRetryableRead, waitForRetry } = require('./plm-bom-int07-budget');
+const { createTargetBudget, isRetryableRead } = require('./plm-bom-int07-budget');
 const { getDefaultEngine } = require('./lcwai');
 const { extractJsonObject } = require('./lcwai/lcwai-prompt');
 
@@ -283,6 +283,7 @@ async function syncPlmBoms(records, options = {}) {
         if (withAnalysis.length !== children.length) {
           throw Object.assign(new Error('Set Style takım parçalarının BOM bilgisi eksik döndü.'), { code: 'PLM_SET_COMPONENT_BOM_INCOMPLETE' });
         }
+        read.checkResult();
         fetched.push({
           target,
           kind: 'set',
@@ -299,17 +300,27 @@ async function syncPlmBoms(records, options = {}) {
         if (analysis.styleId && analysis.styleId !== target.styleId) {
           throw Object.assign(new Error(`BOM styleId uyuşmuyor: beklenen ${target.styleId}, gelen ${analysis.styleId}.`), { code: 'PLM_BOM_STYLE_MISMATCH' });
         }
+        read.checkResult();
         fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
       }
     } catch (error) {
       if (error === STOP) { skipped.push(target); return; }
       if (isAuthError(error)) {
-        if (!authError && await awaitAuth(error)) { retryQueue.set(target.plmId, { target, error }); return; }
-        authError = authError || error; skipped.push(target); return;
+        try {
+          read.check();
+          if (!authError && await read.wait(awaitAuth(error))) { retryQueue.set(target.plmId, { target, error }); return; }
+          read.check();
+          authError = authError || error; skipped.push(target); return;
+        } catch (waitError) {
+          if (waitError === STOP) skipped.push(target);
+          else fail(target, waitError);
+          return;
+        }
       }
       if (isRetryableRead(error)) retryQueue.set(target.plmId, { target, error });
       else fail(target, error);
     } finally {
+      if (!retryQueue.has(target.plmId)) read.dispose();
       if (firstPass) {
         done += 1;
         onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: done, total: targets.length, model: target.plmId });
@@ -327,9 +338,19 @@ async function syncPlmBoms(records, options = {}) {
     retriedAny = true;
     // Genel ilerleme korunur: tamamlananlar işlenmiş, yalnız yeniden denenenler kalan.
     onProgress({ phase: options.language === 'en' ? `Retrying PLM BOM (${round + 1}/${rounds})` : `PLM BOM yeniden deneniyor (${round + 1}/${rounds})`, current: Math.max(0, targets.length - pending.length), total: targets.length, model: pending.map(target => target.plmId).slice(0, 3).join(', ') });
-    await waitForRetry(Number(delays[Math.min(round, delays.length - 1)]) || 0, stopped);
-    if (stopped()) { pending.forEach(target => skipped.push(target)); break; }
-    await mapLimit(pending, concurrency, target => processTarget(target, false));
+    const ready = [];
+    await Promise.all(pending.map(async target => {
+      const read = budgets.get(target.plmId);
+      try {
+        await read.waitForRetry(Number(delays[Math.min(round, delays.length - 1)]) || 0);
+        ready.push(target);
+      } catch (error) {
+        if (error === STOP) skipped.push(target);
+        else fail(target, error);
+        read.dispose();
+      }
+    }));
+    await mapLimit(ready, concurrency, target => processTarget(target, false));
   }
   if (rounds && delays && targets.length && retriedAny) {
     onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: Math.max(0, targets.length - retryQueue.size), total: targets.length, model: '' });
@@ -338,6 +359,7 @@ async function syncPlmBoms(records, options = {}) {
     fail(target, error);
   }
 
+  for (const read of budgets.values()) read.dispose();
   const entries = new Map();
   const toSave = [];
   let unchanged = 0, aiConsulted = 0, aiResolved = 0, withPrint = 0;

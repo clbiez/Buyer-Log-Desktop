@@ -1,0 +1,22 @@
+{
+  "tests": 9154,
+  "pass": 9089,
+  "fail": 0,
+  "cancelled": 0,
+  "skipped": 65,
+  "todo": 0,
+  "status": "PASS",
+  "files": 1324,
+  "batches": 10,
+  "completedBatches": 10,
+  "concurrency": 4,
+  "runtime": "Node v24.19.0",
+  "platform": "Linux x86_64",
+  "seconds": 201.2,
+  "runner": "npm test -> tests/run-tests.js",
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "priorFailedRunsRetained": [
+    "full-test-first-environment.log",
+    "full-test-second-completed-result.log"
+  ]
+}

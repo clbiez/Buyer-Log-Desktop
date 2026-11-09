@@ -168,8 +168,8 @@
         "en": "BOM reads share a concurrency limit"
       },
       "body": {
-        "tr": "Aynı kullanıcının eşzamanlı BOM senkronları, takım parçaları dahil, toplam en fazla beş okuma çalıştırır. Geçici hatalarda her okuma en fazla dört kez denenir; kalıcı HTTP ve doğrulama hataları tekrarlanmaz. Durdurma sonrası yeni okumalar başlatılmaz; tamamlanan sonuçlar ve son başarılı kayıtlar korunur.",
-        "en": "Concurrent BOM syncs for the same user run at most five reads in total, including set parts. Each read gets at most four attempts for transient errors; permanent HTTP and validation failures are not retried. Stopping prevents new reads; completed results and last successful records are preserved."
+        "tr": "Aynı kullanıcının eşzamanlı BOM senkronları, takım parçaları dahil, toplam en fazla beş okuma çalıştırır. Geçici hatalarda her okuma en fazla dört kez denenir; kalıcı HTTP ve doğrulama hataları tekrarlanmaz. Durdurma aktif istek ve yanıt okumasına ulaşır. Hedef başına 240 saniyelik toplam okuma süresi kuyruk, yeniden deneme ve yetki beklemesini de kapsar; tamamlanan güvenli sonuçlar ve son başarılı kayıtlar korunur.",
+        "en": "Concurrent BOM syncs for the same user run at most five reads in total, including set parts. Each read gets at most four attempts for transient errors; permanent HTTP and validation failures are not retried. Stopping cancels active requests and response reads. The 240-second total read deadline per target includes queue, retry and authorization waits; safely completed results and last successful records are preserved."
       },
       "visual": {
         "kind": "screenshot",

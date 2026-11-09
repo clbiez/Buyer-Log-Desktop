@@ -42,26 +42,32 @@ test('INT07: real client auth recovery rotates generation and resumes within the
   assert.equal(calls, 2); assert.equal(waits, 1); assert.equal(r.fetched, 1); assert.equal(r.failed.length, 0);
 });
 
-test('INT07: transport limitation evidence — job cancellation cannot abort the active client fetch', async t => {
+test('INT07: job predicate cancellation reaches the active client fetch and rejects late results', async t => {
   settings.saveToken('int07-active', token);
-  let resolveFetch, activeSignal, cancelled = false, finished = false;
-  t.mock.method(global, 'fetch', async (_url, options) => { activeSignal = options.signal; return new Promise(resolve => { resolveFetch = resolve; }); });
-  const running = syncPlmBoms(records, { ownerId: 'int07-active', store: store(), isCancelled: () => cancelled }).then(r => { finished = true; return r; });
+  let activeSignal, cancelled = false, writes = 0;
+  t.mock.method(global, 'fetch', async (_url, options) => {
+    activeSignal = options.signal;
+    return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true }));
+  });
+  const running = syncPlmBoms(records, { ownerId: 'int07-active', store: { load: () => ({ models: {} }), saveResults: () => { writes++; return {}; } }, isCancelled: () => cancelled });
   while (!activeSignal) await pause(1);
   cancelled = true;
-  await pause(35);
-  assert.equal(activeSignal.aborted, false, 'Known blocker: no external signal support in the unchanged general client');
-  assert.equal(finished, false, 'Do not release the permit or claim active cancellation before the HTTP call settles');
-  resolveFetch(new Response(JSON.stringify(okBody)));
-  assert.equal((await running).stopped, 'cancelled');
+  const result = await running;
+  assert.equal(activeSignal.aborted, true);
+  assert.equal(result.stopped, 'cancelled'); assert.equal(result.fetched, 0); assert.equal(writes, 0);
 });
 
-test('INT07: transport limitation evidence — body decoding can outlive the BOM admission deadline', async t => {
-  settings.saveToken('int07-body', token);
-  let resolveBody, decoding = false, finished = false;
-  t.mock.method(global, 'fetch', async () => ({ ok: true, status: 200, text: async () => { decoding = true; return new Promise(resolve => { resolveBody = resolve; }); } }));
-  const running = syncPlmBoms(records, { ownerId: 'int07-body', store: store(), bomAdmissionMs: 5 }).then(r => { finished = true; return r; });
-  while (!decoding) await pause(1);
-  await pause(20); assert.equal(finished, false, 'Known blocker: client clears timeout before response.text()');
-  resolveBody(JSON.stringify(okBody)); assert.equal((await running).fetched, 1);
+test('INT07 FINAL: real client checks legacy cancellation at body completion between polls', async t => {
+  settings.saveToken('int07-boundary', token);
+  let cancelled = false, calls = 0, writes = 0;
+  t.mock.method(global, 'fetch', async () => {
+    calls++;
+    const response = new Response(JSON.stringify(okBody));
+    const text = response.text.bind(response);
+    response.text = async () => { const result = await text(); cancelled = true; return result; };
+    return response;
+  });
+  const result = await syncPlmBoms(records, { ownerId: 'int07-boundary', isCancelled: () => cancelled,
+    store: { load: () => ({ models: {} }), saveResults: () => { writes++; return {}; } } });
+  assert.equal(result.stopped, 'cancelled'); assert.equal(result.fetched, 0); assert.equal(calls, 1); assert.equal(writes, 0);
 });

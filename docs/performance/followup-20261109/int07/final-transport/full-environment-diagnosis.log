@@ -1,0 +1,15 @@
+✔ v7.82 · backup config Central IAM açıkken runtime henüz kapalı olsa da kullanıcılar restart-safe recovery seed olur (166.925082ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.81 · Central IAM offline yeni PC restore kullanıcıları recovery seed olarak görünür tutar (175.923366ms)
+✔ v7.83 · 441 kullanıcı restore seed legacy 47-kullanıcı auth deposu tarafından küçültülmez (585.065173ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.84 · Central IAM .bak içindeki 47 kullanıcı restore edilen 441-kullanıcı seedini ezmez (541.113082ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 917.228315
