@@ -12,35 +12,6 @@
   },
   "changes": [
     {
-      "id": "shell05-native-module-warmup-20261109",
-      "type": "improvement",
-      "module": {
-        "tr": "Masaüstü sekmeleri",
-        "en": "Desktop tabs"
-      },
-      "title": {
-        "tr": "Her masaüstü sekmesi kendi modülünü hazırlar",
-        "en": "Each desktop tab prepares its own module"
-      },
-      "body": {
-        "tr": "Masaüstü sekmeleri arka planda yalnız açık modül için hazırlık yapar. Diğer modüle geçtiğinizde mevcut isteğe bağlı yükleme yolu çalışır; tarayıcıdaki hazırlık davranışı korunur.",
-        "en": "Desktop tabs prepare only their open module in the background. Switching to another module uses the existing on-demand loading path; browser preparation behavior is preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "shell05-native-module-warmup-20261109.png",
-        "alt": {
-          "tr": "Sentetik verilerle gerçek Electron Siparişler sekmesi; CP arka planda hazırlanmamış durumda",
-          "en": "Actual Electron Orders tab with synthetic data; CP has not been prepared in the background"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Electron sekmesi: Siparişler hazır, CP isteğe bağlı açılmayı bekliyor.",
-          "en": "Actual post-change Electron tab: Orders is ready, CP waits for on-demand navigation."
-        }
-      }
-    },
-    {
       "id": "excel-import-acknowledged-outcome-safety",
       "type": "fix",
       "module": {
@@ -124,6 +95,35 @@
         "caption": {
           "tr": "Gerçek uygulamada görünüm kapatma, filtre çekmecesini yeniden açma ve sorguyu tekrar çalıştırma doğrulandı. İptal ve ortak tüketici davranışı ayrıca HTTP ve worker testleriyle doğrulandı.",
           "en": "Closing views, reopening the filter drawer and repeating a query were verified in the actual application. Cancellation and shared-consumer behavior were also verified with HTTP and worker tests."
+        }
+      }
+    },
+    {
+      "id": "shell05-native-module-warmup-20261109",
+      "type": "improvement",
+      "module": {
+        "tr": "Masaüstü sekmeleri",
+        "en": "Desktop tabs"
+      },
+      "title": {
+        "tr": "Her masaüstü sekmesi kendi modülünü hazırlar",
+        "en": "Each desktop tab prepares its own module"
+      },
+      "body": {
+        "tr": "Masaüstü sekmeleri arka planda yalnız açık modül için hazırlık yapar. Diğer modüle geçtiğinizde mevcut isteğe bağlı yükleme yolu çalışır; tarayıcıdaki hazırlık davranışı korunur.",
+        "en": "Desktop tabs prepare only their open module in the background. Switching to another module uses the existing on-demand loading path; browser preparation behavior is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shell05-native-module-warmup-20261109.png",
+        "alt": {
+          "tr": "Sentetik verilerle gerçek Electron Siparişler sekmesi; CP arka planda hazırlanmamış durumda",
+          "en": "Actual Electron Orders tab with synthetic data; CP has not been prepared in the background"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Electron sekmesi: Siparişler hazır, CP isteğe bağlı açılmayı bekliyor.",
+          "en": "Actual post-change Electron tab: Orders is ready, CP waits for on-demand navigation."
         }
       }
     }
