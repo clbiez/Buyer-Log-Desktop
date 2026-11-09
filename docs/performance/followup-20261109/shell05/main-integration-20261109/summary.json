@@ -1,0 +1,66 @@
+{
+  "pr": 942,
+  "baseMain": "0c252a1beeba3527ae8efdda8362fd14063432cc",
+  "testedCommit": "57339ad61dcc737859c6ba345c0a45bca5bfa4ad",
+  "testedTree": "6824084c17476524488f0ef64403efc3d5fffb4e",
+  "noteIds": [
+    "excel-import-acknowledged-outcome-safety",
+    "fx-folder-admission-status-20261109",
+    "ana12-backlog-consumer-cancel-20261109",
+    "shell05-native-module-warmup-20261109"
+  ],
+  "date": "2026-11-09",
+  "full": {
+    "runner": "unmodified npm test; one invocation; default concurrency=4; flock; scoped default-profile writes; no BUYER_LOG/HOME/TMPDIR overrides",
+    "files": 1320,
+    "batchesPassed": 10,
+    "seconds": 110.1,
+    "tests": 9112,
+    "pass": 9047,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 4,
+  "protectedSourcesUnchanged": [
+    "resources/app/server/lib/compute-pool.js",
+    "resources/app/server/lib/compute-service.js",
+    "resources/app/server/lib/corenectum-api-client.js",
+    "resources/app/server/lib/plm-image-ingest.js",
+    "resources/app/public/checklist-components-engine.js",
+    "resources/app/public/checklist-supplier-sync.js",
+    "resources/app/public/cp-overview-assistant.js",
+    "resources/app/tests/checklist-components-row-cache.test.js",
+    ".github/workflows"
+  ],
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "d22b172dc1ef17e0a817812a53bc36daa7abc1b3d96e64372bceff288c77417a",
+    "resources/app/public/release-notes/next.json": "37f1265a3413f26cb1aa9d2e7fd035d1161f26f8983b6afea142cbedff84a3e6",
+    "resources/app/tests/shell05-native-module-warmup.test.js": "71ccd3b7611fbae3f9af2d92ea751f4f4317b4b6bfd44cf5a41b29ece5481562"
+  },
+  "logs": {
+    "full": {
+      "path": "docs/performance/followup-20261109/shell05/main-integration-20261109/full.log.gz",
+      "rawSha256": "5d0aa05d351cbd601a90b13121a55ffc0d5e6babd67fa8b536b4f7d9851cca4a",
+      "gzipSha256": "5ee3c7935e2e823a88fc6819c75821c1bb0bee37c483f8d83ae95665740f692e"
+    },
+    "i18n": {
+      "path": "docs/performance/followup-20261109/shell05/main-integration-20261109/i18n.log.gz",
+      "rawSha256": "f47a45a40313890c19c6796e09c9af1792758b17fdbf33a8b035291ef8705fb3",
+      "gzipSha256": "ecf0c274e5e2a77b42f760bbde06d2de4ea4cab3417f3757929054596e8195e3"
+    },
+    "release": {
+      "path": "docs/performance/followup-20261109/shell05/main-integration-20261109/release.log.gz",
+      "rawSha256": "a455b50bdca4bdb24bb99ac9b93f06ecd855c78c72aef6a222059c5e9bc5360f",
+      "gzipSha256": "e8c01456ddfd9b11a4500122aabb4da00fc222066899a27daf4369211cda123c"
+    }
+  },
+  "postTestChanges": "documentation/evidence only",
+  "github": "actual final-head CI and merge status tracked in PR #942",
+  "TEST": "not triggered",
+  "STABLE": "not triggered"
+}
