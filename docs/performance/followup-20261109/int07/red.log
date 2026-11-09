@@ -1,0 +1,194 @@
+✖ INT07: five sets with six children and two jobs share at most five owner reads (44.149283ms)
+✖ INT07: separate owners make progress together without a global serial queue (36.026595ms)
+✖ INT07: transient reads request one client attempt and stop after four total rounds (124.084826ms)
+✖ INT07: permanent HTTP and validation failures do not retry successful read-only POSTs (5.189827ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 348.179459
+
+✖ failing tests:
+
+test at resources/app/tests/plm-bom-int07-budget.test.js:27:1
+✖ INT07: five sets with six children and two jobs share at most five owner reads (44.149283ms)
+  AssertionError [ERR_ASSERTION]: active reads peaked at 50
+      at TestContext.<anonymous> (/workspace/buyerlog-int07/resources/app/tests/plm-bom-int07-budget.test.js:31:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/plm-bom-int07-budget.test.js:36:1
+✖ INT07: separate owners make progress together without a global serial queue (36.026595ms)
+  AssertionError [ERR_ASSERTION]: {"int07-a":25,"int07-b":25}
+      at TestContext.<anonymous> (/workspace/buyerlog-int07/resources/app/tests/plm-bom-int07-budget.test.js:40:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/plm-bom-int07-budget.test.js:43:1
+✖ INT07: transient reads request one client attempt and stop after four total rounds (124.084826ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3,
+  +   3
+  -   1,
+  -   1,
+  -   1,
+  -   1
+    ]
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-int07/resources/app/tests/plm-bom-int07-budget.test.js:49:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3,
+      ... 1 more item
+    ],
+    expected: [ 1, 1, 1, 1 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/plm-bom-int07-budget.test.js:53:1
+✖ INT07: permanent HTTP and validation failures do not retry successful read-only POSTs (5.189827ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 1
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-int07/resources/app/tests/plm-bom-int07-budget.test.js:57:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

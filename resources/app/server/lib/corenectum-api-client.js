@@ -18,6 +18,8 @@ const DEFAULT_TIMEOUT_MS = 90000;
 const DEFAULT_RETRIES = 3;
 // Only overlap is shared: there is no completed-response cache or report reuse.
 const SHARED_READ_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL, setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL, requestApi.GET_REQUEST_LIST_URL]);
+// Opt-in cancellation is limited to the BOM pipeline's read-only operations.
+const BOM_READ_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL, setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL]);
 const pendingReads = new Map();
 const MAX_PENDING_READS = 128;
 
@@ -49,7 +51,7 @@ function endpointWithQuery(endpoint, query) {
   }
   return parsed.href;
 }
-async function request(userId, url, body, options = {}) {
+async function request(userId, url, body, options = {}, decodeJson = false) {
   const generation = settings.currentTokenGeneration();
   const endpoint = assertEndpoint(url), token = tokenFor(userId, options.token);
   const method = String(options.method || 'POST').toUpperCase();
@@ -57,11 +59,17 @@ async function request(userId, url, body, options = {}) {
   const requestUrl = method === 'GET' ? endpointWithQuery(endpoint, options.query) : endpoint;
   const retries = Math.max(1, Math.min(5, Number(options.retries) || DEFAULT_RETRIES));
   const timeoutMs = Math.max(5000, Math.min(180000, Number(options.timeoutMs) || DEFAULT_TIMEOUT_MS));
+  const controlled = decodeJson && options.bomReadControl === true && BOM_READ_ENDPOINTS.has(endpoint);
   const accept = options.accept || 'application/json, text/plain, */*';
   let lastError = null;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeoutMs);
+    const external = controlled ? options.signal : null;
+    const abort = () => controller.abort(external.reason);
+    external?.addEventListener('abort', abort, { once: true });
+    if (external?.aborted) abort();
     try {
+      if (external?.aborted) throw external.reason;
       const response = await fetch(requestUrl, {
         method, signal:controller.signal, redirect:'follow', cache:'no-store',
         headers:{
@@ -74,25 +82,35 @@ async function request(userId, url, body, options = {}) {
         },
         ...(method === 'POST' ? { body:JSON.stringify(body == null ? {} : body) } : {}),
       });
-      clearTimeout(timer);
+      if (!controlled) clearTimeout(timer);
       if (response.status === 401 || response.status === 403) {
+        if (controlled) await response.body?.cancel();
         throw apiError(`CoreNectum yetkilendirmesi reddedildi (HTTP ${response.status}). Kurumsal oturumun süresi dolmuş olabilir; Buyer Log otomatik yenileme yapmalıdır.`,'CORENECTUM_API_TOKEN_INVALID',409,{remoteStatus:response.status,tokenGeneration:generation});
       }
       if (!response.ok) {
-        const text = await response.text().catch(()=>'');
+        const text = await response.text().catch(error => { if (controlled) throw error; return ''; });
         const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
         const err = apiError(`CoreNectum API isteği başarısız (HTTP ${response.status})${safeRemoteBody(text)?`: ${safeRemoteBody(text)}`:''}.`,'CORENECTUM_API_HTTP_ERROR',502,{remoteStatus:response.status,retryable});
         if (retryable && attempt < retries) { lastError = err; await sleep(350 * attempt * attempt); continue; }
         throw err;
       }
-      return response;
+      // Decode under the same active controller; headers do not finish a read.
+      const result = controlled ? await jsonResponse(response) : response;
+      // The legacy job predicate can change between polls while decoding.
+      if (controlled) options.bomReadCheck?.();
+      if (external?.aborted) throw external.reason;
+      return result;
     } catch (error) {
       clearTimeout(timer);
-      if (error && ['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_HTTP_ERROR','CORENECTUM_API_TOKEN_REQUIRED'].includes(error.code)) throw error;
+      if (external?.aborted) throw external.reason;
+      if (error && ['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_HTTP_ERROR','CORENECTUM_API_TOKEN_REQUIRED', ...(controlled ? ['CORENECTUM_API_INVALID_JSON'] : [])].includes(error.code)) throw error;
       const aborted = error && (error.name === 'AbortError' || /aborted|timeout/i.test(String(error.message||'')));
       lastError = apiError(aborted?'CoreNectum API isteği zaman aşımına uğradı.':`CoreNectum API bağlantısı kurulamadı: ${safeRemoteBody(error&&error.message||error)}`,
         aborted?'CORENECTUM_API_TIMEOUT':'CORENECTUM_API_NETWORK_ERROR',502,{attempt});
       if (attempt < retries) { await sleep(350 * attempt * attempt); continue; }
+    } finally {
+      clearTimeout(timer);
+      external?.removeEventListener('abort', abort);
     }
   }
   throw lastError || apiError('CoreNectum API isteği başarısız.','CORENECTUM_API_NETWORK_ERROR',502);
@@ -105,6 +123,9 @@ async function jsonResponse(response) {
 async function readJson(userId, url, body, options) {
   const endpoint = assertEndpoint(url), token = tokenFor(userId, options.token);
   const scopedOptions = { ...options, token };
+  // Separate opt-in BOM reads: cancelling one consumer must never cancel a
+  // default shared read or another live BOM job. Default sharing is unchanged.
+  if (options.bomReadControl === true && BOM_READ_ENDPOINTS.has(endpoint)) return request(userId, endpoint, body, scopedOptions, true);
   const load = async () => jsonResponse(await request(userId, endpoint, body, scopedOptions));
   if (!SHARED_READ_ENDPOINTS.has(endpoint)) return load();
   // Token rotation and owner changes must never join a previous authority's read.

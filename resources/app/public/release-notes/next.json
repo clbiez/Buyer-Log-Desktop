@@ -271,6 +271,35 @@
           "en": "Actual post-change application with synthetic data. Three-tab request counts, leader handoff and live updates are verified separately with network and event logs."
         }
       }
+    },
+    {
+      "id": "int07-bom-owner-read-budget-20261109",
+      "type": "fix",
+      "module": {
+        "tr": "PLM BOM",
+        "en": "PLM BOM"
+      },
+      "title": {
+        "tr": "BOM okumaları ortak bir sınırla çalışır",
+        "en": "BOM reads share a concurrency limit"
+      },
+      "body": {
+        "tr": "Aynı kullanıcının eşzamanlı BOM senkronları, takım parçaları dahil, toplam en fazla beş okuma çalıştırır. Geçici hatalarda her okuma en fazla dört kez denenir; kalıcı HTTP ve doğrulama hataları tekrarlanmaz. Durdurma aktif istek ve yanıt okumasına ulaşır. Hedef başına 240 saniyelik toplam okuma süresi kuyruk, yeniden deneme ve yetki beklemesini de kapsar; tamamlanan güvenli sonuçlar ve son başarılı kayıtlar korunur.",
+        "en": "Concurrent BOM syncs for the same user run at most five reads in total, including set parts. Each read gets at most four attempts for transient errors; permanent HTTP and validation failures are not retried. Stopping cancels active requests and response reads. The 240-second total read deadline per target includes queue, retry and authorization waits; safely completed results and last successful records are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "int07-bom-owner-read-budget-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log BOM penceresinde altı sentetik takım parçası ve baskı kanıtı",
+          "en": "Six synthetic set parts and print evidence in the actual Buyer Log BOM dialog"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; aynı kullanıcı için iki eşzamanlı işte beşer takım ve altışar parça işlendi. Beş aktif okuma sınırı ayrı sayaçlarla doğrulandı. Görsel tek başına concurrency veya aktif iptal kanıtı değildir.",
+          "en": "Actual post-change application; two concurrent jobs for one user processed five sets each with six parts per set. Separate counters verified the five-read limit. The image alone does not prove concurrency or active cancellation."
+        }
+      }
     }
   ]
 }

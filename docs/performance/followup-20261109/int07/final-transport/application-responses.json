@@ -1,0 +1,826 @@
+[
+  {
+    "ok": true,
+    "records": [
+      {
+        "plmId": "100",
+        "styleId": "200",
+        "styleName": "DEMO-INT07-100",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "20000",
+            "styleId": "2000",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "20001",
+            "styleId": "2001",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "20002",
+            "styleId": "2002",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "20003",
+            "styleId": "2003",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "20004",
+            "styleId": "2004",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "20005",
+            "styleId": "2005",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "101",
+        "styleId": "201",
+        "styleName": "DEMO-INT07-101",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "20100",
+            "styleId": "2010",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "20101",
+            "styleId": "2011",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "20102",
+            "styleId": "2012",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "20103",
+            "styleId": "2013",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "20104",
+            "styleId": "2014",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "20105",
+            "styleId": "2015",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "102",
+        "styleId": "202",
+        "styleName": "DEMO-INT07-102",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "20200",
+            "styleId": "2020",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "20201",
+            "styleId": "2021",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "20202",
+            "styleId": "2022",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "20203",
+            "styleId": "2023",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "20204",
+            "styleId": "2024",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "20205",
+            "styleId": "2025",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "103",
+        "styleId": "203",
+        "styleName": "DEMO-INT07-103",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "20300",
+            "styleId": "2030",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "20301",
+            "styleId": "2031",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "20302",
+            "styleId": "2032",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "20303",
+            "styleId": "2033",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "20304",
+            "styleId": "2034",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "20305",
+            "styleId": "2035",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "104",
+        "styleId": "204",
+        "styleName": "DEMO-INT07-104",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "20400",
+            "styleId": "2040",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "20401",
+            "styleId": "2041",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "20402",
+            "styleId": "2042",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "20403",
+            "styleId": "2043",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "20404",
+            "styleId": "2044",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "20405",
+            "styleId": "2045",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      }
+    ],
+    "failed": [],
+    "requested": 5,
+    "found": 5,
+    "diagnostics": [],
+    "bom": {
+      "background": false,
+      "requested": 5,
+      "fetched": 5,
+      "changed": 5,
+      "unchanged": 0,
+      "withPrint": 5,
+      "aiConsulted": 0,
+      "aiResolved": 0,
+      "failed": [],
+      "revision": 1,
+      "updatedAt": "2026-11-09T04:53:06.064Z"
+    },
+    "bomJob": null,
+    "styleLinks": {
+      "links": [
+        {
+          "plmId": "100",
+          "styleId": "200",
+          "styleName": "DEMO-INT07-100",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=200&m=2"
+        },
+        {
+          "plmId": "101",
+          "styleId": "201",
+          "styleName": "DEMO-INT07-101",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=201&m=2"
+        },
+        {
+          "plmId": "102",
+          "styleId": "202",
+          "styleName": "DEMO-INT07-102",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=202&m=2"
+        },
+        {
+          "plmId": "103",
+          "styleId": "203",
+          "styleName": "DEMO-INT07-103",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=203&m=2"
+        },
+        {
+          "plmId": "104",
+          "styleId": "204",
+          "styleName": "DEMO-INT07-104",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=204&m=2"
+        }
+      ],
+      "count": 5,
+      "revision": 1,
+      "updatedAt": "2026-11-09T04:53:06.069Z",
+      "added": 5,
+      "updated": 0,
+      "unchanged": 0,
+      "invalid": 0,
+      "runSummary": {
+        "checked": 5,
+        "changed": 5,
+        "unchanged": 0,
+        "added": 5,
+        "removed": 0,
+        "imagesDownloaded": 0,
+        "documentsDownloaded": 0,
+        "failed": 0,
+        "deltaEvents": 5,
+        "amplificationRatio": 1
+      }
+    },
+    "jobId": "job_mw8sch80_1"
+  },
+  {
+    "ok": true,
+    "records": [
+      {
+        "plmId": "110",
+        "styleId": "210",
+        "styleName": "DEMO-INT07-110",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "21000",
+            "styleId": "2100",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "21001",
+            "styleId": "2101",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "21002",
+            "styleId": "2102",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "21003",
+            "styleId": "2103",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "21004",
+            "styleId": "2104",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "21005",
+            "styleId": "2105",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "111",
+        "styleId": "211",
+        "styleName": "DEMO-INT07-111",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "21100",
+            "styleId": "2110",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "21101",
+            "styleId": "2111",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "21102",
+            "styleId": "2112",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "21103",
+            "styleId": "2113",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "21104",
+            "styleId": "2114",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "21105",
+            "styleId": "2115",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "112",
+        "styleId": "212",
+        "styleName": "DEMO-INT07-112",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "21200",
+            "styleId": "2120",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "21201",
+            "styleId": "2121",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "21202",
+            "styleId": "2122",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "21203",
+            "styleId": "2123",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "21204",
+            "styleId": "2124",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "21205",
+            "styleId": "2125",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "113",
+        "styleId": "213",
+        "styleName": "DEMO-INT07-113",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "21300",
+            "styleId": "2130",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "21301",
+            "styleId": "2131",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "21302",
+            "styleId": "2132",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "21303",
+            "styleId": "2133",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "21304",
+            "styleId": "2134",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "21305",
+            "styleId": "2135",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      },
+      {
+        "plmId": "114",
+        "styleId": "214",
+        "styleName": "DEMO-INT07-114",
+        "productType": "Set Style",
+        "artworkSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "setStyleComponents": [
+          {
+            "label": "A",
+            "plmId": "21400",
+            "styleId": "2140",
+            "styleName": "DEMO-INT07-A",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "B",
+            "plmId": "21401",
+            "styleId": "2141",
+            "styleName": "DEMO-INT07-B",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "C",
+            "plmId": "21402",
+            "styleId": "2142",
+            "styleName": "DEMO-INT07-C",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "D",
+            "plmId": "21403",
+            "styleId": "2143",
+            "styleName": "DEMO-INT07-D",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "E",
+            "plmId": "21404",
+            "styleId": "2144",
+            "styleName": "DEMO-INT07-E",
+            "specialCode": "",
+            "fabric": ""
+          },
+          {
+            "label": "F",
+            "plmId": "21405",
+            "styleId": "2145",
+            "styleName": "DEMO-INT07-F",
+            "specialCode": "",
+            "fabric": ""
+          }
+        ],
+        "bomSummary": "A - Ön: 1 | Pigment | Toplam: 1\nB - Ön: 1 | Pigment | Toplam: 1\nC - Ön: 1 | Pigment | Toplam: 1\nD - Ön: 1 | Pigment | Toplam: 1\nE - Ön: 1 | Pigment | Toplam: 1\nF - Ön: 1 | Pigment | Toplam: 1",
+        "bomPrintCount": 6,
+        "bomHasPrint": true,
+        "bomAiStatus": "not-needed"
+      }
+    ],
+    "failed": [],
+    "requested": 5,
+    "found": 5,
+    "diagnostics": [],
+    "bom": {
+      "background": false,
+      "requested": 5,
+      "fetched": 5,
+      "changed": 5,
+      "unchanged": 0,
+      "withPrint": 5,
+      "aiConsulted": 0,
+      "aiResolved": 0,
+      "failed": [],
+      "revision": 2,
+      "updatedAt": "2026-11-09T04:53:06.084Z"
+    },
+    "bomJob": null,
+    "styleLinks": {
+      "links": [
+        {
+          "plmId": "100",
+          "styleId": "200",
+          "styleName": "DEMO-INT07-100",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=200&m=2"
+        },
+        {
+          "plmId": "101",
+          "styleId": "201",
+          "styleName": "DEMO-INT07-101",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=201&m=2"
+        },
+        {
+          "plmId": "102",
+          "styleId": "202",
+          "styleName": "DEMO-INT07-102",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=202&m=2"
+        },
+        {
+          "plmId": "103",
+          "styleId": "203",
+          "styleName": "DEMO-INT07-103",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=203&m=2"
+        },
+        {
+          "plmId": "104",
+          "styleId": "204",
+          "styleName": "DEMO-INT07-104",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=204&m=2"
+        },
+        {
+          "plmId": "110",
+          "styleId": "210",
+          "styleName": "DEMO-INT07-110",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=210&m=2"
+        },
+        {
+          "plmId": "111",
+          "styleId": "211",
+          "styleName": "DEMO-INT07-111",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=211&m=2"
+        },
+        {
+          "plmId": "112",
+          "styleId": "212",
+          "styleName": "DEMO-INT07-112",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=212&m=2"
+        },
+        {
+          "plmId": "113",
+          "styleId": "213",
+          "styleName": "DEMO-INT07-113",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=213&m=2"
+        },
+        {
+          "plmId": "114",
+          "styleId": "214",
+          "styleName": "DEMO-INT07-114",
+          "specialCode": "",
+          "season": "",
+          "url": "https://corenectum.lcwaikiki.com/models-options/style-overview?styleId=214&m=2"
+        }
+      ],
+      "count": 10,
+      "revision": 2,
+      "updatedAt": "2026-11-09T04:53:06.091Z",
+      "added": 5,
+      "updated": 0,
+      "unchanged": 0,
+      "invalid": 0,
+      "runSummary": {
+        "checked": 5,
+        "changed": 5,
+        "unchanged": 0,
+        "added": 5,
+        "removed": 0,
+        "imagesDownloaded": 0,
+        "documentsDownloaded": 0,
+        "failed": 0,
+        "deltaEvents": 5,
+        "amplificationRatio": 1
+      }
+    },
+    "jobId": "job_mw8sch8m_2"
+  }
+]

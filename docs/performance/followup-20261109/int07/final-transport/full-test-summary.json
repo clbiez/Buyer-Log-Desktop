@@ -1,0 +1,19 @@
+{
+  "tests": 9154,
+  "pass": 9089,
+  "fail": 0,
+  "cancelled": 0,
+  "skipped": 65,
+  "todo": 0,
+  "status": "PASS",
+  "files": 1324,
+  "batches": 10,
+  "completedBatches": 10,
+  "concurrency": 4,
+  "runtime": "Node v24.19.0",
+  "platform": "Linux x86_64",
+  "seconds": 195.6,
+  "baseMain": "62f2153d258374e98f5582994042119c6b6cc495",
+  "sourceHeadAtRun": "6a577fa42eae3881c92a5178ae68dc75d981594e",
+  "runner": "npm test -> tests/run-tests.js; flock /tmp/buyerlog-performance-measurement.lock"
+}
