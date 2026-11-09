@@ -511,3 +511,48 @@ test('aynı Attachment birden çok renkte seçilse de bayt TEK kez indirilir', a
 });
 
 test.after(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch (_) {} });
+
+test('progress leaves downloading before canonical commit, including a failed download', async () => {
+  const events = [];
+  const { input } = harness({ requests: [{plmId:'2123595'}, {plmId:'2123596'}], onProgress: p => events.push(p) });
+  const commit = input.ingest.commit;
+  input.downloadImage = async url => {
+    if (url.includes('2123596')) throw new Error('demo failure');
+    return {buffer:png(url),mimeType:'image/png',size:20};
+  };
+  input.ingest = {...input.ingest, commit(entries, options) {
+    assert.equal(events.at(-1).stage, 'committing');
+    assert.equal(events.at(-1).model, '');
+    return commit(entries, options);
+  }};
+  const result = await service.runPlmImageSync(input);
+  assert.equal(result.failures.length, 1);
+  const downloads = events.filter(p => p.stage === 'downloading');
+  assert.equal(downloads.at(-1).current, 2, 'failed attempts also finish a download task');
+  assert.equal(result.counts.downloadsCompleted, 1, 'success count remains separate');
+  assert.ok(events.some(p => p.stage === 'selecting'));
+  assert.ok(events.some(p => p.stage === 'fetching-images' && p.current === 0));
+});
+
+test('all-cache fast path reports preparation without inventing a download', async () => {
+  const { input, fake } = harness();
+  await service.runPlmImageSync(input);
+  const events = [];
+  await service.runPlmImageSync({...input, mode:'missing',store:fake.store(),imagemap:fake.imagemap,onProgress:p=>events.push(p)});
+  assert.equal(events[0].stage, 'preparing');
+  assert.ok(!events.some(p => p.stage === 'downloading'));
+});
+
+
+test('metadata stage is visible before its first response, with no Style ID labelled as a model', async () => {
+  const events = [];
+  const { input } = harness({onProgress:p=>events.push(p)});
+  const lookup = input.styleImagesLookup;
+  input.styleImagesLookup = async id => {
+    assert.equal(events.at(-1).stage, 'fetching-images');
+    assert.equal(events.at(-1).current, 0);
+    return lookup(id);
+  };
+  await service.runPlmImageSync(input);
+  assert.ok(events.filter(p=>p.stage==='fetching-images').every(p=>p.model===''));
+});

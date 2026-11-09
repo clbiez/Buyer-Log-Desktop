@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "plm-image-accurate-stage-progress",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Operasyon Merkezi",
+        "en": "PLM Operations Center"
+      },
+      "title": {
+        "tr": "Son görselden sonra gerçek işlem aşaması gösterilir",
+        "en": "Show the actual work after the last image"
+      },
+      "body": {
+        "tr": "PLM görsel işlerinde bağlantı, önbellek, indirme, yerel kayıt, geçici dosya temizliği ve paylaşılan depo kilitlerinin bırakılması ayrı aşamalar olarak gösterilir. Model, stil ve görsel sayaçları istenen kayıtlardan ayrılır; başarısız indirme girişimleri de aşama ilerlemesine sayılır. Yerel işlemlerde son model bilgisi ve yanıltıcı sıfır saniye tahmini gösterilmez; aşamada geçen süre görünür. Türkçe ve İngilizce desteklenir.",
+        "en": "PLM image jobs show separate stages for connecting, checking the cache, downloading, saving locally, cleaning up temporary files and releasing shared storage locks. Model, style and image counters are separate from requested records; failed download attempts also count toward stage progress. Local work hides the last model and misleading zero-second estimates, and shows time in the current stage. Both Turkish and English are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-accurate-progress.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo oturumunda görseller ve model bağlantıları kaydediliyor aşaması",
+          "en": "Saving images and model links in a real Buyer Log demo session"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; izole demo durumuyla kayıt aşaması, istenen kayıt sayısı ve aşamada geçen süre.",
+          "en": "Actual post-change application with isolated demo status: saving stage, requested records and time in stage."
+        }
+      }
+    },
+    {
       "id": "selected-orders-license-atlas-20261109",
       "type": "feature",
       "module": {

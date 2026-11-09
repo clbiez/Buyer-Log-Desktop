@@ -218,7 +218,7 @@ test('eski tek-slot ucu KORUNDU (mevcut istemci kodu bozulmasın)', () => {
   assert.ok(SERVER.includes("app.get('/api/model-operation-status'"));
   // Görsel rotalarında ilerleme hem eskiye hem işe yazılıyor.
   const start = SERVER.indexOf('function reportImageProgress');
-  const block = SERVER.slice(start, start + 500);
+  const block = SERVER.slice(start, SERVER.indexOf('// İstek gövdesinden', start));
   assert.match(block, /setModelOperationProgress/);
   assert.match(block, /plmJobs\.update/);
 });

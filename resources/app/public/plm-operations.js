@@ -35,6 +35,24 @@
     cancelled: { tr: 'İptal edildi', en: 'Cancelled' },
   };
 
+  const STAGE_LABEL = {
+    'waiting-lock': { tr: 'Önceki görsel işlemi bekleniyor', en: 'Waiting for the previous image job' },
+    preparing: { tr: 'Görsel planı hazırlanıyor', en: 'Preparing the image plan' },
+    'local-cache': { tr: 'Yerel görseller kontrol ediliyor', en: 'Checking local images' },
+    'shared-lease': { tr: 'Paylaşılan depo erişimi hazırlanıyor', en: 'Preparing shared storage access' },
+    connecting: { tr: 'PLM bağlantısı kuruluyor', en: 'Connecting to PLM' },
+    resolving: { tr: 'PLM modelleri çözümleniyor', en: 'Resolving PLM models' },
+    'fetching-images': { tr: 'Renk görselleri okunuyor', en: 'Reading colour image metadata' },
+    selecting: { tr: 'Görseller ve önbellek kontrol ediliyor', en: 'Selecting images and checking the cache' },
+    downloading: { tr: 'Görseller indiriliyor', en: 'Downloading images' },
+    'waiting-memory': { tr: 'Yerel kayıt için bellek sırası bekleniyor', en: 'Waiting for memory capacity to save images' },
+    'reading-package': { tr: 'Paket görselleri alınıyor', en: 'Reading package images' },
+    committing: { tr: 'Görseller ve model bağlantıları kaydediliyor', en: 'Saving images and model links' },
+    cleanup: { tr: 'Geçici görsel dosyaları temizleniyor', en: 'Cleaning up temporary image files' },
+    releasing: { tr: 'Paylaşılan depo kilitleri bırakılıyor', en: 'Releasing shared storage locks' },
+    finalizing: { tr: 'İşlem sonucu hazırlanıyor', en: 'Preparing the job result' },
+  };
+
   const en = () => (typeof appLang !== 'undefined' && appLang === 'en');
   const t = (tr, enText) => (en() ? enText : tr);
   const esc = value => (typeof escapeHtml === 'function' ? escapeHtml(value) : String(value == null ? '' : value));
@@ -110,10 +128,36 @@
     return `<span class="badge plmOpsBadge ${tone}">${esc(text)}</span>`;
   }
 
+  function phaseText(job) {
+    if (job.stage && job.running === false) return label(STATUS_LABEL, job.status);
+    return job.stage && STAGE_LABEL[job.stage] ? label(STAGE_LABEL, job.stage) : (job.phase || '');
+  }
+
+  function stageProgress(job) {
+    if (!job.running || !job.stage) return null;
+    const total = Math.max(0, Number(job.stageTotal) || 0);
+    const current = Math.max(0, Number(job.stageCurrent) || 0);
+    // A stage may finish while the job still has local work to do.
+    const percent = total > 0 ? Math.min(100, Math.floor(100 * current / total)) : null;
+    return { current, total, percent };
+  }
+
+  function progressLine(job) {
+    const progress = stageProgress(job);
+    if (!progress) return `${esc(job.label || '')} · ${job.processed}/${job.total} (%${job.percent})`;
+    if (progress.percent == null) return esc(t('Bu aşama için kalan süre hesaplanamıyor.', 'Remaining time cannot be estimated for this stage.'));
+    const unit = ['downloading', 'reading-package'].includes(job.stage) ? t('görsel', 'images')
+      : job.stage === 'fetching-images' ? t('stil', 'styles') : t('model', 'models');
+    return `${esc(t('Aşama ilerlemesi', 'Stage progress'))} · ${progress.current}/${progress.total} ${esc(unit)} (%${progress.percent})`;
+  }
+
   function progressBar(job) {
     const tone = job.status === 'failed' || (!job.running && jobHasFailures(job)) ? ' isFail' : job.running ? '' : ' isDone';
-    return `<div class="plmOpsBar${tone}" role="progressbar" aria-valuenow="${job.percent}" aria-valuemin="0" aria-valuemax="100">
-      <span style="width:${Math.max(0, Math.min(100, job.percent))}%"></span></div>`;
+    const progress = stageProgress(job);
+    const percent = progress ? progress.percent : job.percent;
+    const value = percent == null ? `aria-valuetext="${esc(phaseText(job))}"` : `aria-valuenow="${percent}"`;
+    return `<div class="plmOpsBar${tone}" role="progressbar" ${value} aria-label="${esc(progress ? t('Aşama ilerlemesi', 'Stage progress') : t('İlerleme', 'Progress'))}" aria-valuemin="0" aria-valuemax="100">
+      <span style="width:${percent == null ? '100%;opacity:0.35' : `${Math.max(0, Math.min(100, percent))}%`}"></span></div>`;
   }
 
   function metric(caption, value) {
@@ -121,6 +165,11 @@
   }
 
   function jobMetrics(job) {
+    if (stageProgress(job)) return `<div class="kolPlanStats plmOpsStats">${[
+      metric(t('İstenen kayıt', 'Requested records'), job.total),
+      metric(t('Geçen süre', 'Elapsed'), humanDuration(job.elapsedMs)),
+      metric(t('Aşamada geçen', 'Time in stage'), humanDuration(job.stageElapsedMs)),
+    ].join('')}</div>`;
     const cells = [
       metric(t('Toplam', 'Total'), job.total),
       metric(t('İşlenen', 'Processed'), job.processed),
@@ -154,7 +203,7 @@
     const failureHtml = cached ? failureTable(cached.failures)
       : `<div class="plmOpsEmpty">${esc(t('Yükleniyor…', 'Loading…'))}</div>`;
     const active = job.running && job.activeModel
-      ? `<span class="plmOpsActive">${esc(t('İşlenen model: ', 'Active model: '))}${esc(job.activeModel)}</span>` : '';
+      ? `<span class="plmOpsActive">${esc(job.stage ? t('Son işlenen model: ', 'Last processed model: ') : t('İşlenen model: ', 'Active model: '))}${esc(job.activeModel)}</span>` : '';
     const actions = [];
     if (job.running && !job.cancelRequested) actions.push(`<button type="button" class="tbtn" data-plmops-cancel="${esc(jobId)}">${esc(t('Durdur', 'Stop'))}</button>`);
     if (job.failureCount) actions.push(`<button type="button" class="tbtn" data-plmops-toggle="${esc(jobId)}">${esc(expanded ? t('Hataları gizle', 'Hide errors') : t('Hataları göster', 'Show errors'))} (${job.failureCount})</button>`);
@@ -164,10 +213,10 @@
       <header class="plmOpsJobHead">
         <div class="plmOpsTitle"><strong>${esc(label(KIND_LABEL, job.kind))}</strong>
           <span class="plmOpsScope">${esc(job.scope)}</span>${statusBadge(job)}</div>
-        <div class="plmOpsPhase">${esc(job.phase || '')}${active}</div>
+        <div class="plmOpsPhase">${esc(phaseText(job))}${active}</div>
       </header>
       ${progressBar(job)}
-      <div class="plmOpsLine">${esc(job.label || '')} · ${job.processed}/${job.total} (%${job.percent})</div>
+      <div class="plmOpsLine">${progressLine(job)}</div>
       ${detailed ? jobMetrics(job) : ''}
       ${actions.length ? `<div class="plmOpsActions">${actions.join('')}</div>` : ''}
       ${expanded ? `<div class="plmOpsFailures" data-plmops-failures="${esc(jobId)}">${failureHtml}</div>` : ''}
@@ -297,6 +346,7 @@
         <button type="button" class="tbtn" data-plmops-close>${esc(t('Kapat', 'Close'))}</button>
       </div></div>`;
     document.body.appendChild(modal);
+    window.BLMotionPlus?.play?.('overlay', modal.querySelector('.plmOpsCard'));
     state.panelOpen = true;
     renderPanel();
     syncPolling();
@@ -371,7 +421,10 @@
   const observer = new MutationObserver(() => renderStrip());
   if (document.body) observer.observe(document.body, { attributes: true, attributeFilter: ['data-active-tab'] });
 
+  document.addEventListener('bl:language-changed', render);
+
   window.BLPlmOps = {
+    phaseText,
     refresh, open: openPanel, close: closePanel,
     jobs: () => state.jobs.slice(),
     jobsForScope,
