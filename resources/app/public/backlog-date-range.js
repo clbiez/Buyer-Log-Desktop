@@ -79,8 +79,13 @@
     const targets=['backlogOverview','backlogPlanActualModule','backlogAnalysis'].map(id=>document.getElementById(id));
     targets.push(tree?.closest('.backlogPivotRadarWorkspace')||tree?.closest('.panel'));
     const target=position>0&&content?.style.display!=='none'?targets[position-1]:null;
-    if(target&&target.parentElement===content){if(target.nextElementSibling!==host)target.insertAdjacentElement('afterend',host);}
-    else if(anchor&&anchor.nextElementSibling!==host)anchor.insertAdjacentElement('afterend',host);
+    const after=target&&target.parentElement===content?target:anchor;
+    if(after&&after.nextElementSibling!==host){
+      // Preserve focused controls and native input state during a connected move.
+      const parent=after.parentElement;
+      if(typeof parent.moveBefore==='function')parent.moveBefore(host,after.nextElementSibling);
+      else parent.insertBefore(host,after.nextElementSibling);
+    }
     const up=host.querySelector('[data-range-move="-1"]'),down=host.querySelector('[data-range-move="1"]');
     if(up)up.disabled=position===0;if(down)down.disabled=position===targets.length;
   }
@@ -148,7 +153,7 @@
     host.addEventListener('click',event=>{
       const b=event.target.closest('button');if(!b||!host.contains(b))return;
       if(b.hasAttribute('data-range-toggle')){collapsed=!collapsed;save();syncDisclosure();}
-      else if(b.dataset.rangeMove){position=Math.max(0,Math.min(4,position+Number(b.dataset.rangeMove)));save();positionPanel();b.focus({preventScroll:true});}
+      else if(b.dataset.rangeMove){position=Math.max(0,Math.min(4,position+Number(b.dataset.rangeMove)));save();positionPanel();if(document.activeElement!==b)b.focus({preventScroll:true});}
       else if(b.dataset.rangeField){selected=b.dataset.rangeField;save();render();}
       else if(b.dataset.rangeUnit){unit=b.dataset.rangeUnit;save();render();}
       else if(b.dataset.rangeShift){const r=draft();setDraft(shift(r.from||r.to?r:preset(unit==='day'?'next30':unit),unit,Number(b.dataset.rangeShift)));}

@@ -11,7 +11,7 @@ const iam=require(path.join(app,'server/lib/iam-core'));fs.writeFileSync(path.jo
 const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ignore',log,log]});
 let browser,page;const results=[];
 const baseFiles=new Map(['backlog-overview.js','backlog-date-range.js','backlog-date-range.css','backlog-plan-actual.js'].map(file=>[file,execFileSync('git',['show','fad8578308c527274ab762b9ed8f371e8e033d99:resources/app/public/'+file],{cwd:repo,encoding:'utf8',maxBuffer:8000000})]));
-const functional=process.argv.includes('--functional'),control=process.argv.includes('--control'),largeOnly=process.argv.includes('--large');
+const functional=process.argv.includes('--functional'),control=process.argv.includes('--control'),largeOnly=process.argv.includes('--large'),dateOnly=process.argv.includes('--date-only'),fallback=process.argv.includes('--fallback');
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
 for(let i=0;i<160;i++){try{if((await fetch(base+'/api/user-profiles')).ok)break;}catch{}await wait(250);}
@@ -31,6 +31,7 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
  for(let round=0;round<(functional?1:3);round++)for(const variant of (functional?['candidate']:control?['base','base-control']:['base','candidate'])){
   const context=await browser.newContext({viewport:{width:1600,height:1000},reducedMotion:'reduce'});const [name,...v]=cookie.split('=');await context.addCookies([{name,value:v.join('='),url:base}]);
   await context.addInitScript(()=>{localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0');window.__tasks=[];new PerformanceObserver(l=>window.__tasks.push(...l.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask',buffered:true});});
+  if(fallback)await context.addInitScript(()=>{Element.prototype.moveBefore=undefined;});
   page=await context.newPage();let requests=0;page.on('request',r=>{if(/\/api\/backlog/.test(r.url()))requests++;});
   if(variant!=='candidate')for(const [file,body] of baseFiles)await page.route('**/'+file+'*',r=>r.fulfill({contentType:file.endsWith('.css')?'text/css':'application/javascript',body}));
   if(count===30000)await page.route('**/api/backlog-export?*',r=>new URL(r.request().url()).searchParams.get('format')==='json'?r.fulfill({json:fixture}):r.continue());
@@ -40,7 +41,7 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
   const startupMs=performance.now()-startup,first=performance.now();await page.evaluate(()=>switchTab('backlog'));
   await page.waitForFunction(()=>document.querySelector('#backlogOverviewBody .bpaHero'),null,{timeout:120000});
   const firstMs=performance.now()-first;await page.waitForTimeout(3500);const totals=await page.locator('#backlogOverviewBody .bpaHero').innerText();
-  const scopeTimes=[];for(let i=0;i<5;i++){scopeTimes.push(await page.evaluate(()=>{const start=performance.now();document.querySelector('[data-blv-importance="regular"]').click();document.querySelector('[data-blv-importance="all"]').click();document.getElementById('backlogOverviewBody').getBoundingClientRect();return performance.now()-start;}));await page.waitForTimeout(250);}
+  const scopeTimes=[];for(let i=0;i<(dateOnly?0:5);i++){scopeTimes.push(await page.evaluate(()=>{const start=performance.now();document.querySelector('[data-blv-importance="regular"]').click();document.querySelector('[data-blv-importance="all"]').click();document.getElementById('backlogOverviewBody').getBoundingClientRect();return performance.now()-start;}));await page.waitForTimeout(250);}
   // Each overview render schedules timeline rAF work. Drain that earlier scenario
   // before attributing tasks to the new date-panel interaction.
   await page.waitForTimeout(1000);
@@ -57,7 +58,7 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
    await page.locator('[data-blv-importance="special"]').click();await page.locator('#backlogOverviewBody .bpaEmpty').waitFor();await page.reload({waitUntil:'domcontentloaded'});await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).first().click({timeout:5000}).catch(()=>{});await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:60000});await page.evaluate(()=>switchTab('backlog'));
    await page.waitForFunction(()=>document.querySelector('[data-blv-importance="all"]'),null,{timeout:60000});await page.locator('[data-blv-importance="all"]').click();await page.locator('#backlogOverviewBody .bpaEmpty').waitFor({state:'detached'});
    const native='input[type="date"][data-range-input="from"]';await page.locator(native).evaluate(el=>{el.value='2026-12-01';el.dispatchEvent(new Event('change',{bubbles:true}));});
-   await page.locator('[data-range-toggle]').click();assert.equal(await page.locator('[data-range-summary]').innerText(),'');await page.locator('[data-range-move="1"]').click();await page.locator('[data-range-toggle]').click();assert.equal(await page.locator(native).inputValue(),'2026-12-01');
+   await page.locator('[data-range-toggle]').click();assert.equal(await page.locator('[data-range-summary]').innerText(),'');await page.locator('[data-range-move="1"]').click();assert.equal(await page.locator('[data-range-move="1"]').evaluate(el=>el===document.activeElement),true);await page.locator('[data-range-toggle]').click();assert.equal(await page.locator(native).inputValue(),'2026-12-01');
    await page.locator('[data-range-cancel]').click();await page.evaluate(()=>{document.getElementById('backlogInStoreFrom').value='2026-12-01';document.getElementById('backlogInStoreTo').value='2026-12-31';BLBacklogDateRange.sync();});await page.locator('[data-range-toggle]').click();assert.match(await page.locator('[data-range-summary]').innerText(),/2026/);
    await page.screenshot({path:path.join(app,'public/release-notes/next-assets/backlog-date-range-collapse.png')});
    for(const theme of ['light','dark'])for(const size of ['compact','standard','large','xl']){await page.evaluate(({theme,size})=>{document.documentElement.dataset.theme=theme;document.documentElement.dataset.uiScale=size;},{theme,size});assert.ok(await page.locator('[data-range-toggle]').isVisible());}
@@ -75,5 +76,5 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
   await context.close();
  }
 }
-fs.writeFileSync(path.join(out,functional?'functional-results.json':control?(largeOnly?'control-large-results.json':'control-results.json'):'browser-results.json'),JSON.stringify({base:'fad8578308c527274ab762b9ed8f371e8e033d99',candidate:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runtime:await browser.version(),results},null,2));
+fs.writeFileSync(path.join(out,functional?(fallback?'functional-fallback-results.json':'functional-results.json'):dateOnly?'date-only-results.json':control?(largeOnly?'control-large-results.json':'control-results.json'):'browser-results.json'),JSON.stringify({base:'fad8578308c527274ab762b9ed8f371e8e033d99',candidate:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runtime:await browser.version(),results},null,2));
 })().catch(async e=>{console.error(e);if(page)await page.screenshot({path:path.join(root,'failure.png')}).catch(()=>{});console.error('Evidence:',root);if(page)console.error(await page.evaluate(()=>({date:(window.BLStorage||localStorage).getItem('lcw.backlog.dateRange.v1'),html:document.getElementById('backlogDateRange')?.outerHTML.slice(0,1200),parent:document.getElementById('backlogDateRange')?.parentElement.id})).catch(()=>null));fs.writeFileSync(path.join(out,'browser-partial.json'),JSON.stringify(results,null,2));process.exitCode=1;}).finally(async()=>{await browser?.close();server.kill('SIGTERM');});
