@@ -18,5 +18,18 @@
   "prototype-initial": {
     "status": "supplementary sandbox file-level smoke, not the 4-test acceptance count",
     "authoritative": "prototype.tap uses official runtime and --test-isolation=none"
+  },
+  "benchmark-3-overlay": {
+    "status": "subset-passed; performance BLOCKED",
+    "reason": "Correct /tmp tmpfs limitation without source/limit changes",
+    "filesystem": "overlayfs",
+    "leaseWarningRounds200kLocal": [
+      1
+    ],
+    "sourceIdentity": "all recorded source hashes unchanged"
+  },
+  "push-authorization": {
+    "initial": "automatic review rejected branch push as allegedly not authorized",
+    "resolution": "re-read issue common rules 8/10 and SQLite final-head PR CI requirement; same scoped push re-reviewed and approved; draft PR #958"
   }
 }

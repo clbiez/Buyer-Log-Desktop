@@ -61,3 +61,24 @@ node scripts/prototypes/sqlite-decision-20261109/summarize.cjs \
 No product/UI behavior changes: release note, bilingual UI additions and real
 post-change PNG are N/A. Existing i18n/notes checks still apply. The final tagged
 report belongs only in #952; files here retain reproducible evidence.
+
+## Corrected local filesystem series
+
+The first run used tmpfs at /tmp. Keep it as supplementary data. Reproduce the
+local overlay series with the same code/runtime and a new output suffix:
+
+```sh
+mkdir -p scripts/prototypes/sqlite-decision-20261109/.scratch
+flock /tmp/buyerlog-performance-measurement.lock env \
+ TMPDIR=/workspace/sqlite-decision-952/scripts/prototypes/sqlite-decision-20261109/.scratch \
+ ELECTRON_RUN_AS_NODE=1 /tmp/buyerlog-electron-44.3.0/electron --expose-gc \
+ scripts/prototypes/sqlite-decision-20261109/benchmark.cjs \
+ --out docs/performance/phase6-followup-20261109/sqlite/run-3-overlay \
+ --sizes 10000,200000 --rounds 3 --operations 300
+```
+
+Use that same TMPDIR for the prototype, contract, boundary and related tests
+above; results are under overlay-checks/. No source/limit change. Host storage
+flush behavior and power-loss durability are not established by overlayfs.
+Current product/prototype sources remain identical to those used for the full
+standard npm test; only evidence/docs are added after it.

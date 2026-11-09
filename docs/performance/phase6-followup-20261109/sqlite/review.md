@@ -29,3 +29,9 @@
   .github, AGENTS/CLAUDE değişmez. Önceki checkout `work` dalında 9e667430'da
   kalır. Başka adayın branch/commit'i kullanılmaz. Review tek agent ile yapıldı;
   üretim sınırını değiştiren P1 implementasyonu yok.
+
+Filesystem correction: run-2 was tmpfs and is only supplementary. run-3-overlay
+uses the worktree overlay filesystem with identical executable sources. Disk
+space/backup sizes remain file byte counts, not a durability certification.
+All disk-sensitive subset tests are repeated there; automatic backup parity,
+complete sync state and Windows/power-loss gates remain open.

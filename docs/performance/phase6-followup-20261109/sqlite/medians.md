@@ -1,3 +1,5 @@
+> Supplementary **tmpfs** series (run-2). These are RAM-backed filesystem results, not disk/fsync acceptance. The final local overlay series is in medians-overlay.md. Do not pool the series.
+
 
 Median wall time (ms)
 

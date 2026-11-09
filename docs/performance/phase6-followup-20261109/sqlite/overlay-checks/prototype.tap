@@ -1,0 +1,12 @@
+✔ local patch subset: records, field writers, HLC, journal checksums, filters and compaction agree (1364.120289ms)
+✔ local torn final append is repaired; checksum corruption blocks further writes (123.525065ms)
+✔ SIGKILL retains acknowledged writes in both engines (687.372963ms)
+✔ SQLite rolls back earlier rows and sequence when a later batch member fails (48.924158ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2265.074809
