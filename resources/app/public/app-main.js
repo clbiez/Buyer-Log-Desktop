@@ -37,9 +37,9 @@ window.BLModulePreparation=modulePreparation;
 function renderModulePreparationStates(){
   const snapshot=modulePreparation?.snapshot();if(!snapshot)return;
   const L=(tr,en)=>appLang==='en'?en:tr;
-  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection')};
+  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection'),backlog:'Backlog'};
   const labels={pending:L('Bekliyor','Pending'),loading:L('Yükleniyor','Loading'),ready:L('Hazır','Ready'),error:L('Hata','Error')};
-  for(const module of ['cp','orders','koleksiyon']){
+  for(const module of ['koleksiyon','cp','orders','backlog']){
     const button=document.querySelector('nav.tabs button[data-tab="'+module+'"]');if(!button)continue;
     let badge=button.querySelector('[data-module-preparation]');
     if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove('hasModulePreparation');continue;}
@@ -52,7 +52,7 @@ function renderModulePreparationStates(){
 }
 function startupModuleIntent(event){
   const module=event.target?.closest?.('button[data-tab]')?.dataset.tab;
-  if(!['cp','orders','koleksiyon'].includes(module))return;
+  if(!['koleksiyon','cp','orders','backlog'].includes(module))return;
   if(window.BLCanAccessArea?.(module)===true)modulePreparation?.noteIntent(module);
 }
 document.querySelector('nav.tabs')?.addEventListener('pointerover',startupModuleIntent);
@@ -1650,6 +1650,7 @@ function runDeferredRender(tab){
   const fnName=DEFERRED_TAB_RENDERERS[tab];
   if(!fnName)return;
   _deferredTabRenders.delete(tab);
+  backgroundWarmupUnrendered.delete(tab);
   const fn=window[fnName];
   if(typeof fn==='function')fn();
 }
@@ -2169,16 +2170,22 @@ async function ensureCpLoaded(options={}){
       // önbellekten geldiyse) paylaşılan alan yetkisini paralel eşle.
       const [registry]=await Promise.allSettled([refreshCpStartupImageRegistry(rows),applyCpSharedEditAccess(rows)]);
       if(registry.status==='rejected'){console.warn('CP model image registry:',registry.reason);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
+      // Yanıt beklenirken başlayan yerel düzenlemeyi arka plan yenilemesi ezmez.
+      if(options.reason==='reload'&&cpClientWorkInProgress()){
+        overviewCpLoadState='ready';window.BLModulePreparation?.setStatus('cp','pending');return true;
+      }
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
+      backgroundWarmupUnrendered.add('cp');
       applyPricingRulesToLoadedRows({render:false});
       overviewCpLoadState='ready';overviewCpLoadError='';
       invalidateUnifiedPriorityDecisions('cp-projection-loaded',['cp']);
       syncCpModelColumns(Array.isArray(data.cpModelColumns)?data.cpModelColumns:[]);
-      buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender)renderCP();
+      buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender||currentActiveTab()==='cp')renderCP();
       window.BLPerf?.mark?.('CP_LOAD_READY',{reason:options.reason||'cp',rows:rows.length,revision:_unifiedPriorityDataRevision});
       // CP hangi sekme tarafından yüklenmiş olursa olsun Overview artık dirty'dir.
       // Görünürse aynı frame'de bir kez, görünmüyorsa ilk girişte çizilir.
       scheduleOverviewRender('cp-ready');
+      if(options.reason==='reload')void Promise.resolve(window.BLPerf?.ensureFeature?.('cpAssistant')).then(()=>scheduleUnifiedPrioritiesForTable('cp')).catch(error=>console.warn('CP arka plan kararları:',error));
       return true;
     }catch(err){
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
@@ -2239,6 +2246,7 @@ async function ensureOrdersLoaded(options={}){
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
       state.ordersLogisticExpanded.clear();
+      backgroundWarmupUnrendered.add('orders');
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
       // tutulan lisans royalty kuralları da aynı satırlara yeniden uygulanmalı.
@@ -2246,7 +2254,7 @@ async function ensureOrdersLoaded(options={}){
       applyPricingRulesToLoadedRows({render:false});
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
-      buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender)renderOrders();
+      buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
       window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
@@ -2430,7 +2438,7 @@ function switchTab(tab){
     setTimeout(()=>void ensureCollectionMasterCatalogLoaded(),0);
     void (window.BLPerf?.ensureFeature?.('deferredUi') || Promise.resolve()).catch(()=>{});
   }
-  if(tab==='backlog'&&typeof fetchCurrentBacklog==='function'&&!backlogLoadedOnce)fetchCurrentBacklog();
+  if(tab==='backlog'&&typeof fetchCurrentBacklog==='function'&&(!backlogLoadedOnce||backlogPrefetch))void fetchCurrentBacklog();
   // v9.46 — Teslimat riski analizi açılış kritik yolunda değil: Backlog sekmesi
   // ilk açıldığında lazy yüklenir. Panel kapalıysa hiçbir veri çekmez.
   if(tab==='backlog')void (window.BLPerf?.ensureFeature?.('backlogAnalysis')||Promise.resolve()).catch(()=>{});
@@ -2455,7 +2463,7 @@ function switchTab(tab){
   if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
   // Her sayfanın profili ilk girişte yukarıda veri yükleme ile birlikte çözülür;
   // aynı sayfaya dönüldüğünde kullanıcının geçici seçimi korunur.
-  if(tab==='koleksiyon' && !profileFirstVisit && typeof renderKol==='function') renderKol();
+  // Koleksiyon DOM'u sekme değişiminde korunur; veri olayları gerekli çizimi yapar.
   if(tab==='shipping' && profileFirstVisit){
     void profileReady.then(()=>{if(currentActiveTab()==='shipping'&&typeof renderShipTable==='function'){
       applyStoredProfilesForCurrentPage(true);
@@ -15102,6 +15110,9 @@ async function waitForRefreshJob(expectedJob=null){
     const keepCpForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('cp')&&state.cp&&Array.isArray(state.cp.rows));
     const keepOrdersForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('orders')&&state.orders&&Array.isArray(state.orders.rows));
     const preserveCpClientState=(!userVisibleRefresh&&cpClientWorkInProgress())||keepCpForPartialRefresh;
+    const retainPreparedData=data.hasCachedData!==false&&!data.sourceFilterRequired;
+    const reloadPreparedCp=Boolean(retainPreparedData&&data.cpDeferred&&!preserveCpClientState&&state.cp);
+    const reloadPreparedOrders=Boolean(retainPreparedData&&!Array.isArray(data.orders)&&(force||leanReload)&&data.orderSummaryDeferred&&!keepOrdersForPartialRefresh&&state.orders);
     if(Array.isArray(data.cp)){
       if(!preserveCpClientState){
         state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
@@ -15112,9 +15123,11 @@ async function waitForRefreshJob(expectedJob=null){
     }else if(data.cpDeferred){
       // mode=initial CP'yi bilerek taşımaz. Önceden burada state.cp=null yapıp
       // açık editörü boşa düşürüyorduk. Yerel iş varsa mevcut projection kalır.
-      if(!preserveCpClientState)state.cp=null;
-      overviewCpLoadState=preserveCpClientState?'ready':'idle';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions(preserveCpClientState?'server-cp-deferred-preserved-local-edit':'server-cp-deferred');
+      // Hazır tabloyu silme: yeni projection atomik olarak yerini alır.
+      if(!retainPreparedData&&!preserveCpClientState){state.cp=null;window.BLModulePreparation?.setStatus('cp','pending');}
+      overviewCpLoadState=state.cp?'ready':'idle';overviewCpLoadError='';
+      if(reloadPreparedCp)window.BLModulePreparation?.setStatus('cp','loading');
+      if(!state.cp)invalidateUnifiedPriorityDecisions('server-cp-deferred',['cp']);
       if(currentActiveTab()!=='overview')_deferredTabRenders.add('overview');
     }
     if(Array.isArray(data.orders)){
@@ -15122,7 +15135,9 @@ async function waitForRefreshJob(expectedJob=null){
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){
-      if(!keepOrdersForPartialRefresh)state.orders=null;state.orderSummary=null;
+      if(!retainPreparedData&&!keepOrdersForPartialRefresh){state.orders=null;window.BLModulePreparation?.setStatus('orders','pending');}
+      if(reloadPreparedOrders)window.BLModulePreparation?.setStatus('orders','loading');
+      state.orderSummary=null;
       invalidateUnifiedPriorityDecisions('server-orders-deferred',['orders']);
     }
     if(Array.isArray(data.orderSummary)){
@@ -15208,6 +15223,10 @@ async function waitForRefreshJob(expectedJob=null){
     if(activeModuleMetric)endStartupStage(activeModuleMetric,'ACTIVE_MODULE_INIT',{module:startupTab});
     if(initialScreenLoad)window.BLPerf?.mark?.('UI_FIRST_RENDER');
     if(hydrateMetric)window.BLPerf?.end?.(hydrateMetric);
+    const preparedReloads=[];
+    if(reloadPreparedCp)preparedReloads.push(ensureCpLoaded({force:true,reason:'reload'}));
+    if(reloadPreparedOrders)preparedReloads.push(ensureOrdersLoaded({force:true}));
+    if(userVisibleRefresh)await Promise.all(preparedReloads);
     if(userVisibleRefresh||leanReload){
       const activeTab=currentActiveTab();
       if(activeTab==='cp'&&!state.cp)await ensureCpLoaded({force:true});
@@ -15229,10 +15248,12 @@ async function waitForRefreshJob(expectedJob=null){
     }
     if(currentActiveTab()==='backlog'&&(typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('backlog'))){
       if(typeof fetchCurrentBacklog==='function') fetchCurrentBacklog(); else renderBacklog(data.backlog);
-    }else if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('backlog'))){
+    }else if((userVisibleRefresh||leanReload)&&(!Array.isArray(targets)||!targets.length||targets.includes('backlog'))){
       // Açık değilse çizilmez; bir sonraki girişte taze pivot çekilsin diye
       // "bir kez yüklendi" işareti düşürülür (aksi hâlde eski pivot kalıyordu).
-      backlogLoadedOnce=false;
+      backlogLoadedOnce=false;backlogPrefetch=null;++backlogFetchGeneration;
+      window.BLModulePreparation?.setStatus('backlog','loading');
+      void prefetchBacklogForRefresh().catch(error=>console.warn('Arka plan Backlog:',error));
     }
     // Fiyat & Üretici Analizi hazırladığı veri kümesini önbellekte tutar;
     // yenilemeden sonra bayat kalmasın. Açıksa hemen, değilse ilk girişte hazırlanır.
@@ -16891,30 +16912,23 @@ function schedulePostUiStartupTasks(){
 async function refreshSyncStatusBadge(){
   try{const s=await fetchJSON('/api/sync-status');renderSyncStatusBadge(s.status);}catch(_){renderSyncStatusBadge(null);}
 }
-/* ARKA PLAN ÖN YÜKLEME (aynı sekme). Açılış ekranı çizildikten sonra kullanıcının
-   yetkili olduğu CP → Siparişler → Koleksiyon verisi BU renderer'a sırayla,
-   tarayıcı boştayken ve gizli çizimle yüklenir. Modüle ilk geçişte ağ/JSON
-   beklenmez; tablo ilk görünüşte bir kez çizilir. Ayrı native sekme açılmaz:
-   her sekme uygulamanın tamamını ve verisini baştan yükleyip ~1,5 GiB ek bellek
-   ve dakikalarca CPU yarışı üretiyordu (7.0.314 ölçümü). */
+/* Aynı renderer'da kalıcı veri: ilk ekran açıldıktan sonra Koleksiyon → CP →
+   Siparişler → Backlog. Native sekmeler de bu sırayı izler; ayrı gizli native
+   sekmeler açılmaz. Görünmeyen büyük tablolar ilk gösterimde çizilir ve DOM'u
+   sekme değişiminde korunur. Bellek eşiği bir ekranı sessizce atlamaz. */
 const BACKGROUND_WARMUP_GAP_MS=1500;
 let backgroundWarmupStarted=false;
-/* Adaptif sınır: Orders ön yüklemesi en büyük veri kümesidir (30 bin satırda ~70 MB
-   JSON / ~75 MB JS belleği). Az bellekli makinede veya renderer belleği zaten
-   doluysa atlanır; Orders ilk girişte her zamanki gibi yüklenir. */
-function backgroundWarmupMemoryTight(){
-  const deviceMemory=Number(navigator.deviceMemory)||0;
-  if(deviceMemory>0&&deviceMemory<=4)return true;
-  const memory=performance.memory;
-  return Boolean(memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>0.6);
-}
-function backgroundWarmupNativeTab(){
-  return Boolean(window.location?.search&&new URLSearchParams(window.location.search).get('workspaceTab'));
-}
 function backgroundWarmupSteps(){
-  const nativeTab=backgroundWarmupNativeTab(),activeModule=currentActiveTab();
   const modelData=!(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false);
   return [
+    {module:'koleksiyon',enabled:true,ready:()=>false,load:async()=>{
+      await ensureInitialKolWorkspace();
+      await window.BLPerf?.ensureFeature?.('collectionTools');
+      const ok=await ensureCollectionCatalogLoaded({deferRender:true});
+      if(ok!==true)return ok;
+      await ensureCollectionMasterCatalogLoaded();
+      return true;
+    }},
     // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
     {module:'cp',enabled:modelData,ready:()=>Boolean(state.cp&&_unifiedPriorityCache.cp?.rows===state.cp.rows),load:async()=>{
       const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
@@ -16922,13 +16936,12 @@ function backgroundWarmupSteps(){
       await window.BLPerf?.ensureFeature?.('cpAssistant');
       return await scheduleUnifiedPrioritiesForTable('cp');
     }},
-    {module:'orders',enabled:modelData&&!backgroundWarmupMemoryTight(),ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
-    {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
-  ].filter(step=>!nativeTab||step.module===activeModule);
+    {module:'orders',enabled:modelData,ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
+    {module:'backlog',enabled:modelData,ready:()=>backlogLoadedOnce||Boolean(backlogPrefetch),load:()=>prefetchBacklogForRefresh()},
+  ];
 }
-/* Hazırlık, Continue ve ilk görünür karelerden sonra başlar. Her adımda güncel
-   açma niyeti ve kişisel son kullanım yeniden okunur; yetki, kaynak ve bellek
-   sınırları aynı kalır. Veri hazırlanır, görünmeyen tablo çizilmez. */
+/* Hazırlık Continue ve ilk görünür karelerden sonra başlar. Sabit öncelik
+   gezinme/hover ile değişmez; yetki ve kaynak kapıları her adımda tekrar okunur. */
 function backgroundWarmupCurtainVisible(){return Boolean(document.getElementById('blBootGuard'));}
 function finishStartupModules(){
   window.BLBootGuard?.ready?.('modules');
@@ -16938,9 +16951,7 @@ function scheduleBackgroundModuleWarmup(){
   if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
   const steps=backgroundWarmupSteps();
   // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
-  // Native renderers prepare only their visible module; explicit user navigation
-  // keeps the existing on-demand loaders. Recheck after the idle delay as well.
-  const eligible=step=>(!backgroundWarmupNativeTab()||step.module===currentActiveTab())&&step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
+  const eligible=step=>step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
   const total=steps.filter(eligible).length;let index=0;
   const gap=()=>BACKGROUND_WARMUP_GAP_MS;
   const idle=fn=>{
@@ -16948,21 +16959,17 @@ function scheduleBackgroundModuleWarmup(){
     window.requestIdleCallback(fn,{timeout:4000});
   };
   const next=()=>{
-    const step=window.BLModulePreparation?window.BLModulePreparation.takeNext(steps):steps.shift();
+    const step=steps.shift();
     if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));finishStartupModules();return;}
     if(!eligible(step)){next();return;}
     index++;
     window.BLModulePreparation?.setStatus(step.module,'loading');
     window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
     window.dispatchEvent(new CustomEvent('bl:startup-progress',{detail:{stage:'modules',module:step.module,index,total:Math.max(total,index)}}));
-    // Veri zaten bellekteyse (ör. açılış sekmesi CP idi) tablo çizilmiş olabilir; yalnız
-    // bu adımda ilk kez yüklenen tablo "çizilmemiş" sayılır.
-    const loadedBefore=step.module==='cp'?Boolean(state.cp):step.module==='orders'?Boolean(state.orders):true;
-    Promise.resolve().then(step.load).then(ok=>{
+    Promise.resolve().then(prepareBackgroundPageProfiles).then(step.load).then(ok=>{
       window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
       if(ok===true)window.BLModulePreparation?.setStatus(step.module,'ready');
-      // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
-      if(ok===true&&!loadedBefore&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
+      else if(window.BLModulePreparation?.snapshot?.()[step.module]?.status==='loading')window.BLModulePreparation?.setStatus(step.module,'pending');
     }).catch(error=>{window.BLModulePreparation?.setStatus(step.module,'error','BACKGROUND_PREPARATION_FAILED');console.warn('Arka plan ön yükleme:',step.module,error);})
       .finally(()=>setTimeout(()=>idle(next),gap()));
   };
@@ -17385,6 +17392,17 @@ function applyStoredProfilesForCurrentPage(applyFavorites=true){
   if(startupViewResume?.__page===page)applyViewState(startupViewResume);
 }
 
+let backgroundPageProfilesReady=false,backgroundPageProfilesPromise=null;
+function prepareBackgroundPageProfiles(){
+  if(backgroundPageProfilesPromise)return backgroundPageProfilesPromise;
+  backgroundPageProfilesPromise=Promise.all([fetchJSON('/api/views'),fetchJSON('/api/filter-profiles')]).then(([views,filters])=>{
+    for(const page of ['cp','orders','koleksiyon']){
+      cachePresetStore('view',page,views);cachePresetStore('filter',page,filters);
+    }
+    backgroundPageProfilesReady=true;
+  }).catch(error=>{backgroundPageProfilesPromise=null;console.warn('Arka plan profilleri:',error);});
+  return backgroundPageProfilesPromise;
+}
 async function refreshViewSelect(){
   try{ viewStore = cachePresetStore('view',activeProfilePage(),await fetchJSON('/api/views')); fillProfileSelect(document.getElementById('viewSelect'),viewStore,'view'); }
   catch(err){ console.warn('Görünümler alınamadı:', err.message); }
@@ -17635,6 +17653,7 @@ async function applyProfilesForCurrentPage(applyFavorites=true){
   const generation=++profileApplyGeneration;
   const page=activeProfilePage();if(!isProfilePage(page))return;
   applyCachedProfilesForCurrentPage(applyFavorites);
+  if(backgroundPageProfilesReady&&['cp','orders','koleksiyon'].includes(page))return;
   await refreshViewSelect();await refreshFilterSelect();
   if(generation!==profileApplyGeneration||activeProfilePage()!==page)return;
   if(applyFavorites){
@@ -19783,9 +19802,9 @@ let backlogLoadedOnce=false;
 /* v20260929 — Tek yenileme sonrası Backlog sekmesi açık değilse pivot yanıtı
    arka planda ÖNCEDEN alınır (çizilmez). Sekmeye ilk girişte aynı parametreli
    hazır yanıt beklemeden çizilir. Yanıt yalnız aynı sorgu anahtarı için ve
-   kısa süre geçerlidir; yeni bir yenileme/yeniden yükleme onu düşürür. */
+   tüketilene kadar tutulur; kaynak yenilemesi eski yanıtı geçersiz kılar. */
 let backlogPrefetch=null;
-const BACKLOG_PREFETCH_MAX_AGE_MS=10*60*1000;
+let backlogPrefetchPending=null;
 function backlogQueryString(params){ return new URLSearchParams(params||{}).toString(); }
 /* İlk Backlog yüklemesinde rapor yerine ortak bekleme durumu gösterilir;
    içerik veri gelmeden açılmaz. Boş durum metni sonradan geri yüklenir. */
@@ -19813,6 +19832,7 @@ function applyBacklogData(data){
   backlogDimensionRequests.clear();
   renderBacklog(data);
   backlogLoadedOnce=true;
+  window.BLModulePreparation?.setStatus('backlog','ready');
   renderBacklogDimOrder();
   updateBacklogQuickDimLabels();
   updateBacklogBuyerGrupBtnLabel();
@@ -19842,6 +19862,7 @@ async function fetchBacklog(params){
 async function fetchBacklogData(params){
   backlogPrefetch=null;
   showBacklogLoadingState();
+  window.BLModulePreparation?.setStatus('backlog','loading');
   const generation=++backlogFetchGeneration;
   window.BLBacklogDateRange?.requestState('loading');
   try{
@@ -19852,6 +19873,7 @@ async function fetchBacklogData(params){
   }catch(err){
     if(generation!==backlogFetchGeneration)return;
     window.BLBacklogDateRange?.requestState('error');
+    window.BLModulePreparation?.setStatus('backlog','error','BACKLOG_LOAD_FAILED');
     console.warn('Backlog alınamadı:', err.message);
     const empty=document.getElementById('backlogEmpty');
     if(!backlogLoadedOnce&&empty&&window.BLUI&&typeof window.BLUI.renderState==='function'){
@@ -19859,12 +19881,23 @@ async function fetchBacklogData(params){
     }
   }
 }
-async function prefetchBacklogForRefresh(){
-  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return false;
-  const qs=backlogQueryString(buildBacklogParams());
-  const data=await fetchJSON('/api/backlog' + (qs ? '?'+qs : ''));
-  backlogPrefetch={key:qs,data,at:Date.now()};
-  return true;
+function prefetchBacklogForRefresh(){
+  if(window.BLCanAccessArea?.('backlog')!==true)return Promise.resolve(false);
+  const qs=backlogQueryString(buildBacklogParams()),generation=backlogFetchGeneration;
+  if(backlogPrefetch?.key===qs)return Promise.resolve(true);
+  if(backlogPrefetchPending?.key===qs&&backlogPrefetchPending.generation===generation)return backlogPrefetchPending.promise;
+  const entry={key:qs,generation,promise:null};
+  window.BLModulePreparation?.setStatus('backlog','loading');
+  entry.promise=fetchJSON('/api/backlog'+(qs?'?'+qs:'')).then(data=>{
+    if(generation!==backlogFetchGeneration)return false;
+    backlogPrefetch={key:qs,data};
+    window.BLModulePreparation?.setStatus('backlog','ready');
+    return true;
+  }).catch(error=>{
+    window.BLModulePreparation?.setStatus('backlog','error','BACKLOG_LOAD_FAILED');throw error;
+  }).finally(()=>{if(backlogPrefetchPending===entry)backlogPrefetchPending=null;});
+  backlogPrefetchPending=entry;
+  return entry.promise;
 }
 // Pivot sorgusunun parametreleri tek yerden üretilir: hem /api/backlog hem de
 // /api/backlog-detail aynı filtreleri görmek zorunda, yoksa detay penceresi
@@ -19904,15 +19937,21 @@ function commitBacklogDateInputs(){
   return true;
 }
 function fetchCurrentBacklog(){
-  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog')) return;
-  const params=buildBacklogParams();
+  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return;
+  const params=buildBacklogParams(),key=backlogQueryString(params);
   const ready=backlogPrefetch;
-  if(ready&&ready.key===backlogQueryString(params)&&Date.now()-ready.at<BACKLOG_PREFETCH_MAX_AGE_MS){
-    ++backlogFetchGeneration;
-    backlogPrefetch=null;
-    try{applyBacklogData(ready.data);return;}catch(err){console.warn('Hazır Backlog yanıtı çizilemedi:',err&&err.message);}
+  if(ready&&ready.key===key){
+    ++backlogFetchGeneration;backlogPrefetch=null;
+    try{applyBacklogData(ready.data);return Promise.resolve(true);}catch(err){console.warn('Hazır Backlog yanıtı çizilemedi:',err&&err.message);}
   }
-  fetchBacklog(params);
+  if(backlogPrefetchPending?.key===key&&backlogPrefetchPending.generation===backlogFetchGeneration){
+    showBacklogLoadingState();
+    return backlogPrefetchPending.promise.then(ok=>{
+      if(ok&&currentActiveTab()==='backlog'&&backlogQueryString(buildBacklogParams())===key)return fetchCurrentBacklog();
+      return false;
+    }).catch(error=>{console.warn('Backlog alınamadı:',error);return false;});
+  }
+  return fetchBacklog(params);
 }
 document.getElementById('backlogPivotSettingsBtn')?.addEventListener('click', openBacklogPivotSettings);
 (function initBacklogRetailRange(){
