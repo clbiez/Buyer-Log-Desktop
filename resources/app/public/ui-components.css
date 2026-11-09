@@ -12343,6 +12343,7 @@ html[data-ui-system="manifest"] .ocIconButton:hover {
 /* Manifest shared appearance adapters: plan-execute. Module files contain layout only. */
 html[data-ui-system="manifest"] .backlogDateRange {background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
+.backlogDateToggle [data-range-summary] {color:var(--ui-text-muted);font-size:var(--ui-font-xs)}
 html[data-ui-system="manifest"] .backlogDateTitle {font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .backlogDateControls label {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
