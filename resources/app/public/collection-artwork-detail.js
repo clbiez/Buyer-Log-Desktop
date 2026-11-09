@@ -121,6 +121,34 @@
     }
     return changed;
   }
+  // Açık BOM penceresindeki kanıtı, hücre düzenlemenin ortak save/undo yoluyla
+  // uygular. Eski pencere, değişen workspace veya başka modele yazamaz.
+  function canApplyBom(row, entry) {
+    const b = bridge();
+    return Boolean(row && entry && b && b.canEdit?.() && b.batchEdit
+      && allRows().includes(row) && plmIdOfRow(row)
+      && plmIdOfRow(row) === numericId(entry.plmId)
+      && b.validateValue?.(row.id, ART_KEY, summaryFor(entry))?.ok);
+  }
+  function applyBom(row, entry) {
+    if (!canApplyBom(row, entry)) return { ok: false, changed: 0 };
+    const id = plmIdOfRow(row);
+    // batchEdit render'ından önce cache güncellenir; projeksiyon yazılan değeri
+    // son BOM özetiyle eşler ve sonraki PLM SYNC'lerde tekrar güncelleyebilir.
+    // Detay penceresinin ağır component/setComponent listelerini cache'te tutma.
+    const evidence = {
+      plmId: id, isSetStyle: entry.isSetStyle, artworkSummary: entry.artworkSummary,
+      hasPrint: entry.hasPrint, needsAi: entry.needsAi, fetchedAt: entry.fetchedAt,
+      ai: { status: entry.ai?.status },
+      placements: (Array.isArray(entry.placements) ? entry.placements : []).map(item => ({
+        placement: item.placement, placementTr: item.placementTr, placementEn: item.placementEn,
+        count: item.count, printType: item.printType,
+      })),
+    };
+    state.cache.set(id, evidence);
+    state.meta.set(id, evidence);
+    return bridge().batchEdit([{ rowId: row.id, key: ART_KEY, value: summaryFor(entry) }], { source: 'artwork-bom' });
+  }
   function missingIds() {
     const ids = new Set();
     for (const row of allRows()) {
@@ -296,6 +324,8 @@
     ensureFresh,
     project,
     applyToRow,
+    canApplyBom,
+    applyBom,
     refresh: () => ensureFresh({ force: true }),
     openBom,
     summaryFor,

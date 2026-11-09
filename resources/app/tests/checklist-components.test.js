@@ -218,3 +218,27 @@ test('a skipped stale roster cannot authorize a hidden extra component',()=>{
     assert.equal(result.payload.tombstones['P::@set-components'].componentCount,2);
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('component validation identifies the failing entry in a multi-order batch without writing it',async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-notification-component-'));
+  try{
+    const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))});
+      let failure;try{await store.applyEntries([
+        {orderKey:'100|DEMO|001',itemId:'tests',state:'approved'},
+        {orderKey:'200|SET|002',itemId:'tests~part~B',state:'approved'}
+      ],{id:'buyer'});}catch(error){failure={code:error.code,orderKey:error.orderKey,itemId:error.itemId};}
+      process.stdout.write(JSON.stringify({failure,answers:store.publicPayload().answers}));`;
+    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{cwd:ROOT,env:{...process.env,BUYER_LOG_DATA_ROOT:dir,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')},encoding:'utf8'}));
+    assert.deepEqual(result.failure,{code:'CHECKLIST_COMPONENTS_INVALID',orderKey:'200|SET|002',itemId:'tests~part~B'});
+    assert.deepEqual(result.answers,{});
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('sync forwards only the rejected in-flight entry as a durable notification target',async()=>{
+ const fail={error:'Define the set roster before updating a component.',code:'CHECKLIST_COMPONENTS_INVALID',orderKey:'200|SET|002',itemId:'tests~part~B'};
+ const b=browser(new Map(),async()=>({ok:false,status:400,json:async()=>fail}));
+ const first={orderKey:'100|DEMO|001',sourceRow:{Category:"2'li Takım"}},second={orderKey:'200|SET|002',sourceRow:{Category:"2'li Takım"}};
+ b.assistant.setChecklistAnswer(first,'tests~part~A','approved');b.assistant.setChecklistAnswer(second,'tests~part~B','approved');
+ await assert.rejects(b.sync.syncAnswerChanges(),error=>{assert.equal(error.notificationTarget.lineKey,'200|SET|002');assert.equal(error.notificationTarget.itemId,'tests~part~B');assert.equal(error.notificationTarget.module,'cp');return true;});
+ fail.orderKey='999|UNRELATED|003';
+ await assert.rejects(b.sync.syncAnswerChanges(),error=>{assert.equal(error.notificationTarget.lineKey,undefined,'unknown batch error never guesses a record');return true;});
+});

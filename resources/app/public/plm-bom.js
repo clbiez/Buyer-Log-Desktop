@@ -52,12 +52,15 @@
     return status === 'resolved' || status === 'not-needed' ? 'ok' : status === 'failed' ? 'bad' : 'wait';
   }
 
-  function openForPlm(plmId, title) {
+  function openForPlm(plmId, title, context = {}) {
     const id = numericId(plmId);
+    // Yerel BOM okuması, dialogun odak/layout hazırlığını beklemez.
+    const entryPromise = id ? entryForPlm(id) : Promise.resolve(null);
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
-    const close = () => modal.remove();
-    modal.innerHTML = `<div class="cpaModal"><header>
+    let releaseKeyboard = () => {};
+    const close = () => { releaseKeyboard(); modal.remove(); };
+    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true" aria-label="${esc(L('PLM BOM · Baskı Detayı', 'PLM BOM · Print Details'))}"><header>
       <div><b>${esc(L('PLM BOM · Baskı Detayı', 'PLM BOM · Print Details'))}</b><small>${esc([id && 'PLM ' + id, title].filter(Boolean).join(' · '))}</small></div>
       <button type="button" data-bom-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
       <div class="cpaModalBody"><p class="cpaEmpty">${esc(L('BOM bilgisi yükleniyor…', 'Loading BOM data…'))}</p></div>
@@ -66,6 +69,8 @@
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
     modal.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
     document.body.appendChild(modal);
+    releaseKeyboard = window.BLUI?.bindDialogKeyboard?.(modal, { onEscape: close }) || (() => {});
+    if (window.BLMotionPlus?.enabled?.()) window.BLMotionPlus.play('overlay', modal.querySelector('.cpaModal'));
 
     const body = modal.querySelector('.cpaModalBody');
     (async () => {
@@ -74,7 +79,7 @@
         return;
       }
       try {
-        const entry = await entryForPlm(id);
+        const entry = await entryPromise;
         if (!modal.isConnected) return;
         if (!entry) {
           body.innerHTML = `<p class="cpaEmpty">${esc(L('Bu model için henüz BOM kaydı yok. PLM SYNC çalıştırıldığında BOM da otomatik okunur.', 'No BOM record exists for this style yet. BOM is read automatically during PLM SYNC.'))}</p>`;
@@ -94,7 +99,8 @@
           <td>${esc(item.graphicApprovalStatusName || '—')}</td>
         </tr>`).join('');
         const ai = entry.ai || {};
-        const summary = isSet ? (entry.artworkSummary || entry.summary || L('Baskı yok', 'No print')) : (entry.hasPrint ? entry.summary : L('Baskı yok', 'No print'));
+        const artwork = context.moduleId === 'collection' ? window.BLCollectionArtworkDetail : null;
+        const summary = artwork ? artwork.summaryFor(entry) : isSet ? (entry.artworkSummary || entry.summary || L('Baskı yok', 'No print')) : (entry.hasPrint ? entry.summary : L('Baskı yok', 'No print'));
         const setRows = setComponents.map(item => `<tr>
           <td><b>${esc(item.label || '—')}</b></td>
           <td>${esc(item.childPlmId || '—')}</td>
@@ -123,6 +129,36 @@
           ${entry.needsAi ? `<p class="cpaEmpty">${esc(L('Bazı baskı yerleşimleri hâlâ belirsiz. Manuel kontrol önerilir.', 'Some print placements remain ambiguous. Manual review is recommended.'))}</p>` : ''}
           ${ai.error ? `<p class="cpaEmpty">${esc(ai.error)}</p>` : ''}
         `;
+        if (artwork && context.row) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'cpaBtn';
+          button.dataset.bomApply = '';
+          const applyLabel = L('BOM değerini Artwork Detayına uygula', 'Apply BOM value to Artwork Detail');
+          button.textContent = applyLabel;
+          button.disabled = !artwork.canApplyBom(context.row, entry);
+          button.onclick = async () => {
+            button.disabled = true;
+            button.textContent = L('BOM değeri uygulanıyor…', 'Applying BOM value…');
+            // Ortak hücre kaydı tabloyu çizebilir; önce gerçek geri bildirimi boya.
+            await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+            if (!modal.isConnected) return;
+            try {
+              const result = artwork.applyBom(context.row, entry);
+              if (!result?.ok) throw new Error('BOM_APPLY_FAILED');
+              close();
+              window.showToast?.(result.changed ? L('BOM değeri Artwork Detayına uygulandı. Geri Al ile eski değere dönebilirsiniz.', 'BOM value applied to Artwork Detail. Use Undo to restore the previous value.') : L('Artwork Detayı zaten BOM değeriyle aynı.', 'Artwork Detail already matches the BOM value.'));
+            } catch (_) {
+              let status = body.querySelector('[data-bom-status]');
+              if (!status) { status = document.createElement('p'); status.className = 'cpaEmpty'; status.dataset.bomStatus = ''; status.setAttribute('role', 'status'); body.appendChild(status); }
+              status.textContent = L('BOM değeri uygulanamadı. Düzenleme iznini ve satırı kontrol edip BOM penceresini yeniden açın.', 'BOM value could not be applied. Check edit permission and the row, then reopen the BOM window.');
+              button.textContent = applyLabel;
+              button.disabled = !artwork.canApplyBom(context.row, entry);
+            }
+          };
+          const footer = modal.querySelector('footer');
+          footer.insertBefore(button, footer.firstChild);
+        }
       } catch (error) {
         if (modal.isConnected) body.innerHTML = `<p class="cpaEmpty">${esc(L('BOM bilgisi okunamadı: ', 'BOM data could not be read: ') + String(error && error.message || error))}</p>`;
       }
@@ -131,7 +167,7 @@
 
   function openForRow(row, moduleId) {
     const title = String((row && (row['Model Name'] || row.modelName || row.model || row.modelKod)) || '').trim();
-    openForPlm(plmIdOfRow(row, moduleId), title);
+    openForPlm(plmIdOfRow(row, moduleId), title, { row, moduleId: moduleId || 'collection' });
   }
 
   window.BLPlmBom = { numericId, plmIdOfRow, entryForPlm, openForPlm, openForRow };

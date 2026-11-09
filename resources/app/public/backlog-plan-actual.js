@@ -106,7 +106,7 @@ function positionModule(){
   const mod=moduleEl(),parent=$('backlogContent');if(!mod||!parent)return;
   const pos=Math.max(0,Math.min(POSITIONS-1,Number(state.position)||0));
   const kpi=$('backlogOverview')||$('backlogKpi'),chart=$('backlogChartPanel'),delivery=$('backlogAnalysis');
-  const tree=[...parent.children].find(el=>el.classList&&el.classList.contains('panel')&&el!==mod&&el.id!=='backlogChartPanel'&&el.id!=='backlogOverview');
+  const tree=[...parent.children].find(el=>el.classList&&el.classList.contains('panel')&&el!==mod&&el.id!=='backlogChartPanel'&&el.id!=='backlogOverview'&&el.id!=='backlogDateRange');
   if(pos===0&&kpi)kpi.insertAdjacentElement('afterend',mod);
   else if(pos===1&&(chart||kpi))(chart||kpi).insertAdjacentElement('afterend',mod);
   else if(pos===2&&delivery)delivery.insertAdjacentElement('afterend',mod);

@@ -568,6 +568,7 @@ select.editCell,input.editCell{width:100%;min-width:0;padding:5px 7px;cursor:poi
 .notificationHistoryMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
 .notificationHistoryMeta time{white-space:nowrap;}
 .notificationHistoryCopy p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;}
+.notificationHistoryTarget{margin-top:8px;max-width:100%;white-space:normal;text-align:start;overflow-wrap:anywhere;}
 .notificationHistoryRemove{width:28px;height:28px;display:grid;place-items:center;cursor:pointer;}
 @media(max-width:620px){.notificationHistoryCard{height:calc(100vh - 20px);}.notificationHistoryCard .verHistTools{flex-wrap:wrap;}.notificationHistoryCard .verHistTools input{flex-basis:100%;}.notificationHistoryMeta{align-items:flex-start;flex-direction:column;gap:2px;}}
 .dropzone{position:fixed;inset:0;display:none;align-items:center;justify-content:center;}

@@ -294,10 +294,16 @@ function qualityStrip(){
 /* Özel sipariş uyarısı: riskli siparişlerin içindeki özel siparişler ayrıca
    gösterilir ("riskli 100 siparişin 30'u özel"). Etiket bazında çip tıklanınca
    o etiketin riskli satırları sağdaki çekmecede açılır. */
+function importanceSelector(){
+  const scope=importanceScope();
+  return `<div class="bpaSeg2 blvImportanceScope" role="group" aria-label="${esc(L('Özel sipariş kapsamı','Special order scope'))}">${[['all',L('Tümü','All')],['special',L('Özel','Special')],['regular','Regular']].map(([key,label])=>`<button type="button" class="${scope===key?'is-active':''}" aria-pressed="${scope===key}" data-blv-importance="${key}">${esc(label)}</button>`).join('')}</div>`;
+}
+function recoveryControls(){
+  return `<div class="blvQuality">${importanceSelector()}<span class="bpaSectionSpacer"></span><button type="button" class="tbtn" data-blv-action="filters">${esc(L('Analiz filtrelerini düzenle','Edit analysis filters'))}</button>${activeFilterCount()?`<button type="button" class="tbtn" data-blv-action="clearFilters">${esc(L('Analiz filtrelerini temizle','Clear analysis filters'))}</button>`:''}</div>`;
+}
 function specialStrip(total){
   const groups=R().importanceSummary?R().importanceSummary(items):[];
-  const scope=importanceScope();
-  const seg=`<div class="bpaSeg2 blvImportanceScope" role="group" aria-label="${esc(L('Özel sipariş kapsamı','Special order scope'))}">${[['all',L('Tümü','All')],['special',L('Özel','Special')],['regular','Regular']].map(([key,label])=>`<button type="button" class="${scope===key?'is-active':''}" data-blv-importance="${key}">${esc(label)}</button>`).join('')}</div>`;
+  const seg=importanceSelector();
   const risky=groups.filter(g=>g.riskItems.length);
   const chips=risky.map(g=>{
     const orders=new Set(g.riskItems.map(it=>it.orderCode||it.lineId)).size;
@@ -596,10 +602,10 @@ function render(){
   updateFilterButton();if(filterOpen)renderFilterPanel();
   tips=new Map();openers=new Map();hideTip();
   if(!state.open)return;
-  if(loading){host.innerHTML=`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
-  if(error){host.innerHTML=`<div class="bpaError">${esc(error)}</div>`;return;}
-  if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
-  if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
+  if(loading){host.innerHTML=recoveryControls()+`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
+  if(error){host.innerHTML=recoveryControls()+`<div class="bpaError">${esc(error)}</div>`;return;}
+  if(!items||!R()){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
+  if(!items.length){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
   host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
@@ -729,6 +735,8 @@ function bind(){
   host.addEventListener('click',e=>{
     const t=e.target.closest('[data-blv-open],[data-blv-importance],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-chart],[data-blv-timeline-dim],[data-blv-gran],[data-blv-action]');
     if(!t||!host.contains(t))return;
+    if(t.dataset.blvAction==='filters'){void openFilterPanel();return;}
+    if(t.dataset.blvAction==='clearFilters'){state.filters=[];filterEditorId='';filterValueSearch='';reapplyOverviewFilters();return;}
     if(t.dataset.blvImportance){state.importanceScope=t.dataset.blvImportance;saveState();items=applyOverviewFilters(baseItems||[]);return render();}
     if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return render();}
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
