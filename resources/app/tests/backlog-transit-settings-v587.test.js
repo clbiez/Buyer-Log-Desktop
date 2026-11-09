@@ -111,7 +111,7 @@ test('v5.87 tablo BACKLOG sayfasından ÖNCE kurulur', () => {
   assert.ok(planIndex > 0 && expandIndex > planIndex && sheetIndex > expandIndex, 'plan önce üretilmeli, sonra tarih boyutları genişletilmeli');
   assert.match(block, /backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
   assert.match(block, /const chartState=window\.BLBacklogChart\?\.getState\?\.\(\)\|\|null/);
-  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState\}\)/);
+  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState,showSelectedColumns:true\}\)/);
   assert.match(block, /buildBacklogSettingsSheet\(transitPlan\)/);
 });
 

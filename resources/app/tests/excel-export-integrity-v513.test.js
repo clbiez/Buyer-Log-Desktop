@@ -57,6 +57,6 @@ test('v5.13 Backlog magnifier Excel uses the same detail sheet/formula and valid
   // (exportHeaders); motor ve üçüncü argüman aynı kalır.
   assert.match(full,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
   assert.match(full,/const chartState=window\.BLBacklogChart\?\.getState\?\.\(\)\|\|null/);
-  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState\}\)/);
+  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState,showSelectedColumns:true\}\)/);
   assert.match(full,/backlogWorkbookGuardConfig\(backlogHeaders,backlogRows\)/);
 });
