@@ -1287,7 +1287,8 @@
       valueSearchTimer = setTimeout(() => {
         if (!host) return;
         runPendingSearches();
-        if (!refreshSearchResults(document.activeElement)) render();
+        const active = typeof document === 'undefined' ? null : document.activeElement;
+        if (!refreshSearchResults(active)) render();
       }, 350);
       return true;
     }
