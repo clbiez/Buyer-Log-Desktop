@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.344",
+      "publishedAt": "2026-11-08",
+      "title": {
+        "tr": "Tablo görsellerinde daha düşük bellek kullanımı",
+        "en": "Lower memory use for table images"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 8,
+        "fixes": 13
+      },
+      "file": "release-notes/7.0.344/release.json"
+    },
+    {
       "version": "7.0.343",
       "publishedAt": "2026-11-08",
       "title": {
