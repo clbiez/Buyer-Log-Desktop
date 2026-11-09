@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "selected-orders-license-atlas-20261109",
+      "type": "feature",
+      "module": {
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
+      },
+      "title": {
+        "tr": "Seçili siparişlerden lisans atlası oluşturun",
+        "en": "Create a license atlas from selected orders"
+      },
+      "body": {
+        "tr": "CP ve Siparişler › Araçlar › Lisans Atlası Oluştur, seçili ve filtrede görünen siparişlerin lisanslarını tekrarsız toplar. Lisans ve lisansöre göre kayıtlı kartlar eşleştirilir; üretici paylaşım ayarlarıyla önizleme ve TR/EN çevrimdışı HTML çıktısı hazırlanır. Eşleşmeyen, lisansörü belirsiz veya paylaşımı kapalı kayıtlar açıklanır; süreç haritası olmayan kartlar yalnız lisans bilgisiyle eklenir.",
+        "en": "CP and Orders › Tools › Create License Atlas collects unique licenses from selected orders visible in the current filter. Saved cards are matched by license and licensor; supplier sharing settings govern the preview and TR/EN offline HTML export. Missing, ambiguous or unshared records are reported; cards without a process map include license details only."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "order-license-atlas-cp-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında dört sentetik siparişten oluşturulan iki lisanslı Atlas önizlemesi",
+          "en": "Atlas preview with two licenses from four synthetic orders in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Tekrarlı lisanslar birleştirilir, paylaşımı kapalı lisans açıklanır ve kayıtlı onay haritası önizlenir. Aynı akış Siparişler ekranında da doğrulandı.",
+          "en": "Repeated licenses are combined, the unshared license is explained, and the saved approval map is previewed. The same flow was also verified in Orders."
+        }
+      }
+    },
+    {
       "id": "trivia-continue-viewport",
       "type": "fix",
       "module": {
