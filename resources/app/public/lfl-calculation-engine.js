@@ -1,5 +1,6 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BLLflCalculationEngine=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
+  const DEFAULT_BREAKDOWN=Object.freeze(['mag','mmyg','classification']);
   const countryKey=value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ');
   const isTurkeyCountry=value=>['TURKIYE','TURKEY','TR'].includes(countryKey(value));
   const currencyForRow=row=>isTurkeyCountry(row&&row.country)?'TRY':'USD';
@@ -40,5 +41,14 @@
       sharedKeys,
     };
   }
-  return {countryKey,isTurkeyCountry,currencyForRow,summary,metricBetween,comparablePeriodRows};
+  function aiKnowledge(lang){
+    return [lang==='en'
+      ? 'LFL = Like-for-Like. Buyer Log compares quantity-weighted FOB between a current and reference period, only for breakdown/currency pairs present in both periods. This is a price comparison, not retail sales growth. Use the deterministic LFL query; do not ask the user to define LFL.'
+      : 'LFL = Like-for-Like. Buyer Log güncel ve kıyas dönemlerinin adet ağırlıklı FOB fiyatını, yalnız her iki dönemde de bulunan kırılım/para birimi çiftlerinde karşılaştırır. Satış büyümesi analizi değildir. Deterministik LFL sorgusunu kullan; kullanıcıdan LFL tanımı isteme.',
+      'Default breakdown: '+DEFAULT_BREAKDOWN.join(' + '),
+      lang==='en'?'Valid rows: FOB > 0 and quantity > 0. Turkey uses TRY, other countries USD; currencies are never averaged together. Change = (current/reference - 1)*100; improvement has the opposite sign. Overall change weights currency changes by current comparable quantity. Default periods: latest season versus previous season with the same prefix, using Buyer Log season rules. Missing comparison season requires clarification; never compare the same season to itself.'
+        :'Geçerli kayıt: FOB > 0 ve adet > 0. Türkiye TRY, diğer ülkeler USD; para birimleri birlikte ortalanmaz. Değişim = (güncel/kıyas - 1)*100; iyileşme ters işaretlidir. Genel değişim para birimi değişimlerini güncel karşılaştırılabilir adetle ağırlıklandırır. Varsayılan dönem: Buyer Log sezon kurallarına göre son sezon ve aynı önekli önceki sezon. Kıyas sezonu yoksa dönem sorulur; aynı sezon kendisiyle karşılaştırılmaz.'
+    ].join('\n');
+  }
+  return {DEFAULT_BREAKDOWN,countryKey,isTurkeyCountry,currencyForRow,summary,metricBetween,comparablePeriodRows,aiKnowledge};
 });
