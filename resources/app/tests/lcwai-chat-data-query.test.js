@@ -9,7 +9,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const read = name => fs.readFileSync(path.join(__dirname, '..', 'public', name), 'utf8');
-const SOURCES = ['canonical-fields.js', 'date-dimension.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
+const SOURCES = ['canonical-fields.js', 'date-dimension.js', 'lfl-calculation-engine.js', 'lcwai-lfl-query.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
 const fixture = require('./helpers/merch-calendar-fixture');
 
 function ordersTable() {
@@ -21,10 +21,12 @@ function ordersTable() {
   ];
   const col = (key, label, type) => ({ key, label, type, readValue: row => (row[key] instanceof Date ? row[key].toISOString().slice(0, 10) : String(row[key] ?? '')), rawValue: row => row[key] });
   const columns = [col('Season', 'Season', 'ro'), col('Merch Alt Grup Kod', 'Merch Alt Grup', 'ro'), col('Country', 'Country', 'ro'), col('Buyer Grup (TR)', 'Buying Group', 'ro'), col('Order Quantity', 'Order Qty', 'int'), col('In-Store (Model Budget)', 'In-Store', 'instoreEdit'), col('OPD', 'OPD', 'date'), col('Order Code', 'Order Code', 'ordercode')];
+  rows.forEach((row, i) => { row.FOB = [2, 4, 7, 10][i]; });
+  columns.push(col('FOB', 'FOB', 'num'));
   return { rows, columns };
 }
 
-function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
+function load({ plans = [], storage = new Map(), ordersLoaded = true, lflRows = [], lflStatus = 200, backlogRows = [], quotations = [] } = {}) {
   const calls = { ask: [], chat: [], uploads: [], tables: [], ensure: 0 };
   const queue = plans.slice();
   let loaded = ordersLoaded;
@@ -39,17 +41,20 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
     errorText(error) { return String(error && error.code || error); }, needsLogin() { return false; },
   };
   const window = {
-    appLang: 'tr', BuyerLogAI: api, addEventListener() {},
+    appLang: 'tr', BuyerLogAI: api, BLBusinessRules: require('../public/business-rules'), addEventListener() {},
     BLStorage: { getItem: key => (storage.has(key) ? storage.get(key) : null), setItem: (key, value) => storage.set(key, String(value)) },
     async BLEnsureOrdersLoaded(options) { calls.ensure++; assert.equal(options.deferRender, true, 'görünmeyen modül çizilmez'); loaded = true; return true; },
     BLAIScreenData: {
       lastTab: () => 'overview', pageTitle: tab => ({ orders: 'Siparişler', cp: 'CP Tracker' }[tab] || tab),
       table(tab, opts = {}) { if (tab !== 'orders' || !loaded) return null; return { tableKey: 'orders', rows: orders.rows, columns: orders.columns, selectedIds: [], filters: {}, rowId: row => row._id, all: Boolean(opts.all) }; },
       overviewCpRows: () => [], cpColumns: () => [],
+      backlogRows: async () => backlogRows, backlogQuery: () => ({ format: 'json' }),
+      lflRows: async () => { if (lflStatus !== 200) throw new Error('LFL forbidden'); return lflRows; },
     },
+    BLPriceSupplierAnalysisBridge: { async get() { return { priceType: 'quotation', observations: quotations }; } },
   };
   window.window = window;
-  const context = vm.createContext({ window, globalThis: window, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
+  const context = vm.createContext({ window, globalThis: window, fetch: async url => { assert.equal(url, '/api/lfl'); return { ok: lflStatus === 200, status: lflStatus, json: async () => ({ rows: lflRows, error: lflStatus === 200 ? undefined : 'LFL forbidden' }) }; }, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
   SOURCES.forEach((source, index) => {
     vm.runInContext(source, context);
     // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.
@@ -59,6 +64,68 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
 }
 const PIVOT = { mode: 'query', dataset: 'orders', specJson: JSON.stringify({ dataset: 'orders', filters: [{ field: 'MAG', values: ['CU4E'] }, { field: 'Season', values: ['w6'] }, { field: 'Country', op: 'not_in', values: ['Türkiye'] }], rows: [{ field: 'In-Store (Model Budget)', bucket: 'month' }], columns: [{ field: 'Buying Group' }], measures: [{ agg: 'sum', field: 'Order Quantity' }], title: 'MAG CU4E W6 — MB ayı × Buying Group' }), assumptions: ['MB = In-Store (Model Budget)'] };
 const lastAnswer = chat => chat._state.conversations[0].messages.at(-1);
+
+test('unopened LFL and Backlog are computed directly; access failure never becomes a CSV/chat fallback', async () => {
+  const lflRows = ['S6', 'S7'].map((season,i) => ({ season, mag: 'CU4E', mmyg: 'KIDS', classification: 'T-Shirt', country: 'CHINA', quantity: 100, fob: 4-i }));
+  const lfl = { mode: 'query', specJson: JSON.stringify({ dataset: 'lfl', comparison: { type: 'lfl' } }) };
+  const one = load({ plans: [lfl], lflRows });
+  await one.chat.send('basit bir LFL analizi yapar mısın');
+  assert.equal(lastAnswer(one.chat).error, undefined);
+  assert.match(lastAnswer(one.chat).text, /-25/);
+  assert.equal(one.calls.uploads.length, 0); assert.equal(one.calls.chat.length, 0);
+  const saved = lastAnswer(one.chat).query.spec;
+  assert.match(saved, /comparison/);
+  const two = load({ plans: [{ mode: 'query', specJson: JSON.stringify({ dataset: 'backlog', rows: ['manufacturer'], measures: [{ agg: 'sum', field: 'remainingUnits' }] }) }], backlogRows: [{ Manufacturer: 'Demo', 'Remaining Units': 100 }] });
+  await two.chat.send('Backlog toplam kalan adedi üretici bazında çıkar');
+  assert.equal(lastAnswer(two.chat).error, undefined); assert.match(lastAnswer(two.chat).text, /100/);
+  assert.equal(two.calls.uploads.length, 0); assert.equal(two.calls.chat.length, 0);
+  const denied = load({ plans: [lfl], lflRows, lflStatus: 403 });
+  await denied.chat.send('LFL analizi');
+  assert.ok(lastAnswer(denied.chat).error); assert.equal(denied.calls.ask.length, 0); assert.equal(denied.calls.chat.length, 0);
+});
+
+test('quoted supplier and placed-order volume can be answered together and exported on two numeric sheets', async () => {
+  const spec = { queries: [
+    { dataset: 'quotations', title: 'En uygun teklif', rows: ['manufacturer', 'currency'], measures: [{ agg: 'min', field: 'fob' }] },
+    { dataset: 'orders', title: 'En çok sipariş', rows: ['Country'], measures: [{ agg: 'sum', field: 'Order Quantity' }] },
+  ] };
+  // Ayrı hedefler tek istekte; bu test ülke kırılımıyla çoklu hesap/dosya taşımasını sınar.
+  const { chat, calls } = load({ plans: [{ mode: 'query', specJson: JSON.stringify(spec) }], quotations: [{ manufacturer: 'Demo supplier', currency: 'USD', price: 3, quantity: 100 }] });
+  chat._state.output.format = 'xlsx';
+  await chat.send('teklifleri ve siparişleri ayrı tablolarla göster');
+  assert.equal(lastAnswer(chat).error, undefined);
+  assert.equal(calls.tables[0].data.sheets.length, 2); assert.equal(calls.tables[0].data.sheets[0].rows[0][2], 3);
+  assert.equal(calls.ask.length, 1); assert.equal(calls.uploads.length, 0);
+});
+test('a requested LFL calculation cannot fall through to generic chat or raw CSV when the planner says chat',async()=>{
+  const lflRows=['S6','S7'].map((season,i)=>({season,mag:'CU4E',mmyg:'KIDS',classification:'T-Shirt',country:'CHINA',quantity:100,fob:4-i}));
+  const plan={mode:'query',specJson:JSON.stringify({dataset:'lfl',comparison:{type:'lfl'}})};
+  const good=load({plans:[{mode:'chat'},plan],lflRows});await good.chat.send('basit bir LFL analizi yap');
+  assert.equal(good.calls.ask.length,2);assert.equal(good.calls.chat.length,0);assert.equal(good.calls.uploads.length,0);assert.match(lastAnswer(good.chat).text,/-25/);
+  const bad=load({plans:[{mode:'chat'},{mode:'chat'}],lflRows});await bad.chat.send('basit bir LFL analizi yap');
+  assert.ok(lastAnswer(bad.chat).error);assert.equal(bad.calls.ask.length,2);assert.equal(bad.calls.chat.length,0);
+});
+
+test('omitted weighted FOB triggers one repair; both numeric measures reach the chat and Excel', async () => {
+  const filters = [{ field: 'Country', op: 'not_in', values: ['Türkiye'] }];
+  const partial = { mode: 'query', specJson: JSON.stringify({ dataset: 'orders', filters, measures: [{ agg: 'sum', field: 'Order Quantity' }] }) };
+  const complete = { mode: 'query', specJson: JSON.stringify({ dataset: 'orders', filters, measures: [{ agg: 'sum', field: 'Order Quantity' }, { agg: 'weighted_avg', field: 'FOB', weightField: 'Order Quantity' }] }) };
+  const { chat, calls } = load({ plans: [partial, complete] });
+  chat._state.output.format = 'xlsx';
+  await chat.send('sipariş toplam adetini ve ağırlıklı FOB ortalamasını çıkar');
+  assert.equal(calls.ask.length, 2);
+  assert.ok(calls.ask[1].context.errors.includes('missing-requested-measure:weighted_avg:FOB'));
+  assert.equal(calls.chat.length, 0); assert.equal(calls.uploads.length, 0);
+  assert.deepEqual(calls.tables[0].data.sheets[0].rows, [[1450, 11800 / 1450]]);
+  assert.match(lastAnswer(chat).text, /Ağırlıklı ortalama/);
+  assert.ok(lastAnswer(chat).query.lines.some(line => line.includes('Σ(FOB × Order Qty)')));
+  const bad = load({ plans: [partial, partial] });
+  bad.chat._state.output.format = 'xlsx';
+  await bad.chat.send('sipariş toplam adetini ve ağırlıklı FOB ortalamasını çıkar');
+  assert.equal(bad.calls.ask.length, 2); assert.equal(bad.calls.tables.length, 0);
+  assert.match(lastAnswer(bad.chat).error, /kısmi sonuç göstermedim/);
+  assert.equal(lastAnswer(bad.chat).query, undefined);
+});
 
 test('veri isteği: plan LCW AI’dan, rakam Buyer Log’dan; CSV yüklenmez, LCW AI sohbetine tablo gitmez', async () => {
   const { chat, calls } = load({ plans: [PIVOT] });

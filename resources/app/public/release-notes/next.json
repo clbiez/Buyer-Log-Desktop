@@ -503,6 +503,122 @@
           "en": "Actual post-change Buyer Log in Electron 44.3.0 with 2,000 demo orders. Five navigation rounds made no new page-data requests and opened tables retained the same rows."
         }
       }
+    },
+    {
+      "id": "lcwai-weighted-metrics",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Toplam adet ve ağırlıklı FOB birlikte hesaplanır",
+        "en": "Calculate quantity and weighted FOB together"
+      },
+      "body": {
+        "tr": "Birden fazla ölçüt içeren taleplerde adet toplamı ve adet ağırlıklı FOB aynı filtrelerle hesaplanır. Formül, kullanılan ağırlık ve hesaba katılmayan kayıtlar açıklanır. Eksik ölçüt bir kez düzeltilir; eksik kalan plan tam sonuç gibi gösterilmez. Farklı para birimleri tek fiyat ortalamasında birleşmez.",
+        "en": "Requests with multiple measures calculate total quantity and quantity-weighted FOB with identical filters. The formula, weight and excluded records are explained. A missing measure triggers one repair; incomplete plans are not shown as complete answers. Different currencies are never combined in one price average."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-weighted-metrics.png",
+        "alt": {
+          "tr": "Toplam adet ve ağırlıklı FOB birlikte hesaplanır; gerçek Buyer Log ekranında sentetik demo veriler",
+          "en": "Calculate quantity and weighted FOB together; synthetic demo data in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; yalnız demo veriler. Planlayıcı yanıtı testte taklit edilmiştir, hesaplar Buyer Log tarafından yapılmıştır.",
+          "en": "Actual post-change application with demo data only. Planner responses are simulated in this test; Buyer Log performs the calculations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-lfl-query",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI / LFL",
+        "en": "LCW AI / LFL"
+      },
+      "title": {
+        "tr": "LFL kuralları ve tarihçesi doğal dil sorgularına bağlandı",
+        "en": "LFL rules and history are available to natural-language queries"
+      },
+      "body": {
+        "tr": "LCW AI, LFL tanımını kullanıcıdan istemeden Buyer Log hesap motorunu kullanır. CP güncel kayıtları yetkili LFL tarihçesiyle kıyaslanabilir. Ortak kırılım ve para birimi çiftlerinde ağırlıklı FOB, adet, değişim ve iyileşme gösterilir. Dönem belirtilmezse aynı önekli önceki sezon kullanılır; uygun kıyas yoksa dönem sorulur.",
+        "en": "LCW AI uses the Buyer Log calculation engine without asking the user to define LFL. Current CP records can be compared with authorized LFL history. Shared breakdown and currency pairs show weighted FOB, quantities, change and improvement. Without explicit periods it uses the previous same-prefix season; if none exists, it asks for comparison periods."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-lfl-analysis.png",
+        "alt": {
+          "tr": "LFL kuralları ve tarihçesi doğal dil sorgularına bağlandı; gerçek Buyer Log ekranında sentetik demo veriler",
+          "en": "LFL rules and history are available to natural-language queries; synthetic demo data in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; yalnız demo veriler. Planlayıcı yanıtı testte taklit edilmiştir, hesaplar Buyer Log tarafından yapılmıştır.",
+          "en": "Actual post-change application with demo data only. Planner responses are simulated in this test; Buyer Log performs the calculations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-supplier-multiple-queries",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI / Üretici analizi",
+        "en": "LCW AI / Supplier analysis"
+      },
+      "title": {
+        "tr": "Teklif ve sipariş hacmi ayrı kaynaklardan karşılaştırılır",
+        "en": "Compare quotations and order volume from their own sources"
+      },
+      "body": {
+        "tr": "En düşük t-shirt teklifi ve en yüksek sipariş hacmi gibi farklı sorular aynı istekte ayrı tablolarda hesaplanabilir; Excel çıktısında ayrı sayfalara yazılır. Teklif fiyatı yerine sipariş FOB’u kullanılmaz. En iyi üretici sorusunda fiyat, hacim veya teslimat ölçütü netleştirilir. Tüm alt sorgular doğrulanmadan kısmi sonuç gösterilmez.",
+        "en": "Different questions such as lowest T-Shirt quotation and highest order volume can be calculated as separate tables in one request and exported on separate Excel sheets. Order FOB never substitutes for a quotation. Best-supplier questions clarify price, volume or delivery criteria. All subqueries are validated before any partial result is displayed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-supplier-analysis.png",
+        "alt": {
+          "tr": "Teklif ve sipariş hacmi ayrı kaynaklardan karşılaştırılır; gerçek Buyer Log ekranında sentetik demo veriler",
+          "en": "Compare quotations and order volume from their own sources; synthetic demo data in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; yalnız demo veriler. Planlayıcı yanıtı testte taklit edilmiştir, hesaplar Buyer Log tarafından yapılmıştır.",
+          "en": "Actual post-change application with demo data only. Planner responses are simulated in this test; Buyer Log performs the calculations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-backlog-query",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI / Backlog",
+        "en": "LCW AI / Backlog"
+      },
+      "title": {
+        "tr": "Backlog kalan adetleri doğrudan hesaplanır",
+        "en": "Calculate Backlog remaining quantities directly"
+      },
+      "body": {
+        "tr": "Backlog verileri sayfa açılmadan yetkili kaynaktan alınır ve Buyer Log tarafından hesaplanır. Kalan alım sipariş miktarı kanonik kalan adet alanına bağlandı. Hesap için ham CSV dosyasının LCW AI’a gönderilmesi gerekmez; kaynak erişim hatasında başka veriyle sonuç üretilmez.",
+        "en": "Backlog data is read from the authorized source without opening the page and calculated by Buyer Log. Remaining purchase-order quantity is bound to the canonical remaining-units field. Calculations do not require uploading a raw CSV to LCW AI, and source access failures never produce answers from substitute data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-backlog-analysis.png",
+        "alt": {
+          "tr": "Backlog kalan adetleri doğrudan hesaplanır; gerçek Buyer Log ekranında sentetik demo veriler",
+          "en": "Calculate Backlog remaining quantities directly; synthetic demo data in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; yalnız demo veriler. Planlayıcı yanıtı testte taklit edilmiştir, hesaplar Buyer Log tarafından yapılmıştır.",
+          "en": "Actual post-change application with demo data only. Planner responses are simulated in this test; Buyer Log performs the calculations."
+        }
+      }
     }
   ]
 }

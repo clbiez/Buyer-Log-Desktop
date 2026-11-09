@@ -28,10 +28,11 @@
   'use strict';
   const canonical = root && root.BLCanonicalFields ? root.BLCanonicalFields : (typeof require === 'function' ? require('./canonical-fields.js') : null);
   const dates = root && root.BLDateDimension ? root.BLDateDimension : (typeof require === 'function' ? require('./date-dimension.js') : null);
-  const api = factory(canonical, dates);
+  const lfl = root && root.BLLcwAiLflQuery ? root.BLLcwAiLflQuery : (typeof require === 'function' ? require('./lcwai-lfl-query.js') : null);
+  const api = factory(canonical, dates, lfl);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLDataQuery = api;
-})(typeof window !== 'undefined' ? window : null, function (CF, DD) {
+})(typeof window !== 'undefined' ? window : null, function (CF, DD, LFL) {
   'use strict';
 
   const VERSION = 1;
@@ -41,7 +42,7 @@
     excelSheetRows: 5000, excelSheets: 10, excelCols: 40,
   });
   const BUCKETS = ['day', 'week', 'month', 'quarter', 'year'];
-  const AGGS = ['sum', 'count', 'count_distinct', 'avg', 'min', 'max'];
+  const AGGS = ['sum', 'count', 'count_distinct', 'avg', 'weighted_avg', 'min', 'max'];
   const TEXT_OPS = ['in', 'not_in', 'contains', 'not_contains', 'empty', 'not_empty'];
   const NUMBER_OPS = ['in', 'not_in', 'between', 'gte', 'lte', 'gt', 'lt', 'empty', 'not_empty'];
   const DATE_OPS = ['in', 'not_in', 'between', 'gte', 'lte', 'gt', 'lt', 'empty', 'not_empty'];
@@ -214,8 +215,8 @@
   /* table: BLAIScreenData.table() çıktısı (columns: {key,label,type,readValue,rawValue}).
      Alan türü önce sütun türünden, sonra kanonik alandan, en son örnek
      değerlerden çıkarılır. */
-  function createDataset({ id, label, screen, rows, columns, scope, total } = {}) {
-    const module = MODULE_OF[screen || id] || screen || id;
+  function createDataset({ id, label, screen, rows, columns, scope, total, module: moduleId } = {}) {
+    const module = moduleId || MODULE_OF[screen || id] || screen || id;
     const list = Array.isArray(rows) ? rows : [];
     const fields = [];
     const seen = new Set();
@@ -231,6 +232,15 @@
     const sample = sampleRows(list, 400);
     for (const field of fields) field.kind = detectKind(field, sample);
     return dataset;
+  }
+  function datasetFromRecords({ id, screen = id, label, rows = [], module: moduleId = screen, scope = 'all', lang = 'tr' }) {
+    const keys = new Set();
+    for (const row of rows.slice(0, 100)) for (const key of Object.keys(row)) if (!key.startsWith('_')) keys.add(key);
+    const columns = [...keys].map(key => {
+      const canonical = CF && CF.canonicalId(moduleId, key), def = canonical && CF.field(canonical);
+      return { key, label: def ? CF.label(canonical, lang) : key, type: def && def.type === 'number' ? 'num' : def && def.type === 'date' ? 'date' : 'ro', rawValue: row => row[key], readValue: row => row[key] };
+    });
+    return createDataset({ id, screen, label, rows, columns, scope, module: moduleId });
   }
   function sampleRows(rows, max) {
     if (rows.length <= max) return rows;
@@ -306,6 +316,15 @@
     const list = [field.label, ...(def ? [def.label && def.label.tr, def.label && def.label.en, ...(def.aliases || [])] : []), ...(GLOSSARY[field.canonical] || [])];
     const seen = new Set([token(field.id)]);
     return list.filter(Boolean).map(clean).filter(item => { const k = token(item); if (!k || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 10);
+  }
+  async function schemaTextAsync(datasets, options = {}) {
+    let since = Date.now();
+    for (const dataset of datasets) for (const field of dataset.fields) {
+      if (options.cancelled?.()) throw Object.assign(new Error('cancelled'), { code: 'LCWAI_CANCELLED' });
+      profile(dataset, field);
+      if (Date.now() - since >= 8) { await new Promise(resolve => setTimeout(resolve, 0)); since = Date.now(); }
+    }
+    return schemaText(datasets, options);
   }
   const shortValue = value => { const text = clean(value); return text.length > 40 ? `${text.slice(0, 39)}…` : text; };
   /* LCW AI'a giden şema: alan kimliği, tür, eş anlamlılar ve örnek değerler. */
@@ -436,13 +455,27 @@
        { ok, spec, notes[], errors[], clarify: { question, options[] } | null }
      errors: LCW AI'dan düzeltme istenecek yapısal hatalar.
      clarify: kullanıcıya sorulacak belirsizlik (ör. eşleşmeyen değer). */
-  function normalizeSpec(rawSpec, datasets, { lang = 'tr' } = {}) {
+  function normalizeSpec(rawSpec, datasets, { lang = 'tr', request = '', deferCurrencyCheck = false } = {}) {
     const list = (Array.isArray(datasets) ? datasets : []).filter(Boolean);
     const input = parseSpec(rawSpec);
     const notes = [], errors = [];
     if (!input) return { ok: false, spec: null, notes, errors: ['spec-not-json'], clarify: null };
+    if (input.queries) {
+      if (!Array.isArray(input.queries) || input.queries.length < 2 || input.queries.length > 4 || input.queries.some(q => !q || q.queries)) return { ok: false, spec: null, notes, errors: ['multi-query-needs-2-to-4-flat-queries'], clarify: null };
+      const queries = input.queries.map(q => normalizeSpec(q, list, { lang, deferCurrencyCheck }));
+      errors.push(...queries.flatMap(q => q.errors)); notes.push(...queries.flatMap(q => q.notes));
+      const fields = new Map(), measures = [];
+      for (const q of queries) if (q.dataset && q.spec) {
+        for (const f of q.dataset.fields) fields.set(f.canonical || f.id, { ...f, id: f.canonical || f.id });
+        for (const m of q.spec.measures) measures.push({ ...m, field: (q.dataset.fields.find(f => f.id === m.field) || {}).canonical || m.field });
+      }
+      errors.push(...validateRequestedMeasures(request, { measures }, { fields: [...fields.values()] }));
+      errors.push(...validateAnalysisIntent(request, queries));
+      if (/\bLFL\b|LIKE[ -]FOR[ -]LIKE/i.test(request) && !queries.some(q => q.spec && q.spec.comparison)) errors.push('missing-requested-analysis:lfl');
+      return { ok: errors.length === 0, errors, notes: [...new Set(notes)], clarify: queries.find(q => q.clarify)?.clarify || null, dataset: queries[0].dataset, spec: { title: clean(input.title).slice(0, 120), queries: queries.map(q => q.spec) } };
+    }
     let dataset = list.find(item => item.id === clean(input.dataset)) || list.find(item => token(item.id) === token(input.dataset) || token(item.label) === token(input.dataset));
-    if (!dataset && list.length === 1) dataset = list[0];
+    if (!dataset && list.length === 1 && !clean(input.dataset)) dataset = list[0];
     if (!dataset) return { ok: false, spec: null, notes, errors: [`unknown-dataset:${clean(input.dataset)}`], clarify: null };
     // Dönemler varsayılan olarak LCW Merch Calendar'a göredir; miladi yalnız açık istekle.
     const calendar = /^(gregorian|miladi|calendar)$/i.test(clean(input.calendar)) ? 'gregorian' : 'merch';
@@ -551,21 +584,30 @@
         spec[key].push({ field: field.id, bucket: bucketFor(field, item && item.bucket) });
       }
     }
+    if (asArray(input.measures).length > LIMITS.measures) errors.push('too-many-measures');
     for (const item of asArray(input.measures).slice(0, LIMITS.measures)) {
       if (!item || typeof item !== 'object') continue;
       const agg = clean(item.agg || item.op || 'sum').toLowerCase().replace(/[\s-]+/g, '_');
-      const aggName = { distinct: 'count_distinct', countdistinct: 'count_distinct', average: 'avg', mean: 'avg', total: 'sum' }[agg] || agg;
+      const aggName = { distinct: 'count_distinct', countdistinct: 'count_distinct', average: 'avg', mean: 'avg', total: 'sum', weighted_average: 'weighted_avg' }[agg] || agg;
       if (!AGGS.includes(aggName)) { errors.push(`bad-agg:${agg}`); continue; }
       if (aggName === 'count' && !item.field) { spec.measures.push({ agg: 'count', field: '' }); continue; }
       const field = fieldOf(item.field, 'measure');
       if (!field) continue;
-      if (['sum', 'avg'].includes(aggName) && field.kind !== 'number') { errors.push(`agg-needs-number:${aggName}:${field.id}`); continue; }
+      if (['sum', 'avg', 'weighted_avg'].includes(aggName) && field.kind !== 'number') { errors.push(`agg-needs-number:${aggName}:${field.id}`); continue; }
       if (['min', 'max'].includes(aggName) && field.kind === 'text') { errors.push(`agg-needs-number-or-date:${aggName}:${field.id}`); continue; }
-      spec.measures.push({ agg: aggName === 'count' ? 'count' : aggName, field: aggName === 'count' ? '' : field.id });
+      const measure = { agg: aggName, field: aggName === 'count' ? '' : field.id };
+      if (aggName === 'weighted_avg') {
+        if (!clean(item.weightField)) { errors.push('missing-weight-field'); continue; }
+        const weight = fieldOf(item.weightField, 'weight');
+        if (!weight) continue;
+        if (weight.kind !== 'number') { errors.push(`weight-needs-number:${weight.id}`); continue; }
+        measure.weightField = weight.id;
+      }
+      spec.measures.push(measure);
     }
     for (const item of asArray(input.list).slice(0, LIMITS.list)) { const field = fieldOf(item, 'list'); if (field && !spec.list.includes(field.id)) spec.list.push(field.id); }
     if (spec.list.length && (spec.rows.length || spec.measures.length)) { spec.rows = []; spec.columns = []; spec.measures = []; notes.push(T(lang, 'Liste istendiği için gruplama uygulanmadı.', 'A list was requested, so no grouping was applied.')); }
-    if (!spec.list.length && !spec.measures.length) {
+    if (!input.comparison && !spec.list.length && !spec.measures.length) {
       if (spec.rows.length) spec.measures.push({ agg: 'count', field: '' });
       else errors.push('nothing-to-show');
     }
@@ -579,7 +621,74 @@
     }
     const limit = Math.trunc(Number(input.limit));
     if (limit > 0) spec.limit = Math.min(limit, 100000);
-    return { ok: errors.length === 0, spec, notes: [...new Set(notes)], errors, clarify, dataset };
+    let reference = null;
+    if (input.comparison) {
+      if (!LFL || input.comparison.type !== 'lfl') errors.push('unsupported-comparison');
+      else {
+        const comparison = LFL.normalize(input.comparison, spec, dataset, list, { normalizeSpec, resolveField, read }, lang);
+        errors.push(...comparison.errors); notes.push(...comparison.notes); clarify = clarify || comparison.clarify; reference = comparison.reference;
+      }
+    } else {
+      if (/\bLFL\b|LIKE[ -]FOR[ -]LIKE/i.test(request)) errors.push('missing-requested-analysis:lfl');
+      errors.push(...validateRequestedMeasures(request, spec, dataset));
+      errors.push(...validateAnalysisIntent(request, [{ spec, dataset }]));
+      if (!deferCurrencyCheck && !errors.length && !clarify) errors.push(...validatePriceCurrencies(spec, dataset));
+    }
+    return { ok: errors.length === 0, spec, notes: [...new Set(notes)], errors, clarify, dataset, reference };
+  }
+  /* Dar bir eksiksizlik kontrolü: açıkça adlandırılmış sayısal alan/işlem
+     çiftleri. Filtre/sezon/ürün yorumunu yeniden yapan ikinci bir NL motoru
+     değildir; hata mevcut tek plan onarım turuna gider, sayı uydurulmaz. */
+  function validateRequestedMeasures(request, spec, dataset) {
+    const errors = new Set();
+    const need = (field, agg) => {
+      if (!spec.measures.some(m => m.field === field.id && m.agg === agg)) errors.add(`missing-requested-measure:${agg}:${field.id}`);
+    };
+    for (const clause of token(request).split(/\s+(?:VE|AND)\s+/)) {
+      const text = ` ${clause} `;
+      const weighted = /\b(?:AGIRLIKLI|WEIGHTED)\b/.test(text);
+      const fields = dataset.fields.filter(f => f.kind === 'number' && [f.id, ...aliasesOf(f)].some(alias => text.includes(` ${token(alias)} `)));
+      const targets = weighted && fields.some(f => f.canonical !== 'orderQuantity') ? fields.filter(f => f.canonical !== 'orderQuantity') : fields;
+      for (const field of targets) {
+        if (weighted) need(field, 'weighted_avg');
+        else if (/\b(?:ORTALAMA\w*|AVERAGE|MEAN|AVG)\b/.test(text)) need(field, 'avg');
+        else if (/\b(?:TOPLAM\w*|TOTAL|SUM)\b/.test(text)) need(field, 'sum');
+        if (/\b(?:MINIMUM|MIN|EN DUSUK)\b/.test(text)) need(field, 'min');
+        if (/\b(?:MAXIMUM|MAKSIMUM|MAX|EN YUKSEK)\b/.test(text)) need(field, 'max');
+      }
+      // Türkçe iyelik eki: "toplam adetini" alan eş anlamlısına tam eşit değildir.
+      if (/\b(?:TOPLAM\w*|TOTAL|SUM)\s+(?:SIPARIS\s+)?(?:ADET\w*|MIKTAR\w*|QUANTITY|QTY)\b|\b(?:ADET\w*|MIKTAR\w*|QUANTITY|QTY)\s+(?:TOPLAM\w*|TOTAL|SUM)\b/.test(text)) {
+        const qty = dataset.fields.find(f => f.canonical === 'orderQuantity');
+        if (qty) need(qty, 'sum');
+      }
+    }
+    return [...errors];
+  }
+  function validateAnalysisIntent(request, queries) {
+    const text = token(request), errors = [];
+    const quoted = /\b(?:TEKLIF\w*|QUOT\w*)\b|FIYAT VER\w*|PRICE OFFER/.test(text) && /EN (?:UYGUN|DUSUK|UCUZ)|LOWEST|CHEAPEST|BEST PRICE/.test(text);
+    const volume = /EN COK.*SIPARIS|MOST.*ORDER|HIGHEST.*VOLUME/.test(text);
+    const grouping = q => q.dataset && q.spec && q.spec.rows?.some(d => q.dataset.fields.find(f => f.id === d.field)?.canonical === 'manufacturer');
+    if (quoted && !queries.some(q => q.dataset?.id === 'quotations' && grouping(q) && q.spec.measures.some(m => m.agg === 'min' && q.dataset.fields.find(f => f.id === m.field)?.canonical === 'fob'))) errors.push('missing-requested-analysis:quotation-supplier-minimum');
+    if (volume && !queries.some(q => ['orders', 'cp'].includes(q.dataset?.id) && grouping(q) && q.spec.measures.some(m => (m.agg === 'sum' && q.dataset.fields.find(f => f.id === m.field)?.canonical === 'orderQuantity') || (m.agg === 'count_distinct' && q.dataset.fields.find(f => f.id === m.field)?.canonical === 'orderCode')))) errors.push('missing-requested-analysis:order-volume-by-supplier');
+    return errors;
+  }
+  function validatePriceCurrencies(spec, dataset) {
+    if (!spec.measures.some(m => m.agg !== 'count_distinct' && ['fob', 'supplierFob'].includes(dataset.fields.find(f => f.id === m.field)?.canonical))) return [];
+    const currency = dataset.fields.find(f => f.canonical === 'currency'), country = dataset.fields.find(f => f.canonical === 'country');
+    const dims = [...spec.rows, ...spec.columns];
+    if (currency && dims.some(d => d.field === currency.id)) return [];
+    if (!currency && country && dims.some(d => d.field === country.id)) return [];
+    if (!currency && !country) return [];
+    const currencies = new Set();
+    for (const row of matchRows(spec, dataset)) {
+      const explicit = currency ? token(read(currency, row)) : '';
+      const nation = country ? token(read(country, row)) : '';
+      const code = explicit || (nation ? (['TR', 'TURKIYE', 'TURKEY'].includes(nation) ? 'TRY' : 'USD') : '');
+      currencies.add(code || '?');
+      if (currencies.size > 1) return ['mixed-price-currencies:group-by-currency-or-country'];
+    }
+    return [];
   }
   function periodStart(value, calendar = 'gregorian') {
     const p = typeof value === 'string' || typeof value === 'number' ? periodOf(String(value)) : null;
@@ -632,11 +741,21 @@
     if (value === '' || value == null) return EMPTY;
     return bucket ? bucketOf(value, bucket, calendar) : value;
   }
-  function newAcc(measure) { return { agg: measure.agg, sum: 0, n: 0, min: null, max: null, set: measure.agg === 'count_distinct' ? new Set() : null }; }
-  function addAcc(acc, value) {
+  function newAcc(measure) { return { agg: measure.agg, sum: 0, n: 0, min: null, max: null, weightSum: 0, excluded: 0, currencies: measure._price ? new Set() : null, set: measure.agg === 'count_distinct' ? new Set() : null }; }
+  function addAcc(acc, value, weight, currency) {
     if (acc.agg === 'count') { acc.n++; return; }
+    // FOB: CP/Orders kolWeightedAverage/kolArithmeticAverage ile aynı fiyat kuralı.
+    if (acc.currencies && !(value > 0)) { if (acc.agg === 'weighted_avg') acc.excluded++; return; }
+    if (acc.agg === 'weighted_avg') {
+      // Yalnız geçerli değer + pozitif sonlu ağırlık çifti her iki toplama girer.
+      if (!Number.isFinite(value) || !Number.isFinite(weight) || weight <= 0 || !Number.isFinite(value * weight)) { acc.excluded++; return; }
+      if (acc.currencies) acc.currencies.add(currency);
+      acc.sum += value * weight; acc.weightSum += weight; acc.n++;
+      return;
+    }
     if (value === '' || value == null) return;
     if (acc.agg === 'count_distinct') { acc.set.add(value); return; }
+    if (acc.currencies) acc.currencies.add(currency);
     acc.n++;
     if (typeof value === 'number') acc.sum += value;
     if (acc.min == null || value < acc.min) acc.min = value;
@@ -644,10 +763,12 @@
   }
   function accValue(acc) {
     if (!acc) return null;
+    if (acc.currencies && acc.currencies.size > 1) return null;
     if (acc.agg === 'count') return acc.n;
     if (acc.agg === 'count_distinct') return acc.set.size;
     if (acc.agg === 'sum') return acc.n ? acc.sum : 0;
     if (acc.agg === 'avg') return acc.n ? acc.sum / acc.n : null;
+    if (acc.agg === 'weighted_avg') return acc.weightSum > 0 && Number.isFinite(acc.sum) && Number.isFinite(acc.weightSum) ? acc.sum / acc.weightSum : null;
     if (acc.agg === 'min') return acc.min;
     if (acc.agg === 'max') return acc.max;
     return null;
@@ -666,6 +787,10 @@
     if (measure.agg === 'count') return T(lang, 'Kayıt sayısı', 'Record count');
     const field = dataset.fields.find(item => item.id === measure.field);
     const name = field ? field.label : measure.field;
+    if (measure.agg === 'weighted_avg') {
+      const weight = dataset.fields.find(item => item.id === measure.weightField);
+      return `${name} · ${T(lang, 'Ağırlıklı ortalama', 'Weighted average')} (${weight ? weight.label : measure.weightField})`;
+    }
     const word = { sum: T(lang, 'Toplam', 'Total'), avg: T(lang, 'Ortalama', 'Average'), min: 'Min', max: 'Max', count_distinct: T(lang, 'farklı sayı', 'distinct count') }[measure.agg];
     return `${name} · ${word}`;
   }
@@ -688,15 +813,44 @@
   }
   const emptyLabel = lang => T(lang, '(boş)', '(blank)');
   /* Doğrulanmış plan + veri kümesi → tablo. Hiçbir değer tahmin edilmez. */
-  function execute(spec, dataset, { lang = 'tr' } = {}) {
+  function* matchSteps(spec, dataset) {
     const byId = id => dataset.fields.find(field => field.id === id);
     const filters = spec.filters.map(filter => ({ ...filter, _field: byId(filter.field), _set: new Set(filter.values || []) }));
     const matched = [];
+    let batch = 0, since = Date.now();
     for (const row of dataset.rows) {
       let ok = true;
       for (const filter of filters) { if (!rowMatches(filter, read(filter._field, row))) { ok = false; break; } }
       if (ok) matched.push(row);
+      if (++batch % 256 === 0 && Date.now() - since >= 8) { yield; since = Date.now(); }
     }
+    return matched;
+  }
+  function finishSteps(steps) { let next = steps.next(); while (!next.done) next = steps.next(); return next.value; }
+  function matchRows(spec, dataset) { return finishSteps(matchSteps(spec, dataset)); }
+  function execute(spec, dataset, options = {}) { return finishSteps(executeSteps(spec, dataset, options)); }
+  async function executeAsync(spec, dataset, options = {}) {
+    const steps = executeSteps(spec, dataset, options);
+    const check = () => { if (options.cancelled?.()) throw Object.assign(new Error('cancelled'), { code: 'LCWAI_CANCELLED' }); };
+    check();
+    let next = steps.next();
+    while (!next.done) { await new Promise(resolve => setTimeout(resolve, 0)); check(); next = steps.next(); }
+    return next.value;
+  }
+  function* executeSteps(spec, dataset, { lang = 'tr', reference = dataset, datasets = [dataset] } = {}) {
+    if (spec.queries) {
+      const results = [];
+      for (const q of spec.queries) {
+        const ds = datasets.find(d => d.id === q.dataset), ref = datasets.find(d => d.id === q.comparison?.referenceDataset);
+        if (!ds || (q.comparison && !ref)) throw new Error('query-dataset-unavailable');
+        const computed = yield* executeSteps(q, ds, { lang, reference: ref });
+        results.push({ title: q.title || ds.label, computed, lines: describe(q, ds, computed, lang) });
+      }
+      return { kind: 'multi', results, rows: results.flatMap(r => r.computed.rows), matched: results.reduce((n,r) => n+r.computed.matched, 0), scanned: results.reduce((n,r) => n+r.computed.scanned, 0) };
+    }
+    if (spec.comparison) return yield* LFL.steps(spec, dataset, reference, { read, matchRows, matchSteps, token }, lang);
+    const byId = id => dataset.fields.find(field => field.id === id);
+    const matched = yield* matchSteps(spec, dataset);
     const calendar = spec.calendar === 'gregorian' ? 'gregorian' : 'merch';
     const out = { columns: [], rows: [], total: null, matched: matched.length, scanned: dataset.rows.length, truncatedColumns: 0, outsideCalendar: 0, kind: spec.list.length ? 'list' : 'aggregate' };
     if (spec.list.length) {
@@ -710,18 +864,26 @@
     }
     const rowDims = spec.rows.map(dim => ({ ...dim, _field: byId(dim.field) }));
     const colDim = spec.columns[0] ? { ...spec.columns[0], _field: byId(spec.columns[0].field) } : null;
-    const measures = spec.measures.map(measure => ({ ...measure, _field: measure.field ? byId(measure.field) : null }));
+    const measures = spec.measures.map(measure => ({ ...measure, _field: measure.field ? byId(measure.field) : null, _weight: measure.weightField ? byId(measure.weightField) : null, _price: measure.agg !== 'count_distinct' && ['fob', 'supplierFob'].includes(byId(measure.field)?.canonical) }));
+    const hasWeights = measures.some(measure => measure._weight);
+    const currencyField = measures.some(m => m._price) ? dataset.fields.find(f => f.canonical === 'currency') : null;
+    const countryField = measures.some(m => m._price) ? dataset.fields.find(f => f.canonical === 'country') : null;
     const groups = new Map(); // satır anahtarı → { keys, cells: Map(colKey → acc[]), total: acc[] }
     const colTotals = new Map();
     const grand = measures.map(newAcc);
     const colSeen = new Map();
+    let batch = 0, since = Date.now();
     for (const row of matched) {
       const keys = rowDims.map(dim => groupKey(dim._field, dim.bucket, row, calendar));
       const key = keys.join('␟');
       if (!groups.has(key)) groups.set(key, { keys, cells: new Map(), total: measures.map(newAcc) });
       const group = groups.get(key);
       const values = measures.map(measure => (measure._field ? read(measure._field, row) : 1));
-      values.forEach((value, i) => { addAcc(group.total[i], value); addAcc(grand[i], value); });
+      const weights = hasWeights ? measures.map(measure => (measure._weight ? read(measure._weight, row) : null)) : null;
+      const explicitCurrency = currencyField ? token(read(currencyField, row)) : '';
+      const nation = !explicitCurrency && countryField ? token(read(countryField, row)) : '';
+      const currency = explicitCurrency || (nation ? (['TR', 'TURKIYE', 'TURKEY'].includes(nation) ? 'TRY' : 'USD') : '?');
+      values.forEach((value, i) => { addAcc(group.total[i], value, weights && weights[i], currency); addAcc(grand[i], value, weights && weights[i], currency); });
       if (keys.includes(OUTSIDE)) out.outsideCalendar++;
       if (colDim) {
         const colKey = groupKey(colDim._field, colDim.bucket, row, calendar);
@@ -729,8 +891,9 @@
         colSeen.set(colKey, (colSeen.get(colKey) || 0) + 1);
         if (!group.cells.has(colKey)) group.cells.set(colKey, measures.map(newAcc));
         if (!colTotals.has(colKey)) colTotals.set(colKey, measures.map(newAcc));
-        values.forEach((value, i) => { addAcc(group.cells.get(colKey)[i], value); addAcc(colTotals.get(colKey)[i], value); });
+        values.forEach((value, i) => { addAcc(group.cells.get(colKey)[i], value, weights && weights[i], currency); addAcc(colTotals.get(colKey)[i], value, weights && weights[i], currency); });
       }
+      if (++batch % 256 === 0 && Date.now() - since >= 8) { yield; since = Date.now(); }
     }
     let colKeys = colDim ? [...colSeen.keys()].sort(compareKeys) : [];
     const maxCols = Math.max(1, Math.floor((LIMITS.excelCols - rowDims.length - measures.length) / Math.max(1, measures.length)));
@@ -773,6 +936,9 @@
     } else measures.forEach((_, i) => totalCells.push(accValue(grand[i])));
     out.total = rowDims.length ? totalCells : null;
     if (!rowDims.length) out.rows = [totalCells];
+    out.measureStats = grand.map(acc => acc.agg === 'weighted_avg' ? { validRows: acc.n, excludedRows: acc.excluded, weightSum: acc.weightSum } : null);
+    out.priceCurrencies = grand.map(acc => acc.currencies ? [...acc.currencies] : []);
+    out.currencyConflict = [...groups.values()].some(group => colDim ? [...group.cells.values()].some(accs => accs.some(acc => acc.currencies?.size > 1)) : group.total.some(acc => acc.currencies?.size > 1));
     return out;
   }
 
@@ -808,6 +974,7 @@
   }
   /* "Nasıl anladım" satırları — kullanıcı yorumu tek bakışta doğrular. */
   function describe(spec, dataset, result, lang = 'tr') {
+    if (spec.queries) return (result?.results || []).flatMap(r => [r.title, ...r.lines]);
     const n = numberFormat(lang);
     const lines = [`${T(lang, 'Veri', 'Data')}: ${dataset.label} — ${scopeText(dataset, lang)}, ${n.format(dataset.total)} ${T(lang, 'kayıt', 'records')}`];
     lines.push(`${T(lang, 'Filtre', 'Filter')}: ${spec.filters.length ? spec.filters.map(filter => filterText(dataset, filter, lang)).join(' · ') : T(lang, 'yok', 'none')}`);
@@ -818,7 +985,27 @@
     const period = calendarLine(spec, dataset, lang);
     if (period) lines.push(period);
     if (result) lines.push(`${T(lang, 'Eşleşen', 'Matched')}: ${n.format(result.matched)} / ${n.format(result.scanned)} ${T(lang, 'kayıt', 'records')}`);
+    spec.measures.forEach((measure, i) => {
+      const priceField = dataset.fields.find(f => f.id === measure.field);
+      if (measure.agg !== 'count_distinct' && ['fob', 'supplierFob'].includes(priceField?.canonical)) lines.push(T(lang, `${priceField.label}: Buyer Log fiyat ortalamalarıyla aynı şekilde yalnız pozitif fiyatlar kullanıldı; sıfır ve negatif fiyatlar hesaba katılmadı.`, `${priceField.label}: only positive prices were used, matching Buyer Log price averages; zero and negative prices were excluded.`));
+      if (result?.priceCurrencies?.[i]?.length > 1) lines.push(T(lang, `${measureLabel(dataset, measure, lang)}: farklı para birimleri (${result.priceCurrencies[i].join(', ')}) birleşmedi; bunları birleştiren toplam/ortalama hücreleri boştur.`, `${measureLabel(dataset, measure, lang)}: different currencies (${result.priceCurrencies[i].join(', ')}) were not combined; total/average cells that would combine them are blank.`));
+      if (measure.agg !== 'weighted_avg') return;
+      const field = dataset.fields.find(f => f.id === measure.field), weight = dataset.fields.find(f => f.id === measure.weightField);
+      const valueName = field ? field.label : measure.field, weightName = weight ? weight.label : measure.weightField;
+      lines.push(`${measureLabel(dataset, measure, lang)}: Σ(${valueName} × ${weightName}) / Σ(${weightName})`);
+      const stats = result && result.measureStats && result.measureStats[i];
+      if (stats) lines.push(T(lang,
+        `${valueName}: ${n.format(stats.validRows)} geçerli kayıt, kullanılan ağırlık toplamı ${n.format(stats.weightSum)}; ${n.format(stats.excludedRows)} kayıt boş/geçersiz değer veya pozitif olmayan ağırlık nedeniyle hesaba katılmadı. Geçerli ağırlık yoksa ortalama boştur.`,
+        `${valueName}: ${n.format(stats.validRows)} valid records, weight sum used ${n.format(stats.weightSum)}; ${n.format(stats.excludedRows)} records excluded for missing/invalid values or nonpositive weights. Without valid weights the average is blank.`));
+    });
     if (result && result.outsideCalendar) lines.push(T(lang, `Merch Calendar dışı: ${n.format(result.outsideCalendar)} kayıt ayrı satır/sütunda gösterildi (tarihi yüklü takvimin aralığında değil).`, `Outside Merch Calendar: ${n.format(result.outsideCalendar)} records are shown in a separate row/column (their date is outside the loaded calendar).`));
+    if (spec.comparison) {
+      lines.push(T(lang, 'LFL: Like-for-Like fiyat kıyası; geçerli FOB ve adet > 0. Yalnız ortak kırılım/para birimi çiftleri karşılaştırıldı; Türkiye TRY, diğer ülkeler USD. Para birimleri birlikte ortalanmadı.', 'LFL: Like-for-Like price comparison; valid FOB and quantity > 0. Only shared breakdown/currency pairs were compared; Turkey TRY, other countries USD. Currencies were not averaged together.'));
+      lines.push(`${T(lang, 'Güncel dönem', 'Current period')}: ${spec.comparison.currentFilters.map(f => filterText(dataset, f, lang)).join(' · ')}`);
+      lines.push(`${T(lang, 'Kıyas kaynağı', 'Reference source')}: ${spec.comparison.referenceDataset}; ${spec.comparison.referenceFilters.map(f => filterText(dataset, f, lang)).join(' · ')}`);
+      const s = result && result.comparisonStats;
+      if (s) lines.push(T(lang, `Karşılaştırılabilir kayıt: güncel ${s.currentComparable}/${result.matched}, kıyas ${s.referenceComparable}/${s.referenceMatched}. Genel FOB değişimi: ${s.change == null ? '—' : n.format(s.change) + '%'}. Ortak çift yoksa fiyat değişimi hesaplanmaz.`, `Comparable records: current ${s.currentComparable}/${result.matched}, reference ${s.referenceComparable}/${s.referenceMatched}. Overall FOB change: ${s.change == null ? '—' : n.format(s.change) + '%'}. Without shared pairs, price change is unavailable.`));
+    }
     return lines;
   }
   /* Dönemlerin hangi takvime göre hesaplandığı — kullanıcı her zaman görür. */
@@ -836,6 +1023,7 @@
   }
   const mdCell = value => String(value == null ? '' : value).replace(/\|/g, '¦').replace(/[\r\n]+/g, ' ');
   function toMarkdown(result, { lang = 'tr', maxRows = LIMITS.chatRows } = {}) {
+    if (result.kind === 'multi') return result.results.map(r => `**${mdCell(r.title)}**\n\n${toMarkdown(r.computed, { lang, maxRows })}`).join('\n\n');
     if (!result.columns.length) return '';
     const head = `| ${result.columns.map(col => mdCell(col.label)).join(' | ')} |`;
     const sep = `| ${result.columns.map(() => '---').join(' | ')} |`;
@@ -846,6 +1034,12 @@
   /* Excel çalışma kitabı (output-contracts normalizeWorkbook biçimi). Uzun
      listeler 5.000 satırlık sayfalara bölünür. */
   function toWorkbook(result, { title, lines = [], notes = [], lang = 'tr' } = {}) {
+    if (result.kind === 'multi') {
+      const books = result.results.map(r => toWorkbook(r.computed, { title: r.title, lines: r.lines, notes, lang }));
+      const sheets = books.flatMap((b, i) => b.sheets.map(s => ({ ...s, name: `${i + 1} ${s.name}` })));
+      if (sheets.length > LIMITS.excelSheets) throw new Error('too-many-excel-sheets');
+      return { title: clean(title) || T(lang, 'Buyer Log analizleri', 'Buyer Log analyses'), notes: [...lines, ...notes].slice(0, 30), sheets };
+    }
     const columns = result.columns.slice(0, LIMITS.excelCols).map(col => ({ header: col.label.slice(0, 120), type: col.kind === 'number' ? 'number' : col.kind === 'date' ? 'date' : 'text' }));
     const rows = result.rows.map(row => row.slice(0, columns.length));
     if (result.total) rows.push(result.total.slice(0, columns.length));
@@ -866,7 +1060,7 @@
      Mesaj veri hesabı istiyor olabilir mi? (Planlayıcı yine "chat" diyebilir.)
      Türkçe karakter ve yazım hatasına dayanıklı olsun diye kelimeler token'a
      çevrilip kök eşleşmesiyle aranır. */
-  const DATA_STEMS = ['SIPARIS', 'SIPRS', 'ORDER', 'ADET', 'MIKTAR', 'TOPLAM', 'SAYI', 'KAC', 'TABLO', 'LISTE', 'GRUPLA', 'BAZLI', 'BAZINDA', 'PIVOT', 'SEZON', 'SEASON', 'ULKE', 'COUNTRY', 'URETICI', 'TEDARIKCI', 'SUPPLIER', 'LISANS', 'LICENSE', 'BUYING', 'MAG', 'MMYG', 'EXFACTORY', 'EX F', 'MB', 'BUTCE', 'BUDGET', 'TARIH', 'AYLIK', 'HAFTALIK', 'YUKLEME', 'SEVK', 'SHIPMENT', 'QTY', 'QUANTITY', 'COUNT', 'SUM', 'TOTAL', 'PO', 'MODEL', 'RENK', 'FOB', 'KOLEKSIYON', 'COLLECTION', 'BACKLOG', 'CP', 'GECIKEN', 'GECIKME', 'DELAY']; // i18n-ignore — sezgisel arama kökleri
+  const DATA_STEMS = ['LFL', 'ANALIZ', 'ANALYSIS', 'TEKLIF', 'QUOTATION', 'SIPARIS', 'SIPRS', 'ORDER', 'ADET', 'MIKTAR', 'TOPLAM', 'SAYI', 'KAC', 'TABLO', 'LISTE', 'GRUPLA', 'BAZLI', 'BAZINDA', 'PIVOT', 'SEZON', 'SEASON', 'ULKE', 'COUNTRY', 'URETICI', 'TEDARIKCI', 'SUPPLIER', 'LISANS', 'LICENSE', 'BUYING', 'MAG', 'MMYG', 'EXFACTORY', 'EX F', 'MB', 'BUTCE', 'BUDGET', 'TARIH', 'AYLIK', 'HAFTALIK', 'YUKLEME', 'SEVK', 'SHIPMENT', 'QTY', 'QUANTITY', 'COUNT', 'SUM', 'TOTAL', 'PO', 'MODEL', 'RENK', 'FOB', 'KOLEKSIYON', 'COLLECTION', 'BACKLOG', 'CP', 'GECIKEN', 'GECIKME', 'DELAY']; // i18n-ignore — sezgisel arama kökleri
   const SCREEN_STEMS = { orders: ['SIPARIS', 'SIPRS', 'ORDER', 'PO'], cp: ['CP', 'TRACKER'], koleksiyon: ['KOLEKSIYON', 'COLLECTION'], shipping: ['NAKLIYE', 'NAVLUN', 'SHIPPING', 'FREIGHT'], backlog: ['BACKLOG'], overview: ['OVERVIEW', 'GENEL BAKIS'] }; // i18n-ignore — ekran adı kökleri
   function words(text) { return token(text).split(' ').filter(Boolean); }
   function hasStem(list, stems) {
@@ -887,7 +1081,7 @@
 
   return Object.freeze({
     VERSION, LIMITS, BUCKETS, AGGS, GLOSSARY, token, parseDate, parseNumber, bucketOf, periodOf, periodStart, periodEnd, periodLabel, merchRange, merchActive,
-    createDataset, read, distinctValues, profile, schemaText, resolveField, matchValue, normalizeSpec, execute,
+    createDataset, datasetFromRecords, read, distinctValues, profile, schemaText, schemaTextAsync, resolveField, matchValue, normalizeSpec, execute, executeAsync, matchRows,
     describe, toMarkdown, toWorkbook, formatCell, looksLikeDataRequest, screensIn, parseSpec,
   });
 });

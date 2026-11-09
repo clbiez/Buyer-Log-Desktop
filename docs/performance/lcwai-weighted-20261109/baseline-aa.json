@@ -1,0 +1,1444 @@
+{
+  "baseline": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3",
+  "cases": [
+    {
+      "pair": 0,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 459.79999999981374,
+        "requestToVisibleMs": 516.2999999998137,
+        "planToVisibleMs": 69.39999999990687,
+        "longTasksMs": [
+          495
+        ],
+        "longTasks": [
+          {
+            "start": 5391.0999999996275,
+            "duration": 495
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 5470.699999999721,
+            "end": 5884.299999999814
+          },
+          {
+            "stage": "normalize",
+            "start": 5902.399999999907,
+            "end": 5904.299999999814
+          },
+          {
+            "stage": "execute-sync",
+            "start": 5906.5999999996275,
+            "end": 5921
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 252.70000000018626,
+          "requestToVisibleMs": 308.8000000002794,
+          "planToVisibleMs": 74.40000000037253,
+          "longTasksMs": [
+            307
+          ],
+          "longTasks": [
+            {
+              "start": 5991.199999999721,
+              "duration": 307
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6080.899999999907,
+              "end": 6298
+            },
+            {
+              "stage": "normalize",
+              "start": 6321.799999999814,
+              "end": 6322
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6324.5999999996275,
+              "end": 6338.199999999721
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 190,
+          "requestToVisibleMs": 262.20000000018626,
+          "planToVisibleMs": 81.39999999990687,
+          "longTasksMs": [
+            234,
+            54
+          ],
+          "longTasks": [
+            {
+              "start": 6408.5,
+              "duration": 234
+            },
+            {
+              "start": 6658.0999999996275,
+              "duration": 54
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6476.0999999996275,
+              "end": 6641.799999999814
+            },
+            {
+              "stage": "normalize",
+              "start": 6658.299999999814,
+              "end": 6658.399999999907
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6660.5999999996275,
+              "end": 6699.5
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 192.6999999997206,
+          "requestToVisibleMs": 258.59999999962747,
+          "planToVisibleMs": 81.39999999990687,
+          "longTasksMs": [
+            245
+          ],
+          "longTasks": [
+            {
+              "start": 6759.5,
+              "duration": 245
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6842.5999999996275,
+              "end": 7004.5999999996275
+            },
+            {
+              "stage": "normalize",
+              "start": 7026,
+              "end": 7026.399999999907
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7032.0999999996275,
+              "end": 7049.5999999996275
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 219.20000000018626,
+          "requestToVisibleMs": 274,
+          "planToVisibleMs": 65.1999999997206,
+          "longTasksMs": [
+            271
+          ],
+          "longTasks": [
+            {
+              "start": 7126.0999999996275,
+              "duration": 271
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7211.0999999996275,
+              "end": 7395.899999999907
+            },
+            {
+              "stage": "normalize",
+              "start": 7416.899999999907,
+              "end": 7417.0999999996275
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7419.799999999814,
+              "end": 7434.699999999721
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 186,
+          "requestToVisibleMs": 230.89999999990687,
+          "planToVisibleMs": 53.6999999997206,
+          "longTasksMs": [
+            258
+          ],
+          "longTasks": [
+            {
+              "start": 7508.699999999721,
+              "duration": 258
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7609.0999999996275,
+              "end": 7765.899999999907
+            },
+            {
+              "stage": "normalize",
+              "start": 7779.5,
+              "end": 7779.699999999721
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7783.0999999996275,
+              "end": 7795.5999999996275
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    },
+    {
+      "pair": 0,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 761.8999999999069,
+        "requestToVisibleMs": 831,
+        "planToVisibleMs": 78.5,
+        "longTasksMs": [
+          834
+        ],
+        "longTasks": [
+          {
+            "start": 6348,
+            "duration": 834
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 6676.699999999721,
+            "end": 7181.0999999996275
+          },
+          {
+            "stage": "normalize",
+            "start": 7198,
+            "end": 7199.799999999814
+          },
+          {
+            "stage": "execute-sync",
+            "start": 7202.799999999814,
+            "end": 7223.699999999721
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 265.60000000009313,
+          "requestToVisibleMs": 339.60000000009313,
+          "planToVisibleMs": 92.10000000009313,
+          "longTasksMs": [
+            336
+          ],
+          "longTasks": [
+            {
+              "start": 7298.399999999907,
+              "duration": 336
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7406.699999999721,
+              "end": 7633.0999999996275
+            },
+            {
+              "stage": "normalize",
+              "start": 7655.699999999721,
+              "end": 7655.699999999721
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7659,
+              "end": 7686.5
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 285.5,
+          "requestToVisibleMs": 366.39999999990687,
+          "planToVisibleMs": 98,
+          "longTasksMs": [
+            329,
+            51
+          ],
+          "longTasks": [
+            {
+              "start": 7759.699999999721,
+              "duration": 329
+            },
+            {
+              "start": 8124.5999999996275,
+              "duration": 51
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7838.799999999814,
+              "end": 8088.199999999721
+            },
+            {
+              "stage": "normalize",
+              "start": 8125.0999999996275,
+              "end": 8125.199999999721
+            },
+            {
+              "stage": "execute-sync",
+              "start": 8128.5999999996275,
+              "end": 8162.299999999814
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 209.70000000018626,
+          "requestToVisibleMs": 280.8000000002794,
+          "planToVisibleMs": 82.20000000018626,
+          "longTasksMs": [
+            262,
+            52
+          ],
+          "longTasks": [
+            {
+              "start": 8220.19999999972,
+              "duration": 262
+            },
+            {
+              "start": 8500.799999999814,
+              "duration": 52
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 8303.69999999972,
+              "end": 8482
+            },
+            {
+              "stage": "normalize",
+              "start": 8501,
+              "end": 8501.19999999972
+            },
+            {
+              "stage": "execute-sync",
+              "start": 8504.5,
+              "end": 8538.099999999627
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 189.89999999990687,
+          "requestToVisibleMs": 292.79999999981374,
+          "planToVisibleMs": 113.10000000009313,
+          "longTasksMs": [
+            243,
+            77
+          ],
+          "longTasks": [
+            {
+              "start": 8602.69999999972,
+              "duration": 243
+            },
+            {
+              "start": 8863.899999999907,
+              "duration": 77
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 8683.799999999814,
+              "end": 8845.5
+            },
+            {
+              "stage": "normalize",
+              "start": 8864,
+              "end": 8864.799999999814
+            },
+            {
+              "stage": "execute-sync",
+              "start": 8868.599999999627,
+              "end": 8919.299999999814
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 180.5,
+          "requestToVisibleMs": 223.09999999962747,
+          "planToVisibleMs": 51.299999999813735,
+          "longTasksMs": [
+            236
+          ],
+          "longTasks": [
+            {
+              "start": 8999,
+              "duration": 236
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 9081,
+              "end": 9235.099999999627
+            },
+            {
+              "stage": "normalize",
+              "start": 9252.099999999627,
+              "end": 9252.299999999814
+            },
+            {
+              "stage": "execute-sync",
+              "start": 9255.19999999972,
+              "end": 9266.599999999627
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 452.09999999962747,
+        "requestToVisibleMs": 517.6999999997206,
+        "planToVisibleMs": 77.79999999981374,
+        "longTasksMs": [
+          506
+        ],
+        "longTasks": [
+          {
+            "start": 4808.800000000279,
+            "duration": 506
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 4914.600000000093,
+            "end": 5313.899999999907
+          },
+          {
+            "stage": "normalize",
+            "start": 5333.399999999907,
+            "end": 5336.100000000093
+          },
+          {
+            "stage": "execute-sync",
+            "start": 5341.100000000093,
+            "end": 5366
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 279.79999999981374,
+          "requestToVisibleMs": 336.60000000009313,
+          "planToVisibleMs": 68.5,
+          "longTasksMs": [
+            319
+          ],
+          "longTasks": [
+            {
+              "start": 5425.700000000186,
+              "duration": 319
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5499.300000000279,
+              "end": 5743.700000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 5759.5,
+              "end": 5759.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 5761.700000000186,
+              "end": 5790.800000000279
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 204.3000000002794,
+          "requestToVisibleMs": 251.60000000009313,
+          "planToVisibleMs": 63.39999999990687,
+          "longTasksMs": [
+            255
+          ],
+          "longTasks": [
+            {
+              "start": 5852.300000000279,
+              "duration": 255
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5935.200000000186,
+              "end": 6107
+            },
+            {
+              "stage": "normalize",
+              "start": 6133.5,
+              "end": 6133.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6137.200000000186,
+              "end": 6152.399999999907
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 181.10000000009313,
+          "requestToVisibleMs": 221.39999999990687,
+          "planToVisibleMs": 51.700000000186265,
+          "longTasksMs": [
+            220
+          ],
+          "longTasks": [
+            {
+              "start": 6205.899999999907,
+              "duration": 220
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6267.100000000093,
+              "end": 6425.200000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 6444.399999999907,
+              "end": 6444.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6448.700000000186,
+              "end": 6461.200000000186
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 185.3000000002794,
+          "requestToVisibleMs": 220.10000000009313,
+          "planToVisibleMs": 49.200000000186265,
+          "longTasksMs": [
+            231
+          ],
+          "longTasks": [
+            {
+              "start": 6511.899999999907,
+              "duration": 231
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6587.600000000093,
+              "end": 6742.100000000093
+            },
+            {
+              "stage": "normalize",
+              "start": 6761.5,
+              "end": 6761.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6764.5,
+              "end": 6776.700000000186
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 168.29999999981374,
+          "requestToVisibleMs": 222.79999999981374,
+          "planToVisibleMs": 64.10000000009313,
+          "longTasksMs": [
+            218
+          ],
+          "longTasks": [
+            {
+              "start": 6835.700000000186,
+              "duration": 218
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6914.5,
+              "end": 7052.899999999907
+            },
+            {
+              "stage": "normalize",
+              "start": 7068.300000000279,
+              "end": 7068.399999999907
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7073.100000000093,
+              "end": 7089.899999999907
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 413,
+        "requestToVisibleMs": 476.79999999981374,
+        "planToVisibleMs": 76.79999999981374,
+        "longTasksMs": [
+          460
+        ],
+        "longTasks": [
+          {
+            "start": 4911,
+            "duration": 460
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 4997.700000000186,
+            "end": 5369.5
+          },
+          {
+            "stage": "normalize",
+            "start": 5391.5,
+            "end": 5393.200000000186
+          },
+          {
+            "stage": "execute-sync",
+            "start": 5396,
+            "end": 5420.300000000279
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 200.60000000009313,
+          "requestToVisibleMs": 251.79999999981374,
+          "planToVisibleMs": 62.39999999990687,
+          "longTasksMs": [
+            261
+          ],
+          "longTasks": [
+            {
+              "start": 5481.800000000279,
+              "duration": 261
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5571.600000000093,
+              "end": 5742.100000000093
+            },
+            {
+              "stage": "normalize",
+              "start": 5761.200000000186,
+              "end": 5761.5
+            },
+            {
+              "stage": "execute-sync",
+              "start": 5764.300000000279,
+              "end": 5780
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 235.70000000018626,
+          "requestToVisibleMs": 279.79999999981374,
+          "planToVisibleMs": 65.89999999990687,
+          "longTasksMs": [
+            271
+          ],
+          "longTasks": [
+            {
+              "start": 5851.300000000279,
+              "duration": 271
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5930,
+              "end": 6120.5
+            },
+            {
+              "stage": "normalize",
+              "start": 6149.9000000003725,
+              "end": 6150.100000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6153.300000000279,
+              "end": 6172
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 175.6999999997206,
+          "requestToVisibleMs": 231.39999999990687,
+          "planToVisibleMs": 65.10000000009313,
+          "longTasksMs": [
+            219
+          ],
+          "longTasks": [
+            {
+              "start": 6220.9000000003725,
+              "duration": 219
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6296.700000000186,
+              "end": 6439.700000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 6453.4000000003725,
+              "end": 6453.5
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6456.300000000279,
+              "end": 6471.4000000003725
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 176.60000000009313,
+          "requestToVisibleMs": 231.29999999981374,
+          "planToVisibleMs": 64,
+          "longTasksMs": [
+            239
+          ],
+          "longTasks": [
+            {
+              "start": 6554.300000000279,
+              "duration": 239
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6646.800000000279,
+              "end": 6793.4000000003725
+            },
+            {
+              "stage": "normalize",
+              "start": 6814,
+              "end": 6814.100000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6817.4000000003725,
+              "end": 6827.4000000003725
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 174.10000000009313,
+          "requestToVisibleMs": 234.40000000037253,
+          "planToVisibleMs": 68.5,
+          "longTasksMs": [
+            234
+          ],
+          "longTasks": [
+            {
+              "start": 6895.4000000003725,
+              "duration": 234
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6979.600000000093,
+              "end": 7128.600000000093
+            },
+            {
+              "stage": "normalize",
+              "start": 7145.600000000093,
+              "end": 7145.800000000279
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7149.600000000093,
+              "end": 7168.5
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 454.79999999981374,
+        "requestToVisibleMs": 508,
+        "planToVisibleMs": 63.90000000037253,
+        "longTasksMs": [
+          503
+        ],
+        "longTasks": [
+          {
+            "start": 4721.600000000093,
+            "duration": 503
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 4807.5,
+            "end": 5222.800000000279
+          },
+          {
+            "stage": "normalize",
+            "start": 5241.899999999907,
+            "end": 5243.100000000093
+          },
+          {
+            "stage": "execute-sync",
+            "start": 5247.600000000093,
+            "end": 5267.600000000093
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 177.8000000002794,
+          "requestToVisibleMs": 216,
+          "planToVisibleMs": 48.5,
+          "longTasksMs": [
+            220
+          ],
+          "longTasks": [
+            {
+              "start": 5322.5,
+              "duration": 220
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5392.800000000279,
+              "end": 5542.300000000279
+            },
+            {
+              "stage": "normalize",
+              "start": 5558.100000000093,
+              "end": 5558.300000000279
+            },
+            {
+              "stage": "execute-sync",
+              "start": 5561.399999999907,
+              "end": 5575.100000000093
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 164.10000000009313,
+          "requestToVisibleMs": 241.10000000009313,
+          "planToVisibleMs": 89.3000000002794,
+          "longTasksMs": [
+            204,
+            61
+          ],
+          "longTasks": [
+            {
+              "start": 5631.100000000093,
+              "duration": 204
+            },
+            {
+              "start": 5855.100000000093,
+              "duration": 61
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5697.5,
+              "end": 5834.399999999907
+            },
+            {
+              "stage": "normalize",
+              "start": 5856.5,
+              "end": 5856.700000000186
+            },
+            {
+              "stage": "execute-sync",
+              "start": 5867.899999999907,
+              "end": 5902.100000000093
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 175.3000000002794,
+          "requestToVisibleMs": 216.5,
+          "planToVisibleMs": 48.60000000009313,
+          "longTasksMs": [
+            219
+          ],
+          "longTasks": [
+            {
+              "start": 5956.700000000186,
+              "duration": 219
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6028.5,
+              "end": 6175.300000000279
+            },
+            {
+              "stage": "normalize",
+              "start": 6188.100000000093,
+              "end": 6188.200000000186
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6194.399999999907,
+              "end": 6206
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 205.79999999981374,
+          "requestToVisibleMs": 260.29999999981374,
+          "planToVisibleMs": 70,
+          "longTasksMs": [
+            244
+          ],
+          "longTasks": [
+            {
+              "start": 6257.600000000093,
+              "duration": 244
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6328.100000000093,
+              "end": 6501.200000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 6529.5,
+              "end": 6529.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6532.100000000093,
+              "end": 6550.399999999907
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 177.89999999990687,
+          "requestToVisibleMs": 232.89999999990687,
+          "planToVisibleMs": 66,
+          "longTasksMs": [
+            236
+          ],
+          "longTasks": [
+            {
+              "start": 6611.600000000093,
+              "duration": 236
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6699.300000000279,
+              "end": 6847.100000000093
+            },
+            {
+              "stage": "normalize",
+              "start": 6865.899999999907,
+              "end": 6866.399999999907
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6869.100000000093,
+              "end": 6892.300000000279
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "mode": "baseline",
+      "first": {
+        "feedbackMs": 442.89999999990687,
+        "requestToVisibleMs": 516.1000000000931,
+        "planToVisibleMs": 109.5,
+        "longTasksMs": [
+          489
+        ],
+        "longTasks": [
+          {
+            "start": 5208.300000000279,
+            "duration": 489
+          }
+        ],
+        "stages": [
+          {
+            "stage": "schema",
+            "start": 5315.5,
+            "end": 5695.700000000186
+          },
+          {
+            "stage": "normalize",
+            "start": 5749.899999999907,
+            "end": 5755.100000000093
+          },
+          {
+            "stage": "execute-sync",
+            "start": 5763.100000000093,
+            "end": 5780.399999999907
+          }
+        ],
+        "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+        "calls": {
+          "ask": 1,
+          "chat": 0,
+          "uploads": 0
+        },
+        "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+      },
+      "repeats": [
+        {
+          "feedbackMs": 241.89999999990687,
+          "requestToVisibleMs": 344.6999999997206,
+          "planToVisibleMs": 130.5,
+          "longTasksMs": [
+            271,
+            62
+          ],
+          "longTasks": [
+            {
+              "start": 5843.200000000186,
+              "duration": 271
+            },
+            {
+              "start": 6161.399999999907,
+              "duration": 62
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 5917.899999999907,
+              "end": 6111.5
+            },
+            {
+              "stage": "normalize",
+              "start": 6161.399999999907,
+              "end": 6161.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6165.100000000093,
+              "end": 6198.200000000186
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 2,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 191,
+          "requestToVisibleMs": 268.29999999981374,
+          "planToVisibleMs": 89.5,
+          "longTasksMs": [
+            223,
+            55
+          ],
+          "longTasks": [
+            {
+              "start": 6280,
+              "duration": 223
+            },
+            {
+              "start": 6520.200000000186,
+              "duration": 55
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6344.800000000279,
+              "end": 6503
+            },
+            {
+              "stage": "normalize",
+              "start": 6520.300000000279,
+              "end": 6520.5
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6523.100000000093,
+              "end": 6548.399999999907
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 3,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 157.59999999962747,
+          "requestToVisibleMs": 202.6999999997206,
+          "planToVisibleMs": 53.39999999990687,
+          "longTasksMs": [
+            219
+          ],
+          "longTasks": [
+            {
+              "start": 6627.200000000186,
+              "duration": 219
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 6711.800000000279,
+              "end": 6845.5
+            },
+            {
+              "stage": "normalize",
+              "start": 6859,
+              "end": 6859.100000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 6865.200000000186,
+              "end": 6882
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 4,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 182.59999999962747,
+          "requestToVisibleMs": 239.5,
+          "planToVisibleMs": 64,
+          "longTasksMs": [
+            246
+          ],
+          "longTasks": [
+            {
+              "start": 6934.5,
+              "duration": 246
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7020.700000000186,
+              "end": 7180.200000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 7198.399999999907,
+              "end": 7198.600000000093
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7202.300000000279,
+              "end": 7212.800000000279
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 5,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        },
+        {
+          "feedbackMs": 212.20000000018626,
+          "requestToVisibleMs": 258.89999999990687,
+          "planToVisibleMs": 56.1999999997206,
+          "longTasksMs": [
+            268
+          ],
+          "longTasks": [
+            {
+              "start": 7277.899999999907,
+              "duration": 268
+            }
+          ],
+          "stages": [
+            {
+              "stage": "schema",
+              "start": 7360.399999999907,
+              "end": 7545.700000000186
+            },
+            {
+              "stage": "normalize",
+              "start": 7560.600000000093,
+              "end": 7560.800000000279
+            },
+            {
+              "stage": "execute-sync",
+              "start": 7564.200000000186,
+              "end": 7584.700000000186
+            }
+          ],
+          "answer": "**Demo · Total quantity**\n\n| Sipariş Adeti · Toplam |\n| --- |\n| 7.436.500 |",
+          "calls": {
+            "ask": 6,
+            "chat": 0,
+            "uploads": 0
+          },
+          "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · Total quantity\"}"
+        }
+      ]
+    }
+  ]
+}
