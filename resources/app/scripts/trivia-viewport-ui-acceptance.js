@@ -88,8 +88,8 @@ async function closeHold(page,keyboard=false){
         if(tab!=='cp'){await page.evaluate(tab=>switchTab(tab),tab);await page.clock.fastForward(1000);}
         for(const lang of ['tr','en']){
           await page.evaluate(lang=>applyLanguage(lang),lang);await createHold(page,tab,0);
-          for(const theme of ['light','dark'])for(const scale of ['compact','standard','large','xl'])for(const viewport of [{width:1787,height:813},{width:960,height:480},{width:640,height:480}]){
-            await page.setViewportSize(viewport);await page.evaluate(({theme,scale})=>Object.assign(document.documentElement.dataset,{theme,uiScale:scale}),{theme,scale});await page.clock.fastForward(350);
+          for(const theme of ['light','dark'])for(const scale of ['compact','standard','large','xl'])for(const viewport of [{width:1787,height:813},{width:960,height:480},{width:640,height:480},{width:320,height:568}]){
+            await page.setViewportSize(viewport);await page.evaluate(({theme,scale})=>Object.assign(document.documentElement.dataset,{theme,uiScale:scale,rail:innerWidth<480?'min':'full'}),{theme,scale});await page.clock.fastForward(350);
             const g=await geometry(page),label=`${tab}/${lang}/${theme}/${scale}/${viewport.width}x${viewport.height}`;
             assert.ok(g.visible&&g.hit,label+': Continue hit target');assert.ok(g.button.bottom<=g.hold.bottom&&g.button.top>=g.hold.top,label+': full button visible');
             assert.ok(g.slotHeight>0,label+': fact has a readable scroll area');assert.ok(g.horizontalOverflow<=1,label+': no clipped horizontal content');
