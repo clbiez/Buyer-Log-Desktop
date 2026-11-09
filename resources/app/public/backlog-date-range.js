@@ -81,7 +81,7 @@
     const target=position>0&&content?.style.display!=='none'?targets[position-1]:null;
     const after=target&&target.parentElement===content?target:anchor;
     if(after&&after.nextElementSibling!==host){
-      // Preserve focused controls and native input state during a connected move.
+      // Bağlı düğümü taşırken odak ve yerel tarih alanının durumu korunsun.
       const parent=after.parentElement;
       if(typeof parent.moveBefore==='function')parent.moveBefore(host,after.nextElementSibling);
       else parent.insertBefore(host,after.nextElementSibling);

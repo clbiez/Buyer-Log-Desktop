@@ -47,9 +47,8 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
   await page.waitForTimeout(1000);
   const cdp=await context.newCDPSession(page);await cdp.send('HeapProfiler.collectGarbage');const heapBefore=await cdp.send('Runtime.getHeapUsage');await cdp.send('Performance.enable');const cpuBefore=await cdp.send('Performance.getMetrics');const before=await cdp.send('Memory.getDOMCounters');
   const times=[];await cdp.send('Profiler.enable');await cdp.send('Profiler.start');const reqBefore=requests,mark=await page.evaluate(()=>performance.now());
-  if(variant==='candidate'){
-   for(let i=0;i<5;i++)for(const selector of ['[data-range-toggle]','[data-range-toggle]','[data-range-move="1"]','[data-range-move="-1"]'])times.push(await page.evaluate(selector=>{const start=performance.now();document.querySelector(selector).click();document.getElementById('backlogDateRange').getBoundingClientRect();return performance.now()-start;},selector));
-  }
+  const selectors=variant==='candidate'?['[data-range-toggle]','[data-range-toggle]','[data-range-move="1"]','[data-range-move="-1"]']:dateOnly?['#backlogOverviewToggle','#backlogOverviewToggle','#backlogPlanActualMoveDown','#backlogPlanActualMoveUp']:[];
+  for(let i=0;i<5;i++)for(const selector of selectors)times.push(await page.evaluate(selector=>{const start=performance.now(),button=document.querySelector(selector);button.focus({preventScroll:true});button.click();document.getElementById('view-backlog').getBoundingClientRect();return performance.now()-start;},selector));
   await page.waitForTimeout(250);const interactionEnd=await page.evaluate(()=>performance.now());const tasks=await page.evaluate(({mark,end})=>window.__tasks.filter(t=>t.start>=mark&&t.start<end),{mark,end:interactionEnd});await cdp.send('HeapProfiler.collectGarbage');const after=await cdp.send('Memory.getDOMCounters');const heapAfter=await cdp.send('Runtime.getHeapUsage'),cpuAfter=await cdp.send('Performance.getMetrics');
   const profile=await cdp.send('Profiler.stop');if(variant==='candidate'&&round===0)fs.writeFileSync(path.join(out,'date-profile-'+count+'.json'),JSON.stringify(profile.profile));
   const result={count,fixtureHash,round,variant,startupMs,firstMs,totals,scopeTimes,newInteractionTimes:times,interactionRequests:requests-reqBefore,requests,interactionEnd,before,after,heapBefore,heapAfter,cpuBefore,cpuAfter,tasks};results.push(result);console.log(JSON.stringify(result));
@@ -72,7 +71,7 @@ for(const count of ((functional||control&&!largeOnly)?[220]:[220,30000])){
    await page.evaluate(()=>applyLanguage('tr'));
    await page.locator('[data-blv-importance="special"]').click();await page.locator('#backlogOverviewBody .bpaEmpty').waitFor();await page.screenshot({path:path.join(app,'public/release-notes/next-assets/backlog-empty-scope-recovery.png')});
   }
-  assert.equal(result.interactionRequests,0);assert.ok(times.every(t=>t<=200));assert.ok(after.jsEventListeners<=before.jsEventListeners+2);
+  assert.equal(result.interactionRequests,0);if(variant==='candidate')assert.ok(times.every(t=>t<=200));assert.ok(after.jsEventListeners<=before.jsEventListeners+2);
   await context.close();
  }
 }
