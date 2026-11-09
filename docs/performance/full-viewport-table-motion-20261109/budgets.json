@@ -1,0 +1,15 @@
+{
+  "baseMain": "4a0cc7b4",
+  "risk": "P2",
+  "scenario": "Actual Buyer Log with isolated seeded demo data; startup, first CP/Orders visit, repeat visit and five activation/cancel cycles; three alternating Main/candidate pairs",
+  "budgets": {
+    "existingNavigation": "No repeatable regression against Main; use A/A only to resolve noise",
+    "animationSetupMs": 50,
+    "rowEntryEndMs": 391,
+    "animatedRows": "All eligible visible rows among the existing 128-row probe in each of at most two visible tables",
+    "retainedRowAnimationsAfterCancel": 0,
+    "addedNetworkRequests": 0,
+    "dataParity": "Identical cell text and row identity before/after entrance"
+  },
+  "scope": "Shared renderer-only motion; no Electron/preload/native-specific change, no table data or request logic change. Chromium is the affected renderer acceptance runtime; Windows/VDI remain platform limits."
+}
