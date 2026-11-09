@@ -1,0 +1,7 @@
+Error: spawnSync git EPERM
+    at spawnSync (node:internal/child_process:1160:20)
+    at r.spawnSync (node:electron/js2c/node_init:2:20109)
+    at spawnSync (node:child_process:928:24)
+    at execFileSync (node:child_process:971:15)
+    at func (node:electron/js2c/node_init:2:2677)
+    at main (/workspace/sqlite-decision-952/scripts/prototypes/sqlite-decision-20261109/benchmark.cjs:52:67)
