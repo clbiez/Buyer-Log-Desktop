@@ -40,8 +40,88 @@ function loadModule({ rows = [], entries = {}, lang = 'tr' } = {}) {
   };
   const context = vm.createContext({ window, document: window.document, fetch: window.fetch, setTimeout, clearTimeout, Date, Map, Set, Promise, Object, String, Number, Math, Array, JSON });
   vm.runInContext(COLUMN, context);
-  return { api: window.BLCollectionArtworkDetail, requests };
+  return { api: window.BLCollectionArtworkDetail, requests, window };
 }
+
+test('explicit BOM apply replaces a manual note through the existing save/undo bridge and resumes PLM ownership', () => {
+  const row = { id: 1, plmId: '2112292', artworkDetail: 'Manual note', artworkDetailPlm: 'Old BOM' };
+  const { api, window, requests } = loadModule({ rows: [row] });
+  const entry = { plmId: '2112292', hasPrint: true, placements: [{ placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment' }] };
+  const edits = [];
+  Object.assign(window.BLCollectionSpreadsheetBridge, {
+    canEdit: () => true,
+    validateValue: () => ({ ok: true }),
+    batchEdit(ops, summary) {
+      edits.push({ before: { ...row }, ops, summary });
+      row.artworkDetail = ops[0].value;
+      api.project(); // the actual batch edit renders through the artwork projection
+      return { ok: true, changed: 1 };
+    },
+  });
+  assert.equal(api.applyBom(row, entry).ok, true);
+  assert.equal(edits.length, 1);
+  assert.equal(edits[0].before.artworkDetail, 'Manual note', 'undo snapshot must retain the original note');
+  assert.equal(edits[0].ops[0].key, 'artworkDetail');
+  assert.equal(row.artworkDetail, 'Ön: 1 | Pigment | Toplam: 1');
+  assert.equal(row.artworkDetailPlm, row.artworkDetail);
+  api.applyToRow(row, 'Arka: 2 | Toplam: 2');
+  assert.equal(row.artworkDetail, 'Arka: 2 | Toplam: 2');
+  assert.equal(requests.length, 0, 'apply uses the already displayed local BOM; no extra PLM/AI traffic');
+});
+
+test('BOM apply rejects absent/mismatched BOM, read-only/linked cells and stale rows without writing', () => {
+  const row = { id: 1, plmId: '2112292', artworkDetail: 'Manual', artworkDetailPlm: 'Old' };
+  const { api, window } = loadModule({ rows: [row] });
+  let writes = 0;
+  const b = window.BLCollectionSpreadsheetBridge;
+  Object.assign(b, { canEdit: () => true, validateValue: () => ({ ok: true }), batchEdit: () => { writes++; return { ok: false }; } });
+  assert.equal(api.applyBom(row, null).ok, false);
+  assert.equal(api.applyBom(row, { plmId: '99', hasPrint: false }).ok, false);
+  assert.equal(api.applyBom({ ...row }, { plmId: row.plmId, hasPrint: false }).ok, false);
+  b.canEdit = () => false;
+  assert.equal(api.applyBom(row, { plmId: row.plmId, hasPrint: false }).ok, false);
+  b.canEdit = () => true;
+  b.validateValue = () => ({ ok: false, reason: 'linked' });
+  assert.equal(api.applyBom(row, { plmId: row.plmId, hasPrint: false }).ok, false);
+  assert.equal(writes, 0);
+  b.validateValue = () => ({ ok: true });
+  assert.equal(api.applyBom(row, { plmId: row.plmId, hasPrint: false }).ok, false);
+  assert.equal(row.artworkDetail, 'Manual', 'failed save leaves note intact');
+  assert.equal(row.artworkDetailPlm, 'Old');
+});
+
+test('BOM apply uses localized no-print and intact Set Style summaries', () => {
+  for (const lang of ['tr', 'en']) {
+    const row = { id: 1, plmId: '2112292', artworkDetail: 'Manual', artworkDetailPlm: 'Old' };
+    const { api, window } = loadModule({ rows: [row], lang });
+    Object.assign(window.BLCollectionSpreadsheetBridge, {
+      canEdit: () => true, validateValue: () => ({ ok: true }),
+      batchEdit(ops) { row.artworkDetail = ops[0].value; api.project(); return { ok: true }; },
+    });
+    api.applyBom(row, { plmId: row.plmId, hasPrint: false });
+    assert.equal(row.artworkDetail, lang === 'en' ? 'No print' : 'Baskı yok');
+    api.applyBom(row, { plmId: row.plmId, isSetStyle: true, hasPrint: true, artworkSummary: 'A - Front: 1\nB - Back: 1' });
+    assert.equal(row.artworkDetail, 'A - Front: 1\nB - Back: 1');
+  }
+});
+
+test('the shared bulk editor preserves Set Style line breaks before committing Artwork', () => {
+  const start = APP.indexOf('function kolSpreadsheetMakeEditor(');
+  const end = APP.indexOf('\n/*', start);
+  const context = vm.createContext({
+    kolSpreadsheetColumnMeta: () => ({ col: {} }),
+    document: { createElement(tag) {
+      // HTML text inputs strip CR/LF on assignment; textarea values retain LF.
+      let value = '';
+      return { dataset: {}, set value(next) { value = tag === 'input' ? next.replace(/[\r\n]/g, '') : next; }, get value() { return value; } };
+    } },
+  });
+  vm.runInContext(APP.slice(start, end), context);
+  const summary = 'A - Front: 1 | Total: 1\nB - Back: 2 | Total: 2';
+  const editor = context.kolSpreadsheetMakeEditor(1, 'artworkDetail', summary);
+  assert.equal(editor.value, summary, 'BOM A/B lines must reach commitKolEditor unchanged');
+  assert.equal(editor.dataset.k, 'artworkDetail');
+});
 
 test('Collection loads Artwork Detail projection after app-main and before spreadsheet wiring', () => {
   const app = INDEX.indexOf('app-main.js');
