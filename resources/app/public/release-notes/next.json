@@ -474,6 +474,35 @@
           "en": "All visible rows paused at the same instant of their entrance in the actual app. Coverage, timing and cancellation were also verified by automated tests."
         }
       }
+    },
+    {
+      "id": "persistent-priority-background-pages",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler · Backlog",
+        "en": "Collection · CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Hazır ekranlar arka planda korunur",
+        "en": "Ready screens stay available in the background"
+      },
+      "body": {
+        "tr": "Buyer Log açıldıktan sonra yetkili ekranlar Koleksiyon, CP, Siparişler ve Backlog sırasıyla arka planda hazırlanır; masaüstünde yalnız açık ekranı hazırlayan kısıt kaldırıldı. Siparişler düşük bellek eşiğinde sessizce atlanmaz. Sayfa verileri ve açılmış tablolar sekme değişiminde korunur; hafif veri yenilemesi CP/Siparişler verisini silmeden yeni yanıtı uygular. Backlog’a yükleme sırasında geçilirse aynı istek kullanılır; hazır yanıt süre dolduğu için atılmaz. Hazırlanan görünüm ve filtre listeleri ilk geçişte yeniden bekletmez. Yetki, kaynak filtresi ve devam eden yerel düzenlemeler korunur.",
+        "en": "After Buyer Log opens, authorized screens prepare in the background in Collection, CP, Orders and Backlog order; desktop preparation is no longer limited to the visible module. Orders is not silently skipped on smaller-memory devices. Page data and opened tables stay resident across navigation; lean reloads replace CP/Orders data without clearing the existing screen first. Entering Backlog during preparation shares the same request, and prepared responses are retained until consumed or invalidated by a source change. Prepared view and filter lists avoid waiting on first navigation. Access checks, required source filters and local edits remain protected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "persistent-background-pages.png",
+        "alt": {
+          "tr": "Demo siparişleri açıkken dört ekranın Hazır durumunu gösteren gerçek Buyer Log",
+          "en": "Actual Buyer Log showing all four screens Ready with demo Orders open"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, Electron 44.3.0 ve 2.000 demo sipariş. Beş gezinme turunda yeniden veri isteği yapılmadı; açılmış tablolar aynı satırları korudu.",
+          "en": "Actual post-change Buyer Log in Electron 44.3.0 with 2,000 demo orders. Five navigation rounds made no new page-data requests and opened tables retained the same rows."
+        }
+      }
     }
   ]
 }

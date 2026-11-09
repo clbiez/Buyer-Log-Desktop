@@ -33,12 +33,12 @@ test('CP hedefte değilse yüklü CP satırları, dirty ve undo korunur', () => 
   assert.match(LOAD, /const keepCpForPartialRefresh=Boolean\(partialRefreshTargets&&!partialRefreshTargets\.includes\('cp'\)&&state\.cp/);
   assert.match(LOAD, /const preserveCpClientState=\(!userVisibleRefresh&&cpClientWorkInProgress\(\)\)\|\|keepCpForPartialRefresh;/);
   const deferred = LOAD.slice(LOAD.indexOf('}else if(data.cpDeferred){'));
-  assert.match(deferred.slice(0, 400), /if\(!preserveCpClientState\)state\.cp=null;/);
+  assert.match(deferred.slice(0, 700), /if\(!retainPreparedData&&!preserveCpClientState\)\{state\.cp=null;/);
 });
 
 test('Siparişler hedefte değilse yüklü Siparişler satırları ve seçimi korunur', () => {
   assert.match(LOAD, /const keepOrdersForPartialRefresh=Boolean\(partialRefreshTargets&&!partialRefreshTargets\.includes\('orders'\)&&state\.orders/);
   const branch = LOAD.slice(LOAD.indexOf('data.orderSummaryDeferred){'));
-  assert.match(branch.slice(0, 200), /if\(!keepOrdersForPartialRefresh\)state\.orders=null;state\.orderSummary=null;/);
+  assert.match(branch.slice(0, 500), /if\(!retainPreparedData&&!keepOrdersForPartialRefresh\)\{state\.orders=null;/);
   assert.match(LOAD, /if\(\(userVisibleRefresh&&!keepOrdersForPartialRefresh\)\|\|initialScreenLoad\|\|Array\.isArray\(data\.orders\)\)state\.ordersSelected/);
 });
