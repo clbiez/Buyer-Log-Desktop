@@ -1,7 +1,8 @@
 # Buyer Log Desktop — ortak agent çalışma sözleşmesi
 
 > Buyer Log Desktop için kanonik çalışma sözleşmesi. Claude Code bunu doğrudan, Codex
-> `AGENTS.md` üzerinden kullanır.
+> `AGENTS.md` üzerinden kullanır. Cloud/yerel ortam ve model fark etmeksizin diğer
+> yapay zekâ geliştirme araçları da aynı sözleşmeye uyar.
 >
 > **Okuma kuralı:** Bu dosyayı oturum başında, compaction/context reset sonrasında
 > veya dosya değiştiğinde bir kez oku. Aynı mantıksal görevin devamında yeniden
@@ -93,6 +94,17 @@ Test runner: `resources/app` içinden `npm test` → `tests/run-tests.js` (batch
 - GitHub Actions kotası için boş commit/yeniden push, başarısız işi kanıtsız yeniden çalıştırma, gereksiz ara PR ve yinelenen full-suite yok. TEST/STABLE dosyaları Actions ZIP artifact deposuna yüklenmez; yayın deposuna gider. Silme işlemi ve credential/izin değişikliği için gerekli kullanıcı yetkisi aranır.
 - `updates/vVERSION` immutable dalı yalnız sürüm artışında oluşturulur; aynı sürümü başka kaynağa taşımak için yeni sürüm gerekir.
 - PR, kontroller, merge ve TEST/STABLE durumlarını finalde ayrı ve **gerçek** durumlarıyla bildir. İşlem tamamlanmadıysa tamamlandı deme.
+
+## 3.2 · Her güncelleştirmede performans kabulü (zorunlu)
+
+- Her yeni modül, özellik, düzeltme ve optimizasyonda [docs/PERFORMANCE_ACCEPTANCE.md](docs/PERFORMANCE_ACCEPTANCE.md) uygulanır. Bu kural araç/model/Cloud/yerel ortamdan bağımsızdır; yalnız performans etiketli görevlere ait değildir.
+- Önce kullanıcı hedefini ve gerçek darboğazı doğrula; ölçülmemiş bir hipotezle rastgele cache/worker/polling/refactor ekleme. Mevcut ortak altyapıyla en küçük yeterli çözümü seç.
+- Değişiklik öncesi güncel Main tabanını, etkilenen kullanıcı senaryolarını ve sayısal kabul bütçelerini kaydet. Mevcut akışlarda tekrarlanabilir gerileme kabul edilmez; yeni işin aktif kullanım maliyeti de önceden bütçelenir. Ölçüm gürültüsü performans gerilemesine izin değildir.
+- Son kaynakta aynı veri/ortamla önce/sonra karşılaştır; başlangıç, ilk kullanım, tekrar kullanım ve etkilenen komşu akışları kapsa. Yalnız worker/mikro benchmark veya `npm test` süresi ürün performansı kabulü değildir. Native/Electron değişikliğinin kabulünü yalnız Chromium sonucu ile kapatma.
+- Yeni modül görünmeden ağır hazırlık/indirme/render/polling başlatmaz; mevcut lazy/modül kapıları, ortak kaynak limitleri, iptal/cleanup ve veri doğruluğu korunur. Hız kazancı veri kaybı, stale sonuç, bozuk kopyalama/export veya başka akışın yavaşlamasıyla satın alınmaz.
+- PR/final raporda performans kararını `PASS / FAIL / BLOCKED / N/A` olarak; taban/final SHA, bütçe, önce/sonra metrikler ve ham kanıtla yaz. Ölçülmeyen gerekli kapı BLOCKED'dır. N/A yalnız runtime maliyetini etkilemeyen değişiklikte dosya bazlı gerekçeyle kullanılabilir.
+- FAIL/BLOCKED sonucu merge veya yayın için PASS sayılamaz. Önce dar düzeltme yap; mevcut kullanıcı yetkisini esas al. Somut gerileme için önceden verilmiş kullanıcı kabulü yoksa eşiği artırma, sonucu saklama veya sessizce ödünleşim kabul etme. Kapsam içi çözüm yoksa PR'ı kanıtlı açık bırak; rutin teknik soru/izin akışı üretme.
+- Bu yeni sözleşme tarihsel ölçümleri veya kabul edilmiş eski ödünleşimleri yeniden PASS yapmaz; güncel Main'den sonraki değişiklikleri değerlendirir. Doküman/test değişikliğinde gereksiz performans kampanyası başlatma; etkisine uygun doğrulama yap.
 
 ## 4 · Değişmez mimari kurallar
 
