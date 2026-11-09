@@ -13923,6 +13923,20 @@ function notificationTargetText(target){
   const modules={cp:'CP',orders:en?'Orders':'Siparişler',overview:en?'Overview':'Genel Bakış',source:en?'Source Data':'Kaynak Veri',koleksiyon:en?'Collection':'Koleksiyon',shipping:en?'Shipping':'Sevkiyat'};
   return [modules[target.module],...(target.lineKey?target.lineKey.split('|'):[]),en?target.fieldEn:target.fieldTr].filter(Boolean).join(' · ');
 }
+// Canonical matching is deliberately scoped to an activation, never a startup index.
+async function notificationTargetRow(target,permitted){
+  const rows=state[target.module]?.rows;if(!Array.isArray(rows))return null;
+  let sliceAt=Date.now();
+  for(let i=0;i<rows.length;i++){
+    if(lineKeyOfRow(rows[i])===target.lineKey)return rows[i];
+    if((i&255)===255&&Date.now()-sliceAt>=8){
+      await new Promise(resolve=>setTimeout(resolve,0));
+      if(!permitted()||rows!==state[target.module]?.rows)return null;
+      sliceAt=Date.now();
+    }
+  }
+  return null;
+}
 let _notificationNavigation=0;
 async function openNotificationTarget(raw){
   const target=notificationTarget(raw),en=appLang==='en';if(!target)return false;
@@ -13935,12 +13949,13 @@ async function openNotificationTarget(raw){
     if(!permitted())return false;
     let row;
     if(target.lineKey){
-      row=state[target.module]?.rows?.find(item=>lineKeyOfRow(item)===target.lineKey);
+      const rows=state[target.module]?.rows;
+      row=await notificationTargetRow(target,permitted);
       if(!row){showToast(en?'This order is no longer available in your current records.':'Bu sipariş güncel kayıtlarınızda artık bulunmuyor.');return false;}
       await window.BLPerf?.ensureFeature?.('cpAssistant');
       if(!permitted())return false;
-      // Re-resolve after lazy loading: refresh/login can replace rows while awaiting.
-      row=state[target.module]?.rows?.find(item=>lineKeyOfRow(item)===target.lineKey);
+      // Re-resolve only if the live records changed while lazy loading.
+      if(rows!==state[target.module]?.rows||!rows.includes(row)||lineKeyOfRow(row)!==target.lineKey)row=await notificationTargetRow(target,permitted);
       if(!row){showToast(en?'This order is no longer available in your current records.':'Bu sipariş güncel kayıtlarınızda artık bulunmuyor.');return false;}
     }
     if(currentActiveTab()!==target.module&&switchTab(target.module)===false)return false;
