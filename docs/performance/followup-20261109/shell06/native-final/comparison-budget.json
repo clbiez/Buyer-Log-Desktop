@@ -1,0 +1,15 @@
+{
+  "baseMain": "62f2153d",
+  "candidateSource": "497464758a58e3636e67dddc45124fe067e57cf1",
+  "protocol": "3 alternating Main/candidate pairs; official Electron 44.3.0; 3 real production WebContentsViews; same deterministic 20-row seed 7; 21-second steady window after readiness; shared measurement lock",
+  "budgets": {
+    "SSEPerContext": 1,
+    "candidateRevisionQueryingViews": 1,
+    "candidateSteadyRevisionRequests": "no more than Main in every pair",
+    "candidateMaxConcurrentRevisionRequests": 1,
+    "nativeActivationCatchupMs": 2500,
+    "fiveOpenCloseCycles": "three retained original tabs, one held leader lock; each extra View destroyed",
+    "finalRemainingViews": 0
+  },
+  "scope": "Narrow network and native lifecycle acceptance. No global speed/RSS/CPU/p95/Windows claims. Existing Main steady network budget and original native timeout/single-flight gates are preserved."
+}
