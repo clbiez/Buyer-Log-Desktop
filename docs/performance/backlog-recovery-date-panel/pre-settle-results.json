@@ -1,0 +1,529 @@
+{
+  "base": "9e667430",
+  "candidate": "48e49b41cd9fe166170d14e7a4c1dfeb1edc48c6",
+  "runtime": "154.0.8037.57",
+  "results": [
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 0,
+      "variant": "base",
+      "startupMs": 3762.3664769999996,
+      "firstMs": 544.8305369999998,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        73.09999999997672,
+        84.09999999997672,
+        80.5,
+        64.90000000002328,
+        105.69999999995343
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10125,
+        "jsEventListeners": 1097
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10125,
+        "jsEventListeners": 1097
+      },
+      "tasks": []
+    },
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 0,
+      "variant": "candidate",
+      "startupMs": 3632.2584420000003,
+      "firstMs": 310.68748499999856,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        68.80000000004657,
+        85.39999999990687,
+        79.90000000002328,
+        64.59999999997672,
+        79.29999999993015
+      ],
+      "newInteractionTimes": [
+        5.900000000023283,
+        12.20000000006985,
+        21,
+        15.399999999906868,
+        5.299999999930151,
+        12.400000000023283,
+        17.5,
+        18.100000000093132,
+        6.100000000093132,
+        9.199999999953434,
+        15,
+        17.5,
+        3.900000000023283,
+        15.400000000023283,
+        18.599999999976717,
+        18.900000000023283,
+        5.400000000023283,
+        8.599999999976717,
+        14.5,
+        15.199999999953434
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10719,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10719,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 1,
+      "variant": "base",
+      "startupMs": 3404.577584999999,
+      "firstMs": 577.7570180000002,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        57.40000000002328,
+        157.10000000009313,
+        176.40000000002328,
+        523.0999999999767,
+        132.40000000002328
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 1,
+      "variant": "candidate",
+      "startupMs": 5282.329769999997,
+      "firstMs": 389.0503829999943,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        212.90000000002328,
+        528.1999999999534,
+        81.59999999997672,
+        97.79999999993015,
+        99.5
+      ],
+      "newInteractionTimes": [
+        6.800000000046566,
+        15.400000000023283,
+        30.400000000023283,
+        20.699999999953434,
+        5.199999999953434,
+        13.900000000023283,
+        15.20000000006985,
+        25.29999999993015,
+        8.699999999953434,
+        23.400000000023283,
+        25.70000000006985,
+        56.699999999953434,
+        5.700000000069849,
+        13.5,
+        19.400000000023283,
+        21.199999999953434,
+        10.70000000006985,
+        40,
+        33.70000000006985,
+        41.70000000006985
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10719,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10719,
+        "jsEventListeners": 1460
+      },
+      "tasks": [
+        {
+          "start": 10979.400000000023,
+          "duration": 58
+        }
+      ]
+    },
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 2,
+      "variant": "base",
+      "startupMs": 6547.296967000002,
+      "firstMs": 580.8027880000009,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        306.5999999999767,
+        154.5,
+        213.59999999997672,
+        98.90000000002328,
+        148.70000000006985
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 220,
+      "fixtureHash": "3a3a16a2f153cb96715bafe573fb4cda435c88696c1cac51d1b7c35c4f4ce4bf",
+      "round": 2,
+      "variant": "candidate",
+      "startupMs": 3505.194761999999,
+      "firstMs": 335.64871400000266,
+      "totals": "%21,8\nyüklendi\n220 sipariş · 220 satır\n726.300\nToplam adet\n273 operasyon satırı\n567.630\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n28.220\nYolda + Gümrük\n%3,9\n123.880\nDepoda + Retail bekleyen\n%17,1\n61.370\nEx-F geçti · yüklenmedi\n25 satır\n0\nEksik Yükleme\n%0\n571.700\nRiskli adet\n191 sipariş · transit gecikmiş 3.470\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        84.59999999997672,
+        89.5,
+        94.90000000002328,
+        94.5,
+        87.69999999995343
+      ],
+      "newInteractionTimes": [
+        5.099999999976717,
+        16.199999999953434,
+        20.5,
+        14.29999999993015,
+        5.400000000023283,
+        12,
+        16.70000000006985,
+        15.599999999976717,
+        4.400000000023283,
+        12.70000000006985,
+        17.400000000023283,
+        19.400000000023283,
+        3.800000000046566,
+        11.699999999953434,
+        17.5,
+        16.100000000093132,
+        3.300000000046566,
+        11,
+        17.099999999976717,
+        17.5
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 0,
+      "variant": "base",
+      "startupMs": 17176.435939999996,
+      "firstMs": 11051.27536700001,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        680.5999999998603,
+        583.6999999999534,
+        549.1000000000931,
+        633.6999999999534,
+        670.2000000001863
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10709,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10709,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 0,
+      "variant": "candidate",
+      "startupMs": 9991.476360999994,
+      "firstMs": 9367.65513,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        750.3999999999069,
+        731.5999999998603,
+        1033.0999999998603,
+        1007.1000000000931,
+        748.7000000001863
+      ],
+      "newInteractionTimes": [
+        8.800000000046566,
+        17.100000000093132,
+        28.899999999906868,
+        82.60000000009313,
+        36.5,
+        21.5999999998603,
+        28.399999999906868,
+        21.800000000046566,
+        4.199999999953434,
+        12.400000000139698,
+        22,
+        32.89999999990687,
+        5.699999999953434,
+        11.900000000139698,
+        24,
+        25.300000000046566,
+        5.100000000093132,
+        52.39999999990687,
+        31.4000000001397,
+        38.199999999953434
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "tasks": [
+        {
+          "start": 27998.800000000047,
+          "duration": 86
+        },
+        {
+          "start": 28085,
+          "duration": 59
+        },
+        {
+          "start": 28211.100000000093,
+          "duration": 54
+        },
+        {
+          "start": 28740,
+          "duration": 53
+        }
+      ]
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 1,
+      "variant": "base",
+      "startupMs": 11666.586737000005,
+      "firstMs": 6192.830771999987,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        561.1000000000931,
+        454.80000000004657,
+        523.9000000001397,
+        556.8000000000466,
+        616.8000000000466
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10709,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10709,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 1,
+      "variant": "candidate",
+      "startupMs": 10834.652868999983,
+      "firstMs": 7337.227909999987,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        1112,
+        635.7999999998137,
+        1563.5999999998603,
+        612.6000000000931,
+        1141.5
+      ],
+      "newInteractionTimes": [
+        9.800000000046566,
+        14.800000000046566,
+        61.60000000009313,
+        43.39999999990687,
+        4.100000000093132,
+        32.89999999990687,
+        20.299999999813735,
+        15.800000000046566,
+        5,
+        12.400000000139698,
+        18.899999999906868,
+        26.700000000186265,
+        4.7999999998137355,
+        9.700000000186265,
+        18.800000000046566,
+        18.5,
+        3.4000000001396984,
+        14.199999999953434,
+        16.899999999906868,
+        15.5
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "tasks": [
+        {
+          "start": 28875,
+          "duration": 63
+        }
+      ]
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 2,
+      "variant": "base",
+      "startupMs": 12717.076828999998,
+      "firstMs": 8164.540574999992,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        948.1999999999534,
+        549.1999999999534,
+        532.3999999999069,
+        587.6999999999534,
+        453.10000000009313
+      ],
+      "newInteractionTimes": [],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10595,
+        "jsEventListeners": 1460
+      },
+      "tasks": []
+    },
+    {
+      "count": 30000,
+      "fixtureHash": "fe001986ca5b68130d2fb2d8c0f5a6eb6f7e471ce69ef79b34fe90a7c0be759f",
+      "round": 2,
+      "variant": "candidate",
+      "startupMs": 11619.26189600001,
+      "firstMs": 5793.847695000004,
+      "totals": "%21,8\nyüklendi\n30.000 sipariş · 30.000 satır\n79.798.500\nToplam adet\n30.000 operasyon satırı\n62.368.180\nÜretimde\n%78,2\n0\nYükleme Operasyonları\n%0\n3.101.330\nYolda + Gümrük\n%3,9\n13.606.290\nDepoda + Retail bekleyen\n%17,1\n6.735.430\nEx-F geçti · yüklenmedi\n3.734 satır\n0\nEksik Yükleme\n%0\n62.815.880\nRiskli adet\n22.858 sipariş · transit gecikmiş 381.700\n0\nÖzel siparişler\n0 sipariş · 0 riskli",
+      "scopeTimes": [
+        1100,
+        451.19999999995343,
+        474.69999999995343,
+        368.60000000009313,
+        409.9000000001397
+      ],
+      "newInteractionTimes": [
+        5,
+        9.300000000046566,
+        24.200000000186265,
+        15.699999999953434,
+        2.8999999999068677,
+        7.699999999953434,
+        20.199999999953434,
+        16.300000000046566,
+        3.8999999999068677,
+        9.199999999953434,
+        14,
+        12.899999999906868,
+        3.0999999998603016,
+        9.099999999860302,
+        14.400000000139698,
+        13.300000000046566,
+        2.800000000046566,
+        6.5,
+        15.900000000139698,
+        13.199999999953434
+      ],
+      "interactionRequests": 0,
+      "requests": 3,
+      "before": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "after": {
+        "documents": 3,
+        "nodes": 10605,
+        "jsEventListeners": 1460
+      },
+      "tasks": [
+        {
+          "start": 24686.200000000186,
+          "duration": 132
+        },
+        {
+          "start": 25115.300000000047,
+          "duration": 54
+        }
+      ]
+    }
+  ]
+}
