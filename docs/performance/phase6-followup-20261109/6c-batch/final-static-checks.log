@@ -1,0 +1,19 @@
+
+> buyer-log-desktop@7.0.343 i18n:check
+> node scripts/i18n-coverage.js
+
+[i18n] Yeni eksik: 0 · Baseline'daki eski eksik: 0
+
+> buyer-log-desktop@7.0.343 release:notes:validate
+> node scripts/release-notes.js validate
+
+Release notes OK: 15 change(s).
+✔ tests/agent-instructions.test.js (75.305253ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 89.418818

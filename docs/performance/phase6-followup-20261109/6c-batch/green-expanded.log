@@ -1,0 +1,29 @@
+✔ 6c: ordered heterogeneous patches share one journal turn and preserve per-event metadata (57.073485ms)
+✔ 6c: owner validation failure preserves valid individual mirrors and rollback (46.255734ms)
+✔ 6c: delayed/error mirror stays in flush and cannot rollback a later stage (26.43624ms)
+✔ 6c: two journal writers and duplicate delivery preserve events, receipts and subfields (85.476629ms)
+✖ 6c: real patchOrderOverrides preserves JSON ACK, conflicts and mirror failure isolation (891.39319ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1117.942924
+
+✖ failing tests:
+
+test at resources/app/tests/phase6c-cp-batch.test.js:77:1
+✖ 6c: real patchOrderOverrides preserves JSON ACK, conflicts and mirror failure isolation (891.39319ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop-6c/resources/app/tests/phase6c-cp-batch.test.js:97:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [Function (anonymous)],
+    operator: 'throws',
+    diff: 'simple'
+  }

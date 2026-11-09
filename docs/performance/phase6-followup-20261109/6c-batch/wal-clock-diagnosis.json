@@ -1,0 +1,63 @@
+{
+  "scope": "Whole CP WAL after HTTP acceptance, including post-measurement cases; not the per-sample byte total. Per-sample totals are in pairs/.",
+  "source": "Unchanged local-db.js stampOperation uses hlc.tick for each operation within appendOperations.",
+  "arms": {
+    "main": {
+      "hlcCounterHistogram": {
+        "0": 202
+      },
+      "walLineByteHistogram": {
+        "767": 5,
+        "703": 5,
+        "768": 45,
+        "704": 45,
+        "739": 5,
+        "655": 5,
+        "740": 45,
+        "656": 45,
+        "564": 1,
+        "600": 1
+      }
+    },
+    "candidate": {
+      "hlcCounterHistogram": {
+        "0": 21,
+        "1": 19,
+        "2": 18,
+        "3": 18,
+        "4": 17,
+        "5": 16,
+        "6": 15,
+        "7": 13,
+        "8": 11,
+        "9": 11,
+        "10": 9,
+        "11": 8,
+        "12": 7,
+        "13": 6,
+        "14": 5,
+        "15": 3,
+        "16": 2,
+        "17": 1,
+        "18": 1,
+        "19": 1
+      },
+      "walLineByteHistogram": {
+        "767": 5,
+        "703": 5,
+        "768": 38,
+        "704": 37,
+        "705": 8,
+        "769": 7,
+        "739": 5,
+        "655": 5,
+        "740": 31,
+        "656": 31,
+        "657": 14,
+        "741": 14,
+        "564": 1,
+        "600": 1
+      }
+    }
+  }
+}

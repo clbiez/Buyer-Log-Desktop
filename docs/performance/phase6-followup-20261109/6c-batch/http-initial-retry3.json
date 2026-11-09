@@ -1,0 +1,72 @@
+{
+  "app": "/workspace/Buyer-Log-Desktop-6c/resources/app",
+  "root": "/tmp/buyerlog-6c-http-b1Hszw",
+  "runtime": {
+    "node": "24.19.0",
+    "acorn": "8.17.0",
+    "ada": "3.4.4",
+    "amaro": "1.1.10",
+    "ares": "1.34.6",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.3",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "137",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.69.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "3.5.7",
+    "simdjson": "4.6.4",
+    "simdutf": "6.4.0",
+    "sqlite": "3.53.3",
+    "tz": "2026b",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "13.6.233.17-node.51",
+    "zlib": "1.3.2.1-motley-3246f1b",
+    "zstd": "1.5.7"
+  },
+  "platform": "linux",
+  "fixtureHash": "62c11497340bca91621c02cdfafb1eb8ccd12ddc162376eaa759d820de552ce6",
+  "rows": [
+    {
+      "count": 1,
+      "phase": "cold",
+      "fixtureHash": "d5b7c7fd1f7beb8673f8837ae97b40ed03785b56dec84e02e0b054c705791089",
+      "ackMs": 17.45346199999949,
+      "totalMs": 44.97359299999971,
+      "cpuMs": 47.813,
+      "peakRss": 419110912,
+      "peakHeap": 76868400,
+      "eventLoopGapMs": 12.924890999999661,
+      "physical": {
+        "walAppend": 2,
+        "fsync": 2,
+        "walBytes": 4884,
+        "lease": 2,
+        "serialize": 49
+      },
+      "replayEqual": false,
+      "pending": false,
+      "mode": "shadow",
+      "businessHash": "47bdfae44f42a75498050a6f838792120f609cac416afee19da798cea1202170",
+      "eventHash": "7b21d22b8bb4f838ad929fa5740ac4cc8d97068e26a9e3d1023f1d6f88b8cff9",
+      "eventCount": 1,
+      "updated": 1,
+      "skipped": [],
+      "ackHash": "f287c8dc72349004a67d13bafa6aedad53bdff29d725381115b72be9799dbf2f"
+    }
+  ],
+  "acceptance": [],
+  "ok": false,
+  "error": {
+    "message": "Expected values to be strictly equal:\n\nfalse !== true\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at /workspace/Buyer-Log-Desktop-6c/resources/app/scripts/phase6c-http-acceptance.cjs:34:42\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  }
+}

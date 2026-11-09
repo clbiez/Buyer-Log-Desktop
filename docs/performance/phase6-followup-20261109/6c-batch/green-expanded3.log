@@ -1,0 +1,13 @@
+✔ 6c: ordered heterogeneous patches share one journal turn and preserve per-event metadata (78.127607ms)
+✔ 6c: owner validation failure preserves valid individual mirrors and rollback (45.098836ms)
+✔ 6c: delayed/error mirror stays in flush and cannot rollback a later stage (52.059946ms)
+✔ 6c: two journal writers and duplicate delivery preserve events, receipts and subfields (83.386737ms)
+✔ 6c: real patchOrderOverrides preserves JSON ACK, conflicts and mirror failure isolation (828.800801ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1093.984516

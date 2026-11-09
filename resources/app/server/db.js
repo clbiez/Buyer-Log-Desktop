@@ -1010,7 +1010,7 @@ function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevi
   ov._revisions.orders = current + 1;
   if(touchesSuppFob)ov._revisions.suppFob=currentSuppFob+1;
   const saved = saveOverrides(ov, ov._revision);
-  cpSharedStore.mirrorPatchesDetached(cpTouched.map(item => ({ id: item.key, patch: cpSharedStore.patchFromOrderPatch(saved, item.key, item.patch), subfields: cpSharedStore.subfieldsFromOrderPatch(item.patch) })), { actor: options && options.actor });
+  for (const item of cpTouched) cpSharedStore.mirrorPatchDetached(item.key, cpSharedStore.patchFromOrderPatch(saved, item.key, item.patch), { actor: options && options.actor, subfields: cpSharedStore.subfieldsFromOrderPatch(item.patch) });
   return { overrides: saved, revision: saved._revisions.orders, revisions: { orders: saved._revisions.orders, suppFob: saved._revisions.suppFob }, updated, skipped };
 }
 

@@ -131,7 +131,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Aynayı günceller. Hiçbir koşulda fırlatmaz: çağıran kod eski JSON yazmasını
      bunun sonucuna bakmadan tamamlamalıdır. */
-  async function mirror(collection, entries, { userId = null, subfields = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [], guardCollections = [] } = {}, batch = null) {
+  async function mirror(collection, entries, { userId = null, subfields = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [], guardCollections = [] } = {}) {
     /* v2 no-op suppression. A caller may hand us a full source map; that must
        not turn into one journal event per record. Compare only fields supplied
        by the caller against the hydrated working set and persist meaningful
@@ -190,10 +190,10 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     inflight.add(inflightEntry);
     if (pendingMirrors === 1) trace('mirror:single-flight', { invocation: invocationId, collection }, true);
     pendingMirrors += 1;
-    const execute = async (queue = queueMirrorPatches) => {
+    const run = mirrorTail.catch(() => {}).then(async () => {
       trace('mirror:start', { invocation: invocationId, collection, items: items.length, queued: pendingMirrors - 1 });
       try {
-        const result = await queue(items, invocationId, assertCurrent);
+        const result = await queueMirrorPatches(items, invocationId, assertCurrent);
         trace('mirror:success', { invocation: invocationId, collection, items: items.length });
         return { mirrored: items.length, applied: result.count, unchanged, ok: true };
       } catch (error) {
@@ -205,42 +205,9 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
         pendingMirrors -= 1;
         inflight.delete(inflightEntry);
       }
-    };
-    if (batch) return new Promise(resolve => batch.push({ items, execute, resolve }));
-    const run = mirrorTail.catch(() => {}).then(() => execute());
-    mirrorTail = run.catch(() => {});
-    return run;
-  }
-
-  /* Opt-in transport batch only. Each row still uses mirror's synchronous
-     staging, no-op comparison, rollback and per-row subfields/user metadata.
-     Do not combine patches by ID or share a subfields mask across rows. */
-  async function mirrorBatch(collection, patches = []) {
-    const batch = [];
-    const results = (Array.isArray(patches) ? patches : []).map(item => mirror(
-      collection, { [item.id]: item.patch }, { userId: item.userId, subfields: item.subfields }, batch,
-    ));
-    if (!batch.length) return Promise.all(results);
-    const run = mirrorTail.catch(() => {}).then(async () => {
-      try {
-        const result = await queueMirrorPatches(batch.flatMap(item => item.items), crypto.randomUUID());
-        let offset = 0;
-        for (const item of batch) {
-          const applied = result.results.slice(offset, offset + item.items.length).filter(value => !value.duplicate).length;
-          offset += item.items.length;
-          item.resolve(await item.execute(async () => ({ count: applied })));
-        }
-      } catch (error) {
-        // local-db.resolvePatch validates EVERY owner before appendOperations.
-        // This exact error therefore means zero writes. Use the original
-        // individual path so a rejected owner cannot drop unrelated valid rows.
-        // Never retry a possibly appended batch on disk/lease/merge failure.
-        for (const item of batch) item.resolve(await item.execute(error?.code === 'ORDER_SHARED_OWNER_ONLY'
-          ? queueMirrorPatches : async () => { throw error; }));
-      }
     });
     mirrorTail = run.catch(() => {});
-    return Promise.all(results);
+    return run;
   }
 
   /* Belleğe yazar ve önceki hâli geri yükleyen bir geri alma işlevi döndürür. */
@@ -413,7 +380,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     return { ok: pendingMirrors === 0, pending: pendingMirrors };
   }
 
-  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, mirrorBatch, flush, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
+  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, flush, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
 }
 
 /* ===================================================================

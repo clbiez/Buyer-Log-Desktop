@@ -1,0 +1,32 @@
+✔ 6c: ordered heterogeneous patches share one journal turn and preserve per-event metadata (50.105088ms)
+✔ 6c: owner validation failure preserves valid individual mirrors and rollback (33.77027ms)
+✔ 6c: delayed/error mirror stays in flush and cannot rollback a later stage (24.519941ms)
+✔ 6c: two journal writers and duplicate delivery preserve events, receipts and subfields (78.18295ms)
+✖ 6c: real patchOrderOverrides preserves JSON ACK, conflicts and mirror failure isolation (600.259141ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 796.508515
+
+✖ failing tests:
+
+test at resources/app/tests/phase6c-cp-batch.test.js:77:1
+✖ 6c: real patchOrderOverrides preserves JSON ACK, conflicts and mirror failure isolation (600.259141ms)
+  Error: Unresolved recovery conflict blocks write: /tmp/buyerlog-6c-db-MQccgE/server/overrides.json
+      at integrityError (/workspace/Buyer-Log-Desktop-6c/resources/app/server/lib/durable-file-recovery.js:19:24)
+      at prepareSync (/workspace/Buyer-Log-Desktop-6c/resources/app/server/lib/durable-file-recovery.js:254:33)
+      at Object.replaceSync (/workspace/Buyer-Log-Desktop-6c/resources/app/server/lib/durable-file-recovery.js:337:77)
+      at atomicWriteBuffer (/workspace/Buyer-Log-Desktop-6c/resources/app/server/user-data.js:174:26)
+      at atomicWriteJson (/workspace/Buyer-Log-Desktop-6c/resources/app/server/user-data.js:176:41)
+      at write (/workspace/Buyer-Log-Desktop-6c/resources/app/server/db.js:225:93)
+      at /workspace/Buyer-Log-Desktop-6c/resources/app/server/lib/shared-file-transaction.js:236:110
+      at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+      at withFileLeaseSync (/workspace/Buyer-Log-Desktop-6c/resources/app/server/lib/shared-file-transaction.js:236:35)
+      at saveRevisioned (/workspace/Buyer-Log-Desktop-6c/resources/app/server/db.js:230:90) {
+    code: 'DATA_INTEGRITY_ERROR',
+    statusCode: 503
+  }
