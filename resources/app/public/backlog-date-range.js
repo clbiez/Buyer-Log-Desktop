@@ -48,7 +48,7 @@
   }
   const FIELDS={mb:{ids:['backlogInStoreFrom','backlogInStoreTo'],tr:'MB tarihi',en:'MB date'},ex:{ids:['backlogExFactoryFrom','backlogExFactoryTo'],tr:'Exfactory tarihi',en:'Exfactory date'},retail:{ids:['backlogFrom','backlogTo'],tr:'Retail depo tarihi',en:'Retail warehouse date'}};
   const KEY='lcw.backlog.dateRange.v1';
-  let selected='mb',unit='week',host,apply,scale,drafts={},mounted=false,reportState='ready';
+  let selected='mb',unit='week',host,apply,scale,drafts={},mounted=false,reportState='ready',collapsed=false,position=0;
   const en=()=>document.documentElement.lang==='en';
   const L=(tr,english)=>en()?english:tr;
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -56,12 +56,34 @@
   function current(field=selected){const ids=FIELDS[field].ids;return {from:value(ids[0]),to:value(ids[1])};}
   function draft(){return drafts[selected]||current();}
   function active(){return document.body.dataset.activeTab==='backlog';}
-  function save(){try{(window.BLStorage||localStorage).setItem(KEY,JSON.stringify({selected,unit}));}catch(_){}}
+  function save(){try{(window.BLStorage||localStorage).setItem(KEY,JSON.stringify({selected,unit,collapsed,position}));}catch(_){}}
   function fmt(v){return day(v)?new Intl.DateTimeFormat(en()?'en-GB':'tr-TR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(day(v)):'…';}
   function valid(r){return (!r.from||!!day(r.from))&&(!r.to||!!day(r.to))&&(!r.from||!r.to||r.from<=r.to);}
   function changed(){return Object.keys(drafts).some(field=>JSON.stringify(drafts[field])!==JSON.stringify(current(field)));}
   function setDraft(r){drafts[selected]=r;render();}
   function button(text,attrs=''){return `<button type="button" class="tbtn" ${attrs}>${text}</button>`;}
+  function syncDisclosure(initial=false){
+    const body=host.querySelector('[data-range-body]'),toggle=host.querySelector('[data-range-toggle]');
+    const summary=host.querySelector('[data-range-summary]');
+    summary.textContent=Object.entries(FIELDS).filter(([key])=>current(key).from||current(key).to).map(([key,f])=>`${en()?f.en:f.tr}: ${fmt(current(key).from)} → ${fmt(current(key).to)}`).join(' · ');
+    summary.hidden=!collapsed||!summary.textContent;
+    host.classList.toggle('is-collapsed',collapsed);
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,!collapsed,{trigger:toggle,initial});
+    else body.hidden=collapsed;
+  }
+  function positionPanel(){
+    if(!host)return;
+    const content=document.getElementById('backlogContent'),anchor=document.getElementById('backlogDateRangeAnchor');
+    const tree=document.getElementById('backlogTreeTable');
+    const targets=['backlogOverview','backlogPlanActualModule','backlogAnalysis'].map(id=>document.getElementById(id));
+    targets.push(tree?.closest('.backlogPivotRadarWorkspace')||tree?.closest('.panel'));
+    const target=position>0&&content?.style.display!=='none'?targets[position-1]:null;
+    if(target&&target.parentElement===content){if(target.nextElementSibling!==host)target.insertAdjacentElement('afterend',host);}
+    else if(anchor&&anchor.nextElementSibling!==host)anchor.insertAdjacentElement('afterend',host);
+    const up=host.querySelector('[data-range-move="-1"]'),down=host.querySelector('[data-range-move="1"]');
+    if(up)up.disabled=position===0;if(down)down.disabled=position===targets.length;
+  }
   function updatePreview(){
     const r=draft(),ok=valid(r),status=host.querySelector('[data-range-status]');
     status.textContent=!ok?L('Başlangıç, bitişten sonra olamaz.','Start must be on or before end.'):(r.from||r.to)?`${fmt(r.from)} → ${fmt(r.to)}${r.from&&r.to?' · '+(Math.round((+day(r.to)-day(r.from))/DAY)+1)+' '+L('gün','days'):''}`:L('Tüm tarihler · kaydırarak bir aralık seçin','All dates · slide to select a range');
@@ -84,8 +106,10 @@
     const activeCount=Object.keys(FIELDS).filter(key=>current(key).from||current(key).to).length;
     const r=draft();scale=axis(valid(r)?r:{},unit);
     const max=scale.count-1;
-    host.innerHTML=`<div class="backlogDateTop">
-      <strong class="backlogDateTitle"><svg class="ic"><use href="#i-calendar"/></svg>${L('Tarih aralığı','Date range')}</strong>
+    host.innerHTML=`<div class="backlogDateHeader">
+      <button type="button" class="blvModuleToggle backlogDateToggle" data-range-toggle aria-expanded="${!collapsed}" aria-controls="backlogDateRangeBody"><svg class="ic"><use href="#i-calendar"/></svg><strong>${L('Tarih aralığı','Date range')}</strong><span data-range-summary></span></button>
+      ${button('↑',`data-range-move="-1" aria-label="${L('Paneli yukarı taşı','Move panel up')}"`)}${button('↓',`data-range-move="1" aria-label="${L('Paneli aşağı taşı','Move panel down')}"`)}
+    </div><div id="backlogDateRangeBody" data-range-body><div class="backlogDateTop">
       <div class="bpaSeg2" role="group" aria-label="${L('Tarih türü','Date field')}">${Object.entries(FIELDS).map(([key,f])=>`<button type="button" data-range-field="${key}" aria-pressed="${selected===key}">${en()?f.en:f.tr}${current(key).from||current(key).to?' •':''}</button>`).join('')}</div>
       <span class="backlogDateSpacer"></span>
       <div class="bpaSeg2" role="group" aria-label="${L('Kaydırma adımı','Shift step')}">${[['day','Gün','Day'],['week','Hafta','Week'],['month','Ay','Month']].map(([key,tr,english])=>`<button type="button" data-range-unit="${key}" aria-pressed="${unit===key}">${L(tr,english)}</button>`).join('')}</div>
@@ -106,23 +130,26 @@
     </div>
     <div class="backlogDateBottom"><details class="backlogDateOptions" data-range-options ${optionsOpen?'open':''}><summary>${L('Kısayollar / filtreler','Presets / filters')}${activeCount?' ('+activeCount+')':''}</summary><div class="backlogDateOptionsBody"><div class="backlogDatePresets">${[['week','Bu hafta','This week'],['month','Bu ay','This month'],['next30','Önümüzdeki 30 gün','Next 30 days']].map(([key,tr,english])=>button(L(tr,english),`data-range-preset="${key}"`)).join('')}${button(L('Tüm tarihler','All dates'),'data-range-preset="all"')}</div>
     <div class="backlogDateActive">${Object.entries(FIELDS).filter(([key])=>{const r=current(key);return r.from||r.to;}).map(([key,f])=>button(`${en()?f.en:f.tr}: ${fmt(current(key).from)} → ${fmt(current(key).to)} ×`,`data-range-clear="${key}" aria-label="${esc((en()?f.en:f.tr)+' · '+L('Filtreyi kaldır','Remove filter'))}"`)).join('')}</div>
-    <details class="backlogDateHelp"><summary>${L('Nasıl çalışır?','How does it work?')}</summary><p>${L('Gün / hafta / ay, kaydırıcı adımını belirler. Başlangıç ve bitiş dahil edilir; boş uç sınırsızdır. Birden fazla tarih türündeki filtreler birlikte uygulanır. MB, model bütçe; Exfactory, güncel/revize yükleme; Retail, depo hedef tarihidir. Seçimleri Uygula ile rapora aktarın.','Day / week / month sets the slider step. Start and end are inclusive; an empty end is unbounded. Filters on multiple date fields apply together. MB is model budget; Exfactory is the current/revised shipment date; Retail is the warehouse target date. Apply sends your selections to the report.')}</p></details></div></details><output data-range-status aria-live="polite"></output></div>`;
+    <details class="backlogDateHelp"><summary>${L('Nasıl çalışır?','How does it work?')}</summary><p>${L('Gün / hafta / ay, kaydırıcı adımını belirler. Başlangıç ve bitiş dahil edilir; boş uç sınırsızdır. Birden fazla tarih türündeki filtreler birlikte uygulanır. MB, model bütçe; Exfactory, güncel/revize yükleme; Retail, depo hedef tarihidir. Seçimleri Uygula ile rapora aktarın.','Day / week / month sets the slider step. Start and end are inclusive; an empty end is unbounded. Filters on multiple date fields apply together. MB is model budget; Exfactory is the current/revised shipment date; Retail is the warehouse target date. Apply sends your selections to the report.')}</p></details></div></details><output data-range-status aria-live="polite"></output></div></div>`;
     updatePreview();
+    syncDisclosure(true);positionPanel();
     if(focused)host.querySelector(`[${focused.name}="${focused.value}"]`)?.focus({preventScroll:true});
   }
   function sync(){
     reportState='ready';
     // Retain an unsaved draft while an earlier report request finishes.
     if(!changed())drafts={};
-    render();
+    render();positionPanel();
   }
   function requestState(state){reportState=state;if(host?.firstElementChild&&active())updatePreview();}
   function mount(options){
     if(mounted)return;mounted=true;apply=options.apply;host=document.getElementById('backlogDateRange');if(!host)return;
-    try{const saved=JSON.parse((window.BLStorage||localStorage).getItem(KEY)||'{}');if(FIELDS[saved.selected])selected=saved.selected;if(['day','week','month'].includes(saved.unit))unit=saved.unit;}catch(_){}
+    try{const saved=JSON.parse((window.BLStorage||localStorage).getItem(KEY)||'{}');if(FIELDS[saved.selected])selected=saved.selected;if(['day','week','month'].includes(saved.unit))unit=saved.unit;collapsed=saved.collapsed===true;position=Math.max(0,Math.min(4,Math.trunc(Number(saved.position)||0)));}catch(_){}
     host.addEventListener('click',event=>{
       const b=event.target.closest('button');if(!b||!host.contains(b))return;
-      if(b.dataset.rangeField){selected=b.dataset.rangeField;save();render();}
+      if(b.hasAttribute('data-range-toggle')){collapsed=!collapsed;save();syncDisclosure();}
+      else if(b.dataset.rangeMove){position=Math.max(0,Math.min(4,position+Number(b.dataset.rangeMove)));save();positionPanel();b.focus({preventScroll:true});}
+      else if(b.dataset.rangeField){selected=b.dataset.rangeField;save();render();}
       else if(b.dataset.rangeUnit){unit=b.dataset.rangeUnit;save();render();}
       else if(b.dataset.rangeShift){const r=draft();setDraft(shift(r.from||r.to?r:preset(unit==='day'?'next30':unit),unit,Number(b.dataset.rangeShift)));}
       else if(b.dataset.rangePreset)setDraft(b.dataset.rangePreset==='all'?{from:'',to:''}:preset(b.dataset.rangePreset));
@@ -162,6 +189,8 @@
     });
     new MutationObserver(render).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});
     new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    const content=document.getElementById('backlogContent');
+    if(content)new MutationObserver(positionPanel).observe(content,{attributes:true,attributeFilter:['style'],childList:true});
     render();
   }
   function commit(fields=Object.keys(drafts)){

@@ -1,0 +1,16 @@
+{
+  "base": "9e667430",
+  "risk": "P2",
+  "scope": "Backlog Overview empty/error recovery and date panel disclosure/position",
+  "budgets": {
+    "newInteractionVisibleFeedbackMs": 200,
+    "extraRequestsForDisclosureOrMove": 0,
+    "extraTimersOrListenersPerCycle": 0,
+    "cycles": 5,
+    "existingFlows": "No repeatable regression against current main; 3 alternating pairs; record A/A noise when needed",
+    "mainThread": "No new or growing tasks above 50ms",
+    "data": "Same filters, totals and unsaved date drafts; no automatic filter reset"
+  },
+  "runtime": "Chromium web; no Electron/native behavior changed",
+  "fixture": "isolated generated demo data; normal and 30000-row workload"
+}
