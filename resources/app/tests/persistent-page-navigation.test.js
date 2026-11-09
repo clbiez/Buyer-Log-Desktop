@@ -94,3 +94,15 @@ test('Backlog prefetch obeys required-source and no-cache gates',async()=>{
     assert.equal(await h.api.prefetchBacklogForRefresh(),false);assert.equal(h.requests(),0);
   }
 });
+
+test('CP priorities finishing after navigation schedule the hidden table for its next visit',async()=>{
+  const rows=[{id:'demo'}],dirty=new Set();let active='cp',finish;
+  const api=loadAppMainFunctions(['scheduleUnifiedPrioritiesForTable'],{
+    state:{cp:{rows}},_unifiedPriorityTableRevision:{cp:1},_unifiedPriorityCache:{cp:null},cpPriorityJob:null,
+    window:{BLCpAssistant:{decisionContextRevision:()=>1,computeDecisionsForRowsAsync:()=>new Promise(r=>{finish=r;})}},
+    currentActiveTab:()=>active,syncUnifiedPrioritiesForTable(){},scheduleOverviewRender(){},
+    renderCP:()=>dirty.add('cp'),showToast:message=>assert.fail(message),
+  });
+  const pending=api.scheduleUnifiedPrioritiesForTable('cp');active='orders';finish({byRow:new Map()});
+  assert.equal(await pending,true);assert.equal(dirty.has('cp'),true,'a late decision result must not leave the old loading card on return');
+});

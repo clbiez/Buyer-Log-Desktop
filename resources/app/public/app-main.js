@@ -1137,7 +1137,8 @@ function scheduleUnifiedPrioritiesForTable(tableKey){
     syncUnifiedPrioritiesForTable('cp',result);
     window.BLModulePreparation?.setStatus('cp','ready');
     window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
-    if(currentActiveTab()==='cp')renderCP();
+    // Görünmüyorsa wrapper çizimi ilk dönüşe erteler; yükleme kartı takılı kalmaz.
+    renderCP();
     scheduleOverviewRender('cp-priority-ready');return true;
   }).catch(error=>{window.BLModulePreparation?.setStatus('cp','error','CP_PRIORITY_FAILED');showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
   return job.promise;
