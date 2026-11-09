@@ -2,7 +2,7 @@
 .backlogDateHeader{display:flex;align-items:center;gap:6px}
 .backlogDateToggle{min-width:0;flex:1;text-align:left;flex-wrap:wrap}
 .backlogDateToggle strong{white-space:nowrap}
-.backlogDateToggle [data-range-summary]{color:var(--ui-text-muted);font-size:var(--ui-font-xs);overflow-wrap:anywhere}
+.backlogDateToggle [data-range-summary]{overflow-wrap:anywhere}
 .backlogDateRange [hidden]{display:none!important}
 .backlogDateTop,.backlogDateControls,.backlogDateBottom,.backlogDatePresets,.backlogDateActive{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .backlogDateTitle{display:flex;align-items:center;gap:4px;margin-right:4px}
