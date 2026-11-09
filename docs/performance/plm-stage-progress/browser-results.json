@@ -1,0 +1,394 @@
+[
+  {
+    "round": 0,
+    "variant": "base",
+    "startupMs": 2285.2470649999996,
+    "firstMs": 12.29999999993015,
+    "cycleTimes": [
+      24.300000000046566,
+      3.299999999930151,
+      3,
+      3.400000000023283,
+      2.5
+    ],
+    "refreshTimes": [
+      12.5,
+      7.699999999953434,
+      6.700000000069849,
+      7.599999999976717,
+      13.599999999976717
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2606.5,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8353,
+      "jsEventListeners": 2008
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8353,
+      "jsEventListeners": 2003
+    },
+    "heap": 24772843,
+    "longTasks": [
+      {
+        "start": 513.2999999999302,
+        "duration": 77
+      },
+      {
+        "start": 737.2999999999302,
+        "duration": 163
+      },
+      {
+        "start": 906.5,
+        "duration": 76
+      },
+      {
+        "start": 1135.2999999999302,
+        "duration": 74
+      },
+      {
+        "start": 1287.8999999999069,
+        "duration": 82
+      },
+      {
+        "start": 1394.5,
+        "duration": 98
+      },
+      {
+        "start": 1617.5,
+        "duration": 94
+      },
+      {
+        "start": 2517.1999999999534,
+        "duration": 65
+      }
+    ]
+  },
+  {
+    "round": 0,
+    "variant": "candidate",
+    "startupMs": 1909.9599429999998,
+    "firstMs": 3.400000000023283,
+    "cycleTimes": [
+      5.400000000023283,
+      3.299999999930151,
+      2.5,
+      1.7000000000698492,
+      1.900000000023283
+    ],
+    "refreshTimes": [
+      9.70000000006985,
+      17.29999999993015,
+      10.400000000023283,
+      6.100000000093132,
+      9
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2347.0999999999767,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8367,
+      "jsEventListeners": 2049
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8541,
+      "jsEventListeners": 2049
+    },
+    "heap": 24785714,
+    "longTasks": [
+      {
+        "start": 424.4000000000233,
+        "duration": 84
+      },
+      {
+        "start": 632,
+        "duration": 151
+      },
+      {
+        "start": 826.5999999999767,
+        "duration": 98
+      },
+      {
+        "start": 1291.5999999999767,
+        "duration": 88
+      },
+      {
+        "start": 1380.1999999999534,
+        "duration": 54
+      },
+      {
+        "start": 1483.9000000000233,
+        "duration": 60
+      },
+      {
+        "start": 2075.5,
+        "duration": 80
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "variant": "base",
+    "startupMs": 1984.0039799999995,
+    "firstMs": 7.199999999953434,
+    "cycleTimes": [
+      4.799999999930151,
+      2.5,
+      2.299999999930151,
+      2.099999999976717,
+      3
+    ],
+    "refreshTimes": [
+      22.099999999976717,
+      6.5,
+      12.199999999953434,
+      5.900000000023283,
+      5.899999999906868
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2222.5,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2009
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2004
+    },
+    "heap": 24774331,
+    "longTasks": [
+      {
+        "start": 388.80000000004657,
+        "duration": 122
+      },
+      {
+        "start": 518.2000000000698,
+        "duration": 80
+      },
+      {
+        "start": 620,
+        "duration": 120
+      },
+      {
+        "start": 788,
+        "duration": 125
+      },
+      {
+        "start": 1206.3000000000466,
+        "duration": 83
+      },
+      {
+        "start": 1312.5,
+        "duration": 75
+      },
+      {
+        "start": 1497.3000000000466,
+        "duration": 71
+      },
+      {
+        "start": 1730.8000000000466,
+        "duration": 54
+      },
+      {
+        "start": 2261.70000000007,
+        "duration": 53
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "variant": "candidate",
+    "startupMs": 1927.6218800000006,
+    "firstMs": 10.599999999976717,
+    "cycleTimes": [
+      3,
+      2.5,
+      4.300000000046566,
+      2,
+      2.599999999976717
+    ],
+    "refreshTimes": [
+      12.5,
+      5.400000000023283,
+      7.400000000023283,
+      9.300000000046566,
+      8.699999999953434
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2116.3000000000466,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8345,
+      "jsEventListeners": 2005
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8433,
+      "jsEventListeners": 2005
+    },
+    "heap": 24754938,
+    "longTasks": [
+      {
+        "start": 399.80000000004657,
+        "duration": 73
+      },
+      {
+        "start": 517.5,
+        "duration": 70
+      },
+      {
+        "start": 630.3000000000466,
+        "duration": 102
+      },
+      {
+        "start": 785.0999999999767,
+        "duration": 136
+      },
+      {
+        "start": 1191.7000000000698,
+        "duration": 77
+      },
+      {
+        "start": 1452.2000000000698,
+        "duration": 81
+      },
+      {
+        "start": 1931.0999999999767,
+        "duration": 68
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "variant": "base",
+    "startupMs": 1965.3381410000002,
+    "firstMs": 16.29999999993015,
+    "cycleTimes": [
+      2.799999999930151,
+      4.300000000046566,
+      2.900000000023283,
+      3.5,
+      2.099999999976717
+    ],
+    "refreshTimes": [
+      7.699999999953434,
+      8.300000000046566,
+      16.5,
+      7.699999999953434,
+      8.699999999953434
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2176.70000000007,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8361,
+      "jsEventListeners": 2004
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8361,
+      "jsEventListeners": 2004
+    },
+    "heap": 24744108,
+    "longTasks": [
+      {
+        "start": 481,
+        "duration": 184
+      },
+      {
+        "start": 671.6000000000931,
+        "duration": 72
+      },
+      {
+        "start": 791.8000000000466,
+        "duration": 144
+      },
+      {
+        "start": 942.9000000000233,
+        "duration": 128
+      },
+      {
+        "start": 1253.6000000000931,
+        "duration": 82
+      },
+      {
+        "start": 1358.6000000000931,
+        "duration": 94
+      },
+      {
+        "start": 1540.2000000000698,
+        "duration": 73
+      },
+      {
+        "start": 2207.600000000093,
+        "duration": 53
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "variant": "candidate",
+    "startupMs": 1939.6339340000013,
+    "firstMs": 4.199999999953434,
+    "cycleTimes": [
+      9.600000000093132,
+      3.699999999953434,
+      3.400000000023283,
+      3.799999999930151,
+      2.400000000023283
+    ],
+    "refreshTimes": [
+      8.900000000023283,
+      8.800000000046566,
+      10.900000000023283,
+      8.5,
+      8.300000000046566
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2132.399999999907,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8409,
+      "jsEventListeners": 2009
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8433,
+      "jsEventListeners": 2005
+    },
+    "heap": 24777042,
+    "longTasks": [
+      {
+        "start": 626.5,
+        "duration": 170
+      },
+      {
+        "start": 846.1999999999534,
+        "duration": 95
+      },
+      {
+        "start": 1130,
+        "duration": 87
+      },
+      {
+        "start": 1395.0999999999767,
+        "duration": 95
+      },
+      {
+        "start": 1943.5999999999767,
+        "duration": 68
+      }
+    ]
+  }
+]

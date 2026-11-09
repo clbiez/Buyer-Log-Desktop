@@ -258,10 +258,11 @@ Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
 1 araç tek rozet, birden fazla araç aynı boyutta üç küçük gemi içeren tek filo
 rozetidir; gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur.
 
-**Sıralı satırlar:** Modül girişinde ilk iki görünür tablonun en çok altışar
-görünür veri satırı, `--ui-motion-table:390ms` toplam süre ve
+**Sıralı satırlar:** Modül girişinde ilk iki görünür tablonun kaydırma alanında
+görünen tüm uygun veri satırları, `--ui-motion-table:390ms` toplam süre ve
 `--ui-motion-table-distance:10px` ile sırayla belirir. Satır başına süre
-toplamın %52'si, ilk gecikme %18'i ve satırlar arası aralık %6'sıdır.
+toplamın %52'si, ilk gecikme %18'i ve satırlar arası aralık %6'sıdır;
+altıncı ve sonraki satırlar aynı son gecikmeyi paylaşarak toplam süreyi korur.
 Yalnız `opacity/transform` değişir; hücre renkleri, metin, başlıklar ve seçim
 korunur. Aktif/seçili/düzenlenen hücre içeren satırın tamamı atlanır.
 Tablo başına en çok 128 satır ölçülür; derin kayıtlı kaydırma konumunda bu

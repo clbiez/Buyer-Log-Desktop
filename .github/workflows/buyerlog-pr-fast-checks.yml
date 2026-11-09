@@ -55,6 +55,8 @@ jobs:
         run: node --test tests/launcher-sync-offthread-v70335.test.js tests/launcher-early-notice.test.js tests/launcher-offthread-verification.test.js tests/startup-progress-splash-v70321.test.js tests/startup-background-warmup.test.js tests/updater-launcher-upgrade-gate.test.js
       - name: Global Flow startup curtain and performance visibility
         run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
+      - name: PLM image job phases and progress regression
+        run: node --test tests/plm-stage-progress.test.js tests/plm-operations-ui-v915.test.js tests/job-registry-v914.test.js tests/plm-image-pipeline-v1100.test.js
       - name: LCW AI embedded session and PLM BOM regression
         run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js tests/plm-sync-two-phase.test.js tests/plm-sync-colours-retry.test.js tests/collection-artwork-detail.test.js
       - name: Excel import AI validation and canonical import regression

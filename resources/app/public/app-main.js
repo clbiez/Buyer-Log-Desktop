@@ -33382,7 +33382,7 @@ function watchModelOperationProgress(button){
   const span=button&&button.querySelector('span'); if(!span)return ()=>{};
   const original=span.textContent;
   let timer=null,stopped=false;
-  const read=async()=>{try{const q=await plmJsonRequest('/api/model-operation-status');if(!stopped&&q&&q.total){span.textContent=`${q.phase||'İşleniyor'} • ${q.current||0}/${q.total} • ${q.model||'—'}`;}}catch(_) {}};
+  const read=async()=>{try{const q=await plmJsonRequest('/api/model-operation-status');if(!stopped&&q&&q.total){const phase=window.BLPlmOps?.phaseText(q)||q.phase||(appLang==='en'?'Processing':'İşleniyor');span.textContent=`${phase} • ${q.current||0}/${q.total} • ${q.model||'—'}`;}else if(!stopped&&q&&q.stage){span.textContent=window.BLPlmOps?.phaseText(q)||q.phase||(appLang==='en'?'Processing':'İşleniyor');}}catch(_) {}};
   void read(); timer=setInterval(read,700);
   return ()=>{stopped=true;if(timer){clearInterval(timer);timer=null;}span.textContent=original;};
 }

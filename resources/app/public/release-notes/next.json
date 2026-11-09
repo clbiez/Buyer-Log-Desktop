@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "plm-image-accurate-stage-progress",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Operasyon Merkezi",
+        "en": "PLM Operations Center"
+      },
+      "title": {
+        "tr": "Son görselden sonra gerçek işlem aşaması gösterilir",
+        "en": "Show the actual work after the last image"
+      },
+      "body": {
+        "tr": "PLM görsel işlerinde bağlantı, önbellek, indirme, yerel kayıt, geçici dosya temizliği ve paylaşılan depo kilitlerinin bırakılması ayrı aşamalar olarak gösterilir. Model, stil ve görsel sayaçları istenen kayıtlardan ayrılır; başarısız indirme girişimleri de aşama ilerlemesine sayılır. Yerel işlemlerde son model bilgisi ve yanıltıcı sıfır saniye tahmini gösterilmez; aşamada geçen süre görünür. Türkçe ve İngilizce desteklenir.",
+        "en": "PLM image jobs show separate stages for connecting, checking the cache, downloading, saving locally, cleaning up temporary files and releasing shared storage locks. Model, style and image counters are separate from requested records; failed download attempts also count toward stage progress. Local work hides the last model and misleading zero-second estimates, and shows time in the current stage. Both Turkish and English are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-accurate-progress.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo oturumunda görseller ve model bağlantıları kaydediliyor aşaması",
+          "en": "Saving images and model links in a real Buyer Log demo session"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama; izole demo durumuyla kayıt aşaması, istenen kayıt sayısı ve aşamada geçen süre.",
+          "en": "Actual post-change application with isolated demo status: saving stage, requested records and time in stage."
+        }
+      }
+    },
+    {
       "id": "selected-orders-license-atlas-20261109",
       "type": "feature",
       "module": {
@@ -298,6 +327,35 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek uygulama; aynı kullanıcı için iki eşzamanlı işte beşer takım ve altışar parça işlendi. Beş aktif okuma sınırı ayrı sayaçlarla doğrulandı. Görsel tek başına concurrency veya aktif iptal kanıtı değildir.",
           "en": "Actual post-change application; two concurrent jobs for one user processed five sets each with six parts per set. Separate counters verified the five-read limit. The image alone does not prove concurrency or active cancellation."
+        }
+      }
+    },
+    {
+      "id": "full-viewport-table-motion-20261109",
+      "type": "fix",
+      "module": {
+        "tr": "Sayfa geçişleri",
+        "en": "Page transitions"
+      },
+      "title": {
+        "tr": "Tablo animasyonu ekranın tamamını kapsar",
+        "en": "Table animation covers the full viewport"
+      },
+      "body": {
+        "tr": "Sayfa geçişinde tablo animasyonu artık ilk altı satırla sınırlı kalmaz; kaydırma alanında görünen tüm uygun satırlar birlikte açılır. Geçiş süresi uzamaz; seçili ve düzenlenen satırlar ile hareketi azaltma ayarı korunur.",
+        "en": "Table entrance on page navigation is no longer limited to the first six rows; all eligible rows visible in the scroll area animate into view. The transition keeps its duration and respects selected or edited rows and reduced-motion preferences."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "full-viewport-table-motion-20261109.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında altıncı satırın altına da uygulanan giriş animasyonu; sentetik demo verisi",
+          "en": "Table entrance extends below the sixth row in the actual Buyer Log Orders screen; synthetic demo data"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada animasyonun aynı anında durdurulan tüm görünür satırlar. Kapsam, süre ve iptal davranışı ayrıca otomatik testlerle doğrulandı.",
+          "en": "All visible rows paused at the same instant of their entrance in the actual app. Coverage, timing and cancellation were also verified by automated tests."
         }
       }
     },
