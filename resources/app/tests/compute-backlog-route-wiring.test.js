@@ -8,7 +8,7 @@ function block(route){
 for(const route of paths)test(`${route} delegates its heavy computation and ready response to the common pool`,async()=>{
   let handler,task,sent;const forbidden=()=>{throw Error('Main thread traversal is forbidden');};
   const context={app:{get:(_route,_guard,fn)=>handler=fn},userAccess:{requireArea:()=>null,filterRowsByScope:(_profile,rows)=>rows},
-    assertSourceFilters(){},sourceUserId:()=> 'a',sourceFilterReadiness:()=>({ready:true}),cacheForUser:()=>({asasOrders:[]}),
+    backlogReadConsumer:()=>({signal:new AbortController().signal,dispose(){}}),assertSourceFilters(){},sourceUserId:()=> 'a',sourceFilterReadiness:()=>({ready:true}),cacheForUser:()=>({asasOrders:[]}),
     ensureBacklogSourceFields:async()=>{},ensureBacklogRuntime:async()=>{},ensureDataLoaded:async()=>{},prepareComputeBacklog:async()=>{},
     pageProjectionContext:()=>({id:'a',contextHash:'ctx'}),pageProjectionCache:{readBacklog:async()=>null},backlogCacheKey:()=> 'key',
     effectiveOverridesForUser:()=>({}),loadOverrides:()=>({}),backlogQueryForRequest:forbidden,ordersForTarget:forbidden,

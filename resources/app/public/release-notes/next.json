@@ -68,6 +68,35 @@
           "en": "Actual post-change application; the default Excel queue was saturated with synthetic tasks. Current rates are displayed without offering file repair."
         }
       }
+    },
+    {
+      "id": "ana12-backlog-consumer-cancel-20261109",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Gereksiz Backlog sorguları iptal edilir",
+        "en": "Unneeded Backlog queries are cancelled"
+      },
+      "body": {
+        "tr": "Genel bakış, grafik veya filtre görünümü kapandığında ve sorgu değiştiğinde artık gerekmeyen satır ve filtre değeri istekleri durdurulur. Aynı hesaplamayı kullanan başka bir açık istek varsa işlem devam eder. Eski yanıtlar yeni görünümü değiştirmez.",
+        "en": "When the overview, chart or filter view closes or its query changes, row and filter-value requests that are no longer needed are stopped. Computation continues while another active request still uses it. Old responses cannot change the current view."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ana12-backlog-consumer-cancel-20261109.png",
+        "alt": {
+          "tr": "Sorgu değiştirip geri döndükten sonra gerçek Buyer Log Backlog genel bakışı; sentetik demo verisi",
+          "en": "Actual Buyer Log Backlog overview after changing the query and returning; synthetic demo data"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada görünüm kapatma, filtre çekmecesini yeniden açma ve sorguyu tekrar çalıştırma doğrulandı. İptal ve ortak tüketici davranışı ayrıca HTTP ve worker testleriyle doğrulandı.",
+          "en": "Closing views, reopening the filter drawer and repeating a query were verified in the actual application. Cancellation and shared-consumer behavior were also verified with HTTP and worker tests."
+        }
+      }
     }
   ]
 }
