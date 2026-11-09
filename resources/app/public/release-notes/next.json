@@ -7,10 +7,39 @@
     "en": "Lower memory use for table images"
   },
   "summary": {
-    "tr": "Tablolarda küçük önizlemeler kullanılır; büyük görsel ve dışa aktarma orijinali korur.",
-    "en": "Tables use small previews; large views and exports retain the original."
+    "tr": "Tablolarda küçük önizlemeler kullanılır; büyük görsel ve dışa aktarma orijinali korur. Ekranlar arası genel kültür alanı pencereye sığar; Devam Et düğmesi kısa pencerelerde görünür kalır.",
+    "en": "Tables use small previews; large views and exports retain the original. Trivia between screens fits the window; Continue stays visible in short windows."
   },
   "changes": [
+    {
+      "id": "trivia-continue-viewport",
+      "type": "fix",
+      "module": {
+        "tr": "Ekran geçişleri",
+        "en": "Screen navigation"
+      },
+      "title": {
+        "tr": "Genel kültür alanında Devam Et düğmesi görünür kalır",
+        "en": "Continue stays visible in the trivia area"
+      },
+      "body": {
+        "tr": "Yükleme tamamlandığında genel kültür alanı kısa veya boş modül içeriğine göre kesilmez; pencerenin kullanılabilir yüksekliğini kullanır. Kısa pencerelerde bilgi içeriği kendi içinde kaydırılırken Devam Et düğmesi görünür kalır. Dar alanlarda görsel ve metin tek sütuna geçer.",
+        "en": "After loading, trivia uses the available window height instead of being clipped by short or empty module content. In short windows, facts scroll within the card while Continue stays visible. In narrow areas, the illustration and text use a single column."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "trivia-continue-viewport.png",
+        "alt": {
+          "tr": "Kısa CP Tracker penceresinde tamamen görünen genel kültür kartı ve Devam Et düğmesi",
+          "en": "Trivia card and fully visible Continue button in a short CP Tracker window"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu, 960×480 pencere; modül içeriği boş olsa da Devam Et düğmesine ulaşılır.",
+          "en": "Actual Buyer Log in an isolated demo session at 960×480; Continue remains accessible even with empty module content."
+        }
+      }
+    },
     {
       "id": "excel-import-acknowledged-outcome-safety",
       "type": "fix",
