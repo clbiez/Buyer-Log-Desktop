@@ -412,8 +412,8 @@
           "en": "Actual Buyer Log showing all four screens Ready with demo Orders open"
         },
         "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log, 2.000 demo sipariş. Üç gezinme turunda bu ekranlar için yeniden veri isteği yapılmadı.",
-          "en": "Actual post-change Buyer Log with 2,000 demo orders. Three navigation rounds made no new page-data requests."
+          "tr": "Değişiklik sonrası gerçek Buyer Log, Electron 44.3.0 ve 2.000 demo sipariş. Beş gezinme turunda yeniden veri isteği yapılmadı; açılmış tablolar aynı satırları korudu.",
+          "en": "Actual post-change Buyer Log in Electron 44.3.0 with 2,000 demo orders. Five navigation rounds made no new page-data requests and opened tables retained the same rows."
         }
       }
     }

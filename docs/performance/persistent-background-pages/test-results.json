@@ -1,0 +1,22 @@
+{
+  "decision": "PASS",
+  "sourceSHA": "d6864eaa67fe9c144f84648727f175e694ce2966",
+  "runner": "flock /tmp/buyerlog-performance-measurement.lock /workspace/.buyerlog-tools/node_modules/node/bin/node resources/app/tests/run-tests.js",
+  "node": "22.23.4",
+  "files": 1328,
+  "durationSeconds": 288.2,
+  "counts": {
+    "tests": 9197,
+    "pass": 9132,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0
+  },
+  "sourceHashes": {
+    "resources/app/public/app-main.js": "08b5b48d2a6f632f5b21080efadf936e7b232eb77dfca90b0eb7af9314659422",
+    "resources/app/public/startup-module-preparation.js": "a7742484f1ebab2b5f53c1d31598681e18b48c9fea7a36cc50c1108fcb07fb13",
+    "resources/app/electron/workspace-manager.js": "7329d1b6e5b63a82da95809fa0133ba3dd08464c0faa3097893a56bb51abaa8f",
+    "resources/app/electron/preload.js": "94357c407a9c27b09f783ba81f194b63339356a82ec64ae551e0b9167ed6b339"
+  }
+}

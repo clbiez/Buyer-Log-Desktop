@@ -1,0 +1,807 @@
+{
+  "decision": "PASS for the measured native renderer scenarios",
+  "baseMain": "9e667430",
+  "integrationBaseMain": "fad8578308c527274ab762b9ed8f371e8e033d99",
+  "measuredCandidate": "d6864eaa67fe9c144f84648727f175e694ce2966",
+  "finalMeasuredCandidate": "b64fbd45e7735cee994c7fd691b9fb67e1639b87",
+  "scenarios": {
+    "normal": {
+      "orders": 2000,
+      "collectionModels": 40,
+      "pairs": 3,
+      "samples": {
+        "main": [
+          {
+            "pair": 1,
+            "warmupMs": 2892,
+            "preparedHeapBytes": 30593884,
+            "endRetainedHeapBytes": 47298508,
+            "revisitDataRequests": 4,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": false,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              46392596,
+              46962952,
+              47092996,
+              47205760,
+              47271716,
+              47298508
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6515,
+                "nodes": 45140
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46133
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 2,
+            "warmupMs": 2517,
+            "preparedHeapBytes": 32215040,
+            "endRetainedHeapBytes": 47231632,
+            "revisitDataRequests": 6,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": false,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              46322564,
+              46905620,
+              47020620,
+              47150168,
+              47204936,
+              47231632
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6515,
+                "nodes": 45140
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46133
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6944,
+                "nodes": 46121
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 3,
+            "warmupMs": 4443,
+            "preparedHeapBytes": 29782784,
+            "endRetainedHeapBytes": 47598040,
+            "revisitDataRequests": 2,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": false,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              47058848,
+              47292432,
+              47387720,
+              47452560,
+              47562220,
+              47598040
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6867,
+                "nodes": 45552
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 7296,
+                "nodes": 46428
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 7296,
+                "nodes": 46416
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 7296,
+                "nodes": 46416
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 7296,
+                "nodes": 46416
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 7296,
+                "nodes": 46416
+              }
+            ],
+            "remainingViews": 0
+          }
+        ],
+        "candidate": [
+          {
+            "pair": 1,
+            "warmupMs": 9746,
+            "preparedHeapBytes": 34276836,
+            "endRetainedHeapBytes": 46938684,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              46693096,
+              46830976,
+              46881324,
+              46904436,
+              46918452,
+              46938684
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 2,
+            "warmupMs": 9948,
+            "preparedHeapBytes": 34439704,
+            "endRetainedHeapBytes": 47080064,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              46823428,
+              46978360,
+              47026364,
+              47042000,
+              47061744,
+              47080064
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45769
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6821,
+                "nodes": 45757
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 3,
+            "warmupMs": 8741,
+            "preparedHeapBytes": 34821300,
+            "endRetainedHeapBytes": 47144772,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              46887064,
+              47038644,
+              47080644,
+              47102644,
+              47131252,
+              47144772
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6739,
+                "nodes": 44984
+              }
+            ],
+            "remainingViews": 0
+          }
+        ]
+      },
+      "revisitMedianMs": {
+        "main": {
+          "koleksiyon": 206.40000000002328,
+          "cp": 21.299999999813735,
+          "orders": 12.800000000046566,
+          "backlog": 15.099999999976717
+        },
+        "candidate": {
+          "koleksiyon": 10.5,
+          "cp": 13.29999999993015,
+          "orders": 12.400000000023283,
+          "backlog": 12.800000000046566
+        }
+      },
+      "fixtureHash": "20eed946cc48d125aa1d60b43ae7001147a9198ee37a088c7dd81515c89ee00a"
+    },
+    "large": {
+      "orders": 30000,
+      "collectionModels": 40,
+      "pairs": 3,
+      "samples": {
+        "main": [
+          {
+            "pair": 1,
+            "warmupMs": 1707,
+            "preparedHeapBytes": 28120000,
+            "endRetainedHeapBytes": 404652732,
+            "revisitDataRequests": 4,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": false,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              271920328,
+              339955672,
+              404504116,
+              404550236,
+              404581000,
+              404652732
+            ],
+            "domCycles": [
+              {
+                "documents": 3,
+                "jsEventListeners": 6317,
+                "nodes": 43450
+              },
+              {
+                "documents": 3,
+                "jsEventListeners": 6802,
+                "nodes": 45423
+              },
+              {
+                "documents": 3,
+                "jsEventListeners": 6891,
+                "nodes": 46011
+              },
+              {
+                "documents": 3,
+                "jsEventListeners": 6891,
+                "nodes": 46011
+              },
+              {
+                "documents": 3,
+                "jsEventListeners": 6891,
+                "nodes": 46011
+              },
+              {
+                "documents": 3,
+                "jsEventListeners": 6891,
+                "nodes": 46011
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 2,
+            "warmupMs": 3854,
+            "preparedHeapBytes": 82498172,
+            "endRetainedHeapBytes": 404780356,
+            "revisitDataRequests": 6,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              272373248,
+              338881616,
+              404545944,
+              404651344,
+              404650352,
+              404780356
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6373,
+                "nodes": 43486
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6807,
+                "nodes": 45150
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6884,
+                "nodes": 45771
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6884,
+                "nodes": 45771
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6884,
+                "nodes": 45771
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6884,
+                "nodes": 45771
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 3,
+            "warmupMs": 4882,
+            "preparedHeapBytes": 138215904,
+            "endRetainedHeapBytes": 405173356,
+            "revisitDataRequests": 4,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": false,
+              "ordersRow": true,
+              "kolRow": false,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              272042300,
+              339854952,
+              405051252,
+              405038220,
+              405124604,
+              405173356
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6318,
+                "nodes": 43455
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6803,
+                "nodes": 45373
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6892,
+                "nodes": 46018
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6892,
+                "nodes": 46010
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6892,
+                "nodes": 46010
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6892,
+                "nodes": 46010
+              }
+            ],
+            "remainingViews": 0
+          }
+        ],
+        "candidate": [
+          {
+            "pair": 1,
+            "warmupMs": 29130,
+            "preparedHeapBytes": 264976268,
+            "endRetainedHeapBytes": 407194296,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              274958524,
+              407093540,
+              407141052,
+              407158176,
+              407184548,
+              407194296
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6738,
+                "nodes": 44324
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45877
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 2,
+            "warmupMs": 32914,
+            "preparedHeapBytes": 264943916,
+            "endRetainedHeapBytes": 406789116,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              274965684,
+              409774508,
+              406744792,
+              406756796,
+              406780072,
+              406789116
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6738,
+                "nodes": 44324
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6835,
+                "nodes": 46238
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              }
+            ],
+            "remainingViews": 0
+          },
+          {
+            "pair": 3,
+            "warmupMs": 34921,
+            "preparedHeapBytes": 265084656,
+            "endRetainedHeapBytes": 407012104,
+            "revisitDataRequests": 0,
+            "identity": {
+              "cp": true,
+              "orders": true,
+              "cpRow": true,
+              "ordersRow": true,
+              "kolRow": true,
+              "cpBody": true,
+              "ordersBody": true,
+              "kolBody": true
+            },
+            "heapCycles": [
+              275077900,
+              406899648,
+              406948292,
+              406983460,
+              407004304,
+              407012104
+            ],
+            "domCycles": [
+              {
+                "documents": 4,
+                "jsEventListeners": 6738,
+                "nodes": 44324
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45870
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              },
+              {
+                "documents": 4,
+                "jsEventListeners": 6828,
+                "nodes": 45863
+              }
+            ],
+            "remainingViews": 0
+          }
+        ]
+      },
+      "revisitMedianMs": {
+        "main": {
+          "koleksiyon": 242.5,
+          "cp": 23.5,
+          "orders": 12.299999999813735,
+          "backlog": 14.399999999906868
+        },
+        "candidate": {
+          "koleksiyon": 18,
+          "cp": 18.5,
+          "orders": 13.700000000186265,
+          "backlog": 13.099999999860302
+        }
+      },
+      "fixtureHash": "661c61bcbdd55a63c39561bceb0b76a8b4517659d22179df6be97a2b7b6e4ffa"
+    }
+  },
+  "firstCompleteCollectionMs": {
+    "main": {
+      "raw": [
+        {
+          "switchMs": 32.799999999813735,
+          "dataMs": 3931.5,
+          "frameMs": 4191.399999999907
+        },
+        {
+          "switchMs": 20.100000000093132,
+          "dataMs": 2299.5,
+          "frameMs": 2620.399999999907
+        },
+        {
+          "switchMs": 19.800000000279397,
+          "dataMs": 4780.9000000003725,
+          "frameMs": 5049.600000000093
+        }
+      ],
+      "medianFrameMs": 4191.399999999907
+    },
+    "candidate": {
+      "raw": [
+        {
+          "switchMs": 7.5,
+          "dataMs": 1259.2000000001863,
+          "frameMs": 1763.6000000000931
+        },
+        {
+          "switchMs": 10.399999999906868,
+          "dataMs": 1232.1999999997206,
+          "frameMs": 1690.8999999999069
+        },
+        {
+          "switchMs": 10.899999999906868,
+          "dataMs": 1017.1999999997206,
+          "frameMs": 1716.6000000000931
+        }
+      ],
+      "medianFrameMs": 1716.6000000000931
+    }
+  },
+  "rendererHighWaterRSSKiB": {
+    "pair-1-candidate": 1289540,
+    "pair-1-main": 1156432,
+    "pair-2-candidate": 1290412,
+    "pair-2-main": 1179620,
+    "pair-3-candidate": 1180844,
+    "pair-3-main": 1261448
+  }
+}
