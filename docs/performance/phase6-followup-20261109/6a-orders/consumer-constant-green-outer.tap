@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: real loader and filter cleanup keep all row values for constant omissions (pricing/UI stubbed)
+ok 1 - real loader and filter cleanup keep all row values for constant omissions (pricing/UI stubbed)
+  ---
+  duration_ms: 4.253804
+  type: 'test'
+  ...
+# Subtest: initial Orders status/clipboard summary requires logistic segments
+ok 2 - initial Orders status/clipboard summary requires logistic segments
+  ---
+  duration_ms: 2.282491
+  type: 'test'
+  ...
+# Subtest: actual formula engine preserves dynamic source and note inputs
+ok 3 - actual formula engine preserves dynamic source and note inputs
+  ---
+  duration_ms: 2.852922
+  type: 'test'
+  ...
+# Subtest: selected visible Orders feed the actual atlas engine with canonical precedence
+ok 4 - selected visible Orders feed the actual atlas engine with canonical precedence
+  ---
+  duration_ms: 4.958477
+  type: 'test'
+  ...
+# Subtest: real projection response parser rejects denied/malformed responses and cancels old generation
+ok 5 - real projection response parser rejects denied/malformed responses and cancels old generation
+  ---
+  duration_ms: 2.283738
+  type: 'test'
+  ...
+# Subtest: non-enumerable source bindings are not claimed to survive JSON copies
+ok 6 - non-enumerable source bindings are not claimed to survive JSON copies
+  ---
+  duration_ms: 0.192892
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 118.054028

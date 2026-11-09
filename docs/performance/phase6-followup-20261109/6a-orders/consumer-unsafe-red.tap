@@ -1,0 +1,15 @@
+✖ docs/performance/phase6-followup-20261109/6a-orders/consumer-screen.cjs (97.835412ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.501529
+
+✖ failing tests:
+
+test at docs/performance/phase6-followup-20261109/6a-orders/consumer-screen.cjs:1:1
+✖ docs/performance/phase6-followup-20261109/6a-orders/consumer-screen.cjs (97.835412ms)
+  'test failed'

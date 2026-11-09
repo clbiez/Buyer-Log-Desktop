@@ -1,0 +1,69 @@
+{
+  "baseMain": "d0fdb8889f188e2cc1387b0850f61a841aa7e6d5",
+  "runtimeTree": "a6874d4df9e6c482c036a184e7a71804072cb82f",
+  "allProductFilesUnchanged": true,
+  "paths": {
+    "resources/app/public/app-main.js": {
+      "sha256": "a94fce3189b660294535279e02fad42bc06a65e8d9204bcef0b512c45aa9b652",
+      "equalsBase": true
+    },
+    "resources/app/server/server.js": {
+      "sha256": "d60baa8cb64783df27d50b02c25b116496a44d7a619b257b3b4bfc66788aa6ea",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/compute-tasks.js": {
+      "sha256": "1a9b0b2b934e15aa6d837f03944f54d6ea11919986f5a9a7d5130e6873893609",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/page-projection-cache.js": {
+      "sha256": "fe808e179db3f1cc0fdf66f0186f7d7dc2898fde015a9b06a04faae27ae8970a",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/parse.js": {
+      "sha256": "554c4a2360516955f0443bfa76efe43c85fd295182df39ccdb67c8d843e2d2d5",
+      "equalsBase": true
+    },
+    "resources/app/server/db.js": {
+      "sha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/cp-shared-store.js": {
+      "sha256": "83349e8ffb6d5c4c7d3bfde63548e206ce265cadb8f998b1bc7d7e965661d2f8",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/delta-store.js": {
+      "sha256": "3349ba70f425d34e193b39b03c25972e1aeebbc56a3f9515d0ff4a3cac2fb16c",
+      "equalsBase": true
+    },
+    "resources/app/server/lib/local-db.js": {
+      "sha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+      "equalsBase": true
+    },
+    ".github/installer/runtime.json": {
+      "sha256": "69a0857e6fbbe72c9db5416d47b9d615963858a4da16ad648ef2b090b609f0f9",
+      "equalsBase": true
+    },
+    ".github/workflows/buyerlog-pr-fast-checks.yml": {
+      "sha256": "69c91f89dc9bb501e86007a8e62ef4e112764df730aeb17b44705867a09e1383",
+      "equalsBase": true
+    },
+    "AGENTS.md": {
+      "sha256": "df70a925a13194067eb1621cb1276113828461b4ee636619aea52fb16c253aef",
+      "equalsBase": true
+    },
+    "CLAUDE.md": {
+      "sha256": "21e4da64aaa92ec4fb5b9812926540d89557ee46c9b96bbdc3c40735a47479af",
+      "equalsBase": true
+    },
+    "docs/PERFORMANCE_ACCEPTANCE.md": {
+      "sha256": "917320e8936be5a2a2f4ece9689fcf63c8bf19d581e7366969dd334b1a3e968f",
+      "equalsBase": true
+    }
+  },
+  "originalCheckout": {
+    "branch": "work",
+    "head": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3",
+    "status": "clean"
+  },
+  "scope": "Only this 6a-orders evidence directory is delivered; product, other two tasks, shared program reports and agent contracts unchanged."
+}
