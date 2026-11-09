@@ -1,25 +1,27 @@
 {
   "pr": 939,
-  "baseMain": "ba4048475aff8a2bc5114a3ca591d56567a832de",
-  "testedCommit": "907acf19e196cefcd4979307f1cc89de7096d0f2",
-  "testedTree": "fc1189b49992954b52fae88026ed974256cbd811",
+  "baseMain": "ef2999fc7b3b2cd029e79639dcbcdf5554acb363",
+  "testedCommit": "7ec7ff765db38100bbf84e19e12988f840fded7b",
+  "testedTree": "cc43ab5173a00af37f8287dce67b7de7e784489c",
   "noteIds": [
+    "selected-orders-license-atlas-20261109",
     "trivia-continue-viewport",
     "excel-import-acknowledged-outcome-safety",
     "fx-folder-admission-status-20261109",
     "ana12-backlog-consumer-cancel-20261109",
     "shell05-native-module-warmup-20261109",
     "int03-shared-image-byte-budget-20261109",
+    "backlog-excel-columns-simple-20261109",
     "shell06-shared-revisions-20261109"
   ],
   "date": "2026-11-09",
   "full": {
     "runner": "unmodified npm test; one invocation; default concurrency=4; flock; scoped default-profile writes; no BUYER_LOG/HOME/TMPDIR overrides",
-    "files": 1322,
+    "files": 1323,
     "batchesPassed": 10,
-    "seconds": 108.5,
-    "tests": 9142,
-    "pass": 9077,
+    "seconds": 106.9,
+    "tests": 9149,
+    "pass": 9084,
     "fail": 0,
     "skipped": 65,
     "cancelled": 0
@@ -28,7 +30,7 @@
     "new": 0,
     "baseline": 0
   },
-  "releaseNotes": 7,
+  "releaseNotes": 9,
   "protectedSourcesUnchanged": [
     "resources/app/server/lib/compute-pool.js",
     "resources/app/server/lib/compute-service.js",
@@ -41,16 +43,16 @@
     ".github/workflows"
   ],
   "sourceSha256": {
-    "resources/app/public/app-main.js": "03c2d9273b975385ea2565660c9b83719bcb8001caa767fc45edbaf104e092ce",
-    "resources/app/public/release-notes/next.json": "c83580a5eca1dc0f2684f6464727d5f2142ae8738fe12147b1c8afe6f0da6811",
+    "resources/app/public/app-main.js": "38f268a6db35790d8d70203edb7d6a2e7f536b2f326dd44ed74b3ba57af23366",
+    "resources/app/public/release-notes/next.json": "702eacb3394ec43169231068bf5ca4ed006e1b4c7b0e36a185e2d217b4bca15e",
     "resources/app/tests/multi-tab-live-sync-v20260926.test.js": "6772df99885f780cea26836d4bad0209735ca33006a8981140966e8d1743bb46",
     "resources/app/tests/shared-revision-leader.test.js": "4cfc2615104bd5e153704868d8cedbe193bd0ac3cf8b05690b644affd0ce9c3c"
   },
   "logs": {
     "full": {
       "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/full.log.gz",
-      "rawSha256": "f3217aeb34ffcd18bccd2d5047f9a350c841f8568130c79635ca481ba618f69d",
-      "gzipSha256": "a0029081d338af78ac7bb0a4ef4c0677e010721f1841836e92e2fb9aa5c1664c"
+      "rawSha256": "b4bd9075f038bfee8f0d9cd37c64811ac2a466e771bd8cf86ed99dbbf7d217ba",
+      "gzipSha256": "c1e7def624d2e3145565a01f7416dd8304263707a51a8df5f801d77a4d6e8dfc"
     },
     "i18n": {
       "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/i18n.log.gz",
@@ -59,13 +61,13 @@
     },
     "release": {
       "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/release.log.gz",
-      "rawSha256": "b38f0a732d6edf1ac4c8d143837a8a13feb0c02109ac574b73d272e54346cedc",
-      "gzipSha256": "120d4facf5984a37347a7f307ad4717d84ced61a904b78c00086c153e0ff5ba6"
+      "rawSha256": "49b0be1a206f975137ff90f602c6c13dd1e8876967eee462c10923e660179888",
+      "gzipSha256": "adc96c65841661106b7352dee761b17ca99b25dbda7b72e174350079a8e79bb4"
     },
     "targeted": {
       "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/targeted.log.gz",
-      "rawSha256": "8a58b410c0edabbb37c08c24516eb1246b442310d607fa51d7e58386a9389a7c",
-      "gzipSha256": "8fc8cf781b9b46c4d93874fa4b19abdf01518c19aa847351158b573d40149c12"
+      "rawSha256": "4a19ce51f0827d945e5c5ec52fdf5f83d45dc5c2c12fc827f3a6877ba3cf718f",
+      "gzipSha256": "f7c2752d7b30322b1e258e2a2b5009d423e1e11a900fff214c7b1c478a68c5e2"
     }
   },
   "postTestChanges": "documentation/evidence only",
@@ -76,9 +78,20 @@
     "originalHead": "16fe72f29798c03dd80b195bf51a18df75c28923",
     "finding": "No blocking source defect found in scoped code review; original evidence source hashes and full logs independently checked.",
     "performance": "Narrow acceptance only: native network/catch-up/lifecycle for SHELL-06; controlled BOM cancellation/deadline/attempt/cleanup for INT-07. No universal speed/RSS/p95/Windows claim.",
-    "latestMainIntegration": "Preserves unrelated #946 trivia viewport correction and its workflow guard. Runtime files for this feature are byte-identical to the reviewed original head.",
+    "latestMainIntegration": "Preserves #946 trivia, #947 license atlas and #948 Backlog export changes. Authorized feature blocks/files are identical to the reviewed original head; scoped equality is checked below.",
     "authorizedProductPaths": [
       "resources/app/public/app-main.js"
     ]
+  },
+  "currentMainNativeRecheck": {
+    "baseMain": "ef2999fc7b3b2cd029e79639dcbcdf5554acb363",
+    "source": "7ec7ff765db38100bbf84e19e12988f840fded7b",
+    "status": "PASS",
+    "versions": {
+      "electron": "44.3.0",
+      "chrome": "152.0.7977.78",
+      "node": "24.20.0"
+    },
+    "note": "Unmodified original probe has a historical baseMain label; sourceSha and this receipt pin the actual current source."
   }
 }
