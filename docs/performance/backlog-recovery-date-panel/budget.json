@@ -1,5 +1,5 @@
 {
-  "base": "fad8578308c527274ab762b9ed8f371e8e033d99",
+  "base": "d0fdb8889f188e2cc1387b0850f61a841aa7e6d5",
   "risk": "P2",
   "scope": "Backlog Overview empty/error recovery and date panel disclosure/position",
   "budgets": {
@@ -15,5 +15,6 @@
   "fixture": "Isolated 220-order generated demo model; 30000 synthetic Backlog report rows served through the existing JSON report endpoint for large UI workload. The full 30k model import was blocked by demo-server process termination and is not a claimed acceptance result.",
   "initialBase": "9e667430",
   "measurementNote": "Long-task window ends before forced post-cycle GC. Overview animation frames settle between samples. Numeric acceptance budgets unchanged.",
-  "comparableMainFlows": "Overview disclosure and Plan & Actual panel reordering use the same Backlog document and shared Motion+ layout path. New date interactions retain their independent 200ms/zero-extra-Backlog-request budget."
+  "comparableMainFlows": "Overview disclosure and Plan & Actual panel reordering use the same Backlog document and shared Motion+ layout path. New date interactions retain their independent 200ms/zero-extra-Backlog-request budget.",
+  "previousMeasuredBase": "fad8578308c527274ab762b9ed8f371e8e033d99"
 }
