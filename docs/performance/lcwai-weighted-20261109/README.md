@@ -1,5 +1,16 @@
 # LCW AI weighted metrics acceptance
 
+> Latest Main integration: `2cb965f74af807fcf94231644e01ca2c671ba656` was merged
+> into this branch as `0993fc2fc4e73c9680c80940897b63a62f7ead02`. The only merge
+> conflict was the pending release-note JSON; all 17 Main entries and all 4 LCW AI
+> entries were preserved. Final source revalidation: 492 tests / 68 files PASS,
+> i18n 0 missing, 21 release-note entries PASS. `acceptance-integrated.json`
+> replays the real-app integration cases on that source and records matching runtime
+> hashes; no browser errors, raw uploads or model-chat fallback occurred.
+> Previous A/B numbers below describe the original base, **not** acceptance against
+> the newly integrated Main. Performance remains **BLOCKED** and the PR remains draft.
+
+
 Baseline: main checkout `9e667430e3ac7ca30b321f06893d53f24d6ed5a3`.
 Risk: P1 reporting accuracy; read-only query arithmetic, no stored prices or business records change.
 
