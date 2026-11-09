@@ -1,0 +1,13 @@
+{
+  "archive": "abc683e4bcc247a7e8e412c07532bc8059fe3adb",
+  "base": "d0fdb8889f188e2cc1387b0850f61a841aa7e6d5",
+  "archiveSha256": {
+    "scripts/prototypes/local-db-sqlite/adapters.cjs": "eb2ccda9f10cbac59cb1e95e8a5dc82339ba6101d1d215caefd43d74827fae75",
+    "scripts/prototypes/local-db-sqlite/benchmark.cjs": "939d8120f1c6c6002a1c5e4e18f03bfa7e2273cf97b8f72efdbf3e0aa668e645",
+    "scripts/prototypes/local-db-sqlite/prototype.test.cjs": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994",
+    "scripts/prototypes/local-db-sqlite/summarize.cjs": "8ba1215f48456d9de654d569bec2bee421ca726a7aaf12d19fbafe6a71c69e6e",
+    "scripts/prototypes/local-db-sqlite/worker.cjs": "3219805842fd4cceab7f3e2ed87a2603c91d5c3dc17f1aa2687708f26bc727a7",
+    "scripts/prototypes/local-db-sqlite/workload.cjs": "69dd09bb6e3e7df3bb8a70ac513a03e68ce562212a9d2b78da9db0835ac7078a",
+    "scripts/prototypes/local-db-sqlite/README.md": "991d920838faff2a4314019694947c43095236d7017aaa43f378c4486e46f7be"
+  }
+}
