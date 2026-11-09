@@ -15829,3 +15829,9 @@ html[data-ui-system="manifest"] .shipCompare .shipCardMetrics [data-ship-pct]{
   letter-spacing:-.035em;
   white-space:nowrap;
 }
+/* Retain the existing visible shipping resize handle as a shared affordance. */
+html[data-ui-system="manifest"] .shipCompare thead th .colResizer::after{
+  background:var(--ui-field-border)!important;
+  top:0;bottom:0;left:auto;right:0;width:1px;opacity:1;
+}
+html[data-ui-system="manifest"] .shipCompare thead th .colResizer:hover::after{background:var(--ui-accent)!important;}
