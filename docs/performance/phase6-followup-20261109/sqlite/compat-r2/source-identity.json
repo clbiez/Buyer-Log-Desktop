@@ -1,0 +1,51 @@
+{
+  "sourceCommit": "4427be14f23d82aacf853b0780f79a7b8444de0b",
+  "baseMain": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "startingDraftHead": "87effc5c16435e199005c367abfbd34eb3a1f498",
+  "mainIntegrationCommit": "441b3c30792211a173d9e3b1d6df816411b5810e",
+  "protectedTreesEqual": true,
+  "trees": {
+    "resources/app": {
+      "main": "0826dc06f9cba1c095f212985b3ae8fdd465821f",
+      "candidate": "0826dc06f9cba1c095f212985b3ae8fdd465821f"
+    },
+    ".github": {
+      "main": "334cb553e9dd22bfb66634d6b9e46ad1ae4d8e08",
+      "candidate": "334cb553e9dd22bfb66634d6b9e46ad1ae4d8e08"
+    },
+    "AGENTS.md": {
+      "main": "0d94b08fac88b0d342aa769217b210a2a5873a18",
+      "candidate": "0d94b08fac88b0d342aa769217b210a2a5873a18"
+    },
+    "CLAUDE.md": {
+      "main": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701",
+      "candidate": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701"
+    },
+    "docs/PERFORMANCE_ACCEPTANCE.md": {
+      "main": "d4a5361c29e15b9ab47fbc695a77091721454020",
+      "candidate": "d4a5361c29e15b9ab47fbc695a77091721454020"
+    }
+  },
+  "prototypeSha256": {
+    "scripts/prototypes/sqlite-decision-20261109/README.md": "424ab43d530b2996b50e3ef88c332bebb5052c71da10971b8cca7284aaf48314",
+    "scripts/prototypes/sqlite-decision-20261109/adapters.cjs": "75e5319048bba7e84dd782e24094ef4f2979bf0c7915e9563a64c7b0deae4714",
+    "scripts/prototypes/sqlite-decision-20261109/backup.cjs": "8a46c0cdbad7fbf5cfb6c7b898fd4724153be7ede94828d95e55c18f88f73aa5",
+    "scripts/prototypes/sqlite-decision-20261109/benchmark.cjs": "88bd1b279ac2c77d08b44a9118af0ffcc722d88dfd0ee7d48e45a55a5e985c0a",
+    "scripts/prototypes/sqlite-decision-20261109/boundary-probes.cjs": "b50a24af9a9bef90083e86a0560e13922372e5eb35b04676578020bc08af2efa",
+    "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs": "0c022abce5513450ff7ee90e9bff58028a71fb9bff6dfa571c017a72cc245661",
+    "scripts/prototypes/sqlite-decision-20261109/compat-transitions.cjs": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e",
+    "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
+    "scripts/prototypes/sqlite-decision-20261109/fixture-hashes.cjs": "68de787f256cd895aee11262e9831de61165baa5c0f6ce08b0988e253f8527e9",
+    "scripts/prototypes/sqlite-decision-20261109/oracle.cjs": "d8a298682924728d9f6d83db60f4ef84435d00cb82b02c8aa2ff5735151243bc",
+    "scripts/prototypes/sqlite-decision-20261109/prototype.test.cjs": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994",
+    "scripts/prototypes/sqlite-decision-20261109/reopen-check.cjs": "46bbbb001157d90dc90fcaa1624054bef36e610c816f242084a5ca12decf8e6a",
+    "scripts/prototypes/sqlite-decision-20261109/sqlite-compat.cjs": "14c35eb70bd7ed1b6c7aed383cb2f4f4fb7b2eb2dc9ab8366f060714ba577f5b",
+    "scripts/prototypes/sqlite-decision-20261109/summarize.cjs": "5e5c25227c67dda99fe7384df5af3c5bc89b39300413c680a9746c5f67401fd9",
+    "scripts/prototypes/sqlite-decision-20261109/validate-evidence.cjs": "eede7de60b5b449797452cd84a3eb7d161c8e0d3dee1f53a0000000d2eabec2b",
+    "scripts/prototypes/sqlite-decision-20261109/worker.cjs": "e1743fa84434d6f6b0bdb546b69a6f3699d2f467409aecc390aa253ba1abafe3",
+    "scripts/prototypes/sqlite-decision-20261109/workload.cjs": "69dd09bb6e3e7df3bb8a70ac513a03e68ce562212a9d2b78da9db0835ac7078a"
+  },
+  "productWorkingDiff": "",
+  "originalCheckout": "## work",
+  "originalCheckoutHead": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3"
+}

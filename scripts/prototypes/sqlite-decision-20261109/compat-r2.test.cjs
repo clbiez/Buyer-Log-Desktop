@@ -8,7 +8,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const { open } = require('./adapters.cjs');
-const { CLOCK, DEVICE, clone } = require('./workload.cjs');
+const { CLOCK } = require('./workload.cjs');
 
 // Control only generated wall time and operation UUIDs. No fields are stripped
 // or renamed in receipts/state. Recovery/lease UUIDs retain their real source.
@@ -43,11 +43,11 @@ async function pair(t) {
   async function both(method,...args) {
     let expected;
     instant = CLOCK + (++step)*10000;
-    trace.operations.push({method,args:clone(args),instant,uuidStart:step*100});
+    trace.operations.push({method,args:structuredClone(args),instant,uuidStart:step*100});
     for (let i=0;i<2;i++) {
       serial=step*100;
-      const result = await raw(stores[i])[method](...clone(args));
-      if (!i) expected=clone(result); else assert.deepEqual(result,expected,`${method} receipt step ${step}`);
+      const result = await raw(stores[i])[method](...structuredClone(args));
+      if (!i) expected=structuredClone(result); else assert.deepEqual(result,expected,`${method} receipt step ${step}`);
     }
     await equal();
     return expected;
@@ -162,6 +162,7 @@ test('SQLite-only fresh process reconstructs full state without JSON control fil
   const childEnv={...process.env};delete childEnv.NODE_TEST_CONTEXT;
   const output=path.join(p.dirs[1],'fresh-state.json');
   const result=spawnSync(process.execPath,[path.join(__dirname,'reopen-check.cjs'),path.join(p.dirs[1],'prototype.sqlite'),output],{encoding:'utf8',env:childEnv});
+  assert.equal(result.error,undefined,'fresh process must launch without a spawn error');
   assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(await fsp.readFile(output,'utf8')),expected);
 });
 

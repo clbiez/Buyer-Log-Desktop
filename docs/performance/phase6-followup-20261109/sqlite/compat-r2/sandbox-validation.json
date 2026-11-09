@@ -1,0 +1,118 @@
+{
+  "sourceCommit": "4427be14f23d82aacf853b0780f79a7b8444de0b",
+  "main": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "runtime": {
+    "node": "24.20.0",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.8",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "149",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.6",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2025c",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.2.124.19-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "44.3.0",
+    "chrome": "152.0.7977.78"
+  },
+  "hostNode": "v24.19.0",
+  "filesystem": "overlayfs",
+  "checks": [
+    {
+      "name": "gates-green",
+      "command": [
+        "/tmp/buyerlog-electron-44.3.0/electron",
+        "--test",
+        "--test-reporter=tap",
+        "--test-isolation=none",
+        "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs"
+      ],
+      "cwd": "/workspace/sqlite-compat-r2",
+      "officialRuntime": true,
+      "exitCode": 0,
+      "seconds": 0.6223116750001054,
+      "log": "gates-green.log"
+    },
+    {
+      "name": "prototype-green",
+      "command": [
+        "/tmp/buyerlog-electron-44.3.0/electron",
+        "--test",
+        "--test-reporter=tap",
+        "--test-isolation=none",
+        "scripts/prototypes/sqlite-decision-20261109/prototype.test.cjs"
+      ],
+      "cwd": "/workspace/sqlite-compat-r2",
+      "officialRuntime": true,
+      "exitCode": 0,
+      "seconds": 2.5780329330000313,
+      "log": "prototype-green.log"
+    },
+    {
+      "name": "behavior-green",
+      "command": [
+        "/tmp/buyerlog-electron-44.3.0/electron",
+        "--expose-gc",
+        "--test",
+        "--test-reporter=tap",
+        "--test-isolation=none",
+        "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs"
+      ],
+      "cwd": "/workspace/sqlite-compat-r2",
+      "officialRuntime": true,
+      "exitCode": 0,
+      "seconds": 4.295805760999997,
+      "log": "behavior-green.log"
+    },
+    {
+      "name": "related-runtime",
+      "command": [
+        "/tmp/buyerlog-electron-44.3.0/electron",
+        "--test",
+        "--test-reporter=tap",
+        "--test-isolation=none",
+        "--test-concurrency=4",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-business-integrity.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-compaction.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-crash-recovery.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-hlc-v20261009.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-wal-metadata.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-wal-tail-recovery.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-wal-v807.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/local-db-write-debris-v803.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/sync-ack-writers-v20261009.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/sync-owner-lww-v20261009.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/sync-bundle-idempotency.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/sync-checkpoint-ack.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/backup-v757.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/backup-restore-worker-v20260922.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/shared-personal-backup-v7088.test.js",
+        "/workspace/sqlite-compat-r2/resources/app/tests/selective-backup-restore-v7148.test.js"
+      ],
+      "cwd": "/workspace/sqlite-compat-r2",
+      "officialRuntime": true,
+      "exitCode": 0,
+      "seconds": 85.76223754299997,
+      "log": "related-runtime.log"
+    }
+  ]
+}
