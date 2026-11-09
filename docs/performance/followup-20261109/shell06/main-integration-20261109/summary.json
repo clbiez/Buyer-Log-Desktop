@@ -1,0 +1,84 @@
+{
+  "pr": 939,
+  "baseMain": "ba4048475aff8a2bc5114a3ca591d56567a832de",
+  "testedCommit": "907acf19e196cefcd4979307f1cc89de7096d0f2",
+  "testedTree": "fc1189b49992954b52fae88026ed974256cbd811",
+  "noteIds": [
+    "trivia-continue-viewport",
+    "excel-import-acknowledged-outcome-safety",
+    "fx-folder-admission-status-20261109",
+    "ana12-backlog-consumer-cancel-20261109",
+    "shell05-native-module-warmup-20261109",
+    "int03-shared-image-byte-budget-20261109",
+    "shell06-shared-revisions-20261109"
+  ],
+  "date": "2026-11-09",
+  "full": {
+    "runner": "unmodified npm test; one invocation; default concurrency=4; flock; scoped default-profile writes; no BUYER_LOG/HOME/TMPDIR overrides",
+    "files": 1322,
+    "batchesPassed": 10,
+    "seconds": 108.5,
+    "tests": 9142,
+    "pass": 9077,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 7,
+  "protectedSourcesUnchanged": [
+    "resources/app/server/lib/compute-pool.js",
+    "resources/app/server/lib/compute-service.js",
+    "resources/app/server/lib/corenectum-api-client.js",
+    "resources/app/server/lib/plm-image-ingest.js",
+    "resources/app/public/checklist-components-engine.js",
+    "resources/app/public/checklist-supplier-sync.js",
+    "resources/app/public/cp-overview-assistant.js",
+    "resources/app/tests/checklist-components-row-cache.test.js",
+    ".github/workflows"
+  ],
+  "sourceSha256": {
+    "resources/app/public/app-main.js": "03c2d9273b975385ea2565660c9b83719bcb8001caa767fc45edbaf104e092ce",
+    "resources/app/public/release-notes/next.json": "c83580a5eca1dc0f2684f6464727d5f2142ae8738fe12147b1c8afe6f0da6811",
+    "resources/app/tests/multi-tab-live-sync-v20260926.test.js": "6772df99885f780cea26836d4bad0209735ca33006a8981140966e8d1743bb46",
+    "resources/app/tests/shared-revision-leader.test.js": "4cfc2615104bd5e153704868d8cedbe193bd0ac3cf8b05690b644affd0ce9c3c"
+  },
+  "logs": {
+    "full": {
+      "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/full.log.gz",
+      "rawSha256": "f3217aeb34ffcd18bccd2d5047f9a350c841f8568130c79635ca481ba618f69d",
+      "gzipSha256": "a0029081d338af78ac7bb0a4ef4c0677e010721f1841836e92e2fb9aa5c1664c"
+    },
+    "i18n": {
+      "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/i18n.log.gz",
+      "rawSha256": "f47a45a40313890c19c6796e09c9af1792758b17fdbf33a8b035291ef8705fb3",
+      "gzipSha256": "ecf0c274e5e2a77b42f760bbde06d2de4ea4cab3417f3757929054596e8195e3"
+    },
+    "release": {
+      "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/release.log.gz",
+      "rawSha256": "b38f0a732d6edf1ac4c8d143837a8a13feb0c02109ac574b73d272e54346cedc",
+      "gzipSha256": "120d4facf5984a37347a7f307ad4717d84ced61a904b78c00086c153e0ff5ba6"
+    },
+    "targeted": {
+      "path": "docs/performance/followup-20261109/shell06/main-integration-20261109/targeted.log.gz",
+      "rawSha256": "8a58b410c0edabbb37c08c24516eb1246b442310d607fa51d7e58386a9389a7c",
+      "gzipSha256": "8fc8cf781b9b46c4d93874fa4b19abdf01518c19aa847351158b573d40149c12"
+    }
+  },
+  "postTestChanges": "documentation/evidence only",
+  "github": "actual final-head CI and merge status tracked in PR #939",
+  "TEST": "not triggered",
+  "STABLE": "not triggered",
+  "independentCoordinatorReview": {
+    "originalHead": "16fe72f29798c03dd80b195bf51a18df75c28923",
+    "finding": "No blocking source defect found in scoped code review; original evidence source hashes and full logs independently checked.",
+    "performance": "Narrow acceptance only: native network/catch-up/lifecycle for SHELL-06; controlled BOM cancellation/deadline/attempt/cleanup for INT-07. No universal speed/RSS/p95/Windows claim.",
+    "latestMainIntegration": "Preserves unrelated #946 trivia viewport correction and its workflow guard. Runtime files for this feature are byte-identical to the reviewed original head.",
+    "authorizedProductPaths": [
+      "resources/app/public/app-main.js"
+    ]
+  }
+}
