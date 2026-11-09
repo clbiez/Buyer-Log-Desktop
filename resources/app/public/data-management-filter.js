@@ -1230,7 +1230,7 @@
   /* Arama kutusunu her tuşta host.innerHTML ile sökmek odağı/IME imlecini
      kaybettirir. Yalnız sonuçlar ve ipuçları yenilenir; aktif input DOM'da kalır. */
   function refreshSearchResults(input) {
-    if (!input || !host || !host.contains(input)) return false;
+    if (!input || !host || typeof host.contains !== 'function' || !host.contains(input)) return false;
     if (input.matches('[data-dmf-col-search]')) {
       const catalog = input.closest('.dmfCatalogue');
       const current = catalog && catalog.querySelector('.blvFilterColumns');
