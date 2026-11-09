@@ -81,3 +81,16 @@ test('CP edits begun while a background replacement is in flight keep their orig
   reply({payload:{rows:[{'Order Code':'DEMO-1',Note:'older server'}]}});
   assert.equal(await pending,true);assert.equal(state.cp,old);assert.equal(state.cp.rows[0].Note,'local');
 });
+
+test('rapid Backlog returns share the answer without starting a second fetch after consumption',async()=>{
+  const h=backlogHarness(),warm=h.api.prefetchBacklogForRefresh();
+  const first=h.api.fetchCurrentBacklog(),second=h.api.fetchCurrentBacklog();
+  h.reply({rows:['demo']});await Promise.all([warm,first,second]);
+  assert.equal(h.requests(),1);assert.equal(h.applied.length,1);
+});
+test('Backlog prefetch obeys required-source and no-cache gates',async()=>{
+  for(const flag of ['BL_CP_SOURCE_FILTER_REQUIRED','BL_HAS_CACHED_MODEL_DATA']){
+    const h=backlogHarness();h.api.context.window[flag]=flag==='BL_CP_SOURCE_FILTER_REQUIRED';
+    assert.equal(await h.api.prefetchBacklogForRefresh(),false);assert.equal(h.requests(),0);
+  }
+});

@@ -16969,7 +16969,6 @@ function scheduleBackgroundModuleWarmup(){
     Promise.resolve().then(prepareBackgroundPageProfiles).then(step.load).then(ok=>{
       window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
       if(ok===true)window.BLModulePreparation?.setStatus(step.module,'ready');
-      else if(window.BLModulePreparation?.snapshot?.()[step.module]?.status==='loading')window.BLModulePreparation?.setStatus(step.module,'pending');
     }).catch(error=>{window.BLModulePreparation?.setStatus(step.module,'error','BACKGROUND_PREPARATION_FAILED');console.warn('Arka plan ön yükleme:',step.module,error);})
       .finally(()=>setTimeout(()=>idle(next),gap()));
   };
@@ -19882,7 +19881,7 @@ async function fetchBacklogData(params){
   }
 }
 function prefetchBacklogForRefresh(){
-  if(window.BLCanAccessArea?.('backlog')!==true)return Promise.resolve(false);
+  if(window.BLCanAccessArea?.('backlog')!==true||window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return Promise.resolve(false);
   const qs=backlogQueryString(buildBacklogParams()),generation=backlogFetchGeneration;
   if(backlogPrefetch?.key===qs)return Promise.resolve(true);
   if(backlogPrefetchPending?.key===qs&&backlogPrefetchPending.generation===generation)return backlogPrefetchPending.promise;
@@ -19894,6 +19893,7 @@ function prefetchBacklogForRefresh(){
     window.BLModulePreparation?.setStatus('backlog','ready');
     return true;
   }).catch(error=>{
+    if(generation!==backlogFetchGeneration)return false;
     window.BLModulePreparation?.setStatus('backlog','error','BACKLOG_LOAD_FAILED');throw error;
   }).finally(()=>{if(backlogPrefetchPending===entry)backlogPrefetchPending=null;});
   backlogPrefetchPending=entry;
@@ -19947,7 +19947,7 @@ function fetchCurrentBacklog(){
   if(backlogPrefetchPending?.key===key&&backlogPrefetchPending.generation===backlogFetchGeneration){
     showBacklogLoadingState();
     return backlogPrefetchPending.promise.then(ok=>{
-      if(ok&&currentActiveTab()==='backlog'&&backlogQueryString(buildBacklogParams())===key)return fetchCurrentBacklog();
+      if(ok&&backlogPrefetch?.key===key&&currentActiveTab()==='backlog'&&backlogQueryString(buildBacklogParams())===key)return fetchCurrentBacklog();
       return false;
     }).catch(error=>{console.warn('Backlog alınamadı:',error);return false;});
   }
