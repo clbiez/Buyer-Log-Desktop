@@ -1,0 +1,802 @@
+{
+  "baseMain": "4a0cc7b4",
+  "aa": true,
+  "fixture": {
+    "rows": 180,
+    "seed": 7,
+    "hashes": {
+      "ASAS": "8d7a040fba3fca629d78a8722f510b15a70e5240f1a5dc352854e586d11abe40",
+      "Antrepo": "e395f39ba38f10e19d20d3e0b18ab759b427a7e454fb10cbfda76a5726aa0059"
+    }
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "kind": "main",
+      "startupMs": 2338,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 38.09999999997672,
+          "domReadyMs": 1210.9000000000233,
+          "nextFrameMs": 1289.5999999999767,
+          "longTasks": [
+            {
+              "start": 2430.4000000000233,
+              "duration": 62
+            },
+            {
+              "start": 2710.70000000007,
+              "duration": 61
+            },
+            {
+              "start": 2829.70000000007,
+              "duration": 56
+            },
+            {
+              "start": 3033.20000000007,
+              "duration": 227
+            },
+            {
+              "start": 3262.4000000000233,
+              "duration": 357
+            },
+            {
+              "start": 3746.0999999999767,
+              "duration": 149
+            },
+            {
+              "start": 3895.3000000000466,
+              "duration": 358
+            }
+          ],
+          "setupMs": 5.099999999976717,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.700000000069849,
+          "domReadyMs": 502.20000000006985,
+          "nextFrameMs": 572.2000000000698,
+          "longTasks": [
+            {
+              "start": 5323.70000000007,
+              "duration": 104
+            },
+            {
+              "start": 5427.800000000047,
+              "duration": 316
+            },
+            {
+              "start": 5755.400000000023,
+              "duration": 52
+            },
+            {
+              "start": 5818.400000000023,
+              "duration": 141
+            },
+            {
+              "start": 5959.599999999977,
+              "duration": 289
+            }
+          ],
+          "setupMs": 4.900000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 75.40000000002328,
+          "domReadyMs": 75.40000000002328,
+          "nextFrameMs": 453.4000000000233,
+          "longTasks": [
+            {
+              "start": 7340.599999999977,
+              "duration": 280
+            },
+            {
+              "start": 7620.599999999977,
+              "duration": 166
+            }
+          ],
+          "setupMs": 4.700000000069849,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 4.700000000069849,
+          "domReadyMs": 4.700000000069849,
+          "nextFrameMs": 252.59999999997672,
+          "longTasks": [
+            {
+              "start": 9311.800000000047,
+              "duration": 179
+            },
+            {
+              "start": 9490.800000000047,
+              "duration": 67
+            }
+          ],
+          "setupMs": 4.799999999930151,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 0,
+      "kind": "candidate",
+      "startupMs": 2096,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 6.900000000023283,
+          "domReadyMs": 778.5999999999767,
+          "nextFrameMs": 853.6999999999534,
+          "longTasks": [
+            {
+              "start": 2551,
+              "duration": 237
+            },
+            {
+              "start": 2788.8000000000466,
+              "duration": 311
+            },
+            {
+              "start": 3126.8000000000466,
+              "duration": 57
+            },
+            {
+              "start": 3202.0999999999767,
+              "duration": 168
+            },
+            {
+              "start": 3370.4000000000233,
+              "duration": 356
+            }
+          ],
+          "setupMs": 5.299999999930151,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 7.300000000046566,
+          "domReadyMs": 472.9000000000233,
+          "nextFrameMs": 540.1000000000931,
+          "longTasks": [
+            {
+              "start": 4804.099999999977,
+              "duration": 100
+            },
+            {
+              "start": 4904.900000000023,
+              "duration": 279
+            },
+            {
+              "start": 5192.20000000007,
+              "duration": 55
+            },
+            {
+              "start": 5258.900000000023,
+              "duration": 122
+            },
+            {
+              "start": 5381.70000000007,
+              "duration": 250
+            }
+          ],
+          "setupMs": 4.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 71.89999999990687,
+          "domReadyMs": 71.89999999990687,
+          "nextFrameMs": 405.69999999995343,
+          "longTasks": [
+            {
+              "start": 6769.5,
+              "duration": 266
+            },
+            {
+              "start": 7036.300000000047,
+              "duration": 133
+            }
+          ],
+          "setupMs": 5.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.300000000046566,
+          "domReadyMs": 5.300000000046566,
+          "nextFrameMs": 257.30000000004657,
+          "longTasks": [
+            {
+              "start": 8694.20000000007,
+              "duration": 181
+            },
+            {
+              "start": 8875.400000000023,
+              "duration": 72
+            }
+          ],
+          "setupMs": 4.800000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 1,
+      "kind": "main",
+      "startupMs": 1973,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 6.5,
+          "domReadyMs": 725.3999999999069,
+          "nextFrameMs": 800.8999999999069,
+          "longTasks": [
+            {
+              "start": 2444.9000000000233,
+              "duration": 226
+            },
+            {
+              "start": 2671,
+              "duration": 288
+            },
+            {
+              "start": 3076,
+              "duration": 154
+            },
+            {
+              "start": 3230.5,
+              "duration": 359
+            }
+          ],
+          "setupMs": 4.5,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 8.400000000023283,
+          "domReadyMs": 487.19999999995343,
+          "nextFrameMs": 559.5,
+          "longTasks": [
+            {
+              "start": 4682,
+              "duration": 97
+            },
+            {
+              "start": 4779.099999999977,
+              "duration": 300
+            },
+            {
+              "start": 5088.300000000047,
+              "duration": 58
+            },
+            {
+              "start": 5160.300000000047,
+              "duration": 161
+            },
+            {
+              "start": 5321.900000000023,
+              "duration": 347
+            }
+          ],
+          "setupMs": 5.200000000069849,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 68.19999999995343,
+          "domReadyMs": 68.19999999995343,
+          "nextFrameMs": 409.4000000000233,
+          "longTasks": [
+            {
+              "start": 6677.199999999953,
+              "duration": 274
+            },
+            {
+              "start": 6951.400000000023,
+              "duration": 131
+            }
+          ],
+          "setupMs": 4.199999999953434,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.199999999953434,
+          "domReadyMs": 5.199999999953434,
+          "nextFrameMs": 225.19999999995343,
+          "longTasks": [
+            {
+              "start": 8601,
+              "duration": 159
+            },
+            {
+              "start": 8760.199999999953,
+              "duration": 63
+            }
+          ],
+          "setupMs": 5.5,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 1,
+      "kind": "candidate",
+      "startupMs": 1874,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 6.800000000046566,
+          "domReadyMs": 710.1000000000931,
+          "nextFrameMs": 800.9000000000233,
+          "longTasks": [
+            {
+              "start": 2298,
+              "duration": 246
+            },
+            {
+              "start": 2544.6999999999534,
+              "duration": 306
+            },
+            {
+              "start": 2974.399999999907,
+              "duration": 141
+            },
+            {
+              "start": 3116,
+              "duration": 385
+            }
+          ],
+          "setupMs": 5.599999999976717,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 7.200000000069849,
+          "domReadyMs": 452.80000000004657,
+          "nextFrameMs": 788.7000000000698,
+          "longTasks": [
+            {
+              "start": 4609.599999999977,
+              "duration": 85
+            },
+            {
+              "start": 4695,
+              "duration": 129
+            },
+            {
+              "start": 4824.399999999907,
+              "duration": 137
+            },
+            {
+              "start": 4979,
+              "duration": 50
+            },
+            {
+              "start": 5029.899999999907,
+              "duration": 128
+            },
+            {
+              "start": 5158.5,
+              "duration": 260
+            }
+          ],
+          "setupMs": 5.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 66.09999999997672,
+          "domReadyMs": 66.09999999997672,
+          "nextFrameMs": 387.9000000000233,
+          "longTasks": [
+            {
+              "start": 6816,
+              "duration": 259
+            },
+            {
+              "start": 7075.899999999907,
+              "duration": 120
+            }
+          ],
+          "setupMs": 4.099999999976717,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 8.29999999993015,
+          "domReadyMs": 8.29999999993015,
+          "nextFrameMs": 302.5,
+          "longTasks": [
+            {
+              "start": 8736.599999999977,
+              "duration": 204
+            },
+            {
+              "start": 8941.5,
+              "duration": 71
+            }
+          ],
+          "setupMs": 4.300000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 2,
+      "kind": "main",
+      "startupMs": 1867,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 4.5,
+          "domReadyMs": 787.7999999999302,
+          "nextFrameMs": 1018.9000000000233,
+          "longTasks": [
+            {
+              "start": 2153.4000000000233,
+              "duration": 212
+            },
+            {
+              "start": 2365.8000000000466,
+              "duration": 352
+            },
+            {
+              "start": 2754.6999999999534,
+              "duration": 55
+            },
+            {
+              "start": 2823.8000000000466,
+              "duration": 129
+            },
+            {
+              "start": 3024.9000000000233,
+              "duration": 137
+            },
+            {
+              "start": 3162.0999999999767,
+              "duration": 297
+            }
+          ],
+          "setupMs": 5.699999999953434,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.199999999953434,
+          "domReadyMs": 436.5,
+          "nextFrameMs": 511,
+          "longTasks": [
+            {
+              "start": 4565.5,
+              "duration": 99
+            },
+            {
+              "start": 4665.099999999977,
+              "duration": 258
+            },
+            {
+              "start": 4937.699999999953,
+              "duration": 56
+            },
+            {
+              "start": 5008.900000000023,
+              "duration": 128
+            },
+            {
+              "start": 5137.5,
+              "duration": 353
+            }
+          ],
+          "setupMs": 4.700000000069849,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 72.80000000004657,
+          "domReadyMs": 72.80000000004657,
+          "nextFrameMs": 431.80000000004657,
+          "longTasks": [
+            {
+              "start": 6518.400000000023,
+              "duration": 284
+            },
+            {
+              "start": 6802.800000000047,
+              "duration": 142
+            }
+          ],
+          "setupMs": 5.300000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.299999999930151,
+          "domReadyMs": 5.299999999930151,
+          "nextFrameMs": 232.69999999995343,
+          "longTasks": [
+            {
+              "start": 8474.599999999977,
+              "duration": 161
+            },
+            {
+              "start": 8636.5,
+              "duration": 67
+            }
+          ],
+          "setupMs": 3.799999999930151,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 2,
+      "kind": "candidate",
+      "startupMs": 2006,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 5.100000000093132,
+          "domReadyMs": 714.6000000000931,
+          "nextFrameMs": 813.6000000000931,
+          "longTasks": [
+            {
+              "start": 2439.0999999999767,
+              "duration": 227
+            },
+            {
+              "start": 2666.5999999999767,
+              "duration": 307
+            },
+            {
+              "start": 3119,
+              "duration": 167
+            },
+            {
+              "start": 3286.9000000000233,
+              "duration": 447
+            }
+          ],
+          "setupMs": 5.300000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.900000000023283,
+          "domReadyMs": 486.5,
+          "nextFrameMs": 555.1999999999534,
+          "longTasks": [
+            {
+              "start": 4694,
+              "duration": 87
+            },
+            {
+              "start": 4781.5,
+              "duration": 148
+            },
+            {
+              "start": 4929.900000000023,
+              "duration": 175
+            },
+            {
+              "start": 5181.199999999953,
+              "duration": 155
+            },
+            {
+              "start": 5336.400000000023,
+              "duration": 339
+            }
+          ],
+          "setupMs": 4.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 71.09999999997672,
+          "domReadyMs": 71.09999999997672,
+          "nextFrameMs": 455.9000000000233,
+          "longTasks": [
+            {
+              "start": 6689.900000000023,
+              "duration": 296
+            },
+            {
+              "start": 6986,
+              "duration": 153
+            }
+          ],
+          "setupMs": 5,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.599999999976717,
+          "domReadyMs": 5.599999999976717,
+          "nextFrameMs": 249.90000000002328,
+          "longTasks": [
+            {
+              "start": 8692.29999999993,
+              "duration": 173
+            },
+            {
+              "start": 8865.599999999977,
+              "duration": 68
+            }
+          ],
+          "setupMs": 4.300000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "matrix": [],
+  "errors": [],
+  "chromium": "151.0.7922.173",
+  "status": "passed"
+}
