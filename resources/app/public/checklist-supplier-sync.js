@@ -67,9 +67,19 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-  function toast(message) {
-    if (typeof root.showToast === 'function') root.showToast(message);
+  function toast(message, target) {
+    if (typeof root.showToast === 'function') root.showToast(message, {target:target});
     else if (root.console && root.console.info) root.console.info(message);
+  }
+  function notificationForEntry(entry) {
+    if(!entry||!entry.orderKey)return {module:'cp'};
+    const tuple=String(entry.orderKey).split('|');
+    if(tuple.length!==3)return {module:'cp'};
+    const lineKey=typeof root.lineKeyOfRow==='function'?root.lineKeyOfRow({'Order Code':tuple[0],'Model Name':tuple[1],'C.Code':tuple[2]}):entry.orderKey;
+    const item=catalogItem(entry.itemId),config=entry.itemId===Components.CONFIG_ITEM;
+    return {module:'cp',lineKey:lineKey,itemId:entry.itemId,
+      fieldTr:config?'Set parçaları':item?item.tr:'Checklist',fieldEn:config?'Set components':item?item.en:'Checklist',
+      ownerId:String(root.state?.currentUser?.id??root.BL_USER_CONTEXT?.id??'')};
   }
   function safeJson(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
   function answerKey(orderKey, itemId) { return text(orderKey) + '::' + text(itemId); }
@@ -150,6 +160,7 @@
       const error = new Error(payload.error || payload.message || ('HTTP ' + response.status));
       error.code = payload.code || 'HTTP_ERROR';
       error.status=response.status;
+      if(payload.code==='CHECKLIST_COMPONENTS_INVALID'){error.orderKey=payload.orderKey;error.itemId=payload.itemId;}
       throw error;
     }
     return payload;
@@ -353,6 +364,9 @@
       }
       return true;
     } catch (error) {
+      const failed=inFlightEntries.find(entry=>entry.orderKey===error.orderKey&&entry.itemId===error.itemId)
+        ||(inFlightEntries.length===1?inFlightEntries[0]:null);
+      error.notificationTarget=notificationForEntry(failed);
       // Baseline yalnız başarılı POST'ta ilerlediği için veri yerelde kalır ve
       // tekrar denendiğinde eksik değişiklik yeniden gönderilir.
       if (error.status === 403 || error.status === 401) {
@@ -494,7 +508,7 @@
     const decision = analysesForRows([row]), analysis = decision.byRow.get(row);
     if (!analysis) return;
     const saved = assistantState().answers[Components.configKey(analysis)];
-    openComponentCountDialog(componentParts(analysis).length, saved && saved.componentCount || 2, async count => {
+    return openComponentCountDialog(componentParts(analysis).length, saved && saved.componentCount || 2, async count => {
       if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
       if (!assistant.setChecklistComponents(analysis, count)) return false;
       refreshColumns({ render: true });
@@ -807,7 +821,7 @@
       if (Object.values(state.pendingAnswers).some(sendablePendingEntry)) {
         // Fetch/merge controls the CP view; a rejected write must not delay navigation.
         syncAnswerChanges().catch(function (error) {
-          toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message);
+          toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message, error.notificationTarget);
         });
       }
       const sharedSignature = runtimeSignature();
@@ -2774,7 +2788,7 @@
       const status = option.dataset.clStatus;
       closeStatusMenu(true);
       chooseStatus(trigger, status).catch(function (error) {
-        toast(T('Checklist durumu kaydedilemedi: ', 'Checklist status could not be saved: ') + (error.message || error));
+        toast(T('Checklist durumu kaydedilemedi: ', 'Checklist status could not be saved: ') + (error.message || error), error.notificationTarget);
       });
     });
     menu.addEventListener('keydown', function (event) {
@@ -2841,7 +2855,7 @@
       // Hücre yerel cevapla hemen güncellenir; sunucu senkronu arkada çalışır.
       refreshColumns({ render: true });
       syncAnswerChanges().catch(function (error) {
-        toast(T('Checklist cevabı senkronize edilemedi: ', 'Checklist answer could not be synced: ') + (error.message || error));
+        toast(T('Checklist cevabı senkronize edilemedi: ', 'Checklist answer could not be synced: ') + (error.message || error), error.notificationTarget);
       });
     }
   }
@@ -3052,6 +3066,21 @@
       },
     });
   }
+  async function openNotificationForRow(row, itemId) {
+    if(!row||row._canEdit===false||!itemId)return false;
+    const identity=checklistTriggerIdentity(row);
+    const trigger={dataset:{id:String(row._id),lineKey:identity.key,editOwner:identity.owner,item:String(itemId)}};
+    const decision=analysesForRows([row]),analysis=decision.byRow?.get(row);
+    if(!analysis)return false;
+    const part=Components.parseItem(itemId),parts=componentParts(analysis);
+    if(itemId===Components.CONFIG_ITEM||(part&&!parts.some(p=>p.id===part.partId))){
+      return Boolean(await configureComponents(trigger));
+    }
+    const item=catalogItem(itemId);
+    if(!item||!evidenceEnabled(item,answerFor(item,analysis)))return false;
+    openChecklistEvidenceDialog(trigger);
+    return true;
+  }
   function latestAnswerAt(key) {
     const remote = state.shared.answers[key] || state.shared.tombstones[key] || {};
     const pending = state.pendingAnswers[key] || {};
@@ -3073,6 +3102,7 @@
     statusOptions: statusOptions,
     openStatusMenu: openStatusMenu,
     openEvidenceForRow: openEvidenceForRow,
+    openNotificationForRow: openNotificationForRow,
     componentCellHtml, openComponentCountDialog, expandedItems,
     diffAnswers: diffAnswers,
     refreshAssistantView: refreshAssistantView,

@@ -154,3 +154,12 @@ test('attachment write area revocation during preparation cannot fall back to ov
     assert.deepEqual(fs.readdirSync(store.ATTACHMENT_ROOT).sort(), before);
   } finally { delete profiles.a.areas; }
 });
+
+test('component error response names only the rejected authorized entry in the submitted batch',async()=>{
+ const before=bytes();
+ const result=await post([entry(orderA),entry(orderB,{itemId:'tests~part~B'})],'moderator');
+ assert.equal(result.status,400);assert.equal(result.body.code,'CHECKLIST_COMPONENTS_INVALID');
+ assert.equal(result.body.orderKey,orderB);assert.equal(result.body.itemId,'tests~part~B');assert.equal(bytes(),before);
+ const denied=await post([entry(orderB,{itemId:'tests~part~B'})],'a');
+ assert.equal(denied.status,403);assert.equal(denied.body.orderKey,undefined);
+});
