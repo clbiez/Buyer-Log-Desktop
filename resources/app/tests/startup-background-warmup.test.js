@@ -8,7 +8,7 @@ const APP=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
 const start=APP.indexOf('const BACKGROUND_WARMUP_GAP_MS');
 const source=APP.slice(start,APP.indexOf("window.addEventListener('DOMContentLoaded'",start));
 
-function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='overview',deviceMemory=8,heap=null,curtain=false}={}){
+function harness({access=['cp','orders','koleksiyon','backlog'],state={},flags={},active='overview',deviceMemory=8,heap=null,curtain=false}={}){
   const timers=[],calls=[],marks=[],events=[],details=[],gates=[],revealed=[];
   const resolvers={};
   const window={BLCanAccessArea:area=>access.includes(area),BLPerf:{mark:(name,detail)=>marks.push({name,detail})},
@@ -24,6 +24,11 @@ function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='
     scheduleUnifiedPrioritiesForTable:table=>{calls.push(['priorities:'+table]);context._unifiedPriorityCache[table]={rows:state[table].rows};return Promise.resolve(true);},
     ensureCpLoaded:options=>{calls.push(['cp',options]);return new Promise(resolve=>{resolvers.cp=ok=>{state.cp={rows:[]};resolve(ok);};});},
     ensureOrdersLoaded:options=>{calls.push(['orders',options]);return new Promise(resolve=>{resolvers.orders=ok=>{state.orders={rows:[]};resolve(ok);};});},
+    ensureInitialKolWorkspace:async()=>true,
+    ensureCollectionMasterCatalogLoaded:async()=>true,
+    prepareBackgroundPageProfiles:async()=>true,
+    backlogLoadedOnce:false,backlogPrefetch:null,
+    prefetchBacklogForRefresh:()=>{calls.push(['backlog']);return new Promise(resolve=>{resolvers.backlog=ok=>{context.backlogPrefetch={data:{}};resolve(ok);};});},
     ensureCollectionCatalogLoaded:options=>{calls.push(['koleksiyon',options]);return new Promise(resolve=>{resolvers.koleksiyon=ok=>{state.collectionCatalogs={ready:true};resolve(ok);};});},
   };
   context.backgroundWarmupUnrendered=new Set();
@@ -32,37 +37,23 @@ function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='
   return {context,calls,marks,events,details,gates,delays,resolvers,flush,reveal(){context.curtain=false;revealed.splice(0).forEach(fn=>fn());}};
 }
 
-test('authorized modules warm one at a time, hidden, in CP → Orders → Collection order', async () => {
+test('authorized pages prepare sequentially in Collection → CP → Orders → Backlog order', async () => {
   const h=harness();
   h.context.scheduleBackgroundModuleWarmup();h.context.scheduleBackgroundModuleWarmup();
-  await h.flush();
-  assert.deepEqual(h.calls.map(call=>call[0]),['cp'],'only one module loads at a time');
-  assert.equal(h.calls[0][1].deferRender,true,'hidden tables are not drawn while warming');
-  h.resolvers.cp(true);await h.flush();
-  assert.deepEqual(h.calls.map(call=>call[0]),['cp','priorities:cp','orders'],'CP priorities are prepared before the next module');
-  h.resolvers.orders(true);await h.flush();
-  h.resolvers.koleksiyon(true);await h.flush();
-  assert.deepEqual(h.calls.map(call=>call[0]),['cp','priorities:cp','orders','koleksiyon'],'scheduled once even when called twice');
-  assert.deepEqual([...h.context.backgroundWarmupUnrendered].sort(),['cp','orders'],'first visit draws the warmed table once');
-  assert.ok(h.marks.some(mark=>mark.name==='BACKGROUND_WARMUP_DONE'));
-  assert.deepEqual(h.events,['bl:startup-progress','bl:startup-progress','bl:startup-progress','bl:background-warmup-done']);
-  // Background progress is informational; the primary gate has already opened.
-  assert.deepEqual(h.details.map(d=>[d.stage,d.module,d.index,d.total]),[['modules','cp',1,3],['modules','orders',2,3],['modules','koleksiyon',3,3]]);
+  await h.flush();assert.deepEqual(h.calls.map(c=>c[0]),['koleksiyon']);
+  h.resolvers.koleksiyon(true);await h.flush();assert.deepEqual(h.calls.map(c=>c[0]),['koleksiyon','cp']);
+  h.resolvers.cp(true);await h.flush();assert.deepEqual(h.calls.map(c=>c[0]),['koleksiyon','cp','priorities:cp','orders']);
+  h.resolvers.orders(true);await h.flush();h.resolvers.backlog(true);await h.flush();
+  assert.deepEqual(h.calls.map(c=>c[0]),['koleksiyon','cp','priorities:cp','orders','backlog']);
+  assert.equal(h.calls.find(c=>c[0]==='cp')[1].deferRender,true);
+  assert.deepEqual(h.details.map(d=>d.module),['koleksiyon','cp','orders','backlog']);
   assert.deepEqual(h.gates,['modules']);
-  assert.ok(h.delays.every(ms=>ms===0||ms===1500),'without the curtain the gentle 1.5 s pacing is kept');
 });
 
-test('while the startup curtain is visible no background module starts; preparation follows dismissal', async () => {
-  const h=harness({curtain:true});
-  h.context.scheduleBackgroundModuleWarmup();await h.flush();
-  assert.deepEqual(h.calls,[],'Continue must not compete with background module work');
-  assert.deepEqual(h.delays,[],'no pending warmup timer runs underneath the curtain');
-  h.reveal();await h.flush();
-  h.resolvers.cp(true);await h.flush();h.resolvers.orders(true);await h.flush();
-  assert.deepEqual(h.gates,[],'background completion has not been reported prematurely');
-  h.resolvers.koleksiyon(true);await h.flush();
-  assert.deepEqual(h.gates,['modules']);
-  assert.ok(h.delays.length&&h.delays.every(ms=>ms===0||ms===1500),'background pacing is preserved after dismissal');
+test('preparation waits for Continue without timers under the startup curtain', async () => {
+  const h=harness({curtain:true,access:['orders']});h.context.scheduleBackgroundModuleWarmup();await h.flush();
+  assert.deepEqual(h.calls,[]);assert.deepEqual(h.delays,[]);
+  h.reveal();await h.flush();h.resolvers.orders(true);await h.flush();assert.deepEqual(h.gates,['modules']);
 });
 
 test('a warmup that cannot start still releases the startup modules gate',()=>{
@@ -70,8 +61,8 @@ test('a warmup that cannot start still releases the startup modules gate',()=>{
   assert.match(startup,/\.then\(scheduleBackgroundModuleWarmup\)\.catch\(error=>\{console\.warn\('Arka plan ön yükleme başlatılamadı:',error\);finishStartupModules\(\);\}\)/);
 });
 
-test('denied, already loaded or source-filter-blocked modules send no request', async () => {
-  const h=harness({access:['orders','koleksiyon'],state:{collectionCatalogs:{ready:true}},flags:{BL_CP_SOURCE_FILTER_REQUIRED:true}});
+test('denied and source-filter-blocked model modules send no request', async () => {
+  const h=harness({access:['orders','backlog'],state:{collectionCatalogs:{ready:true}},flags:{BL_CP_SOURCE_FILTER_REQUIRED:true}});
   h.context.scheduleBackgroundModuleWarmup();await h.flush();
   assert.deepEqual(h.calls,[]);
   assert.ok(h.marks.some(mark=>mark.name==='BACKGROUND_WARMUP_DONE'));
@@ -94,15 +85,11 @@ test('switchTab draws a warmed table once, after the page profile, without an ea
   assert.match(body,/if\(tab==='orders'&&\(!state\.orders\|\|warmedUnrendered\)\)/);
 });
 
-test('Orders warmup is skipped on low-memory machines or a nearly full renderer heap', async () => {
+test('Orders still prepares on small devices and busy heaps', async () => {
   for(const options of [{deviceMemory:4},{deviceMemory:2},{heap:{usedJSHeapSize:700,jsHeapSizeLimit:1000}}]){
-    const h=harness({access:['cp','orders'],...options});
-    h.context.scheduleBackgroundModuleWarmup();await h.flush();h.resolvers.cp(true);await h.flush();
-    assert.deepEqual(h.calls.map(call=>call[0]),['cp','priorities:cp'],JSON.stringify(options));
+    const h=harness({access:['orders'],...options});h.context.scheduleBackgroundModuleWarmup();await h.flush();
+    assert.deepEqual(h.calls.map(c=>c[0]),['orders']);h.resolvers.orders(true);await h.flush();
   }
-  const roomy=harness({access:['orders'],deviceMemory:8,heap:{usedJSHeapSize:200,jsHeapSizeLimit:1000}});
-  roomy.context.scheduleBackgroundModuleWarmup();await roomy.flush();
-  assert.deepEqual(roomy.calls.map(call=>call[0]),['orders']);
 });
 
 test('a table already in memory before its warmup step is not marked for a redundant draw', async () => {

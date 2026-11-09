@@ -8,7 +8,7 @@ function fixture({legacy=false}={}){
  const c={Set,root:null,state,currentRows:()=>rows,currentActiveTab:()=>active,refreshAssistantView:()=>calls.push('async'),
   refreshColumns:options=>{assert.equal(options.render,false);assert.equal(options.decision,decision);row.checklist='pending';calls.push('prepare');},
   renderCPNow:function(){calls.push(['render',row.checklist,this?.marker,arguments[0]]);},
-  BLCpAssistant:{peekDecisionsForRows:()=>decision},DEFERRED_TAB_RENDERERS:{cp:'renderCPNow'},_deferredTabRenders:new Set()};
+  BLCpAssistant:{peekDecisionsForRows:()=>decision},DEFERRED_TAB_RENDERERS:{cp:'renderCPNow'},_deferredTabRenders:new Set(),backgroundWarmupUnrendered:new Set()};
  c.root=c;c.window=c;vm.createContext(c);
  vm.runInContext(['runDeferredRender','deferRenderForTab','flushDeferredRenderForTab','renderCP'].map(name=>fn(app,name)).join('\n'),c);
  if(legacy){delete c.renderCPNow;c.renderCP=()=>calls.push(['legacy',row.checklist]);}
@@ -19,7 +19,8 @@ function fixture({legacy=false}={}){
  return {c,row,calls,captured,activate:()=>{active='cp';}};
 }
 test('a captured native CP renderer applies checklist fields on its first visible render',()=>{
- const f=fixture();f.activate();f.captured();
+ const f=fixture();f.c.backgroundWarmupUnrendered.add('cp');f.activate();f.captured();
+ assert.equal(f.c.backgroundWarmupUnrendered.has('cp'),false,'actual first draw consumes the pending warmup marker');
  assert.equal(f.calls.find(Array.isArray)?.[1],'pending','deferred native rendering must prepare the actual row before reading its checklist');
  assert.equal(f.calls.filter(call=>call==='prepare').length,1);
 });

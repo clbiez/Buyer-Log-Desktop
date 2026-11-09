@@ -204,9 +204,10 @@ test('istemci: yenileme sonrası açık olmayan sayfalar çizilmeden arka planda
   assert.match(APP, /refreshPrewarmToken\+\+;/);
   // Görünmeyen CP/Siparişler çizilmez: renderCP/renderOrders ertelenmiş çizimdir.
   assert.match(APP, /function renderCP\(\)\{ deferRenderForTab\('cp'\); \}/);
-  // Backlog ön yanıtı yalnız aynı sorgu anahtarı ve kısa süre için kullanılır.
+  // Backlog ön yanıtı aynı sorgu için tüketilene/kaynak değişene kadar korunur.
   const current = APP.slice(APP.indexOf('function fetchCurrentBacklog(){'), APP.indexOf('function fetchCurrentBacklog(){') + 600);
-  assert.match(current, /ready\.key===backlogQueryString\(params\)&&Date\.now\(\)-ready\.at<BACKLOG_PREFETCH_MAX_AGE_MS/);
+  assert.match(current, /ready&&ready\.key===key/);
+  assert.doesNotMatch(current,/BACKLOG_PREFETCH_MAX_AGE_MS|Date\.now\(\)-ready\.at/);
   // Faz 5 (#885): fetchBacklog fetchBacklogData'ya devreder; ön-hazırlık orada temizlenir.
   assert.match(APP, /async function fetchBacklog\(params\)\{[\s\S]{0,400}?return fetchBacklogData\(params\)/);
   assert.match(APP, /async function fetchBacklogData\(params\)\{\s*backlogPrefetch=null;/);

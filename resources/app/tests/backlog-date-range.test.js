@@ -60,7 +60,7 @@ test('Exfactory range is carried by query, export, detail and persisted settings
 test('an older Backlog response cannot replace a newer date selection',async()=>{
   const vm=require('node:vm');
   const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
-  const start=app.indexOf('let backlogFetchGeneration=0;'),end=app.indexOf('async function prefetchBacklogForRefresh()',start);
+  const start=app.indexOf('let backlogFetchGeneration=0;'),end=app.indexOf('function prefetchBacklogForRefresh()',start);
   const pending=[],applied=[];
   const sandbox={window:{},showBacklogLoadingState(){},backlogQueryString:p=>String(p.id),fetchJSON:()=>new Promise(resolve=>pending.push(resolve)),applyBacklogData:data=>applied.push(data)};
   vm.createContext(sandbox);vm.runInContext(app.slice(start,end),sandbox);

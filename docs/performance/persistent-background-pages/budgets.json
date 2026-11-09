@@ -1,0 +1,32 @@
+{
+  "baseMain": "9e667430",
+  "candidateIntegration": "d6864eaa",
+  "runtime": "Electron 44.3.0, production workspace manager/preloads, Linux Xvfb",
+  "fixtures": [
+    {
+      "orders": 2000,
+      "collectionModels": 40
+    },
+    {
+      "orders": 30000,
+      "collectionModels": 40
+    }
+  ],
+  "seed": 7,
+  "pairs": 3,
+  "order": "Main,candidate alternating; fresh WebContentsViews, warm synthetic server",
+  "budgets": {
+    "queue": "Collection,CP,Orders,Backlog; same renderer, no extra native views",
+    "dataRequestsOnFiveWarmNavigationRounds": 0,
+    "duplicateBacklogRequests": 0,
+    "lostRowsOrDirtyEdits": 0,
+    "backgroundDeadlineMs": 120000,
+    "newPreparedHeapBytes": 1073741824,
+    "repeatNavigationFeedbackMs": 200,
+    "newBlockingTaskMs": 50,
+    "repeatHeapGrowth": "No monotonic retained growth over five rounds after explicit GC; record raw samples",
+    "existingFlows": "No repeatable regression vs Main; use A/A control if needed"
+  },
+  "acceptedTradeoff": "User explicitly requests keeping all four page datasets/previously opened DOM resident, including small-memory devices; measure bounded new residency separately from first-screen baseline. Do not create extra native renderers.",
+  "limits": "Linux native workspace host only; no Windows portable/updater/SMB/upstream claim."
+}
