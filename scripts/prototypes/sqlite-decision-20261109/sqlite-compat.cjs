@@ -36,9 +36,15 @@ function sqlite(file) {
       const state=normalizeState(row?JSON.parse(row.value):emptyState(DEVICE),DEVICE);
       state.records=Object.fromEntries(db.prepare('SELECT id,body FROM records ORDER BY rowid').all().map(r=>[r.id,JSON.parse(r.body)]));
       state.events=Object.fromEntries(db.prepare('SELECT event_id,receipt FROM events WHERE receipt IS NOT NULL ORDER BY rowid').all().map(r=>[r.event_id,JSON.parse(r.receipt)]));
-      const journalIndex=writes?new Map():null;
-      state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>{const e=JSON.parse(r.body);journalIndex?.set(e.eventId,e);return e;});
-      if(journalIndex)journalIndexes.set(state,journalIndex);
+      if(writes) {
+        const journalIndex=new Map();
+        state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>{const e=JSON.parse(r.body);journalIndex.set(e.eventId,e);return e;});
+        journalIndexes.set(state,journalIndex);
+      } else {
+        // Preserve R2's read-only parsing path; per-row write-index checks
+        // introduced a repeatable small-fixture read regression in A/A review.
+        state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>JSON.parse(r.body));
+      }
       if(owned)db.exec('COMMIT');return state;
     }catch(e){if(owned&&db.isTransaction)db.exec('ROLLBACK');throw e;}
   }
