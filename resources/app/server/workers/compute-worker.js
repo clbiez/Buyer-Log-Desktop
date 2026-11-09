@@ -33,7 +33,7 @@ function legacyValue(module,values,params,source={}){
   }
   return values[module];
 }
-async function execute(task,data,transfer,sourceOverride){
+async function execute(task,data,transfer,sourceOverride,options={}){
   if(task==='health')return {ok:true};
   if(task==='local-db-snapshot'){
     const state=v8.deserialize(Buffer.from(data.snapshotBytes));data.snapshotBytes=null;
@@ -86,7 +86,8 @@ async function execute(task,data,transfer,sourceOverride){
       await assertCollectionLflDescriptor(data.source);
       const source=lease.snapshot,version=collectionLflSourceVersion(source);
       if(task==='collection-lfl-source-info')return {available:Boolean(version),version};
-      const references=require('../../public/collection-lfl-engine').buildReferences(access.filterRows(data.params.access,source?.lflRows||[]));
+      const engine=require('../../public/collection-lfl-engine'),rows=access.filterRows(data.params.access,source?.lflRows||[]);
+      const references=options.yieldControl?await engine.buildReferencesAsync(rows,options.yieldControl):engine.buildReferences(rows);
       const result=await compress({references},'api',transfer);await assertCollectionLflDescriptor(data.source);return result;
     }finally{lease.release();}
   }

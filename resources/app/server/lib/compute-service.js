@@ -274,10 +274,11 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
           await require('./compute-snapshot-descriptor').assertCollectionLflDescriptor(descriptor);
         };
         await assertCurrent();const started=performance.now(),transfer=[];
-        const source=await require('./model-snapshot').loadModelSnapshotAsync(descriptor.ownerId);
+        const yieldControl=async()=>{await new Promise(setImmediate);if(closed)throw failure('COMPUTE_POOL_CLOSED');};
+        const source=await require('./model-snapshot').loadModelSnapshotAsync(descriptor.ownerId,{yieldControl});
         await assertCurrent();
         const value=await require('../workers/compute-worker').execute(task,{ownerId:descriptor.ownerId,source:descriptor,
-          params:{...params,access:accessForTask(params.access,task)}},transfer,source);
+          params:{...params,access:accessForTask(params.access,task)}},transfer,source,{yieldControl});
         await assertCurrent();
         return {value,metrics:{threadId:0,fallbackReason:'COMPUTE_JOB_TOO_LARGE',durationMs:performance.now()-started},release(){}};
       });

@@ -8,7 +8,7 @@ const { promisify } = require('util');
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
 const { LOCAL_DATA_ROOT, atomicWriteBuffer, atomicWriteBufferAsync } = require('../user-data');
-const { jsonToBuffer, parseJsonBuffer } = require('./large-json');
+const { jsonToBuffer, parseJsonBuffer, parseJsonBufferAsync } = require('./large-json');
 
 const SNAPSHOT_ROOT = path.join(LOCAL_DATA_ROOT, 'model-snapshots');
 const LEGACY_SNAPSHOT_SCHEMA_VERSION = 1;
@@ -189,8 +189,7 @@ function reviveSnapshotDates(value) {
   return total;
 }
 
-function decodeSnapshotRaw(raw) {
-  const parsed = parseJsonBuffer(raw);
+function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) {
   let value;
   if (parsed && parsed.schemaVersion === LEGACY_SNAPSHOT_SCHEMA_VERSION) {
     value = parsed;
@@ -290,14 +289,16 @@ function loadModelSnapshot(userId) {
   return null;
 }
 
-async function loadModelSnapshotAsync(userId) {
+async function loadModelSnapshotAsync(userId, {yieldControl} = {}) {
   const file = snapshotPath(userId);
   for (const candidate of [file, file + '.bak']) {
     const started = Date.now();
     try {
       const compressed = await fs.promises.readFile(candidate);
       const readMs = Date.now() - started, raw = await gunzip(compressed), inflateMs = Date.now() - started - readMs;
-      const parseStarted = Date.now(), value = decodeSnapshotRaw(raw);
+      const parseStarted = Date.now(), value = yieldControl
+        ? decodeSnapshotRaw(raw, await parseJsonBufferAsync(raw,{yieldControl}))
+        : decodeSnapshotRaw(raw);
       if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:raw.length });
       applySnapshotMetadata(userId, value);
       Object.defineProperty(value, '_snapshotMetrics', {
@@ -307,6 +308,7 @@ async function loadModelSnapshotAsync(userId) {
       return value;
     } catch (error) {
       if (error && error.code === 'ENOENT') continue;
+      if (yieldControl && error?.code?.startsWith('COMPUTE_')) throw error;
       // bozuk ana kopyada yedeği dene
     }
   }

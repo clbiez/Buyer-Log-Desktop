@@ -1746,16 +1746,16 @@ td.num .revPair{justify-content:flex-end;}
 /* Shipping comparison: keep savings visually primary and table boundaries legible.
    Scoped to this module so CP and the other data grids remain unchanged. */
 .shipCompare{
-  border:1px solid var(--ui-border, #cbd5e1);
-  border-radius:4px;
+  border:1px solid var(--ui-group-divider);
+  border-radius:var(--ui-radius);
 }
 .shipCompare thead th{
   white-space:normal;
   overflow-wrap:normal;
   word-break:normal;
   vertical-align:middle;
-  border-right:1px solid var(--ui-border, #cbd5e1);
-  border-bottom:1px solid var(--ui-border, #cbd5e1);
+  border-right:1px solid var(--ui-group-divider);
+  border-bottom:1px solid var(--ui-group-divider);
 }
 .shipCompare thead th>span{
   white-space:normal;
@@ -1764,13 +1764,13 @@ td.num .revPair{justify-content:flex-end;}
 }
 .shipCompare thead th:last-child{border-right:0;}
 .shipCompare tbody td{
-  border-right:1px solid var(--ui-border, #cbd5e1);
-  border-bottom:1px solid var(--ui-border, #cbd5e1);
+  border-right:1px solid var(--ui-group-divider);
+  border-bottom:1px solid var(--ui-group-divider);
 }
 .shipCompare tbody td:last-child{border-right:0;}
 .shipCompare tbody tr:last-child td{border-bottom:0;}
 .shipCompare thead th .colResizer{
-  border-right:1px solid var(--ui-border-strong, #94a3b8);
+  border-right:1px solid var(--ui-field-border);
   z-index:2;
 }
 .shipCompare .shipCardMetrics [data-ship-pct]{
