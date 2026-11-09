@@ -28,11 +28,28 @@ rollback regression; arbitrary internal metadata writes are outside this slice.
 
 New scratch files only. Archived prototype SQL schemas are rejected explicitly,
 without migrating data. The default PRAGMAs remain WAL/FULL, timeout 5000,
-cache -8192 and autocheckpoint 256. For a simple correctness implementation,
-saves replace record/event rows inside the SQL transaction. This creates O(state)
-work and has **no performance acceptance**. Historical 10k/200k numbers belong
-to the original pinned code, not this implementation; do not rerun a new large
-matrix as part of R2 or infer speed/disk wins from these small tests.
+cache -8192 and autocheckpoint 256. The pinned R2 implementation
+(`4ac2ed4847ce4c3af32bc82d13681b101d749d20`) replaced all record/event rows
+inside each transaction and had **no performance acceptance**. Its historical
+correctness and measurement evidence remains unchanged.
+
+R3 nominates record/event IDs from the supported transitions, explicit ACK IDs
+and bounded ACK-through SQL ranges. It compares actual persisted columns before
+upsert/delete and writes envelope only when changed; duplicate/no-op DML is zero.
+A transaction-local journal index is built during existing mutation reads.
+Read-only parsing keeps R2's original path; no general cache/read redesign is
+added. Every mutation still reconstructs full state, and compaction/ledger
+serialization remains explicit work. DML reduction is not end-to-end acceptance.
+
+R3's separate R2→R3 (1k/10k) and current Main JSON/WAL→R3 (10k/200k) measurements,
+A/A controls, real SQL audit and remaining gates are in
+[the R3 evidence](../../../docs/performance/phase6-followup-20261109/sqlite/incr-r3/README.md).
+`incremental-r3.test.cjs` runs separately alongside the unchanged gates/prototype
+and preserved twelve compatibility tests. `incr-r3-benchmark.cjs` uses the final
+worker with explicit A/AA/B modes, fresh processes, the original 300-operation
+trace, full-state/receipt/reopen oracles and the existing 20-minute guard.
+Historical numbers are never attributed to the new source. Production remains
+**WAIT**, and #958 stays draft.
 
 Use the official backend runtime from runtime.json and backend spawn path:
 Electron 44.3.0 / Node 24.20.0 / SQLite 3.53.4, ELECTRON_RUN_AS_NODE=1.

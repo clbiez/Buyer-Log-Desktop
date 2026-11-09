@@ -1,0 +1,11 @@
+{
+  "incrementalSqlAndCompatibility": "PASS",
+  "r2ToR3Performance": "BLOCKED",
+  "r2ToR3Reason": "Strong repeatable single/batch/ACK/mixed CPU and process-I/O improvement; however the 1k filter trial-median paired shifts remain +0.0078/+0.0018/+0.0053 ms. Same-source 1k A/A shifts -0.005/-0.015/-0.000 ms do not establish that this candidate-positive pattern is solely noise. No automatic percentage or broad min/max waiver. The earlier get regression was corrected and no longer repeats. Narrow read/filter gate remains open; no broader redesign.",
+  "mainToR3Performance10k": "FAIL",
+  "mainToR3Performance200k": "FAIL",
+  "production": "WAIT",
+  "delivery": "BLOCKED",
+  "retainedPrototypeReason": "Real bounded SQL writes and meaningful net resource gains against compatible R2 are proven. Candidate remains an isolated, compatible research prototype in the existing draft PR, without a production adapter or adoption claim.",
+  "backupPlatformPowerLoss": "BLOCKED / outside this isolated slice; no equivalent production automatic backup/retention/rollback, signed Windows/native UI, SMB/OneDrive or power-loss acceptance"
+}

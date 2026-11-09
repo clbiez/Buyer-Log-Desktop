@@ -1,0 +1,142 @@
+[
+  {
+    "label": "R2",
+    "size": 20,
+    "rows": [
+      {
+        "tab": "events",
+        "op": "DELETE",
+        "n": 20
+      },
+      {
+        "tab": "events",
+        "op": "INSERT",
+        "n": 21
+      },
+      {
+        "tab": "meta",
+        "op": "UPDATE",
+        "n": 1
+      },
+      {
+        "tab": "records",
+        "op": "DELETE",
+        "n": 20
+      },
+      {
+        "tab": "records",
+        "op": "INSERT",
+        "n": 20
+      }
+    ],
+    "total": 82,
+    "unrelated": 78,
+    "pragma": {
+      "journal_mode": "wal",
+      "synchronous": 2,
+      "busy_timeout": 5000,
+      "cache_size": -8192,
+      "wal_autocheckpoint": 256
+    }
+  },
+  {
+    "label": "R2",
+    "size": 2000,
+    "rows": [
+      {
+        "tab": "events",
+        "op": "DELETE",
+        "n": 2000
+      },
+      {
+        "tab": "events",
+        "op": "INSERT",
+        "n": 2001
+      },
+      {
+        "tab": "meta",
+        "op": "UPDATE",
+        "n": 1
+      },
+      {
+        "tab": "records",
+        "op": "DELETE",
+        "n": 2000
+      },
+      {
+        "tab": "records",
+        "op": "INSERT",
+        "n": 2000
+      }
+    ],
+    "total": 8002,
+    "unrelated": 7998,
+    "pragma": {
+      "journal_mode": "wal",
+      "synchronous": 2,
+      "busy_timeout": 5000,
+      "cache_size": -8192,
+      "wal_autocheckpoint": 256
+    }
+  },
+  {
+    "label": "R3",
+    "size": 20,
+    "rows": [
+      {
+        "tab": "events",
+        "op": "INSERT",
+        "n": 1
+      },
+      {
+        "tab": "meta",
+        "op": "UPDATE",
+        "n": 1
+      },
+      {
+        "tab": "records",
+        "op": "UPDATE",
+        "n": 1
+      }
+    ],
+    "total": 3,
+    "unrelated": 0,
+    "pragma": {
+      "journal_mode": "wal",
+      "synchronous": 2,
+      "busy_timeout": 5000,
+      "cache_size": -8192,
+      "wal_autocheckpoint": 256
+    }
+  },
+  {
+    "label": "R3",
+    "size": 2000,
+    "rows": [
+      {
+        "tab": "events",
+        "op": "INSERT",
+        "n": 1
+      },
+      {
+        "tab": "meta",
+        "op": "UPDATE",
+        "n": 1
+      },
+      {
+        "tab": "records",
+        "op": "UPDATE",
+        "n": 1
+      }
+    ],
+    "total": 3,
+    "unrelated": 0,
+    "pragma": {
+      "journal_mode": "wal",
+      "synchronous": 2,
+      "busy_timeout": 5000,
+      "cache_size": -8192,
+      "wal_autocheckpoint": 256
+    }
+  }
+]
