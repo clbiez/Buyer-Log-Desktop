@@ -23,7 +23,8 @@ function sqlite(file) {
     }
   } catch (error) { db.close(); throw error; }
   const logic=transitions({clock:()=>CLOCK});
-  let closed=false;
+  let closed=false, writes=null;
+  const journalIndexes=new WeakMap();
   function assertOpen(){if(closed)throw Error('SQLite store is closed');}
   function read() {
     assertOpen();
@@ -35,39 +36,54 @@ function sqlite(file) {
       const state=normalizeState(row?JSON.parse(row.value):emptyState(DEVICE),DEVICE);
       state.records=Object.fromEntries(db.prepare('SELECT id,body FROM records ORDER BY rowid').all().map(r=>[r.id,JSON.parse(r.body)]));
       state.events=Object.fromEntries(db.prepare('SELECT event_id,receipt FROM events WHERE receipt IS NOT NULL ORDER BY rowid').all().map(r=>[r.event_id,JSON.parse(r.receipt)]));
-      state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>JSON.parse(r.body));
+      const journalIndex=new Map();
+      state.journal=db.prepare('SELECT body FROM events WHERE body IS NOT NULL ORDER BY sequence').all().map(r=>{const e=JSON.parse(r.body);journalIndex.set(e.eventId,e);return e;});
+      journalIndexes.set(state,journalIndex);
       if(owned)db.exec('COMMIT');return state;
     }catch(e){if(owned&&db.isTransaction)db.exec('ROLLBACK');throw e;}
   }
   function save(state) {
-    // Small correctness prototype: replace rows atomically. No large-data
-    // performance claim; historical benchmark measurements are not reused.
-    db.exec('DELETE FROM records; DELETE FROM events');
-    const put=db.prepare('INSERT INTO records VALUES(?,?,?,?,?)');
-    for(const [id,record] of Object.entries(state.records))put.run(id,JSON.stringify(record),record.kind??null,record.state??null,record.owner??null);
-    const journals=new Map(state.journal.map(e=>[e.eventId,e]));
-    const ids=new Set([...Object.keys(state.events),...journals.keys(),...Object.keys(state.syncLedger.eventIds)]);
-    const eventPut=db.prepare('INSERT INTO events VALUES(?,?,?,?,?,?,?)');
-    for(const id of ids) {
-      const e=journals.get(id);
-      const seq=e?.localSequence??state.syncLedger.eventIds[id]??null;
-      const compactedAck=Boolean(state.syncLedger.acknowledgedEventIds[id]) ||
-        (seq!=null && seq<=state.syncLedger.acknowledgedThrough);
-      eventPut.run(id,seq,Number(e?.uploaded??true),
-        Number(e?.acknowledged??compactedAck),Number(e?.synced??true),
-        e?JSON.stringify(e):null,state.events[id]?JSON.stringify(state.events[id]):null);
+    const own=(object,key)=>Object.hasOwn(object,key)?object[key]:undefined;
+    const getRecord=db.prepare('SELECT * FROM records WHERE id=?');
+    const putRecord=db.prepare('INSERT INTO records VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body,kind=excluded.kind,state=excluded.state,owner=excluded.owner');
+    // TEXT affinity normalizes numeric metadata in the persisted columns.
+    const text=value=>value==null?null:String(value);
+    for(const id of writes.records) {
+      const record=own(state.records,id),old=getRecord.get(id);
+      if(record===undefined){if(old)db.prepare('DELETE FROM records WHERE id=?').run(id);continue;}
+      const values=[JSON.stringify(record),text(record.kind),text(record.state),text(record.owner)];
+      if(!old||values.some((v,i)=>v!==old[['body','kind','state','owner'][i]]))putRecord.run(id,...values);
+    }
+    const getEvent=db.prepare('SELECT * FROM events WHERE event_id=?');
+    const putEvent=db.prepare('INSERT INTO events VALUES(?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET sequence=excluded.sequence,uploaded=excluded.uploaded,acknowledged=excluded.acknowledged,synced=excluded.synced,body=excluded.body,receipt=excluded.receipt');
+    const journals=journalIndexes.get(state);
+    for(const id of writes.events) {
+      const e=journals.get(id),receipt=own(state.events,id),ledgerSeq=own(state.syncLedger.eventIds,id),old=getEvent.get(id);
+      if(!e&&receipt===undefined&&ledgerSeq===undefined){if(old)db.prepare('DELETE FROM events WHERE event_id=?').run(id);continue;}
+      const seq=e?.localSequence??ledgerSeq??null;
+      const compactedAck=Boolean(own(state.syncLedger.acknowledgedEventIds,id)) || (seq!=null&&seq<=state.syncLedger.acknowledgedThrough);
+      const values=[seq,Number(e?.uploaded??true),Number(e?.acknowledged??compactedAck),Number(e?.synced??true),e?JSON.stringify(e):null,receipt?JSON.stringify(receipt):null];
+      if(!old||values.some((v,i)=>v!==old[['sequence','uploaded','acknowledged','synced','body','receipt'][i]]))putEvent.run(id,...values);
     }
     const {records,events,journal,...envelope}=state;
-    db.prepare("INSERT INTO meta VALUES('envelope',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify(envelope));
+    const body=JSON.stringify(envelope);
+    const old=db.prepare("SELECT value FROM meta WHERE key='envelope'").get();
+    if(!old||old.value!==body)db.prepare("INSERT INTO meta VALUES('envelope',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(body);
   }
   function transaction(fn) {
     assertOpen();db.exec('BEGIN IMMEDIATE');
     try {
+      writes={records:new Set(),events:new Set()};
       const state=read();const result=fn(state);save(state);db.exec('COMMIT');return result;
-    }catch(e){if(db.isTransaction)db.exec('ROLLBACK');throw e;}
+    }catch(e){if(db.isTransaction)db.exec('ROLLBACK');throw e;}finally{writes=null;}
   }
   function operation(state,op,payload,apply) {
-    logic.stampOperation(state,{op,payload});return apply(state,payload);
+    writes.records.add(recordId(op==='delta'?payload.delta.id:payload.id));
+    writes.events.add(payload.eventId);
+    const length=state.journal.length;
+    logic.stampOperation(state,{op,payload});const result=apply(state,payload);
+    for(let i=length;i<state.journal.length;i++){const e=state.journal[i];journalIndexes.get(state).set(e.eventId,e);writes.events.add(e.eventId);}
+    return result;
   }
   function prepare(item) {
     // Retained archived prototype input restriction used by the original
@@ -110,11 +126,14 @@ function sqlite(file) {
   function setSharedOwnerResolver(fn) {resolver=typeof fn==='function'?fn:null;logic.setSharedOwnerResolver(resolver);}
   function mark(ids,apply) {
     const normalized=[...new Set(ids.map(eventId).filter(Boolean))];if(!normalized.length)return {marked:0};
-    return transaction(s=>apply(s,{ids:normalized,at:new Date().toISOString()}));
+    return transaction(s=>{for(const id of normalized)writes.events.add(id);return apply(s,{ids:normalized,at:new Date().toISOString()});});
   }
   function markAcknowledgedThrough(lastSequence) {
     const limit=Math.max(0,Number(lastSequence)||0);if(!limit)return {marked:0};
-    return transaction(s=>logic.applyMarkAcknowledgedThrough(s,{lastSequence:limit,at:new Date().toISOString()}));
+    return transaction(s=>{
+      for(const row of db.prepare('SELECT event_id FROM events WHERE sequence<=? AND acknowledged=0').all(limit))writes.events.add(row.event_id);
+      return logic.applyMarkAcknowledgedThrough(s,{lastSequence:limit,at:new Date().toISOString()});
+    });
   }
   function resolveConflict(conflictId,choice='current',customValue) {
     return transaction(state=>{
@@ -140,7 +159,7 @@ function sqlite(file) {
       const next=[],ledger=state.syncLedger;let count=0,first=0,last=0;
       for(let i=0;i<journal.length;i++) {
         const e=journal[i];if(!e.uploaded||keep.has(i)){next.push(e);continue;}
-        const seq=Number(e.localSequence)||0;ledger.eventIds[e.eventId]=seq;delete state.events[e.eventId];count++;
+        const seq=Number(e.localSequence)||0;ledger.eventIds[e.eventId]=seq;delete state.events[e.eventId];journalIndexes.get(state).delete(e.eventId);writes.events.add(e.eventId);count++;
         if(!first||(seq&&seq<first))first=seq;if(seq>last)last=seq;
       }
       if(count){ledger.compactedEvents+=count;ledger.compactedThrough=Math.max(ledger.compactedThrough,last);

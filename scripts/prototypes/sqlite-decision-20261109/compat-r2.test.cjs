@@ -234,8 +234,8 @@ test('SQL failure during conflict, upload, ACK or resolution leaves all tables a
   const p=await pair(t),db=p.stores[1];await db.queuePatch(item(1));
   const delta={...item(2),revision:7,baseRevision:0,deviceId:'remote',localSequence:1,seen:{}};
   const before=await db.read();
-  const fail=()=>db.db.exec("CREATE TEMP TRIGGER abort_save BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT,'state save fault'); END");
-  const drop=()=>db.db.exec('DROP TRIGGER abort_save');
+  const fail=()=>db.db.exec("CREATE TEMP TRIGGER abort_save BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT,'state save fault'); END; CREATE TEMP TRIGGER abort_envelope BEFORE INSERT ON meta BEGIN SELECT RAISE(ABORT,'state save fault'); END");
+  const drop=()=>db.db.exec('DROP TRIGGER abort_save; DROP TRIGGER abort_envelope');
   for(const apply of [()=>db.applyDelta(delta),()=>db.markSynced(['r2-1']),()=>db.markAcknowledged(['r2-1']),()=>db.markAcknowledgedThrough(1)]) {
     fail();assert.throws(apply,/state save fault/);drop();assert.deepEqual(await db.read(),before);assert.equal(db.db.isTransaction,false);
   }
