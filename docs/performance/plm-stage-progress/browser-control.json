@@ -1,0 +1,410 @@
+[
+  {
+    "round": 0,
+    "variant": "base",
+    "startupMs": 1994.422733,
+    "firstMs": 6.400000000023283,
+    "cycleTimes": [
+      4.099999999976717,
+      4.5,
+      2.699999999953434,
+      2.400000000023283,
+      1.7999999999301508
+    ],
+    "refreshTimes": [
+      8.400000000023283,
+      9.79999999993015,
+      8.800000000046566,
+      6.699999999953434,
+      5.199999999953434
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2183.0999999999767,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2004
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8361,
+      "jsEventListeners": 2004
+    },
+    "heap": 24818324,
+    "longTasks": [
+      {
+        "start": 350,
+        "duration": 63
+      },
+      {
+        "start": 422.29999999993015,
+        "duration": 81
+      },
+      {
+        "start": 541.5,
+        "duration": 154
+      },
+      {
+        "start": 919.4000000000233,
+        "duration": 73
+      },
+      {
+        "start": 1071.1999999999534,
+        "duration": 80
+      },
+      {
+        "start": 1309.1999999999534,
+        "duration": 52
+      },
+      {
+        "start": 1387,
+        "duration": 61
+      },
+      {
+        "start": 2131.4000000000233,
+        "duration": 51
+      }
+    ]
+  },
+  {
+    "round": 0,
+    "variant": "base-control",
+    "startupMs": 1950.156078,
+    "firstMs": 2.900000000023283,
+    "cycleTimes": [
+      7,
+      2.300000000046566,
+      2.400000000023283,
+      2,
+      1.7999999999301508
+    ],
+    "refreshTimes": [
+      6.300000000046566,
+      11.5,
+      11.699999999953434,
+      6.199999999953434,
+      6.099999999976717
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2380.899999999907,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8373,
+      "jsEventListeners": 2048
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8373,
+      "jsEventListeners": 2048
+    },
+    "heap": 24765674,
+    "longTasks": [
+      {
+        "start": 453.69999999995343,
+        "duration": 129
+      },
+      {
+        "start": 594.3999999999069,
+        "duration": 68
+      },
+      {
+        "start": 663,
+        "duration": 79
+      },
+      {
+        "start": 795.8999999999069,
+        "duration": 180
+      },
+      {
+        "start": 1202.5,
+        "duration": 98
+      },
+      {
+        "start": 1504.2999999999302,
+        "duration": 78
+      },
+      {
+        "start": 2100.29999999993,
+        "duration": 83
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "variant": "base",
+    "startupMs": 1941.5436869999994,
+    "firstMs": 7.800000000046566,
+    "cycleTimes": [
+      3.699999999953434,
+      3.800000000046566,
+      3.199999999953434,
+      3.200000000069849,
+      2.5
+    ],
+    "refreshTimes": [
+      23.800000000046566,
+      9.599999999976717,
+      14.300000000046566,
+      6.600000000093132,
+      6.600000000093132
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2125,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2004
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8361,
+      "jsEventListeners": 2004
+    },
+    "heap": 24805154,
+    "longTasks": [
+      {
+        "start": 409.5999999999767,
+        "duration": 122
+      },
+      {
+        "start": 561.0999999999767,
+        "duration": 51
+      },
+      {
+        "start": 612.6999999999534,
+        "duration": 52
+      },
+      {
+        "start": 667.4000000000233,
+        "duration": 80
+      },
+      {
+        "start": 1143.1999999999534,
+        "duration": 88
+      },
+      {
+        "start": 1426.5,
+        "duration": 76
+      },
+      {
+        "start": 1687.5999999999767,
+        "duration": 77
+      },
+      {
+        "start": 1973.5,
+        "duration": 61
+      },
+      {
+        "start": 2183.8000000000466,
+        "duration": 76
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "variant": "base-control",
+    "startupMs": 1797.2402170000005,
+    "firstMs": 3.800000000046566,
+    "cycleTimes": [
+      7.599999999976717,
+      2.599999999976717,
+      2.199999999953434,
+      2.299999999930151,
+      2.299999999930151
+    ],
+    "refreshTimes": [
+      23,
+      17.899999999906868,
+      5.299999999930151,
+      13.800000000046566,
+      17.79999999993015
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2005.0999999999767,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8418,
+      "jsEventListeners": 2008
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2004
+    },
+    "heap": 23667272,
+    "longTasks": [
+      {
+        "start": 322.29999999993015,
+        "duration": 59
+      },
+      {
+        "start": 385,
+        "duration": 73
+      },
+      {
+        "start": 495.89999999990687,
+        "duration": 191
+      },
+      {
+        "start": 691.5999999999767,
+        "duration": 64
+      },
+      {
+        "start": 907.1999999999534,
+        "duration": 73
+      },
+      {
+        "start": 1062.7999999999302,
+        "duration": 87
+      },
+      {
+        "start": 1316.5999999999767,
+        "duration": 99
+      },
+      {
+        "start": 1805.3999999999069,
+        "duration": 57
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "variant": "base",
+    "startupMs": 1921.4945980000011,
+    "firstMs": 6.100000000093132,
+    "cycleTimes": [
+      2.800000000046566,
+      2.699999999953434,
+      2.099999999976717,
+      2.599999999976717,
+      2
+    ],
+    "refreshTimes": [
+      8.400000000023283,
+      5.699999999953434,
+      5.5,
+      7.299999999930151,
+      6
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2189,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8353,
+      "jsEventListeners": 2003
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8353,
+      "jsEventListeners": 2003
+    },
+    "heap": 24720408,
+    "longTasks": [
+      {
+        "start": 494.5,
+        "duration": 118
+      },
+      {
+        "start": 620.2000000000698,
+        "duration": 71
+      },
+      {
+        "start": 718.8000000000466,
+        "duration": 73
+      },
+      {
+        "start": 799.4000000000233,
+        "duration": 129
+      },
+      {
+        "start": 1052,
+        "duration": 51
+      },
+      {
+        "start": 1167.6000000000931,
+        "duration": 102
+      },
+      {
+        "start": 1433.1000000000931,
+        "duration": 71
+      },
+      {
+        "start": 2192.4000000000233,
+        "duration": 56
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "variant": "base-control",
+    "startupMs": 1967.7146930000017,
+    "firstMs": 9.599999999976717,
+    "cycleTimes": [
+      2.599999999976717,
+      1.900000000023283,
+      2.199999999953434,
+      1.7999999999301508,
+      2.1000000000931323
+    ],
+    "refreshTimes": [
+      14.199999999953434,
+      5.699999999953434,
+      5.5,
+      9.599999999976717,
+      4.800000000046566
+    ],
+    "jobRequests": 12,
+    "requestsAfterClose": 0,
+    "openAt": 2046.3000000000466,
+    "beforeCycles": {
+      "documents": 1,
+      "nodes": 8360,
+      "jsEventListeners": 2004
+    },
+    "afterCycles": {
+      "documents": 1,
+      "nodes": 8361,
+      "jsEventListeners": 2004
+    },
+    "heap": 24807959,
+    "longTasks": [
+      {
+        "start": 412.30000000004657,
+        "duration": 128
+      },
+      {
+        "start": 546.0999999999767,
+        "duration": 75
+      },
+      {
+        "start": 622.8000000000466,
+        "duration": 146
+      },
+      {
+        "start": 818.6999999999534,
+        "duration": 58
+      },
+      {
+        "start": 1170.1999999999534,
+        "duration": 109
+      },
+      {
+        "start": 1401.3000000000466,
+        "duration": 67
+      },
+      {
+        "start": 1867.5,
+        "duration": 60
+      },
+      {
+        "start": 2095.6999999999534,
+        "duration": 61
+      }
+    ]
+  }
+]

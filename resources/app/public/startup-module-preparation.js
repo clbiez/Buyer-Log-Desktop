@@ -3,7 +3,7 @@
   else root.BLStartupPreparation=factory();
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
-  const MODULES=['cp','orders','koleksiyon'];
+  const MODULES=['koleksiyon','cp','orders','backlog'];
   const STATUSES=new Set(['pending','loading','ready','error']);
   const INTENT_TTL_MS=30000;
   function create({readHistory=()=>({}),writeHistory=()=>{},now=Date.now,onChange=()=>{}}={}){

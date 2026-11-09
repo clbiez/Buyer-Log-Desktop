@@ -983,6 +983,7 @@
           <div class="toolbarMoreWrap" id="cpToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="cpToolsMenu" hidden>
+              <button type="button" class="tbtn" data-order-license-atlas="cp" disabled><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Lisans Atlası Oluştur" data-i18n-en="Create License Atlas">Lisans Atlası Oluştur</span></button>
               <button type="button" class="tbtn" id="cpDocumentReviewBtn"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Belge Operasyon Merkezi" data-i18n-en="Document Operations Center">Belge Operasyon Merkezi</span></button>
               <button type="button" class="tbtn" data-output-studio="cp"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="tbtn" id="cpEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
@@ -1052,6 +1053,7 @@
           <div class="toolbarMoreWrap" id="ordersToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="ordersToolsMenu" hidden>
+              <button type="button" class="tbtn" data-order-license-atlas="orders" disabled><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Lisans Atlası Oluştur" data-i18n-en="Create License Atlas">Lisans Atlası Oluştur</span></button>
               <button type="button" class="tbtn" data-output-studio="orders"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="navActionBtn" id="ordersLicenseRoyaltyBtn" data-license-royalty title="Lisans kartları / License cards"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Lisans Kartları" data-i18n-en="License Cards">Lisans Kartları</span></button>
               <button class="tbtn" id="ordersEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
@@ -1456,6 +1458,7 @@
       <input type="date" id="backlogAntrepoFrom">
       <input type="date" id="backlogAntrepoTo">
     </div>
+    <div id="backlogDateRangeAnchor" hidden></div>
     <div id="backlogDateRange" class="panel backlogDateRange"></div>
     <div id="backlogEmpty" class="empty">Backlog raporu, veri modeli yenilendiğinde ("Veri Modelinden Güncelle") otomatik oluşur.</div>
     <div id="backlogDetailModal" class="backlogDetailOverlay" hidden></div>

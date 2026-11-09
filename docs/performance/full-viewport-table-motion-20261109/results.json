@@ -1,0 +1,991 @@
+{
+  "baseMain": "4a0cc7b4",
+  "aa": false,
+  "fixture": {
+    "rows": 180,
+    "seed": 7,
+    "hashes": {
+      "ASAS": "8d7a040fba3fca629d78a8722f510b15a70e5240f1a5dc352854e586d11abe40",
+      "Antrepo": "e395f39ba38f10e19d20d3e0b18ab759b427a7e454fb10cbfda76a5726aa0059"
+    }
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "kind": "main",
+      "startupMs": 2252,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 5.2999999999883585,
+          "domReadyMs": 834.8999999999651,
+          "nextFrameMs": 904.2000000000116,
+          "longTasks": [
+            {
+              "start": 2697.2000000000116,
+              "duration": 238
+            },
+            {
+              "start": 2936.2000000000116,
+              "duration": 297
+            },
+            {
+              "start": 3347.399999999965,
+              "duration": 172
+            },
+            {
+              "start": 3520,
+              "duration": 366
+            }
+          ],
+          "setupMs": 5.2000000000116415,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.5,
+          "domReadyMs": 420.5999999999767,
+          "nextFrameMs": 749.5999999999767,
+          "longTasks": [
+            {
+              "start": 4933.899999999965,
+              "duration": 82
+            },
+            {
+              "start": 5016.899999999965,
+              "duration": 257
+            },
+            {
+              "start": 5345.299999999988,
+              "duration": 120
+            },
+            {
+              "start": 5466,
+              "duration": 241
+            }
+          ],
+          "setupMs": 5.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 67.09999999997672,
+          "domReadyMs": 67.09999999997672,
+          "nextFrameMs": 411.5999999999767,
+          "longTasks": [
+            {
+              "start": 7120.899999999965,
+              "duration": 283
+            },
+            {
+              "start": 7404.200000000012,
+              "duration": 124
+            }
+          ],
+          "setupMs": 4.5,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.7999999999883585,
+          "domReadyMs": 6.7999999999883585,
+          "nextFrameMs": 227.19999999995343,
+          "longTasks": [
+            {
+              "start": 9068.899999999965,
+              "duration": 161
+            },
+            {
+              "start": 9230.399999999965,
+              "duration": 63
+            }
+          ],
+          "setupMs": 4,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 0,
+      "kind": "candidate",
+      "startupMs": 1926,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 4.2000000000116415,
+          "domReadyMs": 597.8000000000466,
+          "nextFrameMs": 687.2000000000116,
+          "longTasks": [
+            {
+              "start": 2288.5,
+              "duration": 210
+            },
+            {
+              "start": 2499,
+              "duration": 276
+            },
+            {
+              "start": 2809.0999999999767,
+              "duration": 54
+            },
+            {
+              "start": 2899.5999999999767,
+              "duration": 130
+            },
+            {
+              "start": 3030.2999999999884,
+              "duration": 334
+            }
+          ],
+          "setupMs": 5.7999999999883585,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 9.5,
+          "domReadyMs": 474.79999999998836,
+          "nextFrameMs": 848.9000000000233,
+          "longTasks": [
+            {
+              "start": 4385.199999999953,
+              "duration": 92
+            },
+            {
+              "start": 4565.599999999977,
+              "duration": 86
+            },
+            {
+              "start": 4652.299999999988,
+              "duration": 297
+            },
+            {
+              "start": 5036.799999999988,
+              "duration": 143
+            },
+            {
+              "start": 5180.799999999988,
+              "duration": 262
+            }
+          ],
+          "setupMs": 4.5,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "cp",
+          "switchMs": 75.69999999995343,
+          "domReadyMs": 75.69999999995343,
+          "nextFrameMs": 398.0999999999767,
+          "longTasks": [
+            {
+              "start": 6849.799999999988,
+              "duration": 272
+            },
+            {
+              "start": 7122,
+              "duration": 121
+            }
+          ],
+          "setupMs": 5.899999999965075,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.099999999976717,
+          "domReadyMs": 6.099999999976717,
+          "nextFrameMs": 238.80000000004657,
+          "longTasks": [
+            {
+              "start": 8769.399999999965,
+              "duration": 162
+            },
+            {
+              "start": 8932,
+              "duration": 67
+            }
+          ],
+          "setupMs": 5.300000000046566,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 1,
+      "kind": "main",
+      "startupMs": 1906,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 4.200000000069849,
+          "domReadyMs": 751.4000000000233,
+          "nextFrameMs": 830.7000000000698,
+          "longTasks": [
+            {
+              "start": 2325.5,
+              "duration": 237
+            },
+            {
+              "start": 2563.3000000000466,
+              "duration": 329
+            },
+            {
+              "start": 3015.0999999999767,
+              "duration": 140
+            },
+            {
+              "start": 3155.8000000000466,
+              "duration": 423
+            }
+          ],
+          "setupMs": 4.599999999976717,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 6.699999999953434,
+          "domReadyMs": 515.6999999999534,
+          "nextFrameMs": 581,
+          "longTasks": [
+            {
+              "start": 4613.300000000047,
+              "duration": 99
+            },
+            {
+              "start": 4712.5,
+              "duration": 333
+            },
+            {
+              "start": 5054.599999999977,
+              "duration": 52
+            },
+            {
+              "start": 5114.099999999977,
+              "duration": 156
+            },
+            {
+              "start": 5271,
+              "duration": 293
+            }
+          ],
+          "setupMs": 4.099999999976717,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 61.89999999990687,
+          "domReadyMs": 61.89999999990687,
+          "nextFrameMs": 443.79999999993015,
+          "longTasks": [
+            {
+              "start": 6632.699999999953,
+              "duration": 281
+            },
+            {
+              "start": 6914.400000000023,
+              "duration": 156
+            }
+          ],
+          "setupMs": 6.5,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.599999999976717,
+          "domReadyMs": 5.599999999976717,
+          "nextFrameMs": 246.5,
+          "longTasks": [
+            {
+              "start": 8615.300000000047,
+              "duration": 176
+            },
+            {
+              "start": 8791.599999999977,
+              "duration": 66
+            }
+          ],
+          "setupMs": 4.400000000023283,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 1,
+      "kind": "candidate",
+      "startupMs": 1982,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 5.5,
+          "domReadyMs": 745.5999999999767,
+          "nextFrameMs": 840.4000000000233,
+          "longTasks": [
+            {
+              "start": 2285.4000000000233,
+              "duration": 253
+            },
+            {
+              "start": 2539.1999999999534,
+              "duration": 339
+            },
+            {
+              "start": 2926.5999999999767,
+              "duration": 60
+            },
+            {
+              "start": 3018.29999999993,
+              "duration": 139
+            },
+            {
+              "start": 3157.5999999999767,
+              "duration": 374
+            }
+          ],
+          "setupMs": 6.5,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.800000000046566,
+          "domReadyMs": 411.60000000009313,
+          "nextFrameMs": 742.8000000000466,
+          "longTasks": [
+            {
+              "start": 4622.29999999993,
+              "duration": 93
+            },
+            {
+              "start": 4715.599999999977,
+              "duration": 237
+            },
+            {
+              "start": 5033.199999999953,
+              "duration": 119
+            },
+            {
+              "start": 5153.099999999977,
+              "duration": 242
+            }
+          ],
+          "setupMs": 4.599999999976717,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "cp",
+          "switchMs": 73.5,
+          "domReadyMs": 73.5,
+          "nextFrameMs": 412.5999999999767,
+          "longTasks": [
+            {
+              "start": 6812.900000000023,
+              "duration": 275
+            },
+            {
+              "start": 7088.099999999977,
+              "duration": 132
+            }
+          ],
+          "setupMs": 5.5,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.799999999930151,
+          "domReadyMs": 5.799999999930151,
+          "nextFrameMs": 276.0999999999767,
+          "longTasks": [
+            {
+              "start": 8748.29999999993,
+              "duration": 171
+            },
+            {
+              "start": 8919.699999999953,
+              "duration": 87
+            },
+            {
+              "start": 9413.900000000023,
+              "duration": 51
+            }
+          ],
+          "setupMs": 6.400000000023283,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 2,
+      "kind": "main",
+      "startupMs": 1659,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 5.5,
+          "domReadyMs": 679.0999999999767,
+          "nextFrameMs": 753,
+          "longTasks": [
+            {
+              "start": 2032.2999999999302,
+              "duration": 232
+            },
+            {
+              "start": 2265.0999999999767,
+              "duration": 282
+            },
+            {
+              "start": 2661.29999999993,
+              "duration": 125
+            },
+            {
+              "start": 2812.6999999999534,
+              "duration": 129
+            },
+            {
+              "start": 2942.1999999999534,
+              "duration": 267
+            }
+          ],
+          "setupMs": 5.300000000046566,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 35.800000000046566,
+          "domReadyMs": 487.4000000000233,
+          "nextFrameMs": 559.3000000000466,
+          "longTasks": [
+            {
+              "start": 4143.699999999953,
+              "duration": 51
+            },
+            {
+              "start": 4195.29999999993,
+              "duration": 54
+            },
+            {
+              "start": 4296.79999999993,
+              "duration": 93
+            },
+            {
+              "start": 4390.599999999977,
+              "duration": 289
+            },
+            {
+              "start": 4692.699999999953,
+              "duration": 55
+            },
+            {
+              "start": 4760.5,
+              "duration": 152
+            },
+            {
+              "start": 4913.400000000023,
+              "duration": 265
+            }
+          ],
+          "setupMs": 4,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "cp",
+          "switchMs": 68,
+          "domReadyMs": 68,
+          "nextFrameMs": 405.0999999999767,
+          "longTasks": [
+            {
+              "start": 6270.400000000023,
+              "duration": 273
+            },
+            {
+              "start": 6544.199999999953,
+              "duration": 128
+            }
+          ],
+          "setupMs": 4.200000000069849,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        },
+        {
+          "tab": "orders",
+          "switchMs": 5.099999999976717,
+          "domReadyMs": 5.200000000069849,
+          "nextFrameMs": 229.30000000004657,
+          "longTasks": [
+            {
+              "start": 8197,
+              "duration": 163
+            },
+            {
+              "start": 8360,
+              "duration": 64
+            }
+          ],
+          "setupMs": 4.299999999930151,
+          "eligible": 22,
+          "animated": 6,
+          "coverage": false,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 6
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "pair": 2,
+      "kind": "candidate",
+      "startupMs": 1647,
+      "visits": [
+        {
+          "tab": "cp",
+          "switchMs": 13.900000000023283,
+          "domReadyMs": 1009.0999999999767,
+          "nextFrameMs": 1098.5,
+          "longTasks": [
+            {
+              "start": 1790.5,
+              "duration": 92
+            },
+            {
+              "start": 2085.3000000000466,
+              "duration": 249
+            },
+            {
+              "start": 2335.20000000007,
+              "duration": 295
+            },
+            {
+              "start": 2675,
+              "duration": 55
+            },
+            {
+              "start": 2777.70000000007,
+              "duration": 198
+            },
+            {
+              "start": 2976.20000000007,
+              "duration": 356
+            }
+          ],
+          "setupMs": 6.200000000069849,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 10.199999999953434,
+          "domReadyMs": 454.69999999995343,
+          "nextFrameMs": 913.0999999999767,
+          "longTasks": [
+            {
+              "start": 4191,
+              "duration": 77
+            },
+            {
+              "start": 4416.100000000093,
+              "duration": 91
+            },
+            {
+              "start": 4507.300000000047,
+              "duration": 263
+            },
+            {
+              "start": 4805.20000000007,
+              "duration": 148
+            },
+            {
+              "start": 4954.20000000007,
+              "duration": 258
+            }
+          ],
+          "setupMs": 4.800000000046566,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "cp",
+          "switchMs": 76.80000000004657,
+          "domReadyMs": 76.80000000004657,
+          "nextFrameMs": 449.5,
+          "longTasks": [
+            {
+              "start": 6753.900000000023,
+              "duration": 299
+            },
+            {
+              "start": 7053,
+              "duration": 146
+            }
+          ],
+          "setupMs": 5.599999999976717,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        },
+        {
+          "tab": "orders",
+          "switchMs": 8,
+          "domReadyMs": 8,
+          "nextFrameMs": 274.4000000000233,
+          "longTasks": [
+            {
+              "start": 8728.300000000047,
+              "duration": 188
+            },
+            {
+              "start": 8917.100000000093,
+              "duration": 81
+            }
+          ],
+          "setupMs": 6.699999999953434,
+          "eligible": 22,
+          "animated": 22,
+          "coverage": true,
+          "endMs": 390,
+          "dataParity": true,
+          "activeRowEffects": 22
+        }
+      ],
+      "cleanup": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "matrix": [
+    {
+      "theme": "light",
+      "scale": "compact",
+      "lang": "tr",
+      "setupMs": 4.099999999976717,
+      "eligible": 23,
+      "animated": 23,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 23
+    },
+    {
+      "theme": "light",
+      "scale": "compact",
+      "lang": "en",
+      "setupMs": 5.900000000023283,
+      "eligible": 23,
+      "animated": 23,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 23
+    },
+    {
+      "theme": "light",
+      "scale": "standard",
+      "lang": "tr",
+      "setupMs": 8.5,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "light",
+      "scale": "standard",
+      "lang": "en",
+      "setupMs": 5.599999999976717,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "light",
+      "scale": "large",
+      "lang": "tr",
+      "setupMs": 7.900000000023283,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "light",
+      "scale": "large",
+      "lang": "en",
+      "setupMs": 7.299999999930151,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "light",
+      "scale": "xl",
+      "lang": "tr",
+      "setupMs": 4.5,
+      "eligible": 21,
+      "animated": 21,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 21
+    },
+    {
+      "theme": "light",
+      "scale": "xl",
+      "lang": "en",
+      "setupMs": 5.100000000093132,
+      "eligible": 21,
+      "animated": 21,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 21
+    },
+    {
+      "theme": "dark",
+      "scale": "compact",
+      "lang": "tr",
+      "setupMs": 5.100000000093132,
+      "eligible": 23,
+      "animated": 23,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 23
+    },
+    {
+      "theme": "dark",
+      "scale": "compact",
+      "lang": "en",
+      "setupMs": 7.599999999976717,
+      "eligible": 23,
+      "animated": 23,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 23
+    },
+    {
+      "theme": "dark",
+      "scale": "standard",
+      "lang": "tr",
+      "setupMs": 5.899999999906868,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "dark",
+      "scale": "standard",
+      "lang": "en",
+      "setupMs": 4.599999999976717,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "dark",
+      "scale": "large",
+      "lang": "tr",
+      "setupMs": 4.299999999930151,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "dark",
+      "scale": "large",
+      "lang": "en",
+      "setupMs": 4.800000000046566,
+      "eligible": 22,
+      "animated": 22,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 22
+    },
+    {
+      "theme": "dark",
+      "scale": "xl",
+      "lang": "tr",
+      "setupMs": 4.399999999906868,
+      "eligible": 21,
+      "animated": 21,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 21
+    },
+    {
+      "theme": "dark",
+      "scale": "xl",
+      "lang": "en",
+      "setupMs": 8,
+      "eligible": 21,
+      "animated": 21,
+      "coverage": true,
+      "endMs": 390,
+      "dataParity": true,
+      "activeRowEffects": 21
+    }
+  ],
+  "errors": [],
+  "chromium": "151.0.7922.173",
+  "status": "passed"
+}

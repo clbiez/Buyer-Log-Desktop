@@ -27,6 +27,7 @@ const api = require('./corenectum-style-api');
 const jobStore = require('./plm-image-job-store');
 const { runBounded } = require('./plm-image-download-queue');
 const ingestLib = require('./plm-image-ingest');
+const { imageByteBudget, createImageStaging, DOWNLOAD_BYTES, COMMIT_BYTES } = require('./plm-image-byte-budget-int03');
 
 const AUTH_CODES = new Set(['CORENECTUM_LOGIN_REQUIRED', 'PLM_IMAGE_AUTH', 'CORENECTUM_AUTH_REQUIRED', 'CORENECTUM_API_TOKEN_REQUIRED', 'CORENECTUM_API_TOKEN_INVALID']);
 /* API token hatası (409) da yetki hatasıdır. Özgün kod korunur: istemcideki
@@ -203,6 +204,7 @@ async function runPlmImageSync(input = {}) {
   const phase = (status, text) => { if (checkpoint) checkpoint.phase(status, text); };
 
   counts.requested = requests.length;
+  onProgress({ stage: 'preparing', phase: 'Görsel planı hazırlanıyor', model: '' });
   if (!requests.length) {
     return { status: jobStore.STATUS_COMPLETED, counts, failures, skipped, outcomes: [], linksUpdated: 0 };
   }
@@ -227,6 +229,7 @@ async function runPlmImageSync(input = {}) {
 
   // 1) Çözümleme
   phase(jobStore.STATUS_RESOLVING, 'PLM çözümleniyor');
+  onProgress({ stage: 'resolving', phase: 'PLM çözümleniyor', current: 0, total: api.dedupePlmCodes(decided.map(item => item.plmId)).length, model: '' });
   const resolution = await resolveStyleRows(decided.map(item => item.plmId), {
     ...input, isCancelled, onProgress: progress => onProgress({ ...progress, stage: 'resolving' }),
   });
@@ -265,14 +268,16 @@ async function runPlmImageSync(input = {}) {
   // 2) Metadata (tekil styleId)
   phase(jobStore.STATUS_FETCHING_IMAGES, 'Renk görselleri okunuyor');
   const plan = api.uniqueStyleIdPlan(pending);
+  onProgress({ stage: 'fetching-images', phase: 'Renk görselleri okunuyor', current: 0, total: plan.styleIds.length, model: '' });
   const meta = await fetchStyleImageMetadata(plan.styleIds, {
-    ...input, isCancelled, onProgress: progress => onProgress({ ...progress, stage: 'fetching-images' }),
+    ...input, isCancelled, onProgress: progress => onProgress({ ...progress, stage: 'fetching-images', model: '' }),
   });
   counts.stylesProcessed = meta.metadata.size;
   counts.styleMetadataFailed = meta.errors.size;
   if (checkpoint) checkpoint.set({ stylesProcessed: counts.stylesProcessed, styleMetadataFailed: counts.styleMetadataFailed });
 
   // 3) Seçim + önbellek + indirme planı
+  onProgress({ stage: 'selecting', phase: 'Görseller ve önbellek kontrol ediliyor', model: '' });
   const downloads = [];
   const ready = [];
   for (const item of pending) {
@@ -328,64 +333,87 @@ async function runPlmImageSync(input = {}) {
     byUrl.get(identity).items.push(item);
   }
   const uniqueUrls = [...byUrl.values()];
-  let downloaded = 0;
+  let downloaded = 0, downloadsProcessed = 0;
+  onProgress({ stage: 'downloading', phase: 'Görseller indiriliyor', current: 0, total: uniqueUrls.length, model: '' });
 
-  const run = await runBounded(uniqueUrls, async task => {
-    assertNotCancelled(isCancelled);
-    const image = await downloadImage(task.url, { isCancelled });
-    downloaded += 1;
-    counts.downloadsCompleted = downloaded;
-    counts.bytesDownloaded += Number(image.size) || 0;
-    onProgress({ phase: 'Görseller indiriliyor', current: downloaded, total: uniqueUrls.length, model: task.items[0] && task.items[0].plmId, stage: 'downloading' });
-    if (checkpoint) checkpoint.set({ downloadsCompleted: counts.downloadsCompleted, bytesDownloaded: counts.bytesDownloaded });
-    return image;
-  }, { concurrency: api.boundedConcurrency(input.downloadConcurrency, api.IMAGE_DOWNLOAD_CONCURRENCY), isCancelled });
+  const staging = await createImageStaging();
+  try {
+    const run = await runBounded(uniqueUrls, async task => {
+      assertNotCancelled(isCancelled);
+      const permit = await imageByteBudget.acquire(DOWNLOAD_BYTES, isCancelled);
+      try {
+        const image = await downloadImage(task.url, { isCancelled });
+        const staged = await staging.write(image);
+        downloaded += 1;
+        counts.downloadsCompleted = downloaded;
+        counts.bytesDownloaded += Number(image.size) || 0;
+        if (checkpoint) checkpoint.set({ downloadsCompleted: counts.downloadsCompleted, bytesDownloaded: counts.bytesDownloaded });
+        return staged;
+      } finally {
+        permit.release();
+        downloadsProcessed += 1;
+        onProgress({ phase: 'Görseller indiriliyor', current: downloadsProcessed, total: uniqueUrls.length, model: task.items[0] && task.items[0].plmId, stage: 'downloading' });
+      }
+    }, { concurrency: api.boundedConcurrency(input.downloadConcurrency, api.IMAGE_DOWNLOAD_CONCURRENCY), isCancelled });
 
-  for (let index = 0; index < uniqueUrls.length; index += 1) {
-    const result = run.results[index];
-    const task = uniqueUrls[index];
-    if (!result || result.cancelled) continue;
-    if (!result.ok) {
-      // TEK bir görselin başarısızlığı işi düşürmez.
-      for (const item of task.items) fail({ ...item, code: clean(result.error && result.error.code, 60) || 'PLM_IMAGE_DOWNLOAD_FAILED', error: clean(result.error && result.error.message, 300) });
-      continue;
+    for (let index = 0; index < uniqueUrls.length; index += 1) {
+      const result = run.results[index];
+      const task = uniqueUrls[index];
+      if (!result || result.cancelled) continue;
+      if (!result.ok) {
+        if (isCancellation(result.error)) continue;
+        // TEK bir görselin başarısızlığı işi düşürmez.
+        for (const item of task.items) fail({ ...item, code: clean(result.error && result.error.code, 60) || 'PLM_IMAGE_DOWNLOAD_FAILED', error: clean(result.error && result.error.message, 300) });
+        continue;
+      }
+      for (const item of task.items) {
+        ready.push(staging.entry(item, result.value));
+      }
     }
-    for (const item of task.items) {
-      ready.push({ ...item, buffer: result.value.buffer, mimeType: result.value.mimeType });
+
+    // 5) Kanonik yazma
+    let commit = { outcomes: [], linksUpdated: 0, counts: {}, overrides: { imagemap }, store, removedFiles: 0 };
+    if (ready.length) {
+      onProgress({ stage: 'waiting-memory', phase: 'Yerel kayıt için bellek sırası bekleniyor', model: '' });
+      // İptal edilen iş, önceki gibi başarıyla indirilen alt kümeyi yazar.
+      // Bu rezervasyonu iptal ederek başarılı sonuçları kaybetme.
+      const permit = await imageByteBudget.acquire(COMMIT_BYTES);
+      try {
+        onProgress({ stage: 'committing', phase: 'Görseller ve model bağlantıları kaydediliyor', model: '' });
+        await new Promise(resolve => setImmediate(resolve));
+        commit = await ingest.commit(ready, { store, imagemap, overwriteManual, dropOldFiles: input.dropOldFiles === true });
+      } finally { permit.release(); }
+      for (const outcome of commit.outcomes) {
+        if (outcome.status === ingestLib.COMMIT_FAILED) fail({ ...outcome, error: outcome.error, code: outcome.code });
+        else if (checkpoint) checkpoint.complete(outcome);
+      }
+      counts.manualPreserved += (commit.counts.manualPreserved || 0);
     }
+
+    const cancelled = isCancelled() || run.cancelled;
+    const status = cancelled ? jobStore.STATUS_CANCELLED
+      : failures.length ? jobStore.STATUS_PARTIAL
+        : jobStore.STATUS_COMPLETED;
+    phase(status, '');
+
+    return {
+      status,
+      counts,
+      failures,
+      skipped,
+      outcomes: commit.outcomes,
+      linksUpdated: commit.linksUpdated,
+      overrides: commit.overrides,
+      store: commit.store || store,
+      removedFiles: commit.removedFiles || 0,
+      resolution: { batchLog: resolution.batchLog, ambiguous: resolution.ambiguous },
+      metadataCalls: meta.calls,
+      uniqueDownloads: uniqueUrls.length,
+    };
+  } finally {
+    onProgress({ stage: 'cleanup', phase: 'Geçici görsel dosyaları temizleniyor', model: '' });
+    await staging.close();
   }
-
-  // 5) Kanonik yazma
-  let commit = { outcomes: [], linksUpdated: 0, counts: {}, overrides: { imagemap }, store, removedFiles: 0 };
-  if (ready.length) {
-    commit = ingest.commit(ready, { store, imagemap, overwriteManual, dropOldFiles: input.dropOldFiles === true });
-    for (const outcome of commit.outcomes) {
-      if (outcome.status === ingestLib.COMMIT_FAILED) fail({ ...outcome, error: outcome.error, code: outcome.code });
-      else if (checkpoint) checkpoint.complete(outcome);
-    }
-    counts.manualPreserved += (commit.counts.manualPreserved || 0);
-  }
-
-  const cancelled = isCancelled() || run.cancelled;
-  const status = cancelled ? jobStore.STATUS_CANCELLED
-    : failures.length ? jobStore.STATUS_PARTIAL
-      : jobStore.STATUS_COMPLETED;
-  phase(status, '');
-
-  return {
-    status,
-    counts,
-    failures,
-    skipped,
-    outcomes: commit.outcomes,
-    linksUpdated: commit.linksUpdated,
-    overrides: commit.overrides,
-    store: commit.store || store,
-    removedFiles: commit.removedFiles || 0,
-    resolution: { batchLog: resolution.batchLog, ambiguous: resolution.ambiguous },
-    metadataCalls: meta.calls,
-    uniqueDownloads: uniqueUrls.length,
-  };
 }
 
 /* HAZIR PAKET AKIŞI — canlı senkronla AYNI kanonik alım yolunu kullanır.
@@ -413,6 +441,8 @@ async function runPackageImport(input = {}) {
 
   if (checkpoint) checkpoint.phase(jobStore.STATUS_DOWNLOADING, 'Paket görselleri alınıyor');
   let processed = 0;
+  const reportReading = () => onProgress({ stage: 'reading-package', phase: 'Paket görselleri alınıyor', current: processed, total: entries.length, model: '' });
+  reportReading();
   // Baytlar TEK TEK okunur: 5.876 görselin tamamını belleğe almak gereksiz ve
   // tehlikelidir (önizleme de bu yüzden bayt tutmaz).
   for (const entry of entries) {
@@ -429,7 +459,7 @@ async function runPackageImport(input = {}) {
       fail({ ...entry, code: 'PLM_PACKAGE_FILE_UNREADABLE', error: clean(error && error.message, 300) });
     }
     if (processed % 25 === 0 || processed === entries.length) {
-      onProgress({ phase: 'Paket görselleri alınıyor', current: processed, total: entries.length, model: entry.plmId, stage: 'downloading' });
+      onProgress({ phase: 'Paket görselleri alınıyor', current: processed, total: entries.length, model: entry.plmId, stage: 'reading-package' });
       if (checkpoint) checkpoint.set({ downloadsCompleted: counts.downloadsCompleted, bytesDownloaded: counts.bytesDownloaded });
     }
     // Bellek tavanı: biriken baytlar eşiği aşarsa ara yazma yapılır.
@@ -437,6 +467,7 @@ async function runPackageImport(input = {}) {
       const flushed = commitBatch(ingest, ready.splice(0, ready.length), input, counts, fail, checkpoint);
       if (flushed) input.imagemap = (flushed.overrides && flushed.overrides.imagemap) || input.imagemap;
       if (flushed && flushed.store) input.store = flushed.store;
+      if (processed < entries.length) reportReading();
     }
   }
 
@@ -458,6 +489,7 @@ async function runPackageImport(input = {}) {
 }
 
 function commitBatch(ingest, batch, input, counts, fail, checkpoint) {
+  if (typeof input.onProgress === 'function') input.onProgress({ stage: 'committing', phase: 'Görseller ve model bağlantıları kaydediliyor', model: '' });
   const result = ingest.commit(batch, {
     store: input.store,
     imagemap: input.imagemap || {},

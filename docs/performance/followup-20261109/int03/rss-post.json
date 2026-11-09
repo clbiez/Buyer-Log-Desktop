@@ -1,0 +1,44 @@
+{
+  "mode": "post-change",
+  "node": "v24.19.0",
+  "platform": "linux/x64",
+  "synthetic": true,
+  "serviceSha256": "16fcbcadd88922ddd47812dee811a4211b99a6c9cbe9d270ecb97640dd7ec269",
+  "helperSha256": "afde8caff6610976dd225c92bfcef7c5f8111781c81d8e5ccf0ada1cae448363",
+  "jobs": 2,
+  "imagesPerJob": 40,
+  "sizesMiB": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "bytesDownloaded": 251658240,
+  "outcomes": 80,
+  "contentHashesSha256": "1e685fc22e0ab535dc72aea2134d1f08e987f86c48634b5e3f939960cd808b85",
+  "before": {
+    "rss": 45215744,
+    "heapTotal": 12185600,
+    "heapUsed": 9100664,
+    "external": 2720922,
+    "arrayBuffers": 162315
+  },
+  "sampledPeak": {
+    "rss": 155054080,
+    "arrayBuffers": 102958711,
+    "external": 111812142
+  },
+  "maxEagerBufferRootsAtCommit": 0,
+  "reservation": {
+    "limit": 268435456,
+    "used": 0,
+    "peak": 268435456,
+    "waiting": 0
+  },
+  "reservationIsRss": false,
+  "statuses": [
+    "completed",
+    "completed"
+  ]
+}

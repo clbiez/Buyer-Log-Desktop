@@ -230,7 +230,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
       orders: { fname: 'Eski', rows: [{ 'Order Code': 1 }] },
       ordersLogisticExpanded: new Set(),
     },
-    ordersLoadPromise: null,
+    ordersLoadPromise: null,backgroundWarmupUnrendered:new Set(),
     appLang: 'tr',
     setOrdersLoadingState: () => {},
     fetchOrdersProjection: async () => {

@@ -50,13 +50,17 @@ jobs:
       - name: CP checklist pass caches, single refresh and delta recalculation
         run: node --test tests/checklist-components-row-cache.test.js tests/cp-personal-layer-delta.test.js tests/checklist-columns-delta.test.js tests/checklist-summary-contribution-cache.test.js tests/checklist-applies-row-memo.test.js tests/checklist-answer-batch-notify.test.js tests/checklist-assistant-view-reuse.test.js tests/checklist-remote-merge-noop.test.js tests/checklist-components-count-lookups.test.js
       - name: Thinking Orbs startup and navigation regression
-        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js tests/intake-ui-controls.test.js tests/first-transition-benchmark.test.js
+        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/startup-trivia-v20261001.test.js tests/navigation-revisit-perf-v250.test.js tests/persistent-page-navigation.test.js tests/startup-background-warmup.test.js tests/shell05-native-module-warmup.test.js tests/intake-ui-controls.test.js tests/first-transition-benchmark.test.js
       - name: Post-update startup freeze, launch notice steps and module gate
         run: node --test tests/launcher-sync-offthread-v70335.test.js tests/launcher-early-notice.test.js tests/launcher-offthread-verification.test.js tests/startup-progress-splash-v70321.test.js tests/startup-background-warmup.test.js tests/updater-launcher-upgrade-gate.test.js
       - name: Global Flow startup curtain and performance visibility
         run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
+      - name: PLM image job phases and progress regression
+        run: node --test tests/plm-stage-progress.test.js tests/plm-operations-ui-v915.test.js tests/job-registry-v914.test.js tests/plm-image-pipeline-v1100.test.js
       - name: LCW AI embedded session and PLM BOM regression
         run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js tests/plm-sync-two-phase.test.js tests/plm-sync-colours-retry.test.js tests/collection-artwork-detail.test.js
+      - name: LCW AI deterministic metrics, LFL and supplier query regression
+        run: node --test tests/lcwai-data-query.test.js tests/lcwai-weighted-metrics.test.js tests/lcwai-analysis-queries.test.js tests/lcwai-chat-data-query.test.js
       - name: Excel import AI validation and canonical import regression
         run: node --test tests/excel-import-ai.test.js tests/excel-import-plan-v1060.test.js tests/excel-import-mapping-match-v1060.test.js tests/collection-excel-import-actions-v20260920.test.js
       - name: Release version, lock, SBOM and artifact bytes

@@ -67,7 +67,12 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
         source, entries: entries.length, updated: result.updated, cleared: result.cleared, skipped: result.skipped, conflicts: result.conflicts || 0, revision: result.revision,
       });
       res.json(result);
-    } catch (err) { automationError(res, err, 'Checklist cevapları kaydedilemedi.'); }
+    } catch (err) {
+      if(err.code==='CHECKLIST_COMPONENTS_INVALID'&&err.orderKey&&err.itemId){
+        return res.status(err.statusCode||400).json({error:err.message,code:err.code,orderKey:err.orderKey,itemId:err.itemId});
+      }
+      automationError(res, err, 'Checklist cevapları kaydedilemedi.');
+    }
   });
   app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), async (req, res) => {
     try {

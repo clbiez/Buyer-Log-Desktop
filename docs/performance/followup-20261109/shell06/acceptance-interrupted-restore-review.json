@@ -1,0 +1,193 @@
+{
+  "baseSha": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "synthetic": true,
+  "nativeElectron": "NOT VERIFIED",
+  "scenarios": [
+    {
+      "name": "baseline-three-tabs",
+      "durationMs": 21001,
+      "requests": [
+        {
+          "page": 0,
+          "at": 1794174869963,
+          "offsetMs": 6005
+        },
+        {
+          "page": 1,
+          "at": 1794174870152,
+          "offsetMs": 6194
+        },
+        {
+          "page": 2,
+          "at": 1794174870198,
+          "offsetMs": 6240
+        },
+        {
+          "page": 0,
+          "at": 1794174876963,
+          "offsetMs": 13005
+        },
+        {
+          "page": 1,
+          "at": 1794174877153,
+          "offsetMs": 13195
+        },
+        {
+          "page": 2,
+          "at": 1794174877207,
+          "offsetMs": 13249
+        },
+        {
+          "page": 0,
+          "at": 1794174883962,
+          "offsetMs": 20004
+        },
+        {
+          "page": 1,
+          "at": 1794174884153,
+          "offsetMs": 20195
+        },
+        {
+          "page": 2,
+          "at": 1794174884198,
+          "offsetMs": 20240
+        }
+      ],
+      "count": 9,
+      "requestingTabs": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "shared-three-tabs",
+      "durationMs": 21000,
+      "requests": [
+        {
+          "page": 0,
+          "at": 1794174896282,
+          "offsetMs": 6294
+        },
+        {
+          "page": 0,
+          "at": 1794174903288,
+          "offsetMs": 13300
+        },
+        {
+          "page": 0,
+          "at": 1794174910295,
+          "offsetMs": 20307
+        }
+      ],
+      "count": 3,
+      "requestingTabs": [
+        0
+      ]
+    },
+    {
+      "name": "revision-fanout",
+      "revision": 2,
+      "received": [
+        {
+          "at": 1794174917306,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:55:10.992Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:54:21.155Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        },
+        {
+          "at": 1794174917307,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:55:10.992Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:54:21.155Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        },
+        {
+          "at": 1794174917307,
+          "changed": [
+            "quotation"
+          ],
+          "revisions": {
+            "schemaVersion": 1,
+            "revision": 3,
+            "entities": {
+              "quotation": {
+                "revision": 2,
+                "updatedAt": "2026-11-08T21:55:10.992Z"
+              },
+              "collection": {
+                "revision": 1,
+                "updatedAt": "2026-11-08T21:54:21.155Z",
+                "actorId": "moderator",
+                "ownerId": "moderator"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "leader-close-handoff",
+      "newLeader": 1,
+      "requestsAfterClose": [
+        {
+          "page": 1,
+          "at": 1794174917438
+        },
+        {
+          "page": 1,
+          "at": 1794174924453
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "name": "slow-request",
+      "delayMs": 12000,
+      "startsDuringFirst8500ms": 0,
+      "maxActive": 1
+    },
+    {
+      "name": "offline-online",
+      "offlineMs": 8000,
+      "offlineRevisionRequests": 0,
+      "recoveredRevision": 4
+    }
+  ],
+  "browser": "154.0.8037.57",
+  "status": "FAIL",
+  "error": "page.evaluate: Target page, context or browser has been closed\n    at /workspace/buyerlog-shell06/docs/performance/followup-20261109/shell06/acceptance.cjs:75:64\n    at /workspace/buyerlog-shell06/docs/performance/followup-20261109/shell06/acceptance.cjs:75:55\n    at until (/workspace/buyerlog-shell06/docs/performance/followup-20261109/shell06/acceptance.cjs:14:106)\n    at async /workspace/buyerlog-shell06/docs/performance/followup-20261109/shell06/acceptance.cjs:75:5"
+}

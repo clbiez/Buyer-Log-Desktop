@@ -21,8 +21,8 @@ test('v6.14 places Notification History immediately left of Notebook', () => {
 test('v6.14 records both transient toast and centre notices', () => {
   const toast = APP.slice(APP.indexOf('function showToast'), APP.indexOf('const TABLE_META'));
   const center = APP.slice(APP.indexOf('function showCenterNotice'), APP.indexOf('function showToast'));
-  assert.match(toast, /notificationHistoryAdd\(msg,'toast'\)/);
-  assert.match(center, /notificationHistoryAdd\(msg,'center'\)/);
+  assert.match(toast, /notificationHistoryAdd\(msg,'toast',o.target\)/);
+  assert.match(center, /notificationHistoryAdd\(msg,'center',o.target\)/);
   assert.match(APP, /notificationHistoryAdd\(`\$\{text\.title\}: \$\{text\.detail\}`,'toast'\)/);
   assert.match(APP, /NOTIFICATION_HISTORY_LIMIT=250/);
 });

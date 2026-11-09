@@ -343,31 +343,35 @@ td .dateFieldWrap{display:flex;width:100%;}
 .colPanel.show{display:block;}
 .submfrDropItem{display:flex;align-items:center;gap:7px;padding:6px 8px;cursor:pointer;white-space:nowrap;}
 .colPanelItem{display:flex;align-items:center;gap:7px;padding:6px 8px;cursor:pointer;white-space:nowrap;}
-.backlogExportColumnsCard{width:min(1280px,calc(100vw - 28px));height:min(92vh,1280px);max-height:min(92vh,1280px);display:flex;flex-direction:column;overflow:hidden;}
-.backlogExportColumnsBody{display:flex;flex-direction:column;gap:14px;overflow:auto;padding:14px 18px;flex:1 1 auto;min-height:260px;}
-.backlogExportColumnsGroup{padding:10px;min-width:0;}
-.backlogExportColumnsGroup h3{margin:0 0 8px;}
-.backlogColManager{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;}
-.backlogColPane{display:flex;flex-direction:column;min-width:0;padding:8px;}
-.backlogColPaneHead{margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.backlogColSearch{width:100%;box-sizing:border-box;padding:6px 8px;margin-bottom:6px;}
-.backlogColList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:3px;min-height:180px;max-height:320px;}
-.backlogColGroupLabel{margin:6px 0 2px;padding:0 2px;}
+.backlogExportColumnsCard{width:min(880px,calc(100vw - 28px));max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.backlogExportColumnsBody{display:flex;flex-direction:column;gap:var(--ui-space-3);overflow:auto;padding:var(--ui-space-4);min-height:0;}
+.backlogExportColumnsGroup{padding:var(--ui-space-2);min-width:0;}
+.backlogExportColumnsGroup summary{cursor:pointer;}
+.backlogColPane{display:flex;flex-direction:column;min-width:0;padding:var(--ui-space-3);flex-shrink:0;}
+.backlogColPaneHead{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;}
+.backlogColPaneHead h3{margin:0;}
+.backlogColTools{display:flex;gap:var(--ui-space-2);flex-wrap:wrap;}
+.backlogColSearchLabel{display:flex;flex-direction:column;gap:var(--ui-space-1);}
+.backlogColSearch{width:100%;box-sizing:border-box;padding:var(--ui-space-2);margin-bottom:var(--ui-space-2);}
+.backlogColList{overflow:auto;display:flex;flex-direction:column;gap:var(--ui-space-1);flex-shrink:0;}
+.backlogColSelectedList{max-height:42vh;min-height:100px;}
+.backlogColAvailableList{max-height:20vh;}
+.backlogColPane:not([hidden]) + .backlogColSelectedList{max-height:26vh;}
+.backlogColGroupLabel{margin:var(--ui-space-2) 0 var(--ui-space-1);}
 .backlogColGroupLabel:first-child{margin-top:0;}
-.backlogColRow{display:flex;align-items:center;gap:6px;padding:4px 6px;}
-.backlogColAvailRow{cursor:pointer;}
+.backlogColRow{display:flex;align-items:center;gap:var(--ui-space-2);padding:var(--ui-space-2);flex-shrink:0;}
+.backlogColAvailRow{cursor:pointer;width:100%;text-align:start;}
 .backlogColRowLabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.backlogColRowNum{min-width:18px;}
-.backlogColTag{padding:1px 5px;white-space:nowrap;}
-.backlogColRemove{cursor:pointer;padding:0 3px;}
-.backlogColRowBtn{cursor:pointer;padding:0 2px;display:flex;}
+.backlogColRowNum{min-width:24px;}
+.backlogColTag{padding:var(--ui-space-1);white-space:nowrap;}
+.backlogColRemove{cursor:pointer;padding:var(--ui-space-1);}
+.backlogColRowBtn{cursor:pointer;padding:var(--ui-space-1);display:flex;}
 .backlogColRowBtn:disabled{opacity:.3;cursor:not-allowed;}
-.backlogColManagerActions{display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:6px;padding:0 2px;min-width:118px;}
-.backlogColEmpty{padding:10px 4px;text-align:center;}
-.backlogExportFormulaList{display:flex;flex-direction:column;gap:10px;}
-.backlogExcelFormulaField{display:flex;flex-direction:column;gap:4px;}
-.backlogExcelFormulaField input{width:100%;box-sizing:border-box;padding:6px 7px;}
-@media(max-width:820px){.backlogColManager{grid-template-columns:1fr;}.backlogColManagerActions{flex-direction:row;flex-wrap:wrap;min-width:0;}}
+.backlogColEmpty{padding:var(--ui-space-3);text-align:center;}
+.backlogExportFormulaList{display:flex;flex-direction:column;gap:var(--ui-space-3);}
+.backlogExcelFormulaField{display:flex;flex-direction:column;gap:var(--ui-space-1);}
+.backlogExcelFormulaField input{width:100%;box-sizing:border-box;padding:var(--ui-space-2);}
+@media(max-width:600px){.backlogColTag{display:none;}.backlogColRow{gap:var(--ui-space-1);}}
 .ocMetaSuggestDrop{min-width:170px;overscroll-behavior:contain;}
 .themeDock{position:fixed;left:calc(var(--ui-rail-width) + 8px);bottom:12px;}
 .themeDock .colPanel{position:static;margin:0;}
@@ -564,6 +568,7 @@ select.editCell,input.editCell{width:100%;min-width:0;padding:5px 7px;cursor:poi
 .notificationHistoryMeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
 .notificationHistoryMeta time{white-space:nowrap;}
 .notificationHistoryCopy p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;}
+.notificationHistoryTarget{margin-top:8px;max-width:100%;white-space:normal;text-align:start;overflow-wrap:anywhere;}
 .notificationHistoryRemove{width:28px;height:28px;display:grid;place-items:center;cursor:pointer;}
 @media(max-width:620px){.notificationHistoryCard{height:calc(100vh - 20px);}.notificationHistoryCard .verHistTools{flex-wrap:wrap;}.notificationHistoryCard .verHistTools input{flex-basis:100%;}.notificationHistoryMeta{align-items:flex-start;flex-direction:column;gap:2px;}}
 .dropzone{position:fixed;inset:0;display:none;align-items:center;justify-content:center;}
@@ -1737,6 +1742,52 @@ td.num .revPair{justify-content:flex-end;}
 .cfpItem.cfpFaded{opacity:.42;}
 .shipDecision{display:block; margin-bottom:10px;}
 .shipDecision[hidden]{display:none;}
+
+/* Shipping comparison: keep savings visually primary and table boundaries legible.
+   Scoped to this module so CP and the other data grids remain unchanged. */
+.shipCompare{
+  border:1px solid var(--ui-border, #cbd5e1);
+  border-radius:4px;
+}
+.shipCompare thead th{
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  vertical-align:middle;
+  border-right:1px solid var(--ui-border, #cbd5e1);
+  border-bottom:1px solid var(--ui-border, #cbd5e1);
+}
+.shipCompare thead th>span{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.shipCompare thead th:last-child{border-right:0;}
+.shipCompare tbody td{
+  border-right:1px solid var(--ui-border, #cbd5e1);
+  border-bottom:1px solid var(--ui-border, #cbd5e1);
+}
+.shipCompare tbody td:last-child{border-right:0;}
+.shipCompare tbody tr:last-child td{border-bottom:0;}
+.shipCompare thead th .colResizer{
+  border-right:1px solid var(--ui-border-strong, #94a3b8);
+  z-index:2;
+}
+.shipCompare .shipCardMetrics [data-ship-pct]{
+  font-size:clamp(19px,1.5vw,25px);
+  font-weight:800;
+  line-height:1.1;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+}
+.shipCompare .shipCardMetrics{
+  flex-wrap:wrap;
+  row-gap:2px;
+}
+.shipCompare .shipCardPrice{
+  font-size:var(--ui-font-sm, 13px);
+  font-weight:700;
+}
 
 .shipCompareWrap{overflow:auto;}
 .shipCompare{

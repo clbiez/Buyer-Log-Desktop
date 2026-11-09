@@ -1,0 +1,41 @@
+✔ v5.54 browser allowlist settings normalize URLs, casing and duplicates (2.235738ms)
+✔ v5.54 recorder preserves repeated clicks, collapses field edits, and converts double-click correctly (1.59338ms)
+✔ v5.54 recorder refuses sensitive password/OTP/token/PIN/CVV fields (0.341169ms)
+✔ v5.54 batch browser replay supports item fields with spaces and index placeholders (1.036929ms)
+✔ v5.54 server and the automation UI expose allowlist, recorder and same-window browser routes (0.721081ms)
+✔ v5.54 old Agent Center stays removed while the new connector uses only the generic portable engine (1.317587ms)
+✔ v7.42 · "Order Info" seçilen sütun O BANDIN İÇİNE girer, ikinci bant açılmaz (4.813285ms)
+✔ v7.42 · ortadaki bir gruba eklemek sonraki grupları bozmaz (1.517844ms)
+✔ v7.42 · başlık adı büyük/küçük harften bağımsız eşleşir (TR duyarlı) (1.099245ms)
+✔ v7.42 · bilinmeyen başlık kendi bandını açar (sütun sonda kalır) (0.68345ms)
+✔ v7.42 · aynı yeni başlığı alan ikinci sütun BİRİNCİNİN yanına gider (0.836362ms)
+✔ v7.42 · seçenek listesi başlıkları EKRANDAKİ sırayla ve tekrarsız verir (1.004629ms)
+✔ v7.42 · sıra kullanıcının sürüklediği hâlde ise liste de o sırayı izler (0.969419ms)
+✔ v7.42 · sırada olmayan (gizlenmiş/yeni) sütunun grubu da listede kalır (0.439049ms)
+✔ v7.42 · grupsuz sütun listeye boş bir başlık eklemez (0.959116ms)
+✔ v7.42 · hesaplanan sütun grubu tanımdan gelir, seçilmemişse Hesaplanan (0.521311ms)
+✔ v7.42 · syncColumns sütuna seçilen grubu verir (0.590844ms)
+✔ v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişikliğinde kurulur (0.260906ms)
+✔ v7.42 · son yerleştirilen grup tanımın yanında saklanır, gereksiz yazma yok (0.230177ms)
+✔ v7.42 · pencerede başlık seçimi ve yeni başlık kutusu var (0.463589ms)
+✔ v7.42 · yeni başlık seçilip adı boş bırakılırsa kaydedilmez (0.397438ms)
+✔ v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi kullanır (0.172454ms)
+✔ v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database (0.258701ms)
+✔ v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır (0.231832ms)
+✔ v7.42 · sunucu grubu saklar; uydurmaz (§152) (0.241445ms)
+✔ v7.42 · sunucu grubu kaydeder ve uzunluğu sınırlar (118.609738ms)
+✔ v7.42 · veri tabanı sütunu penceresinde başlık seçimi var (0.557119ms)
+✔ v7.42 · düzenlemede sütunun kayıtlı başlığı seçili gelir (0.503411ms)
+✔ v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır (0.684333ms)
+✔ v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz) (0.256804ms)
+✔ v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir (86.392637ms)
+✔ v7.42 · veri tabanı penceresinde tam genişlik alan SIRAYLA değil adıyla seçilir (47.167442ms)
+✔ v7.42/v7.43 · sürüm tek canonical kaynaktan runtime türetilir (9.428829ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 469.592317

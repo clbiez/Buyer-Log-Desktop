@@ -1,0 +1,73 @@
+✖ INT07 FINAL: real active fetch cancellation closes the HTTP request, releases permits and starts no late writes (6005.192587ms)
+✖ INT07 FINAL: real headers then stalled streamed body stops at total target deadline (6016.675066ms)
+✖ INT07 FINAL: target deadline also aborts a request before headers (2030.217582ms)
+✖ INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live (2505.172746ms)
+✖ INT07 FINAL: deadline interrupts shared auth wait with no new HTTP or store writes (6005.344479ms)
+✖ INT07 FINAL: deadline interrupts retry delay instead of starting another read (6001.019286ms)
+ℹ Error: Test "INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live" at resources/app/tests/plm-bom-int07-final-http.test.js:70:1 generated asynchronous activity after the test ended. This activity created the error "Error: CoreNectum API bağlantısı kurulamadı: fetch failed" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+ℹ Error: Test "INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live" at resources/app/tests/plm-bom-int07-final-http.test.js:70:1 generated asynchronous activity after the test ended. This activity created the error "AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+Error: CoreNectum API bağlantısı kurulamadı: fetch failed" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 4
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32846.473506
+
+✖ failing tests:
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:41:1
+✖ INT07 FINAL: real active fetch cancellation closes the HTTP request, releases permits and starts no late writes (6005.192587ms)
+  'test timed out after 6000ms'
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:53:1
+✖ INT07 FINAL: real headers then stalled streamed body stops at total target deadline (6016.675066ms)
+  'test timed out after 6000ms'
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:63:1
+✖ INT07 FINAL: target deadline also aborts a request before headers (2030.217582ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PLM_BOM_ADMISSION_DEADLINE'
+  - 'PLM_BOM_READ_DEADLINE'
+             ^
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-int07-final/resources/app/tests/plm-bom-int07-final-http.test.js:67:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PLM_BOM_ADMISSION_DEADLINE',
+    expected: 'PLM_BOM_READ_DEADLINE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:70:1
+✖ INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live (2505.172746ms)
+  AssertionError [ERR_ASSERTION]: event observed before safety timeout
+      at until (/workspace/buyerlog-int07-final/resources/app/tests/plm-bom-int07-final-http.test.js:22:33)
+      at async TestContext.<anonymous> (/workspace/buyerlog-int07-final/resources/app/tests/plm-bom-int07-final-http.test.js:78:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:98:3
+✖ INT07 FINAL: deadline interrupts shared auth wait with no new HTTP or store writes (6005.344479ms)
+  'test timed out after 6000ms'
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:112:3
+✖ INT07 FINAL: deadline interrupts retry delay instead of starting another read (6001.019286ms)
+  'test timed out after 6000ms'

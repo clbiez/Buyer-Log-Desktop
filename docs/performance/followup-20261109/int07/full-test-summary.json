@@ -1,0 +1,21 @@
+{
+  "command": "npm test",
+  "runner": "resources/app/tests/run-tests.js",
+  "files": 1316,
+  "batches": 10,
+  "concurrency": 4,
+  "exitCode": 0,
+  "elapsedSeconds": 134.4,
+  "tests": 9097,
+  "suites": 0,
+  "pass": 9032,
+  "fail": 0,
+  "cancelled": 0,
+  "skipped": 65,
+  "todo": 0,
+  "node": "v24.19.0",
+  "os": "Linux x86_64",
+  "lock": "/tmp/buyerlog-performance-measurement.lock",
+  "testRoots": "isolated /tmp/buyerlog-int07-full/{app,local,server}; shared npm dependencies via untracked node_modules symlink",
+  "notes": "One uninterrupted standard run on the final code; existing platform-dependent skips retained, none added or relaxed."
+}

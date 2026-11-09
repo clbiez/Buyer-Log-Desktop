@@ -1,0 +1,38 @@
+
+> buyer-log-desktop@7.0.343 test
+> node tests/run-tests.js full-system-restore-users iam-v672 intake-store
+
+[Buyer Log tests] 6 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (6 dosya)
+✔ v7.82 · backup config Central IAM açıkken runtime henüz kapalı olsa da kullanıcılar restart-safe recovery seed olur (233.296014ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.81 · Central IAM offline yeni PC restore kullanıcıları recovery seed olarak görünür tutar (152.709514ms)
+✔ v7.83 · 441 kullanıcı restore seed legacy 47-kullanıcı auth deposu tarafından küçültülmez (577.541918ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ v7.84 · Central IAM .bak içindeki 47 kullanıcı restore edilen 441-kullanıcı seedini ezmez (658.356682ms)
+✔ legacy roles migrate idempotently to the four requested roles and keep Gökberk protected (8.812392ms)
+✔ the four roles expose distinct default MAG/MMYG-aware scopes (2.186926ms)
+✔ inactive user can be created, assigned a password and activated by Moderator (184.819087ms)
+✔ direct permissions and MAG/MMYG scope can be copied to multiple users atomically (192.690365ms)
+✔ IAM UI has delegated inactive-card selection, a corrected two-column matrix header and hierarchy editing (6.585031ms)
+✔ INTAKE cache anahtarı display label ve kolon genişliğini içermez (2.051174ms)
+✔ INTAKE cache ve kullanıcı snapshotı yeniden başlatma sonrasında okunabilir (6.722241ms)
+✔ INTAKE Reset only removes the current user snapshot; it cannot alter connection configuration (4.112387ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 804.462362
+[Buyer Log tests] Batch 1/1 süresi: 0.9s.
+
+[Buyer Log tests] PASS — 6 test dosyası (0.9s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

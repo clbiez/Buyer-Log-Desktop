@@ -1,0 +1,179 @@
+{
+  "scope": "INT07 local synthetic HTTP only",
+  "baseMain": "62f2153d",
+  "candidateProductCommit": "8c2b1f6eea46d16e9ec6bbc59b5fc976dac4033d",
+  "fixtureDefinitionSha256": "0a3027426064b07628932ba148da9522df01fb6dd36f4d567eef77af5a811e06",
+  "runtime": "Node v24.19.0 --expose-gc, Linux x86_64",
+  "pairs": 3,
+  "additionalMainAA": 3,
+  "p95Claim": false,
+  "timingsMs": {
+    "normal-cold": {
+      "samples": {
+        "main": [
+          155.813128,
+          170.22506900000002,
+          123.73869200000001
+        ],
+        "candidate": [
+          130.54855700000002,
+          162.624432,
+          160.176335
+        ],
+        "aa": [
+          126.78822599999998,
+          184.72424900000004,
+          135.43297099999998
+        ]
+      },
+      "medians": {
+        "main": 155.813128,
+        "candidate": 160.176335,
+        "aa": 135.43297099999998
+      },
+      "observedMainAARange": [
+        123.73869200000001,
+        184.72424900000004
+      ],
+      "candidateMedianWithinMainAARange": true
+    },
+    "normal-warm": {
+      "samples": {
+        "main": [
+          62.73577999999998,
+          57.33556699999997,
+          55.35164499999996
+        ],
+        "candidate": [
+          55.725626999999974,
+          61.84068100000002,
+          58.67936800000001
+        ],
+        "aa": [
+          54.857552000000055,
+          55.598298,
+          56.058739
+        ]
+      },
+      "medians": {
+        "main": 57.33556699999997,
+        "candidate": 58.67936800000001,
+        "aa": 55.598298
+      },
+      "observedMainAARange": [
+        54.857552000000055,
+        62.73577999999998
+      ],
+      "candidateMedianWithinMainAARange": true
+    },
+    "defaults-cold": {
+      "samples": {
+        "main": [
+          54.845147,
+          57.08388099999996,
+          54.63775099999998
+        ],
+        "candidate": [
+          55.557105000000035,
+          56.00649299999998,
+          57.05506200000002
+        ],
+        "aa": [
+          54.51331099999999,
+          54.684316999999965,
+          54.37343900000002
+        ]
+      },
+      "medians": {
+        "main": 54.845147,
+        "candidate": 56.00649299999998,
+        "aa": 54.51331099999999
+      },
+      "observedMainAARange": [
+        54.37343900000002,
+        57.08388099999996
+      ],
+      "candidateMedianWithinMainAARange": true
+    },
+    "defaults-warm": {
+      "samples": {
+        "main": [
+          57.23397699999998,
+          53.93587299999996,
+          55.792441999999994
+        ],
+        "candidate": [
+          53.229832999999985,
+          54.90028700000005,
+          54.25970900000004
+        ],
+        "aa": [
+          56.36154299999998,
+          53.25016700000003,
+          52.53703100000001
+        ]
+      },
+      "medians": {
+        "main": 55.792441999999994,
+        "candidate": 54.25970900000004,
+        "aa": 53.25016700000003
+      },
+      "observedMainAARange": [
+        52.53703100000001,
+        57.23397699999998
+      ],
+      "candidateMedianWithinMainAARange": true
+    }
+  },
+  "lifecycle": {
+    "main": {
+      "cycles": 15,
+      "cancelToCloseMedianMs": 509.500546,
+      "worstObservedCancelToCloseMs": 520.6080860000002,
+      "maxRss": 67383296,
+      "maxHeapUsed": 11439952,
+      "activeRequestsAfterCycle": 0,
+      "jobSignalListenersAfterCycle": 0,
+      "jobTimersAfterCycle": 0,
+      "heapGrowthPerFiveCycles": [
+        427840,
+        429600,
+        427960
+      ]
+    },
+    "candidate": {
+      "cycles": 15,
+      "cancelToCloseMedianMs": 7.417354000000046,
+      "worstObservedCancelToCloseMs": 9.099886999999967,
+      "maxRss": 67665920,
+      "maxHeapUsed": 11616608,
+      "activeRequestsAfterCycle": 0,
+      "jobSignalListenersAfterCycle": 0,
+      "jobTimersAfterCycle": 0,
+      "heapGrowthPerFiveCycles": [
+        400016,
+        399400,
+        395088
+      ]
+    },
+    "aa": {
+      "cycles": 15,
+      "cancelToCloseMedianMs": 510.52362500000004,
+      "worstObservedCancelToCloseMs": 734.9505319999998,
+      "maxRss": 67301376,
+      "maxHeapUsed": 11440296,
+      "activeRequestsAfterCycle": 0,
+      "jobSignalListenersAfterCycle": 0,
+      "jobTimersAfterCycle": 0,
+      "heapGrowthPerFiveCycles": [
+        429600,
+        429600,
+        429568
+      ]
+    }
+  },
+  "defaultOverlappingReadCalls": 1,
+  "normalOutputFingerprintParity": true,
+  "decision": "PASS for requested INT07 limits, cancellation, output and cleanup; normal timing changes lie within observed Main A/A noise",
+  "limits": "No production capacity/speedup/p95 claim. RSS/heap are actual process samples, not reservations; both revisions show common allocator/undici heap warmup. Opt-in duplicate reads are explicitly authorized in #937; defaults stay shared."
+}

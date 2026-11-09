@@ -19,6 +19,7 @@ const styleApi = require('./corenectum-style-api');
 const setStyleApi = require('./corenectum-set-style-api');
 const defaultStore = require('./plm-bom-store');
 const coreNectumApiClient = require('./corenectum-api-client');
+const { createTargetBudget, isRetryableRead } = require('./plm-bom-int07-budget');
 const { getDefaultEngine } = require('./lcwai');
 const { extractJsonObject } = require('./lcwai/lcwai-prompt');
 
@@ -29,9 +30,9 @@ const MAX_AI_PER_SYNC = 50;
    zaman kullanıcının kendi LCW AI sohbetine bırakır. */
 const AI_CONCURRENCY = 2;
 const AI_BUSY_RETRIES = 4;
-/* Kullanıcı kararı: herhangi bir aşamadaki hata işi durdurmaz. Başarısız
-   BOM'lar ilk turdan SONRA, yalnız onlar (kaldığı yerden) en az 3 tur yeniden
-   denenir; LCW AI danışması da en az 3 kez denenir. */
+/* Bir modeldeki geçici hata diğer modelleri durdurmaz.
+   Geçici BOM hataları ilk turdan sonra en fazla 3 tur yeniden denenir;
+   her okuma client dahil toplam 4 denemeyle sınırlıdır. LCW AI ayrı kalır. */
 const RETRY_ROUNDS = 3;
 const RETRY_DELAYS_MS = Object.freeze([2000, 5000, 10000]);
 const AI_ATTEMPTS = 3;
@@ -190,7 +191,7 @@ async function syncPlmBoms(records, options = {}) {
   const fetched = [];
   const failed = [];
   const recordOverrides = new Map();
-  const isCancelled = typeof options.isCancelled === 'function' ? options.isCancelled : () => false;
+  const isCancelled = () => Boolean(options.signal?.aborted) || (typeof options.isCancelled === 'function' && options.isCancelled());
   /* Oturum düşerse kalan her BOM aynı 401'i alır: ilk yetki hatasında yeni
      istek başlatılmaz. İptalde de öyle. Tamamlanan BOM'lar yine kaydedilir. */
   let authError = null;
@@ -219,16 +220,24 @@ async function syncPlmBoms(records, options = {}) {
     return authWait;
   };
   let done = 0;
-  const concurrency = Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY;
+  const concurrency = Math.max(1, Math.min(BOM_FETCH_CONCURRENCY, Math.floor(Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY)));
+  const budgets = new Map();
+  const fail = (target, error) => failed.push({
+    plmId: target.plmId, styleId: target.styleId,
+    code: clean(error && error.code, 80) || 'PLM_BOM_FETCH_FAILED',
+    error: clean(error && error.message || error, 500) || 'BOM alınamadı.',
+  });
 
   const processTarget = async (target, firstPass) => {
     if (stopped()) { skipped.push(target); return; }
+    if (!budgets.has(target.plmId)) budgets.set(target.plmId, createTargetBudget(ownerId, checkStop, options));
+    const read = budgets.get(target.plmId);
     try {
       if (setStyleApi.isSetStyle(target.productType)) {
-        const associationPayload = await getJson(
+        const associationPayload = await read('GET',
           setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL,
           setStyleApi.associationQuery(target.styleId),
-          { timeoutMs: 60000, retries: 3, language: options.language }
+          getJson
         );
         checkStop();
         let children = setStyleApi.childStyleAssociations(associationPayload);
@@ -241,33 +250,40 @@ async function syncPlmBoms(records, options = {}) {
         const childPlmIds = children.map(item => item.childPlmId).filter(Boolean);
         if (childPlmIds.length) {
           checkStop();
-          const metadataPayload = await postJson(
+          const metadataPayload = await read('POST',
             styleApi.GET_STYLE_LIST_URL,
             styleApi.styleListBatchBody(childPlmIds),
-            { timeoutMs: 60000, retries: 3, language: options.language }
+            postJson
           );
           children = setStyleApi.enrichChildStyles(children, metadataPayload);
         }
 
         const childAnalyses = new Array(children.length);
-        await mapLimit(children, Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY, async (child, childIndex) => {
-          checkStop();
-          const payload = await postJson(
-            bomApi.GET_STYLE_BOM_INFORMATION_URL,
-            bomApi.bomRequestBody(child.childStyleId),
-            { timeoutMs: 60000, retries: 3, language: options.language }
-          );
-          const analysis = bomApi.analyzeBom(payload);
-          if (analysis.styleId && analysis.styleId !== child.childStyleId) {
-            throw Object.assign(new Error(`BOM styleId uyuşmuyor: beklenen ${child.childStyleId}, gelen ${analysis.styleId}.`), { code: 'PLM_BOM_STYLE_MISMATCH' });
-          }
-          childAnalyses[childIndex] = { ...child, analysis: { ...analysis, styleId: child.childStyleId } };
+        let childError = null;
+        await mapLimit(children, concurrency, async (child, childIndex) => {
+          if (childError) return;
+          try {
+            checkStop();
+            const payload = await read('POST',
+              bomApi.GET_STYLE_BOM_INFORMATION_URL,
+              bomApi.bomRequestBody(child.childStyleId),
+              postJson
+            );
+            const analysis = bomApi.analyzeBom(payload);
+            if (analysis.styleId && analysis.styleId !== child.childStyleId) {
+              throw Object.assign(new Error(`BOM styleId uyuşmuyor: beklenen ${child.childStyleId}, gelen ${analysis.styleId}.`), { code: 'PLM_BOM_STYLE_MISMATCH' });
+            }
+            childAnalyses[childIndex] = { ...child, analysis: { ...analysis, styleId: child.childStyleId } };
+          } catch (error) { childError = childError || error; }
         });
+        // Drain siblings before retrying; active client calls retain their slots.
+        if (childError) throw childError;
 
         const withAnalysis = childAnalyses.filter(Boolean);
         if (withAnalysis.length !== children.length) {
           throw Object.assign(new Error('Set Style takım parçalarının BOM bilgisi eksik döndü.'), { code: 'PLM_SET_COMPONENT_BOM_INCOMPLETE' });
         }
+        read.checkResult();
         fetched.push({
           target,
           kind: 'set',
@@ -275,25 +291,36 @@ async function syncPlmBoms(records, options = {}) {
           fingerprint: aggregateSetFingerprint(withAnalysis),
         });
       } else {
-        const payload = await postJson(
+        const payload = await read('POST',
           bomApi.GET_STYLE_BOM_INFORMATION_URL,
           bomApi.bomRequestBody(target.styleId),
-          { timeoutMs: 60000, retries: 3, language: options.language }
+          postJson
         );
         const analysis = bomApi.analyzeBom(payload);
         if (analysis.styleId && analysis.styleId !== target.styleId) {
           throw Object.assign(new Error(`BOM styleId uyuşmuyor: beklenen ${target.styleId}, gelen ${analysis.styleId}.`), { code: 'PLM_BOM_STYLE_MISMATCH' });
         }
+        read.checkResult();
         fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
       }
     } catch (error) {
       if (error === STOP) { skipped.push(target); return; }
       if (isAuthError(error)) {
-        if (!authError && await awaitAuth(error)) { retryQueue.set(target.plmId, { target, error }); return; }
-        authError = authError || error; skipped.push(target); return;
+        try {
+          read.check();
+          if (!authError && await read.wait(awaitAuth(error))) { retryQueue.set(target.plmId, { target, error }); return; }
+          read.check();
+          authError = authError || error; skipped.push(target); return;
+        } catch (waitError) {
+          if (waitError === STOP) skipped.push(target);
+          else fail(target, waitError);
+          return;
+        }
       }
-      retryQueue.set(target.plmId, { target, error });
+      if (isRetryableRead(error)) retryQueue.set(target.plmId, { target, error });
+      else fail(target, error);
     } finally {
+      if (!retryQueue.has(target.plmId)) read.dispose();
       if (firstPass) {
         done += 1;
         onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: done, total: targets.length, model: target.plmId });
@@ -303,7 +330,7 @@ async function syncPlmBoms(records, options = {}) {
 
   await mapLimit(targets, concurrency, target => processTarget(target, true));
   const delays = Array.isArray(options.retryDelaysMs) ? options.retryDelaysMs : RETRY_DELAYS_MS;
-  const rounds = Math.max(RETRY_ROUNDS, Number(options.retryRounds) || 0);
+  const rounds = RETRY_ROUNDS; // Fixed total budget; callers cannot multiply client retries.
   let retriedAny = false;
   for (let round = 0; round < rounds && retryQueue.size && !stopped(); round += 1) {
     const pending = [...retryQueue.values()].map(item => item.target);
@@ -311,22 +338,28 @@ async function syncPlmBoms(records, options = {}) {
     retriedAny = true;
     // Genel ilerleme korunur: tamamlananlar işlenmiş, yalnız yeniden denenenler kalan.
     onProgress({ phase: options.language === 'en' ? `Retrying PLM BOM (${round + 1}/${rounds})` : `PLM BOM yeniden deneniyor (${round + 1}/${rounds})`, current: Math.max(0, targets.length - pending.length), total: targets.length, model: pending.map(target => target.plmId).slice(0, 3).join(', ') });
-    await wait(Number(delays[Math.min(round, delays.length - 1)]) || 0);
-    if (stopped()) { pending.forEach(target => skipped.push(target)); break; }
-    await mapLimit(pending, concurrency, target => processTarget(target, false));
+    const ready = [];
+    await Promise.all(pending.map(async target => {
+      const read = budgets.get(target.plmId);
+      try {
+        await read.waitForRetry(Number(delays[Math.min(round, delays.length - 1)]) || 0);
+        ready.push(target);
+      } catch (error) {
+        if (error === STOP) skipped.push(target);
+        else fail(target, error);
+        read.dispose();
+      }
+    }));
+    await mapLimit(ready, concurrency, target => processTarget(target, false));
   }
   if (rounds && delays && targets.length && retriedAny) {
     onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: Math.max(0, targets.length - retryQueue.size), total: targets.length, model: '' });
   }
   for (const { target, error } of retryQueue.values()) {
-    failed.push({
-      plmId: target.plmId,
-      styleId: target.styleId,
-      code: clean(error && error.code, 80) || 'PLM_BOM_FETCH_FAILED',
-      error: clean(error && error.message || error, 500) || 'BOM alınamadı.',
-    });
+    fail(target, error);
   }
 
+  for (const read of budgets.values()) read.dispose();
   const entries = new Map();
   const toSave = [];
   let unchanged = 0, aiConsulted = 0, aiResolved = 0, withPrint = 0;

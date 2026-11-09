@@ -1,0 +1,413 @@
+{
+  "sourceHead": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "sourceState": "worktree; SHA-256 pins the exact application files",
+  "sourceFiles": {
+    "server/server.js": "27d6f46e114fb8a3382574ae3b6036effbaf87f449d6ec3fdd016904528a0bf7",
+    "public/fx.js": "8f7c7237ce933dc2e94609bf0e52197959ecd81e1f1b5aa67301f0ead4991e62"
+  },
+  "syntheticOnly": true,
+  "scenarios": [
+    {
+      "name": "default-singleton-admission-busy",
+      "id": 1,
+      "result": {
+        "found": false,
+        "updated": false,
+        "reason": "worker-busy"
+      },
+      "store": {
+        "base": "USD",
+        "currencies": [
+          "TRY",
+          "CHF"
+        ],
+        "months": {
+          "2026-10": {
+            "TRY": 40
+          },
+          "2026-11": {
+            "CHF": 0.8
+          }
+        },
+        "updatedAt": "2026-11-08T21:44:11.289Z",
+        "sourceFile": null,
+        "sourceType": null,
+        "sourceModifiedAt": null,
+        "reportMonth": null,
+        "sourceFingerprint": null,
+        "parser": null,
+        "_revision": 1,
+        "_updatedAt": "2026-11-08T21:44:11.289Z"
+      },
+      "folderSync": {
+        "file": "KUR.xlsx",
+        "modifiedAt": null,
+        "reportMonth": null,
+        "fingerprint": null,
+        "reason": "worker-busy"
+      },
+      "stats": {
+        "queued": 68,
+        "completed": 2,
+        "failed": 0,
+        "rejected": 1,
+        "active": true,
+        "lastTask": "parseAntrepoFile",
+        "lastDurationMs": 192.1208610000001,
+        "lastQueueWaitMs": 0.04619600000000901,
+        "lastExecutionMs": 147.59341000000018,
+        "lastOverheadMs": 44.52745099999993,
+        "maxQueueWaitMs": 0.4002189999999928,
+        "lastMainReceiveMs": 0.1638470000000325,
+        "lastWorkerPostMessageMs": 0.058730000000196014,
+        "totalQueueWaitMs": 0.4464150000000018,
+        "totalExecutionMs": 346.4789440000003,
+        "peakActiveWorkers": 2,
+        "peakWorkerHeapMiB": 27.862960815429688,
+        "pending": 64,
+        "activeWorkers": 2,
+        "maxWorkers": 2,
+        "memoryBudgetMiB": 256,
+        "estimatedActiveMiB": 128,
+        "retainedPayloadMiB": 0
+      }
+    },
+    {
+      "name": "TR-EN-busy-no-AI-no-write",
+      "writes": 0
+    },
+    {
+      "name": "normal-attempt-applies-once",
+      "applied": {
+        "id": 3,
+        "result": {
+          "found": true,
+          "updated": true,
+          "file": "KUR.xlsx",
+          "stats": {
+            "sheetCount": 1,
+            "latestSheet": "Synthetic FX",
+            "currencyCount": 3,
+            "monthCount": 1,
+            "valueCount": 3,
+            "firstMonth": "2026-11",
+            "lastMonth": "2026-11"
+          },
+          "reason": "apply",
+          "data": {
+            "base": "USD",
+            "currencies": [
+              "CHF",
+              "EUR",
+              "GBP",
+              "TRY"
+            ],
+            "months": {
+              "2026-10": {
+                "TRY": 40
+              },
+              "2026-11": {
+                "CHF": 0.8,
+                "TRY": 42,
+                "EUR": 0.9,
+                "GBP": 0.8
+              }
+            },
+            "updatedAt": "2026-11-08T21:44:16.159Z",
+            "sourceFile": "KUR.xlsx",
+            "sourceType": "KUR",
+            "sourceModifiedAt": "2026-11-08T21:44:11.292Z",
+            "reportMonth": "2026-11",
+            "sourceFingerprint": "bebe3db6353b59a46227771d2b75b2b8c9d76f0ba1c8564b40c204330e228f1a",
+            "parser": "deterministic",
+            "_revision": 2,
+            "_updatedAt": "2026-11-08T21:44:16.160Z"
+          }
+        },
+        "store": {
+          "base": "USD",
+          "currencies": [
+            "CHF",
+            "EUR",
+            "GBP",
+            "TRY"
+          ],
+          "months": {
+            "2026-10": {
+              "TRY": 40
+            },
+            "2026-11": {
+              "CHF": 0.8,
+              "TRY": 42,
+              "EUR": 0.9,
+              "GBP": 0.8
+            }
+          },
+          "updatedAt": "2026-11-08T21:44:16.159Z",
+          "sourceFile": "KUR.xlsx",
+          "sourceType": "KUR",
+          "sourceModifiedAt": "2026-11-08T21:44:11.292Z",
+          "reportMonth": "2026-11",
+          "sourceFingerprint": "bebe3db6353b59a46227771d2b75b2b8c9d76f0ba1c8564b40c204330e228f1a",
+          "parser": "deterministic",
+          "_revision": 2,
+          "_updatedAt": "2026-11-08T21:44:16.160Z"
+        },
+        "folderSync": null,
+        "stats": {
+          "queued": 69,
+          "completed": 69,
+          "failed": 0,
+          "rejected": 1,
+          "active": false,
+          "lastTask": "loadFxWorkbookFromDirectories",
+          "lastDurationMs": 173.69232199999988,
+          "lastQueueWaitMs": 0.028814000000238593,
+          "lastExecutionMs": 132.6666150000001,
+          "lastOverheadMs": 41.025706999999784,
+          "maxQueueWaitMs": 2415.5416809999997,
+          "lastMainReceiveMs": 0.06069300000035582,
+          "lastWorkerPostMessageMs": 0.03742999999940366,
+          "totalQueueWaitMs": 110828.27774000003,
+          "totalExecutionMs": 2518.4204149999982,
+          "peakActiveWorkers": 2,
+          "peakWorkerHeapMiB": 27.862960815429688,
+          "pending": 0,
+          "activeWorkers": 0,
+          "maxWorkers": 2,
+          "memoryBudgetMiB": 256,
+          "estimatedActiveMiB": 0,
+          "retainedPayloadMiB": 0
+        }
+      },
+      "duplicate": {
+        "id": 4,
+        "result": {
+          "found": true,
+          "updated": false,
+          "file": "KUR.xlsx",
+          "modifiedAt": "2026-11-08T21:44:11.292Z"
+        },
+        "store": {
+          "base": "USD",
+          "currencies": [
+            "CHF",
+            "EUR",
+            "GBP",
+            "TRY"
+          ],
+          "months": {
+            "2026-10": {
+              "TRY": 40
+            },
+            "2026-11": {
+              "CHF": 0.8,
+              "TRY": 42,
+              "EUR": 0.9,
+              "GBP": 0.8
+            }
+          },
+          "updatedAt": "2026-11-08T21:44:16.159Z",
+          "sourceFile": "KUR.xlsx",
+          "sourceType": "KUR",
+          "sourceModifiedAt": "2026-11-08T21:44:11.292Z",
+          "reportMonth": "2026-11",
+          "sourceFingerprint": "bebe3db6353b59a46227771d2b75b2b8c9d76f0ba1c8564b40c204330e228f1a",
+          "parser": "deterministic",
+          "_revision": 2,
+          "_updatedAt": "2026-11-08T21:44:16.160Z"
+        },
+        "folderSync": null,
+        "stats": {
+          "queued": 70,
+          "completed": 70,
+          "failed": 0,
+          "rejected": 1,
+          "active": false,
+          "lastTask": "loadFxWorkbookFromDirectories",
+          "lastDurationMs": 153.68777200000022,
+          "lastQueueWaitMs": 0.008355999999366759,
+          "lastExecutionMs": 113.46032000000014,
+          "lastOverheadMs": 40.227452000000085,
+          "maxQueueWaitMs": 2415.5416809999997,
+          "lastMainReceiveMs": 0.01823400000012043,
+          "lastWorkerPostMessageMs": 0.03621800000018993,
+          "totalQueueWaitMs": 110828.28609600004,
+          "totalExecutionMs": 2631.8807349999984,
+          "peakActiveWorkers": 2,
+          "peakWorkerHeapMiB": 27.862960815429688,
+          "pending": 0,
+          "activeWorkers": 0,
+          "maxWorkers": 2,
+          "memoryBudgetMiB": 256,
+          "estimatedActiveMiB": 0,
+          "retainedPayloadMiB": 0
+        }
+      }
+    },
+    {
+      "name": "missing-and-corrupt-distinct",
+      "missing": {
+        "id": 5,
+        "result": {
+          "found": false,
+          "updated": false,
+          "reason": "KUR Excel bulunamadı"
+        },
+        "store": {
+          "base": "USD",
+          "currencies": [
+            "CHF",
+            "EUR",
+            "GBP",
+            "TRY"
+          ],
+          "months": {
+            "2026-10": {
+              "TRY": 40
+            },
+            "2026-11": {
+              "CHF": 0.8,
+              "TRY": 42,
+              "EUR": 0.9,
+              "GBP": 0.8
+            }
+          },
+          "updatedAt": "2026-11-08T21:44:16.159Z",
+          "sourceFile": "KUR.xlsx",
+          "sourceType": "KUR",
+          "sourceModifiedAt": "2026-11-08T21:44:11.292Z",
+          "reportMonth": "2026-11",
+          "sourceFingerprint": "bebe3db6353b59a46227771d2b75b2b8c9d76f0ba1c8564b40c204330e228f1a",
+          "parser": "deterministic",
+          "_revision": 2,
+          "_updatedAt": "2026-11-08T21:44:16.160Z"
+        },
+        "folderSync": null,
+        "stats": {
+          "queued": 71,
+          "completed": 71,
+          "failed": 0,
+          "rejected": 1,
+          "active": false,
+          "lastTask": "loadFxWorkbookFromDirectories",
+          "lastDurationMs": 199.07568999999967,
+          "lastQueueWaitMs": 0.009157000000413973,
+          "lastExecutionMs": 144.63051300000006,
+          "lastOverheadMs": 54.4451769999996,
+          "maxQueueWaitMs": 2415.5416809999997,
+          "lastMainReceiveMs": 0.014035999999578053,
+          "lastWorkerPostMessageMs": 0.04080599999997503,
+          "totalQueueWaitMs": 110828.29525300005,
+          "totalExecutionMs": 2776.5112479999984,
+          "peakActiveWorkers": 2,
+          "peakWorkerHeapMiB": 27.862960815429688,
+          "pending": 0,
+          "activeWorkers": 0,
+          "maxWorkers": 2,
+          "memoryBudgetMiB": 256,
+          "estimatedActiveMiB": 0,
+          "retainedPayloadMiB": 0
+        }
+      },
+      "corrupt": {
+        "id": 6,
+        "result": {
+          "found": true,
+          "updated": false,
+          "file": "KUR.xlsx",
+          "modifiedAt": "2026-11-08T21:44:16.512Z",
+          "reason": "parse-failed"
+        },
+        "store": {
+          "base": "USD",
+          "currencies": [
+            "CHF",
+            "EUR",
+            "GBP",
+            "TRY"
+          ],
+          "months": {
+            "2026-10": {
+              "TRY": 40
+            },
+            "2026-11": {
+              "CHF": 0.8,
+              "TRY": 42,
+              "EUR": 0.9,
+              "GBP": 0.8
+            }
+          },
+          "updatedAt": "2026-11-08T21:44:16.159Z",
+          "sourceFile": "KUR.xlsx",
+          "sourceType": "KUR",
+          "sourceModifiedAt": "2026-11-08T21:44:11.292Z",
+          "reportMonth": "2026-11",
+          "sourceFingerprint": "bebe3db6353b59a46227771d2b75b2b8c9d76f0ba1c8564b40c204330e228f1a",
+          "parser": "deterministic",
+          "_revision": 2,
+          "_updatedAt": "2026-11-08T21:44:16.160Z"
+        },
+        "folderSync": {
+          "file": "KUR.xlsx",
+          "modifiedAt": "2026-11-08T21:44:16.512Z",
+          "reportMonth": null,
+          "fingerprint": null,
+          "reason": "parse-failed"
+        },
+        "stats": {
+          "queued": 72,
+          "completed": 72,
+          "failed": 0,
+          "rejected": 1,
+          "active": false,
+          "lastTask": "loadFxWorkbookFromDirectories",
+          "lastDurationMs": 181.36888799999997,
+          "lastQueueWaitMs": 0.010029000000031374,
+          "lastExecutionMs": 142.85342800000035,
+          "lastOverheadMs": 38.51545999999962,
+          "maxQueueWaitMs": 2415.5416809999997,
+          "lastMainReceiveMs": 0.01973699999962264,
+          "lastWorkerPostMessageMs": 0.0375000000003638,
+          "totalQueueWaitMs": 110828.30528200004,
+          "totalExecutionMs": 2919.364675999999,
+          "peakActiveWorkers": 2,
+          "peakWorkerHeapMiB": 27.862960815429688,
+          "pending": 0,
+          "activeWorkers": 0,
+          "maxWorkers": 2,
+          "memoryBudgetMiB": 256,
+          "estimatedActiveMiB": 0,
+          "retainedPayloadMiB": 0
+        }
+      }
+    },
+    {
+      "name": "explicit-confirmation-busy-and-conflicts",
+      "cancelledWrites": 0,
+      "busyRequestsWithoutWrite": 1,
+      "confirmedWrites": 1,
+      "totalBrowserRequests": 2,
+      "confirmedRevision": 3,
+      "conflict": {
+        "error": "Döviz kurları başka bir pencere veya işlem tarafından değiştirildi. Güncel veriyi yeniden yükleyip tekrar deneyin.",
+        "code": "REVISION_CONFLICT",
+        "currentRevision": 3,
+        "expectedRevision": 2,
+        "revisionKey": null
+      },
+      "changed": {
+        "error": "Klasör kuru uygulanamadı.",
+        "code": "SOURCE_KUR_CHANGED"
+      },
+      "unchangedExplicitStatus": 200
+    }
+  ],
+  "screenshots": [
+    "fx-admission-busy-tr-20261109.png",
+    "fx-admission-busy-en-20261109.png"
+  ],
+  "pageErrors": [],
+  "externalRequests": [],
+  "result": "PASS"
+}

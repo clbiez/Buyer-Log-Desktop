@@ -201,6 +201,17 @@
         return { label: mode === 'rows' ? L('Backlog — filtrelenmiş kayıtlar', 'Backlog — filtered records') : L('Backlog — tüm kayıtlar', 'Backlog — all records'), screen: 'backlog', summary: mode === 'rows' ? L(`${rows.length} Backlog satırı (sayfa filtreleri uygulanmış).`, `${rows.length} Backlog rows (page filters applied).`) : L(`${rows.length} Backlog satırı (filtre uygulanmadan).`, `${rows.length} Backlog rows (no filters applied).`), columns, rows: rows.map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
       },
     });
+    for (const [id, label] of [['lfl', { tr: 'LFL Analizi', en: 'LFL Analysis' }], ['quotations', { tr: 'Üretici teklifleri', en: 'Supplier quotations' }]]) {
+      api.registerContextProvider({ id, screen: id, label,
+        getOptions: () => [{ id: 'all', label: { tr: 'Tüm kayıtlar', en: 'All records' } }],
+        async build() {
+          const datasets = await queryDatasets([`${id}:all`], '');
+          const ds = datasets[0];
+          if (!ds) return { screen: id, label: L(label.tr, label.en), summary: L('Veri bulunamadı.', 'No data found.'), columns: [], rows: [] };
+          return { screen: id, label: ds.label, columns: ds.fields.map(f => f.label), rows: ds.rows.map(row => ds.fields.map(f => DQ().read(f, row))), totalRows: ds.rows.length };
+        },
+      });
+    }
   }
 
   /* ---------------- Durum ---------------- */
@@ -382,6 +393,8 @@
      bağlam eklemediyse ilgili ekranın verisi otomatik eklenir. Konu
      kartları ve otomatik seçim aynı ekran listesini kullanır. */
   const SCREEN_HINTS = [
+    ['lfl', /\blfl\b|like.for.like/i],
+    ['quotations', /teklif|fiyat veren|quotations?|quoted|price offers?/i], // i18n-ignore
     ['backlog', /\bbacklog/i],
     ['cp', /\bcp\b|cp[- ]?tracker|cp takip/i], // i18n-ignore
     ['orders', /sipari[şs]ler|sipari[şs] (listesi|ekran|tablo)|\borders? (screen|table|tab|list)|\borders ekran/i], // i18n-ignore
@@ -926,8 +939,8 @@
      Böylece on binlerce satırlık tablo LCW AI'a yüklenmez ve rakamlar
      modelden gelmez. Belirsizlikte tahmin edilmez, kullanıcıya sorulur. */
   const DQ = () => window.BLDataQuery || null;
-  const QUERY_SCREENS = ['orders', 'cp', 'koleksiyon', 'shipping'];
-  const QUERY_STATE_CHARS = 1800;
+  const QUERY_SCREENS = ['orders', 'cp', 'koleksiyon', 'shipping', 'backlog', 'lfl', 'quotations'];
+  const QUERY_STATE_CHARS = 12000;
   const answerResults = new WeakMap(); // cevap → { computed, title, lines, notes } (yalnız bellekte)
   const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   /* Bağlam kimlikleri ("orders:all", "overview:cp") → sorgulanacak tablolar.
@@ -938,12 +951,14 @@
     for (const id of contextIds || []) {
       const [provider, mode = 'all'] = String(id || '').split(':');
       if (provider === 'overview') targets.push({ screen: 'cp', scope: mode === 'cp' ? 'overview' : 'all' });
-      else if (QUERY_SCREENS.includes(provider)) targets.push({ screen: provider, scope: mode === 'visible' || mode === 'filters' ? 'visible' : mode === 'selected' ? 'selected' : 'all' });
+      else if (QUERY_SCREENS.includes(provider)) targets.push({ screen: provider, scope: mode === 'visible' || mode === 'filters' || mode === 'rows' ? 'visible' : mode === 'selected' ? 'selected' : 'all' });
       else other = true;
     }
+    // Açıkça istenen tarihçe/teklif kaynağı, otomatik CP/Orders bağlamında kaybolmaz.
+    for (const screen of ['lfl', 'quotations', 'backlog']) if (SCREEN_HINTS.find(([id]) => id === screen)?.[1].test(text) && !targets.some(t => t.screen === screen)) targets.push({ screen, scope: 'all' });
     if (targets.length || other) return { targets, named: true };
     const named = (DQ() ? DQ().screensIn(text) : []).filter(screen => QUERY_SCREENS.includes(screen));
-    return { targets: (named.length ? named : QUERY_SCREENS).map(screen => ({ screen, scope: 'all' })), named: named.length > 0 };
+    return { targets: (named.length ? named : ['orders', 'cp', 'koleksiyon', 'shipping']).map(screen => ({ screen, scope: 'all' })), named: named.length > 0 };
   }
   /* Görünmeyen modül çizilmez: veri gerekiyorsa yalnız yüklenir (deferRender). */
   async function ensureQueryData(screen) {
@@ -959,6 +974,26 @@
       const key = `${target.screen}:${target.scope}`;
       if (seen.has(key)) continue;
       seen.add(key);
+      if (target.screen === 'backlog') {
+        const query = target.scope === 'all' ? { format: 'json' } : data.backlogQuery();
+        const rows = window.BLBacklogRows ? await window.BLBacklogRows.load(query) : await data.backlogRows(query);
+        out.push(engine.datasetFromRecords({ id: 'backlog', label: 'Backlog', rows, lang: isEn() ? 'en' : 'tr', scope: target.scope }));
+        continue;
+      }
+      if (target.screen === 'lfl') {
+        const rows = await data.lflRows();
+        out.push(engine.datasetFromRecords({ id: 'lfl', label: L('LFL tarihçesi', 'LFL history'), rows, lang: isEn() ? 'en' : 'tr' }));
+        continue;
+      }
+      if (target.screen === 'quotations') {
+        if (!window.BLPriceSupplierInsights && window.BLPerf?._loadScript) await window.BLPerf._loadScript('price-supplier-insights-engine.js');
+        if (!window.BLCollectionAnalyticsEngine && window.BLPerf?._loadScript) await window.BLPerf._loadScript('collection-analytics-engine.js');
+        const source = await window.BLPriceSupplierAnalysisBridge.get('collection', 'all', 'quotation');
+        if (source.priceType !== 'quotation') throw new Error(L('Üretici teklif verisi bulunamadı; sipariş fiyatları teklif yerine kullanılamaz.', 'Supplier quotation data is unavailable; order prices cannot replace quotations.'));
+        const rows = (source.observations || []).map(o => ({ manufacturer: o.manufacturer, country: o.country, mag: o.mag, mmyg: o.mmyg, buyingGroup: o.buyingGroup, buyer: o.buyer, season: o.season, classification: o.classification, productDescription: o.productMainDefinition, modelName: o.model, fob: o.price, currency: o.currency, quantity: o.quantity }));
+        out.push(engine.datasetFromRecords({ id: 'quotations', module: 'lfl', label: L('Üretici teklifleri (sipariş fiyatı değildir)', 'Supplier quotations (not order prices)'), rows, lang: isEn() ? 'en' : 'tr' }));
+        continue;
+      }
       // Ad verilmediyse yalnız Siparişler yüklenir; diğer tablolar yüklüyse sorguya girer.
       if (named || target.screen === 'orders') await ensureQueryData(target.screen);
       let rows = null, columns = null;
@@ -1020,41 +1055,59 @@
   async function runDataQuery({ api, conv, userMessage, answer, output }) {
     const engine = DQ();
     const lang = isEn() ? 'en' : 'tr';
+    const assertActive = () => { if (state.queryCancelled) throw Object.assign(new Error('cancelled'), { code: 'LCWAI_CANCELLED' }); };
     answer.phase = L('Buyer Log verisi hazırlanıyor…', 'Preparing Buyer Log data…');
     renderMessages();
+    const newAnalysis = /\b(?:AGIRLIKLI|WEIGHTED|LFL|BACKLOG|TEKLIF\w*|QUOT\w*)\b|FIYAT VER/.test(engine.token(userMessage.text)) || /weighted_avg|"comparison"|"queries"/.test(conv.queryState?.specJson || '');
+    if (newAnalysis) await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+    assertActive();
     await merchCalendarReady();
     const datasets = await queryDatasets(userMessage.contextIds, userMessage.text);
+    assertActive();
     if (!datasets.length) return 'chat';
     answer.phase = L('İstek yorumlanıyor…', 'Interpreting the request…');
     renderMessages();
-    const guide = engine.schemaText(datasets, { lang });
+    const guide = newAnalysis ? await engine.schemaTextAsync(datasets, { lang, cancelled: () => state.queryCancelled }) : engine.schemaText(datasets, { lang });
     const context = planContext(conv);
     const base = context.previous && context.previous.question ? `${context.previous.request} → ${userMessage.text}` : userMessage.text;
     let result = await askPlan(api, userMessage.text, guide, context);
+    assertActive();
     let plan = planOf(result);
     if (result && result.model && result.model.label) answer.model = result.model.label;
-    if (!plan || planMode(plan) === 'chat' || !['query', 'clarify'].includes(planMode(plan))) return 'chat';
+    const requestTokens = engine.token(base);
+    const calculationRequired = /\b(?:LFL|AGIRLIKLI|WEIGHTED|BACKLOG|TEKLIF\w*|QUOT\w*)\b/.test(requestTokens) && /\b(?:ANALIZ\w*|ANALYS\w*|TOPLAM\w*|TOTAL|HESAPLA\w*|CALCULATE|CIKAR\w*|GOSTER\w*|SHOW|KAC|HOW MANY)\b/.test(requestTokens) && !/\b(?:NEDIR|ACIKLA\w*|EXPLAIN|WHAT IS)\b/.test(requestTokens);
+    const invalidMode = !plan || !['query', 'clarify'].includes(planMode(plan));
+    if (invalidMode && !calculationRequired) return 'chat';
     if (planMode(plan) === 'clarify') return askClarification(conv, answer, base, plan.question, plan.options, context.previous && context.previous.specJson);
-    let norm = engine.normalizeSpec(plan.specJson, datasets, { lang });
+    let norm = invalidMode ? { ok: false, errors: ['query-required:requested-calculation-cannot-use-chat'], clarify: null } : engine.normalizeSpec(plan.specJson, datasets, { lang, request: base, deferCurrencyCheck: true });
     if (!norm.ok && !norm.clarify) {
-      // Yapısal hata (bilinmeyen alan, türe uymayan işlem): LCW AI'dan bir kez düzeltme istenir.
+      // Yapı veya eksik ölçüt: LCW AI'dan bir kez tam plan düzeltmesi istenir.
       answer.phase = L('Sorgu planı düzeltiliyor…', 'Correcting the query plan…');
       renderMessages();
-      result = await askPlan(api, userMessage.text, guide, { ...context, invalidPlan: String(plan.specJson || '').slice(0, QUERY_STATE_CHARS), errors: norm.errors.slice(0, 12) });
+      result = await askPlan(api, userMessage.text, guide, { ...context, invalidPlan: String(plan?.specJson || '').slice(0, QUERY_STATE_CHARS), errors: norm.errors.slice(0, 12) });
       const repaired = planOf(result);
-      if (repaired && planMode(repaired) === 'clarify') return askClarification(conv, answer, base, repaired.question, repaired.options, plan.specJson);
-      if (repaired && planMode(repaired) === 'query') { plan = repaired; norm = engine.normalizeSpec(plan.specJson, datasets, { lang }); }
+      if (repaired && planMode(repaired) === 'clarify') return askClarification(conv, answer, base, repaired.question, repaired.options, plan?.specJson);
+      if (repaired && planMode(repaired) === 'query') { plan = repaired; norm = engine.normalizeSpec(plan.specJson, datasets, { lang, request: base, deferCurrencyCheck: true }); }
     }
     if (norm.clarify) return askClarification(conv, answer, base, norm.clarify.question, norm.clarify.options, plan.specJson);
     if (!norm.ok) {
       // Tahmini bir rakam göstermektense durulur.
-      answer.error = L('Bu isteği Buyer Log verisinde güvenle hesaplayamadım; tahmini bir rakam göstermemek için durdum. Hangi alana göre istediğinizi (ör. Sezon, MB ayı, Buying Group, sipariş adedi) ekleyerek tekrar yazar mısınız?', 'I could not calculate this request safely on Buyer Log data, so I stopped instead of showing an estimate. Could you rewrite it naming the fields you mean (e.g. season, MB month, buying group, order quantity)?');
+      answer.error = norm.errors.every(error => error.startsWith('missing-requested-measure:'))
+        ? L('Sorgu planı, istediğiniz ölçütlerin tamamını içermiyor. Düzeltme denemesi de eksik kaldığı için kısmi sonuç göstermedim. İstediğiniz ölçütleri birlikte belirterek yeniden deneyebilirsiniz.', 'The query plan does not include all the measures you requested. The repair was also incomplete, so I did not show a partial result. You can retry by naming the requested measures together.')
+        : L('Bu isteği Buyer Log verisinde güvenle hesaplayamadım; tahmini bir rakam göstermemek için durdum. Hangi alana göre istediğinizi (ör. Sezon, MB ayı, Buying Group, sipariş adedi) ekleyerek tekrar yazar mısınız?', 'I could not calculate this request safely on Buyer Log data, so I stopped instead of showing an estimate. Could you rewrite it naming the fields you mean (e.g. season, MB month, buying group, order quantity)?');
       return 'done';
     }
     const dataset = norm.dataset;
     answer.phase = L('Buyer Log hesaplıyor…', 'Buyer Log is calculating…');
     renderMessages();
-    const computed = engine.execute(norm.spec, dataset, { lang });
+    const cooperative = norm.spec.comparison || norm.spec.queries || norm.spec.measures.some(m => m.agg === 'weighted_avg');
+    if (cooperative) await new Promise(resolve => setTimeout(resolve, 0));
+    const computed = cooperative
+      ? await engine.executeAsync(norm.spec, dataset, { lang, reference: norm.reference, datasets, cancelled: () => state.queryCancelled })
+      : engine.execute(norm.spec, dataset, { lang });
+    if (computed.currencyConflict || computed.results?.some(r => r.computed.currencyConflict)) return askClarification(conv, answer, base,
+      L('Fiyatlar farklı para birimlerinde. Hangi kapsamda karşılaştırayım?', 'Prices use different currencies. How should I compare them?'),
+      [L('Ülke veya para birimi bazında göster', 'Group by country or currency'), L('Yalnız USD', 'USD only'), L('Yalnız TRY', 'TRY only')], JSON.stringify(norm.spec));
     const lines = engine.describe(norm.spec, dataset, computed, lang);
     const notes = [...(Array.isArray(plan.assumptions) ? plan.assumptions : []).map(item => String(item == null ? '' : item).trim()), ...norm.notes].filter(Boolean);
     if (computed.truncatedColumns) notes.push(L(`${computed.truncatedColumns} sütun değeri sığmadığı için en sık geçen değerler sütun olarak gösterildi; Toplam sütunu tüm değerleri içerir.`, `${computed.truncatedColumns} column values did not fit, so the most frequent ones are shown as columns; the Total column includes all values.`));
@@ -1065,7 +1118,9 @@
     answerResults.set(answer, { computed, title, lines, notes });
     const shown = Math.min(computed.rows.length, engine.LIMITS.chatRows);
     const table = engine.toMarkdown(computed, { lang });
-    answer.text = computed.matched
+    answer.text = computed.kind === 'lfl' && !computed.rows.length
+      ? L('Bu iki dönem arasında aynı kırılım ve para biriminde karşılaştırılabilir kayıt bulunamadı. Fiyat değişimi hesaplanmadı; dönem ve filtreleri kontrol edebilirsiniz.', 'No comparable records with matching breakdowns and currencies were found between these periods. Price change was not calculated; you can check the periods and filters.')
+      : computed.matched
       ? `**${title}**\n\n${table}${computed.rows.length > shown ? `\n\n${L(`İlk ${shown} / ${computed.rows.length} satır gösteriliyor; tamamı için Excel olarak indirin.`, `Showing the first ${shown} of ${computed.rows.length} rows; download as Excel for all of them.`)}` : ''}`
       : L('Bu filtrelere uyan kayıt yok. Yorumu aşağıda kontrol edip düzeltmeyi yazabilirsiniz.', 'No records match these filters. Check the interpretation below and write a correction.');
     // Sonraki sohbet mesajı ("bunu yorumla", "bundan mail yaz") hesaplanmış tabloyu görsün.
@@ -1099,10 +1154,14 @@
       let memo = answerResults.get(message);
       if (!memo) {
         await merchCalendarReady();
-        const datasets = await queryDatasets(message.query.contextIds || [], '');
-        const norm = engine.normalizeSpec(message.query.spec, datasets.filter(item => item.id === message.query.dataset), { lang });
+        const savedSpec = engine.parseSpec(message.query.spec);
+        const ids = [...new Set([...(savedSpec?.queries || [savedSpec]).flatMap(q => [q?.dataset, q?.comparison?.referenceDataset])].filter(Boolean))].map(id => `${id}:all`);
+        const contexts = [...(message.query.contextIds || [])];
+        for (const id of ids) if (!contexts.some(c => c.split(':')[0] === id.split(':')[0])) contexts.push(id.split(':')[0] === message.query.dataset ? `${message.query.dataset}:${message.query.scope || 'all'}` : id);
+        const datasets = await queryDatasets(contexts, '');
+        const norm = engine.normalizeSpec(message.query.spec, datasets, { lang });
         if (!norm.ok || norm.clarify) throw Object.assign(new Error('stale'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });
-        const computed = engine.execute(norm.spec, norm.dataset, { lang });
+        const computed = await engine.executeAsync(norm.spec, norm.dataset, { lang, reference: norm.reference, datasets });
         memo = { computed, title: message.query.title, lines: engine.describe(norm.spec, norm.dataset, computed, lang), notes: message.query.notes || [] };
       }
       message.file = await api.createTableOutput(engine.toWorkbook(memo.computed, { title: memo.title, lines: memo.lines, notes: memo.notes, lang }), lang);
@@ -1121,6 +1180,7 @@
   async function send(text, { reuse = null } = {}) {
     const api = AI();
     if (!api || state.busy) return;
+    state.queryCancelled = false;
     const conv = activeConversation();
     const message = String(text || '').trim();
     const files = reuse ? [] : state.files.filter(item => !item.error).map(item => item.file);
@@ -1335,7 +1395,7 @@
     }
     if (target.matches('[data-chip-file]')) { state.files.splice(Number(target.dataset.chipFile), 1); renderChips(); return; }
     if (target.matches('[data-chip-context]')) { state.contexts.splice(Number(target.dataset.chipContext), 1); renderChips(); return; }
-    if (target.matches('[data-chat-cancel]')) { AI()?.cancel(state.requestId); return; }
+    if (target.matches('[data-chat-cancel]')) { state.queryCancelled = true; AI()?.cancel(state.requestId); return; }
     if (target.matches('[data-chat-login]')) { AI()?.connect().then(status => { state.status = status; renderConnection(); }).catch(() => {}); return; }
     if (target.matches('[data-chat-topic]')) {
       activeTopic = target.dataset.chatTopic;

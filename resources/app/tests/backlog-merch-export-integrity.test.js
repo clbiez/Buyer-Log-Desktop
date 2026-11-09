@@ -144,3 +144,19 @@ test('date header heuristics preserve boolean formula helpers in SheetJS and Exc
     assert.equal(reread.getWorksheet('BACKLOG').getCell('A2').result,result);
   }
 });
+
+test('explicitly selected Backlog columns stay visible while formula helpers remain hidden',{skip:!XLSX},()=>{
+  const ctx=browser(),headers=['Lisans','FOB Fiyatı','ASAS · Demo Extra Column','Sipariş Kod'];
+  const rows=[{'Lisans':'DEMO','FOB Fiyatı':4,'ASAS · Demo Extra Column':'EXTRA','Sipariş Kod':'1001'}];
+  const selected=ctx.buildBacklogDetailSheet(headers,rows,null,{showSelectedColumns:true});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,selected,'BACKLOG');
+  const out=XLSX.read(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),{type:'buffer',cellStyles:true}).Sheets.BACKLOG;
+  headers.forEach((header,index)=>{
+    assert.equal(out[XLSX.utils.encode_col(index)+'1'].v,header);
+    assert.equal(Boolean(out['!cols'][index].hidden),false,header+' must be visible');
+    assert.equal(out['!cols'][index].level||0,0,'selected columns are not collapsed groups');
+  });
+  assert.ok(out['!cols'].slice(headers.length).every(col=>col.hidden),'formula helpers remain hidden');
+  const detail=ctx.buildBacklogDetailSheet(headers,rows,null);
+  assert.equal(detail['!cols'][0].hidden,true,'existing detail export keeps its default view');
+});

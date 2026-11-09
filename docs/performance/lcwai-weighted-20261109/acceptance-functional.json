@@ -1,0 +1,431 @@
+{
+  "baseline": "9e667430e3ac7ca30b321f06893d53f24d6ed5a3",
+  "node": "v24.19.0",
+  "chromium": "154.0.8037.57",
+  "sourceHashes": {
+    "public/lcwai-data-query.js": "653d92e8e4b7648f758a7360e269759e98db4e00bed351494635b422ea6a30f3",
+    "public/lcwai-chat.js": "ab04cb9e6ea53f7f8e9ac0f4ea1eb939c60cb2f756c239da72936af830b0cd46",
+    "public/lcwai-lfl-query.js": "efb677f7091aff7b1d641d3654fbb140c8e7e91485e9f48e5d24e6db2e3e7a00",
+    "public/lfl-calculation-engine.js": "722425746c61510e3f605f0d1e489641268b2f7a2173116501cfa5eec1e886e9",
+    "public/app-main.js": "7803e23d25dd83153c9a6db83a2bf6b276dc3fc63ac0918672ed33a8613983ee",
+    "public/canonical-fields.js": "00101681dd7ccf904686ffa7150db9961c3dbda8673dc40ee7cdb4b99c9b3e3d",
+    "public/perf-runtime.js": "cc958a00e713f03391c01499d239af9bd92d3fc21855de6b041e94a96e23c345",
+    "server/lib/lcwai/lcwai-prompt.js": "8212bd2ddc7a9c47a4586b15838ad76111bf5206cc0642f955dcc279b3889f3c",
+    "server/lib/lcwai/lcwai-knowledge.js": "48bfc3aa34e13676bce45a4a8f511c76f7e64685867b90bd427f1ead960c411c"
+  },
+  "syntheticRows": 37183,
+  "fixtureRecipeHash": "d45fbdc0461b2e366426f6afab747b40040e3a8f7a8d7e4104616c5e0236dd2a",
+  "cases": [],
+  "weighted": {
+    "feedbackMs": 36.799999999813735,
+    "requestToVisibleMs": 644.7000000001863,
+    "planToVisibleMs": 146.60000000009313,
+    "longTasksMs": [
+      73,
+      114
+    ],
+    "longTasks": [
+      {
+        "start": 5983.200000000186,
+        "duration": 73
+      },
+      {
+        "start": 6343,
+        "duration": 114
+      }
+    ],
+    "stages": [
+      {
+        "stage": "normalize",
+        "start": 6531.800000000279,
+        "end": 6534
+      },
+      {
+        "stage": "execute",
+        "start": 6543.800000000279,
+        "end": 6643.100000000093
+      }
+    ],
+    "answer": "**Demo · CU4E S7 toplam adet ve ağırlıklı FOB**\n\n| Sipariş Adeti · Toplam | FOB · Ağırlıklı ortalama (Sipariş Adeti) |\n| --- | --- |\n| 7.436.500 | 5 |",
+    "calls": {
+      "ask": 1,
+      "chat": 0,
+      "uploads": 0
+    },
+    "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"},{\"agg\":\"weighted_avg\",\"field\":\"FOB ($)\",\"weightField\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · CU4E S7 toplam adet ve ağırlıklı FOB\"}"
+  },
+  "weightedEn": {
+    "feedbackMs": 28.399999999906868,
+    "requestToVisibleMs": 337,
+    "planToVisibleMs": 102,
+    "longTasksMs": [
+      147
+    ],
+    "longTasks": [
+      {
+        "start": 9925.900000000373,
+        "duration": 147
+      }
+    ],
+    "stages": [
+      {
+        "stage": "normalize",
+        "start": 10293.100000000093,
+        "end": 10294.100000000093
+      },
+      {
+        "stage": "execute",
+        "start": 10302.80000000028,
+        "end": 10373.400000000373
+      }
+    ],
+    "answer": "**Demo · CU4E S7 total quantity and weighted FOB**\n\n| Order Qty · Total | FOB · Weighted average (Order Qty) |\n| --- | --- |\n| 7,436,500 | 5 |",
+    "calls": {
+      "ask": 7,
+      "chat": 0,
+      "uploads": 0
+    },
+    "spec": "{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"},{\"agg\":\"weighted_avg\",\"field\":\"FOB ($)\",\"weightField\":\"Order Quantity\"}],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · CU4E S7 total quantity and weighted FOB\"}"
+  },
+  "retainedHeapSamples": [
+    35337480,
+    35475968,
+    35640688,
+    35676044,
+    35801772,
+    35877196
+  ],
+  "lfl": {
+    "role": "ai",
+    "text": "**Demo · LFL fiyat kıyası**\n\n| MAG | MMYG | Kategori | Para birimi | Güncel adet | Kıyas adet | Güncel ağırlıklı FOB | Kıyas ağırlıklı FOB | FOB değişimi % | İyileşme % |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| CU4E | KIDS | T-Shirt | USD | 2.788.800 | 929.600 | 3 | 4 | -25 | 25 |\n| CU4E | KIDS | T-Shirt | TRY | 2.788.800 | 929.600 | 110 | 100 | 10 | -10 |",
+    "streaming": false,
+    "phase": "Buyer Log hesaplıyor…",
+    "model": "Demo planner",
+    "query": {
+      "title": "Demo · LFL fiyat kıyası",
+      "lines": [
+        "Veri: LFL tarihçesi — tüm kayıtlar (sayfa filtreleri uygulanmadan), 37.184 kayıt",
+        "Filtre: yok",
+        "Eşleşen: 18.592 / 37.184 kayıt",
+        "LFL: Like-for-Like fiyat kıyası; geçerli FOB ve adet > 0. Yalnız ortak kırılım/para birimi çiftleri karşılaştırıldı; Türkiye TRY, diğer ülkeler USD. Para birimleri birlikte ortalanmadı.",
+        "Güncel dönem: Sezon = S7",
+        "Kıyas kaynağı: lfl; Sezon = S6",
+        "Karşılaştırılabilir kayıt: güncel 18592/18592, kıyas 18592/18592. Genel FOB değişimi: -7,5%. Ortak çift yoksa fiyat değişimi hesaplanmaz."
+      ],
+      "notes": [
+        "LFL varsayılan dönemleri: S7 / S6; aynı sezon öneki kullanıldı."
+      ],
+      "dataset": "lfl",
+      "scope": "all",
+      "contextIds": [
+        "lfl:all"
+      ],
+      "spec": "{\"dataset\":\"lfl\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[],\"columns\":[],\"measures\":[],\"list\":[],\"sort\":null,\"limit\":0,\"title\":\"Demo · LFL fiyat kıyası\",\"comparison\":{\"type\":\"lfl\",\"referenceDataset\":\"lfl\",\"currentFilters\":[{\"field\":\"season\",\"op\":\"in\",\"values\":[\"S7\"]}],\"referenceFilters\":[{\"field\":\"season\",\"op\":\"in\",\"values\":[\"S6\"]}],\"matchBy\":[{\"field\":\"mag\",\"referenceField\":\"mag\"},{\"field\":\"mmyg\",\"referenceField\":\"mmyg\"},{\"field\":\"classification\",\"referenceField\":\"classification\"}]}}",
+      "matched": 18592,
+      "rows": 2
+    },
+    "acceptanceMetrics": {
+      "feedbackMs": 47.39999999990687,
+      "visibleMs": 2438,
+      "planToVisibleMs": 567.4000000003725,
+      "stages": [
+        {
+          "stage": "normalize",
+          "start": 29538.100000000093,
+          "end": 29573.200000000186
+        },
+        {
+          "stage": "execute",
+          "start": 29581.700000000186,
+          "end": 30077
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 27599.80000000028,
+          "duration": 99
+        },
+        {
+          "start": 28810.200000000186,
+          "duration": 328
+        },
+        {
+          "start": 29140.700000000186,
+          "duration": 239
+        }
+      ]
+    }
+  },
+  "backlog": {
+    "count": 22,
+    "fields": [
+      {
+        "id": "Sezon",
+        "canonical": "season",
+        "kind": "text"
+      },
+      {
+        "id": "Sipariş Yerleştirme MerchTarih",
+        "canonical": "orderPlacementDate",
+        "kind": "date"
+      },
+      {
+        "id": "Siparişin Üretildiği Ülke",
+        "canonical": "country",
+        "kind": "text"
+      },
+      {
+        "id": "Buyer",
+        "canonical": "buyer",
+        "kind": "text"
+      },
+      {
+        "id": "Buyer Grup (TR)",
+        "canonical": "buyingGroup",
+        "kind": "text"
+      },
+      {
+        "id": "Lisans",
+        "canonical": "license",
+        "kind": "text"
+      },
+      {
+        "id": "Üretici",
+        "canonical": "manufacturer",
+        "kind": "text"
+      },
+      {
+        "id": "Alt Üretici",
+        "canonical": "subManufacturer",
+        "kind": "text"
+      },
+      {
+        "id": "Line",
+        "canonical": "line",
+        "kind": "text"
+      },
+      {
+        "id": "Ürün Klasman",
+        "canonical": "category",
+        "kind": "text"
+      },
+      {
+        "id": "Sipariş Kod",
+        "canonical": "orderCode",
+        "kind": "text"
+      },
+      {
+        "id": "Özel Kod 1",
+        "canonical": "specialCode",
+        "kind": "text"
+      },
+      {
+        "id": "Model Adı",
+        "canonical": "modelName",
+        "kind": "text"
+      },
+      {
+        "id": "Renk Kod",
+        "canonical": "colourCode",
+        "kind": "text"
+      },
+      {
+        "id": "Renk",
+        "canonical": "colour",
+        "kind": "text"
+      },
+      {
+        "id": "Orijinal Exfactory Merch Ay",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "Orijinal Exfactory Merch Tarih",
+        "canonical": "exFactory",
+        "kind": "date"
+      },
+      {
+        "id": "Retail Depo Merch Yil Ay",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "Retail Depo Tarih Yıl Ay Gün",
+        "canonical": "retailDate",
+        "kind": "date"
+      },
+      {
+        "id": "Model Bütçe Merch Yil Ay",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "Model Bütçe Tarih Yıl Ay Gün",
+        "canonical": "inStore",
+        "kind": "date"
+      },
+      {
+        "id": "Model Bütçe Yil Hafta",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "Retail Depo Merch Yil Hafta",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "Net Alım Sipariş Miktarı",
+        "canonical": "orderQuantity",
+        "kind": "number"
+      },
+      {
+        "id": "Adet",
+        "canonical": "collectionQuantity",
+        "kind": "number"
+      },
+      {
+        "id": "Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo",
+        "canonical": "",
+        "kind": "number"
+      },
+      {
+        "id": "Kalan Alım Sipariş Miktarı",
+        "canonical": "remainingUnits",
+        "kind": "number"
+      },
+      {
+        "id": "FOB Fiyatı",
+        "canonical": "fob",
+        "kind": "number"
+      },
+      {
+        "id": "Net Gelen Alım Sipariş Miktarı",
+        "canonical": "",
+        "kind": "number"
+      },
+      {
+        "id": "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo",
+        "canonical": "",
+        "kind": "number"
+      },
+      {
+        "id": "GÜNCEL DURUM\n(STATUS)",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)",
+        "canonical": "",
+        "kind": "date"
+      },
+      {
+        "id": "RİSK\n(PRIORITY)",
+        "canonical": "",
+        "kind": "text"
+      },
+      {
+        "id": "ANTREPO GİRİŞ TARİHİ",
+        "canonical": "",
+        "kind": "date"
+      },
+      {
+        "id": "YÜKLEME TİPİ",
+        "canonical": "deliveryType",
+        "kind": "text"
+      },
+      {
+        "id": "ANTREPO-RETAIL",
+        "canonical": "",
+        "kind": "number"
+      },
+      {
+        "id": "ÖNEM ETİKETİ\n(IMPORTANCE)",
+        "canonical": "importance",
+        "kind": "text"
+      },
+      {
+        "id": "buying note",
+        "canonical": "",
+        "kind": "text"
+      }
+    ]
+  },
+  "backlogAnswer": {
+    "role": "ai",
+    "text": "**Demo · Backlog kalan adet**\n\n| Üretici | Kalan Adet · Toplam |\n| --- | --- |\n| ATLAS KNIT | 10.800 |\n| EGE ORME | 10.200 |\n| CHITTAGONG KNIT | 9.500 |\n| NILE KNIT | 8.500 |\n| DHAKA APPAREL | 7.570 |\n| DELTA TEXTILE | 6.000 |\n| NINGBO KNITWEAR | 5.400 |\n| **Toplam** | 57.970 |",
+    "streaming": false,
+    "phase": "Buyer Log hesaplıyor…",
+    "model": "Demo planner",
+    "query": {
+      "title": "Demo · Backlog kalan adet",
+      "lines": [
+        "Veri: Backlog — tüm kayıtlar (sayfa filtreleri uygulanmadan), 22 kayıt",
+        "Filtre: yok",
+        "Satırlar: Üretici",
+        "Değer: Kalan Adet · Toplam",
+        "Eşleşen: 22 / 22 kayıt"
+      ],
+      "notes": [],
+      "dataset": "backlog",
+      "scope": "all",
+      "contextIds": [
+        "backlog:all"
+      ],
+      "spec": "{\"dataset\":\"backlog\",\"calendar\":\"merch\",\"filters\":[],\"rows\":[{\"field\":\"Üretici\",\"bucket\":\"\"}],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Kalan Alım Sipariş Miktarı\"}],\"list\":[],\"sort\":{\"measure\":0,\"dir\":\"desc\"},\"limit\":0,\"title\":\"Demo · Backlog kalan adet\"}",
+      "matched": 22,
+      "rows": 7
+    }
+  },
+  "suppliers": {
+    "answer": {
+      "role": "ai",
+      "text": "**Demo · Üretici teklif ve hacim kıyası**\n\n**En düşük t-shirt teklifi (USD)**\n\n| Üretici | Para Birimi | FOB · Min | Kayıt sayısı |\n| --- | --- | --- | --- |\n| DEMO BETA | USD | 3 | 1 |\n| **Toplam** |  | 3 | 2 |\n\n**En yüksek t-shirt sipariş hacmi**\n\n| Üretici | Sipariş Adeti · Toplam | Sipariş · farklı sayı |\n| --- | --- | --- |\n| DEMO BETA | 300.000 | 1.000 |\n| **Toplam** | 400.000 | 2.000 |",
+      "streaming": false,
+      "phase": "Buyer Log hesaplıyor…",
+      "model": "Demo planner",
+      "query": {
+        "title": "Demo · Üretici teklif ve hacim kıyası",
+        "lines": [
+          "En düşük t-shirt teklifi (USD)",
+          "Veri: Üretici teklifleri (sipariş fiyatı değildir) — tüm kayıtlar (sayfa filtreleri uygulanmadan), 2 kayıt",
+          "Filtre: Kategori = T-Shirt",
+          "Satırlar: Üretici › Para Birimi",
+          "Değer: FOB · Min, Kayıt sayısı",
+          "Eşleşen: 2 / 2 kayıt",
+          "FOB: Buyer Log fiyat ortalamalarıyla aynı şekilde yalnız pozitif fiyatlar kullanıldı; sıfır ve negatif fiyatlar hesaba katılmadı.",
+          "En yüksek t-shirt sipariş hacmi",
+          "Veri: Siparişler — tüm kayıtlar (sayfa filtreleri uygulanmadan), 2.000 kayıt",
+          "Filtre: Ürün Tanım = T-Shirt",
+          "Satırlar: Üretici",
+          "Değer: Sipariş Adeti · Toplam, Sipariş · farklı sayı",
+          "Eşleşen: 2.000 / 2.000 kayıt"
+        ],
+        "notes": [],
+        "dataset": "quotations",
+        "scope": "all",
+        "contextIds": [
+          "quotations:all",
+          "orders:all"
+        ],
+        "spec": "{\"title\":\"Demo · Üretici teklif ve hacim kıyası\",\"queries\":[{\"dataset\":\"quotations\",\"calendar\":\"merch\",\"filters\":[{\"field\":\"classification\",\"op\":\"in\",\"values\":[\"T-Shirt\"]}],\"rows\":[{\"field\":\"manufacturer\",\"bucket\":\"\"},{\"field\":\"currency\",\"bucket\":\"\"}],\"columns\":[],\"measures\":[{\"agg\":\"min\",\"field\":\"fob\"},{\"agg\":\"count\",\"field\":\"\"}],\"list\":[],\"sort\":{\"measure\":0,\"dir\":\"asc\"},\"limit\":1,\"title\":\"En düşük t-shirt teklifi (USD)\"},{\"dataset\":\"orders\",\"calendar\":\"merch\",\"filters\":[{\"field\":\"Ürün Tanım\",\"op\":\"in\",\"values\":[\"T-Shirt\"]}],\"rows\":[{\"field\":\"Manufacturer\",\"bucket\":\"\"}],\"columns\":[],\"measures\":[{\"agg\":\"sum\",\"field\":\"Order Quantity\"},{\"agg\":\"count_distinct\",\"field\":\"Order Code\"}],\"list\":[],\"sort\":{\"measure\":0,\"dir\":\"desc\"},\"limit\":1,\"title\":\"En yüksek t-shirt sipariş hacmi\"}]}",
+        "matched": 2002,
+        "rows": 2
+      }
+    },
+    "collectionRows": 1,
+    "calls": {
+      "ask": 1,
+      "chat": 0,
+      "uploads": 0,
+      "worksheets": []
+    }
+  },
+  "excel": {
+    "format": "xlsx",
+    "sheets": [
+      "Sonuç"
+    ]
+  },
+  "errors": []
+}

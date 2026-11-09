@@ -1,0 +1,59 @@
+{
+  "measured": "d6864eaa67fe9c144f84648727f175e694ce2966",
+  "integrated": "b64fbd45e7735cee994c7fd691b9fb67e1639b87",
+  "unchangedFunctions": [
+    {
+      "name": "backgroundWarmupSteps",
+      "sha256": "7b9b1749cd3f552213fffef1616481064b10951c61f7e4697e997d789643c3f8"
+    },
+    {
+      "name": "scheduleBackgroundModuleWarmup",
+      "sha256": "c4d83fdd6d0f0e86d933a095cbafa16321df473a4c1b296bfa6bee68912e7647"
+    },
+    {
+      "name": "ensureCpLoaded",
+      "sha256": "5d5430d5fc63827902488690565fae0be90a72933448b5ef566cdfaeae8cc2e5"
+    },
+    {
+      "name": "ensureOrdersLoaded",
+      "sha256": "b6527f821a839a7918063c5a1203017723ebbfbe89f1fc4463ba1ab48fa13dda"
+    },
+    {
+      "name": "runDeferredRender",
+      "sha256": "44c5f31988f63e39175c8613e7130d8bb7f617097017af184947fd8576ba96d1"
+    },
+    {
+      "name": "switchTab",
+      "sha256": "237fa17630a24257672e8ba11b9d423c0eec960c9ebb71830695c2f9b78423c1"
+    },
+    {
+      "name": "prefetchBacklogForRefresh",
+      "sha256": "9a67982feeba5696578fefe08302ac78f0fa878aacfc13b4544d355ebbf88451"
+    },
+    {
+      "name": "fetchCurrentBacklog",
+      "sha256": "94660ef3c5e3783cb8d5a33fce6f5a649a6dc9bb533203b22a8cdb7d84239bfe"
+    },
+    {
+      "name": "prepareBackgroundPageProfiles",
+      "sha256": "7122e2902bcf0cfb5915b4fb65866d3fce63648ecfac0cb9ded17a39dc27aa8b"
+    },
+    {
+      "name": "applyProfilesForCurrentPage",
+      "sha256": "6e887d269f88d22941ad167bffae193d7a686e54da9e76245bff097ec48c58ba"
+    },
+    {
+      "name": "scheduleUnifiedPrioritiesForTable",
+      "sha256": "c4f5a5312d011e9add45ce6790a55e5d487030897617ac2b009ea30178a836e0"
+    },
+    {
+      "name": "ensureCollectionCatalogLoaded",
+      "sha256": "fe8e69c53cae9642c869b022983c4219b052c42ee109aef95e6aa423d3422d24"
+    },
+    {
+      "name": "loadFromServer",
+      "sha256": "dc794a47307e3fbc18fa27cff413aae35cf564c5e8a06839285675d1dd08892c"
+    }
+  ],
+  "note": "The Main merge adds notification activation/history helpers and checklist failure targeting. It does not change the measured warmup, tab navigation, page loaders, refresh hydration or Backlog sharing paths."
+}

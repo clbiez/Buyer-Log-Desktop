@@ -1,0 +1,133 @@
+{
+  "baseMain": "511cb2fae629cd6e0c1ad31eb773775e5c95841d",
+  "runner": "npm test -> tests/run-tests.js",
+  "node": "v24.19.0",
+  "platform": "Linux x86_64",
+  "concurrency": 4,
+  "environment": {
+    "BUYER_LOG_DATA_ROOT": "/tmp/ana12-regression-appdata"
+  },
+  "files": 1318,
+  "batches": [
+    {
+      "batch": 1,
+      "files": 300,
+      "tests": 1806,
+      "suites": 0,
+      "pass": 1746,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 60,
+      "todo": 0
+    },
+    {
+      "batch": 2,
+      "files": 300,
+      "tests": 2314,
+      "suites": 0,
+      "pass": 2311,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 3,
+      "todo": 0
+    },
+    {
+      "batch": 3,
+      "files": 300,
+      "tests": 2054,
+      "suites": 0,
+      "pass": 2054,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 4,
+      "files": 300,
+      "tests": 2030,
+      "suites": 0,
+      "pass": 2029,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "todo": 0
+    },
+    {
+      "batch": 5,
+      "files": 113,
+      "tests": 847,
+      "suites": 0,
+      "pass": 847,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 6,
+      "files": 1,
+      "tests": 4,
+      "suites": 0,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 7,
+      "files": 1,
+      "tests": 12,
+      "suites": 0,
+      "pass": 12,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 8,
+      "files": 1,
+      "tests": 8,
+      "suites": 0,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 9,
+      "files": 1,
+      "tests": 8,
+      "suites": 0,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 10,
+      "files": 1,
+      "tests": 15,
+      "suites": 0,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "todo": 0
+    }
+  ],
+  "total": {
+    "tests": 9098,
+    "suites": 0,
+    "pass": 9033,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0
+  },
+  "elapsedSeconds": 130.6
+}

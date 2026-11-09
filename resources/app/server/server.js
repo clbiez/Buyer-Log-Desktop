@@ -4828,6 +4828,9 @@ async function runPlmImageImport(req,res){
     }).id;
     if(typeof req.onPlmJob==='function')req.onPlmJob(imageJobRef.id);
 
+    const reportStage = stage => reportImageProgress(req, imageJobRef, { stage, model: '' });
+    reportStage('waiting-lock');
+
     /* Phase timing (field report: 129-model job ~9 min with 124 cache hits).
        Names and durations only — no PLM data — so backend.log shows which
        step waits (local plan, shared OneDrive store, lease, PLM API). */
@@ -4835,6 +4838,7 @@ async function runPlmImageImport(req,res){
     const phaseLog=(phase,extra={})=>{const now=Date.now();plmImageRefreshLog('PLM_IMAGE_PHASE',{phase,ms:now-phaseMark,totalMs:now-phaseStartedAt,...extra});phaseMark=now;};
     const result=await withModelImageImportLock(req.currentUser.id,async()=>{
       phaseLog('lock');
+      reportStage('preparing');
       const before=loadOverrides(),imagemap=before.imagemap||{},styleLinks=loadPlmStyleLinks().links||{};
       // İstekler TEKİLLEŞTİRİLİR: aynı PLM+Renk iki kez API'ye gitmez.
       /* PLM ID taşımayan alt detay kalemleri önce model adı üzerinden çözülür;
@@ -4861,6 +4865,7 @@ async function runPlmImageImport(req,res){
          kimlikler gider. Kaynak SIKIDIR: ASAS kökenli paylaşılan bir nesne
          bir PLM isteğini karşılayamaz. */
       const sharedForCollection = collectionImageSyncPolicy.scopeUsesSharedImages(plmJobScope(req));
+      reportStage('local-cache');
       const first = await resolveModelImagesLocalFirst(requests, {
         source: sharedImageStoreLib.SOURCE_PLM, mode, overwriteManual,
         force: Boolean(req.body && req.body.force), overrides: before,
@@ -4869,6 +4874,7 @@ async function runPlmImageImport(req,res){
       phaseLog('local-first-plan',{upstream:first.plan.upstream.length});
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const eligibleSharedKeys = collectionShareableImageKeys(req.currentUser.id, plmJobScope(req));
+      reportStage('shared-lease');
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM, {
         ownerId: req.currentUser.id, eligibleKeys: eligibleSharedKeys,
       });
@@ -4885,6 +4891,7 @@ async function runPlmImageImport(req,res){
         waitingOtherInstance: upstreamLease.busy.length,
       };
       if(!upstreamRequests.length){
+        reportStage('releasing');
         await upstreamLease.release();
         const overridesNow = first.overrides || before;
         return {
@@ -4901,6 +4908,7 @@ async function runPlmImageImport(req,res){
       });
       try {
       if(typeof req.assertAuthority==='function')req.assertAuthority();
+      reportStage('connecting');
       apiSession = await agentBrowserConnector.openCoreNectumStyleApiSession(req.currentUser.id, {
         isCancelled: () => plmJobs.isCancelled(req.currentUser.id, imageJobRef.id),
       });
@@ -4924,6 +4932,7 @@ async function runPlmImageImport(req,res){
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
+      reportStage('finalizing');
       if (sharedForCollection && eligibleSharedKeys.size) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM, { collectionOwnerId:req.currentUser.id });
       /* Kaynak duyarlı "bulunamadı" belleği: PLM'in yok demesi ASAS için
          hiçbir şey söylemez. Açık bir yenileme yine deneyebilir. */
@@ -4960,12 +4969,14 @@ async function runPlmImageImport(req,res){
         uniqueDownloads: run.uniqueDownloads||0,
       };
       } finally {
+        reportStage('releasing');
         const releaseStarted = Date.now();
         const released = await upstreamLease.release();
         plmImageRefreshLog('PLM_IMAGE_LEASE_RELEASE', { ms:Date.now()-releaseStarted, protected:upstreamLease.protectedCount, ...released });
       }
     });
 
+    reportStage('finalizing');
     phaseLog('done');
     for(const item of result.imageFailedItems||[])plmJobs.addFailure(req.currentUser.id,imageJobRef.id,{plmId:item&&item.plmId,model:item&&item.styleName,error:(item&&item.error)||'PLM gorseli alinamadi.',code:(item&&item.code)||'PLM_IMAGE_MISSING'});
     plmJobs.update(req.currentUser.id,imageJobRef.id,{processed:result.requested,total:result.requested,succeeded:Math.max(0,result.requested-(result.imagesFailed||0))});
@@ -5138,13 +5149,18 @@ function finishImageJob(req, jobRef, error) {
 /* Görsel rotalarında ilerleme hem eski tek slota hem de işin kendi kaydına
    yazılır. Eski uç korunuyor ki ona bakan mevcut istemci kodu bozulmasın. */
 function reportImageProgress(req, jobRef, progress) {
-  setModelOperationProgress(req.currentUser.id, { kind: 'images', ...progress });
+  const value = progress || {};
+  setModelOperationProgress(req.currentUser.id, { kind: 'images', ...value });
   if (!jobRef || !jobRef.id) return;
+  // Image stages count different units (models, styles, attachments). Keep
+  // those counters separate from the requested records and final outcomes.
+  const counters = value.stage
+    ? { stage: value.stage, stageCurrent: value.current || 0, stageTotal: value.total || 0 }
+    : { processed: value.current, total: value.total };
   plmJobs.update(req.currentUser.id, jobRef.id, {
-    phase: progress && progress.phase,
-    processed: progress && progress.current,
-    total: progress && progress.total,
-    activeModel: progress && progress.model,
+    ...counters,
+    phase: value.phase || (value.stage ? '' : undefined),
+    activeModel: value.model == null && value.stage ? '' : value.model,
   });
 }
 
@@ -6976,7 +6992,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
     if (!parsed.found) { folderFxSyncStatus = null; return parsed; }
-    if (!parsed.updated && parsed.reason !== 'parse-failed') return parsed;
+    if (!parsed.updated && parsed.reason !== 'parse-failed') { folderFxSyncStatus = null; return parsed; }
     for (let attempt = 0; attempt < 2; attempt += 1) {
       let decision = decideFolderKurApply(current, parsed);
       const reason = decision.reason || 'apply';
@@ -6993,10 +7009,13 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
       }
     }
   } catch (err) {
+    // Ayrıştırma hatasını worker sonuç olarak döndürür. Kuyruğa kabul edilmeyen
+    // veya tamamlanamayan iş dosyanın bozuk olduğunu göstermez; kimlik kaydetme.
+    const reason = err.code === 'EXCEL_WORKER_BUSY' ? 'worker-busy' : 'sync-failed';
+    if (err.code !== 'REVISION_CONFLICT') remember({}, reason);
     if (explicit || err.code === 'REVISION_CONFLICT') throw err;
-    remember({}, 'parse-failed');
-    logRuntimeFailure('fxWorkbookRead', err);
-    return { found: false, updated: false, reason: 'parse-failed' };
+    if (reason !== 'worker-busy') logRuntimeFailure('fxWorkbookRead', err);
+    return { found: false, updated: false, reason };
   }
 }
 
@@ -8837,27 +8856,43 @@ function backlogQueryForRequest(req,options={},includeWindowed=false,context=nul
   });
 }
 
+// Only these Backlog reads opt into consumer cancellation. IncomingMessage
+// 'close' also fires for a normally received GET; use response completion instead.
+function backlogReadConsumer(req,res){
+  const controller=new AbortController();
+  const dispose=()=>{req.removeListener('aborted',abort);res.removeListener('close',closed);res.removeListener('finish',dispose);};
+  const abort=()=>{controller.abort();dispose();};
+  const closed=()=>{if(!res.writableFinished)abort();else dispose();};
+  req.once('aborted',abort);res.once('close',closed);res.once('finish',dispose);
+  if(req.aborted||res.destroyed)abort();
+  return {signal:controller.signal,dispose};
+}
+
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
+  const consumer=backlogReadConsumer(req,res);
   try{
     assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    if(consumer.signal.aborted)return;
     const q=req.query;let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
     const options={retailFrom:q.retailFrom,retailTo:q.retailTo,inStoreFrom:q.inStoreFrom,inStoreTo:q.inStoreTo,exFactoryFrom:q.exFactoryFrom,exFactoryTo:q.exFactoryTo,buyerGrup:q.buyerGrup,groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom,antrepoTo:q.antrepoTo,antrepoDateLevels:q.antrepoDateLevels?String(q.antrepoDateLevels).split(',').filter(Boolean):undefined};
     const json=q.format==='json',task=json?'backlog-export':'backlog-workbook';
-    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json});
+    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json,signal:consumer.signal});
     if(json)return sendComputedResponse(req,res,lease);
     const d=new Date(),pad=value=>String(value).padStart(2,'0'),filename=`Backlog_Report_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
     return sendComputedResponse(req,res,lease,{contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',filename,gzip:false});
-  }catch(err){apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}
+  }catch(err){if(!consumer.signal.aborted)apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}finally{consumer.dispose();}
 });
 
 app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req,res)=>{
+  const consumer=backlogReadConsumer(req,res);
   try{
     assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    if(consumer.signal.aborted)return;
     let dimFilters={};try{dimFilters=JSON.parse(req.query.dimFilters||'{}');}catch{}
     const options={...req.query,dimFilters,analysisFilters:undefined};
-    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')});
+    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')},{signal:consumer.signal});
     return sendComputedResponse(req,res,lease);
-  }catch(err){apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}
+  }catch(err){if(!consumer.signal.aborted)apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}finally{consumer.dispose();}
 });
 
 // Backlog pivot'unda bir düğüme tıklanınca veya CP/Siparişler sayfasında seçili

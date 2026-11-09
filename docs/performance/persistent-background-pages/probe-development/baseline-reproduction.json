@@ -1,0 +1,1598 @@
+{
+  "synthetic": true,
+  "platform": "linux",
+  "arch": "x64",
+  "versions": {
+    "node": "24.20.0",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.8",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "149",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.6",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2025c",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.2.124.19-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "44.3.0",
+    "chrome": "152.0.7977.78"
+  },
+  "sourceSha": "d6864eaa67fe9c144f84648727f175e694ce2966",
+  "baseMain": "9e667430",
+  "variant": "main",
+  "rows": 2000,
+  "scenarios": [],
+  "requests": [
+    {
+      "at": 1794209074096,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/merch-calendar",
+      "query": "",
+      "requestId": 157
+    },
+    {
+      "at": 1794209074250,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/lcwai/status",
+      "query": "",
+      "requestId": 159
+    },
+    {
+      "at": 1794209074251,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/corenectum-api/status",
+      "query": "",
+      "requestId": 160
+    },
+    {
+      "at": 1794209074251,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/oab/auth/status",
+      "query": "",
+      "requestId": 161
+    },
+    {
+      "at": 1794209074303,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences/delete",
+      "query": "",
+      "requestId": 162
+    },
+    {
+      "at": 1794209074338,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences/delete",
+      "query": "",
+      "requestId": 163
+    },
+    {
+      "at": 1794209074352,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/model-connections",
+      "query": "",
+      "requestId": 164
+    },
+    {
+      "at": 1794209074352,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/sync-status",
+      "query": "",
+      "requestId": 165
+    },
+    {
+      "at": 1794209074352,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/shipping-comparison",
+      "query": "",
+      "requestId": 166
+    },
+    {
+      "at": 1794209074374,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/qtx/saved",
+      "query": "",
+      "requestId": 167
+    },
+    {
+      "at": 1794209074529,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/endeksmatik/status",
+      "query": "",
+      "requestId": 168
+    },
+    {
+      "at": 1794209074541,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/collection-workspaces",
+      "query": "",
+      "requestId": 169
+    },
+    {
+      "at": 1794209074740,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/live-events",
+      "query": "?clientId=btfm5gtopllmw8xr891",
+      "requestId": 192
+    },
+    {
+      "at": 1794209074907,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/collection-permissions",
+      "query": "",
+      "requestId": 195
+    },
+    {
+      "at": 1794209075494,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/data",
+      "query": "?mode=initial",
+      "requestId": 198
+    },
+    {
+      "at": 1794209075624,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/collection-workspaces/moderator",
+      "query": "",
+      "requestId": 199
+    },
+    {
+      "at": 1794209075686,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 200
+    },
+    {
+      "at": 1794209075720,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/model-images/settings",
+      "query": "",
+      "requestId": 201
+    },
+    {
+      "at": 1794209075985,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/page-projection/overview",
+      "query": "",
+      "requestId": 204
+    },
+    {
+      "at": 1794209077260,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 205
+    },
+    {
+      "at": 1794209077867,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209077859",
+      "requestId": 206
+    },
+    {
+      "at": 1794209078109,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/test-reports/tasks",
+      "query": "",
+      "requestId": 216
+    },
+    {
+      "at": 1794209078109,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/startup/ready",
+      "query": "",
+      "requestId": 217
+    },
+    {
+      "at": 1794209078110,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/heartbeat",
+      "query": "",
+      "requestId": 218
+    },
+    {
+      "at": 1794209078150,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/collection-workspaces/moderator",
+      "query": "",
+      "requestId": 219
+    },
+    {
+      "at": 1794209078181,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/lcwai/status",
+      "query": "",
+      "requestId": 220
+    },
+    {
+      "at": 1794209078183,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/corenectum-api/status",
+      "query": "",
+      "requestId": 221
+    },
+    {
+      "at": 1794209078184,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/oab/auth/status",
+      "query": "",
+      "requestId": 222
+    },
+    {
+      "at": 1794209078205,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/backlog-export",
+      "query": "?format=json&lazyDimensions=1&groupBy=status%2CantrepoDate&antrepoDateLevels=year%2Cmonth%2Cweek%2Cday&projection=global-flow",
+      "requestId": 223
+    },
+    {
+      "at": 1794209078205,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/transit-rules",
+      "query": "",
+      "requestId": 224
+    },
+    {
+      "at": 1794209078265,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/page-projection/cp",
+      "query": "",
+      "requestId": 228
+    },
+    {
+      "at": 1794209078274,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/status",
+      "query": "",
+      "requestId": 229
+    },
+    {
+      "at": 1794209078317,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 247
+    },
+    {
+      "at": 1794209079190,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/plm-requests",
+      "query": "",
+      "requestId": 249
+    },
+    {
+      "at": 1794209079285,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/plm-style-links",
+      "query": "",
+      "requestId": 250
+    },
+    {
+      "at": 1794209079503,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/model-images/registry/cp",
+      "query": "",
+      "requestId": 251
+    },
+    {
+      "at": 1794209079529,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/cp-shared-edit",
+      "query": "",
+      "requestId": 252
+    },
+    {
+      "at": 1794209080050,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/oab/seasons",
+      "query": "",
+      "requestId": 253
+    },
+    {
+      "at": 1794209080076,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/intake/state",
+      "query": "",
+      "requestId": 254
+    },
+    {
+      "at": 1794209080409,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/cp-managed-rules",
+      "query": "",
+      "requestId": 256
+    },
+    {
+      "at": 1794209080430,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/checklist-supplier",
+      "query": "",
+      "requestId": 257
+    },
+    {
+      "at": 1794209082129,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/sync-status",
+      "query": "",
+      "requestId": 262
+    },
+    {
+      "at": 1794209082137,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 263
+    },
+    {
+      "at": 1794209082307,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/plm-jobs",
+      "query": "",
+      "requestId": 264
+    },
+    {
+      "at": 1794209083917,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/oab/state",
+      "query": "",
+      "requestId": 265
+    },
+    {
+      "at": 1794209084250,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 271
+    },
+    {
+      "at": 1794209084293,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/oab/batch-status",
+      "query": "",
+      "requestId": 272
+    },
+    {
+      "at": 1794209084371,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/fx",
+      "query": "",
+      "requestId": 273
+    },
+    {
+      "at": 1794209084823,
+      "phase": "round-0-koleksiyon",
+      "wc": 2,
+      "url": "/api/views",
+      "query": "",
+      "requestId": 274
+    },
+    {
+      "at": 1794209084824,
+      "phase": "round-0-koleksiyon",
+      "wc": 2,
+      "url": "/api/page-projection/collection-catalog",
+      "query": "",
+      "requestId": 275
+    },
+    {
+      "at": 1794209085216,
+      "phase": "round-0-koleksiyon",
+      "wc": 2,
+      "url": "/api/plm-translations",
+      "query": "",
+      "requestId": 290
+    },
+    {
+      "at": 1794209085217,
+      "phase": "round-0-koleksiyon",
+      "wc": 2,
+      "url": "/api/collection-master-catalog",
+      "query": "",
+      "requestId": 291
+    },
+    {
+      "at": 1794209085283,
+      "phase": "round-0-koleksiyon",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209085282",
+      "requestId": 292
+    },
+    {
+      "at": 1794209085928,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/plm-sync/bom/batch",
+      "query": "",
+      "requestId": 294
+    },
+    {
+      "at": 1794209086175,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/fabric-cards",
+      "query": "",
+      "requestId": 295
+    },
+    {
+      "at": 1794209086311,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/views",
+      "query": "",
+      "requestId": 296
+    },
+    {
+      "at": 1794209087194,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/fx",
+      "query": "",
+      "requestId": 299
+    },
+    {
+      "at": 1794209087194,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/email-groups",
+      "query": "",
+      "requestId": 300
+    },
+    {
+      "at": 1794209087330,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/filter-profiles",
+      "query": "",
+      "requestId": 301
+    },
+    {
+      "at": 1794209087333,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/plm-sync/bom/batch",
+      "query": "",
+      "requestId": 302
+    },
+    {
+      "at": 1794209087335,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/filter-profiles",
+      "query": "",
+      "requestId": 303
+    },
+    {
+      "at": 1794209087719,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/quotations",
+      "query": "",
+      "requestId": 304
+    },
+    {
+      "at": 1794209087745,
+      "phase": "round-0-cp",
+      "wc": 2,
+      "url": "/api/plm-sync/bom/batch",
+      "query": "",
+      "requestId": 305
+    },
+    {
+      "at": 1794209087789,
+      "phase": "round-0-orders",
+      "wc": 2,
+      "url": "/api/views",
+      "query": "",
+      "requestId": 306
+    },
+    {
+      "at": 1794209087790,
+      "phase": "round-0-orders",
+      "wc": 2,
+      "url": "/api/page-projection/orders",
+      "query": "",
+      "requestId": 307
+    },
+    {
+      "at": 1794209087999,
+      "phase": "round-0-orders",
+      "wc": 2,
+      "url": "/api/filter-profiles",
+      "query": "",
+      "requestId": 308
+    },
+    {
+      "at": 1794209088204,
+      "phase": "round-0-orders",
+      "wc": 2,
+      "url": "/api/plm-sync/bom/batch",
+      "query": "",
+      "requestId": 309
+    },
+    {
+      "at": 1794209090202,
+      "phase": "round-0-backlog",
+      "wc": 2,
+      "url": "/api/backlog",
+      "query": "?lazyDimensions=1&retailFrom=undefined&retailTo=undefined&inStoreFrom=undefined&inStoreTo=undefined&exFactoryFrom=undefined&exFactoryTo=undefined&antrepoFrom=undefined&antrepoTo=undefined&groupBy=status%2CantrepoDate&antrepoDateLevels=year%2Cmonth%2Cweek%2Cday",
+      "requestId": 310
+    },
+    {
+      "at": 1794209090561,
+      "phase": "round-0-backlog",
+      "wc": 2,
+      "url": "/api/backlog-export",
+      "query": "?format=json&lazyDimensions=1&groupBy=status%2CantrepoDate&antrepoDateLevels=year%2Cmonth%2Cweek%2Cday",
+      "requestId": 320
+    },
+    {
+      "at": 1794209092277,
+      "phase": "round-0-backlog",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 322
+    },
+    {
+      "at": 1794209093562,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/views",
+      "query": "",
+      "requestId": 327
+    },
+    {
+      "at": 1794209093906,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/collection-lfl-reference",
+      "query": "",
+      "requestId": 328
+    },
+    {
+      "at": 1794209095031,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209095029",
+      "requestId": 329
+    },
+    {
+      "at": 1794209095031,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/source-watch",
+      "query": "",
+      "requestId": 330
+    },
+    {
+      "at": 1794209095109,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/filter-profiles",
+      "query": "",
+      "requestId": 331
+    },
+    {
+      "at": 1794209098118,
+      "phase": "round-1-cp",
+      "wc": 2,
+      "url": "/api/heartbeat",
+      "query": "",
+      "requestId": 332
+    },
+    {
+      "at": 1794209101333,
+      "phase": "round-2-koleksiyon",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 333
+    },
+    {
+      "at": 1794209102283,
+      "phase": "round-2-cp",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209102282",
+      "requestId": 334
+    },
+    {
+      "at": 1794209107334,
+      "phase": "round-3-koleksiyon",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 335
+    },
+    {
+      "at": 1794209109398,
+      "phase": "round-3-orders",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209109396",
+      "requestId": 336
+    },
+    {
+      "at": 1794209111432,
+      "phase": "round-3-backlog",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 337
+    },
+    {
+      "at": 1794209116452,
+      "phase": "round-4-orders",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "query": "?_=1794209116448",
+      "requestId": 338
+    },
+    {
+      "at": 1794209118098,
+      "phase": "round-4-backlog",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 339
+    },
+    {
+      "at": 1794209118933,
+      "phase": "round-5-koleksiyon",
+      "wc": 2,
+      "url": "/api/heartbeat",
+      "query": "",
+      "requestId": 340
+    },
+    {
+      "at": 1794209119326,
+      "phase": "round-5-koleksiyon",
+      "wc": 2,
+      "url": "/api/data-cleanup/reminder",
+      "query": "",
+      "requestId": 341
+    },
+    {
+      "at": 1794209123010,
+      "phase": "round-5-backlog",
+      "wc": 2,
+      "url": "/api/user-preferences",
+      "query": "",
+      "requestId": 342
+    }
+  ],
+  "windowEvents": [
+    {
+      "event": "first-renderer-ready",
+      "wc": 2
+    }
+  ],
+  "errors": [],
+  "fixtureHash": "20eed946cc48d125aa1d60b43ae7001147a9198ee37a088c7dd81515c89ee00a",
+  "continueReadyMs": 7360,
+  "firstScreenMs": 87,
+  "warmupMs": 6447,
+  "initial": {
+    "tasks": [
+      {
+        "at": 7293,
+        "ms": 53
+      },
+      {
+        "at": 7580.29999999993,
+        "ms": 133
+      },
+      {
+        "at": 7806.400000000023,
+        "ms": 178
+      },
+      {
+        "at": 8010.79999999993,
+        "ms": 112
+      },
+      {
+        "at": 8123.699999999953,
+        "ms": 62
+      },
+      {
+        "at": 8186.900000000023,
+        "ms": 68
+      },
+      {
+        "at": 8303.699999999953,
+        "ms": 55
+      },
+      {
+        "at": 8438.900000000023,
+        "ms": 215
+      },
+      {
+        "at": 8674.29999999993,
+        "ms": 115
+      },
+      {
+        "at": 8790.099999999977,
+        "ms": 374
+      },
+      {
+        "at": 9264,
+        "ms": 247
+      },
+      {
+        "at": 9613.599999999977,
+        "ms": 52
+      },
+      {
+        "at": 9734.29999999993,
+        "ms": 54
+      },
+      {
+        "at": 9788.599999999977,
+        "ms": 73
+      },
+      {
+        "at": 9862.099999999977,
+        "ms": 1139
+      },
+      {
+        "at": 11003.199999999953,
+        "ms": 78
+      },
+      {
+        "at": 11098.599999999977,
+        "ms": 118
+      },
+      {
+        "at": 11258.199999999953,
+        "ms": 69
+      },
+      {
+        "at": 11369.900000000023,
+        "ms": 62
+      },
+      {
+        "at": 11441.29999999993,
+        "ms": 1454
+      },
+      {
+        "at": 12895.79999999993,
+        "ms": 104
+      },
+      {
+        "at": 13042.79999999993,
+        "ms": 192
+      },
+      {
+        "at": 13235.5,
+        "ms": 133
+      }
+    ],
+    "preparation": {
+      "cp": {
+        "status": "ready",
+        "error": ""
+      },
+      "orders": {
+        "status": "pending",
+        "error": ""
+      },
+      "koleksiyon": {
+        "status": "pending",
+        "error": ""
+      }
+    },
+    "queue": [],
+    "cp": 1662,
+    "backlog": false,
+    "collection": 40
+  },
+  "preparedHeap": 30443456,
+  "visits": [
+    {
+      "tab": "koleksiyon",
+      "round": 0,
+      "switchMs": 25.800000000046566,
+      "dataMs": 26,
+      "frameMs": 416.9000000000233,
+      "tasks": [
+        {
+          "at": 13939,
+          "ms": 350
+        },
+        {
+          "at": 14289.5,
+          "ms": 50
+        },
+        {
+          "at": 14353.79999999993,
+          "ms": 54
+        }
+      ],
+      "cp": 1662,
+      "collection": 40,
+      "dataRequests": [
+        {
+          "at": 1794209084823,
+          "phase": "round-0-koleksiyon",
+          "wc": 2,
+          "url": "/api/views",
+          "query": "",
+          "requestId": 274
+        },
+        {
+          "at": 1794209084824,
+          "phase": "round-0-koleksiyon",
+          "wc": 2,
+          "url": "/api/page-projection/collection-catalog",
+          "query": "",
+          "requestId": 275
+        },
+        {
+          "at": 1794209085217,
+          "phase": "round-0-koleksiyon",
+          "wc": 2,
+          "url": "/api/collection-master-catalog",
+          "query": "",
+          "requestId": 291
+        }
+      ]
+    },
+    {
+      "tab": "cp",
+      "round": 0,
+      "switchMs": 530.2000000000698,
+      "dataMs": 530.3000000000466,
+      "frameMs": 1424.6000000000931,
+      "tasks": [
+        {
+          "at": 14907.79999999993,
+          "ms": 997
+        },
+        {
+          "at": 15916.29999999993,
+          "ms": 384
+        },
+        {
+          "at": 16326.599999999977,
+          "ms": 69
+        },
+        {
+          "at": 16460,
+          "ms": 171
+        },
+        {
+          "at": 16708.900000000023,
+          "ms": 67
+        }
+      ],
+      "cp": 1662,
+      "collection": 40,
+      "dataRequests": [
+        {
+          "at": 1794209086311,
+          "phase": "round-0-cp",
+          "wc": 2,
+          "url": "/api/views",
+          "query": "",
+          "requestId": 296
+        },
+        {
+          "at": 1794209087330,
+          "phase": "round-0-cp",
+          "wc": 2,
+          "url": "/api/filter-profiles",
+          "query": "",
+          "requestId": 301
+        },
+        {
+          "at": 1794209087335,
+          "phase": "round-0-cp",
+          "wc": 2,
+          "url": "/api/filter-profiles",
+          "query": "",
+          "requestId": 303
+        }
+      ]
+    },
+    {
+      "tab": "orders",
+      "round": 0,
+      "switchMs": 10.79999999993015,
+      "dataMs": 1102.5,
+      "frameMs": 1896.0999999999767,
+      "tasks": [
+        {
+          "at": 17177.199999999953,
+          "ms": 125
+        },
+        {
+          "at": 17322.699999999953,
+          "ms": 203
+        },
+        {
+          "at": 17526.099999999977,
+          "ms": 477
+        },
+        {
+          "at": 18045.5,
+          "ms": 74
+        },
+        {
+          "at": 18119.699999999953,
+          "ms": 386
+        },
+        {
+          "at": 18506.599999999977,
+          "ms": 477
+        },
+        {
+          "at": 18988.79999999993,
+          "ms": 52
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": [
+        {
+          "at": 1794209087789,
+          "phase": "round-0-orders",
+          "wc": 2,
+          "url": "/api/views",
+          "query": "",
+          "requestId": 306
+        },
+        {
+          "at": 1794209087790,
+          "phase": "round-0-orders",
+          "wc": 2,
+          "url": "/api/page-projection/orders",
+          "query": "",
+          "requestId": 307
+        },
+        {
+          "at": 1794209087999,
+          "phase": "round-0-orders",
+          "wc": 2,
+          "url": "/api/filter-profiles",
+          "query": "",
+          "requestId": 308
+        }
+      ]
+    },
+    {
+      "tab": "backlog",
+      "round": 0,
+      "switchMs": 33.29999999993015,
+      "dataMs": 417.39999999990687,
+      "frameMs": 455.5999999999767,
+      "tasks": [
+        {
+          "at": 19310.400000000023,
+          "ms": 91
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": [
+        {
+          "at": 1794209090202,
+          "phase": "round-0-backlog",
+          "wc": 2,
+          "url": "/api/backlog",
+          "query": "?lazyDimensions=1&retailFrom=undefined&retailTo=undefined&inStoreFrom=undefined&inStoreTo=undefined&exFactoryFrom=undefined&exFactoryTo=undefined&antrepoFrom=undefined&antrepoTo=undefined&groupBy=status%2CantrepoDate&antrepoDateLevels=year%2Cmonth%2Cweek%2Cday",
+          "requestId": 310
+        }
+      ]
+    },
+    {
+      "tab": "koleksiyon",
+      "round": 1,
+      "switchMs": 7.900000000023283,
+      "dataMs": 8,
+      "frameMs": 1481.1999999999534,
+      "tasks": [
+        {
+          "at": 22676.79999999993,
+          "ms": 1005
+        },
+        {
+          "at": 23682.5,
+          "ms": 455
+        },
+        {
+          "at": 24289.29999999993,
+          "ms": 270
+        },
+        {
+          "at": 24560,
+          "ms": 1005
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": [
+        {
+          "at": 1794209093562,
+          "phase": "round-1-koleksiyon",
+          "wc": 2,
+          "url": "/api/views",
+          "query": "",
+          "requestId": 327
+        },
+        {
+          "at": 1794209095109,
+          "phase": "round-1-koleksiyon",
+          "wc": 2,
+          "url": "/api/filter-profiles",
+          "query": "",
+          "requestId": 331
+        }
+      ]
+    },
+    {
+      "tab": "cp",
+      "round": 1,
+      "switchMs": 231.40000000002328,
+      "dataMs": 231.79999999993015,
+      "frameMs": 1407.7999999999302,
+      "tasks": [
+        {
+          "at": 25574,
+          "ms": 50
+        },
+        {
+          "at": 25633.5,
+          "ms": 825
+        },
+        {
+          "at": 26459.5,
+          "ms": 553
+        },
+        {
+          "at": 27041.599999999977,
+          "ms": 117
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "orders",
+      "round": 1,
+      "switchMs": 9,
+      "dataMs": 9.099999999976717,
+      "frameMs": 325.19999999995343,
+      "tasks": [
+        {
+          "at": 27571,
+          "ms": 251
+        },
+        {
+          "at": 27822.5,
+          "ms": 72
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "backlog",
+      "round": 1,
+      "switchMs": 10.900000000023283,
+      "dataMs": 10.900000000023283,
+      "frameMs": 142.70000000006985,
+      "tasks": [
+        {
+          "at": 28404.29999999993,
+          "ms": 92
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "koleksiyon",
+      "round": 2,
+      "switchMs": 321.5,
+      "dataMs": 321.5999999999767,
+      "frameMs": 910.7000000000698,
+      "tasks": [
+        {
+          "at": 29544.699999999953,
+          "ms": 719
+        },
+        {
+          "at": 30264.400000000023,
+          "ms": 186
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "cp",
+      "round": 2,
+      "switchMs": 12.699999999953434,
+      "dataMs": 12.699999999953434,
+      "frameMs": 403.0999999999767,
+      "tasks": [
+        {
+          "at": 30964.400000000023,
+          "ms": 299
+        },
+        {
+          "at": 31264.29999999993,
+          "ms": 100
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "orders",
+      "round": 2,
+      "switchMs": 19.600000000093132,
+      "dataMs": 19.70000000006985,
+      "frameMs": 459,
+      "tasks": [
+        {
+          "at": 31880.599999999977,
+          "ms": 324
+        },
+        {
+          "at": 32205,
+          "ms": 131
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "backlog",
+      "round": 2,
+      "switchMs": 14.099999999976717,
+      "dataMs": 14.199999999953434,
+      "frameMs": 136.90000000002328,
+      "tasks": [
+        {
+          "at": 32845.19999999995,
+          "ms": 95
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "koleksiyon",
+      "round": 3,
+      "switchMs": 231.40000000002328,
+      "dataMs": 231.5,
+      "frameMs": 2472.79999999993,
+      "tasks": [
+        {
+          "at": 33916.59999999998,
+          "ms": 1587
+        },
+        {
+          "at": 35504.29999999993,
+          "ms": 870
+        },
+        {
+          "at": 36389.59999999998,
+          "ms": 66
+        },
+        {
+          "at": 36503.40000000002,
+          "ms": 50
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "cp",
+      "round": 3,
+      "switchMs": 17,
+      "dataMs": 17,
+      "frameMs": 673.6000000000931,
+      "tasks": [
+        {
+          "at": 36903,
+          "ms": 580
+        },
+        {
+          "at": 37483,
+          "ms": 92
+        },
+        {
+          "at": 37921.09999999998,
+          "ms": 155
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "orders",
+      "round": 3,
+      "switchMs": 41,
+      "dataMs": 41.09999999997672,
+      "frameMs": 377.5,
+      "tasks": [
+        {
+          "at": 38108.5,
+          "ms": 281
+        },
+        {
+          "at": 38390.40000000002,
+          "ms": 94
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "backlog",
+      "round": 3,
+      "switchMs": 10.099999999976717,
+      "dataMs": 10.099999999976717,
+      "frameMs": 130.69999999995343,
+      "tasks": [
+        {
+          "at": 38993,
+          "ms": 94
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "koleksiyon",
+      "round": 4,
+      "switchMs": 407.0999999999767,
+      "dataMs": 407.4000000000233,
+      "frameMs": 1499.1999999999534,
+      "tasks": [
+        {
+          "at": 41582.59999999998,
+          "ms": 1246
+        },
+        {
+          "at": 42829.09999999998,
+          "ms": 246
+        },
+        {
+          "at": 43081.90000000002,
+          "ms": 82
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "cp",
+      "round": 4,
+      "switchMs": 17.400000000023283,
+      "dataMs": 17.400000000023283,
+      "frameMs": 484.20000000006985,
+      "tasks": [
+        {
+          "at": 43590.59999999998,
+          "ms": 352
+        },
+        {
+          "at": 43943.40000000002,
+          "ms": 122
+        },
+        {
+          "at": 44074.5,
+          "ms": 50
+        },
+        {
+          "at": 44484.5,
+          "ms": 59
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "orders",
+      "round": 4,
+      "switchMs": 9.599999999976717,
+      "dataMs": 9.79999999993015,
+      "frameMs": 565.8999999999069,
+      "tasks": [
+        {
+          "at": 44583.59999999998,
+          "ms": 459
+        },
+        {
+          "at": 45043.59999999998,
+          "ms": 104
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "backlog",
+      "round": 4,
+      "switchMs": 10.20000000006985,
+      "dataMs": 10.20000000006985,
+      "frameMs": 165.5,
+      "tasks": [
+        {
+          "at": 45652.69999999995,
+          "ms": 100
+        },
+        {
+          "at": 45752.79999999993,
+          "ms": 61
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "koleksiyon",
+      "round": 5,
+      "switchMs": 244.90000000002328,
+      "dataMs": 245.09999999997672,
+      "frameMs": 826,
+      "tasks": [
+        {
+          "at": 47226.5,
+          "ms": 655
+        },
+        {
+          "at": 47882.19999999995,
+          "ms": 166
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "cp",
+      "round": 5,
+      "switchMs": 50.90000000002328,
+      "dataMs": 52.5,
+      "frameMs": 653.7000000000698,
+      "tasks": [
+        {
+          "at": 48570.69999999995,
+          "ms": 498
+        },
+        {
+          "at": 49069.19999999995,
+          "ms": 154
+        },
+        {
+          "at": 49225.09999999998,
+          "ms": 51
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "orders",
+      "round": 5,
+      "switchMs": 12.600000000093132,
+      "dataMs": 12.800000000046566,
+      "frameMs": 402.80000000004657,
+      "tasks": [
+        {
+          "at": 49728.79999999993,
+          "ms": 301
+        },
+        {
+          "at": 50030.5,
+          "ms": 99
+        },
+        {
+          "at": 50131.90000000002,
+          "ms": 58
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    },
+    {
+      "tab": "backlog",
+      "round": 5,
+      "switchMs": 10.300000000046566,
+      "dataMs": 10.400000000023283,
+      "frameMs": 148.30000000004657,
+      "tasks": [
+        {
+          "at": 50643.79999999993,
+          "ms": 100
+        }
+      ],
+      "cp": 1662,
+      "orders": 2000,
+      "collection": 40,
+      "dataRequests": []
+    }
+  ],
+  "heapCycles": [
+    46891768,
+    47429836,
+    47580572,
+    47685016,
+    47737252,
+    47791084
+  ],
+  "domCycles": [
+    {
+      "documents": 4,
+      "jsEventListeners": 6373,
+      "nodes": 44329
+    },
+    {
+      "documents": 4,
+      "jsEventListeners": 6857,
+      "nodes": 45357
+    },
+    {
+      "documents": 4,
+      "jsEventListeners": 6857,
+      "nodes": 45345
+    },
+    {
+      "documents": 4,
+      "jsEventListeners": 6869,
+      "nodes": 45345
+    },
+    {
+      "documents": 4,
+      "jsEventListeners": 6857,
+      "nodes": 45345
+    },
+    {
+      "documents": 4,
+      "jsEventListeners": 6857,
+      "nodes": 45345
+    }
+  ],
+  "identity": {
+    "cp": true,
+    "orders": true,
+    "cpRow": false,
+    "ordersRow": true,
+    "kolRow": false,
+    "cpBody": true,
+    "ordersBody": true,
+    "kolBody": true
+  },
+  "warmDataRequests": [
+    {
+      "at": 1794209093562,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/views",
+      "query": "",
+      "requestId": 327
+    },
+    {
+      "at": 1794209095109,
+      "phase": "round-1-koleksiyon",
+      "wc": 2,
+      "url": "/api/filter-profiles",
+      "query": "",
+      "requestId": 331
+    }
+  ],
+  "status": "FAIL",
+  "error": "AssertionError [ERR_ASSERTION]: warm pages must not fetch data again\n\n2 !== 0\n\n    at /workspace/work/buyerlog-949/docs/performance/persistent-background-pages/acceptance.cjs:126:9"
+}

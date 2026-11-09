@@ -1,0 +1,91 @@
+✔ INT07: five sets with six children and two jobs share at most five owner reads (146.172891ms)
+✔ INT07: separate owners make progress together without a global serial queue (74.263009ms)
+✔ INT07: transient reads request one client attempt and stop after four total rounds (5.47559ms)
+✔ INT07: permanent HTTP and validation failures do not retry successful read-only POSTs (1.184072ms)
+✔ INT07: cancelled queued job never starts HTTP, active calls retain permits until settled (63.597635ms)
+✔ INT07: total read deadline includes queue and retry waits; it does not launch a replacement fetch (15.767837ms)
+✔ INT07: partial failure preserves last successful model; successful set content is equivalent on retry (96.265914ms)
+✔ INT07 FINAL: one expired auth consumer detaches without cancelling another live target (50.914981ms)
+✔ INT07 FINAL: successful target signal is disposed without being aborted later (101.116656ms)
+✔ INT07 FINAL: real active fetch cancellation closes the HTTP request, releases permits and starts no late writes (84.301955ms)
+✔ INT07 FINAL: real headers then stalled streamed body stops at total target deadline (162.68128ms)
+✔ INT07 FINAL: target deadline also aborts a request before headers (156.944773ms)
+✔ INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live (19.969593ms)
+✔ INT07 FINAL: default consumers still share and clone one read and ignore unsolicited signal (44.891859ms)
+✔ INT07 FINAL: cancel interrupts shared auth wait with no new HTTP or store writes (37.32792ms)
+✔ INT07 FINAL: cancel interrupts retry delay instead of starting another read (6.472585ms)
+✔ INT07 FINAL: deadline interrupts shared auth wait with no new HTTP or store writes (181.471828ms)
+✔ INT07 FINAL: deadline interrupts retry delay instead of starting another read (152.309323ms)
+✔ INT07 FINAL: cancel removes queued reads; different owner progresses and all five permits are reusable (33.295033ms)
+✔ INT07 FINAL: deadline removes queued reads; different owner progresses and all five permits are reusable (175.956237ms)
+✔ INT07 FINAL: real HTTP 429 respects four attempts, permanent failure and request cleanup (19.301881ms)
+✔ INT07 FINAL: real HTTP 503 respects four attempts, permanent failure and request cleanup (14.665494ms)
+✔ INT07 FINAL: real HTTP 400 respects four attempts, permanent failure and request cleanup (5.912356ms)
+✖ INT07 FINAL: real auth recovery cancels unread auth body, keeps generation and resumes with refreshed token (5.073189ms)
+✔ INT07 FINAL: cancellation after headers also closes a streamed error body without retry (32.341936ms)
+✔ INT07 FINAL: a cancelled read cannot overwrite old data; previously completed safe target survives (12.136052ms)
+✔ INT07 FINAL: pre-aborted opt-in starts no request; default and opt-in overlapping consumers remain independent (15.320888ms)
+✔ INT07: real client sends four total HTTP attempts for 429/503/timeout/network, one for 400 (53.637101ms)
+✔ INT07: real client auth recovery rotates generation and resumes within the same attempt budget (4.709753ms)
+✔ INT07: job predicate cancellation reaches the active client fetch and rejects late results (25.988988ms)
+✔ canlı doğrulanmış BOM request body styleId sayısını taşır (2.270081ms)
+✔ BOM parser Ön + Arka Pigment baskıyı 2 olarak çıkarır; SEE ARTWORK label baskı sayılmaz (4.498853ms)
+✔ tek Print satırı Ön + Arka bölgeyi kapsıyorsa iki baskı sayılır (SPIDERMAN-4-YD) (0.391644ms)
+✔ All Over (TÜM BEDEN / ALL BODY) kumaşta yazdığı için Artwork özetine girmez (PSG-6-YD) (0.807143ms)
+✔ Ön ve Arka farklı teknikteyse her bölge kendi tekniğiyle yazılır (0.504956ms)
+✔ analiz kuralı sürümü fingerprint'e girer; eski kayıtlar yeni kuralla yeniden çözümlenir (0.682807ms)
+✔ belirsiz Print yerleşimi LCW AI sonucu yalnız aynı componentCode için kabul eder (2.715118ms)
+✔ BOM fingerprint değişmediyse ikinci PLM Sync LCW AI çağrısını tekrar etmez (9.981296ms)
+✔ ertelenen/başarısız LCW AI analizi fingerprint aynı olsa da sonraki PLM Sync'te yeniden denenir (5.495491ms)
+✔ BOM fetch hatası daha önce saklanan başarılı kaydı silmez (11.325617ms)
+✔ PLM Sync route BOM senkronunu aynı işin içine alır ve saklı BOM okuma ucu sunar (0.864033ms)
+✔ CoreNectum allowlist doğrulanmış BOM endpointini içerir (0.200482ms)
+✔ BOM görüntüleyici lazy yüklenir ve model sağ tık menüsünde açılır (0.343316ms)
+✔ normal BOM sync preserves full normalized fabric and label evidence without another AI consultation (3.871642ms)
+✔ canlı SetStyleChildStyleColorAssociation yanıtı A/B child style ilişkisini çıkarır (3.145844ms)
+✔ Set Style PLM Sync parent satırı korur; Fabric ve BOM/Artwork bilgisini A/B child stylelardan toplar (13.932369ms)
+✔ Single Style eski akışta kalır; child association endpointi çağrılmaz (2.710612ms)
+✔ her Koleksiyon renk satırı PLM’deki kendi rengiyle eşleşir; eksik renk yeni renk adayıdır (2.761139ms)
+✔ rengi olmayan tek satır yalnız PLM’nin ilk rengine bağlanır; diğer renkler o satırı ezmez (0.519461ms)
+✔ renkli tek satırda farklı PLM rengi yeni renk adayıdır; aynı renk satırı günceller (0.635739ms)
+✔ rengi belli olmayan satırların olduğu çok satırlı modelde tahmin yapılmaz (0.53004ms)
+✔ Koleksiyon PLM Sync satır bazında eşler, PLM’de olmayan rengi hata saymaz ve yeni renkleri onayla ekler (26.64517ms)
+✔ yeni renk satırı model düzeyindeki Buyer Log değerlerini mevcut modelden devralır; kalıcı boş fark oluşmaz (3.293467ms)
+✔ BOM hatası işi durdurmaz: yalnız başarısız model kaldığı yerden yeniden denenir (16.034821ms)
+✔ kalıcı BOM hatası ilk denemeye ek en az 3 tur yeniden denendikten sonra raporlanır (5.778028ms)
+✔ oturum düşünce iş durmaz: yeni yetki beklenir ve kalan modeller kaldığı yerden okunur (5.326294ms)
+✔ yenileme tamamlandıktan sonra geç dönen eski-token 401 ikinci bir bekleme açmaz (44.73254ms)
+✔ istemci 401 hatası yalnız token kuşağını taşır, token değerini taşımaz (0.820904ms)
+✔ yenilenmeyen oturumda iş en fazla 3 bekleme sonrası durur, okunanlar kaydedilir (3.829952ms)
+✔ LCW AI geçici hatası en az 3 kez denenir; oturum hatası tekrarlanmaz (11.237243ms)
+✔ Style List partisi tüm bölmelerden sonra da başarısızsa iş durmaz; yalnız o PLM’ler yeniden sorulur (74.980649ms)
+✔ arka plan işi yeni token gelene kadar bekler ve bunu iş kaydında gösterir (74.600043ms)
+✔ istemci ilk fazı geçici hatada 3 kez yeniden dener ve bekleyen işte oturum kurtarmasını başlatır (20.923835ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 62
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1331.555924
+
+✖ failing tests:
+
+test at resources/app/tests/plm-bom-int07-final-http.test.js:160:1
+✖ INT07 FINAL: real auth recovery cancels unread auth body, keeps generation and resumes with refreshed token (5.073189ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-int07-final/resources/app/tests/plm-bom-int07-final-http.test.js:174:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,89 @@
+✔ INT07: five sets with six children and two jobs share at most five owner reads (149.71997ms)
+✔ INT07: separate owners make progress together without a global serial queue (75.511263ms)
+✔ INT07: transient reads request one client attempt and stop after four total rounds (5.303104ms)
+✔ INT07: permanent HTTP and validation failures do not retry successful read-only POSTs (0.686115ms)
+✔ INT07: cancelled queued job never starts HTTP, active calls retain permits until settled (63.823295ms)
+✔ INT07: total read deadline includes queue and retry waits; it does not launch a replacement fetch (15.114362ms)
+✔ INT07: partial failure preserves last successful model; successful set content is equivalent on retry (94.040021ms)
+✔ INT07 FINAL: one expired auth consumer detaches without cancelling another live target (52.162752ms)
+✔ INT07 FINAL: successful target signal is disposed without being aborted later (100.353065ms)
+✔ INT07 FINAL: real active fetch cancellation closes the HTTP request, releases permits and starts no late writes (70.644671ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: real headers then stalled streamed body stops at total target deadline (159.985164ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: target deadline also aborts a request before headers (156.371699ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: opt-in consumers use separate reads; cancelling one leaves the other live; success signal stays live (19.395805ms)
+ℹ {"requests":2,"active":0,"closed":2,"peak":2}
+✔ INT07 FINAL: default consumers still share and clone one read and ignore unsolicited signal (39.82307ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: cancel interrupts shared auth wait with no new HTTP or store writes (45.925387ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: cancel interrupts retry delay instead of starting another read (8.228774ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: deadline interrupts shared auth wait with no new HTTP or store writes (182.322046ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: deadline interrupts retry delay instead of starting another read (152.975992ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: cancel removes queued reads; different owner progresses and all five permits are reusable (63.129563ms)
+ℹ {"requests":11,"active":0,"closed":11,"peak":6}
+✔ INT07 FINAL: deadline removes queued reads; different owner progresses and all five permits are reusable (175.809437ms)
+ℹ {"requests":11,"active":0,"closed":11,"peak":6}
+✔ INT07 FINAL: real HTTP 429 respects four attempts, permanent failure and request cleanup (15.442765ms)
+ℹ {"requests":4,"active":0,"closed":4,"peak":1}
+✔ INT07 FINAL: real HTTP 503 respects four attempts, permanent failure and request cleanup (13.135981ms)
+ℹ {"requests":4,"active":0,"closed":4,"peak":1}
+✔ INT07 FINAL: real HTTP 400 respects four attempts, permanent failure and request cleanup (2.500891ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: real auth recovery cancels unread auth body, keeps generation and resumes with refreshed token (6.82835ms)
+ℹ {"requests":2,"active":0,"closed":2,"peak":1}
+✔ INT07 FINAL: cancellation after headers also closes a streamed error body without retry (35.250285ms)
+ℹ {"requests":1,"active":0,"closed":1,"peak":1}
+✔ INT07 FINAL: a cancelled read cannot overwrite old data; previously completed safe target survives (12.4792ms)
+ℹ {"requests":2,"active":0,"closed":2,"peak":1}
+✔ INT07 FINAL: pre-aborted opt-in starts no request; default and opt-in overlapping consumers remain independent (14.854949ms)
+ℹ {"requests":2,"active":0,"closed":2,"peak":2}
+✔ INT07: real client sends four total HTTP attempts for 429/503/timeout/network, one for 400 (58.934155ms)
+✔ INT07: real client auth recovery rotates generation and resumes within the same attempt budget (6.908537ms)
+✔ INT07: job predicate cancellation reaches the active client fetch and rejects late results (26.838507ms)
+✔ canlı doğrulanmış BOM request body styleId sayısını taşır (1.697118ms)
+✔ BOM parser Ön + Arka Pigment baskıyı 2 olarak çıkarır; SEE ARTWORK label baskı sayılmaz (3.26846ms)
+✔ tek Print satırı Ön + Arka bölgeyi kapsıyorsa iki baskı sayılır (SPIDERMAN-4-YD) (0.421656ms)
+✔ All Over (TÜM BEDEN / ALL BODY) kumaşta yazdığı için Artwork özetine girmez (PSG-6-YD) (0.812543ms)
+✔ Ön ve Arka farklı teknikteyse her bölge kendi tekniğiyle yazılır (0.581414ms)
+✔ analiz kuralı sürümü fingerprint'e girer; eski kayıtlar yeni kuralla yeniden çözümlenir (0.637311ms)
+✔ belirsiz Print yerleşimi LCW AI sonucu yalnız aynı componentCode için kabul eder (1.314299ms)
+✔ BOM fingerprint değişmediyse ikinci PLM Sync LCW AI çağrısını tekrar etmez (10.167493ms)
+✔ ertelenen/başarısız LCW AI analizi fingerprint aynı olsa da sonraki PLM Sync'te yeniden denenir (5.37768ms)
+✔ BOM fetch hatası daha önce saklanan başarılı kaydı silmez (15.512195ms)
+✔ PLM Sync route BOM senkronunu aynı işin içine alır ve saklı BOM okuma ucu sunar (0.868201ms)
+✔ CoreNectum allowlist doğrulanmış BOM endpointini içerir (0.226072ms)
+✔ BOM görüntüleyici lazy yüklenir ve model sağ tık menüsünde açılır (0.345417ms)
+✔ normal BOM sync preserves full normalized fabric and label evidence without another AI consultation (6.801123ms)
+✔ canlı SetStyleChildStyleColorAssociation yanıtı A/B child style ilişkisini çıkarır (3.642836ms)
+✔ Set Style PLM Sync parent satırı korur; Fabric ve BOM/Artwork bilgisini A/B child stylelardan toplar (13.892133ms)
+✔ Single Style eski akışta kalır; child association endpointi çağrılmaz (2.89834ms)
+✔ her Koleksiyon renk satırı PLM’deki kendi rengiyle eşleşir; eksik renk yeni renk adayıdır (4.783004ms)
+✔ rengi olmayan tek satır yalnız PLM’nin ilk rengine bağlanır; diğer renkler o satırı ezmez (0.449071ms)
+✔ renkli tek satırda farklı PLM rengi yeni renk adayıdır; aynı renk satırı günceller (0.440053ms)
+✔ rengi belli olmayan satırların olduğu çok satırlı modelde tahmin yapılmaz (0.365325ms)
+✔ Koleksiyon PLM Sync satır bazında eşler, PLM’de olmayan rengi hata saymaz ve yeni renkleri onayla ekler (23.812779ms)
+✔ yeni renk satırı model düzeyindeki Buyer Log değerlerini mevcut modelden devralır; kalıcı boş fark oluşmaz (4.133431ms)
+✔ BOM hatası işi durdurmaz: yalnız başarısız model kaldığı yerden yeniden denenir (19.546389ms)
+✔ kalıcı BOM hatası ilk denemeye ek en az 3 tur yeniden denendikten sonra raporlanır (4.412877ms)
+✔ oturum düşünce iş durmaz: yeni yetki beklenir ve kalan modeller kaldığı yerden okunur (4.926024ms)
+✔ yenileme tamamlandıktan sonra geç dönen eski-token 401 ikinci bir bekleme açmaz (43.664717ms)
+✔ istemci 401 hatası yalnız token kuşağını taşır, token değerini taşımaz (0.467684ms)
+✔ yenilenmeyen oturumda iş en fazla 3 bekleme sonrası durur, okunanlar kaydedilir (3.605799ms)
+✔ LCW AI geçici hatası en az 3 kez denenir; oturum hatası tekrarlanmaz (17.482244ms)
+✔ Style List partisi tüm bölmelerden sonra da başarısızsa iş durmaz; yalnız o PLM’ler yeniden sorulur (104.198713ms)
+✔ arka plan işi yeni token gelene kadar bekler ve bunu iş kaydında gösterir (74.027674ms)
+✔ istemci ilk fazı geçici hatada 3 kez yeniden dener ve bekleyen işte oturum kurtarmasını başlatır (23.525348ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1370.851652

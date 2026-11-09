@@ -1,0 +1,120 @@
+{
+  "decision": "PASS",
+  "baseMain": "62f2153d258374e98f5582994042119c6b6cc495",
+  "candidateSource": "497464758a58e3636e67dddc45124fe067e57cf1",
+  "fixtureSemanticSha256": "0661bcf9070df6fdf99ae7a88b4fab1942ab30febf2245a07a71ae9131c7068a",
+  "samples": [
+    {
+      "pair": 1,
+      "name": "comparison-steady",
+      "variant": "main",
+      "durationMs": 21000,
+      "revisionRequests": 9,
+      "requestingTabs": [
+        2,
+        4,
+        3
+      ],
+      "SSE": 1,
+      "revisionBytes": 1998,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    },
+    {
+      "pair": 1,
+      "name": "comparison-steady",
+      "variant": "candidate",
+      "durationMs": 21000,
+      "revisionRequests": 1,
+      "requestingTabs": [
+        2
+      ],
+      "SSE": 1,
+      "revisionBytes": 222,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    },
+    {
+      "pair": 2,
+      "name": "comparison-steady",
+      "variant": "main",
+      "durationMs": 21000,
+      "revisionRequests": 9,
+      "requestingTabs": [
+        2,
+        3,
+        4
+      ],
+      "SSE": 1,
+      "revisionBytes": 1998,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    },
+    {
+      "pair": 2,
+      "name": "comparison-steady",
+      "variant": "candidate",
+      "durationMs": 21000,
+      "revisionRequests": 1,
+      "requestingTabs": [
+        2
+      ],
+      "SSE": 1,
+      "revisionBytes": 222,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    },
+    {
+      "pair": 3,
+      "name": "comparison-steady",
+      "variant": "main",
+      "durationMs": 21000,
+      "revisionRequests": 9,
+      "requestingTabs": [
+        2,
+        3,
+        4
+      ],
+      "SSE": 1,
+      "revisionBytes": 1998,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    },
+    {
+      "pair": 3,
+      "name": "comparison-steady",
+      "variant": "candidate",
+      "durationMs": 21000,
+      "revisionRequests": 1,
+      "requestingTabs": [
+        2
+      ],
+      "SSE": 1,
+      "revisionBytes": 222,
+      "maxActive": 1,
+      "cleanupCycles": 5,
+      "remainingTabs": 0
+    }
+  ],
+  "median": {
+    "main": {
+      "requests": 9,
+      "bytes": 1998
+    },
+    "candidate": {
+      "requests": 1,
+      "bytes": 222
+    }
+  },
+  "nativeActivation": {
+    "budgetMs": 2500,
+    "before": "timeout",
+    "afterMs": 539
+  },
+  "limits": "21-second native window with hidden leader; no general latency/CPU/RSS/p95/Windows claim"
+}

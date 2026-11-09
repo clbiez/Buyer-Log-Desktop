@@ -18,7 +18,7 @@
  * en fazla birkaç modül seçer; her modül bir karakter bütçesiyle kesilir.
  */
 
-const KNOWLEDGE_VERSION = '2026-10-05.1';
+const KNOWLEDGE_VERSION = '2026-11-09.1';
 const MODULE_BUDGET_CHARS = 9000;
 const MAX_MODULES = 2;
 
@@ -114,13 +114,20 @@ const MODULES = Object.freeze({
   rules: { title: { tr: 'CP öncelik/checklist kural dili', en: 'CP priority/checklist rule language' }, keywords: ['kural', 'rule', 'öncelik', 'priority', 'kritik', 'critical', 'checklist', 'kontrol listesi'], build: rulesKnowledge },
   automations: { title: { tr: 'Automation Code', en: 'Automation Code' }, keywords: ['otomasyon', 'automation', 'tetik', 'trigger', 'e-posta', 'email', 'mail at', 'bildirim'], build: automationKnowledge },
   backlog: { title: { tr: 'Backlog ve teslimat riski', en: 'Backlog and delivery risk' }, keywords: ['backlog', 'gecikme', 'delay', 'teslimat', 'delivery', 'yetiş', 'in store', 'retail'], build: backlogKnowledge },
+  lfl: { title: { tr: 'LFL fiyat karşılaştırması', en: 'LFL price comparison' }, keywords: ['lfl', 'like for like', 'like-for-like'], build: lang => require('../../../public/lfl-calculation-engine').aiKnowledge(lang) },
+  suppliers: { title: { tr: 'Üretici kıyaslaması', en: 'Supplier comparison' }, keywords: ['üretici', 'uretici', 'manufacturer', 'supplier', 'en uygun', 'cheapest', 'teklif'], build: lang => {
+    const engine = require('../../../public/price-supplier-insights-engine');
+    return (lang === 'en' ? 'Supplier analysis dimensions: ' : 'Üretici analizi boyutları: ') + engine.DIMENSIONS.join(', ') + '\n' + (lang === 'en'
+      ? 'Most orders by units = sum quantity descending by manufacturer; number of POs = distinct order codes. Cheapest quoted supplier uses quotation observations, not placed-order FOB. Historical lowest FOB uses quantity-weighted FOB by supplier, within one currency and comparable product/period filters. Best supplier is not a universal score: ask whether price, volume or delivery matters when unspecified. Always identify source, period, currency, sample size and criterion; missing quality/delivery evidence cannot support an overall recommendation.'
+      : 'En çok sipariş alan üretici, adet sorusunda üreticiye göre toplam adet azalan sıralamadır; PO sayısı farklı sipariş kodlarının sayısıdır. En uygun teklif veren üretici teklif gözlemlerinden bulunur; geçmiş sipariş FOB’u teklif değildir. Geçmiş en düşük FOB, aynı para birimi ve karşılaştırılabilir ürün/dönem filtrelerinde üretici bazında adet ağırlıklı FOB ile bulunur. En iyi üretici tek bir evrensel puan değildir; ölçüt belirtilmemişse fiyat, hacim veya teslimat önceliği sorulur. Kaynak, dönem, para birimi, örneklem ve ölçüt açıklanır; eksik kalite/teslimat verisiyle genel üstünlük iddia edilmez.');
+  } },
   orders: { title: { tr: 'Siparişler ve CP', en: 'Orders and CP' }, keywords: ['sipariş', 'siparis', 'order', 'po ', 'cp ', 'cp tracker', 'tedarikçi', 'supplier'], build: lang => pick(lang, STATIC_MODULES.orders) },
   'test-reports': { title: { tr: 'Test raporu aktarımı', en: 'Test report import' }, keywords: ['test raporu', 'test report', 'talep no', 'request no', 'labright', 'ticari onay', 'commercial approval', 'gold seal', 'tekrar test', 'retest'], build: testReportKnowledge },
   collection: { title: { tr: 'Koleksiyon', en: 'Collection' }, keywords: ['koleksiyon', 'collection', 'model geliştirme', 'quotation', 'teklif', 'fiyat masası', 'pricing desk', 'pazarlık', 'tur'], build: lang => pick(lang, STATIC_MODULES.collection) },
 });
 
 // Bağlam sağlayıcısının ekranı → ilgili modül bilgisi.
-const SCREEN_MODULES = Object.freeze({ cp: 'orders', orders: 'orders', overview: 'rules', backlog: 'backlog', koleksiyon: 'collection', collection: 'collection', automations: 'automations' });
+const SCREEN_MODULES = Object.freeze({ cp: 'orders', orders: 'orders', overview: 'rules', backlog: 'backlog', lfl: 'lfl', priceanalysis: 'suppliers', manufacturers: 'suppliers', koleksiyon: 'collection', collection: 'collection', automations: 'automations' });
 
 const cache = new Map();
 function moduleKnowledge(key, lang) {

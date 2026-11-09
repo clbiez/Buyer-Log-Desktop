@@ -1,0 +1,91 @@
+{
+  "pr": 940,
+  "baseMain": "7a0600080ebe42f80660ee2cc7bec524d431cc44",
+  "testedCommit": "516910469b77f4c818581e4e4ca5f64830939607",
+  "testedTree": "cc8849a6784070489b17d0bbb1deff0db92e966c",
+  "noteIds": [
+    "selected-orders-license-atlas-20261109",
+    "trivia-continue-viewport",
+    "excel-import-acknowledged-outcome-safety",
+    "fx-folder-admission-status-20261109",
+    "ana12-backlog-consumer-cancel-20261109",
+    "shell05-native-module-warmup-20261109",
+    "int03-shared-image-byte-budget-20261109",
+    "backlog-excel-columns-simple-20261109",
+    "shell06-shared-revisions-20261109",
+    "int07-bom-owner-read-budget-20261109"
+  ],
+  "date": "2026-11-09",
+  "full": {
+    "runner": "unmodified npm test; one invocation; default concurrency=4; flock; scoped default-profile writes; no BUYER_LOG/HOME/TMPDIR overrides",
+    "files": 1326,
+    "batchesPassed": 10,
+    "seconds": 111.1,
+    "tests": 9180,
+    "pass": 9115,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "releaseNotes": 10,
+  "protectedSourcesUnchanged": [
+    "resources/app/server/lib/compute-pool.js",
+    "resources/app/server/lib/compute-service.js",
+    "resources/app/server/lib/plm-image-ingest.js",
+    "resources/app/public/checklist-components-engine.js",
+    "resources/app/public/checklist-supplier-sync.js",
+    "resources/app/public/cp-overview-assistant.js",
+    "resources/app/tests/checklist-components-row-cache.test.js",
+    ".github/workflows"
+  ],
+  "sourceSha256": {
+    "resources/app/public/release-notes/next.json": "c5b831e44f1d44b6de6f8d0448dcf41f95b8e4302b2f617501e61124999800aa",
+    "resources/app/server/lib/corenectum-api-client.js": "d8dfc18c1bf547e8cf2d0b5940bcf700887d3d8df70350bcff13a44484a3d95b",
+    "resources/app/server/lib/plm-bom-int07-budget.js": "b1989a78251eb1c81b2ec04302bfac1b45528427fa3858693c0fce58e841dc97",
+    "resources/app/server/lib/plm-bom-sync.js": "0948faff6f8469889e151ca822c49fb2df09e0899199358ad3f79dac4e23ed03",
+    "resources/app/tests/plm-bom-int07-budget.test.js": "2d24d31cc02fac5b7324b047b87a558af10f8a249b8c553bb4e7d5aa50086152",
+    "resources/app/tests/plm-bom-int07-final-http.test.js": "6240026297e236b3aa990e52a89596a0febcd0e4cc0a6e587cbe55cc20b0cb07",
+    "resources/app/tests/plm-bom-int07-transport.test.js": "5f06b6391531f9471d0c5cc003a8af1d3766848f23dac1a236dda4164be6220d"
+  },
+  "logs": {
+    "full": {
+      "path": "docs/performance/followup-20261109/int07/main-integration-20261109/full.log.gz",
+      "rawSha256": "6b3a55dc69f31cf3ebc0855b4fef8dbdbb40845b2e9c0093146d3a9eb13756ab",
+      "gzipSha256": "b27c056d7044fcc518b01788b76376531c9c45c1f6e5101ae4ba54ec6f8db37e"
+    },
+    "i18n": {
+      "path": "docs/performance/followup-20261109/int07/main-integration-20261109/i18n.log.gz",
+      "rawSha256": "f47a45a40313890c19c6796e09c9af1792758b17fdbf33a8b035291ef8705fb3",
+      "gzipSha256": "ecf0c274e5e2a77b42f760bbde06d2de4ea4cab3417f3757929054596e8195e3"
+    },
+    "release": {
+      "path": "docs/performance/followup-20261109/int07/main-integration-20261109/release.log.gz",
+      "rawSha256": "5453386163550e801dd99ba68724a4ad23cfda7f50dfb484b88004dc36fa38ea",
+      "gzipSha256": "ba2e78509d70837338237b5bf1762f272d868ead128669b925eb56a0a55b3b90"
+    },
+    "targeted": {
+      "path": "docs/performance/followup-20261109/int07/main-integration-20261109/targeted.log.gz",
+      "rawSha256": "6c19ca9f9638c9b4abb811f3deb9b5b4058c899bad8c08d9010bbc20471a7a48",
+      "gzipSha256": "b4d615d71220617b2920014a7a1173451b5b3981829ed2b2ea847f60af9a8b67"
+    }
+  },
+  "postTestChanges": "documentation/evidence only",
+  "github": "actual final-head CI and merge status tracked in PR #940",
+  "TEST": "not triggered",
+  "STABLE": "not triggered",
+  "independentCoordinatorReview": {
+    "originalHead": "86907a4c3f5b904dd88e98f383b869ff32627466",
+    "finding": "No blocking source defect found in scoped code review; original evidence source hashes and full logs independently checked.",
+    "performance": "Narrow acceptance only: native network/catch-up/lifecycle for SHELL-06; controlled BOM cancellation/deadline/attempt/cleanup for INT-07. No universal speed/RSS/p95/Windows claim.",
+    "latestMainIntegration": "Preserves #946 trivia, #947 license atlas and #948 Backlog export changes. Authorized feature blocks/files are identical to the reviewed original head; scoped equality is checked below.",
+    "authorizedProductPaths": [
+      "resources/app/server/lib/corenectum-api-client.js",
+      "resources/app/server/lib/plm-bom-int07-budget.js",
+      "resources/app/server/lib/plm-bom-sync.js"
+    ]
+  }
+}

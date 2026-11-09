@@ -1,0 +1,27 @@
+{
+  "baseMain": "62f2153d258374e98f5582994042119c6b6cc495",
+  "mergeCandidate": "c03da67038ed3c4bcb5ccf5301ea3c3c2d113702",
+  "outsidePollingAndInitLiveSyncEqualsMain": true,
+  "allOtherReleaseEntriesAndMetadataEqualMain": true,
+  "otherReleaseNoteIds": [
+    "excel-import-acknowledged-outcome-safety",
+    "fx-folder-admission-status-20261109",
+    "ana12-backlog-consumer-cancel-20261109",
+    "shell05-native-module-warmup-20261109",
+    "int03-shared-image-byte-budget-20261109"
+  ],
+  "ownReleaseNoteCount": 1,
+  "sha256": {
+    "resources/app/public/app-main.js": "03c2d9273b975385ea2565660c9b83719bcb8001caa767fc45edbaf104e092ce",
+    "resources/app/electron/workspace-manager.js": "7329d1b6e5b63a82da95809fa0133ba3dd08464c0faa3097893a56bb51abaa8f",
+    "resources/app/electron/preload.js": "94357c407a9c27b09f783ba81f194b63339356a82ec64ae551e0b9167ed6b339",
+    "resources/app/electron/workspace-preload.js": "3fff1fc1fb58ef2693570b2feec400d16123d8017239f0ddf8839f1cf0bb6337",
+    "resources/app/public/perf-runtime.js": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+    "resources/app/tests/shared-revision-leader.test.js": "4cfc2615104bd5e153704868d8cedbe193bd0ac3cf8b05690b644affd0ce9c3c",
+    "resources/app/public/release-notes/next.json": "be71a395a3a44ee87c376e8e6de45d1cb1cfa8bda924756d103de698232cabff"
+  },
+  "nativeRuntimeZipSha256": "8b49b9efdd73c0f467edc3c1cd5678392c384ccf224f34ff54179f736e2f384b",
+  "runtimeOfficialShasumsMatch": true,
+  "acceptedProductSourceCommit": "497464758a58e3636e67dddc45124fe067e57cf1",
+  "mainIntegrationAfterAcceptance": "Only instructions/documentation changed from 57409641 to 62f2153d; product runtime and test source hashes unchanged."
+}

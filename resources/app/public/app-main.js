@@ -37,9 +37,9 @@ window.BLModulePreparation=modulePreparation;
 function renderModulePreparationStates(){
   const snapshot=modulePreparation?.snapshot();if(!snapshot)return;
   const L=(tr,en)=>appLang==='en'?en:tr;
-  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection')};
+  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection'),backlog:'Backlog'};
   const labels={pending:L('Bekliyor','Pending'),loading:L('Yükleniyor','Loading'),ready:L('Hazır','Ready'),error:L('Hata','Error')};
-  for(const module of ['cp','orders','koleksiyon']){
+  for(const module of ['koleksiyon','cp','orders','backlog']){
     const button=document.querySelector('nav.tabs button[data-tab="'+module+'"]');if(!button)continue;
     let badge=button.querySelector('[data-module-preparation]');
     if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove('hasModulePreparation');continue;}
@@ -52,7 +52,7 @@ function renderModulePreparationStates(){
 }
 function startupModuleIntent(event){
   const module=event.target?.closest?.('button[data-tab]')?.dataset.tab;
-  if(!['cp','orders','koleksiyon'].includes(module))return;
+  if(!['koleksiyon','cp','orders','backlog'].includes(module))return;
   if(window.BLCanAccessArea?.(module)===true)modulePreparation?.noteIntent(module);
 }
 document.querySelector('nav.tabs')?.addEventListener('pointerover',startupModuleIntent);
@@ -1137,7 +1137,8 @@ function scheduleUnifiedPrioritiesForTable(tableKey){
     syncUnifiedPrioritiesForTable('cp',result);
     window.BLModulePreparation?.setStatus('cp','ready');
     window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
-    if(currentActiveTab()==='cp')renderCP();
+    // Görünmüyorsa wrapper çizimi ilk dönüşe erteler; yükleme kartı takılı kalmaz.
+    renderCP();
     scheduleOverviewRender('cp-priority-ready');return true;
   }).catch(error=>{window.BLModulePreparation?.setStatus('cp','error','CP_PRIORITY_FAILED');showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
   return job.promise;
@@ -1466,6 +1467,24 @@ const _favoritesAppliedPages = new Set();
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
 const _selectionActionIds=['cpCopyToKolBtn','cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.addEventListener('click',async()=>{
+  const moduleId=button.dataset.orderLicenseAtlas;
+  if(document.body.dataset.activeTab!==moduleId)return;
+  // Atlas generation only reads visible selected rows, including view-only orders.
+  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
+    license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
+    licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
+  }));
+  if(!rows.length){showToast(appLang==='en'?'Select at least one visible order first.':'Önce görünür en az bir sipariş seçin.');return;}
+  button.disabled=true;button.dataset.atlasLoading='1';
+  const menu=document.getElementById(moduleId+'ToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById(moduleId+'ToolsBtn')?.setAttribute('aria-expanded','false');
+  try{
+    await window.BLPerf.ensureFeature('orderLicenseAtlas');
+    if(document.body.dataset.activeTab===moduleId)window.BLOrderLicenseAtlas.open({rows,moduleId});
+  }catch(_){showToast(appLang==='en'?'The license atlas module could not be loaded. Please retry.':'Lisans atlası modülü yüklenemedi. Yeniden deneyin.');}
+  finally{delete button.dataset.atlasLoading;updateShippingBtnVisibility();}
+}));
 document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async event=>{
   const button=event.currentTarget;button.disabled=true;
   const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
@@ -1632,6 +1651,7 @@ function runDeferredRender(tab){
   const fnName=DEFERRED_TAB_RENDERERS[tab];
   if(!fnName)return;
   _deferredTabRenders.delete(tab);
+  backgroundWarmupUnrendered.delete(tab);
   const fn=window[fnName];
   if(typeof fn==='function')fn();
 }
@@ -2151,16 +2171,22 @@ async function ensureCpLoaded(options={}){
       // önbellekten geldiyse) paylaşılan alan yetkisini paralel eşle.
       const [registry]=await Promise.allSettled([refreshCpStartupImageRegistry(rows),applyCpSharedEditAccess(rows)]);
       if(registry.status==='rejected'){console.warn('CP model image registry:',registry.reason);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
+      // Yanıt beklenirken başlayan yerel düzenlemeyi arka plan yenilemesi ezmez.
+      if(options.reason==='reload'&&cpClientWorkInProgress()){
+        overviewCpLoadState='ready';window.BLModulePreparation?.setStatus('cp','pending');return true;
+      }
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
+      backgroundWarmupUnrendered.add('cp');
       applyPricingRulesToLoadedRows({render:false});
       overviewCpLoadState='ready';overviewCpLoadError='';
       invalidateUnifiedPriorityDecisions('cp-projection-loaded',['cp']);
       syncCpModelColumns(Array.isArray(data.cpModelColumns)?data.cpModelColumns:[]);
-      buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender)renderCP();
+      buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender||currentActiveTab()==='cp')renderCP();
       window.BLPerf?.mark?.('CP_LOAD_READY',{reason:options.reason||'cp',rows:rows.length,revision:_unifiedPriorityDataRevision});
       // CP hangi sekme tarafından yüklenmiş olursa olsun Overview artık dirty'dir.
       // Görünürse aynı frame'de bir kez, görünmüyorsa ilk girişte çizilir.
       scheduleOverviewRender('cp-ready');
+      if(options.reason==='reload')void Promise.resolve(window.BLPerf?.ensureFeature?.('cpAssistant')).then(()=>scheduleUnifiedPrioritiesForTable('cp')).catch(error=>console.warn('CP arka plan kararları:',error));
       return true;
     }catch(err){
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
@@ -2221,6 +2247,7 @@ async function ensureOrdersLoaded(options={}){
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
       state.ordersLogisticExpanded.clear();
+      backgroundWarmupUnrendered.add('orders');
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
       // tutulan lisans royalty kuralları da aynı satırlara yeniden uygulanmalı.
@@ -2228,7 +2255,7 @@ async function ensureOrdersLoaded(options={}){
       applyPricingRulesToLoadedRows({render:false});
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
-      buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender)renderOrders();
+      buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
       window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
@@ -2412,7 +2439,7 @@ function switchTab(tab){
     setTimeout(()=>void ensureCollectionMasterCatalogLoaded(),0);
     void (window.BLPerf?.ensureFeature?.('deferredUi') || Promise.resolve()).catch(()=>{});
   }
-  if(tab==='backlog'&&typeof fetchCurrentBacklog==='function'&&!backlogLoadedOnce)fetchCurrentBacklog();
+  if(tab==='backlog'&&typeof fetchCurrentBacklog==='function'&&(!backlogLoadedOnce||backlogPrefetch))void fetchCurrentBacklog();
   // v9.46 — Teslimat riski analizi açılış kritik yolunda değil: Backlog sekmesi
   // ilk açıldığında lazy yüklenir. Panel kapalıysa hiçbir veri çekmez.
   if(tab==='backlog')void (window.BLPerf?.ensureFeature?.('backlogAnalysis')||Promise.resolve()).catch(()=>{});
@@ -2437,7 +2464,7 @@ function switchTab(tab){
   if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
   // Her sayfanın profili ilk girişte yukarıda veri yükleme ile birlikte çözülür;
   // aynı sayfaya dönüldüğünde kullanıcının geçici seçimi korunur.
-  if(tab==='koleksiyon' && !profileFirstVisit && typeof renderKol==='function') renderKol();
+  // Koleksiyon DOM'u sekme değişiminde korunur; veri olayları gerekli çizimi yapar.
   if(tab==='shipping' && profileFirstVisit){
     void profileReady.then(()=>{if(currentActiveTab()==='shipping'&&typeof renderShipTable==='function'){
       applyStoredProfilesForCurrentPage(true);
@@ -13553,6 +13580,12 @@ window.BLAIScreenData = {
     if (!response.ok) throw new Error(body && body.error ? body.error : `HTTP ${response.status}`);
     return Array.isArray(body.rows) ? body.rows : [];
   },
+  lflRows: async () => {
+    const response = await fetch('/api/lfl', { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } });
+    const body = await response.json();
+    if (!response.ok || body.sourceFilterRequired) throw new Error(body.error || body.sourceFilterMessage || (appLang === 'en' ? 'LFL data could not be read.' : 'LFL verisi okunamadı.'));
+    return Array.isArray(body.rows) ? body.rows : [];
+  },
   pageTitle: tab => { const item = APP_PAGE_META[tab]; return item ? (appLang === 'en' ? item.en : item.tr) : tab; },
 };
 // Üst çubuktaki LCW AI düğmesi: her ekrandan genel LCW AI çalışma alanına.
@@ -13889,16 +13922,83 @@ document.getElementById('sourceUpdateNotesBtn')?.addEventListener('click',()=>op
 const NOTIFICATION_HISTORY_KEY='lcw.notifications.history.v1';
 const NOTIFICATION_HISTORY_LIMIT=250;
 let _notificationHistoryState=null;
+// Targets contain canonical identities only; callbacks/URLs and transient row IDs are never persisted.
+function notificationTarget(value){
+  if(!value||typeof value!=='object'||!['cp','orders','overview','source','koleksiyon','shipping'].includes(value.module))return null;
+  const target={module:value.module};
+  for(const [key,max] of Object.entries({lineKey:1000,itemId:200,fieldTr:200,fieldEn:200,ownerId:200})){
+    if(value[key]!=null){if(typeof value[key]!=='string'||value[key].length>max)return null;target[key]=value[key];}
+  }
+  if(target.itemId&&(!target.lineKey||target.module!=='cp'))return null;
+  if(target.lineKey&&!['cp','orders'].includes(target.module))return null;
+  return target;
+}
+function notificationTargetText(target){
+  const en=appLang==='en';
+  const modules={cp:'CP',orders:en?'Orders':'Siparişler',overview:en?'Overview':'Genel Bakış',source:en?'Source Data':'Kaynak Veri',koleksiyon:en?'Collection':'Koleksiyon',shipping:en?'Shipping':'Sevkiyat'};
+  return [modules[target.module],...(target.lineKey?target.lineKey.split('|'):[]),en?target.fieldEn:target.fieldTr].filter(Boolean).join(' · ');
+}
+// Canonical matching is deliberately scoped to an activation, never a startup index.
+async function notificationTargetRow(target,permitted){
+  const rows=state[target.module]?.rows;if(!Array.isArray(rows))return null;
+  let sliceAt=Date.now();
+  for(let i=0;i<rows.length;i++){
+    if(lineKeyOfRow(rows[i])===target.lineKey)return rows[i];
+    if((i&255)===255&&Date.now()-sliceAt>=8){
+      await new Promise(resolve=>setTimeout(resolve,0));
+      if(!permitted()||rows!==state[target.module]?.rows)return null;
+      sliceAt=Date.now();
+    }
+  }
+  return null;
+}
+let _notificationNavigation=0;
+async function openNotificationTarget(raw){
+  const target=notificationTarget(raw),en=appLang==='en';if(!target)return false;
+  const owner=String(state.currentUser?.id??window.BL_USER_CONTEXT?.id??''),generation=++_notificationNavigation;
+  const permitted=()=>generation===_notificationNavigation&&owner===String(state.currentUser?.id??window.BL_USER_CONTEXT?.id??'')&&(!target.ownerId||target.ownerId===owner)&&window.BLCanAccessArea?.(target.module)===true;
+  if(!permitted()){showToast(en?'You do not have access to this notification’s destination.':'Bu bildirimin hedef alanına erişiminiz bulunmuyor.');return false;}
+  try{
+    if(target.module==='cp'&&!(await ensureCpLoaded({deferRender:true})))return false;
+    if(target.module==='orders'&&!(await ensureOrdersLoaded({deferRender:true})))return false;
+    if(!permitted())return false;
+    let row;
+    if(target.lineKey){
+      const rows=state[target.module]?.rows;
+      row=await notificationTargetRow(target,permitted);
+      if(!row){showToast(en?'This order is no longer available in your current records.':'Bu sipariş güncel kayıtlarınızda artık bulunmuyor.');return false;}
+      await window.BLPerf?.ensureFeature?.('cpAssistant');
+      if(!permitted())return false;
+      // Re-resolve only if the live records changed while lazy loading.
+      if(rows!==state[target.module]?.rows||!rows.includes(row)||lineKeyOfRow(row)!==target.lineKey)row=await notificationTargetRow(target,permitted);
+      if(!row){showToast(en?'This order is no longer available in your current records.':'Bu sipariş güncel kayıtlarınızda artık bulunmuyor.');return false;}
+    }
+    if(currentActiveTab()!==target.module&&switchTab(target.module)===false)return false;
+    if(!row)return true;
+    if(target.itemId&&row._canEdit!==false&&await window.BLChecklistSupplierSync?.openNotificationForRow?.(row,target.itemId))return true;
+    window.BLCpAssistant?.openOverviewRows?.([row],notificationTargetText(target));
+    if(target.itemId)showToast(en?'The checklist field is unavailable or read-only. Current order details are shown.':'Checklist alanı kullanılamıyor veya salt okunur. Güncel sipariş detayları gösteriliyor.');
+    return true;
+  }catch(error){showToast((en?'Notification destination could not be opened: ':'Bildirim hedefi açılamadı: ')+(error.message||error),{kind:'error'});return false;}
+}
+function notificationOptions(options){
+  const o=options||{},target=notificationTarget(o.target);if(!target)return o;
+  if(!target.ownerId)target.ownerId=String(state.currentUser?.id??window.BL_USER_CONTEXT?.id??'');
+  const actionId='notification-target',previous=o.onAction;
+  return {...o,target,detail:[o.detail,notificationTargetText(target)].filter(Boolean).join(' · '),
+    actions:[...(Array.isArray(o.actions)?o.actions:[]),{id:actionId,label:appLang==='en'?'Open related record':'İlgili kayda git',primary:true}],
+    onAction:async(id,context)=>{if(id===actionId){if(await openNotificationTarget(target))context?.close?.();}else if(typeof previous==='function')await previous(id,context);}};
+}
 function notificationHistoryText(){const en=appLang==='en';return{title:en?'Notification History':'Bildirim Geçmişi',sub:en?'Recent messages shown by Buyer Log':'Buyer Log tarafından gösterilen son mesajlar',search:en?'Search notifications…':'Bildirimlerde ara…',empty:en?'No notifications yet.':'Henüz bildirim yok.',noMatch:en?'No matching notifications.':'Eşleşen bildirim yok.',clear:en?'Clear all':'Tümünü temizle',confirm:en?'Clear the entire notification history?':'Tüm bildirim geçmişi temizlensin mi?',close:en?'Close':'Kapat',count:n=>en?`${n} notification(s)`:`${n} bildirim`,toast:en?'Quick notification':'Kısa bildirim',center:en?'Important notification':'Önemli bildirim',remove:en?'Remove notification':'Bildirimi kaldır'};}
 function notificationHistoryLoad(){if(_notificationHistoryState)return _notificationHistoryState;let state=null;try{state=JSON.parse(BLStorage.getItem(NOTIFICATION_HISTORY_KEY)||'null');}catch(_){}if(!state||!Array.isArray(state.items))state={items:[]};state.items=state.items.filter(item=>item&&item.message).slice(0,NOTIFICATION_HISTORY_LIMIT).map(item=>({...item,read:item.read===true}));_notificationHistoryState=state;return state;}
 function notificationHistorySave(){try{BLStorage.setItem(NOTIFICATION_HISTORY_KEY,JSON.stringify(notificationHistoryLoad()));return true;}catch(_){return false;}}
 function notificationHistoryUnread(){return notificationHistoryLoad().items.reduce((count,item)=>count+(item.read?0:1),0);}
 function notificationHistoryUpdateBadge(){const button=document.getElementById('notificationsBtn'),badge=document.getElementById('notificationUnreadBadge'),count=notificationHistoryUnread(),t=notificationHistoryText();if(badge){badge.hidden=!count;badge.textContent=count>99?'99+':String(count);}if(button){button.classList.toggle('hasUnread',count>0);button.setAttribute('aria-label',count?`${t.title} (${count})`:t.title);}}
-function notificationHistoryAdd(message,kind='toast'){const text=String(message==null?'':message).replace(/\s+/g,' ').trim().slice(0,5000);if(!text)return;const state=notificationHistoryLoad();state.items.unshift({id:`notification-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,message:text,kind:kind==='center'?'center':'toast',createdAt:new Date().toISOString(),read:false});if(state.items.length>NOTIFICATION_HISTORY_LIMIT)state.items.length=NOTIFICATION_HISTORY_LIMIT;notificationHistorySave();notificationHistoryUpdateBadge();}
-function notificationHistoryDate(value){const date=new Date(value);if(Number.isNaN(date.getTime()))return'';return new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'}).format(date);}
-function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>item.message.toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt))}</time></div><p>${escapeHtml(item.message)}</p></div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
+function notificationHistoryAdd(message,kind='toast',target){const text=String(message==null?'':message).replace(/\s+/g,' ').trim().slice(0,5000);if(!text)return;const state=notificationHistoryLoad();state.items.unshift({id:`notification-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,message:text,...(notificationTarget(target)?{target:notificationTarget(target)}:{}),kind:kind==='center'?'center':'toast',createdAt:new Date().toISOString(),read:false});if(state.items.length>NOTIFICATION_HISTORY_LIMIT)state.items.length=NOTIFICATION_HISTORY_LIMIT;notificationHistorySave();notificationHistoryUpdateBadge();}
+function notificationHistoryDate(value,formatter){const date=new Date(value);if(Number.isNaN(date.getTime()))return'';return (formatter||new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'})).format(date);}
+function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>[item.message,item.target&&notificationTarget(item.target)?notificationTargetText(item.target):''].join(' ').toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}const formatter=new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'});host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt,formatter))}</time></div><p>${escapeHtml(item.message)}</p>${notificationTarget(item.target)?`<button type="button" class="tbtn notificationHistoryTarget" data-notification-open="${escapeHtml(item.id)}" title="${escapeHtml(notificationTargetText(item.target))}">${escapeHtml(notificationTargetText(item.target))} · ${escapeHtml(appLang==='en'?'Open related record':'İlgili kayda git')}</button>`:''}</div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
 function notificationHistoryMarkAllRead(){const state=notificationHistoryLoad();let changed=false;state.items.forEach(item=>{if(!item.read){item.read=true;changed=true;}});if(changed)notificationHistorySave();notificationHistoryUpdateBadge();}
-function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};window.BLLayerSystem?.openDialog(modal,{onClose:close});modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
+function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);window.BLMotionPlus?.play('overlay',modal);renderNotificationHistoryList('');const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};window.BLLayerSystem?.openDialog(modal,{onClose:close});modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const open=event.target.closest('[data-notification-open]');if(open){const item=notificationHistoryLoad().items.find(item=>item.id===open.dataset.notificationOpen);if(item){open.disabled=true;void openNotificationTarget(item.target).then(ok=>{if(ok)close();}).finally(()=>{open.disabled=false;});}return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
 // penceresinin içinde: iki ayrı yerde iki ayrı geçmiş aramak yerine tek yer.
 modal.querySelector('#notificationUpdateHistoryBtn')?.addEventListener('click',()=>{close();openSourceRefreshHistory();});
 modal.querySelector('#notificationHistorySearch').addEventListener('input',event=>renderNotificationHistoryList(event.target.value));modal.querySelector('#notificationHistoryClear').addEventListener('click',()=>{if(!notificationHistoryLoad().items.length||!confirm(t.confirm))return;notificationHistoryLoad().items=[];notificationHistorySave();renderNotificationHistoryList('');notificationHistoryUpdateBadge();});setTimeout(()=>modal.querySelector('#notificationHistorySearch')?.focus(),0);}
@@ -13908,8 +14008,8 @@ notificationHistoryUpdateBadge();
 // beklenen bir bildirimde gozden kaciyordu; bu not bakisin zaten bulundugu yerde belirir,
 // kendiliginden kapanir ve tiklama/Esc ile de kapatilabilir.
 function showCenterNotice(msg, opts){
-  const o=opts||{};
-  notificationHistoryAdd(msg,'center');
+  const o=notificationOptions(opts);
+  notificationHistoryAdd(msg,'center',o.target);
   const notify=window.BLUI?.notify;
   if(typeof notify==='function'){
     // Bir modal/overlay açıkken merkez bildirim onun üzerine/içine düşüyordu;
@@ -13943,8 +14043,8 @@ function showCenterNotice(msg, opts){
   return close;
 }
 function showToast(msg,opts){
-  const o=opts||{};
-  notificationHistoryAdd(msg,'toast');
+  const o=notificationOptions(opts);
+  notificationHistoryAdd(msg,'toast',o.target);
   const notify=window.BLUI?.notify;
   if(typeof notify==='function')return notify(msg,{...o,placement:'edge',kind:o.kind||'info',language:appLang});
   let el = document.getElementById('_toast');
@@ -15084,6 +15184,9 @@ async function waitForRefreshJob(expectedJob=null){
     const keepCpForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('cp')&&state.cp&&Array.isArray(state.cp.rows));
     const keepOrdersForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('orders')&&state.orders&&Array.isArray(state.orders.rows));
     const preserveCpClientState=(!userVisibleRefresh&&cpClientWorkInProgress())||keepCpForPartialRefresh;
+    const retainPreparedData=data.hasCachedData!==false&&!data.sourceFilterRequired;
+    const reloadPreparedCp=Boolean(retainPreparedData&&data.cpDeferred&&!preserveCpClientState&&state.cp);
+    const reloadPreparedOrders=Boolean(retainPreparedData&&!Array.isArray(data.orders)&&(force||leanReload)&&data.orderSummaryDeferred&&!keepOrdersForPartialRefresh&&state.orders);
     if(Array.isArray(data.cp)){
       if(!preserveCpClientState){
         state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
@@ -15094,9 +15197,11 @@ async function waitForRefreshJob(expectedJob=null){
     }else if(data.cpDeferred){
       // mode=initial CP'yi bilerek taşımaz. Önceden burada state.cp=null yapıp
       // açık editörü boşa düşürüyorduk. Yerel iş varsa mevcut projection kalır.
-      if(!preserveCpClientState)state.cp=null;
-      overviewCpLoadState=preserveCpClientState?'ready':'idle';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions(preserveCpClientState?'server-cp-deferred-preserved-local-edit':'server-cp-deferred');
+      // Hazır tabloyu silme: yeni projection atomik olarak yerini alır.
+      if(!retainPreparedData&&!preserveCpClientState){state.cp=null;window.BLModulePreparation?.setStatus('cp','pending');}
+      overviewCpLoadState=state.cp?'ready':'idle';overviewCpLoadError='';
+      if(reloadPreparedCp)window.BLModulePreparation?.setStatus('cp','loading');
+      if(!state.cp)invalidateUnifiedPriorityDecisions('server-cp-deferred',['cp']);
       if(currentActiveTab()!=='overview')_deferredTabRenders.add('overview');
     }
     if(Array.isArray(data.orders)){
@@ -15104,7 +15209,9 @@ async function waitForRefreshJob(expectedJob=null){
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){
-      if(!keepOrdersForPartialRefresh)state.orders=null;state.orderSummary=null;
+      if(!retainPreparedData&&!keepOrdersForPartialRefresh){state.orders=null;window.BLModulePreparation?.setStatus('orders','pending');}
+      if(reloadPreparedOrders)window.BLModulePreparation?.setStatus('orders','loading');
+      state.orderSummary=null;
       invalidateUnifiedPriorityDecisions('server-orders-deferred',['orders']);
     }
     if(Array.isArray(data.orderSummary)){
@@ -15190,6 +15297,10 @@ async function waitForRefreshJob(expectedJob=null){
     if(activeModuleMetric)endStartupStage(activeModuleMetric,'ACTIVE_MODULE_INIT',{module:startupTab});
     if(initialScreenLoad)window.BLPerf?.mark?.('UI_FIRST_RENDER');
     if(hydrateMetric)window.BLPerf?.end?.(hydrateMetric);
+    const preparedReloads=[];
+    if(reloadPreparedCp)preparedReloads.push(ensureCpLoaded({force:true,reason:'reload'}));
+    if(reloadPreparedOrders)preparedReloads.push(ensureOrdersLoaded({force:true}));
+    if(userVisibleRefresh)await Promise.all(preparedReloads);
     if(userVisibleRefresh||leanReload){
       const activeTab=currentActiveTab();
       if(activeTab==='cp'&&!state.cp)await ensureCpLoaded({force:true});
@@ -15211,10 +15322,12 @@ async function waitForRefreshJob(expectedJob=null){
     }
     if(currentActiveTab()==='backlog'&&(typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('backlog'))){
       if(typeof fetchCurrentBacklog==='function') fetchCurrentBacklog(); else renderBacklog(data.backlog);
-    }else if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('backlog'))){
+    }else if((userVisibleRefresh||leanReload)&&(!Array.isArray(targets)||!targets.length||targets.includes('backlog'))){
       // Açık değilse çizilmez; bir sonraki girişte taze pivot çekilsin diye
       // "bir kez yüklendi" işareti düşürülür (aksi hâlde eski pivot kalıyordu).
-      backlogLoadedOnce=false;
+      backlogLoadedOnce=false;backlogPrefetch=null;++backlogFetchGeneration;
+      window.BLModulePreparation?.setStatus('backlog','loading');
+      void prefetchBacklogForRefresh().catch(error=>console.warn('Arka plan Backlog:',error));
     }
     // Fiyat & Üretici Analizi hazırladığı veri kümesini önbellekte tutar;
     // yenilemeden sonra bayat kalmasın. Açıksa hemen, değilse ilk girişte hazırlanır.
@@ -15315,16 +15428,47 @@ async function waitForRefreshJob(expectedJob=null){
   }
 }
 
-let sharedRevisionSnapshot=null,sharedRevisionTimer=0;
-async function pollSharedRevisions(){
-  try{
-    const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store'});if(!response.ok)return;const next=await response.json(),previous=sharedRevisionSnapshot;sharedRevisionSnapshot=next;
+let sharedRevisionSnapshot=null,sharedRevisionContext=null;
+// Revision timer'ı yalnız mevcut canlı bağlantı liderinin ömründe çalışır.
+function createSharedRevisionPoller({isCurrent,announce}){
+  let active=false,timer=0,request=null,retryMs=7000;
+  function accept(next){
+    if(!isCurrent()||!next||!next.entities||typeof next.entities!=='object')return;
+    const previous=sharedRevisionSnapshot;
+    // Devir sırasında kuyruğa girmiş eski bir yayın baseline'ı geriye götürmez.
+    if(previous&&Number(next.revision)<Number(previous.revision))return;
+    sharedRevisionSnapshot=next;
     if(!previous)return;
-    const changed=[];for(const [entity,item] of Object.entries(next.entities||{}))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
+    const changed=[];for(const [entity,item] of Object.entries(next.entities))if(Number(item&&item.revision)>Number(previous.entities&&previous.entities[entity]&&previous.entities[entity].revision||0))changed.push(entity);
     if(changed.length)window.dispatchEvent(new CustomEvent('bl-shared-revision',{detail:{changed,revisions:next}}));
-  }catch(_){/* lightweight polling must not disturb the user */}
+  }
+  function schedule(ms){clearTimeout(timer);timer=setTimeout(pollSharedRevisions,ms);}
+  async function pollSharedRevisions(){
+    if(!active||!isCurrent()||request||navigator.onLine===false)return;
+    clearTimeout(timer);
+    const controller=new AbortController();request=controller;
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const response=await fetch(`/api/shared-revisions?_=${Date.now()}`,{cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error('Revision poll failed');
+      const next=await response.json();
+      if(!active||controller.signal.aborted||!isCurrent())return;
+      accept(next);announce({type:'revisions',revisions:next});retryMs=7000;
+    }catch(_){retryMs=Math.min(retryMs*2,30000);/* background failure stays quiet */}
+    finally{
+      clearTimeout(timeout);if(request===controller)request=null;
+      if(active&&isCurrent()&&navigator.onLine!==false)schedule(Math.max(retryMs,document.visibilityState==='hidden'?30000:0));
+    }
+  }
+  return {
+    accept,
+    snapshot:()=>sharedRevisionSnapshot,
+    start(ms=2500){active=true;schedule(ms);},
+    wake(){if(active&&!request)void pollSharedRevisions();},
+    pause(){clearTimeout(timer);request?.abort();},
+    stop(){active=false;clearTimeout(timer);request?.abort();}
+  };
 }
-setTimeout(()=>{void pollSharedRevisions();sharedRevisionTimer=window.setInterval(pollSharedRevisions,7000);},2500);
 
 // Yenile: ASAS aktif Data Model bağlantısından gelir. Antrepo varsayılan olarak
 // kaynak klasöründeki Excel'den okunur; yalnız Database modu seçilmişse IAS model
@@ -16842,26 +16986,23 @@ function schedulePostUiStartupTasks(){
 async function refreshSyncStatusBadge(){
   try{const s=await fetchJSON('/api/sync-status');renderSyncStatusBadge(s.status);}catch(_){renderSyncStatusBadge(null);}
 }
-/* ARKA PLAN ÖN YÜKLEME (aynı sekme). Açılış ekranı çizildikten sonra kullanıcının
-   yetkili olduğu CP → Siparişler → Koleksiyon verisi BU renderer'a sırayla,
-   tarayıcı boştayken ve gizli çizimle yüklenir. Modüle ilk geçişte ağ/JSON
-   beklenmez; tablo ilk görünüşte bir kez çizilir. Ayrı native sekme açılmaz:
-   her sekme uygulamanın tamamını ve verisini baştan yükleyip ~1,5 GiB ek bellek
-   ve dakikalarca CPU yarışı üretiyordu (7.0.314 ölçümü). */
+/* Aynı renderer'da kalıcı veri: ilk ekran açıldıktan sonra Koleksiyon → CP →
+   Siparişler → Backlog. Native sekmeler de bu sırayı izler; ayrı gizli native
+   sekmeler açılmaz. Görünmeyen büyük tablolar ilk gösterimde çizilir ve DOM'u
+   sekme değişiminde korunur. Bellek eşiği bir ekranı sessizce atlamaz. */
 const BACKGROUND_WARMUP_GAP_MS=1500;
 let backgroundWarmupStarted=false;
-/* Adaptif sınır: Orders ön yüklemesi en büyük veri kümesidir (30 bin satırda ~70 MB
-   JSON / ~75 MB JS belleği). Az bellekli makinede veya renderer belleği zaten
-   doluysa atlanır; Orders ilk girişte her zamanki gibi yüklenir. */
-function backgroundWarmupMemoryTight(){
-  const deviceMemory=Number(navigator.deviceMemory)||0;
-  if(deviceMemory>0&&deviceMemory<=4)return true;
-  const memory=performance.memory;
-  return Boolean(memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>0.6);
-}
 function backgroundWarmupSteps(){
   const modelData=!(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false);
   return [
+    {module:'koleksiyon',enabled:true,ready:()=>false,load:async()=>{
+      await ensureInitialKolWorkspace();
+      await window.BLPerf?.ensureFeature?.('collectionTools');
+      const ok=await ensureCollectionCatalogLoaded({deferRender:true});
+      if(ok!==true)return ok;
+      await ensureCollectionMasterCatalogLoaded();
+      return true;
+    }},
     // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
     {module:'cp',enabled:modelData,ready:()=>Boolean(state.cp&&_unifiedPriorityCache.cp?.rows===state.cp.rows),load:async()=>{
       const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
@@ -16869,13 +17010,12 @@ function backgroundWarmupSteps(){
       await window.BLPerf?.ensureFeature?.('cpAssistant');
       return await scheduleUnifiedPrioritiesForTable('cp');
     }},
-    {module:'orders',enabled:modelData&&!backgroundWarmupMemoryTight(),ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
-    {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
+    {module:'orders',enabled:modelData,ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
+    {module:'backlog',enabled:modelData,ready:()=>backlogLoadedOnce||Boolean(backlogPrefetch),load:()=>prefetchBacklogForRefresh()},
   ];
 }
-/* Hazırlık, Continue ve ilk görünür karelerden sonra başlar. Her adımda güncel
-   açma niyeti ve kişisel son kullanım yeniden okunur; yetki, kaynak ve bellek
-   sınırları aynı kalır. Veri hazırlanır, görünmeyen tablo çizilmez. */
+/* Hazırlık Continue ve ilk görünür karelerden sonra başlar. Sabit öncelik
+   gezinme/hover ile değişmez; yetki ve kaynak kapıları her adımda tekrar okunur. */
 function backgroundWarmupCurtainVisible(){return Boolean(document.getElementById('blBootGuard'));}
 function finishStartupModules(){
   window.BLBootGuard?.ready?.('modules');
@@ -16893,21 +17033,16 @@ function scheduleBackgroundModuleWarmup(){
     window.requestIdleCallback(fn,{timeout:4000});
   };
   const next=()=>{
-    const step=window.BLModulePreparation?window.BLModulePreparation.takeNext(steps):steps.shift();
+    const step=steps.shift();
     if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));finishStartupModules();return;}
     if(!eligible(step)){next();return;}
     index++;
     window.BLModulePreparation?.setStatus(step.module,'loading');
     window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
     window.dispatchEvent(new CustomEvent('bl:startup-progress',{detail:{stage:'modules',module:step.module,index,total:Math.max(total,index)}}));
-    // Veri zaten bellekteyse (ör. açılış sekmesi CP idi) tablo çizilmiş olabilir; yalnız
-    // bu adımda ilk kez yüklenen tablo "çizilmemiş" sayılır.
-    const loadedBefore=step.module==='cp'?Boolean(state.cp):step.module==='orders'?Boolean(state.orders):true;
-    Promise.resolve().then(step.load).then(ok=>{
+    Promise.resolve().then(prepareBackgroundPageProfiles).then(step.load).then(ok=>{
       window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
       if(ok===true)window.BLModulePreparation?.setStatus(step.module,'ready');
-      // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
-      if(ok===true&&!loadedBefore&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
     }).catch(error=>{window.BLModulePreparation?.setStatus(step.module,'error','BACKGROUND_PREPARATION_FAILED');console.warn('Arka plan ön yükleme:',step.module,error);})
       .finally(()=>setTimeout(()=>idle(next),gap()));
   };
@@ -17330,6 +17465,17 @@ function applyStoredProfilesForCurrentPage(applyFavorites=true){
   if(startupViewResume?.__page===page)applyViewState(startupViewResume);
 }
 
+let backgroundPageProfilesReady=false,backgroundPageProfilesPromise=null;
+function prepareBackgroundPageProfiles(){
+  if(backgroundPageProfilesPromise)return backgroundPageProfilesPromise;
+  backgroundPageProfilesPromise=Promise.all([fetchJSON('/api/views'),fetchJSON('/api/filter-profiles')]).then(([views,filters])=>{
+    for(const page of ['cp','orders','koleksiyon']){
+      cachePresetStore('view',page,views);cachePresetStore('filter',page,filters);
+    }
+    backgroundPageProfilesReady=true;
+  }).catch(error=>{backgroundPageProfilesPromise=null;console.warn('Arka plan profilleri:',error);});
+  return backgroundPageProfilesPromise;
+}
 async function refreshViewSelect(){
   try{ viewStore = cachePresetStore('view',activeProfilePage(),await fetchJSON('/api/views')); fillProfileSelect(document.getElementById('viewSelect'),viewStore,'view'); }
   catch(err){ console.warn('Görünümler alınamadı:', err.message); }
@@ -17580,6 +17726,7 @@ async function applyProfilesForCurrentPage(applyFavorites=true){
   const generation=++profileApplyGeneration;
   const page=activeProfilePage();if(!isProfilePage(page))return;
   applyCachedProfilesForCurrentPage(applyFavorites);
+  if(backgroundPageProfilesReady&&['cp','orders','koleksiyon'].includes(page))return;
   await refreshViewSelect();await refreshFilterSelect();
   if(generation!==profileApplyGeneration||activeProfilePage()!==page)return;
   if(applyFavorites){
@@ -17695,6 +17842,8 @@ function backlogExcelColumnCatalog(){
   const catalog=new Map();
   BACKLOG_DEFAULT_EXPORT_HEADERS.forEach((header,index)=>{
     const id=backlogFieldId(index);
+    // Legacy month/week fields are already derived from the selected date.
+    if(backlogIsLegacyDateDerivedId(id))return;
     catalog.set(id,{id,header,display:header.replace(/\n/g,' '),group:'field'});
   });
   backlogExportSourceCatalog().forEach(item=>{
@@ -17715,21 +17864,24 @@ function openBacklogExportColumns(){
   let workingSelected=dedupe(backlogExcelColumns());
   const workingFormulas={...backlogExcelFormulaOverrides()};
   const defaultPlan=window.BLBacklogExcel?.formulaPlan?.(BACKLOG_DEFAULT_EXPORT_HEADERS,{},2)||{formulas:{}};
-  const availableChecked=new Set(),selectedChecked=new Set();
   let searchQuery='';
   const tr=(en,tk)=>appLang==='en'?en:tk;
-  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
-  modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle"><div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${escapeHtml(tr('Excel options','Excel seçenekleri'))}</div><div class="backlogDetailMeta">${escapeHtml(tr('Manage exported columns and edit formula cells. Use {row} for the current Excel row.','Aktarılacak sütunları yönetin ve formül hücrelerini düzenleyin. Güncel Excel satırı için {row} kullanın.'))}</div></div><button type="button" class="backlogDetailClose" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="backlogExportColumnsBody"><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Columns','Sütunlar'))}</h3><div class="backlogColManager">
-    <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Available columns','Kullanılabilir sütunlar'))}</span></div><input type="text" class="backlogColSearch" data-col-search placeholder="${escapeHtml(tr('Search…','Ara…'))}"><div class="backlogColList" data-col-available></div></div>
-    <div class="backlogColManagerActions">
-      <button type="button" class="tbtn" data-col-add>${escapeHtml(tr('Add →','Ekle →'))}</button>
-      <button type="button" class="tbtn" data-col-remove>${escapeHtml(tr('← Remove','← Çıkar'))}</button>
-      <button type="button" class="tbtn" data-col-add-all>${escapeHtml(tr('Add all','Tümünü Ekle'))}</button>
-      <button type="button" class="tbtn" data-col-remove-all>${escapeHtml(tr('Remove all','Tümünü Çıkar'))}</button>
-      <button type="button" class="tbtn" data-col-reset-selection>${escapeHtml(tr('Restore defaults','Varsayılana Dön'))}</button>
+  // All labels own TR/EN pairs; source headers must retain their canonical text.
+  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.dataset.noI18n='';
+  const text=(en,tk)=>`<span data-i18n-tr="${escapeHtml(tk)}" data-i18n-en="${escapeHtml(en)}">${escapeHtml(tr(en,tk))}</span>`;
+  modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle">
+    <div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${text('Backlog Excel settings','Backlog Excel ayarları')}</div><div class="backlogDetailMeta">${text('Add, remove or reorder the columns in your report. Applies to Legacy and V3.','Raporunuzdaki sütunları ekleyin, çıkarın veya sıralayın. Legacy ve V3 için geçerlidir.')}</div></div><button type="button" class="backlogDetailClose" data-close data-close-icon><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="backlogExportColumnsBody">
+      <div class="backlogColPaneHead"><h3>${text('Report columns','Rapordaki sütunlar')} <span class="backlogColCount" data-col-count aria-live="polite"></span></h3><div class="backlogColTools"><button type="button" class="tbtn" data-col-reset-selection>${text('Restore defaults','Varsayılana dön')}</button><button type="button" class="tbtn primary" data-col-toggle-add aria-expanded="false" aria-controls="backlogExcelAddColumns">${text('Add column','Sütun ekle')}</button></div></div>
+      <div id="backlogExcelAddColumns" class="backlogColPane" hidden>
+        <label class="backlogColSearchLabel">${text('Find a column','Sütun ara')}<input type="search" class="backlogColSearch" data-col-search></label>
+        <div class="backlogColList backlogColAvailableList" data-col-available></div>
+      </div>
+      <div class="backlogColList backlogColSelectedList" data-col-selected></div>
+      <details class="backlogExportColumnsGroup" data-formula-settings><summary>${text('Advanced settings · formulas','Gelişmiş ayarlar · formüller')}</summary><p>${text('Leave the default formulas unchanged unless needed. Use {row} for the current Excel row.','Gerekmedikçe varsayılan formülleri değiştirmeyin. Güncel Excel satırı için {row} kullanın.')}</p><div class="backlogExportFormulaList" data-formula-list></div></details>
     </div>
-    <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Columns in Excel','Excel’de yer alacak sütunlar'))}</span><span class="backlogColCount" data-col-count></span></div><div class="backlogColList" data-col-selected></div></div>
-  </div></div><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Formula cells','Formül hücreleri'))}</h3><div class="backlogExportFormulaList" data-formula-list></div></div></div><div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(tr('Cancel','İptal'))}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(tr('Apply','Uygula'))}</button></div></div>`;
+    <div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${text('Cancel','İptal')}</button><button type="button" class="tbtn primary" data-save>${text('Apply','Uygula')}</button></div>
+  </div>`;
   document.body.appendChild(modal);
   let releaseKeyboard=()=>{};
   const close=()=>{releaseKeyboard();modal.remove();};
@@ -17740,6 +17892,16 @@ function openBacklogExportColumns(){
   const selectedEl=modal.querySelector('[data-col-selected]');
   const formulaEl=modal.querySelector('[data-formula-list]');
   const countEl=modal.querySelector('[data-col-count]');
+  const addPanel=modal.querySelector('#backlogExcelAddColumns');
+  const addToggle=modal.querySelector('[data-col-toggle-add]');
+  const searchEl=modal.querySelector('[data-col-search]');
+  const formulaSettings=modal.querySelector('[data-formula-settings]');
+  addToggle.addEventListener('click',()=>{
+    const open=addToggle.getAttribute('aria-expanded')!=='true';
+    addToggle.setAttribute('aria-expanded',String(open));
+    if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(addPanel,open,{trigger:addToggle});else addPanel.hidden=!open;
+    if(open)searchEl.focus();
+  });
   const norm=text=>String(text||'').toLocaleLowerCase('tr');
   function renderAvailable(){
     const q=norm(searchQuery);
@@ -17749,18 +17911,19 @@ function openBacklogExportColumns(){
       const items=[...catalog.values()].filter(item=>item.group===group&&!workingSelected.includes(item.id)&&(!q||norm(item.display).includes(q)));
       if(!items.length)return;
       html+=`<div class="backlogColGroupLabel">${escapeHtml(groupLabel)}</div>`;
-      html+=items.map(item=>`<label class="backlogColRow backlogColAvailRow" data-avail-row="${escapeHtml(item.id)}"><input type="checkbox" data-avail-id="${escapeHtml(item.id)}" ${availableChecked.has(item.id)?'checked':''}><span class="backlogColRowLabel">${escapeHtml(item.display)}</span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}</label>`).join('');
+      html+=items.map(item=>`<button type="button" class="tbtn backlogColRow backlogColAvailRow" data-col-add-id="${escapeHtml(item.id)}"><span class="backlogColRowLabel">${escapeHtml(item.display)}</span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}<span>+ ${escapeHtml(tr('Add','Ekle'))}</span></button>`).join('');
     });
     availableEl.innerHTML=html||`<div class="backlogColEmpty">${escapeHtml(searchQuery?tr('No matches.','Eşleşme yok.'):tr('No columns.','Sütun yok.'))}</div>`;
   }
   function renderSelected(){
     if(countEl)countEl.textContent=String(workingSelected.length);
-    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('No columns.','Sütun yok.'))}</div>`;return;}
+    modal.querySelector('[data-save]').disabled=!workingSelected.length;
+    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('Add at least one column to your report.','Raporunuza en az bir sütun ekleyin.'))}</div>`;return;}
     selectedEl.innerHTML=workingSelected.map((id,index)=>{
       const item=catalog.get(id);
       const label=item?item.display:id;
       const tag=item&&item.group!=='field'?backlogColumnGroupTag(item.group):'';
-      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
+      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" aria-label="${escapeHtml(tr('Remove','Çıkar')+': '+label)}">${escapeHtml(tr('Remove','Çıkar'))}</button></div>`;
     }).join('');
   }
   function currentFormulaHeaders(){
@@ -17771,61 +17934,46 @@ function openBacklogExportColumns(){
   function renderFormulas(){
     formulaEl.innerHTML=currentFormulaHeaders().map(header=>{
       const current=workingFormulas[header]!=null?workingFormulas[header]:(defaultPlan.formulas?.[header]?.formula||'');
-      return `<label class="backlogExcelFormulaField"><span>${escapeHtml(header.replace(/\n/g,' '))}</span><input type="text" data-formula-header="${escapeHtml(header)}" value="${escapeHtml(current)}" placeholder="=IF(...) — {row} satır numarası"></label>`;
+      return `<label class="backlogExcelFormulaField"><span>${escapeHtml(header.replace(/\n/g,' '))}</span><input type="text" data-formula-header="${escapeHtml(header)}" value="${escapeHtml(current)}" placeholder="${escapeHtml(tr('=IF(...) — {row} row number','=IF(...) — {row} satır numarası'))}"></label>`;
     }).join('');
   }
-  function renderAll(){renderAvailable();renderSelected();renderFormulas();}
+  function renderAll(){renderAvailable();renderSelected();if(formulaSettings.open)renderFormulas();}
+  formulaSettings.addEventListener('toggle',()=>{if(formulaSettings.open)renderFormulas();});
   modal.querySelector('[data-col-search]').addEventListener('input',event=>{searchQuery=event.target.value;renderAvailable();});
-  availableEl.addEventListener('change',event=>{
-    const box=event.target.closest('[data-avail-id]');if(!box)return;
-    if(box.checked)availableChecked.add(box.dataset.availId);else availableChecked.delete(box.dataset.availId);
-  });
-  availableEl.addEventListener('dblclick',event=>{
-    const row=event.target.closest('[data-avail-row]');if(!row)return;
-    const id=row.dataset.availRow;availableChecked.delete(id);
+  availableEl.addEventListener('click',event=>{
+    const button=event.target.closest('[data-col-add-id]');if(!button)return;
+    const id=button.dataset.colAddId;
     if(!workingSelected.includes(id))workingSelected.push(id);
     renderAll();
-  });
-  selectedEl.addEventListener('change',event=>{
-    const box=event.target.closest('[data-sel-id]');if(!box)return;
-    if(box.checked)selectedChecked.add(box.dataset.selId);else selectedChecked.delete(box.dataset.selId);
-  });
-  selectedEl.addEventListener('dblclick',event=>{
-    if(event.target.closest('button')||event.target.closest('input'))return;
-    const row=event.target.closest('[data-col-id]');if(!row)return;
-    const id=row.dataset.colId;selectedChecked.delete(id);
-    workingSelected=workingSelected.filter(x=>x!==id);
-    renderAll();
+    // Keep keyboard focus in the picker after the clicked row is removed.
+    const next=availableEl.querySelector('[data-col-add-id]');
+    (next||searchEl).focus({preventScroll:true});
   });
   selectedEl.addEventListener('click',event=>{
     const up=event.target.closest('[data-col-up]'),down=event.target.closest('[data-col-down]'),remove=event.target.closest('[data-col-remove]');
-    if(up){const id=up.dataset.colUp,i=workingSelected.indexOf(id);if(i>0){[workingSelected[i-1],workingSelected[i]]=[workingSelected[i],workingSelected[i-1]];renderAll();}return;}
-    if(down){const id=down.dataset.colDown,i=workingSelected.indexOf(id);if(i>-1&&i<workingSelected.length-1){[workingSelected[i+1],workingSelected[i]]=[workingSelected[i],workingSelected[i+1]];renderAll();}return;}
-    if(remove){const id=remove.dataset.colRemove;selectedChecked.delete(id);workingSelected=workingSelected.filter(x=>x!==id);renderAll();return;}
+    if(up||down){
+      const id=up?up.dataset.colUp:down.dataset.colDown,i=workingSelected.indexOf(id),next=i+(up?-1:1);
+      if(i<0||next<0||next>=workingSelected.length)return;
+      [workingSelected[i],workingSelected[next]]=[workingSelected[next],workingSelected[i]];
+      renderAll();
+      const row=[...selectedEl.querySelectorAll('[data-col-id]')].find(el=>el.dataset.colId===id);
+      const action=row?.querySelector(up?'[data-col-up]':'[data-col-down]');
+      (action?.disabled?row.querySelector('[data-col-remove]'):action)?.focus({preventScroll:true});
+      return;
+    }
+    if(remove){
+      const id=remove.dataset.colRemove,index=workingSelected.indexOf(id);
+      workingSelected=workingSelected.filter(x=>x!==id);renderAll();
+      const rows=selectedEl.querySelectorAll('[data-col-id]');
+      (rows[Math.min(index,rows.length-1)]?.querySelector('[data-col-remove]')||addToggle).focus({preventScroll:true});
+    }
   });
   formulaEl.addEventListener('input',event=>{
     const input=event.target.closest('[data-formula-header]');if(!input)return;
     workingFormulas[input.dataset.formulaHeader]=input.value;
   });
-  modal.querySelector('[data-col-add]').addEventListener('click',()=>{
-    if(!availableChecked.size)return;
-    [...catalog.values()].forEach(item=>{if(availableChecked.has(item.id)&&!workingSelected.includes(item.id))workingSelected.push(item.id);});
-    availableChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-remove]').addEventListener('click',()=>{
-    if(!selectedChecked.size)return;
-    workingSelected=workingSelected.filter(id=>!selectedChecked.has(id));
-    selectedChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-add-all]').addEventListener('click',()=>{
-    [...catalog.keys()].forEach(id=>{if(!workingSelected.includes(id))workingSelected.push(id);});
-    availableChecked.clear();renderAll();
-  });
-  modal.querySelector('[data-col-remove-all]').addEventListener('click',()=>{
-    workingSelected=[];selectedChecked.clear();renderAll();
-  });
   modal.querySelector('[data-col-reset-selection]').addEventListener('click',()=>{
-    workingSelected=backlogDefaultExcelColumns();availableChecked.clear();selectedChecked.clear();renderAll();
+    workingSelected=backlogDefaultExcelColumns();renderAll();
   });
   let dragId=null;
   const clearDragMarks=()=>selectedEl.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));
@@ -17864,7 +18012,13 @@ function openBacklogExportColumns(){
     saveBacklogExcelFormulaOverrides(formulas);
     close();
   });
-  renderAll();
+  modal.refreshLanguage=()=>{
+    searchEl.placeholder=tr('Search by column name…','Sütun adıyla ara…');
+    const closeLabel=tr('Close','Kapat');
+    modal.querySelector('[data-close-icon]').setAttribute('aria-label',closeLabel);
+    renderAll();
+  };
+  modal.refreshLanguage();
   // Katalog aktif ASAS/Antrepo şemasından tazelenir; modal bu istek dönmeden de
   // kullanılabilir kalsın diye render bloke edilmez, liste geldiğinde yenilenir.
   fetchBacklogSourceColumns().then(()=>{
@@ -19541,8 +19695,9 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   });
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,rows.length),c:allHeaders.length-1}});
   ws['!autofilter']={ref:ws['!ref']};
+  // Explicit report selections override the old collapsed column preset.
   ws['!cols']=[
-    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
+    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),...(options.showSelectedColumns===true?{hidden:false,level:0}:{}),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
     ...chartHelperHeaders.map(()=>({hidden:true,wch:2})),
   ];
@@ -19633,7 +19788,7 @@ async function exportBacklogToExcel(_event,options={}){
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
     const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
     const chartState=window.BLBacklogChart?.getState?.()||null;
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState});
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState,showSelectedColumns:true});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     // Excel Backlog V3 legacy sayfaları yerel grafik eklemeden alır (V3 kendi grafiklerini yazar).
     const chartExport=options.onLegacyWorkbook?null:window.BLBacklogChart?.appendWorkbookSheets?.(
@@ -19720,9 +19875,9 @@ let backlogLoadedOnce=false;
 /* v20260929 — Tek yenileme sonrası Backlog sekmesi açık değilse pivot yanıtı
    arka planda ÖNCEDEN alınır (çizilmez). Sekmeye ilk girişte aynı parametreli
    hazır yanıt beklemeden çizilir. Yanıt yalnız aynı sorgu anahtarı için ve
-   kısa süre geçerlidir; yeni bir yenileme/yeniden yükleme onu düşürür. */
+   tüketilene kadar tutulur; kaynak yenilemesi eski yanıtı geçersiz kılar. */
 let backlogPrefetch=null;
-const BACKLOG_PREFETCH_MAX_AGE_MS=10*60*1000;
+let backlogPrefetchPending=null;
 function backlogQueryString(params){ return new URLSearchParams(params||{}).toString(); }
 /* İlk Backlog yüklemesinde rapor yerine ortak bekleme durumu gösterilir;
    içerik veri gelmeden açılmaz. Boş durum metni sonradan geri yüklenir. */
@@ -19750,6 +19905,7 @@ function applyBacklogData(data){
   backlogDimensionRequests.clear();
   renderBacklog(data);
   backlogLoadedOnce=true;
+  window.BLModulePreparation?.setStatus('backlog','ready');
   renderBacklogDimOrder();
   updateBacklogQuickDimLabels();
   updateBacklogBuyerGrupBtnLabel();
@@ -19779,6 +19935,7 @@ async function fetchBacklog(params){
 async function fetchBacklogData(params){
   backlogPrefetch=null;
   showBacklogLoadingState();
+  window.BLModulePreparation?.setStatus('backlog','loading');
   const generation=++backlogFetchGeneration;
   window.BLBacklogDateRange?.requestState('loading');
   try{
@@ -19789,6 +19946,7 @@ async function fetchBacklogData(params){
   }catch(err){
     if(generation!==backlogFetchGeneration)return;
     window.BLBacklogDateRange?.requestState('error');
+    window.BLModulePreparation?.setStatus('backlog','error','BACKLOG_LOAD_FAILED');
     console.warn('Backlog alınamadı:', err.message);
     const empty=document.getElementById('backlogEmpty');
     if(!backlogLoadedOnce&&empty&&window.BLUI&&typeof window.BLUI.renderState==='function'){
@@ -19796,12 +19954,24 @@ async function fetchBacklogData(params){
     }
   }
 }
-async function prefetchBacklogForRefresh(){
-  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return false;
-  const qs=backlogQueryString(buildBacklogParams());
-  const data=await fetchJSON('/api/backlog' + (qs ? '?'+qs : ''));
-  backlogPrefetch={key:qs,data,at:Date.now()};
-  return true;
+function prefetchBacklogForRefresh(){
+  if(window.BLCanAccessArea?.('backlog')!==true||window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return Promise.resolve(false);
+  const qs=backlogQueryString(buildBacklogParams()),generation=backlogFetchGeneration;
+  if(backlogPrefetch?.key===qs)return Promise.resolve(true);
+  if(backlogPrefetchPending?.key===qs&&backlogPrefetchPending.generation===generation)return backlogPrefetchPending.promise;
+  const entry={key:qs,generation,promise:null};
+  window.BLModulePreparation?.setStatus('backlog','loading');
+  entry.promise=fetchJSON('/api/backlog'+(qs?'?'+qs:'')).then(data=>{
+    if(generation!==backlogFetchGeneration)return false;
+    backlogPrefetch={key:qs,data};
+    window.BLModulePreparation?.setStatus('backlog','ready');
+    return true;
+  }).catch(error=>{
+    if(generation!==backlogFetchGeneration)return false;
+    window.BLModulePreparation?.setStatus('backlog','error','BACKLOG_LOAD_FAILED');throw error;
+  }).finally(()=>{if(backlogPrefetchPending===entry)backlogPrefetchPending=null;});
+  backlogPrefetchPending=entry;
+  return entry.promise;
 }
 // Pivot sorgusunun parametreleri tek yerden üretilir: hem /api/backlog hem de
 // /api/backlog-detail aynı filtreleri görmek zorunda, yoksa detay penceresi
@@ -19841,15 +20011,21 @@ function commitBacklogDateInputs(){
   return true;
 }
 function fetchCurrentBacklog(){
-  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog')) return;
-  const params=buildBacklogParams();
+  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return;
+  const params=buildBacklogParams(),key=backlogQueryString(params);
   const ready=backlogPrefetch;
-  if(ready&&ready.key===backlogQueryString(params)&&Date.now()-ready.at<BACKLOG_PREFETCH_MAX_AGE_MS){
-    ++backlogFetchGeneration;
-    backlogPrefetch=null;
-    try{applyBacklogData(ready.data);return;}catch(err){console.warn('Hazır Backlog yanıtı çizilemedi:',err&&err.message);}
+  if(ready&&ready.key===key){
+    ++backlogFetchGeneration;backlogPrefetch=null;
+    try{applyBacklogData(ready.data);return Promise.resolve(true);}catch(err){console.warn('Hazır Backlog yanıtı çizilemedi:',err&&err.message);}
   }
-  fetchBacklog(params);
+  if(backlogPrefetchPending?.key===key&&backlogPrefetchPending.generation===backlogFetchGeneration){
+    showBacklogLoadingState();
+    return backlogPrefetchPending.promise.then(ok=>{
+      if(ok&&backlogPrefetch?.key===key&&currentActiveTab()==='backlog'&&backlogQueryString(buildBacklogParams())===key)return fetchCurrentBacklog();
+      return false;
+    }).catch(error=>{console.warn('Backlog alınamadı:',error);return false;});
+  }
+  return fetchBacklog(params);
 }
 document.getElementById('backlogPivotSettingsBtn')?.addEventListener('click', openBacklogPivotSettings);
 (function initBacklogRetailRange(){
@@ -20212,8 +20388,10 @@ function updateShippingBtnVisibility(){
       :(appLang==='en'? `Copy ${count} selected order(s) to Collection`:`${count} seçili siparişi Koleksiyona kopyala`);
   }
   for(const mode of ['cp','orders']){
-    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
+    const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
+    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
+    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
       ?(appLang==='en'?'Calculate Endeksmatik one year before or after the selected order':'Seçili siparişin bir yıl öncesi veya sonrası için Endeksmatik hesapla')
@@ -29475,7 +29653,8 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   return {ok:true,value,meta};
 }
 function kolSpreadsheetMakeEditor(rowId,key,value){
-  const meta=kolSpreadsheetColumnMeta(key),c=meta.col,el=document.createElement('input');
+  const meta=kolSpreadsheetColumnMeta(key),c=meta.col,el=key==='artworkDetail'?document.createElement('textarea'):document.createElement('input');
+  // Set Style Artwork A/B satırlarını input.value satır sonu temizliğiyle kaybetme.
   // Validation already canonicalizes select/dropdown text before this synthetic
   // editor reaches commitKolEditor(). A detached <select> without option nodes
   // would coerce its .value to an empty string and silently erase valid pasted
@@ -33277,7 +33456,7 @@ function watchModelOperationProgress(button){
   const span=button&&button.querySelector('span'); if(!span)return ()=>{};
   const original=span.textContent;
   let timer=null,stopped=false;
-  const read=async()=>{try{const q=await plmJsonRequest('/api/model-operation-status');if(!stopped&&q&&q.total){span.textContent=`${q.phase||'İşleniyor'} • ${q.current||0}/${q.total} • ${q.model||'—'}`;}}catch(_) {}};
+  const read=async()=>{try{const q=await plmJsonRequest('/api/model-operation-status');if(!stopped&&q&&q.total){const phase=window.BLPlmOps?.phaseText(q)||q.phase||(appLang==='en'?'Processing':'İşleniyor');span.textContent=`${phase} • ${q.current||0}/${q.total} • ${q.model||'—'}`;}else if(!stopped&&q&&q.stage){span.textContent=window.BLPlmOps?.phaseText(q)||q.phase||(appLang==='en'?'Processing':'İşleniyor');}}catch(_) {}};
   void read(); timer=setInterval(read,700);
   return ()=>{stopped=true;if(timer){clearInterval(timer);timer=null;}span.textContent=original;};
 }
@@ -38884,7 +39063,12 @@ function refreshSharedMasterClient(area){
    yeniden kurulur; boşlukta kaçırılmış olabilecek değişiklikler için açık veri
    hafif yoldan yeniden okunur. API yoksa eski davranış: sekme kendi bağlantısı. */
 function initLiveSync(){
-  if(!window.BL_CLIENT_ID)return;
+  const contextKey=()=>{
+    const user=window.BL_USER_CONTEXT||(typeof state!=='undefined'&&state.currentUser)||{};
+    return JSON.stringify([user.id||null,user.iamRevision,user.role,user.systemRole,user.enabled,user.status,user.dataScope,user.scopes,user.permissions,user.accessAreas,user.capabilities,user.collectionAccess,user.delegatedUserIds]);
+  };
+  const context=contextKey();
+  if(sharedRevisionContext!==context){sharedRevisionSnapshot=null;sharedRevisionContext=context;}
   const url=`/api/live-events?clientId=${encodeURIComponent(window.BL_CLIENT_ID)}`;
   const handle=payload=>{
     if(!payload||!payload.area)return;
@@ -38923,51 +39107,103 @@ function initLiveSync(){
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
     }
   };
-  const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('buyerlog-live-sync'):null;
+  let channel=null;
+  try{if(typeof BroadcastChannel==='function')channel=new BroadcastChannel('buyerlog-live-sync:'+context);}catch(_){/* disabled API: local fallback */}
   const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
-  const shared=Boolean(channel&&locks);
-  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false;
-  const announce=message=>{if(shared)channel.postMessage(message);};
+  // Kimlik belirlenemiyorsa başka bir oturumun süzülmüş SSE verisi paylaşılmaz.
+  let shared=Boolean(channel&&locks&&JSON.parse(context)[0]&&window.BL_CLIENT_ID);
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false,stopped=false,leader=false,releaseLeadership=null,removeNativeActivity=null;
+  const lockController=new AbortController();
+  function stop(){
+    stopped=true;liveSyncConnected=false;
+    clearTimeout(retryTimer);source?.close();poller.stop();
+    lockController.abort();releaseLeadership?.();channel?.close();
+    window.removeEventListener('pagehide',onPageHide);
+    window.removeEventListener('bl:user-access-applied',onAccess);
+    window.removeEventListener('online',onWake);window.removeEventListener('offline',onOffline);
+    document.removeEventListener('visibilitychange',onVisible);
+    removeNativeActivity?.();removeNativeActivity=null;
+  }
+  function isCurrent(){
+    if(stopped)return false;
+    if(contextKey()!==context){stop();sharedRevisionSnapshot=null;initLiveSync();return false;}
+    return true;
+  }
+  const announce=message=>{if(shared&&isCurrent())channel.postMessage({...message,context});};
+  const poller=createSharedRevisionPoller({isCurrent,announce});
+  function onAccess(){isCurrent();}
+  function onWake(){if(!isCurrent())return;if(shared&&!leader)announce({type:'revisions?'});else poller.wake();}
+  function onOffline(){poller.pause();}
+  function onVisible(){if(document.visibilityState!=='hidden')onWake();}
+  function onPageHide(event){
+    stop();
+    if(event.persisted)window.addEventListener('pageshow',()=>{
+      initLiveSync();
+      // BFCache veriyi bellekte tutar; takipçi kalsak da aradaki değişiklikleri oku.
+      liveSyncResyncAfterGap();
+    },{once:true});
+  }
+  window.addEventListener('pagehide',onPageHide);
+  window.addEventListener('bl:user-access-applied',onAccess);
+  window.addEventListener('online',onWake);window.addEventListener('offline',onOffline);
+  document.addEventListener('visibilitychange',onVisible);
+  // Native View yeniden eklenince DOM görünürlüğü hidden kalabilir; mevcut
+  // preload aktivasyonu da aynı liderin catch-up yolunu uyandırsın.
+  try{removeNativeActivity=window.buyerLogDesktop?.workspace?.onTabActivity?.(payload=>{if(payload?.active)onWake();})||null;}catch(_){/* optional desktop bridge */}
   function connect(){
-    if(typeof EventSource==='undefined')return;
-    source=new EventSource(url);
+    if(!isCurrent()||!window.BL_CLIENT_ID||typeof EventSource==='undefined')return;
+    source?.close();
+    const opened=new EventSource(url);source=opened;
     source.onopen=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=true;retryMs=1000;announce({type:'status',connected:true});
-      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();}
+      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();poller.wake();}
     };
     source.onmessage=event=>{
+      if(!isCurrent()||source!==opened)return;
       let payload=null;
       try{payload=JSON.parse(event.data);}catch(_){return;}
       if(!payload||!payload.area)return;
       announce({type:'event',payload});
       handle(payload);
     };
-    // Geçici hatada EventSource kendiliğinden yeniden dener; kalıcı kapanmada
-    // (readyState CLOSED, ör. 401) denemez: yeniden kurulur.
+    // EventSource açıkken kendi retry yolunu kullanır; CLOSED ayrıca kurulur.
     source.onerror=()=>{
+      if(!isCurrent()||source!==opened)return;
       liveSyncConnected=false;gap=true;announce({type:'status',connected:false});
-      if(source&&source.readyState===2){
+      if(source.readyState===2){
         clearTimeout(retryTimer);
         retryTimer=setTimeout(connect,retryMs);
         retryMs=Math.min(retryMs*2,30000);
       }
     };
   }
-  if(!shared){connect();return;}
+  function localFallback(){shared=false;leader=true;channel?.close();poller.start();connect();}
+  if(!shared){localFallback();return;}
   channel.onmessage=event=>{
+    if(!isCurrent())return;
     const message=event&&event.data||{};
+    if(message.context!==context)return;
     if(message.type==='event'&&message.payload)handle(message.payload);
     else if(message.type==='status'){followed=true;liveSyncConnected=Boolean(message.connected);}
+    else if(message.type==='revisions'){followed=true;poller.accept(message.revisions);}
     else if(message.type==='resync')liveSyncResyncAfterGap();
-    else if(message.type==='status?'&&source)announce({type:'status',connected:liveSyncConnected});
+    else if(message.type==='revisions?'&&leader){
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+      poller.wake();
+    }else if(message.type==='status?'&&leader){
+      announce({type:'status',connected:liveSyncConnected});
+      if(poller.snapshot())announce({type:'revisions',revisions:poller.snapshot()});
+    }
   };
   announce({type:'status?'});
-  // Kilit sekme açık kaldığı sürece tutulur (dönen söz hiç çözülmez).
-  locks.request('buyerlog-live-sync-leader',()=>new Promise(()=>{
-    // Önceki liderden devralındıysa arada kaçırılmış olay olabilir.
+  // Aynı kilit hem SSE'yi hem revision polling'i yönetir; ikinci seçim yoktur.
+  locks.request('buyerlog-live-sync-leader:'+context,{signal:lockController.signal},()=>new Promise(resolve=>{
+    if(stopped){resolve();return;}
+    releaseLeadership=resolve;leader=true;
     if(followed)gap=true;
-    connect();
-  }));
+    poller.start(followed?0:2500);connect();
+  })).catch(()=>{if(!stopped&&isCurrent())localFallback();});
 }
 /* Canlı bağlantı boşluğundan sonra açık veriler hafif yoldan yeniden okunur
    (tam kaynak yenilemesi değil). */
@@ -40492,6 +40728,7 @@ function applyLanguage(lang){
   window.BLExcelImportWizard?.refreshLanguage();
   saveLang();
   applyStaticI18n();
+  document.getElementById('backlogExportColumnsModal')?.refreshLanguage?.();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
   if(typeof applyUiFontStep==='function') applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
   translateSubtree(document.querySelector('.sourcebar'));

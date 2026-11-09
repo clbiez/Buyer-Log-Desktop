@@ -1,0 +1,1428 @@
+{
+  "synthetic": true,
+  "platform": "linux",
+  "arch": "x64",
+  "versions": {
+    "node": "24.20.0",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.8",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "149",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.6",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2025c",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.2.124.19-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "44.3.0",
+    "chrome": "152.0.7977.78"
+  },
+  "sourceSha": "c03da67038ed3c4bcb5ccf5301ea3c3c2d113702",
+  "baseMain": "57409641",
+  "scenarios": [
+    {
+      "name": "first-tab-startup-gate",
+      "wc": 2,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 3,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 4,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "production-native-runtime",
+      "runtime": "44.3.0",
+      "diagnostics": {
+        "windowCount": 1,
+        "tabCount": 3,
+        "windows": [
+          {
+            "windowId": 1,
+            "activeTabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "shellPid": 7077
+          }
+        ],
+        "tabs": [
+          {
+            "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+            "module": "orders",
+            "active": false,
+            "pid": 7089
+          },
+          {
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders",
+            "active": false,
+            "pid": 7112
+          },
+          {
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders",
+            "active": true,
+            "pid": 7127
+          }
+        ]
+      },
+      "preferences": [
+        {
+          "wc": 2,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        },
+        {
+          "wc": 3,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        },
+        {
+          "wc": 4,
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        }
+      ],
+      "preload": [
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+          "visibility": "hidden"
+        },
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+          "visibility": "hidden"
+        },
+        {
+          "isDesktop": true,
+          "versions": {
+            "electron": "44.3.0",
+            "chromium": "152.0.7977.78",
+            "node": "24.20.0",
+            "app": "",
+            "updater": ""
+          },
+          "workspaceTab": "506f4ec2-1501-4634-87f6-75f051a987e2",
+          "visibility": "visible"
+        }
+      ]
+    },
+    {
+      "name": "one-SSE-one-revision-leader",
+      "durationMs": 21000,
+      "requests": [
+        {
+          "at": 1794199761244,
+          "phase": "steady",
+          "wc": 2,
+          "url": "/api/shared-revisions",
+          "requestId": 710
+        }
+      ],
+      "SSE": [
+        {
+          "at": 1794199758835,
+          "phase": "setup",
+          "wc": 2,
+          "url": "/api/live-events",
+          "requestId": 194
+        }
+      ],
+      "connected": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "revision-fanout",
+      "revision": 2,
+      "events": [
+        [
+          {
+            "at": 1794199782260,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 3,
+              "entities": {
+                "quotation": {
+                  "revision": 2,
+                  "updatedAt": "2026-11-09T04:49:42.251Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                }
+              }
+            }
+          }
+        ],
+        [
+          {
+            "at": 1794199782260,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 3,
+              "entities": {
+                "quotation": {
+                  "revision": 2,
+                  "updatedAt": "2026-11-09T04:49:42.251Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                }
+              }
+            }
+          }
+        ],
+        [
+          {
+            "at": 1794199782260,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 3,
+              "entities": {
+                "quotation": {
+                  "revision": 2,
+                  "updatedAt": "2026-11-09T04:49:42.251Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                }
+              }
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "normal-SSE-state",
+      "revision": 1,
+      "states": [
+        {
+          "revision": 1,
+          "events": []
+        },
+        {
+          "revision": 1,
+          "events": []
+        },
+        {
+          "revision": 1,
+          "events": []
+        }
+      ]
+    },
+    {
+      "name": "native-activation-catchup",
+      "delayMs": 539,
+      "revision": 3
+    },
+    {
+      "name": "active-hidden-switch",
+      "sameWebContents": [
+        2,
+        3,
+        4
+      ],
+      "states": [
+        {
+          "visibility": "hidden",
+          "activity": [
+            {
+              "at": 1794199759311,
+              "active": false,
+              "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+              "module": "orders"
+            },
+            {
+              "at": 1794199760322,
+              "active": false,
+              "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+              "module": "orders"
+            },
+            {
+              "at": 1794199782940,
+              "active": true,
+              "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+              "module": "orders"
+            },
+            {
+              "at": 1794199783443,
+              "active": false,
+              "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+              "module": "orders"
+            }
+          ]
+        },
+        {
+          "visibility": "hidden",
+          "activity": [
+            {
+              "at": 1794199760323,
+              "active": false,
+              "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+              "module": "orders"
+            },
+            {
+              "at": 1794199782940,
+              "active": false,
+              "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+              "module": "orders"
+            },
+            {
+              "at": 1794199783443,
+              "active": false,
+              "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+              "module": "orders"
+            }
+          ]
+        },
+        {
+          "visibility": "hidden",
+          "activity": [
+            {
+              "at": 1794199761244,
+              "online": true
+            },
+            {
+              "at": 1794199782253,
+              "online": true
+            },
+            {
+              "at": 1794199782938,
+              "active": false,
+              "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+              "module": "orders"
+            },
+            {
+              "at": 1794199783443,
+              "active": true,
+              "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+              "module": "orders"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slow-single-flight",
+      "delayMs": 12000,
+      "maxActive": 1,
+      "startsDuring8500ms": 0
+    },
+    {
+      "name": "offline-online",
+      "offlineMs": 8000,
+      "revisionRequests": 0,
+      "revision": 4,
+      "events": [
+        [
+          {
+            "at": 1794199759311,
+            "active": false,
+            "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+            "module": "orders"
+          },
+          {
+            "at": 1794199760322,
+            "active": false,
+            "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+            "module": "orders"
+          },
+          {
+            "at": 1794199782940,
+            "active": true,
+            "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783443,
+            "active": false,
+            "tabId": "8b4bfded-ed6a-4331-9df6-1174b1cf1502",
+            "module": "orders"
+          },
+          {
+            "at": 1794199795593,
+            "online": false
+          },
+          {
+            "at": 1794199804604,
+            "online": true
+          }
+        ],
+        [
+          {
+            "at": 1794199760323,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199782940,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783443,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199795593,
+            "online": false
+          },
+          {
+            "at": 1794199804603,
+            "online": true
+          }
+        ],
+        [
+          {
+            "at": 1794199761244,
+            "online": true
+          },
+          {
+            "at": 1794199782253,
+            "online": true
+          },
+          {
+            "at": 1794199782938,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783443,
+            "active": true,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783479,
+            "online": true
+          },
+          {
+            "at": 1794199795594,
+            "online": false
+          },
+          {
+            "at": 1794199804604,
+            "online": true
+          }
+        ]
+      ]
+    },
+    {
+      "name": "leader-close-handoff",
+      "closed": 2,
+      "requests": [
+        {
+          "at": 1794199804773,
+          "phase": "handoff",
+          "wc": 3,
+          "url": "/api/shared-revisions",
+          "requestId": 758
+        },
+        {
+          "at": 1794199804773,
+          "phase": "handoff",
+          "wc": 3,
+          "url": "/api/live-events",
+          "requestId": 759
+        }
+      ],
+      "revision": 5
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 5,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "pending",
+          "error": ""
+        },
+        "orders": {
+          "status": "ready",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "reopen-catchup",
+      "newWc": 5,
+      "revision": 6
+    },
+    {
+      "name": "native-tab-ready-gate",
+      "wc": 6,
+      "startup": false,
+      "button": true,
+      "preparation": {
+        "cp": {
+          "status": "ready",
+          "error": ""
+        },
+        "orders": {
+          "status": "pending",
+          "error": ""
+        },
+        "koleksiyon": {
+          "status": "pending",
+          "error": ""
+        }
+      }
+    },
+    {
+      "name": "dirty-CP-catchup-preserved",
+      "dirty": [
+        "native-draft"
+      ],
+      "rows": 17,
+      "guard": true,
+      "note": "Real CP state/dirty guard retained across native switch and production gap resync; no draft written to server."
+    },
+    {
+      "name": "different-user-context-isolation",
+      "heldLeaderLocks": [
+        "buyerlog-live-sync-leader:[\"moderator\",2,\"moderator\",\"moderator\",true,\"ACTIVE\",{\"mode\":\"ALL\",\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],[{\"ownerId\":\"moderator\",\"level\":\"edit\"}],[]]",
+        "buyerlog-live-sync-leader:[\"native-other-synthetic-user\",2,\"moderator\",\"moderator\",true,\"ACTIVE\",{\"mode\":\"ALL\",\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],[{\"ownerId\":\"moderator\",\"level\":\"edit\"}],[]]"
+      ],
+      "markerRejected": true,
+      "note": "Renderer context protocol probe; not a second authenticated HTTP user or an IAM authorization test."
+    },
+    {
+      "name": "different-access-context-isolation",
+      "heldLeaderLocks": [
+        "buyerlog-live-sync-leader:[\"moderator\",2,\"moderator\",\"moderator\",true,\"ACTIVE\",{\"mode\":\"ALL\",\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],[{\"ownerId\":\"moderator\",\"level\":\"edit\"}],[]]",
+        "buyerlog-live-sync-leader:[\"moderator\",987654,\"moderator\",\"moderator\",true,\"ACTIVE\",{\"mode\":\"ALL\",\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"mode\":\"ALL\",\"all\":true,\"buyers\":[],\"mags\":[],\"mmygs\":[],\"buyingGroups\":[]},{\"manageBackup\":true,\"manageBusinessRules\":true,\"manageModelConnections\":true,\"manageAllOrders\":true,\"manageCollections\":true},{\"overview\":true,\"cp\":true,\"orders\":true,\"koleksiyon\":true,\"lfl\":true,\"priceanalysis\":true,\"opencosting\":true,\"backlog\":true,\"shipping\":true,\"automations\":true,\"source\":true},[\"OVERVIEW.VIEW\",\"OVERVIEW.EXPORT\",\"CP.VIEW\",\"CP.CREATE\",\"CP.EDIT\",\"CP.DELETE\",\"CP.EXPORT\",\"ORDERS.VIEW\",\"ORDERS.CREATE\",\"ORDERS.EDIT\",\"ORDERS.DELETE\",\"ORDERS.APPROVE\",\"ORDERS.EXPORT\",\"ORDERS.MANAGE\",\"COLLECTIONS.VIEW\",\"COLLECTIONS.CREATE\",\"COLLECTIONS.EDIT\",\"COLLECTIONS.DELETE\",\"COLLECTIONS.APPROVE\",\"COLLECTIONS.EXPORT\",\"COLLECTIONS.MANAGE\",\"BACKLOG.VIEW\",\"BACKLOG.EXPORT\",\"OAB.VIEW\",\"OAB.CREATE\",\"OAB.EDIT\",\"OAB.DELETE\",\"OAB.EXPORT\",\"OAB.MANAGE\",\"QUOTATIONS.VIEW\",\"QUOTATIONS.CREATE\",\"QUOTATIONS.EDIT\",\"QUOTATIONS.DELETE\",\"QUOTATIONS.APPROVE\",\"QUOTATIONS.EXPORT\",\"ANALYSIS.VIEW\",\"ANALYSIS.EXPORT\",\"OPEN_COSTING.VIEW\",\"OPEN_COSTING.CREATE\",\"OPEN_COSTING.EDIT\",\"OPEN_COSTING.DELETE\",\"OPEN_COSTING.EXPORT\",\"SHIPPING.VIEW\",\"SHIPPING.CREATE\",\"SHIPPING.EDIT\",\"SHIPPING.DELETE\",\"SHIPPING.EXPORT\",\"AUTOMATIONS.VIEW\",\"AUTOMATIONS.CREATE\",\"AUTOMATIONS.EDIT\",\"AUTOMATIONS.DELETE\",\"AUTOMATIONS.APPROVE\",\"AUTOMATIONS.MANAGE\",\"SOURCE_DATA.VIEW\",\"SOURCE_DATA.CREATE\",\"SOURCE_DATA.EDIT\",\"SOURCE_DATA.DELETE\",\"SOURCE_DATA.EXPORT\",\"SOURCE_DATA.MANAGE\",\"USER.VIEW\",\"USER.CREATE\",\"USER.EDIT\",\"USER.MANAGE\",\"USER.GRANT\",\"USER.PROFILE_COPY\",\"ROLE.VIEW\",\"ROLE.MANAGE\",\"PERMISSION.VIEW\",\"PERMISSION.MANAGE\",\"PERMISSION.GRANT\",\"SYSTEM.VIEW\",\"SYSTEM.MANAGE\",\"SECURITY.VIEW\",\"SECURITY.MANAGE\",\"AUDIT.VIEW\",\"AUDIT.EXPORT\"],[{\"ownerId\":\"moderator\",\"level\":\"edit\"}],[]]"
+      ],
+      "markerRejected": true,
+      "note": "Renderer context protocol probe; not a second authenticated HTTP user or an IAM authorization test."
+    }
+  ],
+  "requests": [
+    {
+      "at": 1794199758835,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/live-events",
+      "requestId": 194
+    },
+    {
+      "at": 1794199759180,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 234
+    },
+    {
+      "at": 1794199759812,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 440
+    },
+    {
+      "at": 1794199760816,
+      "phase": "setup",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 693
+    },
+    {
+      "at": 1794199761244,
+      "phase": "steady",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 710
+    },
+    {
+      "at": 1794199782253,
+      "phase": "steady",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 737
+    },
+    {
+      "at": 1794199782941,
+      "phase": "native-switch",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 741
+    },
+    {
+      "at": 1794199783446,
+      "phase": "native-switch",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 743
+    },
+    {
+      "at": 1794199783479,
+      "phase": "slow",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 744
+    },
+    {
+      "at": 1794199804604,
+      "phase": "online",
+      "wc": 2,
+      "url": "/api/shared-revisions",
+      "requestId": 753
+    },
+    {
+      "at": 1794199804773,
+      "phase": "handoff",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 758
+    },
+    {
+      "at": 1794199804773,
+      "phase": "handoff",
+      "wc": 3,
+      "url": "/api/live-events",
+      "requestId": 759
+    },
+    {
+      "at": 1794199805369,
+      "phase": "reopen",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 961
+    },
+    {
+      "at": 1794199805855,
+      "phase": "reopen",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 1001
+    },
+    {
+      "at": 1794199806440,
+      "phase": "dirty",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 1196
+    },
+    {
+      "at": 1794199807189,
+      "phase": "dirty",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 1251
+    },
+    {
+      "at": 1794199808738,
+      "phase": "context-isolation",
+      "wc": 5,
+      "url": "/api/live-events",
+      "requestId": 1257
+    },
+    {
+      "at": 1794199811888,
+      "phase": "context-isolation",
+      "wc": 5,
+      "url": "/api/shared-revisions",
+      "requestId": 1264
+    },
+    {
+      "at": 1794199812718,
+      "phase": "context-isolation",
+      "wc": 5,
+      "url": "/api/live-events",
+      "requestId": 1266
+    },
+    {
+      "at": 1794199815888,
+      "phase": "context-isolation",
+      "wc": 5,
+      "url": "/api/shared-revisions",
+      "requestId": 1269
+    },
+    {
+      "at": 1794199816848,
+      "phase": "context-isolation",
+      "wc": 3,
+      "url": "/api/shared-revisions",
+      "requestId": 1271
+    }
+  ],
+  "windowEvents": [
+    {
+      "event": "first-renderer-ready",
+      "wc": 2
+    }
+  ],
+  "errors": [],
+  "finalTabStates": [
+    {
+      "wcTab": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+      "connected": true,
+      "probe": {
+        "revisions": [
+          {
+            "at": 1794199782260,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 3,
+              "entities": {
+                "quotation": {
+                  "revision": 2,
+                  "updatedAt": "2026-11-09T04:49:42.251Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199782949,
+            "changed": [
+              "quotation",
+              "pricingRules"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 5,
+              "entities": {
+                "quotation": {
+                  "revision": 3,
+                  "updatedAt": "2026-11-09T04:49:42.935Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199804619,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 6,
+              "entities": {
+                "quotation": {
+                  "revision": 4,
+                  "updatedAt": "2026-11-09T04:49:56.599Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199804780,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 7,
+              "entities": {
+                "quotation": {
+                  "revision": 5,
+                  "updatedAt": "2026-11-09T04:50:04.769Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199805863,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 8,
+              "entities": {
+                "quotation": {
+                  "revision": 6,
+                  "updatedAt": "2026-11-09T04:50:05.852Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199811911,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "revision": 987654321,
+              "entities": {
+                "quotation": {
+                  "revision": 987654321
+                }
+              }
+            }
+          }
+        ],
+        "sse": [
+          {
+            "area": "sync",
+            "mode": "status",
+            "at": "2026-11-09T04:50:08.106Z",
+            "status": {
+              "sharedSyncRoot": "",
+              "syncPeriodMinutes": 5,
+              "localDbPath": "/tmp/buyerlog-shell06-native-cOcRGD/local/BuyerLogLocal.db",
+              "deviceId": "9e50dee6-8da1-47db-af38-16cb81036ebc",
+              "lastSync": null,
+              "lastAttempt": "2026-11-09T04:50:08.096Z",
+              "nextSync": null,
+              "pendingUpload": 1,
+              "pendingAck": 0,
+              "pendingDownload": 0,
+              "localCreate": 0,
+              "localUpdate": 0,
+              "localDelete": 0,
+              "conflict": 0,
+              "corruptPackages": 0,
+              "uploadFailures": 0,
+              "retries": 0,
+              "progress": null,
+              "lastError": "Sync klas\u00f6r\u00fc ayarlanmad\u0131.",
+              "online": false,
+              "checkpoint": {},
+              "downloadedEvents": 0,
+              "uploadedEvents": 0,
+              "downloadedPackages": 0,
+              "uploadedPackages": 0,
+              "lastDurationMs": 8,
+              "networkBytesRead": 0,
+              "networkBytesWritten": 0,
+              "localSnapshotDate": null,
+              "scannedPackages": 0,
+              "skippedDeviceFolders": 0,
+              "legacyScanComplete": false,
+              "packageRetentionDays": 30,
+              "prunedPackages": 0,
+              "lastPruneAt": null,
+              "legacyCompatibilityMode": false,
+              "legacyPeerDevices": [],
+              "gzipBundleMode": false,
+              "gzipUnsupportedPeerDevices": [],
+              "protocolVersion": 2,
+              "checkpointAckSupport": true,
+              "localDbFolder": "/tmp/buyerlog-shell06-native-cOcRGD/local",
+              "sharedSyncFolder": ""
+            }
+          }
+        ],
+        "activity": [
+          {
+            "at": 1794199760323,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199782940,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783443,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199795593,
+            "online": false
+          },
+          {
+            "at": 1794199804603,
+            "online": true
+          },
+          {
+            "at": 1794199804762,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199804764,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199805002,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199806011,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807176,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807178,
+            "active": false,
+            "tabId": "ec104ad4-1636-4fa0-b3bd-2b65db5af7e7",
+            "module": "orders"
+          }
+        ],
+        "visibility": [
+          {
+            "at": 1794199760327,
+            "state": "hidden"
+          }
+        ],
+        "startup": [
+          1794199760277
+        ],
+        "access": []
+      }
+    },
+    {
+      "wcTab": "506f4ec2-1501-4634-87f6-75f051a987e2",
+      "connected": true,
+      "probe": {
+        "revisions": [
+          {
+            "at": 1794199782260,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 3,
+              "entities": {
+                "quotation": {
+                  "revision": 2,
+                  "updatedAt": "2026-11-09T04:49:42.251Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199782953,
+            "changed": [
+              "quotation",
+              "pricingRules"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 5,
+              "entities": {
+                "quotation": {
+                  "revision": 3,
+                  "updatedAt": "2026-11-09T04:49:42.935Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199804619,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 6,
+              "entities": {
+                "quotation": {
+                  "revision": 4,
+                  "updatedAt": "2026-11-09T04:49:56.599Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199804781,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 7,
+              "entities": {
+                "quotation": {
+                  "revision": 5,
+                  "updatedAt": "2026-11-09T04:50:04.769Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199805863,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "schemaVersion": 1,
+              "revision": 8,
+              "entities": {
+                "quotation": {
+                  "revision": 6,
+                  "updatedAt": "2026-11-09T04:50:05.852Z"
+                },
+                "collection": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:19.031Z",
+                  "actorId": "moderator",
+                  "ownerId": "moderator"
+                },
+                "pricingRules": {
+                  "revision": 1,
+                  "updatedAt": "2026-11-09T04:49:42.435Z",
+                  "actorId": "moderator",
+                  "deviceId": ""
+                }
+              }
+            }
+          },
+          {
+            "at": 1794199811911,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "revision": 987654321,
+              "entities": {
+                "quotation": {
+                  "revision": 987654321
+                }
+              }
+            }
+          }
+        ],
+        "sse": [],
+        "activity": [
+          {
+            "at": 1794199761244,
+            "online": true
+          },
+          {
+            "at": 1794199782253,
+            "online": true
+          },
+          {
+            "at": 1794199782938,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783443,
+            "active": true,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199783479,
+            "online": true
+          },
+          {
+            "at": 1794199795594,
+            "online": false
+          },
+          {
+            "at": 1794199804604,
+            "online": true
+          },
+          {
+            "at": 1794199804762,
+            "active": true,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199804764,
+            "active": true,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199805025,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199806011,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807176,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807179,
+            "active": false,
+            "tabId": "506f4ec2-1501-4634-87f6-75f051a987e2",
+            "module": "orders"
+          }
+        ],
+        "visibility": [
+          {
+            "at": 1794199782953,
+            "state": "hidden"
+          }
+        ],
+        "startup": [
+          1794199761224
+        ],
+        "access": []
+      }
+    },
+    {
+      "wcTab": "48b80fb1-2601-48b6-b926-b449376c612c",
+      "connected": true,
+      "probe": {
+        "revisions": [],
+        "sse": [],
+        "activity": [
+          {
+            "at": 1794199805855,
+            "online": true
+          },
+          {
+            "at": 1794199806015,
+            "active": false,
+            "tabId": "48b80fb1-2601-48b6-b926-b449376c612c",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807180,
+            "active": true,
+            "tabId": "48b80fb1-2601-48b6-b926-b449376c612c",
+            "module": "orders"
+          },
+          {
+            "at": 1794199807180,
+            "active": false,
+            "tabId": "48b80fb1-2601-48b6-b926-b449376c612c",
+            "module": "orders"
+          }
+        ],
+        "visibility": [
+          {
+            "at": 1794199806019,
+            "state": "hidden"
+          }
+        ],
+        "startup": [
+          1794199805817
+        ],
+        "access": []
+      }
+    },
+    {
+      "wcTab": "eccf74f7-baab-49cb-b52b-9a29ea637b3d",
+      "connected": true,
+      "probe": {
+        "revisions": [
+          {
+            "at": 1794199811911,
+            "changed": [
+              "quotation"
+            ],
+            "revisions": {
+              "revision": 987654321,
+              "entities": {
+                "quotation": {
+                  "revision": 987654321
+                }
+              }
+            }
+          }
+        ],
+        "sse": [],
+        "activity": [
+          {
+            "at": 1794199807176,
+            "active": false,
+            "tabId": "eccf74f7-baab-49cb-b52b-9a29ea637b3d",
+            "module": "cp"
+          },
+          {
+            "at": 1794199807186,
+            "active": true,
+            "tabId": "eccf74f7-baab-49cb-b52b-9a29ea637b3d",
+            "module": "cp"
+          }
+        ],
+        "visibility": [
+          {
+            "at": 1794199807184,
+            "state": "hidden"
+          }
+        ],
+        "startup": [
+          1794199807147
+        ],
+        "access": []
+      }
+    }
+  ],
+  "status": "PASS",
+  "sourceState": {
+    "description": "Working tree on merge candidate c03da670 containing the native activation fix, later committed as b8a53973 and merged with docs-only Main as 49746475. Source hashes recorded after run; no intervening product source edits.",
+    "acceptedProductSourceCommit": "497464758a58e3636e67dddc45124fe067e57cf1",
+    "sha256": {
+      "resources/app/public/app-main.js": "03c2d9273b975385ea2565660c9b83719bcb8001caa767fc45edbaf104e092ce",
+      "resources/app/electron/workspace-manager.js": "7329d1b6e5b63a82da95809fa0133ba3dd08464c0faa3097893a56bb51abaa8f",
+      "resources/app/electron/preload.js": "94357c407a9c27b09f783ba81f194b63339356a82ec64ae551e0b9167ed6b339",
+      "resources/app/electron/workspace-preload.js": "3fff1fc1fb58ef2693570b2feec400d16123d8017239f0ddf8839f1cf0bb6337"
+    }
+  }
+}

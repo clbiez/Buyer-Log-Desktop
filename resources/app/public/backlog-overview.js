@@ -25,7 +25,11 @@ let state=loadState();
 let baseItems=null,items=null,loading=false,error='',signature='',tips=new Map(),openers=new Map(),seq=0,bound=false;
 let filterCatalog=null,filterCatalogPromise=null,filterCatalogError='',filterOpen=false,filterSource='cp',filterSearch='',filterEditorId='',filterValueSearch='';
 const filterFacets=new Map();
-let refreshGeneration=0,sourceRevision='',catalogGeneration=0;
+let refreshGeneration=0,sourceRevision='',catalogGeneration=0,overviewRequest=null;
+function cancelOverviewRequest(){++refreshGeneration;overviewRequest?.abort();overviewRequest=null;loading=false;}
+function requestAborted(){return new DOMException('Aborted','AbortError');}
+function assertRequest(signal){if(signal?.aborted)throw requestAborted();}
+function cancelFilterValues(keepKey){for(const [key,entry] of filterFacets)if(key!==keepKey&&entry.loading){entry.controller.abort();filterFacets.delete(key);}}
 
 function loadState(){
   const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',timelineChart:'stacked',timelineDimension:'buyingGroup',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[],importanceScope:'all'};
@@ -84,13 +88,14 @@ function filterFacet(filter){return filterFacets.get(JSON.stringify(filterFacetP
 async function ensureFilterValues(filter){
   if(!filter)return;
   const params=filterFacetParams(filter),key=JSON.stringify(params),known=filterFacets.get(key);
+  cancelFilterValues(key);
   if(known&&!known.error)return known.promise;
-  const entry={loading:true,data:null,error:''};filterFacets.set(key,entry);
+  const entry={loading:true,data:null,error:'',controller:new AbortController()};filterFacets.set(key,entry);
   while(filterFacets.size>12)filterFacets.delete(filterFacets.keys().next().value);
-  entry.promise=fetch('/api/backlog-filter-values?'+new URLSearchParams(params),{credentials:'same-origin'}).then(async response=>{
+  entry.promise=fetch('/api/backlog-filter-values?'+new URLSearchParams(params),{credentials:'same-origin',signal:entry.controller.signal}).then(async response=>{
     const body=await response.json();if(!response.ok)throw new Error(body.error||`HTTP ${response.status}`);
-    entry.data=body;
-  }).catch(error=>{entry.error=String(error.message||error);}).finally(()=>{entry.loading=false;if(filterOpen)renderFilterPanel();});
+    assertRequest(entry.controller.signal);if(filterFacets.get(key)===entry)entry.data=body;
+  }).catch(error=>{if(!entry.controller.signal.aborted)entry.error=String(error.message||error);}).finally(()=>{entry.loading=false;if(filterOpen&&filterFacets.get(key)===entry)renderFilterPanel();});
   renderFilterPanel();return entry.promise;
 }
 function filterRawValue(item,filter){return item&&item.row?item.row[filter.rowKey]:null}
@@ -146,7 +151,7 @@ function applyOverviewFilters(rows){
 }
 let sharedFilterTimer=0;
 function reapplyOverviewFilters(){
-  ++refreshGeneration;saveState();loading=true;signature='';render();
+  cancelOverviewRequest();saveState();loading=true;signature='';render();
   clearTimeout(sharedFilterTimer);
   sharedFilterTimer=setTimeout(()=>{if(typeof fetchCurrentBacklog==='function')fetchCurrentBacklog();},140);
 }
@@ -158,33 +163,51 @@ function reapplyOverviewFilters(){
 const rowsCache=new Map();
 const rowsRevisions=new Map();
 const rowsQueryKey=params=>JSON.stringify(Object.keys(params||{}).sort().filter(key=>!['groupBy','antrepoDateLevels','lazyDimensions'].includes(key)).map(key=>[key,params[key]]));
-function loadData(params){
+function loadData(params,{signal}={}){
+  assertRequest(signal);
   const sig=rowsQueryKey(params),known=rowsCache.get(sig);
-  if(known)return known.promise;
-  const entry={};rowsCache.set(sig,entry);
+  if(known)return consumeRows(known,sig,signal);
+  const entry={controller:new AbortController(),consumers:new Set(),settled:false};rowsCache.set(sig,entry);
   while(rowsCache.size>4)rowsCache.delete(rowsCache.keys().next().value);
   const qs=new URLSearchParams(params||{}).toString();
-  entry.promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin'}).then(async res=>{
+  entry.promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin',signal:entry.controller.signal}).then(async res=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(body&&body.error?body.error:`HTTP ${res.status}`);
     await window.BLMerchCalendarReady;
-    if(body.merchCalendar)window.BLMerchCalendarRuntime?.apply?.(body.merchCalendar);
+    assertRequest(entry.controller.signal);
+    if(rowsCache.get(sig)===entry&&body.merchCalendar)window.BLMerchCalendarRuntime?.apply?.(body.merchCalendar);
     let rows=Array.isArray(body.rows)?body.rows:[];
     const revision=typeof body.rowsRevision==='string'?body.rowsRevision:'',previous=rowsRevisions.get(sig);
     if(revision&&previous?.revision===revision)rows=previous.rows;
-    else if(revision){
+    else if(revision&&rowsCache.get(sig)===entry){
       rowsRevisions.set(sig,{revision,rows});
       while(rowsRevisions.size>4)rowsRevisions.delete(rowsRevisions.keys().next().value);
     }
     return {...body,rows};
-  }).catch(err=>{if(rowsCache.get(sig)===entry)rowsCache.delete(sig);throw err;});
-  return entry.promise;
+  }).catch(err=>{if(rowsCache.get(sig)===entry)rowsCache.delete(sig);throw err;}).finally(()=>{entry.settled=true;});
+  return consumeRows(entry,sig,signal);
 }
-async function loadRows(params){
+function consumeRows(entry,sig,signal){
+  return new Promise((resolve,reject)=>{
+    const consumer={};entry.consumers.add(consumer);let done=false;
+    const finish=(error,value)=>{
+      if(done)return;done=true;signal?.removeEventListener('abort',abort);entry.consumers.delete(consumer);
+      if(!entry.settled&&!entry.consumers.size){
+        if(rowsCache.get(sig)===entry)rowsCache.delete(sig);
+        entry.controller.abort();
+      }
+      if(error)reject(error);else resolve(value);
+    };
+    const abort=()=>finish(requestAborted());signal?.addEventListener('abort',abort,{once:true});
+    if(signal?.aborted)abort();
+    entry.promise.then(value=>finish(null,value),error=>finish(error));
+  });
+}
+async function loadRows(params,options={}){
   // Teslimat paneli lazy init sırasında pivot yanıtından önce çalışabilir.
   // Bütün tam satır tüketicileri aynı revizyon kapısından geçip tek isteği paylaşır.
   if(window.BLBacklogChartContext?.whenRowsReady)await window.BLBacklogChartContext.whenRowsReady();
-  return loadData(params).then(body=>body.rows);
+  assertRequest(options.signal);return loadData(params,options).then(body=>body.rows);
 }
 window.BLBacklogRows={load:loadRows,loadData,invalidate:()=>rowsCache.clear()};
 
@@ -194,20 +217,21 @@ async function refresh(force){
   const host=$('backlogOverviewBody');if(!host||!state.open)return;
   const params=overviewQueryParams();if(!params){return;}
   const sig=JSON.stringify(params);
-  const generation=++refreshGeneration;
+  cancelOverviewRequest();const generation=refreshGeneration;
   if(!force&&sig===signature&&baseItems){loading=false;error='';items=applyOverviewFilters(baseItems);return render();}
+  const request=new AbortController();overviewRequest=request;
   loading=true;error='';render();
   try{
     if(window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('backlogAnalysis').catch(()=>null);
-    if(force)window.BLBacklogRows.invalidate();
-    const rows=await loadRows(params);
-    if(generation!==refreshGeneration)return;
+    assertRequest(request.signal);if(force)window.BLBacklogRows.invalidate();
+    const rows=await loadRows(params,{signal:request.signal});
+    if(generation!==refreshGeneration||JSON.stringify(overviewQueryParams()||{})!==sig)return;
     if(!R())throw new Error(L('Backlog V3 rapor motoru yüklenemedi.','Backlog V3 report engine could not be loaded.'));
     // Aynı satır dizisi (aynı sunucu revizyonu) zaten normalleştirildiyse tekrarlanmaz.
     if(!(rows===normalizedRows&&baseItems))baseItems=R().normalizeRows(rows);
     normalizedRows=rows;items=applyOverviewFilters(baseItems);signature=sig;
   }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);baseItems=null;items=null;}
-  finally{if(generation===refreshGeneration){loading=false;render();}}
+  finally{if(overviewRequest===request)overviewRequest=null;if(generation===refreshGeneration){loading=false;render();}}
 }
 let pendingTimer=0,lastData=null,normalizedRows=null;
 function onBacklogRendered(data){
@@ -215,6 +239,7 @@ function onBacklogRendered(data){
   // Her yeni Backlog yanıtı (filtre değişimi veya veri yenileme) taze satır
   // demektir: ortak önbellek ve imza burada, Teslimat Riski panelinden ÖNCE sıfırlanır.
   if(data!==lastData){
+    cancelOverviewRequest();cancelFilterValues();
     lastData=data;
     if(!data?.rowsInputRevision || sourceRevision!==data.rowsInputRevision){
       if(sourceRevision){++catalogGeneration;filterCatalog=null;filterCatalogPromise=null;}
@@ -269,10 +294,16 @@ function qualityStrip(){
 /* Özel sipariş uyarısı: riskli siparişlerin içindeki özel siparişler ayrıca
    gösterilir ("riskli 100 siparişin 30'u özel"). Etiket bazında çip tıklanınca
    o etiketin riskli satırları sağdaki çekmecede açılır. */
+function importanceSelector(){
+  const scope=importanceScope();
+  return `<div class="bpaSeg2 blvImportanceScope" role="group" aria-label="${esc(L('Özel sipariş kapsamı','Special order scope'))}">${[['all',L('Tümü','All')],['special',L('Özel','Special')],['regular','Regular']].map(([key,label])=>`<button type="button" class="${scope===key?'is-active':''}" aria-pressed="${scope===key}" data-blv-importance="${key}">${esc(label)}</button>`).join('')}</div>`;
+}
+function recoveryControls(){
+  return `<div class="blvQuality">${importanceSelector()}<span class="bpaSectionSpacer"></span><button type="button" class="tbtn" data-blv-action="filters">${esc(L('Analiz filtrelerini düzenle','Edit analysis filters'))}</button>${activeFilterCount()?`<button type="button" class="tbtn" data-blv-action="clearFilters">${esc(L('Analiz filtrelerini temizle','Clear analysis filters'))}</button>`:''}</div>`;
+}
 function specialStrip(total){
   const groups=R().importanceSummary?R().importanceSummary(items):[];
-  const scope=importanceScope();
-  const seg=`<div class="bpaSeg2 blvImportanceScope" role="group" aria-label="${esc(L('Özel sipariş kapsamı','Special order scope'))}">${[['all',L('Tümü','All')],['special',L('Özel','Special')],['regular','Regular']].map(([key,label])=>`<button type="button" class="${scope===key?'is-active':''}" data-blv-importance="${key}">${esc(label)}</button>`).join('')}</div>`;
+  const seg=importanceSelector();
   const risky=groups.filter(g=>g.riskItems.length);
   const chips=risky.map(g=>{
     const orders=new Set(g.riskItems.map(it=>it.orderCode||it.lineId)).size;
@@ -503,10 +534,10 @@ function filterRoot(){
 }
 async function openFilterPanel(){
   filterOpen=true;const root=filterRoot();root.hidden=false;window.BLMotionPlus?.play?.('overlay',root.querySelector('.blvFilterDrawer'));requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
-  try{await ensureFilterCatalog();await ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId));renderFilterPanel();}catch(_){renderFilterPanel();}
+  try{await ensureFilterCatalog();if(!filterOpen)return;await ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId));renderFilterPanel();}catch(_){renderFilterPanel();}
 }
 function closeFilterPanel(){
-  filterOpen=false;const root=$('blvFilterRoot');if(root){root.classList.remove('is-open');setTimeout(()=>{if(!filterOpen)root.hidden=true;},160);}updateFilterButton();
+  filterOpen=false;cancelFilterValues();const root=$('blvFilterRoot');if(root){root.classList.remove('is-open');setTimeout(()=>{if(!filterOpen)root.hidden=true;},160);}updateFilterButton();
 }
 function filterCriterionText(filter){
   const kind=filterKind(filter);
@@ -571,10 +602,10 @@ function render(){
   updateFilterButton();if(filterOpen)renderFilterPanel();
   tips=new Map();openers=new Map();hideTip();
   if(!state.open)return;
-  if(loading){host.innerHTML=`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
-  if(error){host.innerHTML=`<div class="bpaError">${esc(error)}</div>`;return;}
-  if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
-  if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
+  if(loading){host.innerHTML=recoveryControls()+`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
+  if(error){host.innerHTML=recoveryControls()+`<div class="bpaError">${esc(error)}</div>`;return;}
+  if(!items||!R()){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
+  if(!items.length){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
   host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
@@ -694,7 +725,7 @@ function setOpen(value){
   mod?.classList.toggle('is-open',value);
   if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,value,{trigger:toggle});else if(body)body.hidden=!value;
   toggle?.setAttribute('aria-expanded',value?'true':'false');
-  if(value)void refresh(false);else{closeDrawer();closeFilterPanel();}
+  if(value)void refresh(false);else{cancelOverviewRequest();closeDrawer();closeFilterPanel();}
 }
 function bind(){
   if(bound)return;const host=$('backlogOverviewBody');if(!host)return;bound=true;
@@ -704,6 +735,8 @@ function bind(){
   host.addEventListener('click',e=>{
     const t=e.target.closest('[data-blv-open],[data-blv-importance],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-chart],[data-blv-timeline-dim],[data-blv-gran],[data-blv-action]');
     if(!t||!host.contains(t))return;
+    if(t.dataset.blvAction==='filters'){void openFilterPanel();return;}
+    if(t.dataset.blvAction==='clearFilters'){state.filters=[];filterEditorId='';filterValueSearch='';reapplyOverviewFilters();return;}
     if(t.dataset.blvImportance){state.importanceScope=t.dataset.blvImportance;saveState();items=applyOverviewFilters(baseItems||[]);return render();}
     if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return render();}
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
@@ -722,6 +755,14 @@ function bind(){
 }
 function init(){
   bind();
+  // The shell hides Backlog without unloading its scripts.
+  const content=$('backlogContent');
+  if(content&&'MutationObserver' in window)new MutationObserver(()=>{if(!visible()){cancelOverviewRequest();closeFilterPanel();}}).observe(content,{attributes:true,attributeFilter:['style','hidden']});
+  if('MutationObserver' in window){
+    new MutationObserver(()=>{if(document.body.dataset.activeTab!=='backlog'){cancelOverviewRequest();closeFilterPanel();}}).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});
+    const range=$('backlogDateRange');if(range)new MutationObserver(()=>{if(range.getAttribute('aria-busy')==='true'){cancelOverviewRequest();cancelFilterValues();}}).observe(range,{attributes:true,attributeFilter:['aria-busy']});
+  }
+  window.addEventListener('pagehide',()=>{cancelOverviewRequest();cancelFilterValues();});
   const mod=$('backlogOverview');
   if(mod){mod.classList.toggle('is-open',!!state.open);const body=$('backlogOverviewBody');if(body)body.hidden=!state.open;$('backlogOverviewToggle')?.setAttribute('aria-expanded',state.open?'true':'false');}
   updateFilterButton();render();

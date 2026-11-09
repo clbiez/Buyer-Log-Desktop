@@ -1,0 +1,19 @@
+{
+  "baseMain": "62f2153d",
+  "candidateProductCommit": "8c2b1f6eea46d16e9ec6bbc59b5fc976dac4033d",
+  "scope": "Required INT07 cancellation/deadline acceptance, no general performance campaign or speed claim",
+  "budgetBeforeComparativeRun": {
+    "productionOwnerSlots": 5,
+    "productionReadAttempts": 4,
+    "productionTargetReadMs": 240000,
+    "localCancellationObservationSafetyMs": 2500,
+    "cancelledActiveRequestsAfterSettlement": 0,
+    "retainedJobSignalListenersAfterSettlement": 0,
+    "retainedJobTimersAfterSettlement": 0,
+    "defaultIdenticalOverlappingReadNetworkCalls": 1,
+    "normalBomOutputFingerprint": "exact equality",
+    "sampling": "3 alternating Main/candidate pairs; cold/warm separate; one cancellation warmup then 5 retained-resource cycles per process",
+    "timeCpuRss": "record all samples; no production capacity, p95, RSS-to-reservation equality or general speedup claim"
+  },
+  "authorizedTradeoff": "#937 INT-07-FINAL explicitly permits separating opt-in BOM consumers from shared reads; 2 overlapping BOM reads become 2 HTTP requests rather than 1. Default consumers retain sharing."
+}
