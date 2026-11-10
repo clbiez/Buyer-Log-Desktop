@@ -36,7 +36,7 @@ function normalizeCode(value) {
 }
 function actorName(actor) { return clean(actor && (actor.displayName || actor.username || actor.id), 160); }
 function emptyStore() {
-  return { schemaVersion: 1, cards: {}, _revision: 0, _updatedAt: null };
+  return { schemaVersion: 1, cards: {}, _revision: 0, _updatedAt: null, _pending: {} };
 }
 function normalizeCard(raw, fallbackCode = '', { strictSegments = false } = {}) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
