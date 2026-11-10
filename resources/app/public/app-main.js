@@ -32064,15 +32064,44 @@ function kolFabricCardsEnsureLoaded(){
 }
 async function kolFabricCardsRequest(url,options){
   const res=await fetch(url,options),data=await res.json().catch(()=>({}));
-  if(!res.ok)throw new Error(data.error||res.statusText);
+  if(!res.ok){const error=new Error(data.error||res.statusText);error.code=data.code;error.current=data.current;throw error;}
   kolFabricCardsSet(data);kolFabricCardsState='ready';
   return data;
+}
+async function kolFabricCardsRefresh(){
+  if(kolFabricCardsState==='idle'){kolFabricCardsEnsureLoaded();return;}
+  const res=await fetch('/api/fabric-cards',{cache:'no-store'});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.error||res.statusText);
+  const modal=document.getElementById('_kolFabricCardModal');
+  const code=modal?.dataset.fabricCode||'',before=code?kolFabricCards.get(code):null;
+  const after=code?(data.cards||[]).find(card=>String(card.code)===code):null;
+  kolFabricCardsSet(data);kolFabricCardsState='ready';
+  if(modal&&String(before?.revisionId||'')!==String(after?.revisionId||'')){
+    if(modal.__fabricEditor?.isDirty?.()||modal.dataset.fabricDirty==='1')kolFabricShowRemoteComparison(modal,after||null);
+    else if(after&&modal.__fabricFill){modal.__fabricFill(after);modal.__fabricExpected=after.revisionId||'';}
+    else if(!after)kolFabricShowRemoteComparison(modal,null);
+  }
+  fabricCardsRepaintTables();
+}
+function kolFabricShowRemoteComparison(modal,remote){
+  if(!modal?.isConnected)return;
+  modal.__fabricRemote=remote;
+  const notice=modal.querySelector('[data-fabric-remote]');
+  if(!notice)return;
+  const en=appLang==='en',local=modal.__fabricEditor?.result?.();
+  notice.innerHTML='<strong>'+(en?'The shared fabric card changed':'Ortak kumaş kartı değişti')+'</strong>'
+    +'<div class="fabricSegmentCompare"><section><small>'+(en?'Your draft':'Sizin taslağınız')+'</small><p>'+escapeHtml(local?.ok?local.summary:en?'Incomplete draft':'Tamamlanmamış taslak')+'</p></section>'
+    +'<section><small>'+(en?'Shared version':'Ortak sürüm')+'</small><p>'+escapeHtml(remote?.summary||(en?'Card deleted':'Kart silindi'))+'</p></section></div>'
+    +'<button type="button" class="tbtn" data-fabric-remote-action="mine">'+(en?'Keep draft, acknowledge newer version':'Taslağı koru, yeni sürümü onayla')+'</button> '
+    +'<button type="button" class="tbtn" data-fabric-remote-action="remote">'+(en?'Use shared version':'Ortak sürümü kullan')+'</button>';
+  notice.hidden=false;
 }
 function kolFabricCardsSave(items,{onlyMissing=false}={}){
   return kolFabricCardsRequest('/api/fabric-cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,onlyMissing})});
 }
-function kolFabricCardDelete(code){
-  return kolFabricCardsRequest(`/api/fabric-cards/${encodeURIComponent(code)}`,{method:'DELETE'});
+function kolFabricCardDelete(code,expectedRevisionId=''){
+  return kolFabricCardsRequest(`/api/fabric-cards/${encodeURIComponent(code)}?expectedRevisionId=${encodeURIComponent(expectedRevisionId)}`,{method:'DELETE'});
 }
 /* Kartın aktif dildeki özeti: TR "Süprem · …", EN "Single Jersey · …". */
 function kolFabricSummary(card){return kolFabricApi()?.summaryFor(card,appLang==='en'?'en':'tr')||'';}
@@ -32387,12 +32416,13 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     card:draft,sourceLanguage:en?'en':'tr',uiLanguage:en,
     onDirty:()=>{if(segmentEditor?.isDirty()){modal.dataset.fabricDirty='1';setSource('manual');}}
   });
+  modal.__fabricEditor=segmentEditor;
   modal.addEventListener('input',event=>{if(event.target.dataset.fabricDetail){modal.dataset.fabricDirty='1';setSource('manual');}});
   // Girilen kodun kartı zaten varsa editör o kartla dolar; kayıt hücreyi mevcut karta bağlar.
   modal.querySelector('#_kolFabricCode')?.addEventListener('input',event=>{
     const known=kolFabricCards.get(api.normalizeCode(event.target.value));
     if(!known){status.textContent='';return;}
-    fill(known);
+    fill(known);modal.__fabricExpected=known.revisionId||'';
     status.textContent=en?`Fabric code ${known.code} already has a card. Saving links this cell to it.`:`${known.code} kumaş kodunun zaten kartı var. Kaydettiğinizde bu hücre o karta bağlanır.`;
   });
   modal.addEventListener('click',async event=>{
@@ -32467,7 +32497,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     }
   });
   document.body.appendChild(modal);
-  window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?(freeText?'#_kolFabricCode':'[data-part="tr:0"]'):'[data-fabric="cancel"]'});
+  window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?(freeText?'#_kolFabricCode':en?'[data-part="en:0"]':'[data-part="tr:0"]'):'[data-fabric="cancel"]'});
 }
 function kolPlmListStatusOptions(selected){
   const en=appLang==='en';
@@ -39260,6 +39290,8 @@ function initLiveSync(){
       // Yapısal değişiklik: HAFİF yeniden yükleme. Tam kaynak yenilemesi değil —
       // ekip arkadaşının düzenlemesi ASAS/Antrepo verisini değiştirmez.
       if(typeof loadFromServer==='function')loadFromServer(false).catch(()=>{});
+    }else if(payload.area==='fabric-cards'){
+      void kolFabricCardsRefresh().catch(()=>{});
     }else if(payload.area==='collection'){
       void kolHandleRemoteChange(payload.ownerId,payload);
     }else if(payload.area==='collection-permissions'){
@@ -39375,6 +39407,7 @@ function liveSyncResyncAfterGap(){
   void window.BL_QUOTATIONS?.refresh?.();
   window.BLLicenseCardsPage?.invalidate?.();
   void refreshPricingRulesFromServer().catch(()=>{});
+  if(kolFabricCardsState==='ready')void kolFabricCardsRefresh().catch(()=>{});
 }
 initLiveSync();
 window.addEventListener('bl-shared-revision',event=>{
