@@ -147,7 +147,9 @@ function sharedFingerprint() {
 async function seedSharedCards() {
   if(!deltaStore)return {seeded:0};
   const legacy=await loadFabricCardsAsync();
-  const records=Object.fromEntries(Object.entries(legacy.cards).map(([code,card])=>[code,{card,deleted:false,revisionId:card.revisionId||''}]));
+  const existing=sharedEntries()||{};
+  const records=Object.fromEntries(Object.entries(legacy.cards).filter(([code])=>!Object.hasOwn(existing,code)).slice(0,120)
+    .map(([code,card])=>[code,{card,deleted:false,revisionId:card.revisionId||''}]));
   return deltaStore.seedMissing(DELTA_COLLECTION,records);
 }
 async function flushOutbox() {
