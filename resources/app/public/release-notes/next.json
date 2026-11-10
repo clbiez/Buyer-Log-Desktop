@@ -1,14 +1,102 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-10",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Analiz filtrelerinde toplu seçim",
+    "en": "Bulk selection in analysis filters"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz.",
+    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "supplier-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Filtrelerde tümünü seç ve temizle",
+        "en": "Select all and clear filter values"
+      },
+      "body": {
+        "tr": "Standart ve eklenen sütun filtrelerinde Tümünü seç ve Temizle düğmeleri bulunur. Tüm seçenekleri seçip yalnız istemediklerinizi kaldırabilirsiniz. Arama sırasında toplu işlemler yalnız eşleşen değerleri değiştirir; diğer seçimler korunur.",
+        "en": "Standard and added column filters offer Select all and Clear buttons. Select every option and then uncheck only the ones you want to exclude. Bulk actions during search change only matching values and preserve other selections."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-supplier.png",
+        "alt": {
+          "tr": "Fiyat & Üretici Analizi filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in Price & Supplier Analysis filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    },
+    {
+      "id": "lfl-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL filtrelerinde toplu seçim",
+        "en": "Bulk selection in LFL filters"
+      },
+      "body": {
+        "tr": "LFL filtrelerindeki Hepsi kutusu yerine CP düzeninde Tümünü seç ve Temizle düğmeleri eklendi. Arama dışındaki seçimler korunur ve toplu işlemden sonra çekmece açık kalır.",
+        "en": "LFL filters replace the All reset checkbox with CP-style Select all and Clear buttons. Selections outside the search are preserved and the drawer stays open after bulk actions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-lfl.png",
+        "alt": {
+          "tr": "LFL Analizi filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in LFL Analysis filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    },
+    {
+      "id": "pricing-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Analiz filtrelerinde pratik çoklu seçim",
+        "en": "Convenient multiple selection in analysis filters"
+      },
+      "body": {
+        "tr": "Fiyat Masası analizindeki sezon, klasman, üretici ve diğer çoklu filtrelere Tümünü seç ve Temizle düğmeleri eklendi. Seçimler kaydedilir, diğer filtreler korunur ve çekmece açık kalır.",
+        "en": "Season, classification, manufacturer and other multiple-selection filters in Pricing Desk analysis now offer Select all and Clear buttons. Selections are saved, other filters are preserved and the drawer stays open."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-pricing.png",
+        "alt": {
+          "tr": "Fiyat Masası filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in Pricing Desk filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    }
+  ]
 }

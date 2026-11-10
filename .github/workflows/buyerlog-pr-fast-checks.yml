@@ -93,6 +93,8 @@ jobs:
         run: node --test tests/table-freeze-engine.test.js tests/freeze-hover-v508.test.js tests/kol-freeze-colpanel-imgsize-v585.test.js tests/collection-freeze-grid-alignment-v1015.test.js tests/kol-freeze-cache-bust-v1010.test.js tests/table-header-tracking-v70301.test.js
       - name: Native profiler shutdown and worker ownership
         run: node --test tests/runtime-profiler-worker.test.js tests/runtime-pressure-monitor.test.js
+      - name: Analysis filter bulk selection regression
+        run: node --test tests/analysis-filter-bulk.test.js tests/price-supplier-analysis-v3.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

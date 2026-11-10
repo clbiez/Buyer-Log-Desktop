@@ -716,7 +716,7 @@
     const search=previousSearch?.value||'',restoreFocus=document.activeElement===previousSearch;
     const ordered=values.slice().sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
     rows.forEach(r=>{const value=MONTH_DIMS.includes(dim)?rowPeriodMonth(r,dateFieldForDim(dim)):r[key];if(isUsableValue(value))counts.set(value,(counts.get(value)||0)+1);});
-    panel.innerHTML=`<div class="lflDimPanelHead"><div><strong>${esc(filterMetaLabel(dim))}</strong><span>${selected.size?selected.size+' '+(isEn()?'selected':'seçim'):(isEn()?'All':'Tümü')}</span></div><button type="button" class="lflPanelClear"${selected.size?'':' disabled'}>${isEn()?'Clear':'Temizle'}</button></div><div class="lflDimSearchWrap"><input type="search" class="lflDimSearch" placeholder="${isEn()?'Search…':'Ara…'}" autocomplete="off"></div><div class="lflDimList"><label class="lflDimOption lflDimAll${selected.size?'':' isSelected'}"><input type="checkbox" class="lflDimAllCheck"${selected.size?'':' checked'}><span>${isEn()?'All':'Hepsi'}</span><em>${integer(rows.length)}</em></label>${ordered.map(value=>`<label class="lflDimOption${selected.has(value)?' isSelected':''}" data-search="${esc(displayFilterValue(dim,value))}"><input type="checkbox" class="lflDimCheck" value="${esc(value)}"${selected.has(value)?' checked':''}><span>${esc(displayFilterValue(dim,value))}</span><em>${integer(counts.get(value)||0)}</em></label>`).join('')||`<div class="lflDimNoResult">${isEn()?'No selectable values.':'Seçilebilir değer bulunamadı.'}</div>`}</div>`;
+    panel.innerHTML=`<div class="lflDimPanelHead"><div><strong>${esc(filterMetaLabel(dim))}</strong><span>${selected.size?selected.size+' '+(isEn()?'selected':'seçim'):(isEn()?'All':'Tümü')}</span></div></div><div class="lflDimSearchWrap"><input type="search" class="lflDimSearch" placeholder="${isEn()?'Search…':'Ara…'}" autocomplete="off"></div><div class="cfpHeader"><button type="button" class="cfpAll" data-lfl-bulk="all">${isEn()?'Select all':'Tümünü seç'}</button><button type="button" class="cfpAll" data-lfl-bulk="clear">${isEn()?'Clear':'Temizle'}</button></div><div class="lflDimList">${ordered.map(value=>`<label class="lflDimOption${selected.has(value)?' isSelected':''}" data-search="${esc(displayFilterValue(dim,value))}"><input type="checkbox" class="lflDimCheck" value="${esc(value)}"${selected.has(value)?' checked':''}><span>${esc(displayFilterValue(dim,value))}</span><em>${integer(counts.get(value)||0)}</em></label>`).join('')||`<div class="lflDimNoResult">${isEn()?'No selectable values.':'Seçilebilir değer bulunamadı.'}</div>`}</div>`;
     const searchInput=panel.querySelector('.lflDimSearch'),list=panel.querySelector('.lflDimList');
     if(searchInput&&search){
       searchInput.value=search;
@@ -729,8 +729,13 @@
     if(list)list.scrollTop=scroll;
     if(restoreFocus)searchInput?.focus({preventScroll:true});
     const rerender=()=>{updateFilterButton(dim);saveFilters();render();renderFacetPanel(dim);};
-    panel.querySelector('.lflPanelClear')?.addEventListener('click',()=>{state.filters[dim].clear();rerender();});
-    panel.querySelector('.lflDimAllCheck')?.addEventListener('change',()=>{state.filters[dim].clear();rerender();});
+    panel.querySelectorAll('[data-lfl-bulk]').forEach(button=>button.addEventListener('click',event=>{
+      event.stopPropagation();
+      panel.querySelectorAll('.lflDimOption[data-search]').forEach(row=>{
+        if(row.hidden)return;const value=row.querySelector('.lflDimCheck').value;
+        if(button.dataset.lflBulk==='all')state.filters[dim].add(value);else state.filters[dim].delete(value);
+      });rerender();
+    }));
     panel.querySelectorAll('.lflDimCheck').forEach(chk=>chk.addEventListener('change',()=>{if(chk.checked)state.filters[dim].add(chk.value);else state.filters[dim].delete(chk.value);rerender();}));
     panel.querySelector('.lflDimSearch')?.addEventListener('input',e=>{const terms=normalizeSearchTerms(e.target.value);let visible=0;panel.querySelectorAll('.lflDimOption[data-search]').forEach(row=>{const match=matchesSearch(row.dataset.search,terms);row.hidden=!match;if(match)visible++;});let empty=panel.querySelector('.lflDimSearchEmpty');if(!empty){empty=document.createElement('div');empty.className='lflDimNoResult lflDimSearchEmpty';empty.textContent=isEn()?'No option matches this search.':'Aramayla eşleşen seçenek yok.';panel.querySelector('.lflDimList')?.appendChild(empty);}empty.hidden=visible>0;});
   }
@@ -738,7 +743,7 @@
     const panel=$(`lflDimPanel_${dim}`),btn=$(`lflDimBtn_${dim}`);if(!panel||!btn)return;
     if(dim==='brandDirectorate'&&trialDisablesBrandDirectorate()){panel.hidden=true;btn.setAttribute('aria-expanded','false');return;}
     const willOpen=panel.hidden;closePanels(willOpen?dim:'');closeBreakdownPanel();closeCustomComparePanels();
-    panel.hidden=!willOpen;btn.setAttribute('aria-expanded',willOpen?'true':'false');if(willOpen){renderFacetPanel(dim);setTimeout(()=>panel.querySelector('.lflDimSearch')?.focus(),0);}
+    panel.hidden=!willOpen;btn.setAttribute('aria-expanded',willOpen?'true':'false');if(willOpen){renderFacetPanel(dim);window.BLMotionPlus?.play('overlay',panel);setTimeout(()=>panel.querySelector('.lflDimSearch')?.focus(),0);}
   }
   function currencyBucket(rows,currency){
     let qty=0,weighted=0;const orders=new Set();
