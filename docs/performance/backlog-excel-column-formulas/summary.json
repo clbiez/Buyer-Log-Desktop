@@ -1,0 +1,23 @@
+{
+  "decision": "PASS",
+  "baseMain": "0f0b986770a721c52f68755e5c7befe12662ee26",
+  "runtimeSourceCommit": "9fa01120605636b351dd236c287296aed5236454",
+  "runtimeSourceSha256": "8cefa7011901cb167e56d961ae4a32d24dcf73b5b22f7d64e90b70bdcf980667",
+  "fixtureDescriptorSha256": "b152c7cde413300cc6496b08618e64b8bca396b5bf2e45f6c80c826fefc79468",
+  "runtime": "151.0.7922.173",
+  "pairedRuns": 3,
+  "baselineAAControls": 3,
+  "maxNewFeedbackMs": 65.40000000037253,
+  "maxNewNumericFileMs": 2339.7000000001863,
+  "maxNewDateFileMs": 3115,
+  "maxNumericHeapSnapshotBytes": 361281350,
+  "maxDateHeapSnapshotBytes": 413446216,
+  "baselineAAStartupRangeMs": [
+    1896.9033140000001,
+    2074.430144
+  ],
+  "baselineAAFileRangeMs": [
+    2457.7000000001863,
+    2731
+  ]
+}
