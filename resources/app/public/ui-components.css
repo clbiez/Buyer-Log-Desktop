@@ -15835,3 +15835,10 @@ html[data-ui-system="manifest"] .shipCompare thead th .colResizer::after{
   top:0;bottom:0;left:auto;right:0;width:1px;opacity:1;
 }
 html[data-ui-system="manifest"] .shipCompare thead th .colResizer:hover::after{background:var(--ui-accent)!important;}
+
+/* Export formula state follows the shared theme; glyphs also distinguish states. */
+html[data-ui-system="manifest"] .backlogColFx {min-width:38px;min-height:28px;justify-content:center;align-items:center;}
+html[data-ui-system="manifest"] .backlogColFx.is-custom {color:var(--ui-accent) !important;background:var(--ui-selected) !important;font-weight:700;}
+html[data-ui-system="manifest"] .backlogColFx.is-default {color:var(--ui-accent) !important;}
+html[data-ui-system="manifest"] .backlogColFx.is-empty {color:var(--ui-text-muted) !important;}
+html[data-ui-system="manifest"] .backlogColSource {font-size:var(--ui-font-xs);color:var(--ui-text-muted);}

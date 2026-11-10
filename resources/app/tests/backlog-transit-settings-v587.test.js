@@ -112,7 +112,7 @@ test('v5.87 tablo BACKLOG sayfasından ÖNCE kurulur', () => {
   assert.match(block, /backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
   assert.match(block, /const chartState=window\.BLBacklogChart\?\.getState\?\.\(\)\|\|null/);
   assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState,showSelectedColumns:true\}\)/);
-  assert.match(block, /buildBacklogSettingsSheet\(transitPlan\)/);
+  assert.match(block, /buildBacklogSettingsSheet\(transitPlan,detailSheet\.__backlogColumnPlan\)/);
 });
 
 test('v5.87 hücreye gömülü eski sarı dolgu kodu kaldırıldı', () => {

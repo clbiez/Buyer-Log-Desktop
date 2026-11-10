@@ -348,7 +348,7 @@ test('v7.175 · Gelişmiş kipte sözlük ve canlı analiz var; AI kipinde kopya
 test('v7.175 · kayıt, analizin bulduğu kalıcı hatada durur ve kendine başvuruyu engeller', () => {
   const save = FC_SOURCE.slice(FC_SOURCE.indexOf("if (event.target.closest('[data-fc-save]'))"));
   assert.match(save, /entry\.level === 'error' && entry\.code !== 'UNKNOWN_COLUMN'/);
-  assert.match(save, /program\.columns\.includes\(columnKey\(item\)\)/);
+  assert.match(save, /program\.columns\.includes\(adapter \? item\.id : columnKey\(item\)\)/);
   assert.match(save, /aynı adda bir sütun zaten var/);
 });
 

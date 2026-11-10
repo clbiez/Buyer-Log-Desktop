@@ -35,6 +35,7 @@
     cp: { tr: 'CP', en: 'CP' },
     orders: { tr: 'Siparişler', en: 'Orders' },
     ship: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison' },
+    backlog: { tr: 'Backlog Excel', en: 'Backlog Excel' },
   };
   const KEY_PREFIX = 'bl.formulaColumns.';
   const COLUMN_KEY_PREFIX = '__f_';
@@ -983,8 +984,8 @@
 
   /* ---------------- pencere ---------------- */
 
-  let modal = null;
-  function close() { modal?.remove(); modal = null; document.removeEventListener('keydown', onKey, true); }
+  let modal = null, editorClosed = null, editorLanguageRefresh = null;
+  function close() { const done = editorClosed; editorClosed = null; editorLanguageRefresh = null; modal?.remove(); modal = null; document.removeEventListener('keydown', onKey, true); if (done) done(); }
   function onKey(event) {
     if (event.key !== 'Escape' || !modal) return;
     event.preventDefault(); event.stopImmediatePropagation();
@@ -1008,11 +1009,26 @@
     };
   }
 
-  function open(tableKey, editId, onDone) {
+  // An export editor owns its draft and commits only when its parent is applied.
+  const editorHelpers = { definitions, sourceColumns, columnIndex, displayFormula, toStorage, sampleRows, columnType };
+  function open(tableKey, editId, onDone, adapter = null) {
     if (!TABLES[tableKey]) return;
     if (!engine()) { toast(T('Formül motoru yüklenemedi.', 'The formula engine could not be loaded.')); return; }
     close();
+    editorClosed = adapter?.onClose || null;
     const E = engine();
+    const definitions = key => adapter ? adapter.definitions : editorHelpers.definitions(key);
+    const sourceColumns = (key, exclude) => adapter ? adapter.columns.filter(c => c.ref !== exclude) : editorHelpers.sourceColumns(key, exclude);
+    const columnIndex = key => adapter ? adapter.index : editorHelpers.columnIndex(key);
+    const sampleRows = (key, count) => adapter ? adapter.rows.slice(0, count) : editorHelpers.sampleRows(key, count);
+    const columnType = (key, ref) => adapter ? adapter.columns.find(c => c.ref === ref)?.type : editorHelpers.columnType(key, ref);
+    const displayFormula = (key, formula, refs) => adapter ? engine().rewriteColumns(formula, ref => adapter.index.byKey.get(ref)?.name || refs?.[ref] || ref) : editorHelpers.displayFormula(key, formula, refs);
+    const toStorage = (key, text, refs) => {
+      if (!adapter) return editorHelpers.toStorage(key, text, refs);
+      const formula = engine().rewriteColumns(text, name => resolveRef(adapter.index, name, false) || name);
+      const used = engine().compile(formula).columns;
+      return { formula, refs: Object.fromEntries(adapter.columns.filter(c => used.includes(c.ref)).map(c => [c.ref, c.label])) };
+    };
     const defs = definitions(tableKey);
     const existing = editId ? defs.find(item => item.id === editId) : null;
     const draft = existing ? { ...existing } : {
@@ -1052,6 +1068,7 @@
     }
     if (!builder.operands.length) builder.operands = [{ kind: 'column', column: '', number: '' }];
     builder.advanced = existing ? shown(existing.formula) : '';
+    if (adapter?.builder) Object.assign(builder, adapter.builder);
     let labelTouched = Boolean(existing);
     let formatTouched = Boolean(existing);
 
@@ -1146,6 +1163,25 @@
       </div>
     </div>`;
     document.body.appendChild(modal);
+    window.BLMotionPlus?.play('overlay', modal);
+    if (adapter) {
+      modal.dataset.noI18n = '';
+      modal.querySelector('.fcSub').textContent = T('Formüller ve adlar bu Excel raporuna özeldir. Kaynak veriler değişmez.', 'Formulas and names belong to this Excel report. Source data stays unchanged.');
+      modal.querySelector('[data-fc-group]').closest('.fcFormatRow').hidden = true;
+      modal.querySelector('.fcMore .fcNote').textContent = T('Biçim, Excel hücresinin görünümünü belirler; kaynak veriyi değiştirmez.', 'The format controls how the Excel cell looks; it does not change source data.');
+      const del = modal.querySelector('[data-fc-delete]');
+      if (del) del.textContent = T('Formülü kaldır / varsayılana dön', 'Clear formula / restore default');
+      if (adapter.nativeFormula != null) {
+        const native = document.createElement('details');native.className = 'fcMore';
+        native.innerHTML = `<summary>${esc(T('Mevcut Excel formülü', 'Current Excel formula'))}</summary><p class="fcNote">${esc(T('Bu formül Excel hücre adreslerini kullanır. CP kurucusuyla yeni bir formül kaydedebilir veya mevcut Excel formülünü düzenleyebilirsiniz. {row} güncel satırdır.', 'This formula uses Excel cell addresses. Save a replacement with the CP builder or edit the existing Excel formula. {row} is the current row.'))}</p><label class="fcField">${esc(T('Excel formülü', 'Excel formula'))}<textarea data-fc-native rows="4" spellcheck="false">${esc(adapter.nativeFormula)}</textarea></label><button type="button" class="fcBtn" data-fc-native-save>${esc(T('Excel formülünü kullan', 'Use Excel formula'))}</button>`;
+        modal.querySelector('.fcBody').prepend(native);native.open = Boolean(adapter.nativeOpen);
+        modal.querySelector('[data-fc-native-save]').onclick = () => {
+          const result = adapter.onNativeSave(modal.querySelector('[data-fc-native]').value);
+          if (result === false) return;
+          close();
+        };
+      }
+    }
 
     const labelInput = modal.querySelector('[data-fc-label]');
     const labelEnInput = modal.querySelector('[data-fc-label-en]');
@@ -1181,7 +1217,7 @@
 
     function renderSourceAdd() {
       if (!sourceAdd) return;
-      if (tableKey === 'ship') { sourceAdd.innerHTML = ''; return; }
+      if (adapter || tableKey === 'ship') { sourceAdd.innerHTML = ''; return; }
       const modelCount = columns.filter(col => col.model).length;
       const summary = modelCount
         ? T(`${modelCount} veri tabanı sütunu kaynak listesinde kullanılabilir.`,
@@ -1620,6 +1656,15 @@
       };
     };
 
+    if (adapter) editorLanguageRefresh = () => {
+      const next = { ...adapter, definitions: [currentDraft()], builder: JSON.parse(JSON.stringify(builder)),
+        nativeFormula: modal.querySelector('[data-fc-native]')?.value ?? adapter.nativeFormula,
+        nativeOpen: modal.querySelector('[data-fc-native]')?.closest('details')?.open };
+      // Transferring an unsaved editor is not cancellation of its parent draft.
+      editorClosed = null;
+      open(tableKey, draft.id, onDone, next);
+    };
+
     /* Ad önerisi: kullanıcı başlığa henüz dokunmadıysa kart doldukça anlamlı
        bir ad yazılır. Boş başlık yüzünden "Kaydet" hata vermesin. */
     function suggestedLabel() {
@@ -1880,6 +1925,7 @@
         return;
       }
       if (event.target.closest('[data-fc-delete]')) {
+        if (adapter) { adapter.onDelete(); close(); return; }
         if (!confirm(T(`“${draft.label || existing.label}” sütunu kaldırılsın mı?`, `Remove the “${draft.label || existing.label}” column?`))) return;
         remove(tableKey, draft.id, onDone);
         close();
@@ -1911,7 +1957,7 @@
           modal.querySelector('[data-fc-formula]')?.focus();
           return;
         }
-        if (program.columns.includes(columnKey(item))) {
+        if (program.columns.includes(adapter ? item.id : columnKey(item))) {
           toast(T('Sütun kendi değerini kullanamaz; formülden kendi adını çıkarın.', 'A column cannot use its own value; remove its own name from the formula.'));
           return;
         }
@@ -1930,6 +1976,11 @@
         const clash = renamed && (definitions(tableKey).some(entry => entry.id !== item.id && nameKey(entry.label) === nameKey(item.label))
           || sourceColumns(tableKey, item.id).some(col => !col.calculated && nameKey(col.label) === nameKey(item.label)));
         if (clash) { toast(T('Bu tabloda aynı adda bir sütun zaten var; farklı bir ad verin.', 'This table already has a column with that name; pick another name.')); (en() ? labelEnInput : labelInput).focus(); return; }
+        if (adapter) {
+          if (adapter.onSave(item) === false) return;
+          close();
+          return;
+        }
         const list = definitions(tableKey);
         const index = list.findIndex(entry => entry.id === item.id);
         if (index >= 0) list[index] = item; else list.push(item);
@@ -2026,7 +2077,7 @@
 
   window.BLFormulaColumns = {
     TABLES, definitions, syncColumns, applyToRows, refresh, formatValue, errorFor,
-    open, close, init, columnKey, sourceColumns, tableRows, storageKey, remove, save, dateDisplay,
+    open, close, refreshLanguage: () => editorLanguageRefresh?.(), init, columnKey, sourceColumns, tableRows, storageKey, remove, save, dateDisplay,
     aliasMap, dependenciesOf, orderedDefinitions,
     // Kurucu — sınanabilmesi için dışa açılır.
     calcFormula, joinFormula, builderFormula, builderFromFormula, OPERATORS, SEPARATORS, COMPARISONS,
