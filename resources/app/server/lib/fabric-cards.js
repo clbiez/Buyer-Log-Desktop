@@ -133,7 +133,7 @@ function pendingConflicts(store) {
     const record=remote[code];
     if(record && remoteVersion(record)!==entry.baseRevisionId
       && !(entry.card && remoteVersion(record)===entry.card.revisionId)) {
-      found.push({code,local:entry.card,remote:record.deleted?null:normalizeCard(record.card,code)});
+      found.push({code,local:entry.card,remote:record.deleted?null:normalizeCard(record.card,code),remoteRevisionId:remoteVersion(record)});
     }
   }
   return found;
