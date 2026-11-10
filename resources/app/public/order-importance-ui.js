@@ -51,6 +51,7 @@
   function cellHtml(row, canEdit, tableKey) {
     const res = rowResolution(row);
     const title = esc(sourceTitle(res));
+    canEdit = canEdit && row._canEditShared !== false;
     if (!canEdit) return `<td class="impTd" title="${title}">${chipHtml(res.tag, res.source)}</td>`;
     return `<td class="editTd impTd"><button type="button" class="editCell impTrigger" data-id="${esc(row._id)}" data-table="${esc(tableKey || 'cp')}" aria-haspopup="listbox" aria-expanded="false" title="${title}">${chipHtml(res.tag, res.source)}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
   }
@@ -96,6 +97,7 @@
     if(window.isSavingCpBulk?.()&&!window.isPreparingCpBulk?.()){toast(L('Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.','A bulk save is still pending. Retry after its result.'));return;}
     if (!row) return;
     if (row._canEdit === false) { toast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.', 'You only have view access to this order.')); return; }
+    if (row._canEditShared === false) { toast(L('Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.', 'Only the order owner can edit shared fields.')); return; }
     const orderCode = row['Order Code'];
     if (orderCode == null) return;
     const rows = sameLineRows(row);
@@ -130,7 +132,7 @@
     return id ? { ok: true, value: id } : { ok: false };
   }
   function pasteAssign(row, id) {
-    if (!row || row._canEdit === false) return false;
+    if (!row || row._canEdit === false || row._canEditShared === false) return false;
     const res = rowResolution(row);
     if (id ? res.id === id : res.source !== 'manual') return false;
     void assign(row, id || '');
@@ -197,7 +199,7 @@
     if (trigger === btn) { closeMenu(); return; }
     closeMenu();
     const row = findRow(btn);
-    if (!row) return;
+    if (!row || row._canEdit === false || row._canEditShared === false) return;
     trigger = btn; btn.setAttribute('aria-expanded', 'true');
     const res = rowResolution(row);
     const option = (value, html, selected, extra) => `<button type="button" class="delTypeOption impOption${extra ? ' ' + extra : ''}" role="option" aria-selected="${selected ? 'true' : 'false'}" data-imp-value="${esc(value)}">${html}</button>`;

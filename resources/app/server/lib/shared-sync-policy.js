@@ -28,7 +28,7 @@ const DEVICE_SETTING_FIELDS = new Set(['sourceFolder', 'sourceFolders']);
    çalışır; yalnız kullanıcılar arası aktarılması GEREKEN iş verisi buradan
    geçer:
      - cp-order:*            → Ex-Factory revizeleri (dates), Sub-Manufacturer,
-                               Supp. FOB (+ meta). Notlar, teslim tipi,
+                               Supp. FOB (+ meta), Importance. Notlar, teslim tipi,
                                shortage vb. yereldir.
      - store:email-groups    → Manufacturers e-posta rehberi (kimlikle
                                birleşir, aynı alan yarışı çakışma üretmez).
@@ -36,7 +36,7 @@ const DEVICE_SETTING_FIELDS = new Set(['sourceFolder', 'sourceFolders']);
    talep üzerine paylaşımla taşınır. Çalışma kuralları (bağlantılar, kur,
    endeksmatik, yol süreleri, DTR/Non-DTR, fiyat kuralları) bu kanaldan HİÇ
    geçmez: yalnız Moderatörün yayımladığı Master checkpoint'ten alınır. */
-const PEER_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta']);
+const PEER_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta', 'importance']);
 const PEER_DOCUMENTS = new Set(['store:email-groups.json']);
 const META_FIELD = /^_/;
 const SECRET_KEY = /(password|passphrase|secret|token|authorization|cookie|credential|private.?key|client.?secret|api.?key)/i;

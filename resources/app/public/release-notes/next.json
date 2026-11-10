@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-10",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Sipariş önem etiketleri ortak senkronizasyonda",
+    "en": "Order importance tags in shared synchronization"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Siparişe seçilen Importance etiketi ortak senkronizasyon klasörü üzerinden diğer bilgisayarlara aktarılır.",
+    "en": "The Importance tag selected for an order is replicated to other computers through the shared sync folder."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "importance-peer-sync",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Senkronizasyon",
+        "en": "CP · Orders · Synchronization"
+      },
+      "title": {
+        "tr": "Siparişin önem etiketi ekipte paylaşılır",
+        "en": "Order importance assignments are shared with the team"
+      },
+      "body": {
+        "tr": "Importance seçimi, Regular seçimi ve seçimin kaldırılması aynı ortak senkronizasyon klasöründeki güncel istemcilere sipariş satırı bazında aktarılır. Siparişe erişimi olan kullanıcılar ortak etiketi görür; ortak alanlarda mevcut sipariş sahipliği ve düzenleme yetkileri korunur. Etiket kataloğu ve Line kuralları moderatör yayınıyla dağıtılmaya devam eder.",
+        "en": "Importance assignments, explicit Regular selections and cleared selections replicate by order line to updated clients using the same shared sync folder. Users with access to the order see its shared tag; existing order ownership and edit permissions apply. The tag catalog and Line rules continue to be distributed through moderator publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "importance-peer-sync-20261110.png",
+        "alt": {
+          "tr": "Diğer bilgisayardan aktarılan BTS etiketini gösteren gerçek CP tablosu",
+          "en": "Actual CP table displaying a BTS tag received from another computer"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle iki ayrı Buyer Log sunucusu ve tarayıcı oturumu arasında gerçek klasör aktarımı doğrulandı. Görsel alıcı oturumu gösterir.",
+          "en": "Real folder transport verified between two isolated Buyer Log servers and browser sessions using demo data. The image shows the receiving session."
+        }
+      }
+    }
+  ]
 }

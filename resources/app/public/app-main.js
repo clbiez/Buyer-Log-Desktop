@@ -6099,7 +6099,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
   const oc = r['Order Code'];
   const id = r._id;
   const editorIdentity=tableKey==='cp'?cpEditorIdentityAttributes(r):'';
-  const sharedField = ['exfactory','retailEdit','instoreEdit','submfr'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
+  const sharedField = ['exfactory','retailEdit','instoreEdit','submfr','importance'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
   const canEdit = r._canEdit !== false && (!sharedField || r._canEditShared !== false);
   if(c.personalNote){
     const line=lineKeyOfRow(r);
@@ -10097,7 +10097,7 @@ let bulkCpHistoryBusy=false;
 function cpBulkHistoryCurrent(action){
   const g=action?.bulkGuard;
   return !g||(g.owner===orderLinePeerOwner()&&g.orders===Number(state.storeRevisions.orders)&&g.suppFob===Number(state.storeRevisions.suppFob)&&!isAreaFrozen('cp')&&(action.actions||[]).every(item=>{
-    const row=orderLinePeerRows('cp',null,item.lineKey)[0];return row&&row._canEdit!==false&&(row._canEditShared!==false||item.kind==='importance'||(item.fields||[]).every(field=>['Notes','Ek Not'].includes(field.key)));
+    const row=orderLinePeerRows('cp',null,item.lineKey)[0];return row&&row._canEdit!==false&&(row._canEditShared!==false||(item.kind!=='importance'&&(item.fields||[]).every(field=>['Notes','Ek Not'].includes(field.key))));
   }));
 }
 async function applyCpBulkHistory(action,direction){
@@ -14139,7 +14139,7 @@ const TABLE_META = {
 function cpPasteTarget(row,column){
   if(!row||!column||row._canEdit===false) return null;
   if(column.k==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return null;
-  const shared=['exfactory','retailEdit','instoreEdit','submfr'].includes(column.type)||(column.type==='moneyEdit'&&column.k==='Supp. FOB');
+  const shared=['exfactory','retailEdit','instoreEdit','submfr','importance'].includes(column.type)||(column.type==='moneyEdit'&&column.k==='Supp. FOB');
   if(shared&&row._canEditShared===false) return null;
   switch(column.type){
     case 'moneyEdit': return 'suppfob';

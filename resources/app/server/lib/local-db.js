@@ -23,7 +23,7 @@ const quotationLedger = require('./quotation-ledger');
 
 const SCHEMA_VERSION = 3;
 const DEFAULT_DB_NAME = 'BuyerLogLocal.db';
-const SHARED_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta']);
+const SHARED_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta', 'importance']);
 function compareEventOrder(a, b) {
   if (a && a.hlc && b && b.hlc) return hybridClock.compare(a.hlc, b.hlc);
   const time = String(a && a.at || '').localeCompare(String(b && b.at || ''));
