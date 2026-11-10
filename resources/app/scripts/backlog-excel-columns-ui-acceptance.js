@@ -74,8 +74,8 @@ await page.evaluate(()=>openBacklogExportColumns());await page.locator('[data-co
 await page.evaluate(()=>{applyLanguage('en');});
 await page.waitForTimeout(200);
 assert.equal(await page.locator('[data-col-label="field:0"]').inputValue(),'Draft season');
-assert.equal(await page.locator('#backlogExportColumnsTitle').innerText(),'Excel options');
-assert.match(await page.locator('.backlogDetailMeta').innerText(),/Rename exported columns/);
+assert.equal(await page.locator('#backlogExportColumnsTitle').innerText(),'Backlog Excel settings');
+assert.match(await page.locator('.backlogDetailMeta').innerText(),/Rename columns/);
 assert.match(await page.locator('[data-col-calculated]').innerText(),/Calculated column/);
 // Common LCW AI panel is mounted within the shared editor.
 await page.locator('[data-col-fx="field:24"]').click();

@@ -17883,7 +17883,8 @@ function openBacklogExportColumns(draftState=null){
   let workingSelected=dedupe(draftState?.selected||backlogExcelColumns());
   const workingFormulas={...(draftState?.formulas||backlogExcelFormulaOverrides())};
   const workingSettings=JSON.parse(JSON.stringify(draftState?.settings||backlogExcelColumnSettings()));
-  let previewRows=null,editingRequest=0;
+  let previewRows=null,previewFetch=null,editingRequest=0;
+  const previewAbort=new AbortController();
   const defaultPlan=window.BLBacklogExcel?.formulaPlan?.([...BACKLOG_DEFAULT_EXPORT_HEADERS,...(window.BLBacklogExcel?.HELPER_HEADERS||[])],{},2)||{formulas:{}};
   let searchQuery=draftState?.search||'';
   const tr=(en,tk)=>appLang==='en'?en:tk;
@@ -17904,7 +17905,7 @@ function openBacklogExportColumns(draftState=null){
   </div>`;
   document.body.appendChild(modal);
   let releaseKeyboard=()=>{};
-  const close=()=>{window.BLFormulaColumns?.close();releaseKeyboard();modal.remove();};
+  const close=()=>{previewAbort.abort();window.BLFormulaColumns?.close();releaseKeyboard();modal.remove();};
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:()=>{if(!document.getElementById('_formulaColumnModal'))close();}})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
   modal.addEventListener('click',event=>{if(event.target===modal)close();});
@@ -17954,13 +17955,17 @@ function openBacklogExportColumns(draftState=null){
   async function editFormula(id){
     const request=++editingRequest;
     const item=catalog.get(id);if(!item)return;
+    const busy=[...selectedEl.querySelectorAll('[data-col-fx]')].find(button=>button.dataset.colFx===id),before=busy?.innerHTML;
+    if(busy){busy.disabled=true;busy.setAttribute('aria-busy','true');busy.textContent='ƒx…';}
     try{
       if(!previewRows){
-        const params=backlogExportQueryParams();params.sourceColumns=[...catalog.keys()].filter(key=>/^custom:/.test(key)).join(',');
-        const response=await fetchJSON('/api/backlog-export?'+new URLSearchParams(params));
-        previewRows=response.rows||[];
+        if(!previewFetch){
+          const params=backlogExportQueryParams();params.sourceColumns=[...catalog.keys()].filter(key=>/^custom:/.test(key)).join(',');params.previewLimit=5;
+          previewFetch=fetchJSON('/api/backlog-export?'+new URLSearchParams(params),{signal:previewAbort.signal}).then(response=>response.rows||[]);
+        }
+        previewRows=await previewFetch;
       }
-    }catch(_){previewRows=[];}
+    }catch(_){previewRows=[];}finally{if(busy?.isConnected){busy.disabled=false;busy.removeAttribute('aria-busy');busy.innerHTML=before;}}
     if(!modal.isConnected||request!==editingRequest)return;
     const columns=[...catalog.values()].map(c=>({ref:c.id,key:c.id,label:window.BLBacklogColumns.display(c,workingSettings),model:c.group!=='field',source:c.database}));
     const index=window.BLBacklogColumns.editorIndex(columns);
