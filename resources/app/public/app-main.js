@@ -32077,16 +32077,20 @@ async function kolFabricCardsRefresh(){
   const code=modal?.dataset.fabricCode||'',before=code?kolFabricCards.get(code):null;
   const after=code?(data.cards||[]).find(card=>String(card.code)===code):null;
   kolFabricCardsSet(data);kolFabricCardsState='ready';
-  if(modal&&String(before?.revisionId||'')!==String(after?.revisionId||'')){
+  const blocked=(data.conflicts||[]).find(item=>item.code===code);
+  if(modal&&blocked){kolFabricShowRemoteComparison(modal,blocked.remote,{pending:true,remoteRevisionId:blocked.remoteRevisionId});}
+  else if(modal&&String(before?.revisionId||'')!==String(after?.revisionId||'')){
     if(modal.__fabricEditor?.isDirty?.()||modal.dataset.fabricDirty==='1')kolFabricShowRemoteComparison(modal,after||null);
     else if(after&&modal.__fabricFill){modal.__fabricFill(after);modal.__fabricExpected=after.revisionId||'';}
     else if(!after)kolFabricShowRemoteComparison(modal,null);
   }
   fabricCardsRepaintTables();
 }
-function kolFabricShowRemoteComparison(modal,remote){
+function kolFabricShowRemoteComparison(modal,remote,{pending=false,remoteRevisionId=''}={}){
   if(!modal?.isConnected)return;
   modal.__fabricRemote=remote;
+  modal.__fabricPendingConflict=pending;
+  modal.__fabricRemoteRevision=remoteRevisionId||remote?.revisionId||'';
   const notice=modal.querySelector('[data-fabric-remote]');
   if(!notice)return;
   const en=appLang==='en',local=modal.__fabricEditor?.result?.();
@@ -32429,6 +32433,30 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     const remoteAction=event.target.closest('[data-fabric-remote-action]');
     if(remoteAction){
       const remote=modal.__fabricRemote;
+      if(modal.__fabricPendingConflict){
+        remoteAction.disabled=true;
+        const choice=remoteAction.dataset.fabricRemoteAction;
+        try{
+          const result=await kolFabricCardsRequest('/api/fabric-cards/'+encodeURIComponent(code)+'/resolve',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({choice,expectedRemoteRevisionId:modal.__fabricRemoteRevision})
+          });
+          const current=(result.cards||[]).find(card=>card.code===code)||null;
+          if(choice==='remote'){
+            if(!current){close();fabricCardsRepaintTables();return;}
+            fill(current);modal.dataset.fabricDirty='0';
+          }else{modal.dataset.fabricDirty='1';}
+          modal.__fabricExpected=current?.revisionId||'';
+          modal.__fabricPendingConflict=false;
+          modal.querySelector('[data-fabric-remote]').hidden=true;
+          fabricCardsRepaintTables();
+        }catch(error){
+          remoteAction.disabled=false;
+          status.textContent=(en?'Conflict could not be resolved: ':'Çakışma çözülemedi: ')+(error.message||String(error));
+          if(error.code==='FABRIC_CARD_CONFLICT')kolFabricShowRemoteComparison(modal,error.current||null);
+        }
+        return;
+      }
       if(remoteAction.dataset.fabricRemoteAction==='remote'){
         if(remote){fill(remote);modal.__fabricExpected=remote.revisionId||'';}
         else {close();return;}
@@ -32489,10 +32517,11 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
       if(saveExisting)card.expectedRevisionId=modal.__fabricExpected;
       action.disabled=true;
       try{
-        await kolFabricCardsSave([card]);close();fabricCardsRepaintTables();
+        const saved=await kolFabricCardsSave([card]);close();fabricCardsRepaintTables();
+        const sharePending=Boolean(saved?.sync?.pending);
         // Düz metin hücresi kartın PLM metnine bağlanır; tablo kart görünümüne geçer.
         if(linkRowId!=null)kolFabricLinkRowText(linkRowId,rowRaw);
-        showToast(en?`Fabric card ${saveCode} saved. Every model with this code shows the new summary.`:`${saveCode} kumaş kartı kaydedildi. Bu kodlu tüm modeller yeni özeti gösterir.`);
+        showToast(sharePending?(en?'Fabric card saved locally; sharing is pending.':'Kumaş kartı yerelde kaydedildi; paylaşım bekliyor.'):(en?`Fabric card ${saveCode} saved. All connected users will see the update after sync.`:`${saveCode} kumaş kartı kaydedildi. Eşitleme sonrasında bağlı kullanıcılar güncellemeyi görecek.`));
       }catch(err){action.disabled=false;status.textContent=(en?'The card could not be saved: ':'Kart kaydedilemedi: ')+(err&&err.message||String(err));if(err?.code==='FABRIC_CARD_CONFLICT')kolFabricShowRemoteComparison(modal,err.current||null);}
     }
   });
