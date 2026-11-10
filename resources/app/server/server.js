@@ -651,7 +651,7 @@ const plmStyleLinks = require('./lib/plm-style-links');
 const { loadPlmStyleLinks, publicLinks: publicPlmStyleLinks, upsertPlmStyleLinks } = plmStyleLinks;
 /* Ortak iş verisini tutan her store delta motoruna bağlanır. Bağlama tek
    yerde toplanır ki yeni bir store taşındığında atlanması mümkün olmasın. */
-for (const store of [plmStyleLinks, require('./db'), require('./lib/email-groups-store'),
+for (const store of [plmStyleLinks, fabricCards, require('./db'), require('./lib/email-groups-store'),
   require('./lib/quotations-store')]) {
   store.attachDeltaStore(deltaStore);
 }
@@ -1673,7 +1673,13 @@ function afterSharedSyncCompleted() {
     await localDb.retireOwnerConflicts().catch(error => logRuntimeFailure('retireOwnerConflicts', error));
     await retireOutOfScopeSyncConflicts().catch(error => logRuntimeFailure('retireSyncConflicts', error));
     const master=await pullModeratorMasterIfNewer();
+    const previousFabricState=fabricCards.sharedFingerprint();
     await deltaStore.hydrate();
+    const fabricSeed=await fabricCards.seedSharedCards();
+    const fabricOutbox=await fabricCards.flushOutbox();
+    await deltaStore.hydrate();
+    if(previousFabricState!==fabricCards.sharedFingerprint() || fabricSeed.seeded || fabricOutbox.published)
+      liveEvents.notifyChange('fabric-cards',null,{source:'shared-hub-sync'});
     await licenseCardSync.flushOutbox();
     const licenseChanges=await licenseCardSync.reconcile();
     if(licenseChanges.profilesChanged||licenseChanges.rulesChanged)announceRecoveredMasterEntities(['licenseCards',...(licenseChanges.rulesChanged?['pricingRules']:[])]);
@@ -3960,6 +3966,7 @@ require('./routes/fabric-card-routes')(app, {
   fabricCards,
   requestRevision,
   userAccess,
+  onChanged: req=>liveEvents.notifyChange('fabric-cards',requestClientId(req)),
 });
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile
