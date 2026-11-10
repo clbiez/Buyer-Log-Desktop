@@ -1,0 +1,58 @@
+{
+  "baselinePrSha": "49c41e168795636a47c8776852f3d4b04c3ab37d",
+  "observedMainSha": "76cf2029c55950a5442a1fd0e0bf7887bbf25ef4",
+  "focused": {
+    "tests": 94,
+    "passed": 94,
+    "failed": 0
+  },
+  "fullRegression": {
+    "files": 1338,
+    "tests": 9270,
+    "pass": 9205,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0,
+    "durationSeconds": 197.2
+  },
+  "actualAppAcceptance": {
+    "result": "PASS",
+    "sourceFingerprints": {
+      "public/app-main.js": "b4e039fccdf5a57a47461e9a71d6d4afe84b0bf2ac1ddb1a3a9b816f9213109e",
+      "public/fabric-card-segment-ui.js": "f02621769a2dd998d6b7d114f6ce88681b4c22e7ded1b489d4fe1252d6cbe413",
+      "server/lib/fabric-cards.js": "f14749b068c82e17888fd5652f3655734e4c050cd598d6bf9a26886808bfa520",
+      "server/routes/fabric-card-routes.js": "f67b7d4df1b33409a30b3ce5ed80ba702b952ca5425fe8adbb10984ee3a4b2db"
+    },
+    "errors": [],
+    "englishLabels": true,
+    "cancelledTranslationBlocksSave": true,
+    "manualCorrectionPersisted": true,
+    "aiCalls": 0,
+    "openToVisibleMs": [
+      13.199999999254942,
+      15.099999997764826,
+      12.300000000745058,
+      12.100000001490116,
+      13
+    ],
+    "libraryRequestsDuringFiveReopens": 0,
+    "viewport": [
+      1440,
+      1000
+    ],
+    "note": "Actual Buyer Log server + app modal; synthetic data and browser-only failing AI stand-in. Candidate feedback/cleanup evidence only: physical devices, Main comparison, Electron and external LCW AI are not exercised."
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baselineMissing": 0
+  },
+  "releaseNotes": "PASS: 4 changes, actual post-change PNG inspected",
+  "performance": {
+    "decision": "BLOCKED",
+    "reason": "Candidate feedback/cleanup budget verified; parent PR Main comparison, native Electron/Windows/SMB and physical Shared Hub acceptance remain unverified."
+  },
+  "independentSecondModelReview": false,
+  "merge": false,
+  "testPublication": false,
+  "stablePublication": false
+}

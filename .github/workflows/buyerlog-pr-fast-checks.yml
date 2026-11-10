@@ -76,6 +76,8 @@ jobs:
       - name: Clock-skew and seeded synchronization scenarios
         run: |
           node --test --test-name-pattern="OneDrive simulation: 10 devices|HLC simulation" tests/sync-simulation-v20261009.test.js
+      - name: Shared Fabric Cards and bilingual segmented summaries
+        run: node --test tests/fabric-shared-segments.test.js tests/fabric-cards.test.js
       - name: Importance peer transport, checkpoints and ownership
         run: node --test tests/importance-peer-sync.test.js tests/sync-scope-moderator-authority-v20261009.test.js tests/sync-owner-lww-v20261009.test.js
       - name: Personal order notes and edit-authority isolation

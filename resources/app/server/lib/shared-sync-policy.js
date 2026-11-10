@@ -83,6 +83,7 @@ function classifyRecordId(id) {
   if (/^store:overrides\.json$/.test(key)) return 'MIXED_OVERRIDE';
   if (/^store:(email-groups|fx-rates)\.json$/.test(key)) return 'GLOBAL_MASTER';
   if (/^endeksmatik:/.test(key)) return 'GLOBAL_MASTER';
+  if (/^fabric-card:\d{3,12}$/.test(key)) return 'SHARED_BUSINESS';
   if (/^cp-order:/.test(key)) return 'SHARED_BUSINESS';
   if (/^store:collection-workspaces\/shared-collection\.json$/.test(key)) return 'SHARED_BUSINESS';
   if (/^store:collection-workspaces\//.test(key)) return 'LEGACY_COLLECTION';
@@ -97,7 +98,7 @@ function isCpOrderId(id) { return /^cp-order:/.test(String(id || '')); }
 /* Kayıt eşler arası delta kanalında taşınabilir mi? */
 function peerChannelAllows(id) {
   const key = String(id || '');
-  return isCpOrderId(key) || PEER_DOCUMENTS.has(key) || /^license-card:(?:state|stage-templates|licensor-merges|license-[a-f0-9]{24})$/.test(key);
+  return /^fabric-card:\d{3,12}$/.test(key) || isCpOrderId(key) || PEER_DOCUMENTS.has(key) || /^license-card:(?:state|stage-templates|licensor-merges|license-[a-f0-9]{24})$/.test(key);
 }
 /* cp-order kaydından yalnız paylaşılan alanları (ve motor metasını) bırakır.
    Meta alanlarının alan bazlı haritaları da aynı kapsama indirilir. */
@@ -130,6 +131,17 @@ function sanitizeDelta(delta, direction = 'outgoing') {
   if (!delta || typeof delta !== 'object') return null;
   if (!peerChannelAllows(delta.id)) return null;
   const cpOrder = isCpOrderId(delta.id);
+  if(/^fabric-card:/.test(String(delta.id||''))){
+    if(delta.delete||delta.tombstone)return null;
+    const payload=delta.patch||delta.value||{};
+    const allowed=new Set(['card','deleted','revisionId']);
+    if(!payload||typeof payload!=='object'||!Object.keys(payload).length||Object.keys(payload).some(key=>!allowed.has(key)))return null;
+    if(payload.card!=null && (typeof payload.card!=='object'||Array.isArray(payload.card)||String(payload.card.code||'')!==String(delta.id).slice(12)))return null;
+    if(payload.deleted===true && payload.card!=null)return null;
+    const next=clone(delta);
+    next.patch=Object.fromEntries(Object.entries(payload).map(([k,v])=>[k,scrubSecrets(v)]));
+    delete next.value;next.syncClass='SHARED_BUSINESS';return next;
+  }
   // cp-order kaydının bütünü silinmez: kayıtta artık yerel kalan alanlar da
   // (notlar vb.) var. Paylaşılan alan temizliği alan değeri null ile taşınır.
   if (cpOrder && (delta.delete || delta.tombstone)) return null;

@@ -4,18 +4,24 @@ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-fabric-async-'));process.env
 const express=require('express'),fabric=require('../server/lib/fabric-cards'),{withFileLeaseAsync}=require('../server/lib/shared-file-transaction'),{atomicWriteJsonAsync}=require('../server/user-data');
 const app=express(),arrivals=new EventEmitter();let enabled=true,sessionValid=true,base,server;
 app.use((req,_res,next)=>{req.currentUser={id:'demo',enabled:true};if(req.method==='POST')arrivals.emit('post');next();});
-require('../server/routes/fabric-card-routes')(app,{express,fabricCards:fabric,requestRevision:req=>req.body?.expectedRevision??null,apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code}),userAccess:{requireArea:()=> (_req,_res,next)=>next(),profileById:()=>({id:'demo',enabled}),sessionProfile:()=>sessionValid?{id:'demo',enabled}:null,hasArea:()=>true,effectiveCollectionAccess:()=>[{level:'edit'}],appendAudit:()=>{}}});
+require('../server/routes/fabric-card-routes')(app,{express,fabricCards:fabric,requestRevision:req=>req.body?.expectedRevision??null,apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code}),userAccess:{requireArea:()=> (_req,_res,next)=>next(),profileById:()=>({id:'demo',enabled}),sessionProfile:()=>sessionValid?{id:'demo',enabled}:null,hasArea:()=>true,effectiveCollectionAccess:()=>[],appendAudit:()=>{}}});
 app.get('/health',(_req,res)=>res.json({ok:true}));
 const deferred=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};};
 async function call(items,revision){const response=await fetch(base+'/api/fabric-cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,expectedRevision:revision})});return {status:response.status,body:await response.json()};}
 async function hold(work){const entered=deferred(),release=deferred();const done=withFileLeaseAsync(fabric.FILE,async()=>{entered.resolve();await release.promise;await work?.();});await entered.promise;return {release:release.resolve,done};}
 test.before(async()=>{server=app.listen(0,'127.0.0.1');await once(server,'listening');base='http://127.0.0.1:'+server.address().port;});
 test.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));fs.rmSync(root,{recursive:true,force:true});});
-test('actual fabric route rechecks current permission after a queued lease and leaves bytes unchanged',async()=>{
+test('an active user without Collection edit permission can read and edit the shared fabric library',async()=>{
+ const get=await fetch(base+'/api/fabric-cards');assert.equal(get.status,200);
+ const response=await call([{code:'0999',summary:'Shared fabric without collection permission'}],null);
+ assert.equal(response.status,200);assert.equal(response.body.updated,1);
+ assert.ok(response.body.cards.some(card=>card.code==='0999'));
+});
+test('actual fabric route rechecks active authentication after a queued lease and leaves bytes unchanged',async()=>{
  await fabric.upsertFabricCards([{code:'1001',summary:'Original'}],{id:'demo'});const before=fs.readFileSync(fabric.FILE,'utf8'),lock=await hold();
  const arrived=once(arrivals,'post'),request=call([{code:'1001',summary:'Unauthorized'}],fabric.loadFabricCards()._revision);await arrived;
  enabled=false;lock.release();await lock.done;const response=await request;
- assert.equal(response.status,403);assert.equal(response.body.code,'COLLECTION_EDIT_DENIED');assert.equal(fs.readFileSync(fabric.FILE,'utf8'),before);enabled=true;
+ assert.equal(response.status,403);assert.equal(response.body.code,'FABRIC_SESSION_INVALID');assert.equal(fs.readFileSync(fabric.FILE,'utf8'),before);enabled=true;
 });
 test('queued fabric CAS reads the latest committed revision and does not overwrite the newer writer',async()=>{
  const before=fabric.loadFabricCards(),lock=await hold(async()=>{const next=JSON.parse(JSON.stringify(before));next.cards['1001'].summary='Other writer';next._revision++;await atomicWriteJsonAsync(fabric.FILE,next);});
@@ -40,5 +46,5 @@ test('fabric read does not return records after its session is invalidated durin
  fsp.readFile=async(...args)=>{const bytes=await read(...args);if(!intercepted&&String(args[0])===fabric.FILE){intercepted=true;stalled.resolve();await release.promise;}return bytes;};
  t.after(()=>{release.resolve();fsp.readFile=read;sessionValid=true;});
  const pending=fetch(base+'/api/fabric-cards');await stalled.promise;sessionValid=false;release.resolve();const response=await pending;
- assert.equal(response.status,403);assert.equal((await response.json()).code,'COLLECTION_EDIT_DENIED');
+ assert.equal(response.status,403);assert.equal((await response.json()).code,'FABRIC_SESSION_INVALID');
 });

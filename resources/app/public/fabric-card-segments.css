@@ -1,0 +1,24 @@
+/* Fabric Card 02/B: geometry only. All visual appearance belongs to the
+   shared Buyer Log Manifest controls; Motion+ remains the only animation owner. */
+#_kolFabricCardModal .fabricSegmentBar{display:flex;justify-content:space-between;align-items:end;gap:var(--ui-space-4);margin-block:var(--ui-space-3)}
+#_kolFabricCardModal .fabricSegmentBar strong,#_kolFabricCardModal .fabricSegmentBar small{display:block}
+#_kolFabricCardModal .fabricSegmentBar label{min-width:9rem}
+#_kolFabricCardModal .fabricSegmentBar select{display:block;width:100%;min-height:var(--ui-control-height)}
+.fabricSegmentHeading,.fabricSegmentRow{display:grid;grid-template-columns:minmax(6rem,.6fr) minmax(0,1fr) minmax(0,1fr) minmax(9rem,.8fr);gap:var(--ui-space-2);align-items:center}
+.fabricSegmentHeading,.fabricSegmentRow{padding-block:var(--ui-space-2)}
+.fabricSegmentName b{float:right}
+.fabricSegmentRow input{min-width:0;width:100%;min-height:var(--ui-control-height);padding:var(--ui-space-2)}
+.fabricSegmentAction{display:flex;flex-direction:column;align-items:flex-start;gap:var(--ui-space-1)}
+.fabricSegmentAction button{max-width:100%;white-space:normal;text-align:left}
+.fabricSegmentPreview,.fabricSegmentNotice{padding:var(--ui-space-3);margin-block:var(--ui-space-3)}
+.fabricSegmentPreview p{margin-block:var(--ui-space-2);overflow-wrap:anywhere}
+.fabricSegmentPreview p small{display:inline-block;min-width:2rem}
+.fabricSegmentLegacy{display:block;margin-top:var(--ui-space-2);overflow-wrap:anywhere}
+.fabricSegmentError{margin-block:var(--ui-space-2)}
+.fabricSegmentCompare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-space-3);padding-block:var(--ui-space-3)}
+.fabricSegmentCompare section{min-width:0;padding:var(--ui-space-3);overflow-wrap:anywhere}
+.fabricSegmentCompare small{display:block}
+.kolFabricSummaries [data-fabric-segments]{grid-column:1/-1;min-width:0;width:100%}
+@media(max-width:850px){.fabricSegmentHeading{display:none}.fabricSegmentRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.fabricSegmentName,.fabricSegmentAction{grid-column:1/-1}.fabricSegmentAction{flex-direction:row;flex-wrap:wrap}.fabricSegmentBar{flex-wrap:wrap}}
+@media(max-width:600px){.fabricSegmentCompare{grid-template-columns:1fr}}
+@media(max-width:500px){.fabricSegmentRow{grid-template-columns:1fr}.fabricSegmentAction{grid-column:auto}.fabricSegmentBar label{width:100%}}
