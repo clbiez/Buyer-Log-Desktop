@@ -54,7 +54,7 @@
     for(const pair of pairs){
       const src=pair[from==='tr'?0:1],dst=pair[from==='tr'?1:0];
       const escaped=src.replace(/[\^$.*+?()[\]{}|]/g,'\\$&');
-      const rx=new RegExp('(^|[^A-Za-zÇĞİÖŞÜçğıöşü])('+escaped+')(?![A-Za-zÇĞİÖŞÜçğıöşü])','gi');
+      const rx=new RegExp('(^|[^A-Za-zÇĞİÖŞÜçğıöşü])('+escaped+')(?![A-Za-zÇĞİÖŞÜçğıöşü])','gi'); // i18n-ignore — technical Unicode word-boundary regex, not a UI string.
       rest=rest.replace(rx,function(_,lead){changed=true;marks.push(dst);return lead+'\u0001'+(marks.length-1)+'\u0002';});
     }
     rest=rest.replace(/\u0001(\d+)\u0002/g,(_,i)=>marks[Number(i)]);
