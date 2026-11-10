@@ -23,3 +23,9 @@
 .fabricSegmentError{margin-block:var(--ui-space-2)}
 @media(max-width:850px){.fabricSegmentHeading{display:none}.fabricSegmentRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.fabricSegmentName,.fabricSegmentAction{grid-column:1/-1}.fabricSegmentAction{flex-direction:row;flex-wrap:wrap}.fabricSegmentBar{flex-wrap:wrap}}
 @media(max-width:500px){.fabricSegmentRow{grid-template-columns:1fr}.fabricSegmentAction{grid-column:auto}.fabricSegmentBar label{width:100%}}
+
+.fabricSegmentCompare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-space-3);padding-block:var(--ui-space-3)}
+.fabricSegmentCompare section{min-width:0;background:var(--ui-surface-soft);border:1px solid var(--ui-field-border);padding:var(--ui-space-3);overflow-wrap:anywhere}
+.fabricSegmentCompare small{display:block;color:var(--ui-text-secondary)}
+.fabricSegmentCompare p{color:var(--ui-text)}
+@media(max-width:600px){.fabricSegmentCompare{grid-template-columns:1fr}}
