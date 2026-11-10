@@ -1,0 +1,138 @@
+{
+  "variant": "main",
+  "pair": "aa1",
+  "calculatedDates": null,
+  "startupMs": 2003.8738720000001,
+  "modal": {
+    "samples": [
+      94,
+      58.60000000009313,
+      66.10000000009313,
+      27.799999999813735,
+      43.5
+    ],
+    "syncSamples": [
+      82.5,
+      50.3000000002794,
+      29.799999999813735,
+      24.100000000093132,
+      24.09999999962747
+    ],
+    "longTasks": [
+      55,
+      54
+    ],
+    "feedbackSamples": [
+      82.5,
+      50.3000000002794,
+      29.799999999813735,
+      24.100000000093132,
+      24.09999999962747
+    ],
+    "remaining": 0
+  },
+  "heapBefore": 10908964,
+  "heapAfter": 15871476,
+  "heapCycles": [
+    15871300,
+    15871388,
+    15933336,
+    16049708,
+    15997956
+  ],
+  "retained": 4962512,
+  "catalogs": 1,
+  "exported": {
+    "elapsedMs": 816.3999999999069,
+    "totalMs": 2722.6999999997206,
+    "bytes": 16444400,
+    "heap": 291991354,
+    "cells": 420019,
+    "first": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 0,
+      "t": "n"
+    },
+    "last": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 60,
+      "t": "n"
+    },
+    "range": "A1:N30001"
+  },
+  "calculated": null,
+  "fixtureHash": "b152c7cde413300cc6496b08618e64b8bca396b5bf2e45f6c80c826fefc79468",
+  "runtime": "151.0.7922.173"
+}

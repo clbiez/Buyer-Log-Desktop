@@ -40,7 +40,7 @@ test('v6.23 Backlog export options allow ASAS-IAS source columns and formulas',a
   assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY/);
   assert.match(APP,/BACKLOG_EXCEL_FORMULAS_KEY/);
   assert.doesNotMatch(APP,/value="image:model"/);
-  assert.match(APP,/function backlogExcelColumnCatalog\(\)/);
+  assert.match(APP,/function backlogExcelColumnCatalog\(settings=backlogExcelColumnSettings\(\)\)/);
   assert.match(APP,/backlogExportSourceCatalog\(\)\.forEach\(item=>\{/);
   assert.match(APP,/data-col-add-id=/);
   assert.match(APP,/data-col-selected/);

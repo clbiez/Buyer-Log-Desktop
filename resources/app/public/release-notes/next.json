@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-10",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Backlog Excel sütunları ve hesaplamaları",
+    "en": "Backlog Excel columns and calculations"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Özel sütun adları, kaynak eşlemesi ve CP ile ortak formül düzenleyici.",
+    "en": "Custom column names, source lineage and the shared CP formula editor."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "backlog-excel-column-names-lineage",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog Excel",
+        "en": "Backlog Excel"
+      },
+      "title": {
+        "tr": "Excel sütunlarını adlandırın ve kaynaklarını kontrol edin",
+        "en": "Name Excel columns and inspect their sources"
+      },
+      "body": {
+        "tr": "Rapor sütunlarının Excel adını listeden değiştirebilirsiniz. Her sütunun kaynak adı ve alanı Buyer Log’da görünür; Excel’in Ayarlar sayfasında görünen ad, kaynak, alan kimliği ve formül eşlemesi bulunur. Formül bağlantıları ad ve sıra değişikliklerinde korunur; gerekli kaynaklar gizli sütunlar olarak aktarılır.",
+        "en": "Rename report columns directly in the list. Buyer Log shows each source and field; the Excel Settings sheet records the exported name, source, field identity and formula. References survive renaming and reordering, and required sources are exported as hidden columns."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-excel-column-fx.png",
+        "alt": {
+          "tr": "Özel adları, kaynakları ve FX durumlarını gösteren Backlog Excel ayarları",
+          "en": "Backlog Excel settings showing custom names, sources and FX states"
+        },
+        "caption": {
+          "tr": "Güncel uygulamada izole demo verisi; tek liste düzeni ve sütun kaynağı bilgileri.",
+          "en": "Actual application with isolated demo data, showing the single list and column sources."
+        }
+      }
+    },
+    {
+      "id": "backlog-excel-shared-formula-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog Excel",
+        "en": "Backlog Excel"
+      },
+      "title": {
+        "tr": "Sütunun yanındaki FX ile hesaplama düzenleyin",
+        "en": "Edit calculations with FX beside each column"
+      },
+      "body": {
+        "tr": "Sıralama oklarının solundaki FX, CP’deki hesaplama kurucusunu, sözlüğü, önizlemeyi ve LCW AI desteğini açar. Özel formül noktalı ve vurgulu, yerleşik hesaplama onay işaretli, formülsüz sütun artı işaretlidir. Yeni hesaplanan sütun eklenebilir; mevcut Excel formülleri de aynı pencerede düzenlenebilir. Alttaki Gelişmiş ayarlar alanı kaldırıldı.",
+        "en": "FX to the left of the reorder arrows opens CP’s calculation builder, dictionary, preview and LCW AI support. Custom formulas have a highlighted dot, built-in calculations a checkmark, and columns without formulas a plus. Add calculated columns or edit existing Excel formulas in the same dialog. The bottom Advanced settings section has been removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-excel-calculated-editor.png",
+        "alt": {
+          "tr": "Backlog Excel için ortak hesaplanan sütun düzenleyicisi ve canlı önizleme",
+          "en": "Shared calculated column editor and live preview for Backlog Excel"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log ekranında anonim kaynak sütunundan hesaplanan örnek sonuç.",
+          "en": "An example calculated from an anonymous source column in the actual Buyer Log application."
+        }
+      }
+    }
+  ]
 }
