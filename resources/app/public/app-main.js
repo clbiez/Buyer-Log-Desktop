@@ -1148,8 +1148,8 @@ function renderCorePageLoadingState(tableKey,message){
   const content=document.getElementById(tableKey==='cp'?'cpContent':'ordersContent');
   if(!empty||!content)return;
   const title=message||(tableKey==='cp'
-    ?(appLang==='en'?'Loading CP on demand…':'CP gerektiğinde yükleniyor…')
-    :(appLang==='en'?'Loading Orders on demand…':'Siparişler gerektiğinde yükleniyor…'));
+    ?(appLang==='en'?'Loading CP…':'CP yükleniyor…')
+    :(appLang==='en'?'Loading Orders…':'Siparişler yükleniyor…'));
   if(window.BLUI&&typeof window.BLUI.renderState==='function'){
     window.BLUI.renderState(empty,{kind:'loading',title});
   }else{

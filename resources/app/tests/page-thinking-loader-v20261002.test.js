@@ -26,6 +26,36 @@ test('core page loading states use the shared status marker loader',()=>{
   assert.match(cp,/currentActiveTab\(\)==='cp'\)renderCorePageLoadingState\('cp'\)/);
 });
 
+test('core page loading labels are concise for CP and Orders in TR and EN',()=>{
+  const vm=require('node:vm');
+  const helper=block('function renderCorePageLoadingState','function renderCpLoadError');
+  const cases=[
+    ['cp','tr','CP yükleniyor…'],
+    ['cp','en','Loading CP…'],
+    ['orders','tr','Siparişler yükleniyor…'],
+    ['orders','en','Loading Orders…'],
+  ];
+  for(const [tableKey,appLang,expected] of cases){
+    const empty={style:{}},content={style:{}};
+    let rendered;
+    const context={
+      appLang,
+      document:{getElementById(id){
+        if(id===(tableKey==='cp'?'cpEmpty':'ordersEmpty'))return empty;
+        if(id===(tableKey==='cp'?'cpContent':'ordersContent'))return content;
+        return null;
+      }},
+      window:{BLUI:{renderState(node,options){rendered={node,...options};}}},
+    };
+    vm.runInNewContext(helper+`\nrenderCorePageLoadingState('${tableKey}');`,context);
+    assert.equal(rendered?.node,empty);
+    assert.equal(rendered?.kind,'loading');
+    assert.equal(rendered?.title,expected);
+    assert.equal(empty.style.display,'flex');
+    assert.equal(content.style.display,'none');
+  }
+});
+
 test('Orders failure stops the loading animation and renders an error state',()=>{
   const orders=block('async function ensureOrdersLoaded','window.BLEnsureOrdersLoaded');
   assert.match(orders,/setOrdersLoadingState\(false,message\)/);

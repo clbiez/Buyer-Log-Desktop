@@ -3500,7 +3500,7 @@ pairs:[
 ["Genel Bakış verisi yüklenemedi:","Overview data could not be loaded:"],
 ["CP yüklenemedi:","CP could not be loaded:"],
 ["Koleksiyon filtreleri yüklenemedi:","Collection filters could not be loaded:"],
-["Siparişler gerektiğinde yükleniyor…","Loading Orders on demand…"],
+["Siparişler yükleniyor…","Loading Orders…"],
 ["Siparişler yüklenemedi:","Orders could not be loaded:"],
 ["Bu yetki alanına erişiminiz bulunmuyor.","You do not have access to this area."],
 ["Tüm sütunlar en dar okunabilir genişliğe ayarlandı.","All columns fitted to their narrowest readable width."],
