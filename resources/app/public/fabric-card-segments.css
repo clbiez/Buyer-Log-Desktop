@@ -1,0 +1,25 @@
+/* Buyer Log Fabric Card 02/B; Buyer Log tokens and shared Motion+ only. */
+.kolFabricCardModal .fabricSegmentBar{display:flex;justify-content:space-between;align-items:end;gap:var(--ui-space-4);margin-block:var(--ui-space-3)}
+.fabricSegmentBar strong{display:block;color:var(--ui-text)}
+.fabricSegmentBar small{display:block;color:var(--ui-text-secondary)}
+.fabricSegmentBar label{min-width:9rem;color:var(--ui-text-secondary)}
+.fabricSegmentBar select{display:block;width:100%;min-height:var(--ui-control-height);color:var(--ui-text);background:var(--ui-surface);border:1px solid var(--ui-field-border)}
+.fabricSegmentHeading,.fabricSegmentRow{display:grid;grid-template-columns:minmax(6rem,.6fr) minmax(0,1fr) minmax(0,1fr) minmax(9rem,.8fr);gap:var(--ui-space-2);align-items:center}
+.fabricSegmentHeading{color:var(--ui-text-muted);border-bottom:1px solid var(--ui-field-border);padding-block:var(--ui-space-2)}
+.fabricSegmentRow{border-bottom:1px solid var(--ui-field-border);padding-block:var(--ui-space-2)}
+.fabricSegmentName{color:var(--ui-text-secondary)}
+.fabricSegmentName b{color:var(--ui-accent);float:right}
+.fabricSegmentRow input{min-width:0;width:100%;min-height:var(--ui-control-height);background:var(--ui-surface);border:1px solid var(--ui-field-border);padding:var(--ui-space-2);color:var(--ui-text)}
+.fabricSegmentRow input[readonly]{background:var(--ui-surface-soft);color:var(--ui-text-secondary)}
+.fabricSegmentRow input[data-mode="manual"]{border-color:var(--ui-accent)}
+.fabricSegmentAction{display:flex;flex-direction:column;align-items:flex-start;gap:var(--ui-space-1)}
+.fabricSegmentAction button{max-width:100%;white-space:normal;text-align:left}
+.fabricSegmentAction [data-segment-status]{color:var(--ui-text-secondary)}
+.fabricSegmentAction [data-state="failed"],.fabricSegmentAction [data-state="invalid"],.fabricSegmentAction [data-state="stale"],.fabricSegmentError{color:var(--ui-warning)}
+.fabricSegmentPreview,.fabricSegmentNotice{background:var(--ui-surface-soft);border:1px solid var(--ui-field-border);padding:var(--ui-space-3);margin-block:var(--ui-space-3)}
+.fabricSegmentPreview p{margin-block:var(--ui-space-2);overflow-wrap:anywhere;color:var(--ui-text)}
+.fabricSegmentPreview p small{display:inline-block;min-width:2rem;color:var(--ui-text-muted)}
+.fabricSegmentLegacy{display:block;margin-top:var(--ui-space-2);overflow-wrap:anywhere;color:var(--ui-text-secondary)}
+.fabricSegmentError{margin-block:var(--ui-space-2)}
+@media(max-width:850px){.fabricSegmentHeading{display:none}.fabricSegmentRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.fabricSegmentName,.fabricSegmentAction{grid-column:1/-1}.fabricSegmentAction{flex-direction:row;flex-wrap:wrap}.fabricSegmentBar{flex-wrap:wrap}}
+@media(max-width:500px){.fabricSegmentRow{grid-template-columns:1fr}.fabricSegmentAction{grid-column:auto}.fabricSegmentBar label{width:100%}}
