@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "backlog-synthetic-approval",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Üretim bakiyesinde eski yükleme onayı taşınmaz",
+        "en": "Production remainders no longer inherit shipment approval"
+      },
+      "body": {
+        "tr": "IAS kaydı olmayan otomatik bakiye satırlarında yükleme onay tarihi boş bırakılır. Önceki yüklemeye ait sipariş onayı, üretimde kalan miktarı yanlışlıkla handover bekliyor olarak riskli göstermez. Ekran, detay raporu ve Excel aynı kuralı kullanır; gerçek Retail gecikmesi ve yol süresi aşımı riskleri korunur.",
+        "en": "Automatic remainder rows without an IAS record leave shipment approval blank. An order approval from an earlier shipment no longer incorrectly flags the remaining production quantity as awaiting handover. The screen, detail report and Excel use the same rule; genuine Retail delays and transit overdue risks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-synthetic-approval.png",
+        "alt": {
+          "tr": "İki IAS parsiyeli ve onay tarihi taşınmadan oluşturulan risksiz üretim bakiyesi",
+          "en": "Two IAS partials and a production remainder without an inherited approval or false risk"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi. 300 + 300 IAS adedi ve 400 adet Üretimde bakiyesi; üretim satırının riski YOK.",
+          "en": "Actual post-change Buyer Log with isolated demo data. Two IAS partials of 300 units and a production remainder of 400 units; the production row has no risk."
+        }
+      }
+    },
+    {
       "id": "checklist-set-roster-sync",
       "type": "fix",
       "module": {

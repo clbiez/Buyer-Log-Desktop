@@ -2544,6 +2544,8 @@ function backlogSegment(order, values) {
   const iasRow = values && values.iasRow ? values.iasRow : null;
   const result = {
     ...order,
+    // IAS kaydı olmayan bakiye, siparişin önceki yükleme onayını devralmaz.
+    shipConf: kind === 'ias' ? (order.shipConf || null) : null,
     qty: quantity,
     kalan: kind === 'production' ? quantity : 0,
     antrepo: (antrepoStatusKey(status) === 'DEPODA' || antrepoStatusKey(status) === 'RETAILE AKTARIM BEKLENIYOR') ? quantity : 0,
@@ -3435,6 +3437,9 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
   return (Array.isArray(sourceSegments) ? sourceSegments : []).map(segment => {
     const order = sourceOrderRef(segment) || segment;
     const ias = segment._iasRow || null;
+    // sourceOrderRef asıl siparişi korur; onayı oradan tekrar sentetik
+    // bakiyeye taşımamak gerekir. Risk ve Excel aynı satır değerini kullanır.
+    const shipConfirmationDate = syntheticSegmentKind(segment) ? null : (order.shipConf || null);
     const segmentQty = Math.max(0, Number(segment.qty) || 0);
     const isProduction = segment._segmentKind === 'production';
     const isShortage = segment._segmentKind === 'shortage' || isShortageStatus(segment._status);
@@ -3501,7 +3506,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       'In-Store (Model Budget)': order.mb,
       'Ant. Arrival': backlogAntrepoDate,
       'HANDOVER Tarihi': ias ? (ias.handover || null) : null,
-      'Buying Son Onay Tarihi': order.shipConf || null,
+      'Buying Son Onay Tarihi': shipConfirmationDate,
       // Shortage operasyonel transit hesabında üretim gibi değil, siparişin
       // tamamı Ex-Factory tarihinde yüklenmiş kabul edilerek hesaplanır.
       STATUS: segment._status,
@@ -3525,7 +3530,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       loadDate: actualLoadDate,
       antArrival: backlogAntrepoDate,
       retailDate: backlogRetailDate,
-      shipConfirmationDate: order.shipConf || null,
+      shipConfirmationDate,
       handoverDate: ias ? (ias.handover || null) : null,
       transitDays: transitInfo.days,
       transitOverdue: transitOverdue.overdue,
@@ -3628,7 +3633,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         expectedTransitArrival: transitOverdue.expectedArrival || null,
         transitOverdue: transitOverdue.overdue === true,
         transitOverdueDays: transitOverdue.overdueDays,
-        shipConfirmationDate: order.shipConf || null,
+        shipConfirmationDate,
         // ASAS'ta bu rengin Ex-Factory'si boştu; aynı PO'nun diğer renginden alındı.
         exFactoryInheritedFrom: order._exInheritedFrom ? (order._exInheritedFrom.ccode || '') : '',
         originalDelType: effectiveDelType,
