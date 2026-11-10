@@ -63,7 +63,9 @@ test('Backlog rows expose the compact inputs required for live Excel formulas', 
   assert.equal(row._backlogExcel.transitDays, 70);
   assert.equal(row._backlogExcel.originalDelType, 'Gemi');
   assert.equal(row._backlogExcel.actualAntrepoDate, null);
-  assert.ok(row._backlogExcel.shipConfirmationDate instanceof Date);
+  // IAS kaydı olmayan Üretimde bakiyesi önceki yükleme onayını devralmaz.
+  assert.equal(row._partial.synthetic, 'production');
+  assert.equal(row._backlogExcel.shipConfirmationDate, null);
 });
 
 test('Backlog formula plan keeps month/week, revised Ex-Factory and Priority as direct values while linking live arrival formulas', () => {

@@ -1,0 +1,11 @@
+{
+  "base": "6524112ed413a8d30a28287addecd7b33a814fa2",
+  "candidate": "ea6366e4bd1a18a7ba7a807ce1f4260bf48d9ff2",
+  "fixtures": [
+    1,
+    1000
+  ],
+  "samples": "3 alternating main/candidate pairs; 5 repeated requests per process",
+  "budgets": "No reproducible regression in HTTP first/repeat export, XLSX generation, or server RSS; output counts unchanged; approval/risk change is intentional. Investigate noise with A/A if needed.",
+  "scope": "server parse, Backlog/detail and Excel metadata; no UI, network request topology, startup hooks, or native code changed"
+}
