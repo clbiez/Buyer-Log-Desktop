@@ -32329,10 +32329,10 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   const raw=part.raw,code=part.code;
   const existing=kolFabricCards.get(code)||null;
   const draft=existing?{...existing,details:{...existing.details}}:{...api.ruleCard(freeText?freeText.replace(/\s*·\s*/g,', '):raw),raw};
-  const canEdit=Boolean(kolWorkspaceCanEdit);
+  const canEdit=true; // Fabric Card editing is shared by all active users; Collection permissions are unchanged.
   let source=draft.summarySource,deleteArmed=false;
   document.getElementById('_kolFabricCardModal')?.remove();
-  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
+  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.dataset.fabricCode=code;
   const dis=canEdit?'':' disabled';
   const detailSnapshots={};
   const displayDetail=(key,card)=>{
@@ -32356,16 +32356,13 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     <div class="plmImportBody">
       ${freeText?`<div class="plmListOptions kolFabricDetails"><label><span>${escapeHtml(en?'Fabric code':'Kumaş kodu')}</span><input type="text" id="_kolFabricCode" inputmode="numeric" autocomplete="off" placeholder="${escapeHtml(en?'e.g. 3859':'ör. 3859')}"${dis}></label></div>`:''}
       <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection, CP and Orders tables':'Koleksiyon, CP ve Orders tablolarında görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
-      <div class="plmListOptions kolFabricSummaries">
-        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" value="${escapeHtml(api.summaryFor(draft,'tr'))}"${dis}></label>
-        <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" value="${escapeHtml(api.summaryFor(draft,'en'))}"${dis}></label>
-      </div>
+      <div class="plmListOptions kolFabricSummaries"><div data-fabric-segments></div></div>
       <h4>${escapeHtml(en?'Details':'Ayrıntılar')}</h4>
       <div class="plmListOptions kolFabricDetails">${detailInputs}</div>
       <h4>${escapeHtml(en?'PLM fabric information (kept unchanged)':'PLM kumaş bilgisi (değiştirilmeden saklanır)')}</h4>
       <textarea class="plmListText kolFabricRaw" rows="4" readonly>${escapeHtml(raw)}</textarea>
       ${rawDiffers?`<div class="plmExistingNotice">${escapeHtml(en?'The card was created from a different PLM text for the same code:':'Kart aynı kod için farklı bir PLM metninden oluşturuldu:')} <span class="muted">${escapeHtml(existing.raw)}</span></div>`:''}
-      <div class="muted" data-fabric-status></div>
+      <div class="muted" data-fabric-status></div><div data-fabric-remote class="fabricSegmentNotice" hidden></div>
     </div>
     <div class="verHistFoot kolFabricFoot">
       ${canEdit&&existing?`<button type="button" class="tbtn danger" data-fabric="delete">${escapeHtml(en?'Delete card':'Kartı sil')}</button>`:''}
@@ -32376,15 +32373,21 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
       ${canEdit?`<button type="button" class="tbtn primary" data-fabric="save">${escapeHtml(en?'Save card':'Kartı kaydet')}</button>`:''}
     </div>
   </div>`;
-  const status=modal.querySelector('[data-fabric-status]'),summaryInput=modal.querySelector('#_kolFabricSummary'),summaryEnInput=modal.querySelector('#_kolFabricSummaryEn');
+  const status=modal.querySelector('[data-fabric-status]');let segmentEditor=null;
   const setSource=next=>{source=next;const badge=modal.querySelector('[data-fabric-source]');if(badge){badge.textContent=kolFabricSourceLabel(next);badge.className=`kolFabricSource is-${next}`;}};
   const fill=card=>{
-    summaryInput.value=api.summaryFor(card,'tr');summaryEnInput.value=api.summaryFor(card,'en');
+    segmentEditor?.fill(card);
     api.DETAIL_FIELDS.forEach(key=>{const input=modal.querySelector(`[data-fabric-detail="${key}"]`);if(input)input.value=displayDetail(key,card);});
     setSource(card.summarySource);
   };
-  const close=()=>{window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
-  modal.addEventListener('input',event=>{if(event.target===summaryInput||event.target===summaryEnInput||event.target.dataset.fabricDetail)setSource('manual');});
+  const close=()=>{segmentEditor?.dispose();window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
+  modal.__fabricExpected=existing?.revisionId||'';
+  modal.__fabricFill=fill;
+  segmentEditor=window.BLFabricSegmentUI?.mount(modal.querySelector('[data-fabric-segments]'),{
+    card:draft,sourceLanguage:en?'en':'tr',uiLanguage:en,
+    onDirty:()=>{if(segmentEditor?.isDirty()){modal.dataset.fabricDirty='1';setSource('manual');}}
+  });
+  modal.addEventListener('input',event=>{if(event.target.dataset.fabricDetail){modal.dataset.fabricDirty='1';setSource('manual');}});
   // Girilen kodun kartı zaten varsa editör o kartla dolar; kayıt hücreyi mevcut karta bağlar.
   modal.querySelector('#_kolFabricCode')?.addEventListener('input',event=>{
     const known=kolFabricCards.get(api.normalizeCode(event.target.value));
@@ -32393,6 +32396,17 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     status.textContent=en?`Fabric code ${known.code} already has a card. Saving links this cell to it.`:`${known.code} kumaş kodunun zaten kartı var. Kaydettiğinizde bu hücre o karta bağlanır.`;
   });
   modal.addEventListener('click',async event=>{
+    const remoteAction=event.target.closest('[data-fabric-remote-action]');
+    if(remoteAction){
+      const remote=modal.__fabricRemote;
+      if(remoteAction.dataset.fabricRemoteAction==='remote'){
+        if(remote){fill(remote);modal.__fabricExpected=remote.revisionId||'';}
+        else {close();return;}
+        modal.dataset.fabricDirty='0';
+      }else{modal.__fabricExpected=remote?.revisionId||'';modal.dataset.fabricDirty='1';}
+      modal.querySelector('[data-fabric-remote]').hidden=true;
+      return;
+    }
     const partBtn=event.target.closest('[data-fabric-part]');
     if(partBtn){if(partBtn.dataset.fabricPart!==code){close();openFabricCardDialog(rawText,{trigger,code:partBtn.dataset.fabricPart,collection,linkRowId});}return;}
     const action=event.target.closest('[data-fabric]');
@@ -32419,7 +32433,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
       if(!deleteArmed){deleteArmed=true;action.textContent=en?'Click again to delete':'Silmek için tekrar tıklayın';return;}
       action.disabled=true;
       try{
-        await kolFabricCardDelete(code);close();fabricCardsRepaintTables();
+        await kolFabricCardDelete(code,modal.__fabricExpected);close();fabricCardsRepaintTables();
         showToast(en?`Fabric card ${code} deleted. The table shows the PLM fabric information for this code.`:`${code} kumaş kartı silindi. Tablo bu kod için PLM kumaş bilgisini gösterir.`);
       }catch(err){action.disabled=false;status.textContent=(en?'The card could not be deleted: ':'Kart silinemedi: ')+(err&&err.message||String(err));}
       return;
@@ -32435,19 +32449,25 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
         // Viewing a translated detail must not overwrite its original stored value.
         details[key]=snapshot&&value===snapshot.displayed?snapshot.original:value;
       });
-      const card=api.normalizeCard({code:saveCode,summary:summaryInput.value,summaryEn:summaryEnInput.value,details,summarySource:source,raw:saveExisting&&saveExisting.raw||(freeText?rowRaw:raw)});
-      if(!card){status.textContent=en?'Enter a Turkish summary first.':'Önce Türkçe özeti girin.';summaryInput.focus();return;}
+      const segmentResult=segmentEditor?.result();
+      if(!segmentResult?.ok){status.textContent=segmentResult?.error||(en?'Complete all four summary segments first.':'Önce dört özet parçasını tamamlayın.');return;}
+      const card=api.normalizeCard({code:saveCode,summary:segmentResult.summary,summaryEn:segmentResult.summaryEn,details,summarySource:source,raw:saveExisting&&saveExisting.raw||(freeText?rowRaw:raw)});
+      if(!card){status.textContent=en?'Enter valid fabric summary segments.':'Geçerli kumaş özeti parçalarını girin.';return;}
+      card.summarySegments=segmentResult.summarySegments;
+      card.translationOverrides=segmentResult.translationOverrides;
+      card.segmentSourceLang=segmentResult.segmentSourceLang;
+      if(saveExisting)card.expectedRevisionId=modal.__fabricExpected;
       action.disabled=true;
       try{
         await kolFabricCardsSave([card]);close();fabricCardsRepaintTables();
         // Düz metin hücresi kartın PLM metnine bağlanır; tablo kart görünümüne geçer.
         if(linkRowId!=null)kolFabricLinkRowText(linkRowId,rowRaw);
         showToast(en?`Fabric card ${saveCode} saved. Every model with this code shows the new summary.`:`${saveCode} kumaş kartı kaydedildi. Bu kodlu tüm modeller yeni özeti gösterir.`);
-      }catch(err){action.disabled=false;status.textContent=(en?'The card could not be saved: ':'Kart kaydedilemedi: ')+(err&&err.message||String(err));}
+      }catch(err){action.disabled=false;status.textContent=(en?'The card could not be saved: ':'Kart kaydedilemedi: ')+(err&&err.message||String(err));if(err?.code==='FABRIC_CARD_CONFLICT')kolFabricShowRemoteComparison(modal,err.current||null);}
     }
   });
   document.body.appendChild(modal);
-  window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?(freeText?'#_kolFabricCode':'#_kolFabricSummary'):'[data-fabric="cancel"]'});
+  window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?(freeText?'#_kolFabricCode':'[data-part="tr:0"]'):'[data-fabric="cancel"]'});
 }
 function kolPlmListStatusOptions(selected){
   const en=appLang==='en';
