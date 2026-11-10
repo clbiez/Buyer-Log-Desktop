@@ -17880,7 +17880,13 @@ function backlogColumnGroupTag(group){
   return '';
 }
 async function openBacklogExportColumns(draftState=null){
-  if(!window.BLBacklogColumns)await window.BLPerf._loadScript('backlog-excel-columns.js');
+  if(!window.BLBacklogColumns){
+    const trigger=document.getElementById('backlogExcelOptionsBtn'),label=trigger?.innerHTML;
+    if(trigger){trigger.disabled=true;trigger.setAttribute('aria-busy','true');trigger.textContent=appLang==='en'?'Loading…':'Yükleniyor…';}
+    try{await window.BLPerf._loadScript('backlog-excel-columns.js');}
+    catch(err){showToast((appLang==='en'?'Excel settings could not be loaded: ':'Excel ayarları yüklenemedi: ')+err.message);return;}
+    finally{if(trigger){trigger.disabled=false;trigger.removeAttribute('aria-busy');trigger.innerHTML=label;}}
+  }
   document.getElementById('backlogExportColumnsModal')?.remove();
   if(!draftState?.selected)draftState=null;
   let catalog=backlogExcelColumnCatalog(draftState?.settings);
