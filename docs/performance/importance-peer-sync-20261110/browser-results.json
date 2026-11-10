@@ -1,0 +1,14 @@
+{
+  "errors": [],
+  "feedbackMs": [
+    75
+  ],
+  "transport": "real shared folder, two independent backend processes and Chromium contexts",
+  "mode": "delta",
+  "ui": [
+    "BTS from A to B",
+    "Regular from B to A",
+    "TR and EN rendering"
+  ],
+  "screenshot": "resources/app/public/release-notes/next-assets/importance-peer-sync-20261110.png"
+}

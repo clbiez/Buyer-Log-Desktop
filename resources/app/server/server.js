@@ -6018,7 +6018,7 @@ function rejectUnauthorizedOrders(req, res, orderCodes) {
 }
 
 function rejectSharedOwnerWrites(req, res, items) {
-  const fields = ['dates', 'subManufacturer', 'suppFob', 'suppFobMeta'];
+  const fields = ['dates', 'subManufacturer', 'suppFob', 'suppFobMeta', 'importance'];
   const denied = (items || []).filter(item => {
     const patch = item.patch || item;
     if (!fields.some(field => Object.hasOwn(patch, field))) return false;
