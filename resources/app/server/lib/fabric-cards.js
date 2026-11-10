@@ -149,7 +149,10 @@ async function seedSharedCards() {
   const legacy=await loadFabricCardsAsync();
   const existing=sharedEntries()||{};
   const records=Object.fromEntries(Object.entries(legacy.cards).filter(([code])=>!Object.hasOwn(existing,code)).slice(0,120)
-    .map(([code,card])=>[code,{card,deleted:false,revisionId:card.revisionId||''}]));
+    .map(([code,card])=>{
+      const revisionId=card.revisionId||'legacy-'+crypto.createHash('sha256').update(JSON.stringify(card)).digest('hex').slice(0,24);
+      return [code,{card:{...card,revisionId},deleted:false,revisionId}];
+    }));
   return deltaStore.seedMissing(DELTA_COLLECTION,records);
 }
 async function flushOutbox() {
