@@ -14,9 +14,9 @@ test('cycles and missing sources fail explicitly',()=>{
  assert.throws(()=>C.dependencies(['calc:total'],columns,{'calc:total':{formula:'[missing]+1'}},E),/missing/i);
 });
 test('date, conditions and strings compile to Excel with CP argument order',()=>{
- assert.equal(C.excelFormula('DAYS([field:0],[field:1])',E,id=>id==='field:0'?'A2':'B2'),'(B2-A2)');
+ assert.equal(C.excelFormula('DAYS([field:0],[field:1])',E,id=>id==='field:0'?'A2':'B2'),'IF(OR(A2="",B2=""),"",(B2-A2))');
  assert.equal(C.excelFormula('IF([field:0]>0,"ab","")',E,()=> 'A2'),'IF((A2>0),"ab","")');
- assert.equal(C.excelFormula('ADDDAYS([field:0],30)',E,()=> 'A2'),'(A2+30)');
+ assert.equal(C.excelFormula('ADDDAYS([field:0],30)',E,()=> 'A2'),'IF(A2="","",(A2+30))');
 });
 
 test('native Excel formulas keep identity on reorder without touching quoted strings or settings references',()=>{

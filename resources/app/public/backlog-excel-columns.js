@@ -38,8 +38,8 @@
         return '('+a+({'==':'=','!=':'<>'}[op]||op)+b+')';
       }
       const a=n.args.map(emit),fn=n.name,call=(name,args=a)=>name+'('+args.join(',')+')';
-      if(fn==='DAYS'||fn==='DATEDIF'&&a.length===2)return '('+a[1]+'-'+a[0]+')';
-      if(fn==='ADDDAYS')return '('+a[0]+'+'+a[1]+')';
+      if(fn==='DAYS'||fn==='DATEDIF'&&a.length===2)return 'IF(OR('+a[0]+'="",'+a[1]+'=""),"",('+a[1]+'-'+a[0]+'))';
+      if(fn==='ADDDAYS')return 'IF('+a[0]+'="","",('+a[0]+'+'+a[1]+'))';
       if(fn==='WEEKNUM')return call('WEEKNUM',[a[0],'21']);
       if(fn==='CEIL')return '(-INT(-'+a[0]+'))';
       if(fn==='FLOOR')return call('INT');
