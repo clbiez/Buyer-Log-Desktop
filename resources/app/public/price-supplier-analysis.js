@@ -19,7 +19,7 @@
   const BASE={source:'lfl',tab:'overview',currentSeason:'',previousSeason:'',filters:Object.fromEntries(E.FILTER_DIMENSIONS.map(dim=>[dim,[]])),filterLayout:[...DEFAULT_FILTER_LAYOUT],periods:{current:{dateField:'inStore',month:''},previous:{dateField:'inStore',month:''}},priceType:'',currency:'',groupBy:'classification',relationDim:'buyingGroup',sort:'volume',movement:'price'};
   const TEXT={
     tr:{title:'Fiyat & Üretici Analizi',subtitle:'Hangi üretici nerede avantajlı, kim pahalandı, kim yeni — tek bakışta.',source:'Veri',src_lfl:'LFL siparişleri',src_orders:'Siparişler',src_cp:'CP',src_collection:'Koleksiyon teklifleri',src_horizon:'Horizon',
-      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',filterSearch:'Filtrede ara…',filterStandard:'Standart alanlar',filterColumns:'Tablo sütunları',columnSearch:'Sütun ara…',noSourceData:'Bu kaynakta veri yok',noColumnMatch:'Eşleşen sütun yok.',productMainDefinition:'Ürün Ana Tanım',selected:'seçim',noFilterMatch:'Eşleşen değer yok.',
+      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',selectAll:'Tümünü seç',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',filterSearch:'Filtrede ara…',filterStandard:'Standart alanlar',filterColumns:'Tablo sütunları',columnSearch:'Sütun ara…',noSourceData:'Bu kaynakta veri yok',noColumnMatch:'Eşleşen sütun yok.',productMainDefinition:'Ürün Ana Tanım',selected:'seçim',noFilterMatch:'Eşleşen değer yok.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Klasman',productGroup:'Ürün Grubu',country:'Ülke',manufacturer:'Üretici',
       tab_overview:'Özet',tab_advantage:'Nerede avantajlı?',tab_scorecard:'Üretici karnesi',tab_movement:'Fiyat hareketi',tab_relations:'Kim kiminle?',
       hint_overview:'Seçili sezonun genel resmi ve sizin için öne çıkanlar.',
@@ -41,7 +41,7 @@
       notEnough:'Kıyaslanabilir fiyat verisi yok.',prevVolume:'Kıyas hacmi',suppliers:'üretici',pts:'puan',excelFail:'Excel dosyası hazırlanamadı.',
       summary:'Özet',sheetSuppliers:'Üreticiler',sheetAdvantage:'Nerede avantajlı',sheetRelations:'Kim kiminle',value:'Değer',status:'Durum',group:'Grup',drillHint:'Tıklayınca siparişler açılır'},
     en:{title:'Price & Supplier Analysis',subtitle:'Which supplier wins where, who got pricier, who is new — at a glance.',source:'Data',src_lfl:'LFL orders',src_orders:'Orders',src_cp:'CP',src_collection:'Collection quotes',src_horizon:'Horizon',
-      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',filterSearch:'Search filter…',filterStandard:'Standard fields',filterColumns:'Table columns',columnSearch:'Search columns…',noSourceData:'No data in this source',noColumnMatch:'No matching columns.',productMainDefinition:'Product Main Definition',selected:'selected',noFilterMatch:'No matching values.',
+      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',selectAll:'Select all',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',filterSearch:'Search filter…',filterStandard:'Standard fields',filterColumns:'Table columns',columnSearch:'Search columns…',noSourceData:'No data in this source',noColumnMatch:'No matching columns.',productMainDefinition:'Product Main Definition',selected:'selected',noFilterMatch:'No matching values.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Category',productGroup:'Product Group',country:'Country',manufacturer:'Supplier',
       tab_overview:'Summary',tab_advantage:'Who wins where?',tab_scorecard:'Supplier scorecard',tab_movement:'Price movement',tab_relations:'Who works with whom?',
       hint_overview:'The big picture for the selected season and what stands out for you.',
@@ -178,10 +178,10 @@
     const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:selected[0]||t('all');
     return `<details class="psaMultiFilter psaField${selected.length?' isActive':''}" data-ps-filter-menu="${dim}"${ui.openFilter===dim?' open':''}>
       <summary><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger"><span class="psaMultiLabel">${esc(summary)}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></summary>
-      <div class="psaMultiPanel">
+      <div class="psaMultiPanel blMotionOverlay">
         <input type="search" class="psaMultiSearch" data-ps-filter-search="${dim}" value="${esc(query)}" placeholder="${esc(t('filterSearch'))}" autocomplete="off">
+        <div class="cfpHeader"><button type="button" class="cfpAll" data-ps-filter-bulk="all" data-ps-filter-dim="${dim}">${esc(t('selectAll'))}</button><button type="button" class="cfpAll" data-ps-filter-bulk="clear" data-ps-filter-dim="${dim}">${esc(t('clear'))}</button></div>
         <div class="psaMultiList" role="listbox" aria-multiselectable="true">
-          <label class="psaMultiOption psaMultiAll"><input type="checkbox" data-ps-filter-all="${dim}"${selected.length?'':' checked'}><span>${esc(t('all'))}</span></label>
           ${ordered.map(value=>{const key=E.keyOf(value),hidden=queryKey&&!key.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(key)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(value)}</span></label>`;}).join('')}
           <p class="psaMultiEmpty" data-ps-filter-empty${shown.length?' hidden':''}>${esc(t('noFilterMatch'))}</p>
         </div>
@@ -467,7 +467,6 @@
     root.addEventListener('change',event=>{
       const target=event.target,key=target.dataset.ps;
       if(target.dataset.psFilterValue){const dim=target.dataset.psFilterValue,value=target.value,keyValue=E.keyOf(value),current=filterValues(dim).filter(item=>E.keyOf(item)!==keyValue);if(target.checked)current.push(value);state.filters[dim]=current;ui.openFilter=dim;ui.showAll=false;recalc();return;}
-      if(target.dataset.psFilterAll){const dim=target.dataset.psFilterAll;state.filters[dim]=[];ui.openFilter=dim;ui.showAll=false;recalc();return;}
       if(target.dataset.psFilterToggle){const dim=target.dataset.psFilterToggle;if(!E.isFilterDim(dim))return;ui.configOpen=true;if(target.checked){if(!state.filterLayout.includes(dim))state.filterLayout.push(dim);if(!state.filters[dim])state.filters[dim]=[];persist();render();}else{state.filterLayout=state.filterLayout.filter(item=>item!==dim);state.filters[dim]=[];delete ui.filterSearch[dim];if(ui.openFilter===dim)ui.openFilter='';recalc();}return;}
       if(key==='source'){state.source=target.value;state.priceType='';state.currency='';state.currentSeason='';state.previousSeason='';PERIOD_KINDS.forEach(kind=>state.periods[kind].month='');persist();prepare();return;}
       if(key==='priceType'){state.priceType=target.value;persist();prepare();return;}
@@ -488,6 +487,13 @@
     document.addEventListener?.('pointerdown',event=>{if(!root||!root.isConnected)return;const drawer=event.target?.closest?.('[data-ps-filter-menu],[data-ps-filter-config]');if(drawer&&root.contains(drawer))return;closeFilterDrawers();});
     root.addEventListener('click',event=>{
       const el=event.target.closest('button,[data-ps-drill],[data-ps-select]');if(!el||!root.contains(el))return;
+      if(el.dataset.psFilterBulk){
+        const dim=el.dataset.psFilterDim;if(!dataset||!E.isFilterDim(dim))return;
+        const query=E.keyOf(ui.filterSearch[dim]||''),values=E.dimensionValues(dataset,dim).filter(value=>!query||E.keyOf(value).includes(query));
+        const next=new Map(filterValues(dim).map(value=>[E.keyOf(value),value]));
+        values.forEach(value=>{if(el.dataset.psFilterBulk==='all')next.set(E.keyOf(value),value);else next.delete(E.keyOf(value));});
+        state.filters[dim]=[...next.values()];ui.openFilter=dim;ui.showAll=false;recalc();return;
+      }
       if(el.dataset.psTab){state.tab=el.dataset.psTab;ui.search='';ui.showAll=false;persist();render();return;}
       if(el.dataset.psGo){state.tab=el.dataset.psGo;ui.search='';ui.showAll=false;const focus=el.dataset.psFocus||'';if(state.tab==='advantage')ui.expanded=focus||null;else if(focus)ui.selected=focus;persist();render();return;}
       if(el.dataset.psSeg){state[el.dataset.psSeg]=el.dataset.value;ui.showAll=false;ui.expanded=null;if(el.dataset.psSeg==='groupBy')recalc();else{persist();render();}return;}

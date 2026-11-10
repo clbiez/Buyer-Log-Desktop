@@ -1122,7 +1122,7 @@
     const filterChips=FILTER_DIMS.filter(dim=>dim!=='buyer'||multi).map(dim=>{
       const values=E.dimensionValues(observations,dim),chosen=new Set((a.filters[dim]||[]).map(E.keyOf));
       const label=dim==='manufacturer'?L('Üretici','Manufacturer'):L(...(GROUP_LABELS[dim]||[dim,dim]));
-      return `<details class="pdFilter${chosen.size?' isOn':''}"><summary>${esc(label)}${chosen.size?` <b>${chosen.size}</b>`:''}<svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary><div class="pdFilterList">${values.map(item=>`<label class="pdCheck"><input type="checkbox" data-pd-afilter="${dim}" value="${esc(item.label)}" ${chosen.has(item.key)?'checked':''}><span>${esc(item.label)}</span><small>${item.count}</small></label>`).join('')||`<span class="pdLaneEmpty">${esc(L('Değer yok','No values'))}</span>`}</div></details>`;
+      return `<details class="pdFilter${chosen.size?' isOn':''}"><summary>${esc(label)}${chosen.size?` <b>${chosen.size}</b>`:''}<svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary><div class="pdFilterList blMotionOverlay"><div class="cfpHeader"><button type="button" class="cfpAll" data-pd-abulk="all" data-pd-adim="${dim}">${esc(L('Tümünü seç','Select all'))}</button><button type="button" class="cfpAll" data-pd-abulk="clear" data-pd-adim="${dim}">${esc(L('Temizle','Clear'))}</button></div>${values.map(item=>`<label class="pdCheck"><input type="checkbox" data-pd-afilter="${dim}" value="${esc(item.label)}" ${chosen.has(item.key)?'checked':''}><span>${esc(item.label)}</span><small>${item.count}</small></label>`).join('')||`<span class="pdLaneEmpty">${esc(L('Değer yok','No values'))}</span>`}</div></details>`;
     }).join('');
     const spread=result.groups.filter(group=>Number.isFinite(group.spreadPct)).sort((x,y)=>y.spreadPct-x.spreadPct)[0];
     body.innerHTML=`<div class="pdAnalysis">
@@ -1146,6 +1146,12 @@
     body.querySelector('[data-pd-abasis]')?.addEventListener('change',event=>{a.basis=event.target.value;state.drill=null;store.set(ANALYSIS_KEY,analysisPrefs());renderAnalysis(body);});
     body.querySelectorAll('[data-pd-aview]').forEach(button=>button.addEventListener('click',()=>{a.view=button.dataset.pdAview;state.drill=null;store.set(ANALYSIS_KEY,analysisPrefs());renderAnalysis(body);}));
     body.querySelector('[data-pd-aclear]')?.addEventListener('click',()=>{a.filters={};state.drill=null;store.set(ANALYSIS_KEY,analysisPrefs());renderAnalysis(body);});
+    body.querySelectorAll('[data-pd-abulk]').forEach(button=>button.addEventListener('click',()=>{
+      const dim=button.dataset.pdAdim,next={...(a.filters||{})};
+      if(button.dataset.pdAbulk==='all')next[dim]=E.dimensionValues(observations,dim).map(item=>item.label);else delete next[dim];
+      a.filters=next;state.drill=null;store.set(ANALYSIS_KEY,analysisPrefs());renderAnalysis(body);
+      body.querySelector(`[data-pd-afilter="${dim}"]`)?.closest('details')?.setAttribute('open','');
+    }));
     body.querySelectorAll('[data-pd-afilter]').forEach(box=>box.addEventListener('change',()=>{
       const dim=box.dataset.pdAfilter,values=[...body.querySelectorAll(`[data-pd-afilter="${dim}"]:checked`)].map(input=>input.value);
       const next={...(a.filters||{})};if(values.length)next[dim]=values;else delete next[dim];a.filters=next;state.drill=null;store.set(ANALYSIS_KEY,analysisPrefs());

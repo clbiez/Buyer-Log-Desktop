@@ -374,3 +374,32 @@ test('filter drawers share one multiselect shell and close outside / on Escape',
   assert.match(ui,/document\.addEventListener\?\.\('pointerdown'/);
   assert.match(ui,/event\.key==='Escape'.*closeFilterDrawers\(\)/);
 });
+
+
+test('toplu seçim 20 değerden üçünü dışlamayı ve arama kapsamını destekler',async()=>{
+  const rows=Array.from({length:20},(_,i)=>obs('26Y',`Demo ${i}`,'Kazak',10,100,{country:`Country ${i}`}));
+  const {root,context}=await mountScreen(rows,'tr',JSON.stringify({filterLayout:['country']}));
+  const api=context.BLPriceSupplierAnalysis;
+  const bulk=action=>root.listeners.click({target:{closest:()=>({dataset:{psFilterBulk:action,psFilterDim:'country'}})}});
+  assert.match(root.innerHTML,/Tümünü seç/);
+  bulk('all');
+  assert.equal(api.state.filters.country.length,20);
+  for(let i=0;i<3;i++)root.listeners.change({target:{dataset:{psFilterValue:'country'},value:`Country ${i}`,checked:false}});
+  assert.equal(api.model.totals.records,17);
+  bulk('clear');
+  assert.equal(api.state.filters.country.length,0);
+  assert.equal(api.model.totals.records,20,'temizleme mevcut filtre kaldırma davranışını korur');
+  root.listeners.input({target:{dataset:{psFilterSearch:'country'},value:'Country 1'}});
+  bulk('all');
+  assert.equal(api.state.filters.country.length,11);
+  assert.equal(api.model.totals.records,11);
+  root.listeners.change({target:{dataset:{psFilterValue:'country'},value:'Country 2',checked:true}});
+  bulk('clear');
+  assert.deepEqual(Array.from(api.state.filters.country),['Country 2'],'arama dışındaki seçim korunur');
+  root.listeners.input({target:{dataset:{psFilterSearch:'country'},value:'unmatched'}});
+  bulk('all');
+  assert.deepEqual(Array.from(api.state.filters.country),['Country 2']);
+  context.appLang='en';context.renderPriceSupplierAnalysisLanguage();
+  assert.match(root.innerHTML,/Select all/);
+  assert.match(root.innerHTML,/>Clear<\/button>/);
+});
