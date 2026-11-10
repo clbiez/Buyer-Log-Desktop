@@ -17860,10 +17860,14 @@ function backlogExcelColumnCatalog(settings=backlogExcelColumnSettings()){
     const header=item.label;
     catalog.set(item.id,{id:item.id,header,display:header.replace(/\n/g,' '),group:item.source,database:item.source==='asas'?'ASAS':'IAS / Antrepo',databaseColumn:item.header});
   });
-  const sourceItems=backlogExportSourceCatalog();
+  const sourceByCanonical=new Map();
+  backlogExportSourceCatalog().forEach(source=>{
+    if(source.source!=='asas')return;const field=window.BLCanonicalFields?.canonicalId?.('backlog',source.header);if(!field)return;
+    const matches=sourceByCanonical.get(field)||[];matches.push(source);sourceByCanonical.set(field,matches);
+  });
   catalog.forEach(item=>{
     if(item.group!=='field'||!item.canonicalId)return;
-    const matches=sourceItems.filter(source=>source.source==='asas'&&window.BLCanonicalFields?.canonicalId?.('backlog',source.header)===item.canonicalId);
+    const matches=sourceByCanonical.get(item.canonicalId)||[];
     if(matches.length===1){item.database='ASAS';item.databaseColumn=matches[0].header;}
   });
   Object.entries(settings).forEach(([id,config])=>{if(id.startsWith('calc:'))catalog.set(id,{id,header:id,display:config.label||id,group:'calculated',database:'Buyer Log',databaseColumn:id});});
@@ -19692,7 +19696,7 @@ function backlogColumnExportPlan(headers,rows){
     return source?window.BLBacklogColumns.display(source,settings)+derived[2]:h;
   };
   const lineage=h=>{const item=byHeader.get(h);if(item)return item;const derived=/(.*)( \((?:Ay|Hafta|Month|Week)\))$/.exec(h);return derived?byHeader.get(derived[1]):null;};
-  return {headers:allHeaders,label,settings,byHeader,catalog,value,lineage,visible:new Set(headers),
+  return {headers:allHeaders,label,settings,byHeader,catalog,value,lineage,visible:new Set(headers),hasFormulas:Object.values(settings).some(config=>config?.formula||config?.excelFormula),
     formula(h,excelRow){const item=byHeader.get(h),config=settings[item?.id];if(!config?.formula&&!config?.excelFormula)return null;
       if(config.excelFormula)return {formula:window.BLBacklogColumns.nativeExcel(config.excelFormula,id=>{const h=id.startsWith('helper:')?id.slice(7):catalog.get(id)?.header;const i=[...allHeaders,...window.BLBacklogExcel.HELPER_HEADERS].indexOf(h);return i<0?null:XLSX.utils.encode_col(i);},excelRow),format:config.format,decimals:config.decimals,id:item.id,native:true};
       let template=excelTemplates.get(item.id);
@@ -19708,6 +19712,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   if(!window.BLBacklogExcel)throw new Error('Backlog Excel formül motoru yüklenemedi.');
   const includeImages=options.includeImages===true;
   const columnPlan=typeof backlogColumnExportPlan==='function'?backlogColumnExportPlan(Array.isArray(headers)?headers:[],rows):null;
+  const hasColumnFormulas=columnPlan?.hasFormulas;
   const dataHeaders=columnPlan?columnPlan.headers:Array.isArray(headers)?headers:[];
   const visibleHeaders=includeImages?['Görsel',...dataHeaders]:dataHeaders;
   const bd=_XLS_BORDERS;
@@ -19755,7 +19760,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
       const dimensionFormula=!window.BLDateDimension?.hasMerchCalendar?.()&&dimensionSourceRef&&window.BLBacklogExcel?.dateDimensionFormula
         ?BLBacklogExcel.dateDimensionFormula(dimensionSourceRef,dimensionSpec.kind,appLang):'';
       let cell;
-      const custom=columnPlan?.formula(h,ri+2);
+      const custom=hasColumnFormulas?columnPlan.formula(h,ri+2):null;
       if(custom){
         const value=custom.native?null:columnPlan.value(custom.id,row),format=custom.format;
         const kind=format==='date'||value instanceof Date?'date':typeof value==='number'?'number':typeof value==='boolean'?'boolean':'text';
