@@ -21,7 +21,7 @@ const page=await context.newPage();page.on('pageerror',e=>console.log('PAGE ERRO
 const sources=[{id:'custom:asas:demo',source:'asas',header:'Demo Quantity',label:'ASAS · Demo Quantity'}];
 const rows=[{'Sezon':'S7','Adet':12,'FOB Fiyatı':3,'ASAS · Demo Quantity':20,'GÜNCEL DURUM\n(STATUS)':'Üretimde'}];
 await page.route('**/api/backlog-source-columns',r=>r.fulfill({json:{columns:sources}}));
-await page.route('**/api/backlog-export?*',r=>r.fulfill({json:{headers:['Sezon','Adet','FOB Fiyatı','ASAS · Demo Quantity'],rows}}));
+await page.route('**/api/backlog-export?*',r=>{const query=new URL(r.request().url()).searchParams;if(query.get('sourceColumns')==='custom:asas:demo')assert.equal(query.get('previewLimit'),'5');return r.fulfill({json:{headers:['Sezon','Adet','FOB Fiyatı','ASAS · Demo Quantity'],rows}});});
 await page.goto(base,{waitUntil:'domcontentloaded'});
 await page.waitForFunction(()=>window.BLPerf&&typeof window.switchTab==='function',null,{timeout:60000});
 await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:6000}).catch(()=>{});

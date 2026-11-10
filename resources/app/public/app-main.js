@@ -17879,7 +17879,8 @@ function backlogColumnGroupTag(group){
   if(group==='calculated')return appLang==='en'?'Calculated':'Hesaplanan';
   return '';
 }
-function openBacklogExportColumns(draftState=null){
+async function openBacklogExportColumns(draftState=null){
+  if(!window.BLBacklogColumns)await window.BLPerf._loadScript('backlog-excel-columns.js');
   document.getElementById('backlogExportColumnsModal')?.remove();
   if(!draftState?.selected)draftState=null;
   let catalog=backlogExcelColumnCatalog(draftState?.settings);
@@ -19711,7 +19712,7 @@ function backlogColumnExportPlan(headers,rows){
 function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   if(!window.BLBacklogExcel)throw new Error('Backlog Excel formül motoru yüklenemedi.');
   const includeImages=options.includeImages===true;
-  const columnPlan=typeof backlogColumnExportPlan==='function'?backlogColumnExportPlan(Array.isArray(headers)?headers:[],rows):null;
+  const columnPlan=window.BLBacklogColumns&&typeof backlogColumnExportPlan==='function'?backlogColumnExportPlan(Array.isArray(headers)?headers:[],rows):null;
   const hasColumnFormulas=columnPlan?.hasFormulas;
   const dataHeaders=columnPlan?columnPlan.headers:Array.isArray(headers)?headers:[];
   const visibleHeaders=includeImages?['Görsel',...dataHeaders]:dataHeaders;
@@ -19886,6 +19887,7 @@ window.BLBacklogChartContext={
 };
 
 async function exportBacklogToExcel(_event,options={}){
+  if(!window.BLBacklogColumns)await window.BLPerf._loadScript('backlog-excel-columns.js');
   if(!lastBacklogData || !lastBacklogFlat || !lastBacklogFlat.length){ showToast('Aktarılacak Backlog verisi yok.'); return; }
   if(!commitBacklogDateInputs())return;
   await fetchBacklogSourceColumns();
