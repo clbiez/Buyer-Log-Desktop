@@ -102,6 +102,7 @@
       const known=engine.translateKnown(text,engine.FIELDS[index],lang);
       if(known.status==='known'){
         values[other][index]=known.value;
+        if(known.canonical)values[lang][index]=known.canonical;
         if(index===2){values[lang][index]=engine.weight(text)||text;}
         if(index===1){values[lang][index]=text.replace(/\s*\/\s*/g,'/');}
         states[index]='translated';stale[index]=false;repaint();return;
