@@ -10,7 +10,7 @@
     const L=(tr,eng)=>en?eng:tr;
     const labels=[L('Kumaş türü','Fabric type'),L('İplik','Yarn'),L('Gramaj','Weight'),L('İçerik','Composition')];
     const rawCard=clone(card),cache=new Map(),timers=[null,null,null,null],tokens=[0,0,0,0];
-    let destroyed=false,source=options.sourceLanguage==='en'?'en':'tr';
+    let destroyed=false,firstRender=true,source=options.sourceLanguage==='en'?'en':'tr';
     let pieces=engine.fromCard(card),values={tr:pieces.tr.slice(),en:pieces.en.slice()};
     let overrides={tr:[false,false,false,false],en:[false,false,false,false]};
     let states=['ready','ready','ready','ready'],stale=[false,false,false,false];
@@ -132,7 +132,7 @@
         +'<section class="fabricSegmentPreview"><strong>'+esc(L('Tablodaki canlı özet','Live table summary'))+'</strong><p><small>TR</small> <output data-preview="tr"></output></p><p><small>EN</small> <output data-preview="en"></output></p></section>'
         +'<p class="fabricSegmentError" data-segment-validation role="status" hidden></p>';
       repaint();
-      root.BLMotionPlus?.play?.('card',container);
+      if(firstRender){root.BLMotionPlus?.play?.('card',container);firstRender=false;}
     }
     const onInput=event=>{
       const part=event.target.closest?.('[data-part]');
@@ -148,7 +148,7 @@
         source=event.target.value==='en'?'en':'tr';
         // All user-entered values and manual overrides survive language switching.
         for(let i=0;i<4;i++)cancel(i);
-        states=['ready','ready','ready','ready'];stale=[false,false,false,false];
+        states=['ready','ready','ready','ready']; // Keep stale manual translations across source switches.
         render();
         for(let i=0;i<4;i++)if(!values[target()][i]&&!overrides[target()][i])translate(i);
       }
