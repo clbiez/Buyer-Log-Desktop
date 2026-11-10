@@ -28,7 +28,7 @@
       stale:L('Kaynak değişti; çeviriyi onaylayın','Source changed; review translation'),
       failed:L('Çeviri başarısız; elle düzeltin','Translation failed; edit manually'),
       invalid:L('Geçersiz parça','Invalid segment'),
-      review:L('Teknik yazımı kontrol edin','Check technical notation')
+      review:L('Parçayı ve çevirisini kontrol edin','Review the segment and its translation')
     })[value]||'';
     function callDirty(){options.onDirty?.();}
     function preview(){
@@ -118,9 +118,9 @@
     function render(){
       const names=[L('TÜR','TYPE'),L('İPLİK','YARN'),L('GRAMAJ','WEIGHT'),L('İÇERİK','COMPOSITION')];
       container.innerHTML='<div class="fabricSegmentBar"><div><strong>'+esc(L('Parçalı özet','Segmented summary'))+'</strong><small>'+esc(L('Özet: 4 parça · 3 sabit nokta','Summary: 4 segments · 3 fixed dots'))+'</small></div>'
-        +'<label>'+esc(L('Kaynak dil','Source language'))+'<select data-source-language><option value="tr"'+(source==='tr'?' selected':'')+'>Türkçe</option><option value="en"'+(source==='en'?' selected':'')+'>English</option></select></label></div>'
-        +'<p data-segment-warning class="fabricSegmentNotice"'+(pieces.legacy?'':' hidden')+'>'+esc(L('Eski özet güvenle dört parçaya ayrılamadı. Orijinal özet kayıt edilene kadar korunur.','The previous summary could not be safely split. Its original text remains intact until you save.'))+'<span class="fabricSegmentLegacy">'+esc(rawCard.summary||'')+' / '+esc(rawCard.summaryEn||'')+'</span></p>'
-        +'<div class="fabricSegmentHeading"><span>'+esc(L('Alan','Field'))+'</span><span>TR</span><span>EN</span><span>'+esc(L('Çeviri','Translation'))+'</span></div>'
+        +'<label>'+esc(L('Kaynak dil','Source language'))+'<select data-source-language data-no-i18n><option value="tr"'+(source==='tr'?' selected':'')+'>Türkçe</option><option value="en"'+(source==='en'?' selected':'')+'>English</option></select></label></div>'
+        +'<p data-segment-warning class="fabricSegmentNotice"'+(pieces.legacy?'':' hidden')+'>'+esc(L('Eski özet güvenle dört parçaya ayrılamadı. Orijinal özet kayıt edilene kadar korunur.','The previous summary could not be safely split. Its original text remains intact until you save.'))+'<span class="fabricSegmentLegacy" data-no-i18n>'+esc(rawCard.summary||'')+' / '+esc(rawCard.summaryEn||'')+'</span></p>'
+        +'<div class="fabricSegmentHeading"><span>'+esc(L('Alan','Field'))+'</span><span data-no-i18n>TR</span><span data-no-i18n>EN</span><span>'+esc(L('Çeviri','Translation'))+'</span></div>'
         +names.map((name,i)=>'<div class="fabricSegmentRow" data-segment-row="'+i+'">'
           +'<span class="fabricSegmentName">'+esc(name)+(i<3?'<b aria-hidden="true"> · </b>':'')+'</span>'
           +'<input type="text" data-part="tr:'+i+'" aria-label="'+esc(labels[i]+' / Türkçe')+'" lang="tr" value="'+esc(values.tr[i])+'">'
@@ -129,7 +129,7 @@
           +'<button type="button" class="tbtn" data-segment-action="auto:'+i+'" hidden>'+esc(L('Otomatik çeviriye dön','Use auto translation'))+'</button>'
           +'<button type="button" class="tbtn" data-segment-action="confirm:'+i+'" hidden>'+esc(L('Onayla','Confirm'))+'</button>'
           +'<small aria-live="polite" data-segment-status="'+i+'"></small></div></div>').join('')
-        +'<section class="fabricSegmentPreview"><strong>'+esc(L('Tablodaki canlı özet','Live table summary'))+'</strong><p><small>TR</small> <output data-preview="tr"></output></p><p><small>EN</small> <output data-preview="en"></output></p></section>'
+        +'<section class="fabricSegmentPreview"><strong>'+esc(L('Tablodaki canlı özet','Live table summary'))+'</strong><p data-no-i18n><small>TR</small> <output data-preview="tr"></output></p><p data-no-i18n><small>EN</small> <output data-preview="en"></output></p></section>'
         +'<p class="fabricSegmentError" data-segment-validation role="status" hidden></p>';
       repaint();
       if(firstRender){root.BLMotionPlus?.play?.('card',container);firstRender=false;}
@@ -147,8 +147,13 @@
       if(event.target.matches?.('[data-source-language]')){
         source=event.target.value==='en'?'en':'tr';
         // All user-entered values and manual overrides survive language switching.
-        for(let i=0;i<4;i++)cancel(i);
-        states=['ready','ready','ready','ready']; // Keep stale manual translations across source switches.
+        for(let i=0;i<4;i++){
+          cancel(i);
+          // Cancelling a request does not validate its old target text. Keep
+          // failed/invalid/manual-stale states too; only translation or explicit
+          // manual correction/review can make an unresolved pair saveable.
+          if(states[i]==='translating')states[i]='review';
+        }
         render();
         for(let i=0;i<4;i++)if(!values[target()][i]&&!overrides[target()][i])translate(i);
       }

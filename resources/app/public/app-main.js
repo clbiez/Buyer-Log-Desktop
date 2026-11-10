@@ -32421,7 +32421,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   modal.__fabricExpected=existing?.revisionId||'';
   modal.__fabricFill=fill;
   segmentEditor=window.BLFabricSegmentUI?.mount(modal.querySelector('[data-fabric-segments]'),{
-    card:draft,sourceLanguage:en?'en':'tr',uiLanguage:en,
+    card:draft,sourceLanguage:en?'en':'tr',uiLanguage:en?'en':'tr',
     onDirty:()=>{if(segmentEditor?.isDirty()){modal.dataset.fabricDirty='1';setSource('manual');}}
   });
   modal.__fabricEditor=segmentEditor;

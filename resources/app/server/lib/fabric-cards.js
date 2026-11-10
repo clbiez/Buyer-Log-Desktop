@@ -127,6 +127,11 @@ function mergedStore(store) {
 function remoteVersion(record) {
   return String(record && (record.revisionId || (record.card && record.card.revisionId)) || '');
 }
+function pendingBaseRevision(store,code,current) {
+  // Coalesce local edits against their first shared ancestor. Mirror memory is
+  // optimistic, so only flushOutbox's durable acknowledgment may advance it.
+  return store._pending?.[code]?.baseRevisionId ?? String(current&&current.revisionId||'');
+}
 function pendingConflicts(store) {
   const remote=sharedEntries()||{},found=[];
   for(const [code,entry] of Object.entries(store._pending||{})) {
@@ -169,8 +174,14 @@ async function flushOutbox() {
     if(!result || result.ok===false)continue;
     await withFileLeaseAsync(FILE,async()=>{
       const latest=await loadFabricCardsAsync({recover:true});
-      if(JSON.stringify(latest._pending?.[code])!==JSON.stringify(entry))return;
-      delete latest._pending[code];
+      const next=latest._pending?.[code];
+      if(!next)return;
+      if(JSON.stringify(next)===JSON.stringify(entry))delete latest._pending[code];
+      // A newer edit may have replaced this entry while mirror awaited disk.
+      // Advance only that same ancestry after mirror confirms success; failed
+      // mirrors leave its original base untouched, including after rollback.
+      else if(next.baseRevisionId===entry.baseRevisionId)next.baseRevisionId=revisionId;
+      else return;
       await atomicWriteJsonAsync(FILE,latest);
     });
     published++;
@@ -256,7 +267,7 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
       updatedBy: by,
     };
     store.cards[card.code]=updatedCard;
-    if(deltaStore)store._pending[card.code]={card:updatedCard,deleted:false,baseRevisionId:String(current&&current.revisionId||''),actorId:clean(actor&&actor.id,160)};
+    if(deltaStore)store._pending[card.code]={card:updatedCard,deleted:false,baseRevisionId:pendingBaseRevision(store,card.code,current),actorId:clean(actor&&actor.id,160)};
     updated += 1;
   }
   if (updated) { assertAuthority?.(); await persist(store); }
@@ -276,7 +287,7 @@ function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthorit
   if(deltaStore && expectedRevisionId===undefined)
     throw Object.assign(new Error('Kart revizyonu gerekli. / Fabric card revision is required.'),{code:'FABRIC_CARD_REVISION_REQUIRED',statusCode:409,current});
   delete store.cards[key];
-  if(deltaStore)store._pending[key]={card:null,deleted:true,baseRevisionId:String(current.revisionId||''),actorId:clean(actor&&actor.id,160)};
+  if(deltaStore)store._pending[key]={card:null,deleted:true,baseRevisionId:pendingBaseRevision(store,key,current),actorId:clean(actor&&actor.id,160)};
   assertAuthority?.(); await persist(store);
   return { ...publicCards(store), deleted: true, deletedBy: actorName(actor) };
   });

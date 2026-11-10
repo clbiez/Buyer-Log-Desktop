@@ -134,4 +134,159 @@ test('real card dialog and application shell load 02/B without a parallel overla
   assert.ok(app.includes('data-fabric-segments')&&app.includes('BLFabricSegmentUI?.mount'));
   assert.ok(app.includes('kolFabricShowRemoteComparison')&&app.includes('kolFabricCardsRefresh'));
   assert.ok(!app.includes("modal.querySelector('#_kolFabricSummary')"));
+  assert.match(app,/sourceLanguage:en\?'en':'tr',uiLanguage:en\?'en':'tr'/);
+});
+
+test('repeated pending saves preserve shared ancestry, survive reload and still detect real peer edits',async()=>{
+  const shared={};let online=true;
+  cards.attachDeltaStore({readAllSync:()=>shared,async mirror(_collection,changes){
+    if(!online)return {ok:false};Object.assign(shared,changes);return {ok:true};
+  }});
+  const code='214240';
+  try{
+    await cards.upsertFabricCards([item(code)],actor);await cards.flushOutbox();
+    const baseline=shared[code].revisionId;online=false;
+    for(const finish of ['first pending edit','second pending edit','third pending edit']){
+      const current=cards.publicCards().cards.find(c=>c.code===code);
+      await cards.upsertFabricCards([item(code,{expectedRevisionId:current.revisionId,details:{finish}})],actor);
+      assert.equal((await cards.loadFabricCardsAsync())._pending[code].baseRevisionId,baseline);
+    }
+    online=true;const result=await cards.flushOutbox();
+    assert.equal(result.published,1);assert.deepEqual(result.conflicts,[]);
+    assert.equal(shared[code].card.details.finish,'third pending edit');
+    online=false;
+    for(const finish of ['fourth pending edit','fifth pending edit']){
+      const current=cards.publicCards().cards.find(c=>c.code===code);
+      await cards.upsertFabricCards([item(code,{expectedRevisionId:current.revisionId,details:{finish}})],actor);
+    }
+    shared[code]={...shared[code],revisionId:'real-peer-update',card:{...shared[code].card,revisionId:'real-peer-update'}};
+    online=true;const conflict=await cards.flushOutbox();
+    assert.equal(conflict.published,0);assert.equal(conflict.conflicts[0].remoteRevisionId,'real-peer-update');
+    await cards.resolveFabricConflict(code,'remote','real-peer-update',actor);
+  }finally{cards.attachDeltaStore(null);}
+});
+
+test('deleting a pending edit retains its original shared base',async()=>{
+  const shared={};let online=true;
+  cards.attachDeltaStore({readAllSync:()=>shared,async mirror(_collection,changes){
+    if(!online)return {ok:false};Object.assign(shared,changes);return {ok:true};
+  }});
+  const code='214241';
+  try{
+    await cards.upsertFabricCards([item(code)],actor);await cards.flushOutbox();
+    const base=shared[code].revisionId;online=false;
+    await cards.upsertFabricCards([item(code,{expectedRevisionId:base,details:{finish:'pending'}})],actor);
+    const edited=cards.publicCards().cards.find(c=>c.code===code);
+    await cards.deleteFabricCard(code,actor,null,{expectedRevisionId:edited.revisionId});
+    assert.equal((await cards.loadFabricCardsAsync())._pending[code].baseRevisionId,base);
+    online=true;assert.equal((await cards.flushOutbox()).published,1);
+    assert.equal(shared[code].deleted,true);
+  }finally{cards.attachDeltaStore(null);}
+});
+
+test('saving again during publication uses the acknowledged local revision as its base',async()=>{
+  const shared={};let release,entered;
+  const waiting=new Promise(resolve=>{entered=resolve;});
+  let hold=false;
+  cards.attachDeltaStore({readAllSync:()=>shared,async mirror(_collection,changes){
+    Object.assign(shared,changes);
+    if(hold){hold=false;entered();await new Promise(resolve=>{release=resolve;});}
+    return {ok:true};
+  }});
+  const code='214242';
+  try{
+    await cards.upsertFabricCards([item(code)],actor);await cards.flushOutbox();
+    const baseline=shared[code].revisionId;
+    await cards.upsertFabricCards([item(code,{expectedRevisionId:shared[code].revisionId,details:{finish:'first'}})],actor);
+    hold=true;const flushing=cards.flushOutbox();await waiting;
+    const current=cards.publicCards().cards.find(c=>c.code===code);
+    await cards.upsertFabricCards([item(code,{expectedRevisionId:current.revisionId,details:{finish:'second'}})],actor);
+    assert.equal((await cards.loadFabricCardsAsync())._pending[code].baseRevisionId,baseline,'optimistically staged memory is not a durable acknowledgment');
+    release();await flushing;
+    assert.equal((await cards.loadFabricCardsAsync())._pending[code].baseRevisionId,shared[code].revisionId,'advance the next pending save after confirmed publication');
+    assert.equal((await cards.flushOutbox()).published,1);
+    assert.equal(shared[code].card.details.finish,'second');
+  }finally{release?.();cards.attachDeltaStore(null);}
+});
+
+test('a failed in-flight mirror never becomes the base of a later pending save',async()=>{
+  const shared={};let release,entered,failNext=false;
+  const waiting=new Promise(resolve=>{entered=resolve;});
+  cards.attachDeltaStore({readAllSync:()=>shared,async mirror(_collection,changes){
+    const before={...shared};Object.assign(shared,changes);
+    if(failNext){failNext=false;entered();await new Promise(resolve=>{release=resolve;});Object.assign(shared,before);return {ok:false};}
+    return {ok:true};
+  }});
+  const code='214244';
+  try{
+    await cards.upsertFabricCards([item(code)],actor);await cards.flushOutbox();
+    const baseline=shared[code].revisionId;
+    await cards.upsertFabricCards([item(code,{expectedRevisionId:baseline,details:{finish:'first'}})],actor);
+    failNext=true;const flushing=cards.flushOutbox();await waiting;
+    const current=cards.publicCards().cards.find(c=>c.code===code);
+    await cards.upsertFabricCards([item(code,{expectedRevisionId:current.revisionId,details:{finish:'second'}})],actor);
+    release();await flushing;
+    assert.equal((await cards.loadFabricCardsAsync())._pending[code].baseRevisionId,baseline);
+    const retry=await cards.flushOutbox();assert.equal(retry.published,1);assert.deepEqual(retry.conflicts,[]);
+    assert.equal(shared[code].card.details.finish,'second');
+  }finally{release?.();cards.attachDeltaStore(null);}
+});
+
+// Exercise the actual editor event handlers without a browser dependency in CI.
+// DOM stubs store controls and listeners; no translation/state logic is mocked.
+function editorHarness(options={}){
+  const vm=require('node:vm'),controls=new Map(),listeners=new Map(),timers=new Map();let nextTimer=0;
+  const container={innerHTML:'',contains:()=>true,
+    querySelector(selector){if(!controls.has(selector))controls.set(selector,{value:'',dataset:{},focus(){}});return controls.get(selector);},
+    addEventListener:(type,listener)=>listeners.set(type,listener),removeEventListener:type=>listeners.delete(type)};
+  const context={BLFabricSegments:seg,document:{activeElement:null},
+    setTimeout(fn){const id=++nextTimer;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),...options.globals};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','public','fabric-card-segment-ui.js'),'utf8'),context);
+  const editor=context.BLFabricSegmentUI.mount(container,{card:item('214243',{translationOverrides:{}}),sourceLanguage:'tr',uiLanguage:'en',...options});
+  return {editor,container,context,timers,
+    input(lang,index,value){const input=container.querySelector(`[data-part="${lang}:${index}"]`);input.value=value;input.dataset.part=lang+':'+index;input.closest=()=>input;listeners.get('input')({target:input});},
+    language(value){listeners.get('change')({target:{value,matches:()=>true}});},
+    action(action,index){const button={dataset:{segmentAction:action+':'+index}};listeners.get('click')({target:{closest:()=>button}});},
+    async runTimers(){const scheduled=[...timers.values()];timers.clear();for(const run of scheduled)run();await new Promise(resolve=>setImmediate(resolve));}
+  };
+}
+
+test('source switches never accept an untranslated pair after debounce cancellation or failed translation',async()=>{
+  for(const failFirst of [false,true]){
+    const h=editorHarness({globals:{BuyerLogAI:{ask:async()=>{throw Error('synthetic translation failure');}}}});
+    h.input('tr',0,'Yeni Kumaş Türü');
+    if(failFirst)await h.runTimers();
+    assert.equal(h.editor.result().ok,false);
+    h.language('en');assert.equal(h.editor.result().ok,false);
+    h.language('tr');assert.equal(h.editor.result().ok,false);
+    h.action('edit',0);h.input('en',0,'New Fabric Type');
+    const result=h.editor.result();assert.equal(result.ok,true);
+    assert.equal(result.summarySegments.tr[0],'Yeni Kumaş Türü');
+    assert.equal(result.summarySegments.en[0],'New Fabric Type');h.editor.dispose();
+  }
+});
+
+test('late AI replies after a source switch or dispose cannot replace the draft',async()=>{
+  for(const finish of ['switch','dispose']){
+    let resolve;const h=editorHarness({globals:{BuyerLogAI:{ask:()=>new Promise(done=>{resolve=done;})}}});
+    h.input('tr',0,'Yeni Kumaş Türü');await h.runTimers();
+    if(finish==='switch')h.language('en');else h.editor.dispose();
+    assert.equal(h.editor.result().ok,false);
+    resolve({data:{translation:'New Fabric Type'}});await new Promise(done=>setImmediate(done));
+    assert.equal(h.editor.result().ok,false);
+    assert.equal(h.container.querySelector('[data-part="tr:0"]').value,'Yeni Kumaş Türü');
+    assert.equal(h.container.querySelector('[data-part="en:0"]').value,en[0]);
+    h.editor.dispose();assert.equal(h.timers.size,0);
+  }
+});
+
+test('valid pairs and reviewed manual translations survive language switching, with English UI labels',()=>{
+  const h=editorHarness();assert.match(h.container.innerHTML,/Segmented summary/);
+  assert.match(h.container.innerHTML,/<span data-no-i18n>TR<\/span><span data-no-i18n>EN<\/span>/);
+  assert.match(h.container.innerHTML,/<p data-no-i18n><small>TR<\/small> <output data-preview="tr">/);
+  assert.equal(h.editor.result().ok,true);h.language('en');assert.equal(h.editor.result().ok,true);
+  h.language('tr');h.action('edit',0);h.input('en',0,'Custom Three Thread');h.input('tr',0,'Üç İplik Şardonsuz');
+  assert.equal(h.editor.result().ok,false);h.language('en');assert.equal(h.editor.result().ok,false);
+  h.language('tr');h.action('confirm',0);assert.equal(h.editor.result().ok,true);
+  assert.equal(h.editor.result().summarySegments.en[0],'Custom Three Thread');h.editor.dispose();
 });

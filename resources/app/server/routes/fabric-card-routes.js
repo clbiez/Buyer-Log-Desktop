@@ -3,8 +3,16 @@
 /* The Fabric Card library is a shared business resource, not Collection edit
  * permission. Every ACTIVE authenticated user may read and edit fabric cards;
  * all other module permission boundaries remain unchanged. */
-module.exports=function registerFabricCardRoutes(app,deps){
-  const {apiError,express,fabricCards,requestRevision,userAccess,onChanged,getPendingCount}=deps;
+module.exports = function registerFabricCardRoutes(app, deps) {
+  const {
+    apiError,
+    express,
+    fabricCards,
+    requestRevision,
+    userAccess,
+    onChanged,
+    getPendingCount,
+  } = deps;
   function assertActive(req){
     const current=userAccess.sessionProfile?userAccess.sessionProfile(req):req.currentUser;
     if(!current || !req.currentUser || current.id!==req.currentUser.id || current.enabled===false || current.status==='DISABLED')

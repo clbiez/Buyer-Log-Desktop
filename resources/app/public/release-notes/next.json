@@ -97,6 +97,35 @@
           "en": "Real folder transport verified between two isolated Buyer Log servers and browser sessions using demo data. The image shows the receiving session."
         }
       }
+    },
+    {
+      "id": "fabric-card-offline-translation-review-repairs",
+      "type": "fix",
+      "module": {
+        "tr": "Kumaş Kartları",
+        "en": "Fabric Cards"
+      },
+      "title": {
+        "tr": "Bekleyen kumaş kayıtları ve otomatik çeviri daha güvenli",
+        "en": "Safer pending fabric saves and automatic translation"
+      },
+      "body": {
+        "tr": "Aynı kartın art arda bekleyen kayıtları bağlantı sonrasında kendi kendisiyle çakışmaz; gerçek başka kullanıcı değişiklikleri korunur. Çeviri beklerken veya başarısızken kaynak dili değiştirmek eski karşılığın kaydına izin vermez. İngilizce editör doğru dilde açılır; sabit TR/EN etiketleri ve iki dildeki metinler ekranın genel çevirisinden korunur.",
+        "en": "Repeated pending saves for one card no longer conflict with themselves after reconnection; genuine changes from another user remain protected. Switching source language during a pending or failed translation cannot allow an outdated counterpart to be saved. The English editor opens in the correct language, and fixed TR/EN labels and bilingual content are protected from generic page translation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-segments-review-repairs.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içinde İngilizce parçalı kumaş kartı editörü ve elle düzeltilen çeviri",
+          "en": "English segmented fabric card editor and manually corrected translation in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda Türkçe kaynak ve İngilizce düzeltme birlikte görülüyor; kayıt API üzerinden yeniden okunarak doğrulandı.",
+          "en": "An isolated demo session shows the Turkish source and English correction together; persistence was verified by reading the record back through the API."
+        }
+      }
     }
   ]
 }

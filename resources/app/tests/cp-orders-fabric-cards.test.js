@@ -28,7 +28,10 @@ test('CP and Orders render Fabric (PLM) with the Collection fabric-card cell and
   // Koleksiyon aynı pencereyi kullanır; kart kaydı/silinmesi üç tabloyu da yeniler.
   assert.match(APP,/openFabricCardDialog\(String\(kolEffectiveValue\(row,'fabric'\)\?\?''\),\{trigger,code,collection:true\}\)/);
   assert.match(APP,/await kolFabricCardsSave\(\[card\]\);close\(\);fabricCardsRepaintTables\(\);/);
-  assert.match(APP,/await kolFabricCardDelete\(code\);close\(\);fabricCardsRepaintTables\(\);/);
+  // Shared cards now require the observed per-card revision before deletion.
+  // Preserve the original repaint guard while also requiring its CAS argument.
+  assert.match(APP,/await kolFabricCardDelete\(code,modal\.__fabricExpected\);close\(\);fabricCardsRepaintTables\(\);/);
+  assert.match(APP,/if\(saveExisting\)card\.expectedRevisionId=modal\.__fabricExpected;/);
   assert.match(APP,/function fabricCardsRepaintTables\(\)\{[\s\S]{0,160}if\(currentActiveTab\(\)==='koleksiyon'\)renderKol\(\);else kolFabricRepaintPending=true;\n\s*if\(state\.cp\)renderCP\(\);\n\s*if\(state\.orders\)renderOrders\(\);/);
   assert.match(APP,/if\(tab==='koleksiyon'&&kolFabricRepaintPending\)\{kolFabricRepaintPending=false;/);
   // Görünüm stili Koleksiyon'la aynı kuraldır.
