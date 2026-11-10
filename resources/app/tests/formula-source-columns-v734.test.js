@@ -215,9 +215,11 @@ test('v7.34 · yetki kararı SUNUCUDA verilir', () => {
     'istemcideki gizleme yalnız kolaylıktır; asıl engel sunucuda');
 });
 
-test('v7.34 · Nakliye Kıyaslama tablosunda bu yol hiç çizilmez (veri tabanı sütunu yok)', () => {
-  assert.match(FC, /if \(tableKey === 'ship'\) \{ sourceAdd\.innerHTML = ''; return; \}/,
-    'olmayan bir yeteneği düğme olarak sunmak yanıltıcı olurdu');
+test('v7.34 · Nakliye Kıyaslama ve uyarlanmış tabloda kaynak sütunu ekleme gizlenir', () => {
+  /* Ortak FX editörü Backlog'a da açıldı: adapter tablolarında mevcut
+     Data Model bağlantısı yoktur. İki durum da var olmayan bir düğmeyi gizler. */
+  assert.match(FC, /if \(adapter \|\| tableKey === 'ship'\) \{ sourceAdd\.innerHTML = ''; return; \}/,
+    'ship ve adapter durumları için kaynak ekleme yolu gizli kalmalı');
 });
 
 test('v7.34 · değerlerin ne zaman geleceği açıkça yazılır', () => {
