@@ -47,7 +47,7 @@
     if(field==='weight'){const x=weight(text);return x?{status:'known',value:x}:{status:'needs-ai',value:''};}
     if(field==='type'){
       const pair=TERMS.find(pair=>[pair[0],pair[1],...(pair[2]||[])].some(a=>fold(a)===fold(text)));
-      return pair?{status:'known',value:pair[from==='tr'?1:0]}:{status:'needs-ai',value:''};
+      return pair?{status:'known',value:pair[from==='tr'?1:0],canonical:pair[from==='tr'?0:1]}:{status:'needs-ai',value:''};
     }
     const pairs=FIBRES.slice().sort((a,b)=>b[from==='tr'?0:1].length-a[from==='tr'?0:1].length);
     let rest=text,changed=false;const marks=[];
