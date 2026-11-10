@@ -228,6 +228,8 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
   const now = new Date().toISOString(), by = actorName(actor);
   let updated = 0, skipped = 0;
   for (const item of Array.isArray(items) ? items : []) {
+    if(deltaStore && !onlyMissing && (!item || !item.summarySegments))
+      throw Object.assign(new Error('Dört özet parçası gerekli. / Four structured summary segments are required.'),{code:'FABRIC_SEGMENTS_REQUIRED',statusCode:422});
     const card = normalizeCard(item, '', { strictSegments: true });
     if (!card) { skipped += 1; continue; }
     const current = visible.cards[card.code];
