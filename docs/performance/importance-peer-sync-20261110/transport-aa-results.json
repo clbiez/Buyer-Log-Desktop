@@ -1,0 +1,391 @@
+{
+  "base": "0f0b986770a721c52f68755e5c7befe12662ee26",
+  "runtime": "v24.19.0",
+  "fixtureHash": "f81971ba0a1390d7bc7fee7304ace74b5a915daa70dfe171bc4c1f0227755fde",
+  "results": [
+    {
+      "variant": "baseline",
+      "round": 0,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 121.804038,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 904,
+          "read": 584
+        },
+        {
+          "name": "repeat-0",
+          "ms": 77.49410300000002,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 891,
+          "read": 571
+        },
+        {
+          "name": "repeat-1",
+          "ms": 66.71373399999999,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 895,
+          "read": 575
+        },
+        {
+          "name": "repeat-2",
+          "ms": 67.98407300000002,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 895,
+          "read": 575
+        },
+        {
+          "name": "repeat-3",
+          "ms": 65.799599,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-4",
+          "ms": 68.38656800000001,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "batch200",
+          "ms": 118.20430299999998,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22728,
+          "read": 22406
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 55635968
+    },
+    {
+      "variant": "baseline",
+      "round": 0,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 86.75939500000004,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 905,
+          "read": 585
+        },
+        {
+          "name": "repeat-0",
+          "ms": 62.887471000000005,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 891,
+          "read": 571
+        },
+        {
+          "name": "repeat-1",
+          "ms": 64.408998,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "repeat-2",
+          "ms": 63.28747299999998,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-3",
+          "ms": 64.34156699999994,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-4",
+          "ms": 63.252140000000054,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "batch200",
+          "ms": 91.83194999999978,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22508,
+          "read": 22186
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 62885888
+    },
+    {
+      "variant": "baseline",
+      "round": 1,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 92.64226899999994,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 906,
+          "read": 586
+        },
+        {
+          "name": "repeat-0",
+          "ms": 62.006251999999904,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 889,
+          "read": 569
+        },
+        {
+          "name": "repeat-1",
+          "ms": 70.6653530000001,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "repeat-2",
+          "ms": 62.735943000000134,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 893,
+          "read": 573
+        },
+        {
+          "name": "repeat-3",
+          "ms": 67.603701,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-4",
+          "ms": 72.61454800000001,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "batch200",
+          "ms": 80.06625400000007,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22679,
+          "read": 22357
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 65875968
+    },
+    {
+      "variant": "baseline",
+      "round": 1,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 86.94330200000013,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 905,
+          "read": 585
+        },
+        {
+          "name": "repeat-0",
+          "ms": 63.85289200000011,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "repeat-1",
+          "ms": 67.71850399999994,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 895,
+          "read": 575
+        },
+        {
+          "name": "repeat-2",
+          "ms": 65.04169900000011,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-3",
+          "ms": 60.86862599999995,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 893,
+          "read": 573
+        },
+        {
+          "name": "repeat-4",
+          "ms": 67.24803599999996,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 893,
+          "read": 573
+        },
+        {
+          "name": "batch200",
+          "ms": 102.62552499999993,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22801,
+          "read": 22479
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 69398528
+    },
+    {
+      "variant": "baseline",
+      "round": 2,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 94.85031799999979,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 906,
+          "read": 586
+        },
+        {
+          "name": "repeat-0",
+          "ms": 57.28277600000001,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 890,
+          "read": 570
+        },
+        {
+          "name": "repeat-1",
+          "ms": 65.87860799999999,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "repeat-2",
+          "ms": 76.29094000000032,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-3",
+          "ms": 61.83591999999999,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "repeat-4",
+          "ms": 69.17757700000038,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "batch200",
+          "ms": 86.74794800000018,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22554,
+          "read": 22232
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 70692864
+    },
+    {
+      "variant": "baseline",
+      "round": 2,
+      "metrics": [
+        {
+          "name": "first",
+          "ms": 88.15161799999987,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 905,
+          "read": 585
+        },
+        {
+          "name": "repeat-0",
+          "ms": 58.45136300000013,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 891,
+          "read": 571
+        },
+        {
+          "name": "repeat-1",
+          "ms": 61.68781799999988,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 893,
+          "read": 573
+        },
+        {
+          "name": "repeat-2",
+          "ms": 58.48586400000022,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 891,
+          "read": 571
+        },
+        {
+          "name": "repeat-3",
+          "ms": 64.25662000000011,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 894,
+          "read": 574
+        },
+        {
+          "name": "repeat-4",
+          "ms": 61.111205000000155,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 892,
+          "read": 572
+        },
+        {
+          "name": "batch200",
+          "ms": 100.22526199999993,
+          "uploadedPackages": 1,
+          "downloadedPackages": 1,
+          "written": 22821,
+          "read": 22499
+        }
+      ],
+      "idleDownloads": 0,
+      "rss": 69545984
+    }
+  ]
+}
