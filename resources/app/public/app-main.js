@@ -32017,6 +32017,7 @@ async function kolPlmListAiExtract(text){
 // tekrar sorulmaz. AI önerisi BLFabricCards.validateAiCards'tan geçer ve
 // yalnız kullanıcı önizleyip onayladıktan sonra kaydedilir.
 let kolFabricCards=new Map(),kolFabricCardsState='idle',kolFabricBatchRunning=false;
+let kolFabricCardsConflicts=[],kolFabricCardsSharingPending=false;
 // Otomatik akışta "Şimdi değil" denen kodlar bu oturumda tekrar sorulmaz.
 const kolFabricDismissed=new Set();
 const KOL_FABRIC_AUTO_LIMIT=200;
@@ -32041,7 +32042,10 @@ function kolFabricLinkRowText(rowId,raw){
 function kolFabricCardsSet(data){
   const next=new Map();
   (Array.isArray(data&&data.cards)?data.cards:[]).forEach(card=>{if(card&&card.code&&card.summary)next.set(String(card.code),card);});
-  kolFabricCards=next;kolFabricDetailCache.clear();kolFabricDisplayCache.clear();
+  kolFabricCards=next;
+  kolFabricCardsConflicts=Array.isArray(data?.conflicts)?data.conflicts:[];
+  kolFabricCardsSharingPending=Boolean(data?.sharingPending||data?.sync?.pending);
+  kolFabricDetailCache.clear();kolFabricDisplayCache.clear();
 }
 /* Kart sözlüğü değişince onu gösteren üç tablo da yeniden çizilir (CP/Orders
    yalnız açık sekmede çizilir; renderCP/renderOrders bunu kendisi erteler). */
@@ -32063,7 +32067,7 @@ function kolFabricCardsEnsureLoaded(){
   }).catch(err=>{kolFabricCardsState='error';console.warn('Fabric cards could not be loaded:',err);});
 }
 async function kolFabricCardsRequest(url,options){
-  const res=await fetch(url,options),data=await res.json().catch(()=>({}));
+  const res=await fetch(url,{...(options||{}),headers:{...(options?.headers||{}),'X-Client-Id':window.BL_CLIENT_ID||''}}),data=await res.json().catch(()=>({}));
   if(!res.ok){const error=new Error(data.error||res.statusText);error.code=data.code;error.current=data.current;throw error;}
   kolFabricCardsSet(data);kolFabricCardsState='ready';
   return data;
@@ -32526,6 +32530,9 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
     }
   });
   document.body.appendChild(modal);
+  const pendingConflict=kolFabricCardsConflicts.find(entry=>entry.code===code);
+  if(pendingConflict)kolFabricShowRemoteComparison(modal,pendingConflict.remote,{pending:true,remoteRevisionId:pendingConflict.remoteRevisionId});
+  else if(kolFabricCardsSharingPending)status.textContent=en?'Shared synchronization is pending.':'Ortak eşitleme bekliyor.';
   window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?(freeText?'#_kolFabricCode':en?'[data-part="en:0"]':'[data-part="tr:0"]'):'[data-fabric="cancel"]'});
 }
 function kolPlmListStatusOptions(selected){
