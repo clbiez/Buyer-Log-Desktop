@@ -86,3 +86,16 @@ Previously filtered and already acknowledged local edits are not blindly replaye
 reselect such an old assignment after updating if it is absent on peers. New edits,
 and assignments present in shared business checkpoints, use the added field scope.
 TEST and STABLE publication are not requested or triggered by this PR.
+
+## Integration with updated Main
+
+PR #963 advanced Main to `3ffbf22043531705415d405b1c962f3fc4c06cc7`.
+Integrated as `2cd13588` and preserved all three pending visual release notes.
+All four affected backend/Importance UI files and the exact changed CP functions
+(`cellHtml`, `cpPasteTarget`, `cpBulkHistoryCurrent`) are byte-identical to the
+measured runtime source `ea7965f9`; upstream edits affect unrelated Backlog Excel
+functions/styles. Policy/local-db baseline sources are also unchanged. The
+recorded transport comparison therefore remains valid without repeating it.
+On the merged tree, 83 relevant/regression/upstream-integration/contract tests
+passed with zero skips/failures (`merged-validation.txt`); all three release notes
+validated. Subsequent evidence-only commits retain those runtime bytes.
