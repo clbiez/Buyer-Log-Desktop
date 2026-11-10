@@ -29,3 +29,5 @@
 .fabricSegmentCompare small{display:block;color:var(--ui-text-secondary)}
 .fabricSegmentCompare p{color:var(--ui-text)}
 @media(max-width:600px){.fabricSegmentCompare{grid-template-columns:1fr}}
+
+.kolFabricSummaries [data-fabric-segments]{grid-column:1/-1;min-width:0;width:100%}
