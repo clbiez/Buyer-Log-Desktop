@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.346",
+      "publishedAt": "2026-11-10",
+      "title": {
+        "tr": "Backlog Excel ve ortak sipariş etiketleri",
+        "en": "Backlog Excel and shared order tags"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.346/release.json"
+    },
+    {
       "version": "7.0.344",
       "publishedAt": "2026-11-08",
       "title": {

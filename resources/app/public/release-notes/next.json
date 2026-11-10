@@ -1,102 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-10",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Backlog Excel ve ortak sipariş etiketleri",
-    "en": "Backlog Excel and shared order tags"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Özel sütun adları, kaynak eşlemesi ve CP ile ortak formül düzenleyici. Siparişe seçilen Importance etiketi ortak senkronizasyon klasörü üzerinden diğer bilgisayarlara aktarılır.",
-    "en": "Custom column names, source lineage and the shared CP formula editor. The Importance tag selected for an order is replicated to other computers through the shared sync folder."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "backlog-excel-column-names-lineage",
-      "type": "feature",
-      "module": {
-        "tr": "Backlog Excel",
-        "en": "Backlog Excel"
-      },
-      "title": {
-        "tr": "Excel sütunlarını adlandırın ve kaynaklarını kontrol edin",
-        "en": "Name Excel columns and inspect their sources"
-      },
-      "body": {
-        "tr": "Rapor sütunlarının Excel adını listeden değiştirebilirsiniz. Her sütunun kaynak adı ve alanı Buyer Log’da görünür; Excel’in Ayarlar sayfasında görünen ad, kaynak, alan kimliği ve formül eşlemesi bulunur. Formül bağlantıları ad ve sıra değişikliklerinde korunur; gerekli kaynaklar gizli sütunlar olarak aktarılır.",
-        "en": "Rename report columns directly in the list. Buyer Log shows each source and field; the Excel Settings sheet records the exported name, source, field identity and formula. References survive renaming and reordering, and required sources are exported as hidden columns."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "backlog-excel-column-fx.png",
-        "alt": {
-          "tr": "Özel adları, kaynakları ve FX durumlarını gösteren Backlog Excel ayarları",
-          "en": "Backlog Excel settings showing custom names, sources and FX states"
-        },
-        "caption": {
-          "tr": "Güncel uygulamada izole demo verisi; tek liste düzeni ve sütun kaynağı bilgileri.",
-          "en": "Actual application with isolated demo data, showing the single list and column sources."
-        }
-      }
-    },
-    {
-      "id": "backlog-excel-shared-formula-editor",
-      "type": "feature",
-      "module": {
-        "tr": "Backlog Excel",
-        "en": "Backlog Excel"
-      },
-      "title": {
-        "tr": "Sütunun yanındaki FX ile hesaplama düzenleyin",
-        "en": "Edit calculations with FX beside each column"
-      },
-      "body": {
-        "tr": "Sıralama oklarının solundaki FX, CP’deki hesaplama kurucusunu, sözlüğü, önizlemeyi ve LCW AI desteğini açar. Özel formül noktalı ve vurgulu, yerleşik hesaplama onay işaretli, formülsüz sütun artı işaretlidir. Yeni hesaplanan sütun eklenebilir; mevcut Excel formülleri de aynı pencerede düzenlenebilir. Alttaki Gelişmiş ayarlar alanı kaldırıldı.",
-        "en": "FX to the left of the reorder arrows opens CP’s calculation builder, dictionary, preview and LCW AI support. Custom formulas have a highlighted dot, built-in calculations a checkmark, and columns without formulas a plus. Add calculated columns or edit existing Excel formulas in the same dialog. The bottom Advanced settings section has been removed."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "backlog-excel-calculated-editor.png",
-        "alt": {
-          "tr": "Backlog Excel için ortak hesaplanan sütun düzenleyicisi ve canlı önizleme",
-          "en": "Shared calculated column editor and live preview for Backlog Excel"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log ekranında anonim kaynak sütunundan hesaplanan örnek sonuç.",
-          "en": "An example calculated from an anonymous source column in the actual Buyer Log application."
-        }
-      }
-    },
-    {
-      "id": "importance-peer-sync",
-      "type": "fix",
-      "module": {
-        "tr": "CP · Siparişler · Senkronizasyon",
-        "en": "CP · Orders · Synchronization"
-      },
-      "title": {
-        "tr": "Siparişin önem etiketi ekipte paylaşılır",
-        "en": "Order importance assignments are shared with the team"
-      },
-      "body": {
-        "tr": "Importance seçimi, Regular seçimi ve seçimin kaldırılması aynı ortak senkronizasyon klasöründeki güncel istemcilere sipariş satırı bazında aktarılır. Siparişe erişimi olan kullanıcılar ortak etiketi görür; ortak alanlarda mevcut sipariş sahipliği ve düzenleme yetkileri korunur. Etiket kataloğu ve Line kuralları moderatör yayınıyla dağıtılmaya devam eder.",
-        "en": "Importance assignments, explicit Regular selections and cleared selections replicate by order line to updated clients using the same shared sync folder. Users with access to the order see its shared tag; existing order ownership and edit permissions apply. The tag catalog and Line rules continue to be distributed through moderator publication."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "importance-peer-sync-20261110.png",
-        "alt": {
-          "tr": "Diğer bilgisayardan aktarılan BTS etiketini gösteren gerçek CP tablosu",
-          "en": "Actual CP table displaying a BTS tag received from another computer"
-        },
-        "caption": {
-          "tr": "İzole demo verisiyle iki ayrı Buyer Log sunucusu ve tarayıcı oturumu arasında gerçek klasör aktarımı doğrulandı. Görsel alıcı oturumu gösterir.",
-          "en": "Real folder transport verified between two isolated Buyer Log servers and browser sessions using demo data. The image shows the receiving session."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
