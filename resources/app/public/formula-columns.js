@@ -984,8 +984,8 @@
 
   /* ---------------- pencere ---------------- */
 
-  let modal = null, editorClosed = null, editorLanguageRefresh = null;
-  function close() { const done = editorClosed; editorClosed = null; editorLanguageRefresh = null; modal?.remove(); modal = null; document.removeEventListener('keydown', onKey, true); if (done) done(); }
+  let modal = null, editorClosed = null, editorLanguageRefresh = null, editorDisposed = null;
+  function close() { const done = editorClosed, dispose = editorDisposed; editorClosed = null; editorDisposed = null; editorLanguageRefresh = null; if (dispose) dispose(); modal?.remove(); modal = null; document.removeEventListener('keydown', onKey, true); if (done) done(); }
   function onKey(event) {
     if (event.key !== 'Escape' || !modal) return;
     event.preventDefault(); event.stopImmediatePropagation();
@@ -1510,6 +1510,7 @@
        denetler ve önizleme gösterir; kayıt yine "Kaydet" iledir. Kopyala /
        yapıştır yolu, LCW AI erişimi olmayanlar için "Manuel yol" olarak durur. */
     let lcwaiPanel = null;
+    editorDisposed = () => { if (lcwaiPanel) { lcwaiPanel.destroy(); lcwaiPanel = null; } };
     function aiPanelHtml() {
       return `<div class="fcLcwAi" data-fc-lcwai-host></div>
         <ol class="fcAiSteps">

@@ -84,11 +84,13 @@ await page.evaluate(()=>applyLanguage('tr'));
 assert.equal(await page.locator('[data-fc-formula]').inputValue(),'[ASAS · Demo Quantity]*3');
 assert.match(await page.locator('#_fcTitle').innerText(),/Hesaplanan/);
 await page.evaluate(()=>applyLanguage('en'));
+await page.evaluate(async()=>{await BLPerf._loadScript('lcwai-assistant.js?rev=1');const original=BuyerLogAI.mountAssistant;window.__formulaAiDestroyed=0;BuyerLogAI.mountAssistant=(...args)=>{const panel=original(...args);return {destroy(){window.__formulaAiDestroyed++;panel.destroy();}};};});
 await page.locator('[data-fc-mode="ai"]').click();
 await page.locator('[data-fc-lcwai-host]').waitFor({state:'attached'});
 await page.waitForTimeout(500);
 await page.screenshot({path:path.join(root,'lcwai.png')});
 await page.keyboard.press('Escape');
+assert.ok(await page.evaluate(()=>window.__formulaAiDestroyed>=1),'closing the formula editor disposes its LCW AI subscription');
 // Responsive checks: both themes, four viewport sizes, reduced motion.
 const screens=[];
 for(const theme of ['light','dark'])for(const [width,height] of [[1440,1000],[1280,720],[960,480],[768,720]]){
