@@ -175,6 +175,33 @@ async function flushOutbox() {
   const remaining=await loadFabricCardsAsync();
   return {published,pending:Object.keys(remaining._pending||{}).length>0,conflicts:pendingConflicts(remaining)};
 }
+/* Explicit choice for an offline edit that met a newer remote revision.
+ * Never auto-rebase a pending draft; both choices require the currently
+ * observed remote revision, preventing an outdated confirmation. */
+function resolveFabricConflict(code,choice,expectedRemoteRevisionId,actor,{assertAuthority}={}){
+  return withFileLeaseAsync(FILE,async()=>{
+    assertAuthority?.();
+    const store=await loadFabricCardsAsync({recover:true,assertAuthority});
+    const key=normalizeCode(code),pending=store._pending?.[key],remote=(sharedEntries()||{})[key];
+    if(!key||!pending||!remote || remoteVersion(remote)===pending.baseRevisionId)
+      return {resolved:false,...publicCards(store)};
+    if(String(expectedRemoteRevisionId||'')!==remoteVersion(remote))
+      throw Object.assign(new Error('Ortak sürüm yeniden değişti. / Shared version changed again.'),{
+        code:'FABRIC_CARD_CONFLICT',statusCode:409,current:remote.deleted?null:normalizeCard(remote.card,key)
+      });
+    if(choice==='remote'){
+      delete store._pending[key];
+      if(remote.deleted)delete store.cards[key];
+      else store.cards[key]=normalizeCard(remote.card,key);
+    }else if(choice==='mine'){
+      pending.baseRevisionId=remoteVersion(remote);
+      pending.actorId=clean(actor&&actor.id,160);
+      if(pending.card){pending.card.revisionId=crypto.randomUUID();store.cards[key]=pending.card;}
+    }else throw Object.assign(new Error('Unknown conflict choice.'),{statusCode:400,code:'FABRIC_CONFLICT_CHOICE_INVALID'});
+    assertAuthority?.();await persist(store);
+    return {resolved:true,choice,...publicCards(store)};
+  });
+}
 function publicCards(store = loadFabricCards()) {
   const visible=mergedStore(store);
   return { cards:Object.values(visible.cards).map(card=>({...card,details:{...card.details}})),revision:store._revision,updatedAt:store._updatedAt,
@@ -266,4 +293,4 @@ function restoreFabricCards(before, expectedRevision, { assertAuthority } = {}) 
   });
 }
 
-module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, MAX_CARDS, DELTA_COLLECTION, attachDeltaStore, seedSharedCards, flushOutbox, mergedStore, sharedFingerprint, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, loadFabricCardsAsync, publicCards, upsertFabricCards, deleteFabricCard, restoreFabricCards };
+module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, MAX_CARDS, DELTA_COLLECTION, attachDeltaStore, seedSharedCards, flushOutbox, resolveFabricConflict, mergedStore, sharedFingerprint, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, loadFabricCardsAsync, publicCards, upsertFabricCards, deleteFabricCard, restoreFabricCards };
