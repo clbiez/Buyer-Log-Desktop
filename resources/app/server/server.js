@@ -3967,6 +3967,7 @@ require('./routes/fabric-card-routes')(app, {
   requestRevision,
   userAccess,
   onChanged: req=>liveEvents.notifyChange('fabric-cards',requestClientId(req)),
+  getPendingCount:()=>localDb.pendingCount(),
 });
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile
