@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "checklist-set-roster-sync",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Kontrol Listesi",
+        "en": "CP / Checklist"
+      },
+      "title": {
+        "tr": "Set parçası onayları takılmadan kaydedilir",
+        "en": "Set part approvals save without getting stuck"
+      },
+      "body": {
+        "tr": "Set parçası onaylarında sipariş ve ortak model/renk kayıtlarının parça listeleri birlikte korunur. Toplu kayıtta parça listesi önce gönderilir. Eski bekleyen ortak onayların eksik listesi yalnız eşleşen güncel siparişten kurtarılır. Kalıcı doğrulama hataları uygulama yeniden açılsa da sürekli denenmez; bekleyen değişiklik ve ek bilgileri korunur. Düzeltilen kayıt veya kurtarılan parça listesi kaydı yeniden göndermeyi sağlar.",
+        "en": "Set part approvals preserve rosters for both the order and reusable model/colour records. Batch saves send rosters first. Missing rosters for older pending reusable approvals are recovered only from a matching current order. Permanent validation errors do not retry endlessly, including after restart; pending edits and evidence are preserved. Correcting the record or recovering its roster allows a new save attempt."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-set-roster-sync.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda setin B parçası onaylandı ve durum menüsünde Onaylandı seçili.",
+          "en": "Set part B is approved in the actual Buyer Log CP table, with Approved selected in the status menu."
+        },
+        "caption": {
+          "tr": "İzole demo oturumu: sipariş ve ortak model/renk onayları sunucuda doğrulandı.",
+          "en": "Isolated demo session: order and reusable model/colour approvals verified on the server."
+        }
+      }
+    },
+    {
       "id": "supplier-analysis-bulk-filters",
       "type": "improvement",
       "module": {

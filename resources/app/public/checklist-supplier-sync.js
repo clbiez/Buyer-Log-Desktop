@@ -235,10 +235,56 @@
     readPendingAnswers();
     const current = snapshotAnswers();
     const entries = diffAnswers(state.observedAnswers || state.answerBaseline, current);
-    entries.forEach(function (entry) { state.pendingAnswers[answerKey(entry.orderKey, entry.itemId)] = entry; });
+    entries.forEach(queuePendingAnswer);
+    recoverPendingOptionRosters(current);
     state.observedAnswers = current;
     persistPendingAnswers();
     return current;
+  }
+
+  function queuePendingAnswer(entry) {
+    const key = answerKey(entry.orderKey, entry.itemId), previous = state.pendingAnswers[key];
+    if (previous?.syncBlocked && previous.errorCode) {
+      const { syncBlocked, errorCode, remoteAt, ...saved } = previous;
+      // Hydration/promotion can rebuild the same edit with a new baseline.
+      // Only a changed answer may release a permanent validation rejection.
+      if (samePendingEntry(saved, { ...entry, baseAt: saved.baseAt })) return;
+    }
+    state.pendingAnswers[key] = entry;
+  }
+
+  // Older clients saved option part approvals without the option's roster.
+  // Recover only from the matching live order's explicit roster/source count;
+  // a part letter alone must never invent or expand a set.
+  function recoverPendingOptionRosters(current) {
+    const missing = new Set(Object.values(state.pendingAnswers)
+      .filter(entry => entry.orderKey.startsWith('@option:') && Components.parseItem(entry.itemId)
+        && !current[answerKey(entry.orderKey, Components.CONFIG_ITEM)]
+        && !state.pendingAnswers[answerKey(entry.orderKey, Components.CONFIG_ITEM)]
+        && !state.answerBaseline[answerKey(entry.orderKey, Components.CONFIG_ITEM)])
+      .map(entry => entry.orderKey));
+    if (!missing.size) return;
+    const checklist = root.BLCpChecklistEngine, rows = currentRows();
+    const decision = analysesForRows(rows);
+    rows.forEach(row => {
+      const analysis = decision.byRow?.get(row);
+      if (!analysis) return;
+      const key = checklist.optionAnswerKey(analysis, Components.CONFIG_ITEM), split = splitAnswerKey(key);
+      if (!missing.has(split.orderKey)) return;
+      const count = componentParts(analysis, current).length;
+      if (count < 2) return;
+      state.pendingAnswers[key] = { orderKey: split.orderKey, itemId: Components.CONFIG_ITEM,
+        state: 'open', componentCount: count, at: isoNow(), source: 'buyer_log' };
+      Object.values(state.pendingAnswers).forEach(entry => {
+        // The server rejected the whole transaction. Adding its missing roster
+        // also permits one new attempt for the preserved companion edits.
+        if (entry.errorCode === 'CHECKLIST_COMPONENTS_INVALID') {
+          delete entry.syncBlocked;
+          delete entry.errorCode;
+        }
+      });
+      missing.delete(split.orderKey);
+    });
   }
 
   /* v7.221 — checklist başlıkları KİŞİSELDİR (Ön Ayar Paylaşımı ile
@@ -336,8 +382,11 @@
       for (;;) {
         state.syncQueued = false;
         captureAnswerChanges();
-        const entries = Object.values(state.pendingAnswers).filter(sendablePendingEntry).slice(0, 200);
+        // Commit rosters first, including when the queue crosses a batch boundary.
+        const entries = Object.values(state.pendingAnswers).filter(sendablePendingEntry)
+          .sort((a, b) => Number(b.itemId === Components.CONFIG_ITEM) - Number(a.itemId === Components.CONFIG_ITEM)).slice(0, 200);
         if (!entries.length) {
+          if (Object.values(state.pendingAnswers).some(entry => entry.syncBlocked && entry.errorCode)) throw pendingValidationError();
           if (Object.values(state.pendingAnswers).some(entry => entry.syncBlocked)) throw Object.assign(new Error(T('Sunucuda daha yeni bir checklist kaydı var. Bekleyen değişiklik korundu; durumu kontrol edip yeniden seçin.', 'A newer checklist record exists on the server. Your pending edit was preserved; review and select the status again.')), { code: 'CHECKLIST_CONFLICT' });
           if (!state.syncQueued) break;
           continue;
@@ -376,7 +425,14 @@
           const key = answerKey(entry.orderKey, entry.itemId);
           if (sameJson(state.pendingAnswers[key], entry)) state.permissionDeferred.set(key, safeJson(entry));
         });
-      } else if (error.code !== 'CHECKLIST_CONFLICT' && !state.syncRetryTimer) {
+      } else if (error.status >= 400 && error.status < 500 && ![408, 429].includes(error.status)) {
+        inFlightEntries.forEach(function (entry) {
+          const key = answerKey(entry.orderKey, entry.itemId);
+          if (sameJson(state.pendingAnswers[key], entry)) state.pendingAnswers[key] = { ...entry, syncBlocked: true, errorCode: error.code || 'VALIDATION_ERROR' };
+        });
+        persistPendingAnswers();
+        if (error.code === 'CHECKLIST_COMPONENTS_INVALID') throw Object.assign(pendingValidationError(), { notificationTarget: error.notificationTarget });
+      } else if (!['CHECKLIST_CONFLICT', 'CHECKLIST_VALIDATION_PENDING'].includes(error.code) && !state.syncRetryTimer) {
         state.syncRetryTimer = setTimeout(function () {
           state.syncRetryTimer = null;
           syncAnswerChanges().catch(function () {});
@@ -392,6 +448,11 @@
         }, 0);
       }
     }
+  }
+
+  function pendingValidationError() {
+    return Object.assign(new Error(T('Bekleyen checklist değişikliği doğrulanamadı. Kayıt korundu; set parçalarını kontrol edip durumu yeniden seçin.',
+      'A pending checklist change could not be validated. Your edit was preserved; check the set parts and select the status again.')), { code: 'CHECKLIST_VALIDATION_PENDING' });
   }
 
   function itemCatalog() {
@@ -815,7 +876,7 @@
         });
       });
       if (promote.length) {
-        promote.forEach(function (entry) { state.pendingAnswers[answerKey(entry.orderKey, entry.itemId)] = entry; });
+        promote.forEach(queuePendingAnswer);
         persistPendingAnswers();
       }
       if (Object.values(state.pendingAnswers).some(sendablePendingEntry)) {

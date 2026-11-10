@@ -239,6 +239,51 @@ test('sync forwards only the rejected in-flight entry as a durable notification 
  const first={orderKey:'100|DEMO|001',sourceRow:{Category:"2'li Takım"}},second={orderKey:'200|SET|002',sourceRow:{Category:"2'li Takım"}};
  b.assistant.setChecklistAnswer(first,'tests~part~A','approved');b.assistant.setChecklistAnswer(second,'tests~part~B','approved');
  await assert.rejects(b.sync.syncAnswerChanges(),error=>{assert.equal(error.notificationTarget.lineKey,'200|SET|002');assert.equal(error.notificationTarget.itemId,'tests~part~B');assert.equal(error.notificationTarget.module,'cp');return true;});
+ b.assistant.setChecklistAnswer(first,'tests~part~A','rejected');b.assistant.setChecklistAnswer(second,'tests~part~B','rejected');
  fail.orderKey='999|UNRELATED|003';
  await assert.rejects(b.sync.syncAnswerChanges(),error=>{assert.equal(error.notificationTarget.lineKey,undefined,'unknown batch error never guesses a record');return true;});
+});
+
+test('option-scoped approval includes its own roster and the server accepts the full transaction',async()=>{
+  const posts=[],b=browser(new Map(),async(_url,options)=>{posts.push(JSON.parse(options.body));return {ok:true,json:async()=>({ok:true})};});
+  b.assistant._state.rules.push({id:'shared-set',kind:'checklist',approvalScope:'option'});
+  b.assistant.setChecklistAnswer(analysis,Components.itemId('shared-set','B'),'approved',{note:'Keep option evidence'});
+  await b.sync.syncAnswerChanges();
+  const entries=posts.flatMap(p=>p.entries),option=Checklist.optionAnswerKey(analysis,'').split('::')[0];
+  assert.equal(entries.find(e=>e.orderKey===option&&e.itemId===Components.CONFIG_ITEM)?.componentCount,3);
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-option-roster-'));
+  try{
+    const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))});await store.applyEntries(${JSON.stringify(entries)},{id:'buyer'});process.stdout.write(JSON.stringify(store.publicPayload()));`;
+    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
+    assert.equal(result.answers[Checklist.optionAnswerKey(analysis,'shared-set~part~B')].note,'Keep option evidence');
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('a batch boundary never sends a first part before its roster',async()=>{
+  const known=new Set(),posts=[],b=browser(new Map(),async(_url,options)=>{
+    const entries=JSON.parse(options.body).entries;posts.push(entries);
+    for(const entry of entries.filter(e=>e.itemId===Components.CONFIG_ITEM))known.add(entry.orderKey);
+    for(const entry of entries.filter(e=>Components.parseItem(e.itemId)))assert.ok(known.has(entry.orderKey),'part needs a roster in this or an earlier request');
+    return {ok:true,json:async()=>({ok:true})};
+  });
+  for(let i=0;i<199;i++)b.assistant.setChecklistAnswer({orderKey:'normal-'+i},'tests','rejected');
+  b.assistant.setChecklistAnswer(analysis,'tests~part~B','rejected');
+  await b.sync.syncAnswerChanges();
+  assert.ok(posts.length>1);assert.ok(posts.every(entries=>entries.length<=200));
+});
+
+test('legacy pending option parts recover a rejected transaction after restart',async()=>{
+  const b=browser(new Map(),async()=>({ok:false,status:400,json:async()=>({code:'CHECKLIST_COMPONENTS_INVALID'})}));
+  b.assistant._state.rules.push({id:'shared-set',kind:'checklist',approvalScope:'option'});
+  b.assistant.setChecklistAnswer(analysis,'shared-set~part~B','approved',{note:'Legacy evidence'});
+  delete b.assistant._state.answers[Checklist.optionAnswerKey(analysis,Components.CONFIG_ITEM)];
+  b.assistant.persistChecklistAnswers({silent:true});
+  await assert.rejects(b.sync.syncAnswerChanges());
+  const posts=[],restarted=browser(b.saved,async(_url,options)=>{posts.push(JSON.parse(options.body));return {ok:true,json:async()=>({ok:true})};});
+  restarted.ctx.BLFormulaRows={cp:()=>[analysis]};
+  restarted.assistant.computeDecisionsForRows=()=>({byRow:new Map([[analysis,analysis]])});
+  await restarted.sync.syncAnswerChanges();
+  const entries=posts.flatMap(p=>p.entries),option=Checklist.optionAnswerKey(analysis,'').split('::')[0];
+  assert.equal(entries.find(e=>e.orderKey===option&&e.itemId===Components.CONFIG_ITEM)?.componentCount,3);
+  assert.equal(entries.find(e=>e.orderKey===option&&e.itemId==='shared-set~part~B')?.note,'Legacy evidence');
+  assert.ok(entries.some(e=>e.orderKey===analysis.orderKey&&e.itemId==='shared-set~part~B'),'the rejected companion PO edit is recovered too');
 });

@@ -294,3 +294,35 @@ test('Collection Checklist selections are journalled immediately and restored af
   }
   assert.equal(started,4,'each changed selection starts the server save immediately');
 });
+
+test('permanent validation rejection preserves edits without scheduling an endless retry',async()=>{
+  let posts=0;
+  const b=browser(new Map(),async()=>{posts++;return {ok:false,status:400,json:async()=>({code:'CHECKLIST_COMPONENTS_INVALID',error:'Define the set roster before updating a component.'})};});
+  b.assistant.setChecklistAnswer(analysis,'tests','rejected',{note:'Keep me'});
+  const initialTimers=b.timers.length;
+  await assert.rejects(b.sync.syncAnswerChanges());
+  const retryCount=b.timers.length;
+  await assert.rejects(b.sync.syncAnswerChanges());
+  assert.equal(posts,1,'unchanged invalid edits must wait for correction');
+  assert.equal(retryCount,initialTimers,'400 is not a transient network failure');
+  b.ctx.fetch=async()=>{posts++;return {ok:true,json:async()=>({ok:true})};};
+  b.assistant.setChecklistAnswer(analysis,'tests','approved');
+  await b.sync.syncAnswerChanges();
+  assert.equal(posts,2,'an explicit corrected edit is sent again');
+  assert.match([...b.saved.values()].join(' '),/Keep me/);
+});
+
+test('validation-blocked journal survives restart and startup promotion until the answer changes',async()=>{
+  const b=browser(new Map(),async()=>({ok:false,status:400,json:async()=>({code:'CHECKLIST_COMPONENTS_INVALID'})}));
+  b.assistant.setChecklistAnswer(analysis,'tests','rejected',{note:'Preserved across restart'});
+  await assert.rejects(b.sync.syncAnswerChanges());
+  let posts=0;
+  const restarted=browser(b.saved,async(_url,options)=>{if(options?.method==='POST')posts++;return {ok:true,json:async()=>({answers:{},tombstones:{}})};});
+  await restarted.sync.loadShared();
+  await assert.rejects(restarted.sync.syncAnswerChanges());
+  assert.equal(posts,0);
+  assert.equal(restarted.assistant._state.answers[key].note,'Preserved across restart');
+  restarted.assistant.setChecklistAnswer(analysis,'tests','approved');
+  await restarted.sync.syncAnswerChanges();
+  assert.equal(posts,1);
+});

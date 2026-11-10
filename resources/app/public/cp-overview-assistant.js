@@ -457,6 +457,13 @@
     if (scoped && !state.answers[Components.configKey(analysis)]) {
       state.answers[Components.configKey(analysis)] = Checklist.makeAnswer('open', analysis, { componentCount: parts.length, at: answerMeta.at, by });
     }
+    if (scoped && optionKey && state.answers[optionKey]) {
+      const rosterKey = Checklist.optionAnswerKey(analysis, Components.CONFIG_ITEM);
+      const count = Math.max(parts.length, state.answers[rosterKey]?.componentCount || 0);
+      if (count !== state.answers[rosterKey]?.componentCount) {
+        state.answers[rosterKey] = Checklist.makeAnswer('open', analysis, { componentCount: count, at: answerMeta.at, by, loadDate: null });
+      }
+    }
     return saveAnswers();
   }
   function setChecklistComponents(analysis, count) {
