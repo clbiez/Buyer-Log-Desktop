@@ -36,7 +36,14 @@
   function translateKnown(value,field,from){
     const text=clean(value);
     if(!validPiece(text)||!FIELDS.includes(field))return {status:'invalid',value:''};
-    if(field==='yarn'){const x=text.replace(/\s*\/\s*/g,'/');return /^\d+(?:\/\d+)*(?:\s*(?:Ne|Nm|Tex))?$/i.test(x)?{status:'known',value:x}:{status:'needs-ai',value:''};}
+    if(field==='yarn'){
+      const x=text.replace(/\s*\/\s*/g,'/');
+      if(/^\d+(?:\/\d+)*(?:\s*(?:Ne|Nm|Tex))?$/i.test(x))return {status:'known',value:x};
+      const translations=from==='tr'?[['Penye','Combed'],['Karde','Carded']]:[['Combed','Penye'],['Carded','Karde']];
+      const translated=translations.reduce((value,pair)=>value.replace(new RegExp('\\b'+pair[0]+'\\b','gi'),pair[1]),x);
+      return /^\d+(?:\/\d+)*(?:\s*(?:Ne|Nm|Tex))?\s+(?:Penye|Karde|Combed|Carded)$/i.test(translated)
+        ? {status:'known',value:translated}:{status:'needs-review',value:''};
+    }
     if(field==='weight'){const x=weight(text);return x?{status:'known',value:x}:{status:'needs-ai',value:''};}
     if(field==='type'){
       const pair=TERMS.find(pair=>[pair[0],pair[1],...(pair[2]||[])].some(a=>fold(a)===fold(text)));
@@ -51,15 +58,18 @@
       rest=rest.replace(rx,function(_,lead){changed=true;marks.push(dst);return lead+'\u0001'+(marks.length-1)+'\u0002';});
     }
     rest=rest.replace(/\u0001(\d+)\u0002/g,(_,i)=>marks[Number(i)]);
-    const leftover=rest.replace(/\d+(?:[.,]\d+)?/g,'').replace(/[%\s\/.,()+-]/g,'').replace(/Poliester|Cotton|Viscose|Elastane|Polyamide|Acrylic|Linen|Wool|Recycled|Organic/gi,'');
+    const knownWords=['Geri Dönüşümlü','Organik','Polyester','Poliester','Pamuk','Viskon','Viskoz','Elastan','Poliamid','Akrilik','Keten','Yün','Cotton','Viscose','Elastane','Polyamide','Acrylic','Linen','Wool','Recycled','Organic'];
+    let leftover=rest.replace(/\d+(?:[.,]\d+)?/g,'').replace(/[%\s\/.,()+-]/g,'');
+    for(const word of knownWords)leftover=leftover.replace(new RegExp(word,'gi'),'');
     return changed&&!leftover&&numbersMatch(text,rest)?{status:'known',value:rest}:{status:'needs-ai',value:''};
   }
   function validatePair(tr,en){
     if(!Array.isArray(tr)||!Array.isArray(en)||tr.length!==4||en.length!==4||!tr.every(validPiece)||!en.every(validPiece))
       return {ok:false,code:'FABRIC_SEGMENTS_INVALID'};
-    if(clean(tr[1])!==clean(en[1])||weight(tr[2])===null||weight(tr[2])!==weight(en[2]))
+    const yarnTechnical=x=>clean(x).replace(/[^\d\/.,]/g,'').replace(/,/g,'.');
+    if(yarnTechnical(tr[1])!==yarnTechnical(en[1])||weight(tr[2])===null||weight(tr[2])!==weight(en[2]))
       return {ok:false,code:'FABRIC_TECHNICAL_MISMATCH'};
-    if(![0,1,2,3].every(i=>numbersMatch(tr[i],en[i])))
+    if(![1,2,3].every(i=>numbersMatch(tr[i],en[i])))
       return {ok:false,code:'FABRIC_NUMBERS_MISMATCH'};
     return {ok:true,tr:tr.map(clean),en:en.map(clean)};
   }
