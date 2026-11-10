@@ -229,7 +229,7 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
   return { ...publicCards(store), updated, skipped };
   });
 }
-function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthority } = {}) {
+function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthority, expectedRevisionId } = {}) {
   return withFileLeaseAsync(FILE, async () => {
   assertAuthority?.();
   const store = await loadFabricCardsAsync({ recover: true, assertAuthority });
@@ -237,6 +237,10 @@ function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthorit
   const key = normalizeCode(code);
   const current=mergedStore(store).cards[key];
   if (!key || !current) return { ...publicCards(store), deleted: false };
+  if(deltaStore && expectedRevisionId!==undefined && String(expectedRevisionId||'')!==String(current.revisionId||''))
+    throw Object.assign(new Error('Kumaş kartı değişti. / Fabric card changed.'),{code:'FABRIC_CARD_CONFLICT',statusCode:409,current});
+  if(deltaStore && expectedRevisionId===undefined)
+    throw Object.assign(new Error('Kart revizyonu gerekli. / Fabric card revision is required.'),{code:'FABRIC_CARD_REVISION_REQUIRED',statusCode:409,current});
   delete store.cards[key];
   if(deltaStore)store._pending[key]={card:null,deleted:true,baseRevisionId:String(current.revisionId||''),actorId:clean(actor&&actor.id,160)};
   assertAuthority?.(); await persist(store);
