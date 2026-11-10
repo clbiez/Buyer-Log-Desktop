@@ -25,7 +25,7 @@ test('Pivot Ayarları kaydı tarihleri commit eder ve Excel kanonik filtre sorgu
   assert.match(APP,/data-backlog-settings-save/);
   assert.match(APP,/if\(!commitBacklogDateInputs\(\)\)return;/);
   const start=APP.indexOf('async function exportBacklogToExcel'),end=APP.indexOf("document.getElementById('backlogExportBtn')",start),block=APP.slice(start,end);
-  assert.match(block,/const params=backlogExportQueryParams\(\)/);
+  assert.match(block,/params=backlogExportQueryParams\(\)/);
   assert.doesNotMatch(block,/dimFiltersObj/);
   assert.match(APP,/dimFiltersObj\.antrepoDate = \{granularity:backlogDateFilter\.granularity, values:backlogDateFilter\.values\}/);
 });

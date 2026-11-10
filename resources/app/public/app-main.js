@@ -17743,6 +17743,12 @@ let lastBacklogData = null;
 const BACKLOG_EXCEL_COLUMNS_KEY='bl.backlog.excelColumns.v4';
 const BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl.backlog.excelColumns.v3';
 const BACKLOG_EXCEL_FORMULAS_KEY='bl.backlog.excelFormulas.v1';
+const BACKLOG_EXCEL_SETTINGS_KEY='bl.backlog.excelColumns.settings.v1';
+function backlogExcelColumnSettings(){
+  try{const value=JSON.parse(BLStorage.getItem(BACKLOG_EXCEL_SETTINGS_KEY)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch(_){return {};}
+}
+function saveBacklogExcelColumnSettings(value){BLStorage.setItem(BACKLOG_EXCEL_SETTINGS_KEY,JSON.stringify(value));}
+
 const BACKLOG_DEFAULT_EXPORT_HEADERS=[
   'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','ÖNEM ETİKETİ\n(IMPORTANCE)','RİSK\n(PRIORITY)','buying note'
 ];
@@ -17803,15 +17809,19 @@ function backlogExportSourceCatalog(){
   }));
   return result;
 }
-function backlogSelectedSourceIds(){return backlogExcelColumns().filter(id=>/^custom:(asas|antrepo):/.test(id));}
+function backlogSelectedSourceIds(){
+  const settings=backlogExcelColumnSettings(),catalog=[...backlogExcelColumnCatalog().values()];
+  return window.BLBacklogColumns.dependencies(backlogExcelColumns(),catalog,settings,window.BLFormulaEngine).filter(id=>/^custom:(asas|antrepo):/.test(id));
+}
 function backlogSelectedDataHeaders(serverHeaders){
   const available=new Set(Array.isArray(serverHeaders)?serverHeaders:BACKLOG_DEFAULT_EXPORT_HEADERS),catalog=new Map(backlogExportSourceCatalog().map(item=>[item.id,item]));
   const seen=new Set();
   return backlogExcelColumns().map(id=>{
     const match=/^field:(\d+)$/.exec(id);if(match)return BACKLOG_DEFAULT_EXPORT_HEADERS[Number(match[1])]||'';
+    if(id.startsWith('calc:'))return backlogExcelColumnSettings()[id]?.formula||backlogExcelColumnSettings()[id]?.excelFormula?id:'';
     return catalog.get(id)?.label||'';
   }).filter(header=>{
-    if(!header||!available.has(header)||seen.has(header))return false;
+    if(!header||(!header.startsWith('calc:')&&!available.has(header))||seen.has(header))return false;
     seen.add(header);return true;
   });
 }
@@ -17838,64 +17848,84 @@ function backlogExportQueryParams(){
 // Katalog: sabit alanlar (field:N) + ASAS/Antrepo custom source sütunları tek haritada.
 // header = biçimlendirilmemiş gerçek başlık (formula override anahtarı / export eşleşmesi için \n korunur),
 // display = yalnız UI etiketi (\n boşlukla değiştirilir).
-function backlogExcelColumnCatalog(){
+function backlogExcelColumnCatalog(settings=backlogExcelColumnSettings()){
   const catalog=new Map();
   BACKLOG_DEFAULT_EXPORT_HEADERS.forEach((header,index)=>{
     const id=backlogFieldId(index);
-    // Legacy month/week fields are already derived from the selected date.
     if(backlogIsLegacyDateDerivedId(id))return;
-    catalog.set(id,{id,header,display:header.replace(/\n/g,' '),group:'field'});
+    const canonical=window.BLCanonicalFields,idCandidate=canonical?.canonicalId?.('backlog',header);
+    catalog.set(id,{id,header,display:header.replace(/\n/g,' '),group:'field',database:'Buyer Log / BACKLOG',databaseColumn:header,canonicalId:canonical?.bindingFor?.('backlog',idCandidate)?idCandidate:''});
   });
   backlogExportSourceCatalog().forEach(item=>{
     const header=item.label;
-    catalog.set(item.id,{id:item.id,header,display:header.replace(/\n/g,' '),group:item.source});
+    catalog.set(item.id,{id:item.id,header,display:header.replace(/\n/g,' '),group:item.source,database:item.source==='asas'?'ASAS':'IAS / Antrepo',databaseColumn:item.header});
   });
+  const sourceByCanonical=new Map();
+  backlogExportSourceCatalog().forEach(source=>{
+    if(source.source!=='asas')return;const field=window.BLCanonicalFields?.canonicalId?.('backlog',source.header);if(!field)return;
+    const matches=sourceByCanonical.get(field)||[];matches.push(source);sourceByCanonical.set(field,matches);
+  });
+  catalog.forEach(item=>{
+    if(item.group!=='field'||!item.canonicalId)return;
+    const matches=sourceByCanonical.get(item.canonicalId)||[];
+    if(matches.length===1){item.database='ASAS';item.databaseColumn=matches[0].header;}
+  });
+  Object.entries(settings).forEach(([id,config])=>{if(id.startsWith('calc:'))catalog.set(id,{id,header:id,display:config.label||id,group:'calculated',database:'Buyer Log',databaseColumn:id});});
   return catalog;
 }
 function backlogColumnGroupTag(group){
   if(group==='asas')return 'ASAS';
   if(group==='antrepo')return appLang==='en'?'Warehouse':'Antrepo';
+  if(group==='calculated')return appLang==='en'?'Calculated':'Hesaplanan';
   return '';
 }
-function openBacklogExportColumns(){
+async function openBacklogExportColumns(draftState=null){
+  if(!window.BLBacklogColumns){
+    const trigger=document.getElementById('backlogExcelOptionsBtn'),label=trigger?.innerHTML;
+    if(trigger){trigger.disabled=true;trigger.setAttribute('aria-busy','true');trigger.textContent=appLang==='en'?'Loading…':'Yükleniyor…';}
+    try{await window.BLPerf._loadScript('backlog-excel-columns.js');}
+    catch(err){showToast((appLang==='en'?'Excel settings could not be loaded: ':'Excel ayarları yüklenemedi: ')+err.message);return;}
+    finally{if(trigger){trigger.disabled=false;trigger.removeAttribute('aria-busy');trigger.innerHTML=label;}}
+  }
   document.getElementById('backlogExportColumnsModal')?.remove();
-  let catalog=backlogExcelColumnCatalog();
+  if(!draftState?.selected)draftState=null;
+  let catalog=backlogExcelColumnCatalog(draftState?.settings);
   const dedupe=arr=>{const seen=new Set(),out=[];(arr||[]).forEach(id=>{if(typeof id!=='string'||seen.has(id))return;seen.add(id);out.push(id);});return out;};
-  let workingSelected=dedupe(backlogExcelColumns());
-  const workingFormulas={...backlogExcelFormulaOverrides()};
-  const defaultPlan=window.BLBacklogExcel?.formulaPlan?.(BACKLOG_DEFAULT_EXPORT_HEADERS,{},2)||{formulas:{}};
-  let searchQuery='';
+  let workingSelected=dedupe(draftState?.selected||backlogExcelColumns());
+  const workingFormulas={...(draftState?.formulas||backlogExcelFormulaOverrides())};
+  const workingSettings=JSON.parse(JSON.stringify(draftState?.settings||backlogExcelColumnSettings()));
+  let previewRows=null,previewFetch=null,editingRequest=0;
+  const previewAbort=new AbortController();
+  const defaultPlan=window.BLBacklogExcel?.formulaPlan?.([...BACKLOG_DEFAULT_EXPORT_HEADERS,...(window.BLBacklogExcel?.HELPER_HEADERS||[])],{},2)||{formulas:{}};
+  let searchQuery=draftState?.search||'';
   const tr=(en,tk)=>appLang==='en'?en:tk;
-  // All labels own TR/EN pairs; source headers must retain their canonical text.
   const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.dataset.noI18n='';
   const text=(en,tk)=>`<span data-i18n-tr="${escapeHtml(tk)}" data-i18n-en="${escapeHtml(en)}">${escapeHtml(tr(en,tk))}</span>`;
   modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle">
-    <div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${text('Backlog Excel settings','Backlog Excel ayarları')}</div><div class="backlogDetailMeta">${text('Add, remove or reorder the columns in your report. Applies to Legacy and V3.','Raporunuzdaki sütunları ekleyin, çıkarın veya sıralayın. Legacy ve V3 için geçerlidir.')}</div></div><button type="button" class="backlogDetailClose" data-close data-close-icon><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${text('Backlog Excel settings','Backlog Excel ayarları')}</div><div class="backlogDetailMeta">${text('Rename columns, inspect their sources and edit calculations with FX. Applies to Legacy and V3.','Sütunları adlandırın, kaynaklarını kontrol edin ve formülleri FX ile düzenleyin. Legacy ve V3 için geçerlidir.')}</div></div><button type="button" class="backlogDetailClose" data-close data-close-icon><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="backlogExportColumnsBody">
-      <div class="backlogColPaneHead"><h3>${text('Report columns','Rapordaki sütunlar')} <span class="backlogColCount" data-col-count aria-live="polite"></span></h3><div class="backlogColTools"><button type="button" class="tbtn" data-col-reset-selection>${text('Restore defaults','Varsayılana dön')}</button><button type="button" class="tbtn primary" data-col-toggle-add aria-expanded="false" aria-controls="backlogExcelAddColumns">${text('Add column','Sütun ekle')}</button></div></div>
+      <div class="backlogColPaneHead"><h3>${text('Report columns','Rapordaki sütunlar')} <span class="backlogColCount" data-col-count aria-live="polite"></span></h3><div class="backlogColTools"><button type="button" class="tbtn" data-col-calculated>ƒx + ${text('Calculated column','Hesaplanan sütun')}</button><button type="button" class="tbtn" data-col-reset-selection>${text('Restore defaults','Varsayılana dön')}</button><button type="button" class="tbtn primary" data-col-toggle-add aria-expanded="false" aria-controls="backlogExcelAddColumns">${text('Add column','Sütun ekle')}</button></div></div>
       <div id="backlogExcelAddColumns" class="backlogColPane" hidden>
         <label class="backlogColSearchLabel">${text('Find a column','Sütun ara')}<input type="search" class="backlogColSearch" data-col-search></label>
         <div class="backlogColList backlogColAvailableList" data-col-available></div>
       </div>
       <div class="backlogColList backlogColSelectedList" data-col-selected></div>
-      <details class="backlogExportColumnsGroup" data-formula-settings><summary>${text('Advanced settings · formulas','Gelişmiş ayarlar · formüller')}</summary><p>${text('Leave the default formulas unchanged unless needed. Use {row} for the current Excel row.','Gerekmedikçe varsayılan formülleri değiştirmeyin. Güncel Excel satırı için {row} kullanın.')}</p><div class="backlogExportFormulaList" data-formula-list></div></details>
+
     </div>
     <div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${text('Cancel','İptal')}</button><button type="button" class="tbtn primary" data-save>${text('Apply','Uygula')}</button></div>
   </div>`;
   document.body.appendChild(modal);
   let releaseKeyboard=()=>{};
-  const close=()=>{releaseKeyboard();modal.remove();};
-  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
+  const close=()=>{previewAbort.abort();window.BLFormulaColumns?.close();releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:()=>{if(!document.getElementById('_formulaColumnModal'))close();}})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
   modal.addEventListener('click',event=>{if(event.target===modal)close();});
   const availableEl=modal.querySelector('[data-col-available]');
   const selectedEl=modal.querySelector('[data-col-selected]');
-  const formulaEl=modal.querySelector('[data-formula-list]');
   const countEl=modal.querySelector('[data-col-count]');
   const addPanel=modal.querySelector('#backlogExcelAddColumns');
   const addToggle=modal.querySelector('[data-col-toggle-add]');
   const searchEl=modal.querySelector('[data-col-search]');
-  const formulaSettings=modal.querySelector('[data-formula-settings]');
   addToggle.addEventListener('click',()=>{
     const open=addToggle.getAttribute('aria-expanded')!=='true';
     addToggle.setAttribute('aria-expanded',String(open));
@@ -17905,40 +17935,87 @@ function openBacklogExportColumns(){
   const norm=text=>String(text||'').toLocaleLowerCase('tr');
   function renderAvailable(){
     const q=norm(searchQuery);
-    const groups=[['field',tr('Fixed fields','Sabit alanlar')],['asas','ASAS'],['antrepo',tr('Warehouse (IAS/Antrepo)','IAS / Antrepo')]];
+    const groups=[['field',tr('Fixed fields','Sabit alanlar')],['asas','ASAS'],['antrepo',tr('Warehouse (IAS/Antrepo)','IAS / Antrepo')],['calculated',tr('Calculated','Hesaplanan')]];
     let html='';
     groups.forEach(([group,groupLabel])=>{
-      const items=[...catalog.values()].filter(item=>item.group===group&&!workingSelected.includes(item.id)&&(!q||norm(item.display).includes(q)));
+      const items=[...catalog.values()].filter(item=>item.group===group&&!workingSelected.includes(item.id)&&(!q||norm(item.display+' '+item.database+' '+item.databaseColumn).includes(q)));
       if(!items.length)return;
       html+=`<div class="backlogColGroupLabel">${escapeHtml(groupLabel)}</div>`;
-      html+=items.map(item=>`<button type="button" class="tbtn backlogColRow backlogColAvailRow" data-col-add-id="${escapeHtml(item.id)}"><span class="backlogColRowLabel">${escapeHtml(item.display)}</span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}<span>+ ${escapeHtml(tr('Add','Ekle'))}</span></button>`).join('');
+      html+=items.map(item=>`<button type="button" class="tbtn backlogColRow backlogColAvailRow" data-col-add-id="${escapeHtml(item.id)}"><span class="backlogColRowLabel"><span>${escapeHtml(item.display)}</span><small class="backlogColSource">${escapeHtml(item.database+' · '+item.databaseColumn)}</small></span>${item.group!=='field'?`<span class="backlogColTag">${escapeHtml(backlogColumnGroupTag(item.group))}</span>`:''}<span>+ ${escapeHtml(tr('Add','Ekle'))}</span></button>`).join('');
     });
     availableEl.innerHTML=html||`<div class="backlogColEmpty">${escapeHtml(searchQuery?tr('No matches.','Eşleşme yok.'):tr('No columns.','Sütun yok.'))}</div>`;
   }
   function renderSelected(){
-    if(countEl)countEl.textContent=String(workingSelected.length);
     modal.querySelector('[data-save]').disabled=!workingSelected.length;
-    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('Add at least one column to your report.','Raporunuza en az bir sütun ekleyin.'))}</div>`;return;}
+    if(countEl)countEl.textContent=String(workingSelected.length);
+    if(!workingSelected.length){selectedEl.innerHTML=`<div class="backlogColEmpty">${escapeHtml(tr('No columns.','Sütun yok.'))}</div>`;return;}
     selectedEl.innerHTML=workingSelected.map((id,index)=>{
       const item=catalog.get(id);
-      const label=item?item.display:id;
+      const label=item?window.BLBacklogColumns.display(item,workingSettings):id;
+      const state=workingSettings[id]?.formula||workingSettings[id]?.excelFormula||workingFormulas[item?.header]?'custom':defaultPlan.formulas?.[item?.header]?'default':'empty';
+      const formulaTitle=state==='custom'?tr('Custom formula — edit','Özel formül — düzenle'):state==='default'?tr('Built-in formula — edit','Yerleşik formül — düzenle'):tr('No formula — add','Formül yok — ekle');
       const tag=item&&item.group!=='field'?backlogColumnGroupTag(item.group):'';
-      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" aria-label="${escapeHtml(tr('Remove','Çıkar')+': '+label)}">${escapeHtml(tr('Remove','Çıkar'))}</button></div>`;
+      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><label class="backlogColRowLabel"><input type="text" data-col-label="${escapeHtml(id)}" value="${escapeHtml(label)}" aria-label="${escapeHtml(tr('Excel column name','Excel sütun adı'))}"><small class="backlogColSource">${escapeHtml(item?item.database+' · '+item.databaseColumn:id)}${item?.canonicalId?` · ${escapeHtml(item.canonicalId)}`:''}</small></label>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn backlogColFx is-${state}" data-col-fx="${escapeHtml(id)}" title="${escapeHtml(formulaTitle)}" aria-label="${escapeHtml(label+' — '+formulaTitle)}"><span aria-hidden="true">ƒx${state==='custom'?'●':state==='default'?'✓':'+'}</span></button><button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" aria-label="${escapeHtml(tr('Remove','Çıkar')+': '+label)}">${escapeHtml(tr('Remove','Çıkar'))}</button></div>`;
     }).join('');
   }
-  function currentFormulaHeaders(){
-    const fromSelected=workingSelected.map(id=>catalog.get(id)?.header).filter(Boolean);
-    const extra=Object.keys(workingFormulas).filter(header=>!fromSelected.includes(header));
-    return [...fromSelected,...extra];
+  function renderAll(){renderAvailable();renderSelected();}
+  selectedEl.addEventListener('input',event=>{
+    const input=event.target.closest('[data-col-label]');if(!input)return;
+    workingSettings[input.dataset.colLabel]={...workingSettings[input.dataset.colLabel],label:input.value};
+  });
+  async function editFormula(id){
+    const request=++editingRequest;
+    const item=catalog.get(id);if(!item)return;
+    const busy=[...selectedEl.querySelectorAll('[data-col-fx]')].find(button=>button.dataset.colFx===id),before=busy?.innerHTML;
+    if(busy){busy.disabled=true;busy.setAttribute('aria-busy','true');busy.textContent='ƒx…';}
+    try{
+      if(!previewRows){
+        if(!previewFetch){
+          const params=backlogExportQueryParams();params.sourceColumns=[...catalog.keys()].filter(key=>/^custom:/.test(key)).join(',');params.previewLimit=5;
+          previewFetch=fetchJSON('/api/backlog-export?'+new URLSearchParams(params),{signal:previewAbort.signal}).then(response=>response.rows||[]);
+        }
+        previewRows=await previewFetch;
+      }
+    }catch(_){previewRows=[];}finally{if(busy?.isConnected){busy.disabled=false;busy.removeAttribute('aria-busy');busy.innerHTML=before;}}
+    if(!modal.isConnected||request!==editingRequest)return;
+    const columns=[...catalog.values()].map(c=>({ref:c.id,key:c.id,label:window.BLBacklogColumns.display(c,workingSettings),model:c.group!=='field',source:c.database}));
+    const index=window.BLBacklogColumns.editorIndex(columns);
+    const rows=previewRows.slice(0,5).map(row=>{
+      const values=Object.fromEntries([...catalog.values()].map(c=>[c.id,row[c.header]??null])),done=new Set();
+      const calculate=(ref,active=new Set())=>{if(active.has(ref))return null;if(done.has(ref)||ref===id||!workingSettings[ref]?.formula)return values[ref];active.add(ref);const result=window.BLFormulaEngine.compile(workingSettings[ref].formula).evaluate(values,{lookup:key=>calculate(key,active)});active.delete(ref);done.add(ref);return values[ref]=result.ok?result.value:null;};
+      catalog.forEach(c=>calculate(c.id));return values;
+    });
+    const config=workingSettings[id]||{};
+    const nativeIds=workingFormulas[item.header]?[...workingSelected]:[...workingSelected,...[...catalog.keys()].filter(key=>!workingSelected.includes(key))];
+    const selectedHeaders=nativeIds.map(key=>catalog.get(key)?.header).filter(Boolean);
+    const plan=window.BLBacklogExcel?.formulaPlan?.([...selectedHeaders,...(window.BLBacklogExcel?.HELPER_HEADERS||[])],{},2)||{formulas:{}};
+    nativeIds.push(...(window.BLBacklogExcel?.HELPER_HEADERS||[]).map(h=>'helper:'+h));
+    const native=config.excelFormula?window.BLBacklogColumns.nativeExcel(config.excelFormula,ref=>{const i=nativeIds.indexOf(ref);return i<0?null:XLSX.utils.encode_col(i);},'{row}'):workingFormulas[item.header]||plan.formulas?.[item.header]?.formula||'';
+    const commit=definition=>{
+      definition.label=(appLang==='en'?definition.labelEn:definition.labelTr)||definition.label;
+      const next={...workingSettings,[id]:{...definition,id,label:definition.label,formula:definition.formula,excelFormula:undefined}};
+      try{window.BLBacklogColumns.dependencies(workingSelected,[...catalog.values()],next,window.BLFormulaEngine);}catch(err){showToast(tr('Invalid formula dependencies: ','Geçersiz formül bağlantıları: ')+err.message);return false;}
+      Object.assign(workingSettings,next);delete workingFormulas[item.header];renderAll();
+    };
+    window.BLFormulaColumns.open('backlog',id,null,{
+      definitions:[{id,label:window.BLBacklogColumns.display(item,workingSettings),formula:config.formula||'',format:config.format||'auto',decimals:config.decimals??'',refs:config.refs||{}}],
+      columns,index,rows,
+      nativeFormula:native?window.BLBacklogColumns.nativeRowTemplate(native):null,
+      onSave:commit,
+      onNativeSave:value=>{
+        const formula=value.trim();
+        if(!window.BLBacklogColumns.validateNative(formula,window.BLFormulaEngine)){showToast(tr('Enter a valid local Excel formula without external references.','Dış başvuru içermeyen geçerli bir yerel Excel formülü girin.'));return false;}
+        try{workingSettings[id]={...workingSettings[id],formula:undefined,excelFormula:window.BLBacklogColumns.nativeStore(formula,nativeIds)};}catch(err){showToast(err.message);return false;}
+        delete workingFormulas[item.header];renderAll();
+      },
+      onDelete:()=>{delete workingSettings[id]?.formula;delete workingSettings[id]?.excelFormula;delete workingFormulas[item.header];if(id.startsWith('calc:')){delete workingSettings[id];catalog.delete(id);workingSelected=workingSelected.filter(key=>key!==id);}renderAll();},
+      onClose:()=>{if(id.startsWith('calc:')&&!workingSettings[id]?.formula&&!workingSettings[id]?.excelFormula){delete workingSettings[id];catalog.delete(id);workingSelected=workingSelected.filter(key=>key!==id);renderAll();}},
+    });
   }
-  function renderFormulas(){
-    formulaEl.innerHTML=currentFormulaHeaders().map(header=>{
-      const current=workingFormulas[header]!=null?workingFormulas[header]:(defaultPlan.formulas?.[header]?.formula||'');
-      return `<label class="backlogExcelFormulaField"><span>${escapeHtml(header.replace(/\n/g,' '))}</span><input type="text" data-formula-header="${escapeHtml(header)}" value="${escapeHtml(current)}" placeholder="${escapeHtml(tr('=IF(...) — {row} row number','=IF(...) — {row} satır numarası'))}"></label>`;
-    }).join('');
-  }
-  function renderAll(){renderAvailable();renderSelected();if(formulaSettings.open)renderFormulas();}
-  formulaSettings.addEventListener('toggle',()=>{if(formulaSettings.open)renderFormulas();});
+  modal.querySelector('[data-col-calculated]').addEventListener('click',()=>{
+    const id='calc:'+Date.now().toString(36);
+    workingSettings[id]={label:tr('New calculation','Yeni hesaplama')};catalog=backlogExcelColumnCatalog(workingSettings);workingSelected.push(id);renderAll();editFormula(id);
+  });
   modal.querySelector('[data-col-search]').addEventListener('input',event=>{searchQuery=event.target.value;renderAvailable();});
   availableEl.addEventListener('click',event=>{
     const button=event.target.closest('[data-col-add-id]');if(!button)return;
@@ -17950,6 +18027,7 @@ function openBacklogExportColumns(){
     (next||searchEl).focus({preventScroll:true});
   });
   selectedEl.addEventListener('click',event=>{
+    const fx=event.target.closest('[data-col-fx]');if(fx){editFormula(fx.dataset.colFx);return;}
     const up=event.target.closest('[data-col-up]'),down=event.target.closest('[data-col-down]'),remove=event.target.closest('[data-col-remove]');
     if(up||down){
       const id=up?up.dataset.colUp:down.dataset.colDown,i=workingSelected.indexOf(id),next=i+(up?-1:1);
@@ -17968,16 +18046,13 @@ function openBacklogExportColumns(){
       (rows[Math.min(index,rows.length-1)]?.querySelector('[data-col-remove]')||addToggle).focus({preventScroll:true});
     }
   });
-  formulaEl.addEventListener('input',event=>{
-    const input=event.target.closest('[data-formula-header]');if(!input)return;
-    workingFormulas[input.dataset.formulaHeader]=input.value;
-  });
   modal.querySelector('[data-col-reset-selection]').addEventListener('click',()=>{
     workingSelected=backlogDefaultExcelColumns();renderAll();
   });
   let dragId=null;
   const clearDragMarks=()=>selectedEl.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));
   selectedEl.addEventListener('dragstart',event=>{
+    if(event.target.closest('input,button')){event.preventDefault();return;}
     const row=event.target.closest('[data-col-id]');if(!row)return;
     dragId=row.dataset.colId;row.classList.add('isDragging');
     if(event.dataTransfer){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',dragId);}
@@ -18008,6 +18083,11 @@ function openBacklogExportColumns(){
     if(!workingSelected.length){showToast(tr('Select at least one Excel column.','Excel için en az bir sütun seçin.'));return;}
     const formulas={};
     Object.entries(workingFormulas).forEach(([header,value])=>{const v=String(value||'').trim();if(v)formulas[header]=v;});
+    const names=[...catalog.keys()].map(id=>window.BLBacklogColumns.display(catalog.get(id)||{id},workingSettings).trim().toLocaleLowerCase('tr-TR'));
+    if(names.some(name=>!name)||new Set(names).size!==names.length){showToast(tr('Excel column names must be nonempty and unique.','Excel sütun adları boş olamaz ve benzersiz olmalıdır.'));return;}
+    if(workingSelected.some(id=>id.startsWith('calc:')&&!workingSettings[id]?.formula&&!workingSettings[id]?.excelFormula)){showToast(tr('Add a formula to each calculated column or remove it.','Her hesaplanan sütuna formül ekleyin veya sütunu çıkarın.'));return;}
+    try{window.BLBacklogColumns.dependencies(workingSelected,[...catalog.values()],workingSettings,window.BLFormulaEngine);}catch(err){showToast(err.message);return;}
+    saveBacklogExcelColumnSettings(workingSettings);
     saveBacklogExcelColumns(dedupe(workingSelected));
     saveBacklogExcelFormulaOverrides(formulas);
     close();
@@ -18017,13 +18097,15 @@ function openBacklogExportColumns(){
     const closeLabel=tr('Close','Kapat');
     modal.querySelector('[data-close-icon]').setAttribute('aria-label',closeLabel);
     renderAll();
+    if(document.getElementById('_formulaColumnModal'))window.BLFormulaColumns?.refreshLanguage?.();
   };
+  searchEl.value=searchQuery;
   modal.refreshLanguage();
   // Katalog aktif ASAS/Antrepo şemasından tazelenir; modal bu istek dönmeden de
   // kullanılabilir kalsın diye render bloke edilmez, liste geldiğinde yenilenir.
   fetchBacklogSourceColumns().then(()=>{
     if(!document.body.contains(modal))return;
-    catalog=backlogExcelColumnCatalog();
+    catalog=backlogExcelColumnCatalog(workingSettings);
     renderAll();
   });
 }
@@ -19505,7 +19587,7 @@ function backlogSettingsKeyValues(){
 function backlogSettingsTransitFirstRow(){
   return backlogSettingsKeyValues().length + 5;
 }
-function buildBacklogSettingsSheet(transitPlan){
+function buildBacklogSettingsSheet(transitPlan,columnPlan){
   const bd = _XLS_BORDERS;
   const kv = backlogSettingsKeyValues();
   const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
@@ -19538,6 +19620,19 @@ function buildBacklogSettingsSheet(transitPlan){
     });
     lastRow=headerRow+transitPlan.entries.length;
     lastCol=6;
+  }
+  if(columnPlan){
+    const first=lastRow+3;
+    const labels=[['Excel sütunu','Excel column'],['Database / kaynak','Database / source'],['Database sütunu','Database column'],['Buyer Log anahtarı','Buyer Log key'],['Kanonik alan','Canonical field'],['Formül','Formula'],['Görünürlük','Visibility'],['Sütun kimliği','Column ID']].map(([tr,en])=>appLang==='en'?en:tr);
+    labels.forEach((v,c)=>put(first,c,{v,t:'s',s:{border:bd,font:{sz:10,bold:true}}}));
+    columnPlan.headers.forEach((h,i)=>{
+      const direct=columnPlan.byHeader.get(h),item=columnPlan.lineage(h),config=columnPlan.settings[direct?.id]||{};
+      const builtIn=window.BLBacklogExcel?.formulaPlan?.([...columnPlan.headers,...window.BLBacklogExcel.HELPER_HEADERS],{},2)?.formulas?.[h]?.formula||'';
+      const readable=config.formula?window.BLFormulaEngine.rewriteColumns(config.formula,id=>{const source=columnPlan.catalog.get(id);return source?window.BLBacklogColumns.display(source,columnPlan.settings):id;}):config.excelFormula?columnPlan.formula(h,'{row}')?.formula:'';
+      const values=[columnPlan.label(h),item?.database||'Buyer Log',item?.databaseColumn||h,h,item?.canonicalId||'',readable||backlogExcelFormulaOverrides()[h]||builtIn,columnPlan.visible.has(h)?(appLang==='en'?'Visible':'Görünür'):(appLang==='en'?'Hidden dependency':'Gizli bağımlılık'),item?.id||''];
+      values.forEach((v,c)=>put(first+i+1,c,{v,t:'s',s:{border:bd,font:{sz:10},alignment:{wrapText:true,vertical:'top'}}}));
+    });
+    lastRow=first+columnPlan.headers.length;lastCol=7;
   }
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:lastRow,c:lastCol}});
   ws['!cols']=[{wch:30},{wch:70},{wch:18},{wch:18},{wch:20},{wch:18},{wch:8}];
@@ -19587,10 +19682,45 @@ function backlogChartBucketFormula(sourceRef,granularity){
   if(granularity==='year')return 'IF('+ref+'="","",YEAR('+sunday+'))';
   return 'IF('+ref+'="","",TEXT('+ref+',"yyyy-mm-dd"))';
 }
+function backlogColumnExportPlan(headers,rows){
+  const settings=backlogExcelColumnSettings(),catalog=backlogExcelColumnCatalog(),byHeader=new Map([...catalog.values()].map(c=>[c.header,c]));
+  const selected=headers.map(h=>byHeader.get(h)?.id).filter(Boolean);
+  const ids=window.BLBacklogColumns.dependencies(selected,[...catalog.values()],settings,window.BLFormulaEngine);
+  const allHeaders=[...headers];ids.forEach(id=>{const h=catalog.get(id).header;if(!allHeaders.includes(h))allHeaders.push(h);});
+  const formulaCache=new Map(),excelTemplates=new Map(),valueCache=new WeakMap();
+  function value(id,row,active=new Set()){
+    if(active.has(id))throw new Error('Formula dependency cycle: '+id);
+    const config=settings[id],item=catalog.get(id);if(!config?.formula)return row[item?.header]??null;
+    let cache=valueCache.get(row);if(!cache){cache=new Map();valueCache.set(row,cache);}if(cache.has(id))return cache.get(id);
+    active.add(id);
+    let program=formulaCache.get(id);if(!program){program=window.BLFormulaEngine.compile(config.formula);formulaCache.set(id,program);}
+    const result=program.evaluate(row,{lookup:ref=>value(ref,row,active)});active.delete(id);
+    const out=result.ok?result.value:null;cache.set(id,out);return out;
+  }
+  const label=h=>{
+    const item=byHeader.get(h);if(item)return window.BLBacklogColumns.display(item,settings);
+    const derived=/(.*)( \((?:Ay|Hafta|Month|Week)\))$/.exec(h),source=derived&&byHeader.get(derived[1]);
+    return source?window.BLBacklogColumns.display(source,settings)+derived[2]:h;
+  };
+  const lineage=h=>{const item=byHeader.get(h);if(item)return item;const derived=/(.*)( \((?:Ay|Hafta|Month|Week)\))$/.exec(h);return derived?byHeader.get(derived[1]):null;};
+  return {headers:allHeaders,label,settings,byHeader,catalog,value,lineage,visible:new Set(headers),hasFormulas:Object.values(settings).some(config=>config?.formula||config?.excelFormula),
+    formula(h,excelRow){const item=byHeader.get(h),config=settings[item?.id];if(!config?.formula&&!config?.excelFormula)return null;
+      if(config.excelFormula)return {formula:window.BLBacklogColumns.nativeExcel(config.excelFormula,id=>{const h=id.startsWith('helper:')?id.slice(7):catalog.get(id)?.header;const i=[...allHeaders,...window.BLBacklogExcel.HELPER_HEADERS].indexOf(h);return i<0?null:XLSX.utils.encode_col(i);},excelRow),format:config.format,decimals:config.decimals,id:item.id,native:true};
+      let template=excelTemplates.get(item.id);
+      if(!template){template=window.BLBacklogColumns.excelFormula(config.formula,window.BLFormulaEngine,id=>{
+        const index=allHeaders.indexOf(catalog.get(id)?.header);return index<0?null:XLSX.utils.encode_col(index)+'{row}';
+      });excelTemplates.set(item.id,template);}
+      const formula=window.BLBacklogColumns.nativeExcel(template,()=>null,excelRow);
+      return {formula,format:config.format,decimals:config.decimals,id:item.id};
+    },
+  };
+}
 function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   if(!window.BLBacklogExcel)throw new Error('Backlog Excel formül motoru yüklenemedi.');
   const includeImages=options.includeImages===true;
-  const dataHeaders=Array.isArray(headers)?headers:[];
+  const columnPlan=window.BLBacklogColumns&&typeof backlogColumnExportPlan==='function'?backlogColumnExportPlan(Array.isArray(headers)?headers:[],rows):null;
+  const hasColumnFormulas=columnPlan?.hasFormulas;
+  const dataHeaders=columnPlan?columnPlan.headers:Array.isArray(headers)?headers:[];
   const visibleHeaders=includeImages?['Görsel',...dataHeaders]:dataHeaders;
   const bd=_XLS_BORDERS;
   const helperHeaders=[...BLBacklogExcel.HELPER_HEADERS];
@@ -19615,7 +19745,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const ws={};const put=(r,c,cell)=>{ws[XLSX.utils.encode_cell({r,c})]=cell;};
   allHeaders.forEach((h,ci)=>{
     const headerStyle=BLBacklogExcel.headerStyleSpec(h);
-    put(0,ci,{v:String(h).replace(/\r/g,''),t:'s',s:{
+    put(0,ci,{v:String(columnPlan?columnPlan.label(h):h).replace(/\r/g,''),t:'s',s:{
       border:bd,
       font:{sz:10,bold:headerStyle.bold,color:{rgb:headerStyle.fontRgb}},
       fill:{patternType:'solid',fgColor:{rgb:headerStyle.fillRgb},bgColor:{rgb:headerStyle.fillRgb}},
@@ -19637,7 +19767,15 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
       const dimensionFormula=!window.BLDateDimension?.hasMerchCalendar?.()&&dimensionSourceRef&&window.BLBacklogExcel?.dateDimensionFormula
         ?BLBacklogExcel.dateDimensionFormula(dimensionSourceRef,dimensionSpec.kind,appLang):'';
       let cell;
-      if(h==='Görsel')cell=backlogExcelCellFromValue('','text',baseStyle);
+      const custom=hasColumnFormulas?columnPlan.formula(h,ri+2):null;
+      if(custom){
+        const value=custom.native?null:columnPlan.value(custom.id,row),format=custom.format;
+        const kind=format==='date'||value instanceof Date?'date':typeof value==='number'?'number':typeof value==='boolean'?'boolean':'text';
+        const decimals=custom.decimals!==''&&custom.decimals!=null?Math.max(0,Math.min(6,Number(custom.decimals)||0)):format==='integer'?0:format==='percent'?1:Number.isInteger(value)?0:2;
+        const numFmt=kind==='date'?'dd.mm.yy':kind==='number'?'#,##0'+(decimals?'.'+'0'.repeat(decimals):'')+(format==='percent'?'"%"':''):undefined;
+        cell=backlogExcelFormulaCell({kind,cached:value,formula:custom.formula},{...baseStyle,...(numFmt?{numFmt}:{})});
+      }
+      else if(h==='Görsel')cell=backlogExcelCellFromValue('','text',baseStyle);
       else if(formulaSpec)cell=backlogExcelFormulaCell(formulaSpec,baseStyle);
       else if(dimensionFormula)cell=backlogExcelFormulaCell({kind:'text',cached:row[h],formula:dimensionFormula},{...baseStyle,numFmt:'@'});
       else if(h===orderCodeHeader||directTextHeaders.has(h)||dateDimensionTextHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'text',{...baseStyle,numFmt:'@'});
@@ -19701,6 +19839,8 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
     ...chartHelperHeaders.map(()=>({hidden:true,wch:2})),
   ];
+  if(columnPlan)visibleHeaders.forEach((h,index)=>{if(!columnPlan.visible.has(h))ws['!cols'][index]={...ws['!cols'][index],hidden:true};});
+  if(columnPlan)Object.defineProperty(ws,'__backlogColumnPlan',{value:columnPlan,enumerable:false});
   if(chartState&&chartHelperSpecs.length){
     const chartBase=visibleHeaders.length+helperHeaders.length,roleCols={};
     chartHelperSpecs.forEach((item,index)=>{roleCols[item.role]=BLBacklogExcel.columnName(chartBase+index);});
@@ -19753,10 +19893,12 @@ window.BLBacklogChartContext={
 };
 
 async function exportBacklogToExcel(_event,options={}){
+  if(!window.BLBacklogColumns)await window.BLPerf._loadScript('backlog-excel-columns.js');
   if(!lastBacklogData || !lastBacklogFlat || !lastBacklogFlat.length){ showToast('Aktarılacak Backlog verisi yok.'); return; }
   if(!commitBacklogDateInputs())return;
   await fetchBacklogSourceColumns();
-  const params=backlogExportQueryParams();
+  let params;
+  try{params=backlogExportQueryParams();}catch(err){showToast((appLang==='en'?'Check the Excel column sources: ':'Excel sütun kaynaklarını kontrol edin: ')+err.message);return;}
   // Grafik ayarlarında seçilebilen ham ASAS/Antrepo alanları export sırasında da
   // kaynak payload'da bulunmalı; görünür BACKLOG sütun seçimi bundan bağımsızdır.
   const chartSourceColumns=backlogExportSourceCatalog().map(item=>item.id);
@@ -19798,7 +19940,7 @@ async function exportBacklogToExcel(_event,options={}){
         viewRange:window.BLBacklogChart?.getViewRange?.(),
         liveSource:detailSheet.__backlogChartLiveSource||null,
       })||null;
-    const settingsWs = buildBacklogSettingsSheet(transitPlan);
+    const settingsWs = buildBacklogSettingsSheet(transitPlan,detailSheet.__backlogColumnPlan);
     if(settingsWs) XLSX.utils.book_append_sheet(wb, settingsWs, 'Ayarlar');
     forceWorkbookFormulaCalculation(wb);
     const backlogHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers,backlogRows=expanded.rows;

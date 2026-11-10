@@ -3747,3 +3747,7 @@ button.ovNoteCount{cursor:pointer;}
 
 /* A newly activated module waits for its stylesheet before its first paint. */
 [data-bl-styles-loading]{visibility:hidden!important}
+
+.backlogColSource{display:block;white-space:normal;overflow-wrap:anywhere;margin-top:var(--ui-space-1);}
+.backlogColRowLabel input{width:100%;min-width:0;box-sizing:border-box;padding:var(--ui-space-1);}
+.backlogColFx{flex:none;min-width:38px;justify-content:center;align-items:center;white-space:nowrap;}

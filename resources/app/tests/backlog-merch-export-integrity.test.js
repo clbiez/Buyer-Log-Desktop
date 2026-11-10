@@ -18,9 +18,9 @@ const calendar={weeks:[
 ]};
 function source(start,end){const a=app.indexOf(start),b=app.indexOf(end,a);assert.ok(a>=0&&b>a);return app.slice(a,b);}
 function browser(lang='tr'){
-  const ctx={Date,Set,Map,Number,String,Object,Array,window:{BLDateDimension:dimension,BLBacklogExcel:formulas},BLBacklogExcel:formulas,XLSX,
+  const ctx={Date,Set,Map,Number,String,Object,Array,window:{BLDateDimension:dimension,BLBacklogExcel:formulas,BLBacklogColumns:require('../public/backlog-excel-columns'),BLFormulaEngine:require('../public/formula-engine')},BLBacklogExcel:formulas,XLSX,
     BLOrderImportance:{BACKLOG_HEADER:'ÖNEM ETİKETİ\n(IMPORTANCE)'},appLang:lang,_XLS_BORDERS:{},
-    columnSchemaFor:()=>null,coerceDateLoose:dimension.parseDate,backlogExcelFormulaOverrides:()=>({}),
+    columnSchemaFor:()=>null,coerceDateLoose:dimension.parseDate,backlogExcelFormulaOverrides:()=>({}),backlogExcelColumnSettings:()=>({}),backlogExcelColumnCatalog:()=>new Map(),
     kolExcelImageMetrics:()=>({colChars:12}),backlogFormulaWithOverride:(_h,s)=>s};
   vm.createContext(ctx);
   vm.runInContext(source('const BACKLOG_CANONICAL_DATE_HEADERS','/* Detay ekranı kompakt açılır'),ctx);
@@ -159,4 +159,33 @@ test('explicitly selected Backlog columns stay visible while formula helpers rem
   assert.ok(out['!cols'].slice(headers.length).every(col=>col.hidden),'formula helpers remain hidden');
   const detail=ctx.buildBacklogDetailSheet(headers,rows,null);
   assert.equal(detail['!cols'][0].hidden,true,'existing detail export keeps its default view');
+});
+
+test('renamed, reordered calculated columns serialize live formulas and hidden sources with lineage',{skip:!XLSX},()=>{
+  const ctx=browser('en');
+  const catalog=new Map([
+    ['field:24',{id:'field:24',header:'Adet',display:'Adet',database:'Buyer Log / BACKLOG',databaseColumn:'Adet'}],
+    ['custom:asas:demo',{id:'custom:asas:demo',header:'ASAS · Source Qty',display:'Source Qty',database:'ASAS',databaseColumn:'Source Qty'}],
+    ['calc:double',{id:'calc:double',header:'calc:double',display:'Double',database:'Buyer Log',databaseColumn:'calc:double'}],
+  ]);
+  const settings={'field:24':{label:'Units'},'calc:double':{label:'Double units',formula:'[custom:asas:demo]*2',format:'integer'}};
+  ctx.backlogExcelColumnSettings=()=>settings;ctx.backlogExcelColumnCatalog=()=>catalog;
+  ctx.backlogSettingsKeyValues=()=>[];
+  vm.runInContext(source('function buildBacklogSettingsSheet','// BACKLOG detay sayfasını'),ctx);
+  const rows=[{'Adet':12,'ASAS · Source Qty':20}];
+  const ws=ctx.buildBacklogDetailSheet(['calc:double','Adet'],rows,null,{});
+  const meta=ctx.buildBacklogSettingsSheet(null,ws.__backlogColumnPlan);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'BACKLOG');XLSX.utils.book_append_sheet(wb,meta,'Ayarlar');
+  const out=XLSX.read(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),{type:'buffer',cellStyles:true});
+  const sheet=out.Sheets.BACKLOG;
+  assert.equal(sheet.A1.v,'Double units');assert.equal(sheet.B1.v,'Units');assert.equal(sheet.A2.v,40);
+  assert.match(sheet.A2.f,/C2\*2/);assert.equal(sheet['!cols'][2].hidden,true);
+  const metadata=XLSX.utils.sheet_to_json(out.Sheets.Ayarlar,{header:1});
+  assert.ok(metadata.some(row=>row[1]==='ASAS'&&row[2]==='Source Qty'&&row[6]==='Hidden dependency'));
+  assert.equal(rows[0].Adet,12);assert.equal(rows[0]['calc:double'],undefined);
+  // Aliases and a later order change never rewrite the stored expression.
+  settings['custom:asas:demo']={label:'Renamed source'};
+  const reordered=ctx.buildBacklogDetailSheet(['Adet','calc:double'],rows,null,{});
+  assert.match(reordered.B2.f,/C2\*2/);assert.equal(reordered.C1.v,'Renamed source');
+  assert.equal(settings['calc:double'].formula,'[custom:asas:demo]*2');
 });

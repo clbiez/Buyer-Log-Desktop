@@ -1,0 +1,135 @@
+{
+  "variant": "main",
+  "pair": "aa3",
+  "calculatedDates": null,
+  "startupMs": 2074.430144,
+  "modal": {
+    "samples": [
+      88.60000000009313,
+      89.70000000018626,
+      33.09999999962747,
+      39,
+      40
+    ],
+    "syncSamples": [
+      39.39999999990687,
+      52.5,
+      22.5,
+      32.200000000186265,
+      31.5
+    ],
+    "longTasks": [],
+    "feedbackSamples": [
+      39.39999999990687,
+      52.5,
+      22.5,
+      32.200000000186265,
+      31.5
+    ],
+    "remaining": 0
+  },
+  "heapBefore": 14176524,
+  "heapAfter": 15837068,
+  "heapCycles": [
+    15836900,
+    15836988,
+    15912372,
+    15961376,
+    15968964
+  ],
+  "retained": 1660544,
+  "catalogs": 1,
+  "exported": {
+    "elapsedMs": 854.7000000001863,
+    "totalMs": 2731,
+    "bytes": 16444400,
+    "heap": 291966788,
+    "cells": 420019,
+    "first": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 0,
+      "t": "n"
+    },
+    "last": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 60,
+      "t": "n"
+    },
+    "range": "A1:N30001"
+  },
+  "calculated": null,
+  "fixtureHash": "b152c7cde413300cc6496b08618e64b8bca396b5bf2e45f6c80c826fefc79468",
+  "runtime": "151.0.7922.173"
+}

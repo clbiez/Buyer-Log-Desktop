@@ -85,10 +85,10 @@ test('İstemci kataloğu uç noktadan tazeler ve ona öncelik verir', () => {
   const start = APP.indexOf('function backlogExportSourceCatalog()');
   const block = APP.slice(start, APP.indexOf('\n}', start));
   assert.match(block, /const sources=\[backlogSourceColumnCatalog,/);
-  const modalStart = APP.indexOf('function openBacklogExportColumns()');
+  const modalStart = APP.indexOf('function openBacklogExportColumns(');
   const modalBlock = APP.slice(modalStart, APP.indexOf('\ndocument.getElementById(\'backlogExcelOptionsBtn\')', modalStart));
   assert.match(modalBlock, /fetchBacklogSourceColumns\(\)\.then\(/);
-  assert.match(modalBlock, /catalog=backlogExcelColumnCatalog\(\)/);
+  assert.match(modalBlock, /catalog=backlogExcelColumnCatalog\(workingSettings\)/);
 });
 
 test('Export sütunları her zaman kullanıcının seçimi ve sırasıdır', () => {

@@ -1,0 +1,147 @@
+{
+  "variant": "candidate",
+  "pair": "2",
+  "calculatedDates": {
+    "totalMs": 2626.899999999907,
+    "bytes": 18839583,
+    "heap": 412776102,
+    "blank": "",
+    "value": 9
+  },
+  "startupMs": 2001.8806069999998,
+  "modal": {
+    "samples": [
+      92.39999999990687,
+      60,
+      53.39999999990687,
+      32.60000000009313,
+      39.700000000186265
+    ],
+    "syncSamples": [
+      46,
+      45,
+      30.699999999720603,
+      28.200000000186265,
+      29.100000000093132
+    ],
+    "longTasks": [],
+    "feedbackSamples": [
+      19.300000000279397,
+      45,
+      30.699999999720603,
+      28.200000000186265,
+      29.100000000093132
+    ],
+    "remaining": 0
+  },
+  "heapBefore": 14096868,
+  "heapAfter": 15910496,
+  "heapCycles": [
+    15930496,
+    15942676,
+    15999204,
+    16029732,
+    16041284
+  ],
+  "retained": 1813628,
+  "catalogs": 1,
+  "exported": {
+    "elapsedMs": 784.6999999997206,
+    "totalMs": 2625.6999999997206,
+    "bytes": 16446376,
+    "heap": 292134915,
+    "cells": 420019,
+    "first": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 0,
+      "t": "n"
+    },
+    "last": {
+      "s": {
+        "border": {
+          "top": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "bottom": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "left": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          },
+          "right": {
+            "style": "thin",
+            "color": {
+              "rgb": "FFD0D5DD"
+            }
+          }
+        },
+        "font": {
+          "sz": 10,
+          "bold": false
+        },
+        "alignment": {
+          "horizontal": "right",
+          "vertical": "center"
+        },
+        "numFmt": "#,##0"
+      },
+      "v": 60,
+      "t": "n"
+    },
+    "range": "A1:N30001"
+  },
+  "calculated": {
+    "elapsedMs": 740.3999999999069,
+    "totalMs": 2175.600000000093,
+    "bytes": 17346165,
+    "heap": 360493351,
+    "last": 120
+  },
+  "fixtureHash": "b152c7cde413300cc6496b08618e64b8bca396b5bf2e45f6c80c826fefc79468",
+  "runtime": "151.0.7922.173"
+}
