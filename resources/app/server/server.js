@@ -1677,7 +1677,8 @@ function afterSharedSyncCompleted() {
     await deltaStore.hydrate();
     const fabricSeed=await fabricCards.seedSharedCards();
     const fabricOutbox=await fabricCards.flushOutbox();
-    await deltaStore.hydrate();
+    // mirror()/seedMissing() update deltaStore memory; a second full hydrate would
+    // reread every record and add avoidable cost to each shared-sync completion.
     if(previousFabricState!==fabricCards.sharedFingerprint() || fabricSeed.seeded || fabricOutbox.published)
       liveEvents.notifyChange('fabric-cards',null,{source:'shared-hub-sync'});
     await licenseCardSync.flushOutbox();
