@@ -43,7 +43,7 @@ let browser;
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
-  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.goto(base + '/?module=cp', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.BLPerf && typeof window.switchTab === 'function', { timeout: 60000 });
   await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({ timeout: 4000 }).catch(() => {});
   await page.waitForFunction(() => !document.getElementById('blBootGuard'), { timeout: 60000 });
