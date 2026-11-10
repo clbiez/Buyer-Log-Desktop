@@ -13,6 +13,7 @@ const { RevisionConflictError, expectedNumber } = require('../db');
 const { readJsonWithValidatedBackup, readJsonWithValidatedBackupAsync } = require('./safe-json-read');
 const { withFileLeaseAsync } = require('./shared-file-transaction');
 const fabricEngine = require('../../public/fabric-cards-engine');
+const fabricSegments = require('../../public/fabric-card-segments');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'fabric-cards.json');
 const MAX_CARDS = 20000;
@@ -33,18 +34,28 @@ function actorName(actor) { return clean(actor && (actor.displayName || actor.us
 function emptyStore() {
   return { schemaVersion: 1, cards: {}, _revision: 0, _updatedAt: null };
 }
-function normalizeCard(raw, fallbackCode = '') {
+function normalizeCard(raw, fallbackCode = '', { strictSegments = false } = {}) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const code = normalizeCode(raw.code || fallbackCode);
-  const summary = fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(raw.summary, SUMMARY_MAX)), 'tr');
+  const segmented = raw.summarySegments && typeof raw.summarySegments === 'object' ? raw.summarySegments : null;
+  const checked = segmented ? fabricSegments.validatePair(segmented.tr, segmented.en) : null;
+  if (strictSegments && segmented && !checked.ok) {
+    throw Object.assign(new Error('Geçersiz kumaş özeti parçaları. / Invalid fabric summary segments.'), { code:checked.code, statusCode:422 });
+  }
+  const structured = checked && checked.ok;
+  const summary = fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(structured ? fabricSegments.compose(checked.tr) : raw.summary, SUMMARY_MAX)), 'tr');
+  const summaryEn = fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(structured ? fabricSegments.compose(checked.en) : raw.summaryEn, SUMMARY_MAX)), 'en');
   if (!code || !summary) return null;
+  const overrides = raw.translationOverrides && typeof raw.translationOverrides === 'object' ? raw.translationOverrides : {};
+  const translationOverrides = { tr:[0,1,2,3].map(i=>Boolean(overrides.tr && overrides.tr[i])), en:[0,1,2,3].map(i=>Boolean(overrides.en && overrides.en[i])) };
   const details = {};
   for (const key of DETAIL_FIELDS) { const value=clean(raw.details && raw.details[key], DETAIL_MAX); details[key]=key==='composition'?fabricEngine.normalizeComposition(value):value; }
   const source = clean(raw.summarySource, 20);
   return {
     code,
     summary,
-    summaryEn: fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(raw.summaryEn, SUMMARY_MAX)), 'en'),
+    summaryEn,
+    ...(structured ? { summarySegments:{ tr:checked.tr, en:checked.en }, translationOverrides, segmentSourceLang:raw.segmentSourceLang==='en'?'en':'tr' } : {}),
     details,
     summarySource: SOURCES.has(source) ? source : 'manual',
     raw: clean(raw.raw, RAW_MAX),
@@ -102,13 +113,15 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
   const now = new Date().toISOString(), by = actorName(actor);
   let updated = 0, skipped = 0;
   for (const item of Array.isArray(items) ? items : []) {
-    const card = normalizeCard(item);
+    const card = normalizeCard(item, '', { strictSegments: true });
     if (!card) { skipped += 1; continue; }
     const current = store.cards[card.code];
     if (current && onlyMissing) { skipped += 1; continue; }
     if (!current && Object.keys(store.cards).length >= MAX_CARDS) { skipped += 1; continue; }
     if (current && current.summary === card.summary && current.summaryEn === card.summaryEn && current.summarySource === card.summarySource
-      && DETAIL_FIELDS.every(key => current.details[key] === card.details[key]) && (current.raw === card.raw || !card.raw)) { skipped += 1; continue; }
+      && DETAIL_FIELDS.every(key => current.details[key] === card.details[key]) && JSON.stringify(current.summarySegments||null)===JSON.stringify(card.summarySegments||null)
+      && JSON.stringify(current.translationOverrides||null)===JSON.stringify(card.translationOverrides||null)
+      && (current.raw === card.raw || !card.raw)) { skipped += 1; continue; }
     store.cards[card.code] = {
       ...card,
       raw: card.raw || (current && current.raw) || '',
