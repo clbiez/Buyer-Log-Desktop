@@ -83,6 +83,8 @@ function classifyRecordId(id) {
   if (/^store:overrides\.json$/.test(key)) return 'MIXED_OVERRIDE';
   if (/^store:(email-groups|fx-rates)\.json$/.test(key)) return 'GLOBAL_MASTER';
   if (/^endeksmatik:/.test(key)) return 'GLOBAL_MASTER';
+  // Ekip çapında tek LCW iş takvimi: Moderatör yayımıyla herkese dağılır.
+  if (/^merch-calendar:current$/.test(key)) return 'GLOBAL_MASTER';
   if (/^fabric-card:\d{3,12}$/.test(key)) return 'SHARED_BUSINESS';
   if (/^cp-order:/.test(key)) return 'SHARED_BUSINESS';
   if (/^store:collection-workspaces\/shared-collection\.json$/.test(key)) return 'SHARED_BUSINESS';

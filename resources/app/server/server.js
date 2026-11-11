@@ -173,6 +173,9 @@ async function runLocalDbMaintenance() {
     if (seededStores.seeded) markStartup('DELTA_STORE_SEEDED', { collection: db.DELTA_STORE_COLLECTION, count: seededStores.seeded, ids: seededStores.ids });
     const seededEndeksmatik = await endeksmatik.seedMissing(deltaStore);
     if (seededEndeksmatik.seeded) markStartup('DELTA_STORE_SEEDED', { collection: endeksmatik.COLLECTION, count: seededEndeksmatik.seeded, ids: seededEndeksmatik.ids });
+    const merchCalendar = require('./lib/merch-calendar-store');
+    const seededMerchCalendar = await merchCalendar.seedMissing(deltaStore);
+    if (seededMerchCalendar.seeded) markStartup('DELTA_STORE_SEEDED', { collection: merchCalendar.COLLECTION, count: seededMerchCalendar.seeded });
     const workspaces = require('./lib/collection-workspaces');
     const quarantine = await quarantineLegacyCollectionDeltas({
       localDb,
@@ -763,6 +766,8 @@ function noteModeratorSession(profile) {
 function moderatorActiveOnThisDevice() { return Date.now() - moderatorSessionSeenAt < MODERATOR_SESSION_WINDOW_MS; }
 const endeksmatik = require('./lib/endeksmatik');
 endeksmatik.attachDeltaStore(deltaStore);
+const merchCalendarStore = require('./lib/merch-calendar-store');
+merchCalendarStore.attachDeltaStore(deltaStore);
 const userAccess = buildUserAccess({
   onIamApplied: () => liveEvents.notifyChange('iam', null),
   ensureDataLoaded: userId => ensureDataLoaded(userId || 'moderator'),
@@ -922,10 +927,25 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
       changed.add('systemSettings');
       if (different(before && before.modelConnections, after && after.modelConnections)) changed.add('modelConnections');
     } else if (/^endeksmatik:/.test(String(id || ''))) changed.add('endeksmatik');
+    else if (id === 'merch-calendar:current') changed.add('merchCalendar');
   }
   return [...changed];
 }
+/* Merch Calendar yerel dosyadan okunur (route, worker'lar, parmak izi).
+   Moderatör kopyası yerel kayda geldiğinde dosyaya uygulanmadan önce hiçbir
+   ekran yeni takvimi göremez; bildirimden ÖNCE uygulanır. */
+function applySharedMerchCalendar() {
+  try {
+    const result = merchCalendarStore.syncFromShared();
+    if (result.applied) markStartup('MERCH_CALENDAR_SHARED_APPLIED', { removed:Boolean(result.removed) });
+    return result;
+  } catch (error) {
+    logRuntimeFailure('merchCalendarShared', error);
+    return { applied:false, error };
+  }
+}
 function announceRecoveredMasterEntities(entities) {
+  if ((Array.isArray(entities) ? entities : []).includes('merchCalendar')) applySharedMerchCalendar();
   for (const entity of Array.isArray(entities) ? entities : []) {
     void sharedRevisionStore.update(entity, { actorId:'shared-hub-sync', deviceId:'sync' })
       .catch(error => logRuntimeFailure('sharedRevisionRecoveredMaster', error));
@@ -1811,6 +1831,7 @@ async function applyMasterCheckpoint(root, hub, localState) {
   }));
   const applied = await localDb.applyDeltas(events);
   await deltaStore.hydrate();
+  if (Object.prototype.hasOwnProperty.call(records, 'merch-calendar:current')) applySharedMerchCalendar();
   return { applied:applied.applied, conflicts:applied.conflicts.length, head:result.head };
 }
 async function activateSharedHubRuntime({ migrateCollection = true, actorId = '' } = {}) {
@@ -11362,7 +11383,7 @@ app.get('/api/data-management/overview', userAccess.requireArea('source'), (req,
 });
 
 // ---- LCW Merch Calendar: Data Management uploads the authoritative business calendar. ----
-require('./routes/merch-calendar-routes')(app, { express, userAccess });
+require('./routes/merch-calendar-routes')(app, { express, userAccess, publishSharedMasterChange });
 
 /* CORPORATE INTEGRATION LAB.
 

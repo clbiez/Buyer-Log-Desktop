@@ -4,7 +4,13 @@ const merchCalendarStore = require('../lib/merch-calendar-store');
 
 module.exports = function registerMerchCalendarRoutes(app, deps) {
   deps = deps || {};
-  const { express, userAccess } = deps;
+  const { express, userAccess, publishSharedMasterChange } = deps;
+  // Ortak kayda aynalama tamamlanınca Moderatör yayımı planlanır (yalnız
+  // Moderatör oturumu yayımlar); aynalama hatası yerel kaydı geri almaz.
+  const announce = async (req, receipt) => {
+    try { await (receipt && receipt.shared); } catch (_) {}
+    if (typeof publishSharedMasterChange === 'function') publishSharedMasterChange('merchCalendar', req);
+  };
   if (!app || !express || !userAccess) throw new Error('Merch Calendar route dependencies are incomplete.');
   const assertWrite=req=>{
     const current=userAccess.sessionProfile?userAccess.sessionProfile(req):userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
@@ -43,7 +49,9 @@ app.post(
         const expectedFingerprint=body.expectedFingerprint??merchCalendarStore.fingerprint();
         const parsed=await require('../lib/parser-process-client').run('merch-calendar',{buffer,name:sourceName});
         assertWrite(req);
-        const saved = merchCalendarStore.restoreSnapshotWithReceipt(parsed,{expectedFingerprint,assertAuthority:()=>assertWrite(req)}).value;
+        const receipt = merchCalendarStore.restoreSnapshotWithReceipt(parsed,{expectedFingerprint,assertAuthority:()=>assertWrite(req)});
+        const saved = receipt.value;
+        await announce(req, receipt);
         if (typeof userAccess.appendAudit === 'function') {
           userAccess.appendAudit(req.currentUser, 'MERCH_CALENDAR_UPLOAD', sourceName, {
             yearFrom:saved.meta && saved.meta.yearFrom,
@@ -67,9 +75,10 @@ app.delete(
     '/api/merch-calendar',
     userAccess.requireArea('source'),
     userAccess.requirePermission('manageModelConnections'),
-    (req, res) => {
+    async (req, res) => {
       try {
-        merchCalendarStore.remove({expectedFingerprint:req.get?.('If-Match')?.replace(/^"|"$/g,''),assertAuthority:()=>assertWrite(req)});
+        const receipt = merchCalendarStore.removeWithReceipt({expectedFingerprint:req.get?.('If-Match')?.replace(/^"|"$/g,''),assertAuthority:()=>assertWrite(req)});
+        await announce(req, receipt);
         if (typeof userAccess.appendAudit === 'function') userAccess.appendAudit(req.currentUser, 'MERCH_CALENDAR_DELETE', 'Merch Calendar');
         return res.json({ ok:true, ...merchCalendarStore.publicProjection() });
       } catch (error) {

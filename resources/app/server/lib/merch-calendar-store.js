@@ -7,6 +7,7 @@ const XLSX = require('xlsx');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const BLDateDimension = require('../../public/date-dimension');
 const { withFileLeaseSync } = require('./shared-file-transaction');
+const { toDocumentRecord, fromDocumentRecord } = require('./delta-store');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'merch-calendar.json');
 // Retain a native revision receipt across physical deletion. A later native
@@ -23,6 +24,17 @@ const MONTH_ALIASES = Object.freeze({
   TEMMUZ:7, AGUSTOS:8, AĞUSTOS:8, EYLUL:9, EYLÜL:9, EKIM:10, EKİM:10, KASIM:11, ARALIK:12,
 });
 const DAY_MS = 86400000;
+/* ORTAK DAĞITIM. Merch Calendar ekip çapında tek iş takvimidir; Moderatörün
+   yüklediği takvim herkese gitmelidir. Yerel dosya (FILE) tüm okuyucular
+   (route, compute/parser worker'ları, parmak izi) için kaynak olarak kalır;
+   delta kaydı 'merch-calendar:current' yalnız taşıma kopyasıdır. Her yerel
+   kayıt/silme bu kayda aynalanır, Moderatör Master checkpoint'i onu taşır,
+   alan cihaz syncFromShared ile kaydı yerel dosyaya uygular. Kayıt tek alan
+   ('calendar') taşır: alan bazlı birleşim iki takvimin haftalarını karıştıramaz.
+   Silme 'calendar:null' olarak taşınır ki kaldırma da ekibe ulaşsın. */
+const COLLECTION = 'merch-calendar';
+const DOCUMENT_ID = 'current';
+let sharedStore = null;
 
 function cleanText(value) {
   return String(value == null ? '' : value)
@@ -300,13 +312,16 @@ function restoreSnapshotWithReceipt(value,options={}) {
     guardMutation(options);
     const revision=Math.max(Number(load({strict:true})?._revision)||0,deletionReceipt()?.revision||0)+1;
     if(!Number.isSafeInteger(revision))throw merchError('Merch Calendar revizyonu geçersiz. / Invalid Merch Calendar revision.','MERCH_STORE_INVALID',409);
-    if(value===null){atomicWriteJson(DELETION_FILE,{revision,id:crypto.randomUUID(),deletedAt:new Date().toISOString()});try{fs.unlinkSync(FILE);}catch(error){if(error.code!=='ENOENT')throw error;}BLDateDimension.clearMerchCalendar();}
+    const deletedAt=new Date().toISOString();
+    if(value===null){atomicWriteJson(DELETION_FILE,{revision,id:crypto.randomUUID(),deletedAt});try{fs.unlinkSync(FILE);}catch(error){if(error.code!=='ENOENT')throw error;}BLDateDimension.clearMerchCalendar();}
     else {
       try{validateStoredCalendar(value);}catch(_){throw merchError('Geçersiz takvim kaydı. / Invalid calendar record.','MERCH_STORE_INVALID',409);}
       value={...value,_revision:revision};
       options.assertAuthority?.();atomicWriteJson(FILE,value);BLDateDimension.setMerchCalendar(value);
     }
-    return {value,fingerprint:fingerprint()};
+    // Ortak kopyadan gelen uygulama geri aynalanmaz (yankı/döngü olmaz).
+    const shared=options.fromShared?Promise.resolve({ok:true,skipped:true}):mirrorShared(value===null?null:value,deletedAt);
+    return {value,fingerprint:fingerprint(),shared};
   });
 }
 function save(buffer, sourceName, options={}) {
@@ -345,6 +360,56 @@ function publicProjection() {
     },
   };
 }
+function sharedDocument(value,deletedAt=null){
+  if(value===null)return {calendar:null,deletedAt:deletedAt||new Date().toISOString()};
+  const {_revision,...calendar}=value;
+  return {calendar,deletedAt:null};
+}
+function attachDeltaStore(store){ sharedStore=store||null; return sharedStore; }
+function mirrorShared(value,deletedAt){
+  if(!sharedStore)return Promise.resolve({ok:true,mirrored:0});
+  return Promise.resolve(sharedStore.mirror(COLLECTION,{[DOCUMENT_ID]:toDocumentRecord(sharedDocument(value,deletedAt))}))
+    .catch(error=>({ok:false,mirrored:0,error}));
+}
+/* Delta motoruna geçmeden önce yüklenmiş mevcut takvim bir kez tohumlanır;
+   böylece Moderatörün eskiden yüklediği takvim yeniden yükleme gerekmeden
+   bir sonraki Master yayımıyla ekibe gider. Var olan kaydı ezmez. */
+async function seedMissing(store=sharedStore){
+  if(!store)return {seeded:0,ids:[]};
+  const value=load({strict:false});
+  if(!value)return {seeded:0,ids:[]};
+  try{validateStoredCalendar(value);}catch(_){return {seeded:0,ids:[]};}
+  return store.seedMissing(COLLECTION,{[DOCUMENT_ID]:toDocumentRecord(sharedDocument(value))});
+}
+function readSharedDocument(store=sharedStore){
+  if(!store||typeof store.readAllSync!=='function')return null;
+  const records=store.readAllSync(COLLECTION);
+  const record=records&&records[DOCUMENT_ID];
+  if(!record||!Object.prototype.hasOwnProperty.call(record,'calendar'))return null;
+  return fromDocumentRecord(record);
+}
+function comparable(value){
+  if(!value)return null;
+  const {_revision,...rest}=value;
+  return JSON.stringify(rest);
+}
+/* Ortak (Moderatör) kopyasını yerel dosyaya uygular. Aynı içerik yeniden
+   yazılmaz; geçersiz ortak kayıt yerel takvimi asla bozmaz. */
+function syncFromShared(store=sharedStore){
+  const document=readSharedDocument(store);
+  if(!document)return {applied:false,reason:'no-shared-record'};
+  const incoming=document.calendar;
+  if(incoming===null){
+    if(!fs.existsSync(FILE))return {applied:false,reason:'unchanged'};
+    restoreSnapshotWithReceipt(null,{fromShared:true});
+    return {applied:true,removed:true};
+  }
+  if(!incoming||typeof incoming!=='object')return {applied:false,reason:'invalid'};
+  try{validateStoredCalendar(incoming);}catch(_){return {applied:false,reason:'invalid'};}
+  if(comparable(load({strict:false}))===comparable(incoming))return {applied:false,reason:'unchanged'};
+  restoreSnapshotWithReceipt(incoming,{fromShared:true});
+  return {applied:true};
+}
 function activateLoaded() {
   const value = load();
   if (value) BLDateDimension.setMerchCalendar(value);
@@ -353,6 +418,6 @@ function activateLoaded() {
 activateLoaded();
 
 module.exports = {
-  FILE, MAX_BYTES, parseBuffer, parseHtmlCalendar, parseWorkbookCalendar,
+  FILE, COLLECTION, DOCUMENT_ID, MAX_BYTES, parseBuffer, attachDeltaStore, seedMissing, syncFromShared, readSharedDocument, parseHtmlCalendar, parseWorkbookCalendar,
   load, save, remove, publicProjection, activateLoaded, fingerprint, readSnapshot, restoreSnapshot, saveWithReceipt, removeWithReceipt, restoreSnapshotWithReceipt,
 };

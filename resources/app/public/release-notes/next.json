@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Merch Calendar artık tüm ekipte",
+    "en": "Merch Calendar now reaches the whole team"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Moderatörün Veri Yönetimi'nde yüklediği LCW Merch Calendar, Moderatör kural yayımıyla tüm Buyer Log kullanıcılarına dağıtılır.",
+    "en": "The LCW Merch Calendar uploaded by the Moderator in Data Management is distributed to all Buyer Log users through the Moderator rule release."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "merch-calendar-team-sync",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Moderatörün Merch Calendar'ı ekip arkadaşlarında da görünür",
+        "en": "The Moderator's Merch Calendar is visible to teammates"
+      },
+      "body": {
+        "tr": "Merch Calendar önceden yalnız yüklendiği bilgisayarda kalıyordu; ekip arkadaşlarının ekranlarında LCW haftası ve iş ayı görünmüyordu. Artık takvim Moderatör kural yayımına dahildir: ortak senkron sonrası her Buyer Log takvimi kendi kopyasına uygular, açık ekranlar yenilenir. Takvimin kaldırılması da ekibe ulaşır. Daha önce yüklenmiş takvim yeniden yükleme gerektirmeden Moderatörün bir sonraki oturumunda yayımlanır.",
+        "en": "The Merch Calendar previously stayed only on the computer where it was uploaded, so teammates did not see LCW weeks and business months. The calendar is now part of the Moderator rule release: after shared sync each Buyer Log applies it to its own copy and open screens refresh. Removing the calendar also reaches the team. A calendar uploaded earlier is published in the Moderator's next session without uploading it again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "merch-calendar-team-sync.png",
+        "alt": {
+          "tr": "Ekip üyesi kurulumunda Moderatörden gelen aktif Merch Calendar",
+          "en": "Active Merch Calendar received from the Moderator on a teammate installation"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi. Takvimi olmayan ekip üyesi kurulumu Moderatör kaydını uyguladı: 2026–2027, 104 LCW haftası Aktif.",
+          "en": "Actual post-change Buyer Log with isolated demo data. A teammate installation without a calendar applied the Moderator record: 2026–2027, 104 LCW weeks, Active."
+        }
+      }
+    }
+  ]
 }
