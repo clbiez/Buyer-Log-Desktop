@@ -195,6 +195,29 @@
           "en": "Actual Buyer Log UI; captured with synthetic demo data and a simulated LCW AI response."
         }
       }
+    },
+    {
+      "id": "lcwai-query-output-images",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Buyer Log’un hesapladığı listeden hazırlanan sunumlarda model görselleri",
+        "en": "Model images in presentations built from lists calculated by Buyer Log"
+      },
+      "body": {
+        "tr": "“Koleksiyon 27. hafta modelleri için model kartı sunumu” gibi isteklerde Buyer Log listeyi hesapladığında model görselleri artık PowerPoint, PDF ve HTML dosyalarına eklenir. Model kartlarındaki bilgiler de kaynak kayıttan birebir alınır. Sohbetteki tablo değişmez.",
+        "en": "When Buyer Log calculates the list for requests such as “model card presentation for Collection week 27 models”, model images are now added to PowerPoint, PDF and HTML files. Model card details are also taken exactly from the source record. The table in the chat is unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranı değişmedi; düzeltme LCW AI’a giden görsel anahtarlarındadır.",
+          "en": "No Buyer Log screen changed; the fix is in the image keys sent to LCW AI."
+        }
+      }
     }
   ]
 }

@@ -98,6 +98,30 @@
       totalRows: source.length,
     };
   }
+  /* Hesaplanmış LİSTE sonucu dosyaya/sohbete bağlam olurken her satıra kaydın
+     "BL Image" anahtarı eklenir ve görsel/kart haritası sohbete yazılır; böylece
+     çıktı anahtarı kullanırsa Buyer Log gerçek model görselini gömer. Sohbette
+     gösterilen tablo değişmez. Yalnız bağlama girecek ilk satırlar işlenir. */
+  function queryImageTable(conv, dataset, computed, maxRows) {
+    const screenData = window.BLAIScreenData;
+    const tab = dataset && dataset.screen;
+    const sources = computed && computed.kind === 'list' && Array.isArray(computed.sourceRows) ? computed.sourceRows : null;
+    if (!sources || !IMAGE_PREFIX[tab] || !screenData || typeof screenData.rowImage !== 'function') return null;
+    const count = Math.min(sources.length, maxRows);
+    const images = {}, records = {};
+    const keys = sources.slice(0, count).map(row => {
+      const identity = screenData.rowImage(tab, row);
+      if (!identity) return null;
+      const key = imageKeyFor(tab, identity);
+      images[key] = identity;
+      records[key] = dataset.fields.map(field => { let value = ''; try { value = contextCellValue(row, field.col || {}); } catch (_) { value = ''; } return [field.label, value]; });
+      return key;
+    });
+    if (!Object.keys(images).length) return null;
+    conv.imageMap = { ...(conv.imageMap || {}), ...images };
+    conv.recordMap = { ...(conv.recordMap || {}), ...records };
+    return { ...computed, total: null, columns: [{ label: IMAGE_COLUMN, kind: 'text' }, ...computed.columns], rows: computed.rows.slice(0, count).map((row, index) => [keys[index], ...row]) };
+  }
   /* Bağlam tablosu → CSV (RFC 4180; Excel uyumu için UTF-8 BOM). */
   const csvCell = value => { const text = String(value == null ? '' : value); return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; };
   function contextCsv(context) {
@@ -1182,7 +1206,10 @@
       ? `**${title}**\n\n${table}${computed.rows.length > shown ? `\n\n${L(`İlk ${shown} / ${computed.rows.length} satır gösteriliyor; tamamı için Excel olarak indirin.`, `Showing the first ${shown} of ${computed.rows.length} rows; download as Excel for all of them.`)}` : ''}`
       : L('Bu filtrelere uyan kayıt yok. Yorumu aşağıda kontrol edip düzeltmeyi yazabilirsiniz.', 'No records match these filters. Check the interpretation below and write a correction.');
     // Sonraki sohbet mesajı ("bunu yorumla", "bundan mail yaz") hesaplanmış tabloyu görsün.
-    conv.lastQueryContext = { label: L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`), screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}\n${table}`.slice(0, 18000) };
+    const imageTable = computed.matched ? queryImageTable(conv, dataset, computed, engine.LIMITS.chatRows) : null;
+    const contextTable = imageTable ? engine.toMarkdown(imageTable, { lang }) : table;
+    const imageNote = imageTable ? ` ${L(`“${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, `The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`)}` : '';
+    conv.lastQueryContext = { label: L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`), screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}${imageNote}\n${contextTable}`.slice(0, 18000) };
     if (output && output.format === 'xlsx' && computed.matched) {
       answer.phase = L('Excel oluşturuluyor…', 'Creating Excel…');
       setProgress(answer, 'rendering');

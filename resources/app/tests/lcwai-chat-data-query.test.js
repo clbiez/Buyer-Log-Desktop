@@ -308,3 +308,33 @@ test('dosya ilerlemesi İngilizce arayüzde İngilizce yazılır', async () => {
   assert.match(html, /Step 3 \/ 3/);
   assert.match(html, /Buyer Log is laying out the pages/);
 });
+
+/* Regresyon: "Buyer Log hesapladı" yolunda LCW AI'a giden hesaplanmış tabloda
+   "BL Image" anahtarı yoktu ve görsel haritası kurulmuyordu; LCW AI görsel
+   anahtarına başvuramadığı için sunum/PDF'e model görseli girmiyordu. */
+const LIST = { mode: 'query', dataset: 'orders', specJson: JSON.stringify({ dataset: 'orders', filters: [{ field: 'Season', values: ['W6'] }], list: ['Order Code', 'Country'], title: 'W6 siparişleri' }), assumptions: [] };
+test('liste sorgusu dosyaya giderken model görseli anahtarı ve kart bilgisi taşınır', async () => {
+  const pdf = load({ plans: [LIST] });
+  pdf.window.BLAIScreenData.rowImage = (tab, row) => (row['Order Code'] === 'PO2' ? null : { modelId: `M${row._id}`, colourCode: '01', source: `/img/${row._id}` });
+  pdf.chat._state.output.format = 'pptx';
+  let images = null, records = null;
+  pdf.window.BuyerLogAI.chat = async options => {
+    pdf.calls.chat.push(JSON.parse(JSON.stringify({ contexts: options.contexts })));
+    const keys = [...new Set((options.contexts[0].text.match(/\bORD-\d+\b/g) || []))];
+    records = options.resolveRecords(keys);
+    images = keys;
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } };
+  };
+  await pdf.chat.send('W6 siparişlerini sunum yap');
+  const text = pdf.calls.chat[0].contexts[0].text;
+  assert.match(text, /\| BL Image \| Order Code \| Country \|/);
+  assert.match(text, /\| ORD-\d+ \| PO1 \| TÜRKİYE \|/);
+  assert.match(text, /\|  \| PO2 \| BANGLADEŞ \|/, 'görseli olmayan satırın anahtarı boş');
+  assert.match(text, /“BL Image” sütunu/);
+  assert.equal(images.length, 2);
+  const conv = pdf.chat._state.conversations[0];
+  assert.deepEqual(Object.keys(conv.imageMap).sort(), images.slice().sort());
+  assert.ok(records[images[0]].some(([label, value]) => label === 'Order Code' && value === 'PO1'), 'kart bilgisi kaynak satırdan');
+  const answer = lastAnswer(pdf.chat);
+  assert.doesNotMatch(answer.text, /BL Image/, 'sohbetteki tablo anahtar sütunu göstermez');
+});

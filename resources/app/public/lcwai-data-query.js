@@ -884,10 +884,13 @@
     if (spec.list.length) {
       const fields = spec.list.map(byId);
       out.columns = fields.map(field => ({ label: field.label, kind: field.kind }));
-      let rows = matched.map(row => fields.map(field => read(field, row)));
-      if (spec.sort && spec.sort.field) { const i = spec.list.indexOf(spec.sort.field); if (i >= 0) rows.sort((a, b) => compareKeys(a[i] === '' ? EMPTY : a[i], b[i] === '' ? EMPTY : b[i]) * (spec.sort.dir === 'asc' ? 1 : -1)); }
-      if (spec.limit) rows = rows.slice(0, spec.limit);
-      out.rows = rows.map(row => row.map(value => (value === '' ? null : value)));
+      // Kaynak satır, sıralama ve limit sonrası da değer satırıyla hizalı kalır
+      // (model görseli anahtarı ve kart bilgisi için; serileştirilmez).
+      let pairs = matched.map(row => ({ row, values: fields.map(field => read(field, row)) }));
+      if (spec.sort && spec.sort.field) { const i = spec.list.indexOf(spec.sort.field); if (i >= 0) pairs.sort((a, b) => compareKeys(a.values[i] === '' ? EMPTY : a.values[i], b.values[i] === '' ? EMPTY : b.values[i]) * (spec.sort.dir === 'asc' ? 1 : -1)); }
+      if (spec.limit) pairs = pairs.slice(0, spec.limit);
+      out.rows = pairs.map(pair => pair.values.map(value => (value === '' ? null : value)));
+      Object.defineProperty(out, 'sourceRows', { value: pairs.map(pair => pair.row), enumerable: false });
       return out;
     }
     const rowDims = spec.rows.map(dim => ({ ...dim, _field: byId(dim.field) }));
