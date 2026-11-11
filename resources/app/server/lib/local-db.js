@@ -130,6 +130,20 @@ const CLONE_WRITER_SUFFIX = '#clone';
 function retiredDeviceIds(state) {
   return Array.isArray(state && state.retiredDeviceIds) ? state.retiredDeviceIds.filter(item => item && item.deviceId) : [];
 }
+/* Uzaktan uygulanan ve kaydı GERÇEKTEN değiştiren olaylar koleksiyon bazında
+   sayılır. Sayaç uygulamayla aynı işlemde (WAL/snapshot) kalıcıdır; sunucu
+   sayfa projeksiyonu önbelleğinin anahtarına girer. Bellekte tutulsaydı
+   yeniden başlatmada sıfırlanır ve bayat önbellek geri gelirdi. */
+function bumpRemoteApplyRevision(state, key) {
+  const at = String(key || '').indexOf(':');
+  if (at <= 0) return;
+  const collection = String(key).slice(0, at);
+  if (collection !== 'cp-order') return;
+  const map = state.remoteApplyRevisions && typeof state.remoteApplyRevisions === 'object' ? state.remoteApplyRevisions : {};
+  map[collection] = (Number(map[collection]) || 0) + 1;
+  state.remoteApplyRevisions = map;
+}
+
 function isRetiredDeviceId(state, id) {
   const wanted = String(id || '');
   return Boolean(wanted) && retiredDeviceIds(state).some(item => String(item.deviceId) === wanted);
@@ -1041,6 +1055,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       }
       for (const conflict of merged.conflicts) state.conflicts.push({ conflictId: nextConflictId(), eventId: eid, id: key, type: 'field', ...conflict, at, resolved: false });
     }
+    bumpRemoteApplyRevision(state, key);
     state.revision = Math.max(Number(state.revision) || 0, revision);
     state.events[eid] = { eventId: eid, revision, at, origin: 'remote', deviceId: delta.deviceId || null, localSequence: Number(delta.localSequence) || 0 };
     state.appliedEvents[eid] = { eventId: eid, revision, at, origin: delta.origin || 'remote', deviceId: delta.deviceId || null, userId:delta.userId || null };
@@ -1073,7 +1088,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
         const event = state.appliedEvents[conflict.eventId];
         const incomingOwner = sharedOwnerOf(conflict.id, event && event.userId);
         if (!authority.authorityKnown && !(currentOwner.known && currentOwner.allowed) && !(incomingOwner.known && incomingOwner.allowed)) continue;
-        if (!(currentOwner.known && currentOwner.allowed) && record && incomingOwner.known && incomingOwner.allowed) record[conflict.field] = clone(conflict.incoming);
+        if (!(currentOwner.known && currentOwner.allowed) && record && incomingOwner.known && incomingOwner.allowed) { record[conflict.field] = clone(conflict.incoming); bumpRemoteApplyRevision(state, conflict.id); }
         conflict.resolved = true; conflict.resolvedAt = now(); conflict.resolution = 'owner-rule'; pruneResolvedConflict(conflict); closed++;
       }
       return closed;
@@ -1682,4 +1697,4 @@ async function migrateLegacyFiles(db, roots = []) {
   return [];
 }
 
-module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, summarizeConflict, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };
+module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, bumpRemoteApplyRevision, summarizeConflict, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };

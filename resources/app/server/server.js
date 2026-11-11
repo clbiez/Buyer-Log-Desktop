@@ -40,7 +40,7 @@ const {
 const holidayService = require('./lib/holiday-service').createHolidayService({
   cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
 });
-const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict } = require('./lib/local-db');
+const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict, bumpRemoteApplyRevision } = require('./lib/local-db');
 const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout } = require('./lib/sync-settings');
 const syncHealth = require('./lib/sync-health');
 const hubDirent = require('./lib/hub-dirent');
@@ -185,6 +185,8 @@ async function runLocalDbMaintenance() {
     if (quarantine.inspected) markStartup('COLLECTION_LEGACY_DELTA_TRANSITION', quarantine);
     // Çalışan kümeyi belleğe al: delta yetkili fazlarda okumalar buradan gelir.
     const loaded = await deltaStore.hydrate();
+    // Açılıştaki durum taban alınır; yalnız bundan sonraki uzak değişiklik duyurulur.
+    if (loaded.ok) { try { announceRemoteCpChanges(); } catch (error) { logRuntimeFailure('remoteCpBaseline', error); } }
     await licenseCardSync.flushOutbox();
     if (loaded.ok) markStartup('DELTA_STORE_HYDRATED', { collections: loaded.collections, records: loaded.records });
   } catch (error) { logRuntimeFailure('deltaStoreSeed', error); }
@@ -980,6 +982,8 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
         : JSON.parse(JSON.stringify(remoteRecords[id]));
       next.revision = Math.max(Number(next.revision) || 0, sharedSyncPolicy.checkpointRecordRevision(remoteRecords[id]));
       delete next.tombstones[id];
+      // Checkpoint'ten geri gelen CP satırı da sayfa projeksiyonu anahtarını değiştirir.
+      bumpRemoteApplyRevision(next, id);
     }
     next.causalKnowledge = sharedSyncPolicy.mergeKnowledge(next.causalKnowledge, sharedSyncPolicy.checkpointWriterKnowledge(Object.fromEntries(recoverIds.map(id => [id, remoteRecords[id]]))));
     return { recovered:recoverIds.length };
@@ -1687,6 +1691,20 @@ async function retireOutOfScopeSyncConflicts() {
   return closed;
 }
 let afterSharedSyncInFlight = null;
+/* Senkron sonrası: uzaktan cp-order değişikliği uygulandıysa açık ekranlara
+   HAFİF yeniden yükleme sinyali (kaynak sorgusu/kilit yok) ve SSE kopuksa
+   devreye giren revizyon yoklamasına bildirim. Projeksiyon anahtarı sayaçla
+   zaten değişmiştir; yeniden yükleme güncel overlay ile çizilir. */
+let announcedRemoteCpRevision = null;
+function announceRemoteCpChanges() {
+  const revision = cpSharedStore.remoteRevision();
+  if (announcedRemoteCpRevision == null) { announcedRemoteCpRevision = revision; return false; }
+  if (revision <= announcedRemoteCpRevision) return false;
+  announcedRemoteCpRevision = revision;
+  liveEvents.notifyChange('orders', null, { source:'shared-hub-sync' });
+  void sharedRevisionStore.update('cpOverrides', { actorId:'shared-hub-sync' }).catch(error => logRuntimeFailure('sharedRevision', error));
+  return true;
+}
 function afterSharedSyncCompleted() {
   if (afterSharedSyncInFlight) return afterSharedSyncInFlight;
   afterSharedSyncInFlight = (async () => {
@@ -1695,6 +1713,7 @@ function afterSharedSyncCompleted() {
     const master=await pullModeratorMasterIfNewer();
     const previousFabricState=fabricCards.sharedFingerprint();
     await deltaStore.hydrate();
+    announceRemoteCpChanges();
     const fabricSeed=await fabricCards.seedSharedCards();
     const fabricOutbox=await fabricCards.flushOutbox();
     // mirror()/seedMissing() update deltaStore memory; a second full hydrate would
@@ -8080,6 +8099,10 @@ function pageProjectionContext(currentUser = null) {
       antrepoMatchRule:Number(shared._revisions && shared._revisions.antrepoMatchRule) || 0,
       // Önem etiketi kataloğu / Line kuralı değişince CP/Orders etiketleri yeniden çözülür.
       importanceSettings:Number(shared._revisions && shared._revisions.importanceSettings) || 0,
+      // Ekip arkadaşından senkronla gelen cp-order değişikliği (önem etiketi,
+      // tarih, Sub-Man., Supp. FOB) yerel revizyonları artırmaz; kalıcı uzak
+      // uygulama sayacı olmadan önbellek bayat satırları sunuyordu.
+      cpRemote: cpSharedStore.remoteRevision(),
     },
     sourceModes: { asas: shared.asasSourceMode || 'excel', antrepo: shared.antrepoSourceMode || 'excel', lfl: shared.lflSourceMode || 'excel' },
     sourceFolder: sourceFolderForUser(id) || '',
