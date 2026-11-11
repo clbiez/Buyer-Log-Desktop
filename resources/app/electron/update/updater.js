@@ -16,6 +16,16 @@ const STATES=Object.freeze({IDLE:'IDLE',CHECKING:'CHECKING',UPDATE_AVAILABLE:'UP
 function updaterError(message,code='UPDATE_FAILED',extra={}){return Object.assign(new Error(message),{code,...extra});}
 function sanitizeSource(value){return String(value||'').trim().slice(0,4096);}
 function defaultState(currentVersion){return {schemaVersion:1,state:STATES.IDLE,currentVersion,lastKnownGoodVersion:currentVersion,lastSuccessfulCheck:null,lastCheck:null,latestVersion:null,pending:null,activation:null,failedVersions:{},lastError:null};}
+/* Arka plan kontrol aralığı (saat). Açık Buyer Log yeni sürümü en geç bu sürede
+ * fark eder; kontrol yalnız küçük latest.json okumasıdır, paket yalnız yeni sürümde
+ * iner. Eski config.example her config.json'a (ve configure() yerel kopyaya) 6
+ * yazıyordu; o tohum değer bilinçli ayar sayılmaz, yeni varsayılana (1) düşer. */
+const DEFAULT_CHECK_INTERVAL_HOURS=1,LEGACY_SEEDED_CHECK_INTERVAL_HOURS=6;
+function checkIntervalHours(local,base){
+  const pick=value=>value===undefined||value===null||Number(value)===LEGACY_SEEDED_CHECK_INTERVAL_HOURS?undefined:value;
+  const raw=pick(local&&local.checkIntervalHours)??pick(base&&base.checkIntervalHours)??DEFAULT_CHECK_INTERVAL_HOURS;
+  return Math.max(1,Number(raw)||DEFAULT_CHECK_INTERVAL_HOURS);
+}
 function diskFreeBytes(dir){try{const info=fs.statfsSync(dir);return Number(info.bavail)*Number(info.bsize);}catch(_){return null;}}
 function rmSafe(target){try{fs.rmSync(target,{recursive:true,force:true});}catch(_){} }
 
@@ -48,7 +58,7 @@ class BuyerLogUpdater{
     const prior=local.releaseSource??process.env.BUYER_LOG_RELEASE_SOURCE??base.releaseSource??'';
     const source=migration&&prior&&!String(prior).startsWith('github:')?migration:(prior||migration);
     const channel=String(local.channel||process.env.BUYER_LOG_UPDATE_CHANNEL||base.channel||'stable').toLowerCase();
-    return {enabled:(local.enabled??base.enabled??true)!==false,provider:String(source).startsWith('github:')?'github':'folder',releaseSource:sanitizeSource(source),channel:['stable','test'].includes(channel)?channel:'stable',checkIntervalHours:Math.max(1,Number(local.checkIntervalHours??base.checkIntervalHours??6)||6),startupDelayMs:Math.max(0,Number(local.startupDelayMs??base.startupDelayMs??0)||0)};
+    return {enabled:(local.enabled??base.enabled??true)!==false,provider:String(source).startsWith('github:')?'github':'folder',releaseSource:sanitizeSource(source),channel:['stable','test'].includes(channel)?channel:'stable',checkIntervalHours:checkIntervalHours(local,base),startupDelayMs:Math.max(0,Number(local.startupDelayMs??base.startupDelayMs??0)||0)};
   }
   configure(patch,base={}){
     const before=this.config(base), next={...before};
@@ -190,4 +200,4 @@ class BuyerLogUpdater{
     try{for(const name of fs.readdirSync(this.stagingRoot)){if(name.includes('.partial-'))rmSafe(path.join(this.stagingRoot,name));}}catch(_){}
   }
 }
-module.exports={BuyerLogUpdater,STATES,defaultState,updaterError};
+module.exports={BuyerLogUpdater,STATES,defaultState,updaterError,checkIntervalHours};

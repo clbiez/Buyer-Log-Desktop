@@ -658,7 +658,7 @@ function scheduleUpdateChecks() {
 // Açılış kontrolü girişten önce çalışır; kullanıcı kimliği yokken moderator
 // doğrulanamaz ve TEST kanalı STABLE'a düşer. TEST yapılandırılmışsa giriş yapan
 // her yeni kullanıcı için kanal bir kez yeniden kontrol edilir; aksi hâlde TEST
-// sürümü ancak 6 saatlik periyodik kontrolde veya elle görülürdü.
+// sürümü ancak periyodik kontrolde (varsayılan 1 saat) veya elle görülürdü.
 function watchSignedInTestChannel() {
   if(updateSignInTimer){clearInterval(updateSignInTimer);updateSignInTimer=null;}
   const cfg=updater.config(updaterBaseConfig());

@@ -40935,14 +40935,36 @@ function renderVersionHistoryModal(){
 
 (function bindBuyerLogUpdateEvents(){
   const bridge=buyerLogUpdateBridge();if(!bridge||typeof bridge.onStatus!=='function')return;
+  // Buyer Log açıkken arka plan kontrolü (açılış + periyodik) yeni sürümü indirip
+  // doğruladığında kullanıcı KALICI bir uyarı görür: kısa toast gözden kaçıyordu.
+  // Uyarı kullanıcı kapatana kadar durur; "Şimdi Yeniden Başlat" mevcut güvenli
+  // kapanış yolunu (kaydedilmemiş değişiklik koruması) kullanır. Aynı sürüm bu
+  // pencerede bir kez duyurulur. Açılış kontrolü pencere abone olmadan bitmiş
+  // olabileceği için mevcut durum bir kez de doğrudan okunur.
   let announced='';
+  const announce=status=>{
+    if(!status||!status.pendingReady||!status.pendingVersion||announced===status.pendingVersion)return;
+    announced=status.pendingVersion;
+    const en=appLang==='en',version=String(status.pendingVersion);
+    showToast(en?`Buyer Log ${version} is available`:`Buyer Log ${version} güncellemesi var`,{
+      kind:'success',duration:0,icon:'download',
+      kindLabel:en?'Update available':'Güncelleme var',
+      detail:en?'The update has been downloaded and verified. It is applied when Buyer Log restarts.':'Güncelleme indirildi ve doğrulandı. Buyer Log yeniden başladığında uygulanır.',
+      actions:[{id:'restart',label:en?'Restart Now':'Şimdi Yeniden Başlat',primary:true},{id:'later',label:en?'Later':'Sonra'}],
+      onAction:async(id,context)=>{
+        if(id==='later'){context?.close?.();return;}
+        const result=await bridge.restart().catch(()=>null);
+        // ok: pencere kapanıyor; kaydedilmemiş değişiklik kapanışı durdurursa uyarı yerinde kalır.
+        if(result&&result.ok)return;
+        showToast(appLang==='en'?'The update could not be started. Use Version History › Check for Updates.':'Güncelleme başlatılamadı. Sürüm Geçmişi › Güncellemeleri Kontrol Et yolunu kullanın.',{kind:'warning'});
+      },
+    });
+  };
   bridge.onStatus(status=>{
     if(document.getElementById('verHistUpdatePanel'))void refreshBuyerLogUpdatePanel(status);
-    if(status&&status.pendingReady&&status.pendingVersion&&announced!==status.pendingVersion){
-      announced=status.pendingVersion;
-      showToast(appLang==='en'?`Buyer Log ${status.pendingVersion} is ready. Restart to update.`:`Buyer Log ${status.pendingVersion} hazır. Güncellemek için yeniden başlatın.`);
-    }
+    announce(status);
   });
+  if(typeof bridge.status==='function')Promise.resolve(bridge.status('')).then(announce).catch(()=>{});
 })();
 
 function syncVfMenuLanguage(){

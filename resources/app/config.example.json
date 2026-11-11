@@ -15,7 +15,7 @@
     "provider": "folder",
     "releaseSource": "",
     "channel": "stable",
-    "checkIntervalHours": 6,
+    "checkIntervalHours": 1,
     "startupDelayMs": 0
   }
 }

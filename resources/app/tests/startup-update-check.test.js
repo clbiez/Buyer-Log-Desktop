@@ -65,3 +65,33 @@ test('TEST channel is re-checked once a user is signed in (startup check runs be
   assert.match(watch, /runUpdateCheck\(\{manual:false,userId\}\)/);
   assert.match(watch, /clearInterval\(updateSignInTimer\)/);
 });
+
+test('background update check defaults to hourly; legacy seeded 6h value is not a deliberate setting', () => {
+  const { checkIntervalHours } = require('../electron/update/updater');
+  assert.equal(checkIntervalHours({}, {}), 1);
+  assert.equal(checkIntervalHours({}, { checkIntervalHours: 6 }), 1);
+  assert.equal(checkIntervalHours({ checkIntervalHours: 6 }, { checkIntervalHours: 6 }), 1);
+  assert.equal(checkIntervalHours({}, { checkIntervalHours: 3 }), 3);
+  assert.equal(checkIntervalHours({ checkIntervalHours: 2 }, { checkIntervalHours: 3 }), 2);
+  assert.equal(checkIntervalHours({}, { checkIntervalHours: 0 }), 1);
+  assert.equal(checkIntervalHours({}, { checkIntervalHours: 'x' }), 1);
+  assert.match(CONFIG, /"checkIntervalHours": 1,/);
+  assert.match(MAIN, /setInterval\(\(\)=>\{void runUpdateCheck\(\{manual:false\}\)[^\n]*cfg\.checkIntervalHours\*60\*60\*1000\)/);
+});
+
+test('open Buyer Log shows a persistent "update available" notice with restart action', () => {
+  const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  const start = APP.indexOf('(function bindBuyerLogUpdateEvents(){');
+  assert.ok(start >= 0);
+  const block = APP.slice(start, APP.indexOf('})();', start));
+  assert.match(block, /bridge\.onStatus\(/);
+  assert.match(block, /bridge\.status\(''\)\)\.then\(announce\)/, 'status staged before subscription must still be announced');
+  assert.match(block, /pendingReady/);
+  assert.match(block, /announced===status\.pendingVersion/);
+  assert.match(block, /duration:0/, 'notice must stay until the user dismisses it');
+  assert.match(block, /güncellemesi var/);
+  assert.match(block, /is available/);
+  assert.match(block, /Şimdi Yeniden Başlat/);
+  assert.match(block, /Restart Now/);
+  assert.match(block, /bridge\.restart\(\)/);
+});

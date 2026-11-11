@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { initializeBenchmarkState } = require('./startup-benchmark');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-async function start() {
+async function start(options = {}) {
   const app = path.resolve(__dirname, '../..'), root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-client-acceptance-'));
   let server, browser;
   const close = async () => { if (browser) await browser.close(); if (server) { server.kill('SIGTERM'); await new Promise(resolve => server.exitCode !== null ? resolve() : server.once('exit', resolve)); } };
@@ -37,6 +37,7 @@ async function start() {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
     const split = cookie.indexOf('='); await context.addCookies([{ name: cookie.slice(0, split), value: cookie.slice(split + 1), url: base, httpOnly: true }]);
     await context.addInitScript(() => { localStorage.setItem('bl.user.moderator.lcw.lang.v1', 'tr'); localStorage.setItem('bl.user.moderator.lcw_theme', 'light'); for (const key of ['bl.releaseNotes.lastSeenStable.v1', 'bl.user.moderator.bl.releaseNotes.lastSeenStable.v1']) localStorage.setItem(key, '99.0.0'); });
+    if (options.initScript) await context.addInitScript(options.initScript, options.initArg);
     const page = await context.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://**', route => route.abort());
     await page.goto(base + '/?module=overview', { waitUntil: 'domcontentloaded', timeout: 120000 });
