@@ -27,16 +27,33 @@ test('references survive source revisions and process restarts until an explicit
  assert.equal(await cache.read({identity:'different-buyer-or-scope'}),null);
 });
 
-test('empty, incomplete and failed refreshes never replace the last saved references',async t=>{
+test('empty and failed refreshes never replace the last saved references',async t=>{
  const directory=temporary(t),cache=createReferenceCache({directory});
  const args={identity:'buyer',version:'v1',loadRows:()=>[order(),order({inStoreMonth:'2026-03'})]};
  const saved=await cache.get(args);
- for(const rows of [[],[order()]]){
-  await assert.rejects(cache.get({...args,version:'v2',rebuild:true,loadRows:()=>rows}),error=>error.code==='LFL_REFERENCE_INCOMPLETE');
-  assert.deepEqual(await createReferenceCache({directory}).read({identity:args.identity}),saved);
- }
+ await assert.rejects(cache.get({...args,version:'v2',rebuild:true,loadRows:()=>[]}),error=>error.code==='LFL_REFERENCE_INCOMPLETE');
+ assert.deepEqual(await createReferenceCache({directory}).read({identity:args.identity}),saved);
  await assert.rejects(cache.get({...args,rebuild:true,loadRows:()=>{throw Error('parse failed');}}),/parse failed/);
  assert.deepEqual(await cache.read({identity:args.identity}),saved);
+});
+
+test('an explicit refresh adopts a source that no longer contains some saved groups and reports them',async t=>{
+ // Regression: one cancelled order or a moved in-store month used to block every later refresh,
+ // which also left order details permanently stale.
+ const directory=temporary(t),cache=createReferenceCache({directory});
+ const args={identity:'buyer',version:'v1',loadRows:()=>[order(),order({orderCode:'DEMO-2',inStoreMonth:'2026-03'})]};
+ const saved=await cache.get(args);assert.equal(saved.references.length,5);
+ const refreshed=await cache.get({...args,version:'v2',rebuild:true,loadRows:()=>[order({fob:20})]});
+ assert.equal(refreshed.version,'v2');assert.equal(refreshed.removedCount,2,'the 2026-03 month and its season-impact cut-off left the source');
+ assert.deepEqual(refreshed.references.map(item=>JSON.parse(item.key)[4]).sort(),['','2026-02','THROUGH:2026-02']);
+ assert.equal(refreshed.references.find(item=>JSON.parse(item.key)[4]==='').average,20);
+ const durable=await createReferenceCache({directory}).read({identity:args.identity});
+ assert.equal(durable.version,'v2');assert.equal(durable.removedCount,undefined,'the removal count is not persisted');
+ assert.deepEqual(durable.references,refreshed.references);
+ assert.equal((await cache.get({...args,version:'v2'})).removedCount,undefined,'ordinary reads do not repeat the refresh report');
+ // A legacy upgrade is not a refresh: a smaller source still keeps the saved values.
+ const legacy={...durable,schema:4};fs.writeFileSync(path.join(directory,fs.readdirSync(directory)[0]),JSON.stringify(legacy));
+ assert.deepEqual(await createReferenceCache({directory}).get({...args,version:'v2',loadRows:()=>[order({fob:20,inStoreMonth:'2026-04'})]}),legacy);
 });
 
 test('an empty initial read is not persisted and cannot prevent later source recovery',async t=>{
