@@ -222,6 +222,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   assert.match(shortageSrc, /if\s*\(\s*state\.orders\s*\)\s*await\s+ensureOrdersLoaded\(\{\s*force:\s*true\s*\}\)/);
 
   let fetchCalls = 0;
+  let accessCalls = 0;
   const ctx = {
     state: {
       orders: { fname: 'Eski', rows: [{ 'Order Code': 1 }] },
@@ -235,6 +236,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
       return { cancelled: false, payload: { rows: [{ 'Order Code': 2 }] } };
     },
     reviveServerDates: () => {},
+    applyOrdersImportanceEditAccess: async () => { accessCalls += 1; },
     invalidateUnifiedPriorityDecisions: () => {},
     applyPricingRulesToLoadedRows: () => {},
     ensureCollectionCatalogLoaded: () => Promise.resolve(true),
@@ -250,11 +252,13 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   // force verilmezse mevcut state.orders korunur, yeni istek atılmaz.
   await ctx.ensureOrdersLoaded();
   assert.equal(fetchCalls, 0);
+  assert.equal(accessCalls, 0);
   assert.equal(ctx.state.orders.rows[0]['Order Code'], 1);
 
   // force:true verilirse yeniden çekilir.
   await ctx.ensureOrdersLoaded({ force: true });
   assert.equal(fetchCalls, 1);
+  assert.equal(accessCalls, 1, 'fresh Orders rows hydrate field-specific access');
   assert.equal(ctx.state.orders.rows[0]['Order Code'], 2);
 });
 

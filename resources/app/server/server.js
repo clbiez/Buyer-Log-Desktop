@@ -8091,6 +8091,12 @@ function pageProjectionEditResolver(currentUser){
     return byCode.get(key);
   };
 }
+// Orders is otherwise view-only. Recompute this field's hint at response time
+// so pre-existing projections and worker-built caches use live order authority.
+function ordersAccessRows(rows, currentUser) {
+  const canEdit = pageProjectionEditResolver(currentUser);
+  return (rows || []).map(row => ({ ...row, _canEdit:false, _canEditImportance:Boolean(canEdit(row)) }));
+}
 function sameProjectionSourceRows(left, right) {
   if (left === right) return true;
   if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
@@ -8415,7 +8421,7 @@ async function buildResponse(currentUser = null, options = {}) {
     lflMeta: active.lflMeta || null,
     currentUser: currentUser ? userAccess.publicProfile(currentUser) : null,
     cp: startup ? null : (cpDataAllowed ? sharedAccessRows(cp, currentUser) : []),
-    orders: startup ? null : (cpDataAllowed ? (orders || []) : []),
+    orders: startup ? null : (cpDataAllowed ? ordersAccessRows(orders, currentUser) : []),
     orderSummary: startup ? null : (orderSummaryDataAllowed ? (orderSummary || []) : []),
     overviewSummary: startup ? (orderSummaryDataAllowed ? (overviewSummary || []) : []) : null,
     ordersDeferred: startup && cpDataAllowed,
@@ -8484,6 +8490,19 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
 // kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
 const CP_SHARED_EDIT_MAX_CODES = 200000;
+// Compressed Orders projections remain untouched; the client hydrates the
+// field-specific hint separately, including projections made by older builds.
+app.post('/api/orders-importance-edit', userAccess.requireArea('orders'), express.json({ limit: '8mb' }), (req, res) => {
+  try {
+    const codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ code:'ORDERS_IMPORTANCE_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
+    const rows = ordersAccessRows([...new Set(codes.map(String))].map(code => ({ 'Order Code':code })), req.currentUser);
+    res.set('Cache-Control','no-store').json({ allowed:rows.filter(row => row._canEditImportance).map(row => row['Order Code']) });
+  } catch (err) {
+    logRuntimeFailure('ordersImportanceEditAccess', err);
+    res.status(500).json({ code:'ORDERS_IMPORTANCE_EDIT_FAILED', error:'Sipariş önem etiketi yetkisi okunamadı.', errorEn:'Order importance edit access could not be read.' });
+  }
+});
 app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), (req, res) => {
   try {
     const profile = req.currentUser, codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
@@ -8650,7 +8669,7 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
       return sendDateSafeJson(res, {
         loadedAt: runtimeMeta.loadedAt,
         sources: runtimeMeta.sources || {},
-        orders: cachedOrderRows,
+        orders: ordersAccessRows(cachedOrderRows, req.currentUser),
         collectionCatalogs,
         pageCache: { hit: true, readMs: (Number(cachedOrders.ms)||0) + catalogReadMs, generation: cachedOrders.manifest.activeGeneration },
       });
@@ -8674,7 +8693,7 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
         catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
       },active);
     } catch (cacheError) { logRuntimeFailure('ordersPageCacheWrite', cacheError); }
-    sendDateSafeJson(res, { loadedAt: active.loadedAt, sources: active.sources || {}, orders, collectionCatalogs: catalogs, pageCache: { hit: false } });
+    sendDateSafeJson(res, { loadedAt: active.loadedAt, sources: active.sources || {}, orders: ordersAccessRows(orders, req.currentUser), collectionCatalogs: catalogs, pageCache: { hit: false } });
   } catch (err) { apiError(res, err, 'Siparişler verisi yüklenemedi.'); }
 });
 

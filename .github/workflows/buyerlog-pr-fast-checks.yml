@@ -60,6 +60,8 @@ jobs:
           node --test --test-name-pattern="OneDrive simulation: 10 devices|HLC simulation" tests/sync-simulation-v20261009.test.js
       - name: Personal order notes and edit-authority isolation
         run: node --test tests/private-order-notes-v20261026.test.js tests/personal-order-note-columns-v20261026.test.js
+      - name: Closed Orders importance tags and cached edit access
+        run: node --test tests/orders-closed-importance.test.js tests/cp-orders-collection-sync-v20261023.test.js
       # Node-only regression. The HTTP authorization suite needs Express and
       # runs with dependencies installed in the full test environment.
       - name: Checklist denied writes, journal durability and CP first load

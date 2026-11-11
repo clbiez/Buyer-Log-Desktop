@@ -2126,6 +2126,16 @@ function setOrdersLoadingState(loading,message){
     empty.style.display='flex';content.style.display='none';
   }
 }
+async function applyOrdersImportanceEditAccess(rows){
+  if(!rows.length||rows.every(row=>typeof row._canEditImportance==='boolean'))return;
+  try{
+    const codes=[...new Set(rows.map(row=>String(row['Order Code']??'')).filter(Boolean))];
+    const response=await fetch('/api/orders-importance-edit',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({codes})});
+    if(!response.ok)return;
+    const allowed=new Set((await response.json()).allowed||[]);
+    for(const row of rows)row._canEditImportance=allowed.has(String(row['Order Code']));
+  }catch(error){console.warn('Orders importance edit access:',error);}
+}
 async function ensureOrdersLoaded(options={}){
   if(!options.force&&state.orders)return true;
   if(ordersLoadPromise)return ordersLoadPromise;
@@ -2136,6 +2146,7 @@ async function ensureOrdersLoaded(options={}){
       const data=result.payload||{};
       const rows=Array.isArray(data.rows)?data.rows:(Array.isArray(data.orders)?data.orders:[]);
       reviveServerDates(rows);
+      await applyOrdersImportanceEditAccess(rows);
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
       state.ordersLogisticExpanded.clear();

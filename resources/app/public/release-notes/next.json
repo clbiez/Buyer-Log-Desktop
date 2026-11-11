@@ -317,6 +317,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data."
         }
       }
+    },
+    {
+      "id": "orders-closed-importance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+        "en": "Edit importance tags on closed orders"
+      },
+      "body": {
+        "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketini Siparişler ekranından değiştirebilirsiniz. Etiket model ve renk satırına kaydedilir ve yeniden açıldığında korunur. Mevcut sipariş düzenleme yetkileri uygulanır.",
+        "en": "Change the importance tag of closed orders that are absent from CP directly in Orders. Tags are saved for the model and colour line and retained when reopening the screen. Existing order edit permissions apply."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-closed-importance.png",
+        "alt": {
+          "tr": "İki pasif demo siparişi ve BTS etiketi seçilmiş açık önem etiketi menüsü",
+          "en": "Two inactive demo orders and an open importance menu with BTS selected"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle kayıt ve sayfa yenileme sonrası doğrulandı.",
+          "en": "Actual Buyer Log UI; save and page reload verified with isolated demo data."
+        }
+      }
     }
   ]
 }
