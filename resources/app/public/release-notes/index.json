@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.351",
+      "publishedAt": "2026-11-11",
+      "title": {
+        "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+        "en": "Edit importance tags on closed orders"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 2,
+        "fixes": 6
+      },
+      "file": "release-notes/7.0.351/release.json"
+    },
+    {
       "version": "7.0.349",
       "publishedAt": "2026-11-11",
       "title": {

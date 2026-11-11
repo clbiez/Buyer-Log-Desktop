@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.351",
+  "channel": "stable",
+  "publishedAt": "2026-11-11",
+  "title": {
+    "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+    "en": "Edit importance tags on closed orders"
+  },
+  "summary": {
+    "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketi artık Siparişler ekranından değiştirilebilir.",
+    "en": "Importance tags of closed orders that are absent from CP can now be changed in Orders."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 2,
+    "fixes": 6
+  },
+  "changes": [
+    {
+      "id": "orders-closed-importance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+        "en": "Edit importance tags on closed orders"
+      },
+      "body": {
+        "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketini Siparişler ekranından değiştirebilirsiniz. Etiket model ve renk satırına kaydedilir ve yeniden açıldığında korunur. Mevcut sipariş düzenleme yetkileri ve sipariş sahipliği kuralları uygulanır; diğer Siparişler alanları salt okunur kalır.",
+        "en": "Change the importance tag of closed orders that are absent from CP directly in Orders. Tags are saved for the model and colour line and retained when reopening the screen. Existing order edit permissions and order ownership rules apply; other Orders fields stay read-only."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-closed-importance.png",
+        "alt": {
+          "tr": "Pasif demo siparişlerinde açık önem etiketi menüsü",
+          "en": "Open importance tag menu on inactive demo orders"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle kayıt ve yeniden yükleme sonrası doğrulandı.",
+          "en": "Actual Buyer Log UI; save and reload verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "oab-new-seasons",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB filtresine W7, S8 ve W8 sezonları eklendi",
+        "en": "W7, S8 and W8 seasons added to the OAB filter"
+      },
+      "body": {
+        "tr": "OAB Season listesinde artık W7-2027 SONBAHAR KIŞ, S8-2028 YAZ ve W8-2028 SONBAHAR KIŞ seçilebilir. Yeni sezonlarda MAG ve Buyer Group seçenekleri, aynı tipteki son sezondan alınmıştır; PASS listesi farklıysa bazı kombinasyonlar boş sonuç döndürebilir.",
+        "en": "W7-2027 AUTUMN WINTER, S8-2028 SUMMER and W8-2028 AUTUMN WINTER can now be selected in the OAB Season list. MAG and Buyer Group options for the new seasons are taken from the latest season of the same type; some combinations may return no results if the PASS list differs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-new-seasons.png",
+        "alt": {
+          "tr": "Yeni sezonları gösteren OAB Season açılır listesi",
+          "en": "OAB Season dropdown showing the new seasons"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle doğrulandı.",
+          "en": "Actual Buyer Log UI; verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "sync-remote-cp-changes-visible",
+      "type": "fix",
+      "module": {
+        "tr": "Sync / CP",
+        "en": "Sync / CP"
+      },
+      "title": {
+        "tr": "Ekip arkadaşının CP değişiklikleri senkron sonrası otomatik görünür",
+        "en": "Teammates' CP changes appear automatically after sync"
+      },
+      "body": {
+        "tr": "Ortak klasör senkronuyla gelen önem etiketi, Ex-Factory/Retail/In-Store tarihi, Sub-Manufacturer ve Supp. FOB değişiklikleri artık açık CP, Siparişler ve Genel Bakış ekranlarına hafif yeniden yüklemeyle otomatik yansır. Kaynak Yenile gerekmez; ASAS/Antrepo yeniden sorgulanmaz ve düzenleme kilitlenmez. Notlar ve teslim tipi gibi yerel alanlar paylaşılmamaya devam eder.",
+        "en": "Importance tag, Ex-Factory/Retail/In-Store date, Sub-Manufacturer and Supp. FOB changes received through shared-folder sync now appear automatically in open CP, Orders and Overview screens through a lightweight reload. A source Refresh is no longer needed; ASAS/Antrepo is not queried again and editing is not locked. Local fields such as notes and delivery type remain unshared."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde yeni öğe yok; mevcut tablolar senkron sonrası arka planda güncel veriyle yeniden çizilir.",
+          "en": "No new UI element; existing tables are redrawn in the background with current data after sync."
+        }
+      }
+    },
+    {
+      "id": "mb-date-sorting",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon · LFL",
+        "en": "CP · Orders · Collection · LFL"
+      },
+      "title": {
+        "tr": "MB ve diğer tarih sütunları doğru sıralanıyor",
+        "en": "MB and other date columns now sort correctly"
+      },
+      "body": {
+        "tr": "CP ve Siparişler’deki MB (Model Bütçe) sütunu artık eskiden yeniye ve yeniden eskiye tarih sırasıyla sıralanır; önceden gün adına göre karışık sıralanıyordu. Koleksiyon tarih sütunları gg.aa.yyyy biçimli değerleri de doğru sıralar, LFL tablolarındaki tarih sütunları da tarih sırasını izler. Boş tarihler her iki yönde de listenin sonunda kalır.",
+        "en": "The MB (Model Budget) column in CP and Orders now sorts oldest-to-newest and newest-to-oldest by date; previously it was mixed by weekday name. Collection date columns also sort dd.mm.yyyy values correctly, and date columns in LFL tables follow date order. Empty dates stay at the end in both directions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "mb-date-sorting.png",
+        "alt": {
+          "tr": "CP tablosunda Model Bütçe sütunu eskiden yeniye sıralı",
+          "en": "CP table sorted by Model Budget from oldest to newest"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle doğrulandı.",
+          "en": "Actual Buyer Log UI; verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "table-footer-narrow-column-wrap-20261111",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Siparişler / Koleksiyon",
+        "en": "CP / Orders / Collection"
+      },
+      "title": {
+        "tr": "Dar sütunlarda özet satırı metinleri artık çakışmıyor",
+        "en": "Summary footer text no longer overlaps in narrow columns"
+      },
+      "body": {
+        "tr": "FOB ve Supp. FOB ağırlıklı/aritmetik ortalama etiketleri ile değerleri, sütun daraltıldığında hücre içinde alt satıra geçer. Toplam adet ve etiketler de kendi sütununa sığar; hesaplamalar değişmez.",
+        "en": "Weighted/arithmetic average labels and values for FOB and Supp. FOB wrap inside their cells when columns are narrowed. Quantity totals and captions also stay within column bounds; calculations are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız mevcut tablo özetinin CSS taşma davranışı düzeltildi; bu oturumda gerçek Buyer Log'dan değişiklik sonrası ekran görüntüsü alınamadı (görsel doğrulama bekliyor).",
+          "en": "Only CSS overflow behavior of the existing table summary was updated; a post-change screenshot of the actual Buyer Log could not be captured in this session (visual verification pending)."
+        }
+      }
+    },
+    {
+      "id": "lcwai-collection-mb-month",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI Koleksiyon’da MB ayını tanıyor",
+        "en": "LCW AI recognises the MB month in Collection"
+      },
+      "body": {
+        "tr": "“Koleksiyon temmuz modelleri” gibi isteklerde LCW AI artık Koleksiyon’daki Model Budget Month (MB ayı) alanını kullanır; “MB ayı yok” diye sormaz. Türkçe ve İngilizce kaydedilmiş ay değerleri (TEMMUZ 2027 / JULY 2027) aynı ay olarak eşleşir. LFL tarihçesindeki MB ayı da aynı şekilde okunur.",
+        "en": "For requests such as “Collection July models”, LCW AI now uses the Model Budget Month (MB month) field in Collection instead of asking because it cannot find an MB month. Month values saved in Turkish or English (TEMMUZ 2027 / JULY 2027) match the same month. The MB month in the LFL history is read the same way."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; düzeltme LCW AI’ın veri sorgusu planlamasındadır.",
+          "en": "No screen layout changed; the fix is in LCW AI data query planning."
+        }
+      }
+    },
+    {
+      "id": "lcwai-output-progress",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Sunum ve PDF hazırlanırken adım adım ilerleme",
+        "en": "Step-by-step progress while presentations and PDFs are prepared"
+      },
+      "body": {
+        "tr": "PDF, PowerPoint, Excel veya HTML istediğinizde Buyer Log’un hesapladığı tablo görünürken altında dosyanın hangi aşamada olduğu gösterilir: veriler hesaplandı, LCW AI içeriği yazıyor, sayfa düzeni kuruluyor, model görselleri ekleniyor ve PDF basılıyor. Biten adımlar işaretlenir, geçen süre ve yazılan karakter sayısı canlı güncellenir; dosya hazır olunca panel kalkar.",
+        "en": "When you request a PDF, PowerPoint, Excel or HTML file, the stage of the file is shown under the table Buyer Log calculated: data calculated, LCW AI writing the content, pages being laid out, model images being added and the PDF being printed. Completed steps are ticked, elapsed time and written characters update live, and the panel disappears when the file is ready."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-progress.png",
+        "alt": {
+          "tr": "Demo sipariş tablosunun altında PDF dosyası hazırlık adımları",
+          "en": "PDF preparation steps under a demo order table"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; sentetik demo verisiyle, LCW AI cevabı taklit edilerek alındı.",
+          "en": "Actual Buyer Log UI; captured with synthetic demo data and a simulated LCW AI response."
+        }
+      }
+    },
+    {
+      "id": "lcwai-query-output-images",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Buyer Log’un hesapladığı listeden hazırlanan sunumlarda model görselleri",
+        "en": "Model images in presentations built from lists calculated by Buyer Log"
+      },
+      "body": {
+        "tr": "“Koleksiyon 27. hafta modelleri için model kartı sunumu” gibi isteklerde Buyer Log listeyi hesapladığında model görselleri artık PowerPoint, PDF ve HTML dosyalarına eklenir. Model kartlarındaki bilgiler de kaynak kayıttan birebir alınır. Sohbetteki tablo değişmez. Uzun listeler (200 satırı veya metin sınırını aşan) artık kesilmez; tamamı görsel anahtarlarıyla birlikte CSV eki olarak LCW AI’a gider.",
+        "en": "When Buyer Log calculates the list for requests such as “model card presentation for Collection week 27 models”, model images are now added to PowerPoint, PDF and HTML files. Model card details are also taken exactly from the source record. The table in the chat is unchanged. Long lists (over 200 rows or the text limit) are no longer cut off; the whole list goes to LCW AI as a CSV attachment together with the image keys."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranı değişmedi; düzeltme LCW AI’a giden görsel anahtarlarındadır.",
+          "en": "No Buyer Log screen changed; the fix is in the image keys sent to LCW AI."
+        }
+      }
+    }
+  ]
+}
