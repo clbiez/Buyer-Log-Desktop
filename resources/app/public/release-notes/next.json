@@ -197,8 +197,8 @@
         "en": "Column matrix and continuous deck preview"
       },
       "body": {
-        "tr": "Geniş editörde koleksiyon sütunlarını model kartı, başlık, alt başlık ve alt grup olarak seçin; punto ve yerleşimi aynı satırdan ayarlayın. Slaytlar alt alta gösterilir; kartları ve başlıklarıyla grupları slaytlar arasında taşıyın ve geri alın. Sabit puntolu uzun bilgiler devam kartlarına ayrılır.",
-        "en": "Choose collection columns for model cards, titles, subtitles and subgroups in the enlarged editor; adjust typography and placement in the same row. Slides appear vertically; move cards and groups with their titles between slides and undo changes. Long details continue on additional cards at a fixed font size."
+        "tr": "Geniş editörde koleksiyon sütunlarını model kartı, başlık, alt başlık ve alt grup olarak seçin; punto ve yerleşimi aynı satırdan ayarlayın. Slaytlar alt alta gösterilir; kartları ve başlıklarıyla grupları slaytlar arasında taşıyın ve geri alın. Sabit puntolu uzun bilgiler devam kartlarına ayrılır. Gelişmiş AI düzenleme isteklerine manuel yerleşimden türeyen kaynak grup değerleri eklenmez.",
+        "en": "Choose collection columns for model cards, titles, subtitles and subgroups in the enlarged editor; adjust typography and placement in the same row. Slides appear vertically; move cards and groups with their titles between slides and undo changes. Long details continue on additional cards at a fixed font size. Advanced AI layout requests exclude source group values derived from manual placement."
       },
       "visual": {
         "kind": "screenshot",

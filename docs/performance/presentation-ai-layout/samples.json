@@ -1,0 +1,128 @@
+[
+  {
+    "count": 24,
+    "pair": 0,
+    "base": true,
+    "preparationMs": 0.003149140000000017,
+    "requestBytes": 1255
+  },
+  {
+    "count": 24,
+    "pair": 0,
+    "base": false,
+    "preparationMs": 0.0026784299999999916,
+    "requestBytes": 141
+  },
+  {
+    "count": 24,
+    "pair": 1,
+    "base": true,
+    "preparationMs": 0.002826349999999991,
+    "requestBytes": 1255
+  },
+  {
+    "count": 24,
+    "pair": 1,
+    "base": false,
+    "preparationMs": 0.0018759199999999864,
+    "requestBytes": 141
+  },
+  {
+    "count": 24,
+    "pair": 2,
+    "base": true,
+    "preparationMs": 0.006421250000000001,
+    "requestBytes": 1255
+  },
+  {
+    "count": 24,
+    "pair": 2,
+    "base": false,
+    "preparationMs": 0.0033595499999999846,
+    "requestBytes": 141
+  },
+  {
+    "count": 240,
+    "pair": 0,
+    "base": true,
+    "preparationMs": 0.019704119999999995,
+    "requestBytes": 11542
+  },
+  {
+    "count": 240,
+    "pair": 0,
+    "base": false,
+    "preparationMs": 0.0016746200000000045,
+    "requestBytes": 141
+  },
+  {
+    "count": 240,
+    "pair": 1,
+    "base": true,
+    "preparationMs": 0.016284080000000003,
+    "requestBytes": 11542
+  },
+  {
+    "count": 240,
+    "pair": 1,
+    "base": false,
+    "preparationMs": 0.0016422700000000034,
+    "requestBytes": 141
+  },
+  {
+    "count": 240,
+    "pair": 2,
+    "base": true,
+    "preparationMs": 0.015062339999999992,
+    "requestBytes": 11542
+  },
+  {
+    "count": 240,
+    "pair": 2,
+    "base": false,
+    "preparationMs": 0.0016268399999999873,
+    "requestBytes": 141
+  },
+  {
+    "count": 30000,
+    "pair": 0,
+    "base": true,
+    "preparationMs": 2.89026153,
+    "requestBytes": 1497924
+  },
+  {
+    "count": 30000,
+    "pair": 0,
+    "base": false,
+    "preparationMs": 0.0023515300000002525,
+    "requestBytes": 141
+  },
+  {
+    "count": 30000,
+    "pair": 1,
+    "base": true,
+    "preparationMs": 2.86164952,
+    "requestBytes": 1497924
+  },
+  {
+    "count": 30000,
+    "pair": 1,
+    "base": false,
+    "preparationMs": 0.001818629999999075,
+    "requestBytes": 141
+  },
+  {
+    "count": 30000,
+    "pair": 2,
+    "base": true,
+    "preparationMs": 2.8522645900000008,
+    "requestBytes": 1497924
+  },
+  {
+    "count": 30000,
+    "pair": 2,
+    "base": false,
+    "preparationMs": 0.00815586000000053,
+    "requestBytes": 141
+  }
+]

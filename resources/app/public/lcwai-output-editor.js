@@ -308,7 +308,8 @@
     ed.aiBusy = true;
     try {
       const fields = allCardFields(), tokens = cardSourceItems().map(item => item.image);
-      const result = await AI().ask({ source: 'output-studio', task: prompt, context: { layout: ed.data.layout, fields,
+      const aiLayout = clone({ ...ed.data.layout, studio: { ...ed.data.layout.studio, manualPages: [] } });
+      const result = await AI().ask({ source: 'output-studio', task: prompt, context: { layout: aiLayout, fields,
         operations: ['setCardFields', 'setGrouping', 'setCardSpan', 'resizeSection', 'reorderSection', 'setGrid', 'applyPreset', 'setTitle', 'toggleSection', 'setSizing', 'setReflow'],
         cardTokens: tokens.slice(0, 200), operationShape: '{op,value,target?}; sizing: equal|sets|auto; reflow: dense|large|balanced|fixed; resizeSection target header|note; setGrid value {columns,rows}; setCardSpan target cardToken value 1|2; toggleSection target header value boolean; reorderSection value galleryFirst|summaryFirst' } });
       if (ed !== session) return;
