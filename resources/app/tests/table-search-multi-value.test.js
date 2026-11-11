@@ -62,6 +62,13 @@ test('hariç tutma (! önek veya sonek) yazıldığı VEYA grubundan çıkarıl�
   assert.deepEqual(parse('LE SHA!'), [{ mode: 'notContains', value: 'le sha' }]);
   assert.deepEqual(parse('ABC!DEF'), [{ mode: 'exact', value: 'abc!def' }]);
   assert.deepEqual(parse('!'), []);
+  // Önek operatörden sonraki boşluk eski davranışı korur.
+  assert.deepEqual(parse('! RED'), [{ mode: 'notContains', value: 'red' }]);
+  assert.deepEqual(parse('SHIRT; ! RED, BLUE'), [
+    [{ mode: 'exact', value: 'shirt' }],
+    [{ mode: 'exact', value: 'blue' }],
+    [{ mode: 'notContains', value: 'red' }],
+  ]);
 });
 
 test('exact, contains ve not contains operatorleri doğru eşleşir', () => {

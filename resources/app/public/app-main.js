@@ -394,7 +394,8 @@ function parseTableSearchTerms(value){
     return criterion?{mode,value:normalize(criterion)}:null;
   };
   // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
-  const splitPart=part=>String(part).split(/(?<=!)\s+/);
+  // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
+  const splitPart=part=>String(part).split(/(?<=[^\s!]!)\s+/);
   // Hariç tutma (!X / X!) bir VEYA grubunda anlamsızdır (X içermeyen her satır
   // grubu geçirir). Bu yüzden yazıldığı gruptan çıkarılır ve tüm aramaya ayrı
   // bir VE grubu olarak uygulanır: "A; B, C, X!" ≡ "A; B, C; !X".

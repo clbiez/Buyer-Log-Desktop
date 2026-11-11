@@ -123,3 +123,13 @@ test('row-group script app-main sonrasında ve arama yardımından önce yüklen
   const help=html.indexOf('table-search-help.js?v=');
   assert.ok(app>=0&&groups>app&&help>groups);
 });
+
+test('parantez grubunda sonek ! önek ! ile aynı hariç tutmadır',()=>{
+  const {table}=installedSearch();
+  const suffix=table.parseTerms('(SHIRT; RED!)');
+  const prefix=table.parseTerms('(SHIRT; !RED)');
+  assert.deepEqual(suffix,prefix);
+  assert.equal(table.matches('SHIRT BLUE',suffix,{plainMode:'contains'}),true);
+  assert.equal(table.matches('SHIRT RED',suffix,{plainMode:'contains'}),false);
+  assert.deepEqual(rowGroups.criterionFromCell('ABC!DEF'),{mode:'exact',value:'abc!def'});
+});
