@@ -68,7 +68,7 @@ function createLcwAiClient(options = {}) {
   function safeLog(event, details = {}) {
     // Yalnız sayısal/kod alanları: metin, başlık, token geçmez.
     const out = { event };
-    for (const key of ['status', 'code', 'reason', 'ms', 'attempt', 'chunks', 'bytes', 'types', 'reasoningLevel', 'reasoningChunks']) if (details[key] != null) out[key] = details[key];
+    for (const key of ['status', 'code', 'reason', 'shape', 'ms', 'attempt', 'chunks', 'bytes', 'types', 'reasoningLevel', 'reasoningChunks']) if (details[key] != null) out[key] = details[key];
     try { log(out); } catch (_) {}
   }
 
@@ -175,7 +175,7 @@ function createLcwAiClient(options = {}) {
       // Teşhis: "yüklenemedi" tek mesajının hangi adımdan geldiği loglanır.
       // Yalnız sabit neden etiketi + uzak HTTP durumu; gövde/ad/token asla.
       const reason = failure.shortCode === 'NETWORK' ? 'network' : (UPLOAD_FAILURE_REASONS.has(failure.detail) ? failure.detail : (failure.remoteStatus ? 'http' : undefined));
-      safeLog('LCWAI_UPLOAD_FAILED', { code: failure.shortCode === 'NETWORK' ? 'LCWAI_UPLOAD_FAILED' : failure.code, status: failure.remoteStatus, reason });
+      safeLog('LCWAI_UPLOAD_FAILED', { code: failure.shortCode === 'NETWORK' ? 'LCWAI_UPLOAD_FAILED' : failure.code, status: failure.remoteStatus, reason, shape: failure.responseShape });
       if (failure.shortCode === 'NETWORK') throw lcwAiError('UPLOAD_FAILED', { detail: 'network' });
       throw failure;
     } finally { deadline.dispose(); }

@@ -15,7 +15,7 @@ function createDefaultEngine(options = {}) {
   const logger = typeof options.logger === 'function'
     ? options.logger
     // Yalnız olay adı + kod/durum/süre; metin ve başlık asla.
-    : event => { try { console.info(`[LCWAI] ${event.event}${event.status != null ? ` status=${event.status}` : ''}${event.code ? ` code=${event.code}` : ''}${event.reason ? ` reason=${event.reason}` : ''}${event.ms != null ? ` ms=${event.ms}` : ''}${event.types ? ` types=${event.types}` : ''}${event.reasoningLevel ? ` reasoning=${event.reasoningLevel}` : ''}${event.reasoningChunks != null ? ` reasoningChunks=${event.reasoningChunks}` : ''}`); } catch (_) {} };
+    : event => { try { console.info(`[LCWAI] ${event.event}${event.status != null ? ` status=${event.status}` : ''}${event.code ? ` code=${event.code}` : ''}${event.reason ? ` reason=${event.reason}` : ''}${event.shape ? ` shape=${event.shape}` : ''}${event.ms != null ? ` ms=${event.ms}` : ''}${event.types ? ` types=${event.types}` : ''}${event.reasoningLevel ? ` reasoning=${event.reasoningLevel}` : ''}${event.reasoningChunks != null ? ` reasoningChunks=${event.reasoningChunks}` : ''}`); } catch (_) {} };
   // Masaüstü köprüsü ilk token'ı da gerektiğinde alır; yalnız tarayıcı
   // kipi/eski kabuk Edge/CDP oturum sağlayıcısını kullanır.
   const desktopRelay = options.desktopRelay || createDesktopAuthRelay();
