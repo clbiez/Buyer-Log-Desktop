@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.349",
+      "publishedAt": "2026-11-11",
+      "title": {
+        "tr": "Kurumsal giriş ekranlarında otomatik onarım",
+        "en": "Automatic recovery for corporate sign-in screens"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 4
+      },
+      "file": "release-notes/7.0.349/release.json"
+    },
+    {
       "version": "7.0.348",
       "publishedAt": "2026-11-11",
       "title": {
