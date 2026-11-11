@@ -1,14 +1,38 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI dosya ekleri yeniden çalışıyor",
+    "en": "LCW AI file attachments work again"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Görselden arama ve LCW AI sohbetinde eklenen dosyalar yeniden LCW AI’a gönderilir.",
+    "en": "Files added in image search and LCW AI chat are sent to LCW AI again."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-upload-response-compat",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "“Dosya LCW AI’a yüklenemedi” hatası giderildi",
+        "en": "Fixed “The file could not be uploaded to LCW AI”"
+      },
+      "body": {
+        "tr": "LCW AI dosyayı kabul ettiği hâlde değişen yükleme yanıtı nedeniyle ek oluşmuyordu. Görselden arama ve LCW AI sohbetindeki dosya/görsel ekleri artık yeni yanıt biçimiyle de çalışır; güvenlik kontrolleri değişmedi. Hâlâ hata olursa sunucu günlüğü yalnız yanıtın alan adlarını yazar.",
+        "en": "LCW AI accepted the file, but a changed upload response prevented the attachment from being created. File and image attachments in image search and LCW AI chat now work with the new response format too; security checks are unchanged. If it still fails, the server log records only the response field names."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde değişiklik yok; düzeltme sunucunun LCW AI yükleme yanıtını okumasındadır.",
+          "en": "No UI change; the fix is in how the server reads the LCW AI upload response."
+        }
+      }
+    }
+  ]
 }

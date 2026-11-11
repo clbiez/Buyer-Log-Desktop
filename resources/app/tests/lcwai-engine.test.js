@@ -238,6 +238,23 @@ test('askWithFiles: yüklenen ekler mesaja eklenir; kota hatası anlaşılır ko
   await assert.rejects(quotaClient.uploadFile('u1', { buffer: Buffer.from('a'), fileName: 'a.txt' }), error => error.code === 'LCWAI_QUOTA_EXCEEDED');
 });
 
+test('yükleme yanıtı: PascalCase alanlar ve data/result zarfı kabul edilir; başarısızlıkta yalnız alan adları loglanır', async () => {
+  const pascal = files.toAttachment({ BlobName: 'conversation-files/p.png', ContentType: 'image/png', FileName: 'p.png', Size: 7, Url: '/api/chat/attachments/p' });
+  assert.deepEqual(pascal, { blobName: 'conversation-files/p.png', contentType: 'image/png', fileName: 'p.png', size: 7, url: '/api/chat/attachments/p' });
+  const wrapped = files.toAttachment({ isSuccess: true, data: { blobName: 'conversation-files/w.png', fileName: 'w.png', contentType: 'image/png', size: 3, url: '/api/chat/attachments/w' } });
+  assert.equal(wrapped.blobName, 'conversation-files/w.png');
+  assert.equal(files.toAttachment({ result: [{ blobName: 'conversation-files/r.png' }] }, { contentType: 'image/png', fileName: 'r.png', size: 2 }).blobName, 'conversation-files/r.png');
+  // Tanımlı biçimdeki güvenlik kontrolleri zarf içinde de geçerli.
+  assert.throws(() => files.toAttachment({ data: { blobName: 'b', url: 'https://evil.example/x?y' } }), error => error.code === 'LCWAI_UPLOAD_FAILED');
+  const events = [];
+  const client = createLcwAiClient({ auth: { getAuthorization: async () => 'Bearer t', invalidate() {} }, logger: event => events.push(event), fetch: async () => Response.json({ success: true, payload: { storageKey: 'SECRET-KEY', link: 'https://x/SECRET' } }) });
+  await assert.rejects(client.uploadFile('u1', { buffer: Buffer.from('png'), fileName: 'a.png', contentType: 'image/png' }), error => error.code === 'LCWAI_UPLOAD_FAILED');
+  const failed = events.find(event => event.event === 'LCWAI_UPLOAD_FAILED');
+  assert.equal(failed.reason, 'blob-name');
+  assert.equal(failed.shape, 'success,payload{storageKey,link}');
+  assert.ok(!JSON.stringify(events).includes('SECRET'));
+});
+
 test('dosya yükleme hatası: neden etiketi + HTTP durumu loglanır, gövde/ad loglanmaz', async () => {
   const auth = { getAuthorization: async () => 'Bearer t', invalidate() {} };
   const run = async respond => {
@@ -248,7 +265,7 @@ test('dosya yükleme hatası: neden etiketi + HTTP durumu loglanır, gövde/ad l
   };
   const shape = await run(() => Response.json({ fileId: 1, url: 'https://blob.example/x?sig=SECRET' }));
   assert.equal(shape.error.code, 'LCWAI_UPLOAD_FAILED');
-  assert.deepEqual(shape.failed, { event: 'LCWAI_UPLOAD_FAILED', code: 'LCWAI_UPLOAD_FAILED', reason: 'blob-name' });
+  assert.deepEqual(shape.failed, { event: 'LCWAI_UPLOAD_FAILED', code: 'LCWAI_UPLOAD_FAILED', reason: 'blob-name', shape: 'fileId,url' });
   const http = await run(() => new Response('bad file name gizli-ad.png', { status: 400 }));
   assert.equal(http.error.code, 'LCWAI_UPLOAD_FAILED');
   assert.deepEqual(http.failed, { event: 'LCWAI_UPLOAD_FAILED', code: 'LCWAI_UPLOAD_FAILED', status: 400, reason: 'http' });
