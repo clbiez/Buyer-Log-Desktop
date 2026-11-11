@@ -929,7 +929,11 @@
   const groupLabels={lflKey:'MAG · MMYG · Klasman',mag:'MAG',mmyg:'MMYG',classification:'Klasman',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer'};
   function compareTableValues(a,b,type='text'){
     if(type==='number'){const av=num(a),bv=num(b);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;return av-bv;}
-    if(type==='date')return String(a||'').localeCompare(String(b||''));
+    if(type==='date'){
+      // Hücreler Date nesnesi taşır; String(Date) gün adıyla ("Sat Dec…") sıralanırdı.
+      const time=value=>{if(value instanceof Date)return Number.isNaN(value.getTime())?null:value.getTime();const d=dateObject(value);return d?d.getTime():null;};
+      const av=time(a),bv=time(b);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;return av-bv;
+    }
     return BLBusinessRules.compareChronologicalValues(a,b);
   }
   const LEGACY_MANUFACTURER_VOLUME_CLASS='lflManufacturerVolumeValues'; // compatibility marker for prior UI tests

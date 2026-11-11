@@ -9382,8 +9382,11 @@ function sortRows(rows,key,dir){
     const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
     const schema=columnSchemaFor(column||{k:key},rows);
     const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
-    if(sx!=null && sy!=null && schema&&schema.sortType==='number') return (sx-sy)*dir;
-    if(sx!=null && sy!=null && schema&&schema.sortType==='date') return (sx-sy)*dir;
+    if(schema&&(schema.sortType==='number'||schema.sortType==='date')){
+      // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
+      if(sx!=null && sy!=null) return (sx-sy)*dir;
+      if((sx==null)!==(sy==null)) return sx==null?1:-1;
+    }
     return BLBusinessRules.compareChronologicalValues(x,y,dir);
   });
 }
@@ -26591,11 +26594,13 @@ function kolCompareRowsForActiveSort(a,b,rowsForSchema){
   let y=kolSort.key==='exToRetail'?kolExToRetailDays(b):kolEffectiveValue(b,kolSort.key);
   if(kolSort.key==='season'||kolSort.key==='inStoreMonth') return BLBusinessRules.compareChronologicalValues(x,y,kolSort.dir);
   if(col?.checklist) return (KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(x))-KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(y)))*kolSort.dir;
-  const schema=columnSchemaFor(col,rowsForSchema||[]);
-  if(schema&&(schema.sortType==='number'||schema.sortType==='date')){ x=schema.sortValue(x); y=schema.sortValue(y); }
+  const schema=col?.date?null:columnSchemaFor(col,rowsForSchema||[]);
+  // Tarih sütunları ekranda fmtDate/coerceDateLoose ile gösterilir; sıralama da
+  // aynı ayrıştırıcıyı kullanır (gg.aa.yyyy, Excel seri no, ISO hepsi tarih).
+  if(col?.date){ x=x?(coerceDateLoose(x)?.getTime()??NaN):NaN; y=y?(coerceDateLoose(y)?.getTime()??NaN):NaN; }
+  else if(schema&&(schema.sortType==='number'||schema.sortType==='date')){ x=schema.sortValue(x); y=schema.sortValue(y); }
   else if(col?.qty){ x=kolParseQuantityNum(x); y=kolParseQuantityNum(y); }
   else if(col?.money||col?.percent||col?.hologram){ x=kolParseMoneyNum(x); y=kolParseMoneyNum(y); }
-  else if(col?.date){ x=x?(coerceDateLoose(x)?.getTime()??NaN):NaN; y=y?(coerceDateLoose(y)?.getTime()??NaN):NaN; }
   else {
     const nx=Number(x), ny=Number(y);
     if(String(x).trim()!=='' && String(y).trim()!=='' && Number.isFinite(nx) && Number.isFinite(ny)){ x=nx; y=ny; }

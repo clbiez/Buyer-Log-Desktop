@@ -49,7 +49,10 @@
   function keyOf(value) {
     const text = String(value == null ? '' : value);
     return (typeof text.normalize === 'function' ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : text)
-      .toLocaleLowerCase('tr-TR').replace(/[^a-z0-9]+/gi, '');
+      // Türkçe küçültme "I" harfini "ı" yapar; ASCII filtresi onu silerse
+      // "In-Store (Model Budget)" → "nstoremodelbudget" olur ve tarih alias'ı
+      // kaçar (MB sütunu metin gibi sıralanırdı). "ı" → "i" ile eşlenir.
+      .toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/[^a-z0-9]+/gi, '');
   }
   function fieldOf(column) {
     return column && (column.field || column.k || column.key || column.name || column.header || column.label) || '';
@@ -99,6 +102,10 @@
     if (match) return dateParts(+match[1], +match[2], +match[3]);
     match = /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:$|T|\s)/.exec(text);
     if (match) return dateParts(+match[1], +match[2], +match[3], text);
+    // Gün önce biçim (gg.aa.yyyy, gg/aa/yy): ekrandaki fmtDate/coerceDateLoose
+    // ile aynı yorum; aksi halde bu değerler sıralamada "boş" sayılırdı.
+    match = /^(\d{1,2})([.\/-])(\d{1,2})\2(\d{4}|\d{2})$/.exec(text);
+    if (match) return dateParts(match[4].length === 2 ? 2000 + +match[4] : +match[4], +match[3], +match[1]);
     if (/^\d{4}-\d{1,2}-\d{1,2}T/.test(text)) {
       const parsed = new Date(text);
       return Number.isNaN(parsed.getTime()) ? null : parsed;
