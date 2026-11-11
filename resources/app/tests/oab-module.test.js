@@ -859,12 +859,12 @@ test('OAB bundled metadata: proje içinde kalıcı resource olarak mevcut ve do�
   assert.doesNotMatch(oabStaticMetadata.METADATA_FILE.replace(/\\/g, '/'), /server\/data\//, 'release arşivinde dışlanan server/data altında olmamalı');
   const info = oabStaticMetadata.getInfo();
   assert.equal(info.reportRef, 'OrderBudget_List_Report');
-  assert.deepEqual(info.counts, { seasons: 4, uniqueMags: 147, uniqueBuyerGroups: 145 });
+  assert.deepEqual(info.counts, { seasons: 7, uniqueMags: 147, uniqueBuyerGroups: 145 });
 });
 
 test('OAB bundled metadata: Season -> MAG -> Buyer Group ilişkisi gerçek Ref değerleriyle okunuyor', () => {
   const seasons = oabStaticMetadata.getSeasons();
-  assert.equal(seasons.length, 4);
+  assert.equal(seasons.length, 7);
   assert.ok(seasons.some(x => x.SeasonRef === 20271 && x.Name === 'S7-2027 YAZ'));
   const mags = oabStaticMetadata.getMag(20271);
   assert.ok(mags.some(x => x.MerchSubGroupRef === 17 && x.Name.trim() === 'CU4E'));
@@ -1237,4 +1237,14 @@ test('OAB: overview yetkisi PLM linklerini ve kayıtlı model görsellerini salt
   assert.match(SERVER, /app\.get\('\/api\/cp-images\/:id',[\s\S]{0,140}'overview'/);
   assert.doesNotMatch(SERVER, /app\.delete\('\/api\/collection-images\/:id',[\s\S]{0,100}'overview'/);
   assert.doesNotMatch(SERVER, /app\.post\('\/api\/cp-images',[\s\S]{0,100}'overview'/);
+});
+
+test('OAB paket metadata W7/S8/W8 sezonlarını sıralı ve seçilebilir sunar', () => {
+  const staticMetadata = require('../server/lib/oab-static-metadata');
+  const refs = staticMetadata.getSeasons().map(season => season.SeasonRef);
+  assert.deepEqual(refs.slice(0, 4), [20282, 20281, 20272, 20271]);
+  for (const ref of [20272, 20281, 20282]) {
+    assert.ok(staticMetadata.getMag(ref).length > 0, `${ref} için MAG listesi boş olmamalı`);
+  }
+  assert.deepEqual(staticMetadata.validateSelectedRefs({ seasonRef: 20281, merchSubGroupRef: 111, buyerGroupRef: 1 }), { ok: true });
 });
