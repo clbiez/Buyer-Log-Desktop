@@ -59,6 +59,7 @@ const { runInstallRepair, readRepairReport } = require('./install-repair');
 // disk/CPU yarışına girmesin diye ilk ekran açıldıktan sonra başlar.
 const INSTALL_REPAIR_INTEGRITY_DELAY_MS = 20000;
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
+const { nextPortalRecoveryStep } = require('./portal-navigation-recovery');
 const { createWorkspaceManager } = require('./workspace-manager');
 const { syncShortcutIcons, ensureStableIcon, refreshShellIcons } = require('./shortcut-icon');
 const { runExeIconPatch } = require('./exe-icon');
@@ -998,24 +999,6 @@ function isAllowedCoreNectumAuthUrl(value) {
   } catch (_) { return false; }
 }
 
-function coreNectumNavigationErrno(error) {
-  const code = Number(error && error.errno);
-  if (Number.isFinite(code) && code < 0) return code;
-  const match = /\((-\d+)\)/.exec(String(error && error.message || ''));
-  if (match) return Number(match[1]);
-  const text = String(error && (error.code || error.message) || '');
-  if (/ERR_ABORTED/i.test(text)) return -3;
-  if (/ERR_FAILED/i.test(text)) return -2;
-  return 0;
-}
-
-/* SSO oturumuna (çerez/localStorage) dokunmadan yalnız gezinmeyi bozabilen
- * service worker kayıtlarını, Cache Storage'ı ve HTTP önbelleğini temizler. */
-async function resetCoreNectumNavigationCache(authSession) {
-  try { await authSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }); } catch (_) {}
-  try { await authSession.clearCache(); } catch (_) {}
-}
-
 async function acquireCoreNectumToken(options = {}) {
   if (coreNectumAuthInFlight) return coreNectumAuthInFlight;
   const interactive = options.interactive !== false;
@@ -1142,11 +1125,17 @@ async function acquireCoreNectumToken(options = {}) {
         resolve(value);
       }, interactive ? 180000 : 9000);
 
-      const failNavigation = error => {
+      let lastDiagnosis = null;
+      const failNavigation = (error, step) => {
         if (settled) return;
         settled = true;
         cleanup();
-        resolve({ ok: false, code: 'CORENECTUM_AUTH_NAVIGATION_FAILED', error: error && error.message ? error.message : 'CoreNectum açılamadı.' });
+        const diagnosis = (step && step.diagnosis) || lastDiagnosis;
+        resolve({
+          ok: false, code: 'CORENECTUM_AUTH_NAVIGATION_FAILED',
+          diagnosis: diagnosis ? diagnosis.verdict : '',
+          error: (step && step.detail) || (error && error.message) || 'CoreNectum açılamadı.',
+        });
       };
       const loadHome = async (attempt) => {
         if (settled || !authWindow || authWindow.isDestroyed()) return;
@@ -1154,21 +1143,19 @@ async function acquireCoreNectumToken(options = {}) {
           await authWindow.loadURL(CORENECTUM_HOME);
         } catch (error) {
           if (settled || !authWindow || authWindow.isDestroyed()) return;
-          const errno = coreNectumNavigationErrno(error);
           // SSO yönlendirmesi devam ederken ilk yükleme ERR_ABORTED ile biter;
           // pencere gezinmeye devam eder, zaman aşımı/probe akışı sonucu belirler.
-          if (errno === -3) { log('CoreNectum SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).'); return; }
-          // ERR_FAILED: kalıcı bölümdeki eski service worker/önbellek (Chromium ya
-          // da CoreNectum güncellemesi sonrası) gezinmeyi düşürür. Oturum
-          // çerezleri/localStorage korunur; yalnız SW + önbellek temizlenip bir
-          // kez yeniden denenir.
-          if (errno === -2 && attempt === 0) {
-            log('CoreNectum ERR_FAILED; service worker/önbellek temizlenip yeniden deneniyor.');
-            await resetCoreNectumNavigationCache(authSession);
-            return loadHome(1);
-          }
-          log('CoreNectum açılamadı (' + errno + ').');
-          failNavigation(error);
+          // ERR_FAILED vb.: önce SW/önbellek/DNS sıfırlanır (oturum korunur),
+          // sonra teşhis edilir; bölüm bozuksa sıfırlanır, ağ sorunuysa kanıtla
+          // raporlanır (bkz. portal-navigation-recovery.js).
+          const step = await nextPortalRecoveryStep({
+            error, attempt, url: CORENECTUM_HOME, label: 'CoreNectum', log,
+            portalSession: authSession, baselineSession: session.defaultSession,
+          });
+          if (step.diagnosis) lastDiagnosis = step.diagnosis;
+          if (step.action === 'ignore') { log('CoreNectum SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).'); return; }
+          if (step.action === 'retry') return loadHome(attempt + 1);
+          failNavigation(error, step);
         }
       };
       void loadHome(0);
@@ -1265,7 +1252,24 @@ async function acquireLcwAiToken(options = {}) {
     probeTimer = setInterval(() => { void probe(); }, 900);
     if (interactive) showTimer = setTimeout(() => { if (!settled && !win.isDestroyed()) { win.show(); win.focus(); } }, 4500);
     timeoutTimer = setTimeout(() => finish({ ok: false, code: interactive ? 'LCWAI_LOGIN_TIMEOUT' : 'LCWAI_SIGNIN_REQUIRED' }), interactive ? 300000 : 12000);
-    win.loadURL(LCWAI_HOME).catch(() => finish({ ok: false, code: 'LCWAI_NETWORK' }));
+    const authSession = lcwAiAuthSession();
+    let lastDiagnosis = null;
+    const loadHome = async attempt => {
+      if (settled || win.isDestroyed()) return;
+      try { await win.loadURL(LCWAI_HOME); }
+      catch (error) {
+        if (settled || win.isDestroyed()) return;
+        const step = await nextPortalRecoveryStep({
+          error, attempt, url: LCWAI_HOME, label: 'LCW AI', log,
+          portalSession: authSession, baselineSession: session.defaultSession,
+        });
+        if (step.diagnosis) lastDiagnosis = step.diagnosis;
+        if (step.action === 'ignore') return; // SSO yönlendirmesi sürüyor
+        if (step.action === 'retry') return loadHome(attempt + 1);
+        finish({ ok: false, code: 'LCWAI_NETWORK', diagnosis: lastDiagnosis ? lastDiagnosis.verdict : '' });
+      }
+    };
+    void loadHome(0);
   });
   lcwAiAuthInFlight = request;
   try { return await request; }
@@ -1516,11 +1520,14 @@ async function acquireOabAuthorization(options = {}) {
     return await new Promise(resolve => {
       resolvePromise = resolve;
 
+      let navigationDiagnosis = null;
       const finishFailure = (code, error) => {
         if (settled) return;
         settled = true;
         cleanup();
-        resolve({ ok:false, authenticated:false, code, error });
+        const result = { ok:false, authenticated:false, code, error };
+        if (code === 'OAB_AUTH_NAVIGATION_FAILED' && navigationDiagnosis) result.diagnosis = navigationDiagnosis.verdict;
+        resolve(result);
       };
       const showWindow = target => {
         if (!flowState.interactive || settled || closeRequested || !target || target.isDestroyed()) return false;
@@ -1573,7 +1580,11 @@ async function acquireOabAuthorization(options = {}) {
       // close grace period.
       flowState.abort = () => finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
 
-      const loadLoginTarget = async (url, allowFallback = true) => {
+      /* Gezinme hatası kurtarma: SSO ERR_ABORTED hata sayılmaz; diğer hatalarda
+       * ortak merdiven (portal-navigation-recovery.js) uygulanır. İlk yeniden
+       * deneme doğrudan viewer yerine PASS ana sayfasını açar. */
+      let recoveryRetry = null;
+      const loadLoginTarget = async (url, allowFallback = true, attempt = 0) => {
         if (settled || authorizationBusy || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
         navigationBusy = true;
         try {
@@ -1584,25 +1595,33 @@ async function acquireOabAuthorization(options = {}) {
             log('OAB SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).');
             return true;
           }
-          if (allowFallback && !fallbackTried) {
-            fallbackTried = true;
-            log('OAB viewer doğrudan açılamadı; PASS ana sayfası deneniyor.');
-            try {
-              await authWindow.loadURL(OAB_HOME_URL);
-              return true;
-            } catch (fallbackError) {
-              if (isBenignOabNavigationAbort(fallbackError)) {
-                log('OAB PASS SSO yönlendirmesi devam ediyor (fallback ERR_ABORTED göz ardı edildi).');
-                return true;
-              }
+          if (settled || !authWindow || authWindow.isDestroyed()) return false;
+          if (closeRequested) { finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.'); return false; }
+          const step = await nextPortalRecoveryStep({
+            error, attempt, url, label:'OAB', log,
+            portalSession:oabAuthSession(), baselineSession:session.defaultSession,
+          });
+          if (step.diagnosis) navigationDiagnosis = step.diagnosis;
+          if (settled) return false;
+          if (step.action === 'ignore') return true;
+          if (step.action === 'retry') {
+            const nextUrl = allowFallback && !fallbackTried ? OAB_HOME_URL : url;
+            if (nextUrl === OAB_HOME_URL && url !== OAB_HOME_URL) {
+              fallbackTried = true;
+              log('OAB viewer doğrudan açılamadı; PASS ana sayfası deneniyor.');
             }
+            recoveryRetry = { url:nextUrl, attempt:attempt + 1 };
+            return true;
           }
-          if (closeRequested) finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
-          else finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı açılamadı.');
+          finishFailure('OAB_AUTH_NAVIGATION_FAILED', step.detail || 'OAB giriş ekranı açılamadı.');
           return false;
         } finally {
           navigationBusy = false;
-          if (freshReloadPending && !settled) {
+          if (recoveryRetry && !settled) {
+            const retry = recoveryRetry;
+            recoveryRetry = null;
+            setImmediate(() => { if (!settled) void loadLoginTarget(retry.url, false, retry.attempt); });
+          } else if (freshReloadPending && !settled) {
             freshReloadPending = false;
             setImmediate(() => { if (!settled) void loadLoginTarget(targetViewerUrl(), false); });
           }
@@ -1768,6 +1787,9 @@ async function acquireOabAuthorization(options = {}) {
       authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, _validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
         log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
+        // loadURL() sürerken hata, onun catch bloğundaki kurtarma merdiveninde
+        // ele alınır; burada bitirmek yedek/yeniden denemeyi hiç çalıştırmıyordu.
+        if (navigationBusy) return;
         if (closeRequested) finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
         else finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı yüklenemedi.');
       });

@@ -9,38 +9,26 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 
 const main = fs.readFileSync(path.join(__dirname, '..', 'electron', 'main.js'), 'utf8');
 
-function extractFunction(name) {
-  const start = main.indexOf(`function ${name}(`);
-  assert.ok(start >= 0, `${name} bulunamadı`);
-  const end = main.indexOf('\n}\n', start);
-  return main.slice(start, end + 2);
-}
-
-const ctx = {};
-vm.runInNewContext(`${extractFunction('coreNectumNavigationErrno')}; this.errno = coreNectumNavigationErrno;`, ctx);
+const recovery = require('../electron/portal-navigation-recovery');
 
 test('CoreNectum gezinme hata kodu Electron hata nesnesinden okunur', () => {
-  assert.equal(ctx.errno({ errno: -2, code: 'ERR_FAILED' }), -2);
-  assert.equal(ctx.errno({ message: "ERR_FAILED (-2) loading 'https://corenectum.lcwaikiki.com/models-options/style-list'" }), -2);
-  assert.equal(ctx.errno({ code: 'ERR_ABORTED' }), -3);
-  assert.equal(ctx.errno({ message: "ERR_NAME_NOT_RESOLVED (-105) loading 'x'" }), -105);
-  assert.equal(ctx.errno(null), 0);
+  assert.equal(recovery.navigationErrno({ errno: -2, code: 'ERR_FAILED' }), -2);
+  assert.equal(recovery.navigationErrno({ message: "ERR_FAILED (-2) loading 'https://corenectum.lcwaikiki.com/models-options/style-list'" }), -2);
+  assert.equal(recovery.navigationErrno({ code: 'ERR_ABORTED' }), -3);
+  assert.equal(recovery.navigationErrno({ message: "ERR_NAME_NOT_RESOLVED (-105) loading 'x'" }), -105);
+  assert.equal(recovery.navigationErrno(null), 0);
 });
 
-test('CoreNectum ERR_FAILED tek seferlik SW/önbellek temizliğiyle yeniden denenir, oturum korunur', () => {
-  const reset = extractFunction('resetCoreNectumNavigationCache');
-  assert.match(reset, /storages: \['serviceworkers', 'cachestorage'\]/);
-  assert.doesNotMatch(reset, /cookies|localstorage/, 'SSO çerezleri/localStorage silinmemeli');
-
+test('CoreNectum ilk hatası ölümcül değil: ortak kurtarma merdiveniyle yeniden denenir', () => {
   const acquire = main.slice(main.indexOf('async function acquireCoreNectumToken('), main.indexOf('async function clearCoreNectumAuthSession('));
   assert.doesNotMatch(acquire, /authWindow\.loadURL\(CORENECTUM_HOME\)\.catch\(/, 'ilk yükleme hatası doğrudan ölümcül sayılmamalı');
-  assert.match(acquire, /if \(errno === -3\)[^\n]*return;/);
-  assert.match(acquire, /if \(errno === -2 && attempt === 0\) \{[\s\S]*?resetCoreNectumNavigationCache\(authSession\);[\s\S]*?return loadHome\(1\);/);
-  assert.match(acquire, /failNavigation\(error\);/);
+  assert.match(acquire, /nextPortalRecoveryStep\(\{[\s\S]*?portalSession: authSession, baselineSession: session\.defaultSession/);
+  assert.match(acquire, /if \(step\.action === 'ignore'\)[^\n]*return;/);
+  assert.match(acquire, /if \(step\.action === 'retry'\) return loadHome\(attempt \+ 1\);/);
+  assert.match(acquire, /failNavigation\(error, step\);/);
 });
 
 test('PLM Kullanıcı Girişi gezinme hatasını ham Chromium kodu yerine TR/EN rehberle gösterir', () => {
