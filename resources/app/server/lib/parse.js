@@ -236,6 +236,37 @@ function plmImageRef(map, order) {
   // yalnız geçiş uyumluluğu için okunur.
   return overrideGet(map, order);
 }
+/* plmImageRef ile BİREBİR aynı karar; adlı anahtarlar bir kez indekslenir.
+   plmImageRef kod anahtarı yokken her çağrıda bütün imagemap'i tarar; büyük
+   CP/Orders projeksiyonunda bu satır × anahtar maliyetine dönüşürdü. */
+function createPlmImageRefResolver(map) {
+  const source = map && typeof map === 'object' ? map : null;
+  const namedRefsByBase = new Map();
+  if (source) {
+    for (const key of Object.keys(source)) {
+      const at = key.indexOf('|name:');
+      if (at < 0) continue;
+      const base = key.slice(0, at);
+      if (!namedRefsByBase.has(base)) namedRefsByBase.set(base, new Set());
+      namedRefsByBase.get(base).add(String(source[key] == null ? '' : source[key]).trim());
+    }
+  }
+  const has = key => Object.prototype.hasOwnProperty.call(source, key);
+  return order => {
+    if (!source || !order) return undefined;
+    const namedKey = plmColourImageNameKey(order.plm, order.ccode, order.colour || order.color);
+    if (namedKey && has(namedKey)) return source[namedKey];
+    const key = plmColourImageKey(order.plm, order.ccode);
+    if (key && has(key)) return source[key];
+    if (key && namedRefsByBase.has(key)) {
+      const refs = namedRefsByBase.get(key);
+      return refs.size === 1 ? [...refs][0] : undefined;
+    }
+    const legacyPlmKey = plmImageKey(order.plm);
+    if (legacyPlmKey && has(legacyPlmKey)) return source[legacyPlmKey];
+    return overrideGet(source, order);
+  };
+}
 
 // KULLANICI DÜZENLEMELERİNİN ANAHTARI.
 //
@@ -2091,29 +2122,11 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
   const includeInactive = options.includeInactive === true;
   const source = Array.isArray(asasOrders) ? asasOrders : [];
   const filtered = source.filter(o => includeInactive || Number(o && o.kalan) > 0);
-  // Görselleri PLM ID + Colour Code kimliğinde bir kez çözümleriz.
-  // Öncelik: yeni birleşik anahtar (boş tombstone dahil) → v4.61-v4.62
-  // PLM-only anahtarı → v4.57-v4.60 sipariş+model+renk anahtarı.
-  const imageByIdentity = new Map(), resolvedImageKeys = new Set();
-  filtered.forEach(order => {
-    const key = plmColourImageKey(order.plm, order.ccode);
-    if (!key) return;
-    const imageMap = ov.imagemap || {};
-    if (Object.prototype.hasOwnProperty.call(imageMap, key)) {
-      imageByIdentity.set(key, norm(imageMap[key]));
-      resolvedImageKeys.add(key);
-      return;
-    }
-    const legacyPlmKey = plmImageKey(order.plm);
-    if (legacyPlmKey && Object.prototype.hasOwnProperty.call(imageMap, legacyPlmKey)) {
-      imageByIdentity.set(key, norm(imageMap[legacyPlmKey]));
-      resolvedImageKeys.add(key);
-      return;
-    }
-    if (resolvedImageKeys.has(key) || imageByIdentity.get(key)) return;
-    const legacyRef = norm(overrideGet(imageMap, order));
-    if (legacyRef) imageByIdentity.set(key, legacyRef);
-  });
+  /* Görsel kimliği kanonik plmImageRef kararıyla çözülür (adlı renk anahtarı
+     → PLM+Renk Kodu (boş = mezar taşı) → tekil adlı kayıt → eski PLM-only →
+     eski sipariş satırı). Eski yerel çözüm adlı anahtarı okumuyordu: PLM
+     senkronunun yazdığı görsel yeniden açılışta Orders'ta kayboluyordu. */
+  const resolveImageRef = createPlmImageRefResolver(ov.imagemap || {});
   const logisticByOrder = new Map();
   buildBacklogOperationalRows(filtered, antrepoMap, ov).forEach(segment => {
     const source = sourceOrderRef(segment);
@@ -2162,7 +2175,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const suppfob = hasSuppfobOverride && !isRuleOverride ? suppfobOverride : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
     const notesRec = overrideGet(ov.notesmap, o) || {};
     const imageKey = plmColourImageKey(o.plm, o.ccode);
-    const imageRef = imageKey ? (imageByIdentity.get(imageKey) || '') : '';
+    const imageRef = imageKey ? norm(resolveImageRef(o)) : '';
     const row = {
       _id: i, _matchOcode: exactOrderCodeKey(o._matchOcode != null ? o._matchOcode : o.ocode),
       _isActive: isActive, 'Active/Inactive': isActive ? 'Active' : 'Inactive',
@@ -3691,7 +3704,7 @@ module.exports = {
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,
   orderCodeKey, toOrderCodeNumber, antrepoParseMeta, dateOrdinal,
-  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
+  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, createPlmImageRefResolver, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
   antrepoEntryConflicts, backlogNodeAtPath,
   ANTREPO_MATCH_RULES, ANTREPO_MATCH_RULE_LABELS, DEFAULT_ANTREPO_MATCH_RULE, normalizeAntrepoMatchRule,
   DEFAULT_ANTREPO_MATCH_CONDITIONS, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, antrepoMatchConfigSignature, isDefaultAntrepoMatchConfig,

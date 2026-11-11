@@ -68,6 +68,35 @@
           "en": "Actual Buyer Log UI; verified with isolated demo data."
         }
       }
+    },
+    {
+      "id": "orders-plm-images-after-restart",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "PLM görselleri yeniden açılışta korunur",
+        "en": "PLM images are kept after reopening"
+      },
+      "body": {
+        "tr": "PLM Sync ile alınan model görselleri, Buyer Log kapatılıp yeniden açıldığında Siparişler tablosunda görünmeye devam eder; senkronu her açılışta tekrarlamanız gerekmez. Kapalı (pasif) siparişler de dahildir. Daha önce senkronlanmış görseller için senkronu tekrarlamayın; ilk veri yenilemesinden sonra yeniden görünürler.",
+        "en": "Model images fetched with PLM Sync stay visible in the Orders table after Buyer Log is closed and reopened, so you no longer need to repeat the sync at every start. Closed (inactive) orders are included. Do not repeat the sync for previously synced images; they reappear after the first data refresh."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-plm-images-after-restart.png",
+        "alt": {
+          "tr": "Yeniden açılıştan sonra PLM görselleri görünen Siparişler tablosu",
+          "en": "Orders table showing PLM images after reopening"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle doğrulandı.",
+          "en": "Actual Buyer Log UI; verified with isolated demo data."
+        }
+      }
     }
   ]
 }
