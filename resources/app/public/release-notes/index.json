@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.352",
+      "publishedAt": "2026-11-11",
+      "title": {
+        "tr": "LCW AI dosya ekleri yeniden çalışıyor",
+        "en": "LCW AI file attachments work again"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.352/release.json"
+    },
+    {
       "version": "7.0.351",
       "publishedAt": "2026-11-11",
       "title": {
