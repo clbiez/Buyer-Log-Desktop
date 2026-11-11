@@ -105,6 +105,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data: the Overview and special-order summary load without opening Excel settings."
         }
       }
+    },
+    {
+      "id": "update-available-notice",
+      "type": "improvement",
+      "module": {
+        "tr": "Güncelleme",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Buyer Log açıkken yeni sürüm gelince kalıcı “Güncelleme var” uyarısı",
+        "en": "Persistent “Update available” notice when a new version arrives while Buyer Log is open"
+      },
+      "body": {
+        "tr": "Buyer Log yeni sürümü artık her saat kendiliğinden kontrol eder (önceden 6 saatte bir). Yeni sürüm arka planda indirilip doğrulandığında, uygulama açıksa kapanmayan bir “Güncelleme var” uyarısı çıkar: “Şimdi Yeniden Başlat” güncellemeyi hemen uygular (kaydedilmemiş değişiklik koruması korunur), “Sonra” uyarıyı kapatır ve güncelleme bir sonraki açılışta uygulanır. Önceden yalnız birkaç saniyelik kısa bir bildirim gösteriliyor, uygulama açılırken hazırlanan güncelleme ise hiç duyurulmuyordu.",
+        "en": "Buyer Log now checks for a new version every hour on its own (previously every 6 hours). When a new version has been downloaded and verified in the background, an “Update available” notice that stays on screen appears while the app is open: “Restart Now” applies the update immediately (unsaved-change protection is kept), “Later” dismisses it and the update is applied on the next start. Previously only a brief notification was shown for a few seconds, and an update prepared while the app was starting was not announced at all."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "update-available-notice.png",
+        "alt": {
+          "tr": "Genel Bakış ekranında “Güncelleme var” uyarısı: Şimdi Yeniden Başlat ve Sonra düğmeleri (demo veri)",
+          "en": "“Update available” notice on the Overview screen with Restart Now and Later buttons (demo data)"
+        },
+        "caption": {
+          "tr": "Yeni sürüm hazır olduğunda uyarı siz kapatana kadar ekranda kalır",
+          "en": "When a new version is ready, the notice stays on screen until you dismiss it"
+        }
+      }
     }
   ]
 }
