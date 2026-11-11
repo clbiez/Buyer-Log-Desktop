@@ -120,6 +120,29 @@
           "en": "Actual Buyer Log UI; verified with isolated demo data."
         }
       }
+    },
+    {
+      "id": "table-footer-narrow-column-wrap-20261111",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Siparişler / Koleksiyon",
+        "en": "CP / Orders / Collection"
+      },
+      "title": {
+        "tr": "Dar sütunlarda özet satırı metinleri artık çakışmıyor",
+        "en": "Summary footer text no longer overlaps in narrow columns"
+      },
+      "body": {
+        "tr": "FOB ve Supp. FOB ağırlıklı/aritmetik ortalama etiketleri ile değerleri, sütun daraltıldığında hücre içinde alt satıra geçer. Toplam adet ve etiketler de kendi sütununa sığar; hesaplamalar değişmez.",
+        "en": "Weighted/arithmetic average labels and values for FOB and Supp. FOB wrap inside their cells when columns are narrowed. Quantity totals and captions also stay within column bounds; calculations are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız mevcut tablo özetinin CSS taşma davranışı düzeltildi; bu oturumda gerçek Buyer Log'dan değişiklik sonrası ekran görüntüsü alınamadı (görsel doğrulama bekliyor).",
+          "en": "Only CSS overflow behavior of the existing table summary was updated; a post-change screenshot of the actual Buyer Log could not be captured in this session (visual verification pending)."
+        }
+      }
     }
   ]
 }
