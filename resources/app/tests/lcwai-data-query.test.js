@@ -249,3 +249,39 @@ test('takvim yüklü değilken dönem aralığı, gruplama/üyelikle aynı geçi
     assert.equal(y.end, Q.merchRange(Q.periodOf('2026-12')).end);
   } finally { DD.setMerchCalendar(fixture.build()); }
 });
+
+/* Regresyon: Koleksiyon'un "Model Budget Month" (inStoreMonth) sütunu ekranda
+   "JULY 2027" / "TEMMUZ 2027" gibi ay+yıl metnidir. Sütun anahtarı kanonik
+   kayıtta inStore (tarih) bağlamasına da düştüğü için tarih sanılıyor, ay metni
+   tarih olarak okunamıyor ve alan şemadan tamamen düşüyordu; LCW AI "Koleksiyonda
+   MB ayı yok" diye soru soruyordu. */
+function collection() {
+  const rows = [
+    ['BARCA-1', 'BARCELONA', '27', 'JULY 2027'], ['REAL-1', 'REAL MADRID', '27', 'TEMMUZ 2027'], // i18n-ignore — veri
+    ['NBA-1', 'NBA', '28', 'JULY 2027'], ['NBA-2', 'NBA', '31', 'AUGUST 2027'], ['BARCA-2', 'BARCELONA', '32', 'AĞUSTOS 2027'], // i18n-ignore — veri
+  ].map(([model, lisans, week, month], index) => ({ id: index + 1, modelKod: model, lisans, inStoreWeek: week, inStoreMonth: month, inStore: '' }));
+  const col = (key, label) => ({ key, label, type: '', readValue: row => row[key] });
+  const columns = [col('modelKod', 'Model Name'), col('lisans', 'License'), col('inStoreWeek', 'Model Budget Week'), col('inStoreMonth', 'Model Budget Month'), col('inStore', 'In Store')];
+  return Q.createDataset({ id: 'koleksiyon', label: 'Koleksiyon', screen: 'koleksiyon', rows, columns, scope: 'all' });
+}
+
+test('Koleksiyon MB ayı (Model Budget Month) şemada MB ayı olarak görünür ve dilden bağımsız filtrelenir', () => {
+  const ds = collection();
+  const month = ds.fields.find(field => field.id === 'inStoreMonth');
+  assert.equal(month.canonical, 'inStoreMonth', 'sütun anahtarı kendi kanonik alanına bağlanır, In-Store tarihine değil');
+  assert.equal(month.kind, 'text');
+  const schema = Q.schemaText([ds], { lang: 'tr' });
+  assert.match(schema, /"inStoreMonth" \| text \| inStoreMonth \| aka: [^\n]*MB ayı[^\n]*\| values: [^\n]*"2027-07"/, 'MB ayı alanı şemada ve ay değeri dilden bağımsız');
+  assert.doesNotMatch(schema, /"JULY 2027"|"TEMMUZ 2027"/);
+  assert.equal(Q.resolveField(ds, 'MB ayı'), month, '“MB ayı” Koleksiyon’da ay alanına çözülür');
+  for (const value of ['JULY 2027', 'Temmuz 2027', '2027-07', '202707', '07.2027']) {
+    const norm = Q.normalizeSpec({ dataset: 'koleksiyon', filters: [{ field: 'MB ayı', values: [value] }, { field: 'License', op: 'not_in', values: ['NBA'] }], measures: [{ agg: 'count' }] }, [ds]);
+    assert.ok(norm.ok, `${value}: ${norm.errors}`);
+    assert.deepEqual(Q.execute(norm.spec, ds).rows[0], [2], `${value}: Temmuz, NBA hariç (TR ve EN kayıtlı ay metinleri birlikte)`);
+  }
+});
+
+test('Siparişlerde “MB ayı” hâlâ In-Store tarihine çözülür (ay alanı olmayan veri kümesi)', () => {
+  const ds = orders();
+  assert.equal(Q.resolveField(ds, 'MB ayı').id, 'In-Store (Model Budget)');
+});

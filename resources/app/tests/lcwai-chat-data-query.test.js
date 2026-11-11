@@ -54,7 +54,7 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true, lflRows = 
     BLPriceSupplierAnalysisBridge: { async get() { return { priceType: 'quotation', observations: quotations }; } },
   };
   window.window = window;
-  const context = vm.createContext({ window, globalThis: window, fetch: async url => { assert.equal(url, '/api/lfl'); return { ok: lflStatus === 200, status: lflStatus, json: async () => ({ rows: lflRows, error: lflStatus === 200 ? undefined : 'LFL forbidden' }) }; }, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
+  const context = vm.createContext({ window, globalThis: window, fetch: async url => { assert.equal(url, '/api/lfl'); return { ok: lflStatus === 200, status: lflStatus, json: async () => ({ rows: lflRows, error: lflStatus === 200 ? undefined : 'LFL forbidden' }) }; }, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0), cancelAnimationFrame: clearTimeout });
   SOURCES.forEach((source, index) => {
     vm.runInContext(source, context);
     // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.
@@ -250,4 +250,120 @@ test('büyük bağlam dosyası: boş sütun atılır, sınır aşılırsa satır
   assert.ok(capped.file.size <= 20000, `dosya sınırın altında: ${capped.file.size}`);
   assert.ok(capped.truncated.sent < 2000 && capped.truncated.total === 2000);
   assert.match(capped.context.text, /yalnız ilk \d+ \/ 2000 satırı/);
+});
+
+/* Regresyon: PDF/PowerPoint isteğinde Buyer Log tabloyu cevaba yazdıktan sonra
+   dosya üretim aşamaları (LCW AI içerik, sayfa düzeni, görseller, PDF baskısı)
+   message.phase'e yazılıyor ama metin dolu olduğu için hiç görünmüyordu;
+   kullanıcı tabloyu ve imleci görüp sessizce bekliyordu. */
+test('dosya isteğinde tablo görünürken üretim aşamaları adım adım gösterilir', async () => {
+  const pdf = load({ plans: [PIVOT] });
+  pdf.chat._state.output.format = 'pdf';
+  const snapshots = [];
+  const view = () => {
+    const conv = pdf.chat._state.conversations[0];
+    return pdf.chat.messageHtml(conv.messages.at(-1), conv.messages.length - 1, conv);
+  };
+  pdf.window.BuyerLogAI.chat = async options => {
+    snapshots.push(view());
+    options.onProgress({ phase: 'streaming', chars: 1200 });
+    snapshots.push(view());
+    options.onProgress({ phase: 'output', step: 'rendering' });
+    snapshots.push(view());
+    await options.resolveImages([]);
+    snapshots.push(view());
+    options.onProgress({ phase: 'output', step: 'pdf' });
+    snapshots.push(view());
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pdf' } };
+  };
+  await pdf.chat.send('sipariş MB ayı Buying Group tablosu pdf');
+  const [start, streaming, rendering, images, printing] = snapshots;
+  assert.match(start, /\| Toplam \|/, 'Buyer Log tablosu görünür kalır');
+  assert.match(start, /class="lcwaiProgress[^"]*"[^>]*role="status"/);
+  assert.match(start, /is-done[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Buyer Log verileri hesapladı/);
+  assert.match(start, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>LCW AI PDF içeriğini yazıyor/);
+  assert.match(start, /Adım 2 \/ 4/);
+  assert.match(streaming, /1200 karakter/);
+  assert.match(rendering, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Buyer Log sayfa düzenini kuruyor/);
+  assert.match(images, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Model görselleri ekleniyor/);
+  assert.match(images, /Adım 4 \/ 5/, 'görsel adımı ortaya çıktığında listeye eklenir');
+  assert.match(printing, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>PDF basılıyor/);
+  assert.match(printing, /data-lcwai-elapsed/);
+  assert.doesNotMatch(view(), /lcwaiProgress/, 'iş bitince ilerleme paneli kalkar');
+  assert.equal(lastAnswer(pdf.chat).file.fileName, 'x.pdf');
+});
+
+test('dosya ilerlemesi İngilizce arayüzde İngilizce yazılır', async () => {
+  const pdf = load({ plans: [PIVOT] });
+  pdf.window.appLang = 'en';
+  pdf.chat._state.output.format = 'pptx';
+  let html = '';
+  pdf.window.BuyerLogAI.chat = async options => {
+    options.onProgress({ phase: 'output', step: 'rendering' });
+    const conv = pdf.chat._state.conversations[0];
+    html = pdf.chat.messageHtml(conv.messages.at(-1), conv.messages.length - 1, conv);
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } };
+  };
+  await pdf.chat.send('order MB month by buying group presentation');
+  assert.match(html, /Step 3 \/ 3/);
+  assert.match(html, /Buyer Log is laying out the pages/);
+});
+
+/* Regresyon: "Buyer Log hesapladı" yolunda LCW AI'a giden hesaplanmış tabloda
+   "BL Image" anahtarı yoktu ve görsel haritası kurulmuyordu; LCW AI görsel
+   anahtarına başvuramadığı için sunum/PDF'e model görseli girmiyordu. */
+const LIST = { mode: 'query', dataset: 'orders', specJson: JSON.stringify({ dataset: 'orders', filters: [{ field: 'Season', values: ['W6'] }], list: ['Order Code', 'Country'], title: 'W6 siparişleri' }), assumptions: [] };
+test('liste sorgusu dosyaya giderken model görseli anahtarı ve kart bilgisi taşınır', async () => {
+  const pdf = load({ plans: [LIST] });
+  pdf.window.BLAIScreenData.rowImage = (tab, row) => (row['Order Code'] === 'PO2' ? null : { modelId: `M${row._id}`, colourCode: '01', source: `/img/${row._id}` });
+  pdf.chat._state.output.format = 'pptx';
+  let images = null, records = null;
+  pdf.window.BuyerLogAI.chat = async options => {
+    pdf.calls.chat.push(JSON.parse(JSON.stringify({ contexts: options.contexts })));
+    const keys = [...new Set((options.contexts[0].text.match(/\bORD-\d+\b/g) || []))];
+    records = options.resolveRecords(keys);
+    images = keys;
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } };
+  };
+  await pdf.chat.send('W6 siparişlerini sunum yap');
+  const text = pdf.calls.chat[0].contexts[0].text;
+  assert.match(text, /\| BL Image \| Order Code \| Country \|/);
+  assert.match(text, /\| ORD-\d+ \| PO1 \| TÜRKİYE \|/);
+  assert.match(text, /\|  \| PO2 \| BANGLADEŞ \|/, 'görseli olmayan satırın anahtarı boş');
+  assert.match(text, /“BL Image” sütunu/);
+  assert.equal(images.length, 2);
+  const conv = pdf.chat._state.conversations[0];
+  assert.deepEqual(Object.keys(conv.imageMap).sort(), images.slice().sort());
+  assert.ok(records[images[0]].some(([label, value]) => label === 'Order Code' && value === 'PO1'), 'kart bilgisi kaynak satırdan');
+  const answer = lastAnswer(pdf.chat);
+  assert.doesNotMatch(answer.text, /BL Image/, 'sohbetteki tablo anahtar sütunu göstermez');
+});
+
+/* Uzun hesaplanmış liste: metin bağlamı 18.000 karakterde/200 satırda
+   kesiliyordu; LCW AI listenin sonunu hiç görmüyordu. Artık tablonun tamamı
+   (BL Image anahtarlarıyla) CSV eki olarak gider. */
+test('uzun liste sonucu tamamıyla CSV eki olarak gider; kısa liste metin kalır', async () => {
+  const pdf = load({ plans: [LIST] });
+  const table = pdf.window.BLAIScreenData.table('orders');
+  for (let i = 0; i < 260; i++) table.rows.push({ ...table.rows[0], _id: 100 + i, 'Order Code': `PX${i}` });
+  pdf.window.BLAIScreenData.rowImage = (tab, row) => ({ modelId: `M${row._id}`, colourCode: '01', source: `/img/${row._id}` });
+  pdf.chat._state.output.format = 'pptx';
+  const uploaded = [];
+  pdf.window.BuyerLogAI.uploadFile = async file => { uploaded.push({ name: file.name, text: await file.text() }); return { blobName: `b/${file.name}`, contentType: 'text/csv', fileName: file.name, size: file.size, url: '' }; };
+  let sent = null;
+  pdf.window.BuyerLogAI.chat = async options => { sent = JSON.parse(JSON.stringify({ contexts: options.contexts, attachments: options.attachments })); return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } }; };
+  await pdf.chat.send('W6 siparişlerini sunum yap');
+  assert.equal(uploaded.length, 1);
+  assert.match(uploaded[0].name, /\.csv$/);
+  const lines = uploaded[0].text.trim().split(/\r\n/);
+  assert.equal(lines[0].replace(/^﻿/, ''), 'BL Image,Order Code,Country');
+  assert.equal(lines.length, 1 + 263, 'W6: 3 özgün + 260 eklenen satırın tamamı');
+  assert.match(lines.at(-1), /^ORD-\d+,PX259,TÜRKİYE$/);
+  assert.equal(sent.attachments.length, 1);
+  assert.equal(sent.contexts.length, 1);
+  assert.equal(sent.contexts[0].csv, undefined, 'dosya nesnesi bağlam JSON’una girmez');
+  assert.match(sent.contexts[0].text, /Rakamları aynen kullan/);
+  assert.match(sent.contexts[0].text, /Tablonun tamamı ekli “[^”]+\.csv” dosyasında: 263 satır/);
+  assert.doesNotMatch(sent.contexts[0].text, /\| PX/, 'tablo metin olarak tekrar gönderilmez');
+  assert.equal(Object.keys(pdf.chat._state.conversations[0].imageMap).length, 263);
 });

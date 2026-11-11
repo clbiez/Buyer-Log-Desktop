@@ -143,6 +143,81 @@
           "en": "Only CSS overflow behavior of the existing table summary was updated; a post-change screenshot of the actual Buyer Log could not be captured in this session (visual verification pending)."
         }
       }
+    },
+    {
+      "id": "lcwai-collection-mb-month",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI Koleksiyon’da MB ayını tanıyor",
+        "en": "LCW AI recognises the MB month in Collection"
+      },
+      "body": {
+        "tr": "“Koleksiyon temmuz modelleri” gibi isteklerde LCW AI artık Koleksiyon’daki Model Budget Month (MB ayı) alanını kullanır; “MB ayı yok” diye sormaz. Türkçe ve İngilizce kaydedilmiş ay değerleri (TEMMUZ 2027 / JULY 2027) aynı ay olarak eşleşir. LFL tarihçesindeki MB ayı da aynı şekilde okunur.",
+        "en": "For requests such as “Collection July models”, LCW AI now uses the Model Budget Month (MB month) field in Collection instead of asking because it cannot find an MB month. Month values saved in Turkish or English (TEMMUZ 2027 / JULY 2027) match the same month. The MB month in the LFL history is read the same way."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; düzeltme LCW AI’ın veri sorgusu planlamasındadır.",
+          "en": "No screen layout changed; the fix is in LCW AI data query planning."
+        }
+      }
+    },
+    {
+      "id": "lcwai-output-progress",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Sunum ve PDF hazırlanırken adım adım ilerleme",
+        "en": "Step-by-step progress while presentations and PDFs are prepared"
+      },
+      "body": {
+        "tr": "PDF, PowerPoint, Excel veya HTML istediğinizde Buyer Log’un hesapladığı tablo görünürken altında dosyanın hangi aşamada olduğu gösterilir: veriler hesaplandı, LCW AI içeriği yazıyor, sayfa düzeni kuruluyor, model görselleri ekleniyor ve PDF basılıyor. Biten adımlar işaretlenir, geçen süre ve yazılan karakter sayısı canlı güncellenir; dosya hazır olunca panel kalkar.",
+        "en": "When you request a PDF, PowerPoint, Excel or HTML file, the stage of the file is shown under the table Buyer Log calculated: data calculated, LCW AI writing the content, pages being laid out, model images being added and the PDF being printed. Completed steps are ticked, elapsed time and written characters update live, and the panel disappears when the file is ready."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-progress.png",
+        "alt": {
+          "tr": "Demo sipariş tablosunun altında PDF dosyası hazırlık adımları",
+          "en": "PDF preparation steps under a demo order table"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; sentetik demo verisiyle, LCW AI cevabı taklit edilerek alındı.",
+          "en": "Actual Buyer Log UI; captured with synthetic demo data and a simulated LCW AI response."
+        }
+      }
+    },
+    {
+      "id": "lcwai-query-output-images",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Buyer Log’un hesapladığı listeden hazırlanan sunumlarda model görselleri",
+        "en": "Model images in presentations built from lists calculated by Buyer Log"
+      },
+      "body": {
+        "tr": "“Koleksiyon 27. hafta modelleri için model kartı sunumu” gibi isteklerde Buyer Log listeyi hesapladığında model görselleri artık PowerPoint, PDF ve HTML dosyalarına eklenir. Model kartlarındaki bilgiler de kaynak kayıttan birebir alınır. Sohbetteki tablo değişmez. Uzun listeler (200 satırı veya metin sınırını aşan) artık kesilmez; tamamı görsel anahtarlarıyla birlikte CSV eki olarak LCW AI’a gider.",
+        "en": "When Buyer Log calculates the list for requests such as “model card presentation for Collection week 27 models”, model images are now added to PowerPoint, PDF and HTML files. Model card details are also taken exactly from the source record. The table in the chat is unchanged. Long lists (over 200 rows or the text limit) are no longer cut off; the whole list goes to LCW AI as a CSV attachment together with the image keys."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranı değişmedi; düzeltme LCW AI’a giden görsel anahtarlarındadır.",
+          "en": "No Buyer Log screen changed; the fix is in the image keys sent to LCW AI."
+        }
+      }
     }
   ]
 }
