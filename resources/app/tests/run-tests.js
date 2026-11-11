@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { pathToFileURL } = require('node:url');
 
 const TEST_ROOT = __dirname;
 const APP_ROOT = path.resolve(TEST_ROOT, '..');
@@ -26,7 +27,8 @@ const args = process.argv.slice(2).map(v => String(v || '').trim()).filter(Boole
 // maliyetini düşürür). Tam spec/TAP akışı için --verbose veya BUYER_LOG_TEST_VERBOSE=1.
 const verbose = args.includes('--verbose') || process.env.BUYER_LOG_TEST_VERBOSE === '1';
 const filters = args.filter(v => v !== '--verbose').map(v => v.toLowerCase());
-const COMPACT_REPORTER = path.join(TEST_ROOT, 'compact-reporter.js');
+// Windows mutlak yolu (D:\…) ESM yükleyicisinde şema sanılır; raporlayıcı file:// URL olarak verilir.
+const COMPACT_REPORTER = pathToFileURL(path.join(TEST_ROOT, 'compact-reporter.js')).href;
 let tests = collectTests(TEST_ROOT);
 if (filters.length) {
   tests = tests.filter(file => filters.some(filter => rel(file).toLowerCase().includes(filter)));
