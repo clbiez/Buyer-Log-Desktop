@@ -93,6 +93,35 @@
       }
     },
     {
+      "id": "mb-date-sorting",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon · LFL",
+        "en": "CP · Orders · Collection · LFL"
+      },
+      "title": {
+        "tr": "MB ve diğer tarih sütunları doğru sıralanıyor",
+        "en": "MB and other date columns now sort correctly"
+      },
+      "body": {
+        "tr": "CP ve Siparişler’deki MB (Model Bütçe) sütunu artık eskiden yeniye ve yeniden eskiye tarih sırasıyla sıralanır; önceden gün adına göre karışık sıralanıyordu. Koleksiyon tarih sütunları gg.aa.yyyy biçimli değerleri de doğru sıralar, LFL tablolarındaki tarih sütunları da tarih sırasını izler. Boş tarihler her iki yönde de listenin sonunda kalır.",
+        "en": "The MB (Model Budget) column in CP and Orders now sorts oldest-to-newest and newest-to-oldest by date; previously it was mixed by weekday name. Collection date columns also sort dd.mm.yyyy values correctly, and date columns in LFL tables follow date order. Empty dates stay at the end in both directions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "mb-date-sorting.png",
+        "alt": {
+          "tr": "CP tablosunda Model Bütçe sütunu eskiden yeniye sıralı",
+          "en": "CP table sorted by Model Budget from oldest to newest"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle doğrulandı.",
+          "en": "Actual Buyer Log UI; verified with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "table-footer-narrow-column-wrap-20261111",
       "type": "fix",
       "module": {
