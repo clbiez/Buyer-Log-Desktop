@@ -388,11 +388,23 @@ function parseTableSearchTerms(value){
   const parseCriterion=part=>{
     const raw=norm(part); if(!raw)return null;
     const marker=raw[0];
-    const mode=marker==='!'?'notContains':marker==='/'?'contains':'exact';
-    const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):raw;
+    const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
+    const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
+    const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
     return criterion?{mode,value:normalize(criterion)}:null;
   };
-  const groups=String(value==null?'':value).split(/;\s+/).map(group=>group.split(/,\s+/).map(parseCriterion).filter(Boolean)).filter(group=>group.length);
+  // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
+  const splitPart=part=>String(part).split(/(?<=!)\s+/);
+  // Hariç tutma (!X / X!) bir VEYA grubunda anlamsızdır (X içermeyen her satır
+  // grubu geçirir). Bu yüzden yazıldığı gruptan çıkarılır ve tüm aramaya ayrı
+  // bir VE grubu olarak uygulanır: "A; B, C, X!" ≡ "A; B, C; !X".
+  const groups=[];
+  String(value==null?'':value).split(/;\s+/).forEach(group=>{
+    const terms=group.split(/,\s+/).flatMap(splitPart).map(parseCriterion).filter(Boolean);
+    const positive=terms.filter(term=>term.mode!=='notContains');
+    if(positive.length)groups.push(positive);
+    terms.filter(term=>term.mode==='notContains').forEach(term=>groups.push([term]));
+  });
   return groups.length===1?groups[0]:groups;
 }
 function tableSearchMatches(haystack,terms,options){
