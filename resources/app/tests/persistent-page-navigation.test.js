@@ -12,7 +12,7 @@ test('a background Orders response marks the table before Ready, and returning r
       statuses.push([module,status]);
     }}},
     currentActiveTab:()=> 'overview',fetchOrdersProjection:()=>{requests++;return new Promise(r=>{release=r;});},
-    reviveServerDates(){},invalidateUnifiedPriorityDecisions(){},applyPricingRulesToLoadedRows(){},
+    reviveServerDates(){},invalidateUnifiedPriorityDecisions(){},applyPricingRulesToLoadedRows(){},applyOrdersImportanceEditAccess(){},
     buildOrdersFilters(){},applyCoreAutoFilterState(){},renderOrders(){throw Error('hidden draw');},
     setOrdersLoadingState(){throw Error('hidden loading state');},showToast(){},
   });

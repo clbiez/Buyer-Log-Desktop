@@ -3,168 +3,40 @@
   "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kurumsal giriş ekranlarında otomatik onarım",
-    "en": "Automatic recovery for corporate sign-in screens"
+    "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+    "en": "Edit importance tags on closed orders"
   },
   "summary": {
-    "tr": "PLM, OAB ve LCW AI giriş ekranları ERR_FAILED hatasında kendini onarır ve nedeni ağ/oturum olarak teşhis eder.",
-    "en": "PLM, OAB and LCW AI sign-in screens recover from ERR_FAILED and diagnose whether the network or the session is the cause."
+    "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketi artık Siparişler ekranından değiştirilebilir.",
+    "en": "Importance tags of closed orders that are absent from CP can now be changed in Orders."
   },
   "changes": [
     {
-      "id": "portal-signin-err-failed-recovery",
+      "id": "orders-closed-importance",
       "type": "fix",
       "module": {
-        "tr": "PLM Sync · OAB · LCW AI",
-        "en": "PLM Sync · OAB · LCW AI"
-      },
-      "path": {
-        "tr": "PLM Sync › PLM Kullanıcı Girişi › Otomatik bağlan",
-        "en": "PLM Sync › PLM User Sign-In › Connect automatically"
+        "tr": "Siparişler",
+        "en": "Orders"
       },
       "title": {
-        "tr": "PLM, OAB ve LCW AI giriş ekranları ERR_FAILED sonrası kendini onarır",
-        "en": "PLM, OAB and LCW AI sign-in screens recover after ERR_FAILED"
+        "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+        "en": "Edit importance tags on closed orders"
       },
       "body": {
-        "tr": "Bazı bilgisayarlarda PLM, OAB ve LCW AI giriş ekranları “ERR_FAILED (-2)” ile açılmıyor, PLM Sync de bu yüzden çalışmıyordu. Üç ekran artık aynı kurtarmayı kullanır: önce önbellek, DNS ve bağlantılar sıfırlanıp yeniden denenir; sürerse Buyer Log sorunun kendi oturum verisinde mi yoksa ağda mı olduğunu test eder. Oturum verisi bozuksa yalnız o portalın oturumu sıfırlanıp yeniden açılır; bilgisayar adrese hiç ulaşamıyorsa VPN/proxy/güvenlik yazılımı yönlendirmesi ve masaüstü günlüğüne teşhis kaydı yazılır.",
-        "en": "On some computers the PLM, OAB and LCW AI sign-in screens failed with “ERR_FAILED (-2)”, which also stopped PLM Sync. All three screens now share the same recovery: the cache, DNS and connections are reset and the page is retried; if it still fails, Buyer Log tests whether the problem is in its own session data or in the network. Corrupt session data is reset for that portal only and the page is reopened; if the computer cannot reach the address at all, VPN/proxy/security-software guidance is shown and a diagnosis is written to the desktop log."
+        "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketini Siparişler ekranından değiştirebilirsiniz. Etiket model ve renk satırına kaydedilir ve yeniden açıldığında korunur. Mevcut sipariş düzenleme yetkileri ve sipariş sahipliği kuralları uygulanır; diğer Siparişler alanları salt okunur kalır.",
+        "en": "Change the importance tag of closed orders that are absent from CP directly in Orders. Tags are saved for the model and colour line and retained when reopening the screen. Existing order edit permissions and order ownership rules apply; other Orders fields stay read-only."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "portal-signin-network-diagnosis.png",
+        "src": "orders-closed-importance.png",
         "alt": {
-          "tr": "PLM Kullanıcı Girişi: ağ teşhisiyle gösterilen VPN/proxy yönlendirmesi (demo veri)",
-          "en": "PLM User Sign-In: VPN/proxy guidance shown with the network diagnosis (demo data)"
+          "tr": "Pasif demo siparişlerinde açık önem etiketi menüsü",
+          "en": "Open importance tag menu on inactive demo orders"
         },
         "caption": {
-          "tr": "Sayfa açılamazsa nedenin ağ mı oturum verisi mi olduğu gösterilir",
-          "en": "If the page cannot be opened, Buyer Log shows whether the network or the session data is the cause"
-        }
-      }
-    },
-    {
-      "id": "merch-calendar-team-sync",
-      "type": "fix",
-      "module": {
-        "tr": "Veri Yönetimi",
-        "en": "Data Management"
-      },
-      "title": {
-        "tr": "Moderatörün Merch Calendar'ı ekip arkadaşlarında da görünür",
-        "en": "The Moderator's Merch Calendar is visible to teammates"
-      },
-      "body": {
-        "tr": "Merch Calendar önceden yalnız yüklendiği bilgisayarda kalıyordu; ekip arkadaşlarının ekranlarında LCW haftası ve iş ayı görünmüyordu. Artık takvim Moderatör kural yayımına dahildir: ortak senkron sonrası her Buyer Log takvimi kendi kopyasına uygular, açık ekranlar yenilenir. Takvimin kaldırılması da ekibe ulaşır. Daha önce yüklenmiş takvim yeniden yükleme gerektirmeden Moderatörün bir sonraki oturumunda yayımlanır.",
-        "en": "The Merch Calendar previously stayed only on the computer where it was uploaded, so teammates did not see LCW weeks and business months. The calendar is now part of the Moderator rule release: after shared sync each Buyer Log applies it to its own copy and open screens refresh. Removing the calendar also reaches the team. A calendar uploaded earlier is published in the Moderator's next session without uploading it again."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "merch-calendar-team-sync.png",
-        "alt": {
-          "tr": "Ekip üyesi kurulumunda Moderatörden gelen aktif Merch Calendar",
-          "en": "Active Merch Calendar received from the Moderator on a teammate installation"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi. Takvimi olmayan ekip üyesi kurulumu Moderatör kaydını uyguladı: 2026–2027, 104 LCW haftası Aktif.",
-          "en": "Actual post-change Buyer Log with isolated demo data. A teammate installation without a calendar applied the Moderator record: 2026–2027, 104 LCW weeks, Active."
-        }
-      }
-    },
-    {
-      "id": "backlog-overview-query-recovery",
-      "type": "fix",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "path": {
-        "tr": "Backlog › Backlog Genel Bakış",
-        "en": "Backlog › Backlog Overview"
-      },
-      "title": {
-        "tr": "Backlog Genel Bakış ve özel sipariş analizi yeniden hızlı açılır",
-        "en": "Backlog Overview and special-order analysis open quickly again"
-      },
-      "body": {
-        "tr": "Son Excel sütun ayarları güncellemesinden sonra Backlog Genel Bakış ve teslimat analizi, Excel ayarları bir kez açılmadan verileri toplayamıyor ve “Backlog yüklendiğinde…” durumunda bekliyordu. Analiz artık Excel ayarlarından bağımsız olarak hemen yüklenir. Ayrıca özel sipariş (BTS, Bayram …) etiket kuralları her satırda yeniden hesaplanmaz; çok sayıda kural kullanıldığında Backlog ve CP/Orders verilerinin hazırlanması belirgin şekilde hızlanır. Sonuçlar ve etiketler değişmez.",
-        "en": "After the latest Excel column settings update, Backlog Overview and the delivery analysis could not collect data until Excel settings had been opened once, and stayed at “The overview appears once Backlog loads”. The analysis now loads immediately, independently of Excel settings. Special-order (BTS, Eid …) tag rules are also no longer re-evaluated for every row, so preparing Backlog and CP/Orders data is noticeably faster when many rules are used. Results and tags are unchanged."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "backlog-overview-query-recovery.png",
-        "alt": {
-          "tr": "Backlog Genel Bakış, Özel kapsamı seçiliyken BTS ve Bayram kırılımıyla yüklendi (demo veri)",
-          "en": "Backlog Overview loaded with the Special scope selected and a BTS/Eid breakdown (demo data)"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi: Excel ayarları açılmadan Genel Bakış ve özel sipariş özeti yüklendi.",
-          "en": "Actual post-change Buyer Log with isolated demo data: the Overview and special-order summary load without opening Excel settings."
-        }
-      }
-    },
-    {
-      "id": "update-available-notice",
-      "type": "improvement",
-      "module": {
-        "tr": "Güncelleme",
-        "en": "Updates"
-      },
-      "title": {
-        "tr": "Buyer Log açıkken yeni sürüm gelince kalıcı “Güncelleme var” uyarısı",
-        "en": "Persistent “Update available” notice when a new version arrives while Buyer Log is open"
-      },
-      "body": {
-        "tr": "Buyer Log yeni sürümü artık her saat kendiliğinden kontrol eder (önceden 6 saatte bir). Yeni sürüm arka planda indirilip doğrulandığında, uygulama açıksa kapanmayan bir “Güncelleme var” uyarısı çıkar: “Şimdi Yeniden Başlat” güncellemeyi hemen uygular (kaydedilmemiş değişiklik koruması korunur), “Sonra” uyarıyı kapatır ve güncelleme bir sonraki açılışta uygulanır. Önceden yalnız birkaç saniyelik kısa bir bildirim gösteriliyor, uygulama açılırken hazırlanan güncelleme ise hiç duyurulmuyordu.",
-        "en": "Buyer Log now checks for a new version every hour on its own (previously every 6 hours). When a new version has been downloaded and verified in the background, an “Update available” notice that stays on screen appears while the app is open: “Restart Now” applies the update immediately (unsaved-change protection is kept), “Later” dismisses it and the update is applied on the next start. Previously only a brief notification was shown for a few seconds, and an update prepared while the app was starting was not announced at all."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "update-available-notice.png",
-        "alt": {
-          "tr": "Genel Bakış ekranında “Güncelleme var” uyarısı: Şimdi Yeniden Başlat ve Sonra düğmeleri (demo veri)",
-          "en": "“Update available” notice on the Overview screen with Restart Now and Later buttons (demo data)"
-        },
-        "caption": {
-          "tr": "Yeni sürüm hazır olduğunda uyarı siz kapatana kadar ekranda kalır",
-          "en": "When a new version is ready, the notice stays on screen until you dismiss it"
-        }
-      }
-    },
-    {
-      "id": "collection-lfl-refresh-removed-groups",
-      "type": "fix",
-      "module": {
-        "tr": "Koleksiyon",
-        "en": "Collection"
-      },
-      "path": {
-        "tr": "Koleksiyon › Fiyat çekmecesi › Referansları yenile",
-        "en": "Collection › Price drawer › Refresh references"
-      },
-      "title": {
-        "tr": "Previous Season, LFL ve Sezon Etkisi referansları yeniden yenilenebilir",
-        "en": "Previous Season, LFL and Season Impact references can be refreshed again"
-      },
-      "body": {
-        "tr": "LFL kaynağından tek bir referans grubu bile düştüğünde (iptal edilen sipariş, değişen mağaza ayı, kaynak dışına çıkan sezon veya daraltılmış filtre) Referansları yenile her seferinde reddediliyor, sipariş detayları da bu yüzden açılmıyordu. Artık açık yenileme güncel kaynağı kabul eder; kaynakta kalmayan gruplar kaldırılır ve sayıları çekmecede ve bildirimde gösterilir. Boş kaynak kayıtlı referansların yerine geçmez.",
-        "en": "When even one reference group left the LFL source (a cancelled order, a changed in-store month, a season outside the source or a narrower filter), Refresh references was rejected every time and order details could not be opened. An explicit refresh now adopts the current source; groups no longer in the source are removed and their count is shown in the drawer and a notification. An empty source never replaces the saved references."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-lfl-refresh-removed-groups.png",
-        "alt": {
-          "tr": "Koleksiyon fiyat çekmecesi: referanslar yenilendi ve kaldırılan grup sayısı gösteriliyor (demo veri)",
-          "en": "Collection price drawer: references refreshed with the number of removed groups shown (demo data)"
-        },
-        "caption": {
-          "tr": "Kaynaktan düşen gruplar artık yenilemeyi engellemez",
-          "en": "Groups that left the source no longer block a refresh"
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle kayıt ve yeniden yükleme sonrası doğrulandı.",
+          "en": "Actual Buyer Log UI; save and reload verified with isolated demo data."
         }
       }
     }
