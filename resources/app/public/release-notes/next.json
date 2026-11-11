@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+    "en": "Edit importance tags on closed orders"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketi artık Siparişler ekranından değiştirilebilir.",
+    "en": "Importance tags of closed orders that are absent from CP can now be changed in Orders."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "orders-closed-importance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Kapalı siparişlerde önem etiketi düzenleme",
+        "en": "Edit importance tags on closed orders"
+      },
+      "body": {
+        "tr": "CP’de görünmeyen kapalı siparişlerin önem etiketini Siparişler ekranından değiştirebilirsiniz. Etiket model ve renk satırına kaydedilir ve yeniden açıldığında korunur. Mevcut sipariş düzenleme yetkileri ve sipariş sahipliği kuralları uygulanır; diğer Siparişler alanları salt okunur kalır.",
+        "en": "Change the importance tag of closed orders that are absent from CP directly in Orders. Tags are saved for the model and colour line and retained when reopening the screen. Existing order edit permissions and order ownership rules apply; other Orders fields stay read-only."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-closed-importance.png",
+        "alt": {
+          "tr": "Pasif demo siparişlerinde açık önem etiketi menüsü",
+          "en": "Open importance tag menu on inactive demo orders"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle kayıt ve yeniden yükleme sonrası doğrulandı.",
+          "en": "Actual Buyer Log UI; save and reload verified with isolated demo data."
+        }
+      }
+    }
+  ]
 }

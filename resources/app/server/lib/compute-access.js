@@ -80,4 +80,11 @@ function sharedRows(context,rows){
 function sharedEditDeniedCodes(context,codes){
   return ownership.deniedOrderCodes(ownership.createOwnershipResolver(context.authority,context.ownershipProfiles),{userId:context.userId,systemRole:context.systemRole},codes);
 }
-module.exports={normalize,scopeAllowsEdit,createAccessContext,prepareAuthority,filterRows,canEditCode,sharedRows,sharedEditDeniedCodes};
+// Önem etiketi: sipariş düzenleme kapsamı + paylaşılan alan sahipliği. Yalnız
+// istenen geçerli kodlar döner; kapsam dışı kod açığa çıkmaz.
+function importanceEditAllowedCodes(context,codes){
+  const valid=[...new Set((Array.isArray(codes)?codes:[]).map(value=>typeof value==='number'||typeof value==='string'?String(value).trim():'').filter(value=>/^\d{1,20}$/.test(value)))];
+  const denied=new Set(sharedEditDeniedCodes(context,valid).map(String));
+  return valid.filter(code=>!denied.has(code)&&canEditCode(context,code));
+}
+module.exports={normalize,scopeAllowsEdit,createAccessContext,prepareAuthority,filterRows,canEditCode,sharedRows,sharedEditDeniedCodes,importanceEditAllowedCodes};

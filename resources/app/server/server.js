@@ -8522,7 +8522,7 @@ const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.se
   hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
 function computeParamsFor(profile,descriptor,task,parts={}){
   if(task==='source-info')return {};
-  if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
+  if(task==='cp-shared-edit-codes')return {codes:parts.codes,field:parts.field,access:userAccess.computeAccessContext(profile)};
   if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
   const shared=loadOverrides();
   const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
@@ -8639,6 +8639,16 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
 // kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
 const CP_SHARED_EDIT_MAX_CODES = 200000;
+// Orders salt okunur projeksiyonunda önem etiketi için alan bazlı izin. Aynı
+// korumalı worker görevini kullanır; yazma ucu yetkiyi ayrıca canlı denetler.
+app.post('/api/orders-importance-edit', userAccess.requireArea('orders'), express.json({ limit: '8mb' }), async (req, res) => {
+  try {
+    const codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ ok:false, code:'ORDERS_IMPORTANCE_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
+    const lease=await computeReads.run(req,'orders','cp-shared-edit-codes',{codes,field:'importance'},{cache:false});
+    return sendComputedResponse(req,res,lease);
+  } catch (err) { apiError(res, err, 'Sipariş önem etiketi yetkisi okunamadı. / Order importance edit access could not be read.'); }
+});
 app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), async (req, res) => {
   try {
     const codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];

@@ -48,12 +48,36 @@
     if (res.source === 'manual') return L('Bu sipariş için seçildi.', 'Selected for this order.');
     return L('Etiket yok: Regular.', 'No tag: Regular.');
   }
+  // Orders satırları genelde salt okunurdur (_canEdit:false). Önem etiketi için
+  // sunucunun canlı sipariş yetkisinden hesapladığı alan bazlı izin ayrıca açılır.
+  const canEditImportance = row => Boolean(row && (row._canEdit !== false || row._canEditImportance === true));
   function cellHtml(row, canEdit, tableKey) {
     const res = rowResolution(row);
     const title = esc(sourceTitle(res));
-    canEdit = canEdit && row._canEditShared !== false;
+    canEdit = (canEdit || row._canEditImportance === true) && row._canEditShared !== false;
     if (!canEdit) return `<td class="impTd" title="${title}">${chipHtml(res.tag, res.source)}</td>`;
     return `<td class="editTd impTd"><button type="button" class="editCell impTrigger" data-id="${esc(row._id)}" data-table="${esc(tableKey || 'cp')}" aria-haspopup="listbox" aria-expanded="false" title="${title}">${chipHtml(res.tag, res.source)}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+  }
+
+  // İzin yanıtı geldiğinde yalnız görünür önem hücrelerini etkinleştirir; satır
+  // seçimi, odak ve sütun/dondurma durumu korunsun diye tablo yeniden çizilmez.
+  function refreshAccess(rows) {
+    const cells = [...document.querySelectorAll('#ordersTable td[data-key="Importance"]')];
+    if (!cells.length) return;
+    const ids = new Set(cells.map(cell => cell.closest('tr')?.dataset.id));
+    const byId = new Map();
+    for (const row of rows) if (ids.has(String(row._id))) byId.set(String(row._id), row);
+    for (const cell of cells) {
+      const row = byId.get(cell.closest('tr')?.dataset.id);
+      if (!row) continue;
+      const holder = document.createElement('tr');
+      holder.innerHTML = cellHtml(row, false, 'orders');
+      const updated = holder.firstElementChild;
+      if (!updated) continue;
+      cell.replaceChildren(...updated.childNodes);
+      cell.classList.toggle('editTd', updated.classList.contains('editTd'));
+      if (updated.title) cell.title = updated.title; else cell.removeAttribute('title');
+    }
   }
 
   /* ---------------------------------------------------------- satır güncelleme */
@@ -96,7 +120,7 @@
   async function assign(row, value) {
     if(window.isSavingCpBulk?.()&&!window.isPreparingCpBulk?.()){toast(L('Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.','A bulk save is still pending. Retry after its result.'));return;}
     if (!row) return;
-    if (row._canEdit === false) { toast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.', 'You only have view access to this order.')); return; }
+    if (!canEditImportance(row)) { toast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.', 'You only have view access to this order.')); return; }
     if (row._canEditShared === false) { toast(L('Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.', 'Only the order owner can edit shared fields.')); return; }
     const orderCode = row['Order Code'];
     if (orderCode == null) return;
@@ -132,7 +156,7 @@
     return id ? { ok: true, value: id } : { ok: false };
   }
   function pasteAssign(row, id) {
-    if (!row || row._canEdit === false || row._canEditShared === false) return false;
+    if (!canEditImportance(row) || row._canEditShared === false) return false;
     const res = rowResolution(row);
     if (id ? res.id === id : res.source !== 'manual') return false;
     void assign(row, id || '');
@@ -199,7 +223,7 @@
     if (trigger === btn) { closeMenu(); return; }
     closeMenu();
     const row = findRow(btn);
-    if (!row || row._canEdit === false || row._canEditShared === false) return;
+    if (!canEditImportance(row) || row._canEditShared === false) return;
     trigger = btn; btn.setAttribute('aria-expanded', 'true');
     const res = rowResolution(row);
     const option = (value, html, selected, extra) => `<button type="button" class="delTypeOption impOption${extra ? ' ' + extra : ''}" role="option" aria-selected="${selected ? 'true' : 'false'}" data-imp-value="${esc(value)}">${html}</button>`;
@@ -220,6 +244,7 @@
     menu.style.maxHeight = Math.min(320, window.innerHeight - 20) + 'px';
     if (typeof window.positionBuyerLogPopup === 'function') window.positionBuyerLogPopup(menu, btn, { gap: 4 });
     else { const r = btn.getBoundingClientRect(); menu.style.left = r.left + 'px'; menu.style.top = (r.bottom + 4) + 'px'; }
+    window.BLMotionPlus?.play?.('overlay', menu);
     menu.addEventListener('click', event => {
       event.stopPropagation();
       const el = event.target.closest('[data-imp-value],[data-imp-action]');
@@ -394,7 +419,7 @@
   function applyRemote(row, value) { if (row) applyToRow(row, value || undefined); }
 
   window.BLOrderImportanceUI = Object.freeze({
-    setSettings, getSettings, excelValues, plainText, cellHtml, openSettings, reloadSettings, recomputeAllRows, applyRemote, pasteResolve, pasteAssign,
+    setSettings, getSettings, excelValues, plainText, cellHtml, refreshAccess, openSettings, reloadSettings, recomputeAllRows, applyRemote, pasteResolve, pasteAssign,
     revision: () => revision,
   });
 })();

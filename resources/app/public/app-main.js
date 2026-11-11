@@ -2233,6 +2233,22 @@ function setOrdersLoadingState(loading,message){
     empty.style.display='flex';content.style.display='none';
   }
 }
+// Orders projeksiyonu salt okunur gelir. Önem etiketi izni sıkıştırılmış
+// projeksiyonu yeniden üretmeden ayrı ve küçük bir istekle tamamlanır; tablo
+// bunu beklemez. İstek başarısızsa izin açılmaz (kilitli kalır).
+async function applyOrdersImportanceEditAccess(rows){
+  if(!Array.isArray(rows)||!rows.length||rows.every(row=>typeof row._canEditImportance==='boolean'))return;
+  try{
+    const codes=[...new Set(rows.map(row=>String(row['Order Code']??'')).filter(Boolean))];
+    const response=await fetch('/api/orders-importance-edit',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({codes})});
+    if(!response.ok)return;
+    const allowed=new Set(((await response.json())||{}).allowed||[]);
+    // Geç gelen yanıt daha yeni bir Orders tablosunu boyamaz.
+    if(state.orders?.rows!==rows)return;
+    for(const row of rows)row._canEditImportance=allowed.has(String(row['Order Code']));
+    window.BLOrderImportanceUI?.refreshAccess?.(rows);
+  }catch(error){console.warn('Orders importance edit access:',error);}
+}
 async function ensureOrdersLoaded(options={}){
   if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
@@ -2246,6 +2262,7 @@ async function ensureOrdersLoaded(options={}){
       reviveServerDates(rows);
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
+      void applyOrdersImportanceEditAccess(state.orders.rows);
       state.ordersLogisticExpanded.clear();
       backgroundWarmupUnrendered.add('orders');
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
@@ -15206,6 +15223,7 @@ async function waitForRefreshJob(expectedJob=null){
     }
     if(Array.isArray(data.orders)){
       state.orders = { fname: `Sunucu: ${sourceName}`, rows: data.orders.map(row=>({...row,_canEdit:false})) };
+      void applyOrdersImportanceEditAccess(state.orders.rows);
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){

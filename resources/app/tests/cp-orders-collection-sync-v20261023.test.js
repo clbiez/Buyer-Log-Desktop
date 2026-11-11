@@ -221,7 +221,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   const shortageSrc = extractFunction(APP, 'cpSetShortageMark');
   assert.match(shortageSrc, /if\s*\(\s*state\.orders\s*\)\s*await\s+ensureOrdersLoaded\(\{\s*force:\s*true\s*\}\)/);
 
-  let fetchCalls = 0;
+  let fetchCalls = 0, accessCalls = 0;
   const preparations=[];
   const ctx = {
     window:{BLModulePreparation:{setStatus:(module,status)=>preparations.push([module,status])}},
@@ -238,6 +238,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
       return { cancelled: false, payload: { rows: [{ 'Order Code': 2 }] } };
     },
     reviveServerDates: () => {},
+    applyOrdersImportanceEditAccess: rows => { accessCalls += 1; assert.equal(rows, ctx.state.orders.rows); },
     invalidateUnifiedPriorityDecisions: () => {},
     applyPricingRulesToLoadedRows: () => {},
     ensureCollectionCatalogLoaded: () => Promise.resolve(true),
@@ -258,6 +259,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   // force:true verilirse yeniden çekilir.
   await ctx.ensureOrdersLoaded({ force: true });
   assert.equal(fetchCalls, 1);
+  assert.equal(accessCalls, 1, 'fresh Orders rows hydrate importance edit access');
   assert.equal(ctx.state.orders.rows[0]['Order Code'], 2);
   assert.deepEqual(preparations,[['orders','ready'],['orders','loading'],['orders','ready']]);
 });
