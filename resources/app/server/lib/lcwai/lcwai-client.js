@@ -56,6 +56,8 @@ function failureFor(error, reason) {
   return isLcwAiError(error) ? error : errorForTransport(error);
 }
 
+const UPLOAD_FAILURE_REASONS = new Set(['upload-json', 'upload-response', 'blob-name', 'attachment-url', 'empty-file']);
+
 function createLcwAiClient(options = {}) {
   const auth = options.auth;
   if (!auth || typeof auth.getAuthorization !== 'function') throw new TypeError('LCW AI auth is required.');
@@ -66,7 +68,7 @@ function createLcwAiClient(options = {}) {
   function safeLog(event, details = {}) {
     // Yalnız sayısal/kod alanları: metin, başlık, token geçmez.
     const out = { event };
-    for (const key of ['status', 'code', 'ms', 'attempt', 'chunks', 'bytes', 'types', 'reasoningLevel', 'reasoningChunks']) if (details[key] != null) out[key] = details[key];
+    for (const key of ['status', 'code', 'reason', 'ms', 'attempt', 'chunks', 'bytes', 'types', 'reasoningLevel', 'reasoningChunks']) if (details[key] != null) out[key] = details[key];
     try { log(out); } catch (_) {}
   }
 
@@ -170,6 +172,10 @@ function createLcwAiClient(options = {}) {
       return files.toAttachment(json, valid);
     } catch (error) {
       const failure = failureFor(error, deadline.reason());
+      // Teşhis: "yüklenemedi" tek mesajının hangi adımdan geldiği loglanır.
+      // Yalnız sabit neden etiketi + uzak HTTP durumu; gövde/ad/token asla.
+      const reason = failure.shortCode === 'NETWORK' ? 'network' : (UPLOAD_FAILURE_REASONS.has(failure.detail) ? failure.detail : (failure.remoteStatus ? 'http' : undefined));
+      safeLog('LCWAI_UPLOAD_FAILED', { code: failure.shortCode === 'NETWORK' ? 'LCWAI_UPLOAD_FAILED' : failure.code, status: failure.remoteStatus, reason });
       if (failure.shortCode === 'NETWORK') throw lcwAiError('UPLOAD_FAILED', { detail: 'network' });
       throw failure;
     } finally { deadline.dispose(); }
