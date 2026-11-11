@@ -36,7 +36,7 @@ function load() {
     renderCP: () => renders.push('cp'),
     renderOrders: () => renders.push('orders'),
     scheduleOverviewRender: reason => renders.push(reason),
-    reviveServerDates() {}, applyPricingRulesToLoadedRows() {},
+    reviveServerDates() {}, applyPricingRulesToLoadedRows() {}, applyOrdersImportanceEditAccess() {},
     buildOrdersFilters() {}, applyCoreAutoFilterState() {},
     setOrdersLoadingState() {},
     showToast(message) {assert.fail('unexpected error path: ' + message);},
