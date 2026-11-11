@@ -173,6 +173,12 @@ function overlay(overrides) {
   return overrides;
 }
 
+/* Uzaktan uygulanmış cp-order değişikliği sayacı (son hydrate). Sayfa
+   projeksiyonu anahtarına girer; overlay ile aynı bellek görüntüsünden okunur. */
+function remoteRevision() {
+  return deltaStore && typeof deltaStore.remoteApplyRevision === 'function' ? deltaStore.remoteApplyRevision(COLLECTION) : 0;
+}
+
 function readAllSync() {
   return deltaStore ? (deltaStore.readAllSync(COLLECTION) || {}) : {};
 }
@@ -181,5 +187,5 @@ module.exports = {
   COLLECTION, FIELDS, attachDeltaStore, attached, authoritative, legacyKeys,
   recordFromOverrides, patchFromOrderPatch, subfieldsFromOrderPatch, mirrorPatch, mirrorPatchDetached,
   notesExplicitlyCleared, legacyNoteTombstoneProjection,
-  seedFromOverrides, overlay, readAllSync,
+  seedFromOverrides, overlay, readAllSync, remoteRevision,
 };

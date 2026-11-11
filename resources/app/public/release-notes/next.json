@@ -70,6 +70,29 @@
       }
     },
     {
+      "id": "sync-remote-cp-changes-visible",
+      "type": "fix",
+      "module": {
+        "tr": "Sync / CP",
+        "en": "Sync / CP"
+      },
+      "title": {
+        "tr": "Ekip arkadaşının CP değişiklikleri senkron sonrası otomatik görünür",
+        "en": "Teammates' CP changes appear automatically after sync"
+      },
+      "body": {
+        "tr": "Ortak klasör senkronuyla gelen önem etiketi, Ex-Factory/Retail/In-Store tarihi, Sub-Manufacturer ve Supp. FOB değişiklikleri artık açık CP, Siparişler ve Genel Bakış ekranlarına hafif yeniden yüklemeyle otomatik yansır. Kaynak Yenile gerekmez; ASAS/Antrepo yeniden sorgulanmaz ve düzenleme kilitlenmez. Notlar ve teslim tipi gibi yerel alanlar paylaşılmamaya devam eder.",
+        "en": "Importance tag, Ex-Factory/Retail/In-Store date, Sub-Manufacturer and Supp. FOB changes received through shared-folder sync now appear automatically in open CP, Orders and Overview screens through a lightweight reload. A source Refresh is no longer needed; ASAS/Antrepo is not queried again and editing is not locked. Local fields such as notes and delivery type remain unshared."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde yeni öğe yok; mevcut tablolar senkron sonrası arka planda güncel veriyle yeniden çizilir.",
+          "en": "No new UI element; existing tables are redrawn in the background with current data after sync."
+        }
+      }
+    },
+    {
       "id": "mb-date-sorting",
       "type": "fix",
       "module": {
