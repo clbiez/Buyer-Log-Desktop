@@ -298,7 +298,14 @@
     if (field.kind === 'date') { const r = raw(field, row); return parseDate(r) || parseDate(display(field, row)); }
     if (field.kind === 'number') { const r = parseNumber(raw(field, row)); return r != null ? r : parseNumber(display(field, row)); }
     const shown = display(field, row);
-    if (field.period === 'month') { const text = clean(shown == null ? '' : shown) || clean(raw(field, row)); return monthKeyOf(text) || text; }
+    if (field.period === 'month') {
+      // Ay metinleri az sayıda farklı değerdir; çözümleme alan başına önbelleklenir.
+      const text = shown == null || shown === '' ? raw(field, row) : shown;
+      const cache = field._months || (field._months = new Map());
+      let key = cache.get(text);
+      if (key === undefined) { const cleaned = clean(text == null ? '' : text); key = monthKeyOf(cleaned) || cleaned; if (cache.size < 512) cache.set(text, key); }
+      return key;
+    }
     const text = clean(shown == null ? '' : (typeof shown === 'object' ? (shown instanceof Date ? parseDate(shown) : JSON.stringify(shown)) : shown));
     if (text) return text;
     const fallback = raw(field, row);
