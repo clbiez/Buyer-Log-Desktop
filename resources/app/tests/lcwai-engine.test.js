@@ -238,6 +238,26 @@ test('askWithFiles: yüklenen ekler mesaja eklenir; kota hatası anlaşılır ko
   await assert.rejects(quotaClient.uploadFile('u1', { buffer: Buffer.from('a'), fileName: 'a.txt' }), error => error.code === 'LCWAI_QUOTA_EXCEEDED');
 });
 
+test('dosya yükleme hatası: neden etiketi + HTTP durumu loglanır, gövde/ad loglanmaz', async () => {
+  const auth = { getAuthorization: async () => 'Bearer t', invalidate() {} };
+  const run = async respond => {
+    const events = [];
+    const client = createLcwAiClient({ auth, logger: event => events.push(event), fetch: async () => respond() });
+    const error = await client.uploadFile('u1', { buffer: Buffer.from('png'), fileName: 'gizli-ad.png', contentType: 'image/png' }).catch(err => err);
+    return { error, failed: events.find(event => event.event === 'LCWAI_UPLOAD_FAILED') };
+  };
+  const shape = await run(() => Response.json({ fileId: 1, url: 'https://blob.example/x?sig=SECRET' }));
+  assert.equal(shape.error.code, 'LCWAI_UPLOAD_FAILED');
+  assert.deepEqual(shape.failed, { event: 'LCWAI_UPLOAD_FAILED', code: 'LCWAI_UPLOAD_FAILED', reason: 'blob-name' });
+  const http = await run(() => new Response('bad file name gizli-ad.png', { status: 400 }));
+  assert.equal(http.error.code, 'LCWAI_UPLOAD_FAILED');
+  assert.deepEqual(http.failed, { event: 'LCWAI_UPLOAD_FAILED', code: 'LCWAI_UPLOAD_FAILED', status: 400, reason: 'http' });
+  const network = await run(() => { throw new TypeError('fetch failed'); });
+  assert.equal(network.error.code, 'LCWAI_UPLOAD_FAILED');
+  assert.equal(network.failed.reason, 'network');
+  assert.ok(!JSON.stringify([shape.failed, http.failed, network.failed]).match(/gizli|SECRET|fetch failed/));
+});
+
 test('yapılandırılmış cevap: kod bloğu/çevre metin toleransı, geçersiz JSON ve şema uyumsuzluğu güvenli', () => {
   const ok = prompts.parseStructured('Tabii:\n```json\n{"explanation":"Marj","formula":"([Retail]-[Cost])/[Retail]","warnings":"dikkat","extra":1}\n```', 'calculated-column');
   assert.equal(ok.ok, true);
