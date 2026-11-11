@@ -134,6 +134,39 @@
           "en": "When a new version is ready, the notice stays on screen until you dismiss it"
         }
       }
+    },
+    {
+      "id": "collection-lfl-refresh-removed-groups",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "path": {
+        "tr": "Koleksiyon › Fiyat çekmecesi › Referansları yenile",
+        "en": "Collection › Price drawer › Refresh references"
+      },
+      "title": {
+        "tr": "Previous Season, LFL ve Sezon Etkisi referansları yeniden yenilenebilir",
+        "en": "Previous Season, LFL and Season Impact references can be refreshed again"
+      },
+      "body": {
+        "tr": "LFL kaynağından tek bir referans grubu bile düştüğünde (iptal edilen sipariş, değişen mağaza ayı, kaynak dışına çıkan sezon veya daraltılmış filtre) Referansları yenile her seferinde reddediliyor, sipariş detayları da bu yüzden açılmıyordu. Artık açık yenileme güncel kaynağı kabul eder; kaynakta kalmayan gruplar kaldırılır ve sayıları çekmecede ve bildirimde gösterilir. Boş kaynak kayıtlı referansların yerine geçmez.",
+        "en": "When even one reference group left the LFL source (a cancelled order, a changed in-store month, a season outside the source or a narrower filter), Refresh references was rejected every time and order details could not be opened. An explicit refresh now adopts the current source; groups no longer in the source are removed and their count is shown in the drawer and a notification. An empty source never replaces the saved references."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-refresh-removed-groups.png",
+        "alt": {
+          "tr": "Koleksiyon fiyat çekmecesi: referanslar yenilendi ve kaldırılan grup sayısı gösteriliyor (demo veri)",
+          "en": "Collection price drawer: references refreshed with the number of removed groups shown (demo data)"
+        },
+        "caption": {
+          "tr": "Kaynaktan düşen gruplar artık yenilemeyi engellemez",
+          "en": "Groups that left the source no longer block a refresh"
+        }
+      }
     }
   ]
 }

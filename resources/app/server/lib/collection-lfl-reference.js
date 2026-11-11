@@ -52,16 +52,23 @@ function createReferenceCache({directory}){
       const keys=new Set(snapshot.references.map(item=>item.key));
       // An upgrade must reproduce every saved summary exactly; a same-key but smaller source keeps the saved values.
       if(upgrade&&!sameSummaries(saved.references,snapshot.references))return saved;
-      if(saved&&saved.references.some(item=>!keys.has(item.key))){
-        if(upgrade)return saved;
-        throw Object.assign(new Error('LFL kaynağı eksik; kayıtlı referanslar korundu. / The LFL source is incomplete; saved references were preserved.'),{code:'LFL_REFERENCE_INCOMPLETE',statusCode:409});
+      const removedCount=saved?saved.references.filter(item=>!keys.has(item.key)).length:0;
+      if(upgrade&&removedCount)return saved;
+      if(!snapshot.references.length){
+        // An empty explicit refresh never replaces saved references.
+        if(saved)throw Object.assign(new Error('LFL kaynağı boş; kayıtlı referanslar korundu. / The LFL source is empty; saved references were preserved.'),{code:'LFL_REFERENCE_INCOMPLETE',statusCode:409});
+        // Empty first reads are retryable; they are never a durable reference.
+        return snapshot;
       }
-      // Empty first reads are retryable; they are never a durable reference.
-      if(!snapshot.references.length)return snapshot;
+      // An explicit refresh adopts the current non-empty source. Groups that left the source
+      // (cancelled orders, moved in-store months, retired seasons, narrower filters) are dropped
+      // and reported, instead of blocking every later refresh and order detail.
       const temp=file+'.'+crypto.randomUUID()+'.tmp';
       try{await assertCurrent();await fs.mkdir(directory,{recursive:true});await fs.writeFile(temp,JSON.stringify(snapshot));await assertCurrent();await fs.rename(temp,file);}
       catch(error){await fs.rm(temp,{force:true}).catch(()=>{});throw error;}
-      return remember(id,snapshot);
+      remember(id,snapshot);
+      // The count describes this refresh only; it is not part of the durable snapshot.
+      return removedCount?{...snapshot,removedCount}:snapshot;
     })();
     pending.set(id,{version:revision,rebuild,task});
     try{return await task;}finally{pending.delete(id);}

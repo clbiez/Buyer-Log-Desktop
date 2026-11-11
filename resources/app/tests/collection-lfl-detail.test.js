@@ -60,7 +60,7 @@ function uiHarness(){
     state.referenceRequests++;if(state.referenceGate)await state.referenceGate;
     if(state.referenceFailure==='network')throw Error('network failure');
     if(state.referenceFailure)return {ok:false,status:state.referenceFailure==='FORBIDDEN'?403:409,json:async()=>({code:state.referenceFailure})};
-    return {ok:true,json:async()=>({version:state.version,references})};
+    return {ok:true,json:async()=>({version:state.version,references,...(state.removedCount?{removedCount:state.removedCount}:{})})};
    }
    assert.equal(url,'/api/collection-lfl-detail');assert.equal(options.method,'POST');state.detailRequests++;
    if(state.gate)await state.gate;
@@ -146,4 +146,16 @@ test('refresh feedback identifies a missing source or filter and retains the sav
   context.appLang='tr';assert.ok(ui.drawer(candidate).includes(tr));
   context.appLang='en';assert.ok(ui.drawer(candidate).includes(en));
  }
+});
+
+test('an explicit refresh reports removed reference groups in the drawer and a toast, in both languages',async()=>{
+ const {ui,context,state}=uiHarness();const toasts=[];context.showToast=message=>toasts.push(message);
+ await ui.ensure();assert.equal(toasts.length,0,'ordinary loads stay silent');
+ state.removedCount=2;state.version='v2';await ui.ensure({rebuild:true});
+ assert.match(toasts.at(-1),/2 referans grubu kaldırıldı/);assert.match(ui.drawer(candidate),/2 referans grubu kaldırıldı/);
+ context.appLang='en';assert.match(ui.drawer(candidate),/2 reference groups no longer in the current LFL source were removed/);
+ const report=await ui.detailReport(candidate,'month');assert.ok(report.rows.length,'details open after the refresh');
+ state.removedCount=0;await ui.ensure({rebuild:true});assert.equal(toasts.at(-1),'References refreshed.');
+ state.referenceFailure='LFL_REFERENCE_INCOMPLETE';await ui.ensure({rebuild:true});
+ assert.match(toasts.at(-1),/LFL source is empty/);assert.match(ui.drawer(candidate),/Saved references were preserved/);
 });

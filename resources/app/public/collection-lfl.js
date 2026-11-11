@@ -45,7 +45,7 @@
     active.invalidated=false;
     const hadReference=active.status==='ready';
     if(!hadReference)active.status='loading';
-    active.refreshError='';
+    active.refreshError='';active.refreshNotice=null;
     active.detailRows=new Map();
     active.pending=(async()=>{
       try{
@@ -58,8 +58,16 @@
           return;
         }
         active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.countryAware=(data.references||[]).some(item=>Array.isArray(item.byCountry));active.countries=[...new Set((data.references||[]).filter(item=>item.currency==='USD').flatMap(item=>(item.byCountry||[]).map(part=>part.country)))].filter(Boolean).sort();active.timelines=Engine.createSeasonTimelines(data.references);active.version=String(data.version||'');active.calculatedAt=data.calculatedAt;active.status='ready';
+        if(rebuild)active.refreshNotice={removed:Math.max(0,Number(data.removedCount)||0)};
       }catch(_){active.status=hadReference?'ready':'error';active.refreshError='LOAD_ERROR';}
-      finally{active.pending=null;if(current===active)repaint();}
+      finally{
+        active.pending=null;
+        if(current===active){
+          repaint();
+          // Explicit refresh outcome is announced; the drawer note keeps the same text.
+          if(rebuild&&(active.refreshError||active.refreshNotice))global.showToast?.(active.refreshError?refreshErrorMessage(active.refreshError):refreshNoticeMessage(active.refreshNotice));
+        }
+      }
     })();
     return active.pending;
   }
@@ -273,7 +281,7 @@
   }
   function refreshErrorMessage(code){
     const messages={
-      LFL_REFERENCE_INCOMPLETE:T('Kaynak boş veya eksik olduğu için yenilenemedi. Kayıtlı referanslar korundu; LFL kaynak kapsamını kontrol edin.','Refresh could not complete because the source is empty or incomplete. Saved references were preserved; check the LFL source scope.'),
+      LFL_REFERENCE_INCOMPLETE:T('LFL kaynağı boş olduğu için yenilenemedi. Kayıtlı referanslar korundu; LFL kaynak kapsamını kontrol edin.','Refresh could not complete because the LFL source is empty. Saved references were preserved; check the LFL source scope.'),
       SOURCE_FILTER_REQUIRED:T('Referanslar yenilenemedi. Kaynak Veri ekranında LFL filtresini tamamlayın, ardından tekrar deneyin. Kayıtlı değerler korundu.','Could not refresh references. Complete the LFL filter in Source Data, then retry. Saved values were preserved.'),
       LFL_SOURCE_UNAVAILABLE:T('LFL kaynağı yüklenmemiş. Kaynak Veri ekranında LFL verisini yükleyin veya yenileyin, ardından referansları tekrar yenileyin. Kayıtlı değerler korundu.','The LFL source is not loaded. Load or refresh LFL data in Source Data, then refresh references again. Saved values were preserved.'),
       COMPUTE_STALE_GENERATION:T('Kaynak işlem sırasında değişti. Yenileme tamamlandıktan sonra tekrar deneyin. Kayıtlı değerler korundu.','The source changed during refresh. Retry after the source refresh completes. Saved values were preserved.'),
@@ -281,11 +289,18 @@
     };
     return messages[code]||T('Referanslar yenilenemedi. Kayıtlı değerler korundu; tekrar deneyebilirsiniz.','Could not refresh references. Saved values were preserved; you can retry.')+' '+T(`Hata kodu: ${code}`,`Error code: ${code}`);
   }
+  function refreshNoticeMessage(notice){
+    const removed=notice?.removed||0;
+    return removed
+      ?T(`Referanslar yenilendi. Güncel LFL kaynağında artık bulunmayan ${removed} referans grubu kaldırıldı (iptal edilen sipariş, değişen mağaza ayı, kaynak dışı sezon veya daraltılmış filtre).`,`References refreshed. ${removed} reference groups no longer in the current LFL source were removed (cancelled orders, changed in-store months, seasons outside the source or a narrower filter).`)
+      :T('Referanslar yenilendi.','References refreshed.');
+  }
   function drawer(row){
     void ensure();
     const sections=['__previousSeason__','__lfl__','__seasonImpact__'].map(key=>{const mode=modeForKey(key),m=model(row,mode),action=T('Sipariş detaylarını aç','Open order details');return `<div class="cpdSection"><header><h4><button type="button" class="tbtn" data-cpd-lfl-details="${mode}" title="${esc(action)}" aria-label="${esc(labelFor(key)+': '+action)}"${m.reference?'':' disabled'}>${esc(labelFor(key))} ↗</button></h4><span>${esc(key==='__seasonImpact__'?T('Tek model simülasyonu','Single-model simulation'):key==='__previousSeason__'?T('Sezon geneli','Full season'):T('Aynı MB ayı','Same MB month'))}</span></header>${content(row,m)}<p class="cpdNote">${esc(m.reference?m.detail:m.message)}</p></div>`;}).join('');
     const active=session(),note=active.refreshError
       ?refreshErrorMessage(active.refreshError)
+      :active.refreshNotice?refreshNoticeMessage(active.refreshNotice)
       :T('Referanslar kalıcı saklanır. Güncellemek için Referansları yenile düğmesini kullanın.','References are saved permanently. Use Refresh references to update them.');
     return sections+countryRuleHtml(row)+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
