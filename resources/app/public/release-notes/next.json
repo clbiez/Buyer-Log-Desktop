@@ -3,14 +3,47 @@
   "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Merch Calendar artık tüm ekipte",
-    "en": "Merch Calendar now reaches the whole team"
+    "tr": "Kurumsal giriş ekranlarında otomatik onarım",
+    "en": "Automatic recovery for corporate sign-in screens"
   },
   "summary": {
-    "tr": "Moderatörün Veri Yönetimi'nde yüklediği LCW Merch Calendar, Moderatör kural yayımıyla tüm Buyer Log kullanıcılarına dağıtılır.",
-    "en": "The LCW Merch Calendar uploaded by the Moderator in Data Management is distributed to all Buyer Log users through the Moderator rule release."
+    "tr": "PLM, OAB ve LCW AI giriş ekranları ERR_FAILED hatasında kendini onarır ve nedeni ağ/oturum olarak teşhis eder.",
+    "en": "PLM, OAB and LCW AI sign-in screens recover from ERR_FAILED and diagnose whether the network or the session is the cause."
   },
   "changes": [
+    {
+      "id": "portal-signin-err-failed-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Sync · OAB · LCW AI",
+        "en": "PLM Sync · OAB · LCW AI"
+      },
+      "path": {
+        "tr": "PLM Sync › PLM Kullanıcı Girişi › Otomatik bağlan",
+        "en": "PLM Sync › PLM User Sign-In › Connect automatically"
+      },
+      "title": {
+        "tr": "PLM, OAB ve LCW AI giriş ekranları ERR_FAILED sonrası kendini onarır",
+        "en": "PLM, OAB and LCW AI sign-in screens recover after ERR_FAILED"
+      },
+      "body": {
+        "tr": "Bazı bilgisayarlarda PLM, OAB ve LCW AI giriş ekranları “ERR_FAILED (-2)” ile açılmıyor, PLM Sync de bu yüzden çalışmıyordu. Üç ekran artık aynı kurtarmayı kullanır: önce önbellek, DNS ve bağlantılar sıfırlanıp yeniden denenir; sürerse Buyer Log sorunun kendi oturum verisinde mi yoksa ağda mı olduğunu test eder. Oturum verisi bozuksa yalnız o portalın oturumu sıfırlanıp yeniden açılır; bilgisayar adrese hiç ulaşamıyorsa VPN/proxy/güvenlik yazılımı yönlendirmesi ve masaüstü günlüğüne teşhis kaydı yazılır.",
+        "en": "On some computers the PLM, OAB and LCW AI sign-in screens failed with “ERR_FAILED (-2)”, which also stopped PLM Sync. All three screens now share the same recovery: the cache, DNS and connections are reset and the page is retried; if it still fails, Buyer Log tests whether the problem is in its own session data or in the network. Corrupt session data is reset for that portal only and the page is reopened; if the computer cannot reach the address at all, VPN/proxy/security-software guidance is shown and a diagnosis is written to the desktop log."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "portal-signin-network-diagnosis.png",
+        "alt": {
+          "tr": "PLM Kullanıcı Girişi: ağ teşhisiyle gösterilen VPN/proxy yönlendirmesi (demo veri)",
+          "en": "PLM User Sign-In: VPN/proxy guidance shown with the network diagnosis (demo data)"
+        },
+        "caption": {
+          "tr": "Sayfa açılamazsa nedenin ağ mı oturum verisi mi olduğu gösterilir",
+          "en": "If the page cannot be opened, Buyer Log shows whether the network or the session data is the cause"
+        }
+      }
+    },
     {
       "id": "merch-calendar-team-sync",
       "type": "fix",
