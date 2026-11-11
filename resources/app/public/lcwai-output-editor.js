@@ -190,7 +190,7 @@
         if (ed !== session) return;
         session.draft.images = saved.images; updateLayoutPreview();
       }).catch(error => { if (ed === session) { session.imageError = AI().errorText(error); renderFoot(); } });
-      AI().outputTemplates.list().then(list => { if (ed === session) { session.templates = [...list.personal, ...list.shared]; if (session.mode === 'content') renderMain(); } }).catch(() => {});
+      AI().outputTemplates.list().then(list => { if (ed === session) { session.templates = [...list.personal, ...list.shared]; if (['content', 'layout'].includes(session.mode)) renderMain(); } }).catch(() => {});
     } catch (error) { toast(error.message || AI().errorText(error), 'error'); }
   }
   const studioState = () => ed.data.layout.studio;
@@ -272,7 +272,7 @@
     // Ayar paneli ve önizleme ayrı kayar; yeniden çizimde iki konum da korunur.
     const scroll = ['.lcwaiLayControls', '.lcwaiLay > .lcwaiLayStage'].map(sel => main.querySelector(sel)?.scrollTop || 0);
     main.innerHTML = `<div class="lcwaiLay"><aside class="lcwaiLayControls">
-      ${matrixPanel()}${st.manualPages.length ? `<button class="lcwaiBtn" data-matrix-reset>${esc(L('Otomatik gruplamaya dön', 'Restore automatic grouping'))}</button><p class="lcwaiNote">${esc(L('Manuel yerleşim etkin. Grup ayarlarını uygulamak için otomatik gruplamaya dönün.', 'Manual placement is active. Restore automatic grouping to apply group rules.'))}</p>` : ''}<details class="lcwaiLayMore"><summary>${esc(L('Sayfa ve kart düzeni', 'Page and card layout'))}</summary><section class="lcwaiLayGroup">${studioSettings()}</section></details>
+      ${matrixPanel()}<details class="lcwaiLayMore"><summary>${esc(L('Kaynak ve şablonlar', 'Source and templates'))}</summary>${sourceSummary()}${ed.sourceTab ? `<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-scope="selected">${esc(L('Seçili kayıtlardan yeniden başlat', 'Restart from selected records'))}</button><button class="lcwaiBtn" data-studio-scope="filtered">${esc(L('Filtrelenmiş kayıtlardan yeniden başlat', 'Restart from filtered records'))}</button></div>` : ''}${(ed.templates || []).length ? studioSelect('template', L('Kayıtlı şablon', 'Saved template'), [['', L('Şablon seç', 'Choose a template')], ...ed.templates.map((t, i) => [String(i), t.name])], '') : ''}</details>${st.manualPages.length ? `<button class="lcwaiBtn" data-matrix-reset>${esc(L('Otomatik gruplamaya dön', 'Restore automatic grouping'))}</button><p class="lcwaiNote">${esc(L('Manuel yerleşim etkin. Grup ayarlarını uygulamak için otomatik gruplamaya dönün.', 'Manual placement is active. Restore automatic grouping to apply group rules.'))}</p>` : ''}<details class="lcwaiLayMore"><summary>${esc(L('Sayfa ve kart düzeni', 'Page and card layout'))}</summary><section class="lcwaiLayGroup">${studioSettings()}</section></details>
       ${chosen ? `<section class="lcwaiLayGroup"><h4>${esc(chosen)}</h4>${studioSelect('span', L('Bu kartın yüksekliği', 'This card height'), [['auto', L('Kaynağa göre', 'From source')], ['1', L('Tek satır', 'One row')], ['2', L('Çift satır', 'Two rows')]], String(st.spans[chosen] || 'auto'))}<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-card-move="-1">${esc(L('Öne taşı', 'Move earlier'))}</button><button class="lcwaiBtn" data-studio-card-move="1">${esc(L('Sona taşı', 'Move later'))}</button></div></section>` : ''}
       <button class="lcwaiBtn is-primary" data-ed-mode="review">${esc(L('Önizle ve oluştur →', 'Preview and create →'))}</button>
       </aside><div class="lcwaiLayStage" data-lay-stage></div></div>`;
@@ -282,7 +282,7 @@
   }
   function renderStudioReview(main) {
     const pages = ed.previewPages || [];
-    const hidden = pages.reduce((sum, entry) => sum + (entry.page ? entry.page.cells.reduce((n, cell) => n + LAY().cardContent(cell, ed.data.layout, cell.item, ed.draft.records[cell.item.image], entry.page.scale).hidden, 0) : 0), 0);
+    const hidden = studioState().matrix ? 0 : pages.reduce((sum, entry) => sum + (entry.page ? entry.page.cells.reduce((n, cell) => n + LAY().cardContent(cell, ed.data.layout, cell.item, ed.draft.records[cell.item.image], entry.page.scale).hidden, 0) : 0), 0);
     const missing = cardSourceItems().filter(item => !imageOf(item.image)).length;
     main.innerHTML = `<div class="lcwaiStudioSource"><h2>${esc(L('Önizle ve oluştur', 'Preview and create'))}</h2>${sourceSummary()}
       <p>${esc(L(`${pages.length} sayfa · ${missing} kartta görsel yok · ${hidden} bilgi satırı karta sığmıyor`, `${pages.length} pages · ${missing} cards without images · ${hidden} detail lines do not fit`))}</p>
