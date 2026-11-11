@@ -338,3 +338,32 @@ test('liste sorgusu dosyaya giderken model görseli anahtarı ve kart bilgisi ta
   const answer = lastAnswer(pdf.chat);
   assert.doesNotMatch(answer.text, /BL Image/, 'sohbetteki tablo anahtar sütunu göstermez');
 });
+
+/* Uzun hesaplanmış liste: metin bağlamı 18.000 karakterde/200 satırda
+   kesiliyordu; LCW AI listenin sonunu hiç görmüyordu. Artık tablonun tamamı
+   (BL Image anahtarlarıyla) CSV eki olarak gider. */
+test('uzun liste sonucu tamamıyla CSV eki olarak gider; kısa liste metin kalır', async () => {
+  const pdf = load({ plans: [LIST] });
+  const table = pdf.window.BLAIScreenData.table('orders');
+  for (let i = 0; i < 260; i++) table.rows.push({ ...table.rows[0], _id: 100 + i, 'Order Code': `PX${i}` });
+  pdf.window.BLAIScreenData.rowImage = (tab, row) => ({ modelId: `M${row._id}`, colourCode: '01', source: `/img/${row._id}` });
+  pdf.chat._state.output.format = 'pptx';
+  const uploaded = [];
+  pdf.window.BuyerLogAI.uploadFile = async file => { uploaded.push({ name: file.name, text: await file.text() }); return { blobName: `b/${file.name}`, contentType: 'text/csv', fileName: file.name, size: file.size, url: '' }; };
+  let sent = null;
+  pdf.window.BuyerLogAI.chat = async options => { sent = JSON.parse(JSON.stringify({ contexts: options.contexts, attachments: options.attachments })); return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } }; };
+  await pdf.chat.send('W6 siparişlerini sunum yap');
+  assert.equal(uploaded.length, 1);
+  assert.match(uploaded[0].name, /\.csv$/);
+  const lines = uploaded[0].text.trim().split(/\r\n/);
+  assert.equal(lines[0].replace(/^﻿/, ''), 'BL Image,Order Code,Country');
+  assert.equal(lines.length, 1 + 263, 'W6: 3 özgün + 260 eklenen satırın tamamı');
+  assert.match(lines.at(-1), /^ORD-\d+,PX259,TÜRKİYE$/);
+  assert.equal(sent.attachments.length, 1);
+  assert.equal(sent.contexts.length, 1);
+  assert.equal(sent.contexts[0].csv, undefined, 'dosya nesnesi bağlam JSON’una girmez');
+  assert.match(sent.contexts[0].text, /Rakamları aynen kullan/);
+  assert.match(sent.contexts[0].text, /Tablonun tamamı ekli “[^”]+\.csv” dosyasında: 263 satır/);
+  assert.doesNotMatch(sent.contexts[0].text, /\| PX/, 'tablo metin olarak tekrar gönderilmez');
+  assert.equal(Object.keys(pdf.chat._state.conversations[0].imageMap).length, 263);
+});

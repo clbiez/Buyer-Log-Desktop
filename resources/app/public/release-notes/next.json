@@ -208,8 +208,8 @@
         "en": "Model images in presentations built from lists calculated by Buyer Log"
       },
       "body": {
-        "tr": "“Koleksiyon 27. hafta modelleri için model kartı sunumu” gibi isteklerde Buyer Log listeyi hesapladığında model görselleri artık PowerPoint, PDF ve HTML dosyalarına eklenir. Model kartlarındaki bilgiler de kaynak kayıttan birebir alınır. Sohbetteki tablo değişmez.",
-        "en": "When Buyer Log calculates the list for requests such as “model card presentation for Collection week 27 models”, model images are now added to PowerPoint, PDF and HTML files. Model card details are also taken exactly from the source record. The table in the chat is unchanged."
+        "tr": "“Koleksiyon 27. hafta modelleri için model kartı sunumu” gibi isteklerde Buyer Log listeyi hesapladığında model görselleri artık PowerPoint, PDF ve HTML dosyalarına eklenir. Model kartlarındaki bilgiler de kaynak kayıttan birebir alınır. Sohbetteki tablo değişmez. Uzun listeler (200 satırı veya metin sınırını aşan) artık kesilmez; tamamı görsel anahtarlarıyla birlikte CSV eki olarak LCW AI’a gider.",
+        "en": "When Buyer Log calculates the list for requests such as “model card presentation for Collection week 27 models”, model images are now added to PowerPoint, PDF and HTML files. Model card details are also taken exactly from the source record. The table in the chat is unchanged. Long lists (over 200 rows or the text limit) are no longer cut off; the whole list goes to LCW AI as a CSV attachment together with the image keys."
       },
       "visual": {
         "kind": "none",

@@ -101,7 +101,8 @@
   /* Hesaplanmış LİSTE sonucu dosyaya/sohbete bağlam olurken her satıra kaydın
      "BL Image" anahtarı eklenir ve görsel/kart haritası sohbete yazılır; böylece
      çıktı anahtarı kullanırsa Buyer Log gerçek model görselini gömer. Sohbette
-     gösterilen tablo değişmez. Yalnız bağlama girecek ilk satırlar işlenir. */
+     gösterilen tablo değişmez. Anahtar yalnız ilk maxRows satıra üretilir;
+     sonraki satırlar anahtarsız bağlamda kalır. */
   function queryImageTable(conv, dataset, computed, maxRows) {
     const screenData = window.BLAIScreenData;
     const tab = dataset && dataset.screen;
@@ -120,7 +121,18 @@
     if (!Object.keys(images).length) return null;
     conv.imageMap = { ...(conv.imageMap || {}), ...images };
     conv.recordMap = { ...(conv.recordMap || {}), ...records };
-    return { ...computed, total: null, columns: [{ label: IMAGE_COLUMN, kind: 'text' }, ...computed.columns], rows: computed.rows.slice(0, count).map((row, index) => [keys[index], ...row]) };
+    return { ...computed, total: null, columns: [{ label: IMAGE_COLUMN, kind: 'text' }, ...computed.columns], rows: computed.rows.map((row, index) => [index < count ? keys[index] : null, ...row]) };
+  }
+  /* Hesaplanmış sonuç metin bağlamına sığmıyorsa (sunucu bağlam parçası
+     20.000 karakter; sohbet tablosu 200 satır) tamamı CSV eki olarak gider. */
+  const QUERY_INLINE_CHARS = 18000;
+  const QUERY_IMAGE_ROWS = 2000;
+  function queryContextFile(result, label) {
+    const formatted = value => (value == null ? '' : typeof value === 'number' ? value : cellValue(value));
+    const rows = result.rows.map(row => row.map(formatted));
+    if (result.total) rows.push(result.total.map(formatted));
+    const fileLimit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
+    return contextAsFile({ label, columns: result.columns.map(col => col.label), rows }, { maxBytes: Math.max(1024, fileLimit - 65536) });
   }
   /* Bağlam tablosu → CSV (RFC 4180; Excel uyumu için UTF-8 BOM). */
   const csvCell = value => { const text = String(value == null ? '' : value); return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; };
@@ -1206,10 +1218,21 @@
       ? `**${title}**\n\n${table}${computed.rows.length > shown ? `\n\n${L(`İlk ${shown} / ${computed.rows.length} satır gösteriliyor; tamamı için Excel olarak indirin.`, `Showing the first ${shown} of ${computed.rows.length} rows; download as Excel for all of them.`)}` : ''}`
       : L('Bu filtrelere uyan kayıt yok. Yorumu aşağıda kontrol edip düzeltmeyi yazabilirsiniz.', 'No records match these filters. Check the interpretation below and write a correction.');
     // Sonraki sohbet mesajı ("bunu yorumla", "bundan mail yaz") hesaplanmış tabloyu görsün.
-    const imageTable = computed.matched ? queryImageTable(conv, dataset, computed, engine.LIMITS.chatRows) : null;
+    const imageTable = computed.matched ? queryImageTable(conv, dataset, computed, QUERY_IMAGE_ROWS) : null;
+    const contextResult = imageTable || computed;
     const contextTable = imageTable ? engine.toMarkdown(imageTable, { lang }) : table;
     const imageNote = imageTable ? ` ${L(`“${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, `The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`)}` : '';
-    conv.lastQueryContext = { label: L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`), screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}${imageNote}\n${contextTable}`.slice(0, 18000) };
+    const intro = `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}${imageNote}`;
+    const contextLabel = L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`);
+    const inline = `${intro}\n${contextTable}`;
+    const asFile = computed.matched && computed.kind !== 'multi' && Array.isArray(contextResult.columns) && contextResult.columns.length
+      && (inline.length > QUERY_INLINE_CHARS || contextResult.rows.length > engine.LIMITS.chatRows);
+    const prepared = asFile ? queryContextFile(contextResult, title) : null;
+    if (prepared && prepared.truncated) answer.warning = L(`Sonuç LCW AI dosya sınırını aştığı için ilk ${prepared.truncated.sent} / ${prepared.truncated.total} satırı gönderildi.`, `The result exceeded the LCW AI file limit, so only the first ${prepared.truncated.sent} of ${prepared.truncated.total} rows were sent.`);
+    // csv: yalnız bellekte; gönderimde yüklenir ve bağlam JSON'undan çıkarılır.
+    conv.lastQueryContext = prepared && prepared.file
+      ? { label: contextLabel, screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${intro}\n${prepared.context.text}`, csv: prepared.file }
+      : { label: contextLabel, screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: inline.slice(0, QUERY_INLINE_CHARS) };
     if (output && output.format === 'xlsx' && computed.matched) {
       answer.phase = L('Excel oluşturuluyor…', 'Creating Excel…');
       setProgress(answer, 'rendering');
@@ -1346,7 +1369,16 @@
       }
       // Son sorgu sonucu bir sonraki sohbet mesajına bir kez eklenir; LCW AI geçmişi sonrasını taşır.
       const followUp = !computedContexts && conv.lastQueryContext ? [conv.lastQueryContext] : [];
-      const sendContexts = computedContexts || [...(userMessage.contexts || []), ...followUp];
+      const rawContexts = computedContexts || [...(userMessage.contexts || []), ...followUp];
+      // Uzun hesaplanmış sonuç: CSV eki yüklenir, bağlamda yalnız açıklaması kalır.
+      const queryAttachments = [];
+      for (const item of rawContexts) {
+        if (!item || !item.csv) continue;
+        answer.phase = L(`Bağlam dosyası yükleniyor: ${item.csv.name}`, `Uploading context file: ${item.csv.name}`);
+        renderMessages();
+        queryAttachments.push(await api.uploadFile(item.csv));
+      }
+      const sendContexts = rawContexts.map(item => { if (!item || !item.csv) return item; const { csv, ...rest } = item; return rest; });
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
       setProgress(answer, 'generating');
       renderMessages();
@@ -1356,7 +1388,7 @@
         chatId: conv.chatId,
         message: userMessage.text,
         contexts: sendContexts,
-        attachments: computedContexts ? [] : userMessage.attachments,
+        attachments: computedContexts ? queryAttachments : [...(userMessage.attachments || []), ...queryAttachments],
         output,
         resolveImages: tokens => resolveImages(conv, tokens, answer),
         resolveRecords: tokens => resolveRecords(conv, tokens),
