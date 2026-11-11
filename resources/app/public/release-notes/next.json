@@ -143,6 +143,29 @@
           "en": "Only CSS overflow behavior of the existing table summary was updated; a post-change screenshot of the actual Buyer Log could not be captured in this session (visual verification pending)."
         }
       }
+    },
+    {
+      "id": "lcwai-collection-mb-month",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI Koleksiyon’da MB ayını tanıyor",
+        "en": "LCW AI recognises the MB month in Collection"
+      },
+      "body": {
+        "tr": "“Koleksiyon temmuz modelleri” gibi isteklerde LCW AI artık Koleksiyon’daki Model Budget Month (MB ayı) alanını kullanır; “MB ayı yok” diye sormaz. Türkçe ve İngilizce kaydedilmiş ay değerleri (TEMMUZ 2027 / JULY 2027) aynı ay olarak eşleşir. LFL tarihçesindeki MB ayı da aynı şekilde okunur.",
+        "en": "For requests such as “Collection July models”, LCW AI now uses the Model Budget Month (MB month) field in Collection instead of asking because it cannot find an MB month. Month values saved in Turkish or English (TEMMUZ 2027 / JULY 2027) match the same month. The MB month in the LFL history is read the same way."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; düzeltme LCW AI’ın veri sorgusu planlamasındadır.",
+          "en": "No screen layout changed; the fix is in LCW AI data query planning."
+        }
+      }
     }
   ]
 }

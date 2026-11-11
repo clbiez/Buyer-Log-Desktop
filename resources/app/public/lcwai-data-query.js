@@ -53,6 +53,9 @@
   /* Buyer Log kısaltmaları. LCW AI planlarken alan seçimine yardım eder;
      eşleştirme yine alan kaydından yapılır. */
   const GLOSSARY = Object.freeze({
+    // Ay alanı olan veri kümesinde (Koleksiyon) "MB ayı" önce bu alana çözülür;
+    // olmayanda (Siparişler/CP) In-Store tarihine düşer.
+    inStoreMonth: ['MB ayı', 'MB ay', 'MB month', 'Model Bütçe Ayı', 'Model Budget Month', 'In Store Month'], // i18n-ignore — eş anlamlı arama terimleri
     inStore: ['MB', 'Model Bütçe', 'Model Butce', 'Model Budget', 'MB ayı', 'In-Store'], // i18n-ignore — eş anlamlı arama terimleri
     orderPlacementDate: ['OPD', 'Sipariş geçme tarihi', 'Sipariş tarihi', 'Order date', 'Order placement'], // i18n-ignore — eş anlamlı arama terimleri
     exFactory: ['Ex-F', 'Ex-Factory', 'Yükleme tarihi', 'Loading date'], // i18n-ignore — eş anlamlı arama terimleri
@@ -211,6 +214,17 @@
     return null;
   }
 
+  /* Ay dönemi metni ("JULY 2027", "Temmuz 2027", "2027-07", "202707", "07.2027") → "YYYY-AA".
+     Koleksiyon ay değeri kaydedildiği andaki dilde saklanır; TR/EN aynı aya iner. */
+  function monthKeyOf(value) {
+    const text = clean(value);
+    if (!text || typeof text !== 'string') return '';
+    const m = /^(\d{4})(\d{2})$/.exec(text);
+    if (m) return +m[2] >= 1 && +m[2] <= 12 ? `${m[1]}-${m[2]}` : '';
+    const period = periodOf(text);
+    return period && period.bucket === 'month' ? period.key : '';
+  }
+
   /* ---------------- Veri kümesi ve şema ---------------- */
   /* table: BLAIScreenData.table() çıktısı (columns: {key,label,type,readValue,rawValue}).
      Alan türü önce sütun türünden, sonra kanonik alandan, en son örnek
@@ -223,9 +237,16 @@
     for (const col of Array.isArray(columns) ? columns : []) {
       if (!col || !col.key || seen.has(col.key)) continue;
       seen.add(col.key);
-      const canonicalId = CF ? (CF.canonicalId(module, col.key) || CF.canonicalId(module, col.label)) : null;
+      // Sütun anahtarı birebir bir kanonik alanın bu modüldeki anahtarıysa o
+      // alan esastır: Koleksiyon "inStoreMonth" anahtarı In-Store tarihinin
+      // yedek anahtarı olarak da kayıtlı; tarih sanılırsa ay metni okunamaz.
+      const own = CF && CF.field(col.key);
+      const ownBinding = own && own.modules && own.modules[module];
+      const canonicalId = CF ? ((ownBinding && (ownBinding.keys || []).includes(col.key) ? String(col.key) : null) || CF.canonicalId(module, col.key) || CF.canonicalId(module, col.label)) : null;
       const def = canonicalId && CF ? CF.field(canonicalId) : null;
       const field = { id: String(col.key), label: clean(col.label) || String(col.key), canonical: canonicalId || '', canonicalType: def ? def.type : '', role: def ? def.role : '', type: col.type || '', kind: '', col };
+      // Metin türlü tarih rolü = ay dönemi (Model Budget Month): değer "YYYY-AA"ya indirgenir.
+      if (def && def.role === 'date' && def.type === 'text') field.period = 'month';
       fields.push(field);
     }
     const dataset = { id: String(id || screen || 'data'), label: clean(label) || String(id || ''), screen: screen || id, module, rows: list, fields, scope: scope || 'all', total: Number.isFinite(total) ? total : list.length, _profile: new Map(), _distinct: new Map() };
@@ -277,6 +298,7 @@
     if (field.kind === 'date') { const r = raw(field, row); return parseDate(r) || parseDate(display(field, row)); }
     if (field.kind === 'number') { const r = parseNumber(raw(field, row)); return r != null ? r : parseNumber(display(field, row)); }
     const shown = display(field, row);
+    if (field.period === 'month') { const text = clean(shown == null ? '' : shown) || clean(raw(field, row)); return monthKeyOf(text) || text; }
     const text = clean(shown == null ? '' : (typeof shown === 'object' ? (shown instanceof Date ? parseDate(shown) : JSON.stringify(shown)) : shown));
     if (text) return text;
     const fallback = raw(field, row);
@@ -370,8 +392,10 @@
     if (byId) return byId;
     const canonicalId = CF ? (CF.field(wanted) ? wanted : CF.canonicalId(dataset.module, wanted)) : null;
     if (canonicalId) { const hit = dataset.fields.find(field => field.canonical === canonicalId); if (hit) return hit; }
-    const glossary = Object.keys(GLOSSARY).find(id => GLOSSARY[id].some(alias => token(alias) === key));
-    if (glossary) { const hit = dataset.fields.find(field => field.canonical === glossary); if (hit) return hit; }
+    for (const glossary of Object.keys(GLOSSARY).filter(id => GLOSSARY[id].some(alias => token(alias) === key))) {
+      const hit = dataset.fields.find(field => field.canonical === glossary);
+      if (hit) return hit;
+    }
     const alias = dataset.fields.filter(field => aliasesOf(field).some(item => token(item) === key));
     return alias.length === 1 ? alias[0] : null;
   }
@@ -399,6 +423,10 @@
     const wanted = clean(input);
     if (!wanted) return { input: wanted, values: [], how: 'empty' };
     const values = [...counts.keys()];
+    if (field && field.period === 'month') {
+      const month = monthKeyOf(wanted);
+      if (month && values.includes(month)) return { input: wanted, values: [month], how: month === wanted ? 'exact' : 'normalized' };
+    }
     const exact = values.filter(value => value === wanted);
     if (exact.length) return { input: wanted, values: exact, how: 'exact' };
     const key = token(wanted);
