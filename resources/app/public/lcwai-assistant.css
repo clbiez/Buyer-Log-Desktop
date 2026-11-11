@@ -320,6 +320,14 @@
 .lcwaiQueryNotes summary{cursor:pointer;}
 .lcwaiOptions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .lcwaiMsgWarning{margin:0 0 8px;}
+/* Dosya üretim ilerlemesi: tablo görünürken hangi adımın sürdüğü. */
+.lcwaiMsg.has-progress .lcwaiMsgBody::after{content:none;}
+.lcwaiProgress{display:flex;flex-direction:column;gap:6px;margin:10px 0 0;padding:9px 11px;}
+.lcwaiProgressHead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;}
+.lcwaiProgressSteps{display:flex;flex-direction:column;gap:3px;margin:0;padding:0;list-style:none;}
+.lcwaiProgressStep{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;}
+.lcwaiProgressMark{display:inline-block;width:1.1em;text-align:center;}
+.lcwaiProgressDetail{flex-basis:100%;padding-left:calc(1.1em + 8px);}
 
 /* Column matrix: shared tokens and independent scroll surfaces. */
 .lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLay{grid-template-columns:minmax(450px,44%) minmax(0,1fr)}

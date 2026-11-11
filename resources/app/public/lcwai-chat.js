@@ -732,6 +732,7 @@
     const list = (tokens || []).filter(token => map[token]);
     const images = {};
     let done = 0;
+    setProgress(answer, 'images');
     const paint = () => { answer.phase = L(`Model görselleri Buyer Log’dan ekleniyor (${done}/${list.length})…`, `Adding model images from Buyer Log (${done}/${list.length})…`); if (state.activeId === conv.id) renderMessages(); };
     paint();
     let cursor = 0;
@@ -769,6 +770,61 @@
     return '';
   }
 
+  /* Dosya (PDF/PowerPoint/Excel/HTML) üretim ilerlemesi. Buyer Log tabloyu
+     cevaba yazdıktan sonra da dosya aşamaları görünür kalır: hangi adımın
+     bittiği, hangisinin sürdüğü ve geçen süre. Yalnız akış sürerken çizilir. */
+  const PROGRESS_STEPS = ['data', 'generating', 'rendering', 'images', 'pdf'];
+  function startProgress(answer, output) {
+    if (!output || !output.format) return;
+    answer.progress = { format: output.format, current: 'data', images: false, startedAt: Date.now() };
+  }
+  function setProgress(answer, step) {
+    const progress = answer && answer.progress;
+    if (!progress) return;
+    const id = step === 'repairing' ? 'generating' : step;
+    if (!PROGRESS_STEPS.includes(id)) return;
+    if (id === 'images') progress.images = true;
+    progress.current = id;
+  }
+  function progressStepLabel(id, progress) {
+    const name = formatLabel(progress.format);
+    if (id === 'data') return progress.query ? L('Buyer Log verileri hesapladı', 'Buyer Log calculated the data') : L('Buyer Log verisi ve bağlamı hazırlanıyor', 'Preparing Buyer Log data and context');
+    if (id === 'generating') return L(`LCW AI ${name} içeriğini yazıyor`, `LCW AI is writing the ${name} content`);
+    if (id === 'rendering') return L('Buyer Log sayfa düzenini kuruyor', 'Buyer Log is laying out the pages');
+    if (id === 'images') return L('Model görselleri ekleniyor', 'Adding model images');
+    if (id === 'pdf') return L('PDF basılıyor', 'Printing the PDF');
+    return '';
+  }
+  const elapsedText = startedAt => {
+    const seconds = Math.max(0, Math.round((Date.now() - Number(startedAt || Date.now())) / 1000));
+    const text = seconds < 60 ? `${seconds}` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    return seconds < 60 ? L(`${text} sn`, `${text} s`) : L(`${text} dk`, `${text} min`);
+  };
+  function progressHtml(message) {
+    const progress = message && message.streaming ? message.progress : null;
+    if (!progress) return '';
+    // Görsel adımı yalnız çıktı model görseli kullanıyorsa ortaya çıkar; PDF baskısı yalnız PDF'te.
+    const steps = PROGRESS_STEPS.filter(id => (id !== 'images' || progress.images) && (id !== 'pdf' || progress.format === 'pdf') && (id !== 'rendering' || progress.format !== 'xlsx' || progress.current === 'rendering'));
+    const current = Math.max(0, steps.indexOf(progress.current));
+    // Sayfa düzeni ve PDF baskısında aşama metni etiketi tekrarlar; yalnız ek bilgi (sayaç, düzeltme turu) gösterilir.
+    const detail = ['rendering', 'pdf'].includes(progress.current) ? '' : String(message.phase || '').trim();
+    const items = steps.map((id, index) => {
+      const status = index < current ? 'is-done' : index === current ? 'is-active' : 'is-pending';
+      const mark = index < current ? '✓' : index === current ? '●' : '○';
+      const extra = index === current && detail ? `<small class="lcwaiProgressDetail">${esc(detail)}</small>` : '';
+      return `<li class="lcwaiProgressStep ${status}"${index === current ? ' aria-current="step"' : ''}><span class="lcwaiProgressMark" aria-hidden="true">${mark}</span>${esc(progressStepLabel(id, progress))}${extra}</li>`;
+    }).join('');
+    return `<div class="lcwaiProgress blMotionEnter" role="status" aria-live="polite"><div class="lcwaiProgressHead"><b>${esc(L(`${formatLabel(progress.format)} dosyası hazırlanıyor`, `Preparing the ${formatLabel(progress.format)} file`))}</b><span>${esc(L(`Adım ${current + 1} / ${steps.length}`, `Step ${current + 1} / ${steps.length}`))} · <span data-lcwai-elapsed="${Number(progress.startedAt) || 0}">${esc(elapsedText(progress.startedAt))}</span></span></div><ol class="lcwaiProgressSteps">${items}</ol><p class="lcwaiNote">${esc(L('Dosya hazır olduğunda bu mesajda görünür. Bu sırada başka bir modüle geçerseniz hazır olduğunda bildirim alırsınız.', 'The file appears in this message when ready. If you switch to another module meanwhile, you are notified when it is ready.'))}</p></div>`;
+  }
+  let elapsedTimer = 0;
+  function tickElapsed() {
+    const el = host();
+    const nodes = el ? el.querySelectorAll('[data-lcwai-elapsed]') : [];
+    nodes.forEach(node => { node.textContent = elapsedText(node.getAttribute('data-lcwai-elapsed')); });
+  }
+  function startElapsedTimer() { if (!elapsedTimer && typeof setInterval === 'function') elapsedTimer = setInterval(tickElapsed, 1000); }
+  function stopElapsedTimer() { if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = 0; } }
+
   function renderList() {
     const list = $('[data-chat-list]');
     if (!list) return;
@@ -783,17 +839,18 @@
     }
     const last = index === conv.messages.length - 1;
     const warning = message.warning ? `<p class="lcwaiMsgWarning">${esc(message.warning)}</p>` : '';
+    const progress = message.error ? '' : progressHtml(message);
     const content = message.error
       ? `<div class="lcwaiMsgError">${esc(message.error)}${message.login ? ` <button type="button" class="lcwaiBtn is-link" data-chat-login>${esc(L('LCW AI Girişi Yap', 'Sign in to LCW AI'))}</button>` : ''}</div>`
       : message.file ? `${message.text ? md(message.text) : ''}${fileCardHtml(message.file)}`
-        : (message.text ? md(message.text) : `<p class="lcwaiNote">${esc(message.phase || L('LCW AI düşünüyor…', 'LCW AI is thinking…'))}</p>`);
+        : (message.text ? md(message.text) : progress ? '' : `<p class="lcwaiNote">${esc(message.phase || L('LCW AI düşünüyor…', 'LCW AI is thinking…'))}</p>`);
     const options = !message.streaming && last && Array.isArray(message.options) && message.options.length
       ? `<div class="lcwaiOptions">${message.options.map((option, i) => `<button type="button" class="lcwaiBtn" data-msg-option="${index}:${i}">${esc(option)}</button>`).join('')}</div>` : '';
-    const body = `${warning}${message.query && !message.error ? queryHtml(message.query) : ''}${content}${options}`;
+    const body = `${warning}${message.query && !message.error ? queryHtml(message.query) : ''}${content}${progress}${options}`;
     const excel = message.query && message.query.matched && !message.file && !message.error
       ? `<button type="button" class="lcwaiBtn is-link" data-msg-excel="${index}"${message.exporting || state.busy ? ' disabled' : ''}>${esc(message.exporting ? L('Excel hazırlanıyor…', 'Preparing Excel…') : L('Excel olarak indir', 'Download as Excel'))}</button>` : '';
     const actions = message.streaming ? '' : `<div class="lcwaiMsgActions">${excel}${message.text ? `<button type="button" class="lcwaiBtn is-link" data-msg-copy="${index}">${esc(L('Kopyala', 'Copy'))}</button><button type="button" class="lcwaiBtn is-link" data-msg-reuse="${index}">${esc(L('Yeni mesajda kullan', 'Use in new message'))}</button>` : ''}${last ? `<button type="button" class="lcwaiBtn is-link" data-msg-retry>${esc(message.error ? L('Tekrar Dene', 'Try Again') : L('Yeniden üret', 'Regenerate'))}</button>` : ''}</div>`;
-    return `<div class="lcwaiMsg is-ai${message.streaming ? ' is-streaming' : ''}"><div class="lcwaiMsgWho">LCW AI${message.model ? ` · ${esc(message.model)}` : ''}</div><div class="lcwaiMsgBody lcwaiMd">${body}</div>${actions}</div>`;
+    return `<div class="lcwaiMsg is-ai${message.streaming ? ' is-streaming' : ''}${progress ? ' has-progress' : ''}"><div class="lcwaiMsgWho">LCW AI${message.model ? ` · ${esc(message.model)}` : ''}</div><div class="lcwaiMsgBody lcwaiMd">${body}</div>${actions}</div>`;
   }
 
   /* "Nasıl anladım": rakamları Buyer Log'un hesapladığı ve yorumun ne olduğu
@@ -1116,6 +1173,7 @@
     conv.queryState = { request: base.slice(0, 600), question: '', specJson: specJson.slice(0, QUERY_STATE_CHARS) };
     answer.query = { title, lines, notes: notes.slice(0, 12), dataset: dataset.id, scope: dataset.scope, contextIds: (userMessage.contextIds || []).slice(0, 12), spec: specJson.slice(0, 12000), matched: computed.matched, rows: computed.rows.length };
     answerResults.set(answer, { computed, title, lines, notes });
+    if (answer.progress) answer.progress.query = true;
     const shown = Math.min(computed.rows.length, engine.LIMITS.chatRows);
     const table = engine.toMarkdown(computed, { lang });
     answer.text = computed.kind === 'lfl' && !computed.rows.length
@@ -1127,6 +1185,7 @@
     conv.lastQueryContext = { label: L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`), screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}\n${table}`.slice(0, 18000) };
     if (output && output.format === 'xlsx' && computed.matched) {
       answer.phase = L('Excel oluşturuluyor…', 'Creating Excel…');
+      setProgress(answer, 'rendering');
       renderMessages();
       answer.file = await api.createTableOutput(engine.toWorkbook(computed, { title, lines, notes, lang }), lang);
       notifyFile(answer.file, conv);
@@ -1195,6 +1254,8 @@
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
     const answer = { role: 'ai', text: '', streaming: true, phase: '' };
+    startProgress(answer, output);
+    if (answer.progress) startElapsedTimer();
     let pendingPaint = 0;
     conv.messages.push(answer);
     if (!reuse) { state.files = []; state.contexts = []; const input = $('[data-chat-input]'); if (input) input.value = ''; }
@@ -1260,6 +1321,7 @@
       const followUp = !computedContexts && conv.lastQueryContext ? [conv.lastQueryContext] : [];
       const sendContexts = computedContexts || [...(userMessage.contexts || []), ...followUp];
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
+      setProgress(answer, 'generating');
       renderMessages();
       const paint = () => { if (!pendingPaint) pendingPaint = requestAnimationFrame(() => { pendingPaint = 0; if (state.activeId === conv.id) renderMessages(answer); }); };
       const result = await api.chat({
@@ -1275,7 +1337,7 @@
           // Dosya modunda ham HTML/JSON akışı gösterilmez; yalnız aşama ve
           // üretilen karakter sayısı görünür.
           if (output) {
-            if (event.phase === 'output') answer.phase = outputPhase(event, output) || answer.phase;
+            if (event.phase === 'output') { answer.phase = outputPhase(event, output) || answer.phase; setProgress(answer, event.step); }
             else if (event.phase === 'streaming' && event.chars) answer.phase = `${outputPhase({ step: 'generating', templateLabel: answer.templateLabel }, output)} (${L(`${event.chars} karakter`, `${event.chars} characters`)})`;
             if (event.templateLabel) answer.templateLabel = event.templateLabel;
             paint();
@@ -1307,6 +1369,8 @@
     } finally {
       if (pendingPaint) cancelAnimationFrame(pendingPaint);
       answer.streaming = false;
+      delete answer.progress;
+      if (!state.conversations.some(c => c.messages.some(m => m.streaming && m.progress))) stopElapsedTimer();
       setBusy(false);
       persistConversations();
       if (state.activeId === conv.id) renderMessages();
@@ -1523,5 +1587,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, retryLast, runDataQuery, exportQuery, queryTargets, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, messageHtml, progressHtml, openEditor, openTemplateManager, loadTemplates, retryLast, runDataQuery, exportQuery, queryTargets, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
 })();

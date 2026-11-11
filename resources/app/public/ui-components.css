@@ -6363,6 +6363,22 @@ html[data-ui-system="manifest"] .lcwaiMsgError {color:var(--ui-danger) !importan
 }
 html[data-ui-system="manifest"] .lcwaiQuery {background:var(--ui-selected) !important;border-radius:var(--ui-radius)
 }
+html[data-ui-system="manifest"] .lcwaiProgress {background:var(--ui-surface-soft) !important;border-radius:var(--ui-radius)
+}
+html[data-ui-system="manifest"] .lcwaiProgressHead b {font-size:var(--ui-font-xs) !important;letter-spacing:.02em;text-transform:uppercase;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .lcwaiProgressHead span,html[data-ui-system="manifest"] .lcwaiProgressDetail,html[data-ui-system="manifest"] .lcwaiProgress .lcwaiNote {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .lcwaiProgressStep {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .lcwaiProgressStep.is-done .lcwaiProgressMark {color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .lcwaiProgressStep.is-active {color:var(--ui-text) !important;font-weight:650
+}
+html[data-ui-system="manifest"] .lcwaiProgressStep.is-active .lcwaiProgressMark {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .lcwaiProgressStep.is-active .lcwaiProgressDetail {font-weight:400
+}
 html[data-ui-system="manifest"] .lcwaiQueryHead b {font-size:var(--ui-font-xs) !important;letter-spacing:.02em;text-transform:uppercase;color:var(--ui-selected-ink) !important
 }
 html[data-ui-system="manifest"] .lcwaiQueryHead small,html[data-ui-system="manifest"] .lcwaiQueryNotes summary {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important

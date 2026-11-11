@@ -54,7 +54,7 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true, lflRows = 
     BLPriceSupplierAnalysisBridge: { async get() { return { priceType: 'quotation', observations: quotations }; } },
   };
   window.window = window;
-  const context = vm.createContext({ window, globalThis: window, fetch: async url => { assert.equal(url, '/api/lfl'); return { ok: lflStatus === 200, status: lflStatus, json: async () => ({ rows: lflRows, error: lflStatus === 200 ? undefined : 'LFL forbidden' }) }; }, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
+  const context = vm.createContext({ window, globalThis: window, fetch: async url => { assert.equal(url, '/api/lfl'); return { ok: lflStatus === 200, status: lflStatus, json: async () => ({ rows: lflRows, error: lflStatus === 200 ? undefined : 'LFL forbidden' }) }; }, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0), cancelAnimationFrame: clearTimeout });
   SOURCES.forEach((source, index) => {
     vm.runInContext(source, context);
     // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.
@@ -250,4 +250,61 @@ test('büyük bağlam dosyası: boş sütun atılır, sınır aşılırsa satır
   assert.ok(capped.file.size <= 20000, `dosya sınırın altında: ${capped.file.size}`);
   assert.ok(capped.truncated.sent < 2000 && capped.truncated.total === 2000);
   assert.match(capped.context.text, /yalnız ilk \d+ \/ 2000 satırı/);
+});
+
+/* Regresyon: PDF/PowerPoint isteğinde Buyer Log tabloyu cevaba yazdıktan sonra
+   dosya üretim aşamaları (LCW AI içerik, sayfa düzeni, görseller, PDF baskısı)
+   message.phase'e yazılıyor ama metin dolu olduğu için hiç görünmüyordu;
+   kullanıcı tabloyu ve imleci görüp sessizce bekliyordu. */
+test('dosya isteğinde tablo görünürken üretim aşamaları adım adım gösterilir', async () => {
+  const pdf = load({ plans: [PIVOT] });
+  pdf.chat._state.output.format = 'pdf';
+  const snapshots = [];
+  const view = () => {
+    const conv = pdf.chat._state.conversations[0];
+    return pdf.chat.messageHtml(conv.messages.at(-1), conv.messages.length - 1, conv);
+  };
+  pdf.window.BuyerLogAI.chat = async options => {
+    snapshots.push(view());
+    options.onProgress({ phase: 'streaming', chars: 1200 });
+    snapshots.push(view());
+    options.onProgress({ phase: 'output', step: 'rendering' });
+    snapshots.push(view());
+    await options.resolveImages([]);
+    snapshots.push(view());
+    options.onProgress({ phase: 'output', step: 'pdf' });
+    snapshots.push(view());
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pdf' } };
+  };
+  await pdf.chat.send('sipariş MB ayı Buying Group tablosu pdf');
+  const [start, streaming, rendering, images, printing] = snapshots;
+  assert.match(start, /\| Toplam \|/, 'Buyer Log tablosu görünür kalır');
+  assert.match(start, /class="lcwaiProgress[^"]*"[^>]*role="status"/);
+  assert.match(start, /is-done[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Buyer Log verileri hesapladı/);
+  assert.match(start, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>LCW AI PDF içeriğini yazıyor/);
+  assert.match(start, /Adım 2 \/ 4/);
+  assert.match(streaming, /1200 karakter/);
+  assert.match(rendering, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Buyer Log sayfa düzenini kuruyor/);
+  assert.match(images, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>Model görselleri ekleniyor/);
+  assert.match(images, /Adım 4 \/ 5/, 'görsel adımı ortaya çıktığında listeye eklenir');
+  assert.match(printing, /is-active[^>]*>[^<]*<span[^>]*>[^<]*<\/span>PDF basılıyor/);
+  assert.match(printing, /data-lcwai-elapsed/);
+  assert.doesNotMatch(view(), /lcwaiProgress/, 'iş bitince ilerleme paneli kalkar');
+  assert.equal(lastAnswer(pdf.chat).file.fileName, 'x.pdf');
+});
+
+test('dosya ilerlemesi İngilizce arayüzde İngilizce yazılır', async () => {
+  const pdf = load({ plans: [PIVOT] });
+  pdf.window.appLang = 'en';
+  pdf.chat._state.output.format = 'pptx';
+  let html = '';
+  pdf.window.BuyerLogAI.chat = async options => {
+    options.onProgress({ phase: 'output', step: 'rendering' });
+    const conv = pdf.chat._state.conversations[0];
+    html = pdf.chat.messageHtml(conv.messages.at(-1), conv.messages.length - 1, conv);
+    return { chatId: 'c1', text: '', output: { id: 'o1', fileName: 'x.pptx' } };
+  };
+  await pdf.chat.send('order MB month by buying group presentation');
+  assert.match(html, /Step 3 \/ 3/);
+  assert.match(html, /Buyer Log is laying out the pages/);
 });
