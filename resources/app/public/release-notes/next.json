@@ -74,6 +74,39 @@
       }
     },
     {
+      "id": "backlog-overview-query-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "path": {
+        "tr": "Backlog › Backlog Genel Bakış",
+        "en": "Backlog › Backlog Overview"
+      },
+      "title": {
+        "tr": "Backlog Genel Bakış ve özel sipariş analizi yeniden hızlı açılır",
+        "en": "Backlog Overview and special-order analysis open quickly again"
+      },
+      "body": {
+        "tr": "Son Excel sütun ayarları güncellemesinden sonra Backlog Genel Bakış ve teslimat analizi, Excel ayarları bir kez açılmadan verileri toplayamıyor ve “Backlog yüklendiğinde…” durumunda bekliyordu. Analiz artık Excel ayarlarından bağımsız olarak hemen yüklenir. Ayrıca özel sipariş (BTS, Bayram …) etiket kuralları her satırda yeniden hesaplanmaz; çok sayıda kural kullanıldığında Backlog ve CP/Orders verilerinin hazırlanması belirgin şekilde hızlanır. Sonuçlar ve etiketler değişmez.",
+        "en": "After the latest Excel column settings update, Backlog Overview and the delivery analysis could not collect data until Excel settings had been opened once, and stayed at “The overview appears once Backlog loads”. The analysis now loads immediately, independently of Excel settings. Special-order (BTS, Eid …) tag rules are also no longer re-evaluated for every row, so preparing Backlog and CP/Orders data is noticeably faster when many rules are used. Results and tags are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-overview-query-recovery.png",
+        "alt": {
+          "tr": "Backlog Genel Bakış, Özel kapsamı seçiliyken BTS ve Bayram kırılımıyla yüklendi (demo veri)",
+          "en": "Backlog Overview loaded with the Special scope selected and a BTS/Eid breakdown (demo data)"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi: Excel ayarları açılmadan Genel Bakış ve özel sipariş özeti yüklendi.",
+          "en": "Actual post-change Buyer Log with isolated demo data: the Overview and special-order summary load without opening Excel settings."
+        }
+      }
+    },
+    {
       "id": "update-available-notice",
       "type": "improvement",
       "module": {
