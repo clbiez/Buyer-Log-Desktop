@@ -93,17 +93,23 @@ function responseShape(value) {
    gönderilmez: yanlış bir blobName başka bir dosyayı işaret edebilir. */
 function toAttachment(response, fallback = {}) {
   if (!response || typeof response !== 'object') throw lcwAiError('UPLOAD_FAILED', { detail: 'upload-response' });
-  const value = attachmentRecord(response);
-  if (!value) { const error = lcwAiError('UPLOAD_FAILED', { detail: 'blob-name' }); error.responseShape = responseShape(response); throw error; }
-  const blobName = clean(field(value, 'blobName'));
-  const url = clean(field(value, 'url'));
+  // Bilinen biçim (camelCase, zarfsız) doğrudan okunur; yalnız diğer biçimler
+  // tek seferde camelCase alanlara çevrilir.
+  let value = response;
+  if (typeof response.blobName !== 'string') {
+    const record = attachmentRecord(response);
+    if (!record) { const error = lcwAiError('UPLOAD_FAILED', { detail: 'blob-name' }); error.responseShape = responseShape(response); throw error; }
+    value = { blobName: field(record, 'blobName'), url: field(record, 'url'), size: field(record, 'size'), contentType: field(record, 'contentType'), fileName: field(record, 'fileName') };
+  }
+  const blobName = clean(value.blobName);
+  const url = clean(value.url);
   if (!blobName || blobName.length > 500 || /[\u0000-\u001f]/.test(blobName)) throw lcwAiError('UPLOAD_FAILED', { detail: 'blob-name' });
   if (url && (url.length > 1000 || !/^\/?[A-Za-z0-9._~\-/%]+$/.test(url))) throw lcwAiError('UPLOAD_FAILED', { detail: 'attachment-url' });
-  const size = Number(field(value, 'size'));
+  const size = Number(value.size);
   return {
     blobName,
-    contentType: clean(field(value, 'contentType')) || clean(fallback.contentType) || 'application/octet-stream',
-    fileName: sanitizeFileName(field(value, 'fileName') || fallback.fileName),
+    contentType: clean(value.contentType) || clean(fallback.contentType) || 'application/octet-stream',
+    fileName: sanitizeFileName(value.fileName || fallback.fileName),
     size: Number.isFinite(size) && size >= 0 ? size : Number(fallback.size) || 0,
     url,
   };
