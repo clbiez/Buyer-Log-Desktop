@@ -98,6 +98,15 @@ test('pending release-note contract has bilingual detail and verified post-chang
       assert.ok(change[key]?.tr?.trim(),key+' tr missing');
       assert.ok(change[key]?.en?.trim(),key+' en missing');
     }
+    // CLAUDE.md §4.2 + scripts/release-notes.js: görsel olmayan fix/improvement
+    // iki dilli gerekçeyle kind="none" taşır; feature ve ekranda görünen her
+    // değişiklik aşağıdaki ekran görüntüsü kuralına tabi kalır.
+    if(RELEASE_NOTES_SCRIPT.isNonVisual(change)){
+      assert.ok(['fix','improvement'].includes(change.type),'kind=none only for fix/improvement');
+      assert.equal(change.visual.src,undefined);
+      assert.ok(change.visual?.reason?.tr?.trim()&&change.visual?.reason?.en?.trim(),'non-visual reason tr/en');
+      continue;
+    }
     assert.ok(change.visual?.alt?.tr&&change.visual?.alt?.en);
     assert.ok(change.visual?.caption?.tr&&change.visual?.caption?.en);
     const asset=path.join(ROOT,'public','release-notes','next-assets',change.visual.src);
