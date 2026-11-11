@@ -15842,3 +15842,16 @@ html[data-ui-system="manifest"] .backlogColFx.is-custom {color:var(--ui-accent) 
 html[data-ui-system="manifest"] .backlogColFx.is-default {color:var(--ui-accent) !important;}
 html[data-ui-system="manifest"] .backlogColFx.is-empty {color:var(--ui-text-muted) !important;}
 html[data-ui-system="manifest"] .backlogColSource {font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
+
+/* Matrix previews use the print palette independently of the editor theme. */
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"]{background:var(--ui-print-paper)!important;color:var(--ui-print-ink)!important}
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-band,
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-card,
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-frame{background:var(--ui-print-paper)!important}
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayText,
+html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-title{color:var(--ui-print-ink)!important}
+html[data-ui-system="manifest"] .lcwaiMatrixOptions .lcwaiEdField{align-items:stretch;text-align:start}
+html[data-ui-system="manifest"] .lcwaiMatrixOptions input[type="range"]{width:100%}
+
+html[data-ui-system="manifest"] .lcwaiMatrixHead{background:var(--ui-surface-soft);font-size:var(--ui-font-2xs);z-index:var(--ui-z-raised)}
+html[data-ui-system="manifest"] .lcwaiMatrixField[open]{background:var(--ui-selected)}

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-10",
+  "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Analiz filtrelerinde toplu seçim",
-    "en": "Bulk selection in analysis filters"
+    "tr": "Sütun matrisiyle sunum düzenleme ve analiz iyileştirmeleri",
+    "en": "Column matrix presentation editing and analysis improvements"
   },
   "summary": {
-    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz.",
-    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters."
+    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz. Sunum editöründe sütun rollerini tek matristen seçebilir, sabit puntolu çıktıyı alt alta ön izleyebilir ve kartlarla grupları slaytlar arasında taşıyabilirsiniz.",
+    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters. In the presentation editor, choose column roles in one matrix, preview fixed-font output in a continuous slide stream and move cards and groups across slides."
   },
   "changes": [
     {
@@ -182,6 +182,35 @@
         "caption": {
           "tr": "İzole demo oturumunda Türkçe kaynak ve İngilizce düzeltme birlikte görülüyor; kayıt API üzerinden yeniden okunarak doğrulandı.",
           "en": "An isolated demo session shows the Turkish source and English correction together; persistence was verified by reading the record back through the API."
+        }
+      }
+    },
+    {
+      "id": "presentation-column-matrix",
+      "type": "feature",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Sütun matrisi ve kesintisiz sunum ön izlemesi",
+        "en": "Column matrix and continuous deck preview"
+      },
+      "body": {
+        "tr": "Geniş editörde koleksiyon sütunlarını model kartı, başlık, alt başlık ve alt grup olarak seçin; punto ve yerleşimi aynı satırdan ayarlayın. Slaytlar alt alta gösterilir; kartları ve başlıklarıyla grupları slaytlar arasında taşıyın ve geri alın. Sabit puntolu uzun bilgiler devam kartlarına ayrılır.",
+        "en": "Choose collection columns for model cards, titles, subtitles and subgroups in the enlarged editor; adjust typography and placement in the same row. Slides appear vertically; move cards and groups with their titles between slides and undo changes. Long details continue on additional cards at a fixed font size."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-column-matrix.png",
+        "alt": {
+          "tr": "Gerçek sunum editöründe örnek koleksiyonla sütun matrisi ve slayt akışı",
+          "en": "Column matrix and slide stream in the actual editor with demo collection data"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek sunum editörü; yalnız örnek koleksiyon verisi.",
+          "en": "Actual post-change presentation editor with demo collection data only."
         }
       }
     }

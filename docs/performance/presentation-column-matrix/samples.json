@@ -1,0 +1,170 @@
+[
+  {
+    "pair": 0,
+    "base": true,
+    "count": 24,
+    "feedback": 15.899999998509884,
+    "ready": 18.099999997764826,
+    "dom": 149,
+    "longTasks": []
+  },
+  {
+    "pair": 0,
+    "base": true,
+    "count": 240,
+    "feedback": 11.299999997019768,
+    "ready": 22.899999998509884,
+    "dom": 150,
+    "longTasks": []
+  },
+  {
+    "pair": 0,
+    "base": true,
+    "count": 30000,
+    "feedback": 251.90000000223517,
+    "ready": 255.5,
+    "dom": 150,
+    "longTasks": [
+      250.90000000223517
+    ]
+  },
+  {
+    "pair": 0,
+    "base": false,
+    "count": 24,
+    "feedback": 20.800000000745058,
+    "ready": 29.699999999254942,
+    "dom": 518,
+    "longTasks": []
+  },
+  {
+    "pair": 0,
+    "base": false,
+    "count": 240,
+    "feedback": 16.099999997764826,
+    "ready": 189.59999999776483,
+    "dom": 519,
+    "longTasks": []
+  },
+  {
+    "pair": 0,
+    "base": false,
+    "count": 30000,
+    "feedback": 29.300000000745058,
+    "ready": 1883.699999999255,
+    "dom": 519,
+    "longTasks": []
+  },
+  {
+    "pair": 1,
+    "base": true,
+    "count": 24,
+    "feedback": 10.5,
+    "ready": 22.599999997764826,
+    "dom": 149,
+    "longTasks": []
+  },
+  {
+    "pair": 1,
+    "base": true,
+    "count": 240,
+    "feedback": 11,
+    "ready": 27.699999999254942,
+    "dom": 150,
+    "longTasks": []
+  },
+  {
+    "pair": 1,
+    "base": true,
+    "count": 30000,
+    "feedback": 275.8999999985099,
+    "ready": 278.5,
+    "dom": 150,
+    "longTasks": [
+      275
+    ]
+  },
+  {
+    "pair": 1,
+    "base": false,
+    "count": 24,
+    "feedback": 18.800000000745058,
+    "ready": 27.800000000745058,
+    "dom": 518,
+    "longTasks": []
+  },
+  {
+    "pair": 1,
+    "base": false,
+    "count": 240,
+    "feedback": 11.399999998509884,
+    "ready": 160.59999999776483,
+    "dom": 519,
+    "longTasks": []
+  },
+  {
+    "pair": 1,
+    "base": false,
+    "count": 30000,
+    "feedback": 22.800000000745058,
+    "ready": 1818.5,
+    "dom": 519,
+    "longTasks": []
+  },
+  {
+    "pair": 2,
+    "base": true,
+    "count": 24,
+    "feedback": 12.100000001490116,
+    "ready": 14.400000002235174,
+    "dom": 149,
+    "longTasks": []
+  },
+  {
+    "pair": 2,
+    "base": true,
+    "count": 240,
+    "feedback": 13.100000001490116,
+    "ready": 29.699999999254942,
+    "dom": 150,
+    "longTasks": []
+  },
+  {
+    "pair": 2,
+    "base": true,
+    "count": 30000,
+    "feedback": 247.30000000074506,
+    "ready": 249.70000000298023,
+    "dom": 150,
+    "longTasks": [
+      247
+    ]
+  },
+  {
+    "pair": 2,
+    "base": false,
+    "count": 24,
+    "feedback": 20.100000001490116,
+    "ready": 27.699999999254942,
+    "dom": 518,
+    "longTasks": []
+  },
+  {
+    "pair": 2,
+    "base": false,
+    "count": 240,
+    "feedback": 12,
+    "ready": 161.59999999776483,
+    "dom": 519,
+    "longTasks": []
+  },
+  {
+    "pair": 2,
+    "base": false,
+    "count": 30000,
+    "feedback": 24.599999997764826,
+    "ready": 1881.8999999985099,
+    "dom": 519,
+    "longTasks": []
+  }
+]

@@ -81,7 +81,7 @@ function normalizeDefinition(raw = {}) {
   if (!format) return null;
   const base = TEMPLATES[source.base] && TEMPLATES[source.base].formats.includes(format) ? source.base : '';
   const layout = source.layout && typeof source.layout === 'object' ? BLOutputLayout.normalizeLayout(format, source.layout) : null;
-  if (layout && layout.studio) layout.studio.spans = {}; // Record-specific overrides belong only to drafts.
+  if (layout && layout.studio) { layout.studio.spans = {}; layout.studio.manualPages = []; } // Record-specific overrides belong only to drafts.
   return {
     format,
     orientation: source.orientation === 'landscape' ? 'landscape' : 'portrait',

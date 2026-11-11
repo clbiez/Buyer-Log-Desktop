@@ -45,7 +45,14 @@
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
     const spans = {};
     for (const [id, span] of Object.entries(value.spans || {}).slice(0, 30000)) if (/^[A-Z]{2,4}-\d{1,6}$/.test(id) && [1, 2].includes(span)) spans[id] = span;
-    return { version: 1, sizing: ['equal', 'sets', 'auto'].includes(value.sizing) ? value.sizing : 'sets',
+    return { version: 1, matrix: value.matrix === true,
+      subtitleFields: normalizeCardFields(value.subtitleFields) || [],
+      requiredHeader: Math.max(0, Math.min(1000, Number(value.requiredHeader) || 0)),
+      labelSize: Math.max(8, Math.min(18, Number(value.labelSize) || 10)),
+      subtitleSize: Math.max(8, Math.min(28, Number(value.subtitleSize) || 13)),
+      groupSize: Math.max(8, Math.min(28, Number(value.groupSize) || 13)),
+      manualPages: Array.isArray(value.manualPages) ? value.manualPages.slice(0, 30000).map(page => Array.isArray(page) ? page.slice(0, 30000).filter(group => group && typeof group === 'object').map(group => ({ title: cleanText(group.title, 3000), tokens: Array.isArray(group.tokens) ? group.tokens.filter(t => /^[A-Z]{2,4}-\d{1,6}$/.test(t)).slice(0, 30000) : [] })) : []) : [],
+      sizing: ['equal', 'sets', 'auto'].includes(value.sizing) ? value.sizing : 'sets',
       reflow: ['dense', 'large', 'balanced', 'fixed'].includes(value.reflow) ? value.reflow : 'balanced',
       paper: PAPERS[value.paper] ? value.paper : '16:9', orientation: value.orientation === 'portrait' ? 'portrait' : 'landscape',
       spans, galleryFirst: value.galleryFirst === true, headerHidden: value.headerHidden === true,
@@ -184,7 +191,7 @@
   function pptxGeometry(raw) {
     const layout = normalizeLayout('pptx', raw);
     const size = pageSize(layout);
-    const band = layout.studio && layout.studio.headerHidden ? 0 : layout.headerHeight;
+    const band = layout.studio && layout.studio.headerHidden ? 0 : Math.max(layout.headerHeight, layout.studio?.matrix ? layout.studio.requiredHeader || 0 : 0);
     const contentTop = band + 14;
     const note = layout.studio && layout.studio.note ? layout.studio.noteHeight : 0;
     return { layout, size, margin: layout.margin, band, contentTop, contentH: size.height - contentTop - SLIDE.footer - note, width: size.width - layout.margin * 2, note };
@@ -306,7 +313,7 @@
     // kalan yeri de görsel kullanır. Metin ikinci plandadır: küçük yazı;
     // sığmazsa önce yazı küçülür (alt sınır), sonra son satırlar düşer.
     const l = raw && raw.cardTextSize ? raw : normalizeLayout('pptx', raw);
-    const grow = Math.min(1.45, Math.max(1, Math.sqrt(scale)));
+    const grow = l.studio?.matrix ? 1 : Math.min(1.45, Math.max(1, Math.sqrt(scale)));
     const pad = Math.max(3, Math.min(7, cell.w * 0.045));
     const inner = cell.h - pad * 2;
     const imgShare = Math.max(16, inner * l.imageShare / 100);
@@ -341,10 +348,23 @@
   }
   function cardContent(cell, raw, item, record, scale = 1) {
     const l = raw && typeof raw.showTitle === 'boolean' && 'cardFields' in raw ? raw : normalizeLayout('pptx', raw);
-    const details = cardDetails(item || {}, l, record);
+    const details = l.studio?.matrix && Array.isArray(item._matrixDetails) ? item._matrixDetails : cardDetails(item || {}, l, record);
     const meta = [l.showSubtitle ? item.subtitle : '', l.showNote ? item.note : ''].filter(Boolean).join(' · ');
     const badge = l.showBadge && item.badge ? item.badge : '';
     const title = l.showTitle && item.title ? item.title : '';
+    if (l.studio?.matrix) {
+      const pad = 6, size = l.cardTextSize, detail = size * .85, line = Math.max(detail, l.showFieldLabels ? l.studio.labelSize : 0) * 1.3;
+      const width = Math.max(1, cell.w - pad * 2);
+      const wrap = (text, font) => Math.max(1, Math.ceil(String(text || '').length * font * .58 / width));
+      const lines = details.flatMap(row => {
+        const prefix = l.showFieldLabels ? row.label + ' ' : '';
+        const n = Math.max(1, Math.floor(width / (detail * .58)) - prefix.length);
+        return Array.from({ length: Math.ceil(row.value.length / n) }, (_, i) => [{ ...row, value: row.value.slice(i * n, (i + 1) * n) }]);
+      });
+      const textH = (title ? wrap(title, size) * size * 1.3 : 0) + (meta ? wrap(meta, detail) * line : 0) + (badge ? size * 1.1 + 3 : 0) + lines.length * line + 8;
+      const imgH = Math.max(0, cell.h - pad * 2 - textH - 3);
+      return { box: { pad, imgH, size, detail, line, maxLines: lines.length }, title, meta, badge, lines, hidden: 0, requiredHeight: textH + pad * 2 + 45 };
+    }
     const flags = { badge: Boolean(badge), title: Boolean(title), meta: Boolean(meta), scale };
     let box = cardLayout(cell, l, { ...flags, lines: details.length });
     let lines = details.map(row => [row]);
@@ -469,8 +489,23 @@
   function galleryPages(raw, groups, { english = false, fallbackTitle = '', records = null } = {}) {
     const g = pptxGeometry(raw);
     const l = g.layout;
-    const C = l.columns, gap = l.gap;
+    let C = l.columns;
+    const gap = l.gap;
     const studio = l.studio;
+    let subtitleHeight = 0;
+    if (studio?.matrix && !studio.headerHidden) {
+      const titleLength = (groups || []).reduce((n, group) => Math.max(n, (customTitle(l, group.items, records) || group.title || fallbackTitle).length + 12), 1);
+      let subLength = 0;
+      for (const id of studio.subtitleFields) {
+        let max = 0;
+        for (const group of groups || []) for (const item of group.items) max = Math.max(max, fieldValue(item, id, records).length);
+        subLength += max * 2 + 16;
+      }
+      subtitleHeight = subLength ? Math.ceil(subLength * studio.subtitleSize * .58 / g.width) * studio.subtitleSize * 1.35 : 0;
+      const reserve = Math.ceil(Math.ceil(titleLength * l.titleSize * .58 / g.width) * l.titleSize * 1.3 + subtitleHeight + 26);
+      if (reserve > g.size.height - 120) throw Error(english ? 'Selected heading fields exceed the page. Choose fewer heading fields or a smaller heading size.' : 'Seçilen başlık alanları sayfayı aşıyor. Daha az başlık alanı veya daha küçük başlık boyutu seçin.');
+      if (reserve > g.band) return galleryPages({ ...l, studio: { ...studio, requiredHeader: reserve } }, groups, { english, fallbackTitle, records });
+    }
     const span = item => {
       if (!studio || studio.sizing === 'equal') return 1;
       const override = studio.spans[item.image];
@@ -482,9 +517,35 @@
     };
     let R = studio && studio.reflow !== 'fixed' ? Math.max(1, Math.min(6, Math.floor((g.contentH - 8 + gap) / ({ dense: 110, balanced: 140, large: 220 }[studio.reflow] + gap)))) : l.rows;
     if (studio && (groups || []).some(group => group.items.some(item => span(item) === 2))) R = Math.max(2, R);
+    let requiredCardH = 0;
+    if (studio?.matrix) {
+      let required;
+      do {
+        const width = (g.width - gap * (C - 1)) / C;
+        required = (groups || []).reduce((max, group) => group.items.reduce((n, item) => Math.max(n, cardContent({ w: width, h: g.contentH }, l, item, records && records[item.image]).requiredHeight || 0), max), 80);
+        if (required + studio.groupSize * 1.4 + 7 <= g.contentH || C === 1) break;
+        C--;
+      } while (C > 0);
+      requiredCardH = required;
+      R = Math.max(1, Math.min(R, Math.floor((g.contentH - 8) / (required + studio.groupSize * 1.4 + 7 + gap))));
+    }
+    if (studio?.matrix) {
+      const width = (g.width - gap * (C - 1)) / C;
+      const height = g.contentH - 8 - studio.groupSize * 1.4 - 7;
+      groups = (groups || []).map(group => ({ ...group, items: group.items.flatMap(item => {
+        const content = cardContent({ w: width, h: height }, l, item, records && records[item.image]);
+        if (content.requiredHeight <= height) return [item];
+        const lineRoom = Math.max(1, Math.floor((height - 100 - (content.title ? l.cardTextSize * 3 : 0)) / content.box.line));
+        const rows = content.lines.flat();
+        return Array.from({ length: Math.ceil(rows.length / lineRoom) }, (_, i) => ({ ...item, title: `${item.title || ''} (${i + 1}/${Math.ceil(rows.length / lineRoom)})`, _matrixDetails: rows.slice(i * lineRoom, (i + 1) * lineRoom) }));
+      }) }));
+    }
     const list = (groups || []).filter(group => group && Array.isArray(group.items) && group.items.length);
     if (!list.length) return [];
-    const labelH = Number((l.cardTextSize * 1.4 + 7).toFixed(1));
+    const labelLines = studio?.matrix ? list.reduce((n, group) => Math.max(n, Math.ceil((String(group.label || group.title || '').length + 12) * studio.groupSize * .58 / ((g.width - gap * (C - 1)) / C))), 1) : 1;
+    const labelH = Number(((studio?.matrix ? studio.groupSize : l.cardTextSize) * 1.4 * labelLines + 7).toFixed(1));
+    if (studio?.matrix && labelH > g.contentH - 80) throw Error(english ? 'Group headings exceed the page; choose fewer group fields or a smaller group size.' : 'Grup başlıkları sayfayı aşıyor; daha az grup alanı veya daha küçük grup boyutu seçin.');
+    if (studio?.matrix) R = Math.max(1, Math.min(R, Math.floor((g.contentH - 8) / (Math.min(requiredCardH, g.contentH - labelH - 8) + labelH + gap))));
     const top = g.contentTop + 8;
     const availH = g.contentH - 8;
     const runs = l.packGroups ? [list] : list.map(group => [group]);
@@ -559,7 +620,7 @@
             if (!seen.has(seg.group)) {
               seen.add(seg.group);
               const cont = groupPages[seg.group][0] !== pi;
-              const fitted = fitLabel(named.labels[ids.indexOf(seg.group)], w, Math.max(8, l.cardTextSize), cont ? 9 : 0);
+              const fitted = studio?.matrix ? { text: named.labels[ids.indexOf(seg.group)], size: studio.groupSize } : fitLabel(named.labels[ids.indexOf(seg.group)], w, Math.max(8, l.cardTextSize), cont ? 9 : 0);
               labels.push({ x, y, w, h: strip - 4, text: fitted.text, size: fitted.size, cont, group: seg.group });
             }
             if (seg.from > 0 && segments.some(other => other !== seg && other.row === seg.row && other.to === seg.from - 1)) dividers.push({ x: x - gap / 2, y, h: strip + cellH });
@@ -573,8 +634,8 @@
           : one ? `${one.title}${part}`
             : named.common || fallbackTitle || (english ? 'Model gallery' : 'Model galerisi');
         const count = items.length;
-        const subtitle = one ? (one.subtitle || '') : (english ? `${ids.length} groups · ${count} models` : `${ids.length} grup · ${count} model`);
-        pages.push({ title, subtitle, cells, labels, rules, dividers, scale: cellW / baseW, groups: ids.map(gi => run[gi]), sources: [...new Set(ids.flatMap(gi => run[gi].sources || []))], labelH: strip });
+        const subtitle = studio?.subtitleFields?.length ? studio.subtitleFields.map(id => pageValue(cells.map(c => c.item), id, records)).filter(Boolean).join(' · ') : one ? (one.subtitle || '') : (english ? `${ids.length} groups · ${count} models` : `${ids.length} grup · ${count} model`);
+        pages.push({ title, subtitle, headerHeight: g.band, subtitleHeight, cells, labels, rules, dividers, scale: cellW / baseW, groups: ids.map(gi => run[gi]), sources: [...new Set(ids.flatMap(gi => run[gi].sources || []))], labelH: strip });
       }
     }
     return pages;
@@ -611,6 +672,25 @@
      records: görsel anahtarı → kaynak satır (gruplama ve başlık değerleri için). */
   function expandGalleries(slides, raw, { english = false, records = null } = {}) {
     const l = normalizeLayout('pptx', raw);
+    if (l.studio?.manualPages?.length) {
+      const byToken = new Map();
+      (slides || []).forEach((slide, source) => (slide.items || []).forEach(item => byToken.set(item.image, { item, source })));
+      const used = new Set(), result = [];
+      for (const page of l.studio.manualPages) {
+        const groups = page.map(group => {
+          const entries = group.tokens.filter(token => byToken.has(token) && !used.has(token)).map(token => { used.add(token); return byToken.get(token); });
+          return { title: group.title, label: group.title, heading: '', items: entries.map(e => e.item), sources: [...new Set(entries.map(e => e.source))] };
+        }).filter(g => g.items.length);
+        for (const page of galleryPages(l, groups, { english, records })) result.push({ page, sources: page.sources });
+      }
+      const remaining = [...byToken].filter(([token]) => !used.has(token)).map(([,entry]) => entry);
+      if (remaining.length) for (const page of galleryPages(l, [{ title: english ? 'New models' : 'Yeni modeller', items: remaining.map(e => e.item), sources: [...new Set(remaining.map(e => e.source))] }], { english, records })) result.push({ page, sources: page.sources });
+      const firstGallery = (slides || []).findIndex(slide => slide.layout === 'gallery');
+      const prefix = [];
+      (slides || []).forEach((slide, index) => { if (slide.layout !== 'gallery') (index < firstGallery ? prefix : result).push({ slide, sources: [index] }); });
+      result.unshift(...prefix);
+      return result;
+    }
     if (l.studio && l.studio.galleryFirst) {
       const ordered = [...(slides || []).filter(s => s.layout === 'gallery'), ...(slides || []).filter(s => s.layout !== 'gallery')];
       return expandGalleries(ordered, { ...l, studio: { ...l.studio, galleryFirst: false } }, { english, records }).map(entry => ({ ...entry, sources: entry.sources.map(index => slides.indexOf(ordered[index])) }));
@@ -1230,13 +1310,14 @@
 
   // A structured report uses the exact same gallery page plan as PowerPoint and the editor.
   function presentationReport(data, records = {}, english = false) {
-    const l = normalizeLayout('pptx', data.layout), g = pptxGeometry(l);
+    const l = normalizeLayout('pptx', data.layout), baseGeometry = pptxGeometry(l);
     const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const block = (x, y, w, h, cls, html, extra = '') => `<div class="${cls}" style="position:absolute;left:${x}pt;top:${y}pt;width:${w}pt;height:${h}pt;${extra}">${html}</div>`;
     const pages = expandGalleries(data.slides, l, { records, english });
     const body = pages.map((entry, index) => {
+      const g = { ...baseGeometry, band: entry.page?.headerHeight || baseGeometry.band };
       const slide = entry.slide || { title: entry.page.title, subtitle: entry.page.subtitle };
-      let html = l.studio && l.studio.headerHidden ? '' : block(g.margin, 8, g.width, Math.max(1, g.band - 8), 'bl-studio-title', `<b>${escape(slide.title)}</b>${slide.subtitle ? `<small>${escape(slide.subtitle)}</small>` : ''}`, `font-size:${l.titleSize}pt;overflow:hidden;`);
+      let html = l.studio && l.studio.headerHidden ? '' : block(g.margin, 8, g.width, Math.max(1, g.band - 8), 'bl-studio-title', `<b>${escape(slide.title)}</b>${slide.subtitle ? `<small style="font-size:${l.studio?.subtitleSize || 12}pt">${escape(slide.subtitle)}</small>` : ''}`, `font-size:${l.titleSize}pt;overflow:hidden;`);
       const cover = entry.slide && ['title', 'section'].includes(entry.slide.layout);
       if (cover) {
         html = block(g.margin, g.size.height * .3, g.width, g.size.height * .25, 'bl-studio-title', `<b>${escape(slide.title)}</b>`, `font-size:${Math.min(40, g.size.width / 18)}pt;`);
@@ -1245,9 +1326,9 @@
         entry.page.labels.forEach(label => { html += block(label.x, label.y, label.w, label.h, 'bl-studio-label', escape(label.text), `font-size:${label.size}pt;`); });
         entry.page.cells.forEach(cell => {
           const content = cardContent(cell, l, cell.item, records[cell.item.image], entry.page.scale), k = content.box;
-          const fields = content.lines.map(line => line.map(row => `${l.showFieldLabels ? `${escape(row.label)} ` : ''}${escape(row.value)}`).join(' · ')).join('<br>');
+          const fields = content.lines.map(line => line.map(row => `${l.showFieldLabels ? `<span style="font-size:${l.studio?.matrix ? l.studio.labelSize : k.detail}pt">${escape(row.label)}</span> ` : ''}${escape(row.value)}`).join(' · ')).join('<br>');
           const image = `<div style="height:${k.imgH}pt;"><img data-bl-image="${escape(cell.item.image)}" alt="${escape(cell.item.title)}" style="width:100%;height:100%;object-fit:contain;"></div>`;
-          html += block(cell.x, cell.y, cell.w, cell.h, 'bl-studio-card', `${image}<div style="font-size:${k.detail}pt;line-height:1.25;"><b>${escape(content.title)}</b><br>${fields}</div>`, `padding:${k.pad}pt;box-sizing:border-box;overflow:hidden;`);
+          html += block(cell.x, cell.y, cell.w, cell.h, 'bl-studio-card', `${image}<div style="font-size:${k.detail}pt;line-height:1.25;"><b style="font-size:${k.size}pt">${escape(content.title)}</b><br>${fields}</div>`, `padding:${k.pad}pt;box-sizing:border-box;overflow:hidden;`);
         });
       } else {
         const content = slide.layout === 'kpis' ? (slide.kpis || []).map(k => `<p><b>${escape(k.label)}: ${escape(k.value)}</b> ${escape(k.note)}</p>`).join('')
@@ -1261,7 +1342,7 @@
       if (!cover) html += block(g.margin, g.size.height - 25, g.width, 18, 'bl-studio-footer', `${escape(data.title)} · ${index + 1}/${pages.length}`, 'font-size:9pt;');
       return `<section class="bl-studio-page" style="position:relative;width:${g.size.width}pt;height:${g.size.height}pt;break-after:page;box-sizing:border-box;">${html}</section>`;
     }).join('');
-    return { body, width: g.size.width, height: g.size.height, pages };
+    return { body, width: baseGeometry.size.width, height: baseGeometry.size.height, pages };
   }
 
   return {
