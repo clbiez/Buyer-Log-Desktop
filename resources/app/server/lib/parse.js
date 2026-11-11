@@ -3327,13 +3327,27 @@ function backlogYearWeek(d){
   const key=BLDateDimension.bucketKey(d,'week');
   return key ? key.replace('-W','-') : '';
 }
+// Önem ayarları satır başına değil, ayar nesnesi başına bir kez normalize edilir.
+// Satır üretimi (CP/Orders, Backlog) her satırda çağırır; kural/etiket sayısı
+// arttıkça satır × kural maliyeti Backlog analizini yavaşlatıyordu. Ayarlar
+// kaydedilirken yeni nesneyle değiştirilir (yerinde değiştirilmez); nesne
+// değişince WeakMap girişi kendiliğinden düşer.
+const IMPORTANCE_SETTINGS_CACHE = new WeakMap();
+let importanceDefaultSettings = null;
+function importanceSettingsOf(ov) {
+  const raw = ov && ov.importanceSettings;
+  if (!raw || typeof raw !== 'object') return importanceDefaultSettings || (importanceDefaultSettings = BLOrderImportance.normalizeSettings(raw));
+  let settings = IMPORTANCE_SETTINGS_CACHE.get(raw);
+  if (!settings) { settings = BLOrderImportance.normalizeSettings(raw); IMPORTANCE_SETTINGS_CACHE.set(raw, settings); }
+  return settings;
+}
 // Önem etiketi (BTS, Bayram …): sipariş satırı ataması > Line/Sezon kuralı > Regular.
 function resolveOrderImportance(order, overrides) {
   const ov = overrides || {};
   return BLOrderImportance.resolve(
     { line: order && order.line, season: order && order.season },
     overrideGet(ov.importancemap || {}, order),
-    BLOrderImportance.normalizeSettings(ov.importanceSettings));
+    importanceSettingsOf(ov));
 }
 // CP/Orders satırına çözülen etiketi yazar. Artımlı yama (canlı olay / sayfa
 // önbelleği) yalnız değişen atamayı bilir; kural çözümü için satır boyutları kullanılır.
@@ -3341,7 +3355,7 @@ function applyImportanceToRow(row, overrides, manual) {
   if (!row) return row;
   const ov = overrides || {};
   const value = manual !== undefined ? manual : overrideGet(ov.importancemap || {}, { ocode: row['Order Code'], model: row['Model Name'], ccode: row['C.Code'] });
-  const resolved = BLOrderImportance.resolve({ line: row.Line, season: row.Season }, value, BLOrderImportance.normalizeSettings(ov.importanceSettings));
+  const resolved = BLOrderImportance.resolve({ line: row.Line, season: row.Season }, value, importanceSettingsOf(ov));
   row[BLOrderImportance.ROW_KEY] = resolved.label;
   row._importanceId = resolved.id;
   row._importanceSource = resolved.source;
