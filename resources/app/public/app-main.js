@@ -17809,9 +17809,16 @@ function backlogExportSourceCatalog(){
   }));
   return result;
 }
+// Backlog satır sorgusu (Genel Bakış, Teslimat, pivot) bu listeyi her istekte okur.
+// Formül bağımlılıkları çözülemiyorsa (formül motoru henüz ertelenmiş zincirde,
+// bozuk/döngülü formül) sorgu çökmemeli: seçili kaynak sütunlarıyla devam edilir.
+// Excel çıktısı kendi yolunda bağımlılıkları ayrıca doğrular.
 function backlogSelectedSourceIds(){
-  const settings=backlogExcelColumnSettings(),catalog=[...backlogExcelColumnCatalog().values()];
-  return window.BLBacklogColumns.dependencies(backlogExcelColumns(),catalog,settings,window.BLFormulaEngine).filter(id=>/^custom:(asas|antrepo):/.test(id));
+  const selected=backlogExcelColumns(),isSource=id=>/^custom:(asas|antrepo):/.test(id);
+  const settings=backlogExcelColumnSettings(),hasFormula=selected.some(id=>settings[id]?.formula);
+  if(!window.BLBacklogColumns||(hasFormula&&!window.BLFormulaEngine))return selected.filter(isSource);
+  try{return window.BLBacklogColumns.dependencies(selected,[...backlogExcelColumnCatalog().values()],settings,window.BLFormulaEngine).filter(isSource);}
+  catch(_){return selected.filter(isSource);}
 }
 function backlogSelectedDataHeaders(serverHeaders){
   const available=new Set(Array.isArray(serverHeaders)?serverHeaders:BACKLOG_DEFAULT_EXPORT_HEADERS),catalog=new Map(backlogExportSourceCatalog().map(item=>[item.id,item]));
