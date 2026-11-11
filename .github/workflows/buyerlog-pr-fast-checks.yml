@@ -24,7 +24,7 @@ jobs:
           node-version: '22'
       # Core Node-only checks; no npm ci or full regression on ordinary PRs.
       - name: Agent instructions, i18n and release-note contract
-        run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js tests/page-horizon-badges-removal-v20261025.test.js
+        run: node --test tests/agent-instructions.test.js tests/compact-test-reporter.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js tests/page-horizon-badges-removal-v20261025.test.js
       - name: Motion+ table rows, reduced-motion and Manifest contracts
         run: node --test tests/motion-plus-table-rows.test.js tests/motion-plus-wave-batched.test.js tests/motion-plus-contract-v20261025.test.js tests/staggered-disclosures.test.js tests/motion-plus-overlay-opening.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/motion-plus-theme-transitions.test.js tests/startup-sequential-triangles.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js tests/workspace-blur-drawer-v20261029.test.js tests/render-profile-software-compositing.test.js
       - name: Clipboard, selection and Data Management layout regression

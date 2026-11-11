@@ -138,3 +138,27 @@ test('TEST seals notes and STABLE promotion persists immutable archive',()=>{
   assert.match(STABLE_WORKFLOW,/release-notes\.js seal "\$PROMOTE_VERSION" --reset/);
   assert.match(STABLE_WORKFLOW,/git push origin HEAD:main/);
 });
+
+test('non-visual fixes may omit the screenshot only with an explicit bilingual reason',()=>{
+  const os=require('node:os');
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-rn-'));
+  const assets=path.join(dir,'next-assets');fs.mkdirSync(assets);
+  const file=path.join(dir,'next.json');
+  const base={schemaVersion:1,publishedAt:'2026-11-11',bootstrapVisual:false,title:{tr:'Başlık',en:'Title'},summary:{tr:'Özet',en:'Summary'}};
+  const change=(type,visual)=>({id:'c-'+type,type,module:{tr:'Senkron',en:'Sync'},title:{tr:'Düzeltme',en:'Fix'},body:{tr:'Gövde',en:'Body'},visual});
+  const reason={tr:'Arka plan senkron düzeltmesi; ekranda değişiklik yok.',en:'Background sync fix; nothing changes on screen.'};
+  const run=changes=>{fs.writeFileSync(file,JSON.stringify({...base,changes}));return RELEASE_NOTES_SCRIPT.validateNext({file,assets});};
+  try{
+    assert.equal(run([change('fix',{kind:'none',reason})]).changes.length,1);
+    assert.equal(run([change('improvement',{kind:'none',reason})]).changes.length,1);
+    assert.throws(()=>run([change('feature',{kind:'none',reason})]),/feature/);
+    assert.throws(()=>run([change('fix',{kind:'none'})]),/reason/);
+    assert.throws(()=>run([change('fix',{kind:'none',reason:{tr:'yalnız tr'}})]),/reason/);
+    assert.throws(()=>run([change('fix',{kind:'none',reason,src:'x.png'})]),/src/);
+    assert.throws(()=>run([change('fix',{kind:'screenshot',src:'missing.png'})]),/bulunamadı/);
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+  assert.equal(RELEASE_NOTES_SCRIPT.visualAssetName({visual:{kind:'none',reason}}),null);
+  assert.equal(RELEASE_NOTES_SCRIPT.visualAssetName({visual:{kind:'screenshot',src:'a.png'}}),'a.png');
+  assert.match(JS,/v\?\.kind==='none'/);
+  assert.match(JS,/pick\(v\.reason\)/);
+});

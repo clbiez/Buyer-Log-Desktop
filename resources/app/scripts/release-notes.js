@@ -47,9 +47,13 @@ function assertPostChangeVisual(change,src,label){
   const text=[src,change?.visual?.alt?.tr,change?.visual?.alt?.en,change?.visual?.caption?.tr,change?.visual?.caption?.en].filter(Boolean).join(' ').toLocaleLowerCase('tr-TR');
   if(/(^|[\\s._-])(before|previous|prior|old|önceki|önceden|eski)([\\s._-]|$)/i.test(text))fail(label+' değişiklikten önceki/eski durumu gösteremez; güncel post-change ekran gerekli.','RELEASE_NOTES_VISUAL_INVALID');
 }
-function validateNext(){
-  if(!fs.existsSync(NEXT_FILE))fail('public/release-notes/next.json bulunamadı.');
-  const data=readJson(NEXT_FILE);
+// Görsel olmayan (arka plan) düzeltme/iyileştirme: ekran görüntüsü yerine iki dilli gerekçe.
+// Yeni özellik (feature) ve ekranda görünen her değişiklik gerçek post-change PNG ister.
+function isNonVisual(change){return String(change?.visual?.kind||'')==='none';}
+function visualAssetName(change){return isNonVisual(change)?null:safeName(change?.visual?.src);}
+function validateNext({file=NEXT_FILE,assets=NEXT_ASSETS}={}){
+  if(!fs.existsSync(file))fail('public/release-notes/next.json bulunamadı.');
+  const data=readJson(file);
   if(Number(data.schemaVersion)!==1)fail('next.json schemaVersion 1 olmalı.');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(String(data.publishedAt||'')))fail('next.json publishedAt YYYY-MM-DD olmalı.');
   bilingual(data.title,'release title');bilingual(data.summary,'release summary');
@@ -61,7 +65,14 @@ function validateNext(){
     if(!['feature','improvement','fix'].includes(change.type))fail(p+' type feature/improvement/fix olmalı.');
     bilingual(change.module,p+' module');bilingual(change.title,p+' title');bilingual(change.body,p+' body');
     if(!change.visual||typeof change.visual!=='object')fail(p+' visual zorunlu.');
-    const src=safeName(change.visual.src),asset=path.join(NEXT_ASSETS,src);
+    if(change.path)bilingual(change.path,p+' path');
+    if(isNonVisual(change)){
+      if(!['fix','improvement'].includes(change.type))fail(p+' visual.kind="none" yalnız fix/improvement için; feature gerçek ekran görüntüsü ister.','RELEASE_NOTES_VISUAL_INVALID');
+      if(change.visual.src)fail(p+' visual.kind="none" src içeremez.','RELEASE_NOTES_VISUAL_INVALID');
+      bilingual(change.visual.reason,p+' visual.reason');
+      continue;
+    }
+    const src=safeName(change.visual.src),asset=path.join(assets,src);
     if(!fs.existsSync(asset))fail(p+' görseli bulunamadı: '+src);
     bilingual(change.visual.alt,p+' visual.alt');bilingual(change.visual.caption,p+' visual.caption');
     const kind=String(change.visual.kind||'');
@@ -73,7 +84,6 @@ function validateNext(){
       assertPostChangeVisual(change,src,p);
       inspectPngScreenshot(asset,p+' '+src);
     }
-    if(change.path)bilingual(change.path,p+' path');
   }
   return data;
 }
@@ -86,7 +96,8 @@ function seal(version,{reset=false}={}){
   if(!/^\d+\.\d+\.\d+$/.test(String(version||'')))fail('Geçerli semantic version gerekli.');
   const data=validateNext(),dir=path.join(NOTES_ROOT,version);fs.mkdirSync(dir,{recursive:true});
   for(const change of data.changes){
-    const src=safeName(change.visual.src),from=path.join(NEXT_ASSETS,src),to=path.join(dir,src);
+    const src=visualAssetName(change);if(!src)continue;
+    const from=path.join(NEXT_ASSETS,src),to=path.join(dir,src);
     if(fs.existsSync(to)){
       const a=fs.readFileSync(from),b=fs.readFileSync(to);if(!a.equals(b))fail('Aynı version görseli değiştirilemez: '+src,'RELEASE_NOTES_IMMUTABLE');
     }else fs.copyFileSync(from,to);
@@ -118,4 +129,4 @@ function main(){
   fail('Kullanım: release-notes.js validate | seal VERSION [--reset]','RELEASE_NOTES_ARG_INVALID');
 }
 if(require.main===module){try{main();}catch(error){console.error('['+(error.code||'RELEASE_NOTES_FAILED')+'] '+error.message);process.exitCode=1;}}
-module.exports={validateNext,seal,stats,inspectPngScreenshot,assertPostChangeVisual};
+module.exports={validateNext,seal,stats,inspectPngScreenshot,assertPostChangeVisual,visualAssetName,isNonVisual};

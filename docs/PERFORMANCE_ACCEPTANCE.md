@@ -9,7 +9,22 @@ mevcut akışları yavaşlatmamaktır. Evrensel “maksimum hız” iddiası yer
 bütçe ve tekrarlanabilir kanıt gerekir. Sadece testlerin geçmesi, daha az kod veya
 tek hızlı mikro benchmark performans kabulü değildir.
 
-## 1. Değişiklikten önce
+## 0. Kademe seçimi (önce bunu belirle)
+
+| Kademe | Ne zaman | Gerekli kanıt |
+| --- | --- | --- |
+| **N/A** (varsayılan) | Runtime maliyetini etkilemeyen değişiklik: doküman, talimat, test, sürüm notu, yalnız metin/çeviri. | Değişen dosyalar ve tek satır gerekçe (§4). |
+| **L1 · tek ölçüm** (varsayılan runtime kademesi) | Sıcak yol dışında, yerel etkili runtime değişikliği (tek ekran/diyalog/eylem, küçük veri). | Etkilenen senaryoda aynı veri/ortamla Main ve aday **birer koşu**; birincil metrik (etkileşim→yanıt veya uçtan uca süre) ve gerekiyorsa istek sayısı. §1–§3 ayrıntıları uygulanmaz. |
+| **L2 · tam A/B** | **Sıcak yol** (başlangıç, modül açılışı, büyük tablo render/filtre/kaydırma, worker/compute), **büyük veri** (30k fixture yolu) veya **sync/polling/ağ/updater/launcher/Electron native** değişikliği. | Bu dokümanın §1–§3'ü tam uygulanır: önceden bütçe, ≥3 dönüşümlü Main/aday çifti, medyan + ham örnekler, etkilenen kapılar. |
+
+- **Yükseltme:** L1 ölçümünde gerileme görülür veya fark gürültüden ayırt
+  edilemezse iş L2'ye çıkar. Kademeyi düşürmek için gerekçe yazılır; sıcak yol
+  değişikliği L1 ile kapatılamaz.
+- **Bilinen risk:** L1 tek koşu olduğu için küçük (gürültü düzeyinde) gerilemeleri
+  kaçırabilir. Bu, düşük maliyet için bilinçli kabul edilmiş ödünleşimdir; sıcak
+  yollar L2'de kalır ve TEST yayınındaki tam regresyon/performans kapıları sürer.
+
+## 1. Değişiklikten önce (L2)
 
 1. Kullanıcının istediği davranışı, etkilenen dosya/çağrı zincirini ve mevcut
    sorunu doğrula. Salt optimizasyon için gerçek darboğaz ölçümü gerekir;
@@ -28,7 +43,7 @@ tek hızlı mikro benchmark performans kabulü değildir.
    spekülatif prefetch veya geniş refactor ekleme. Donanım, concurrency, queue,
    timeout, retry veya memory limitini artırarak kabulü geçirme.
 
-## 2. Asgari kabul kapıları
+## 2. Asgari kabul kapıları (L2)
 
 Yalnız gerçekten etkilenen satırlar ölçülür; ilgisiz satır için dosya/çağrı
 zincirine dayanan N/A gerekçesi yazılır. Mevcut başarısız eski bir kapı açıkça
@@ -44,7 +59,7 @@ kayıtlı kalır; bu görev onun düzeldiğini iddia etmez ve onu kötüleştire
 | Yeni modül yaşam döngüsü | Lazy yükleme, sınırlı ilk görünür render, ihtiyaca göre hesap; büyük tabloda tüm satır DOM'u/kopyası gerekçesiz oluşturulmaz. İlk/tekrar açılış, düzenleme, kopyala/yapıştır/export, kapat/yeniden aç ve iptal/cleanup doğrulanır. Veri ve dirty-edit korumaları aynıdır. |
 | Electron / native sekme | Ürünün hedef Electron sürümü ve gerçek workspace/preload/native sekme yolu kullanılır. Chromium web kabulü yardımcı kanıttır; Electron kabulünün yerine geçmez. Windows/SMB/kurumsal upstream ölçülmediyse sınır açık yazılır. |
 
-## 3. Gerilememe ve ölçüm yöntemi
+## 3. Gerilememe ve ölçüm yöntemi (L2; L1 yalnız yükseltme kuralına tabidir)
 
 - Süre/CPU/bellek gibi düşük olması iyi olan mevcut akış metriklerinin varsayılan
   bütçesi taban değerdir; çıktı sayısı/throughput gibi metriklerde yön tersidir.
@@ -79,6 +94,8 @@ PR açıklaması [ortak şablondaki](../.github/pull_request_template.md) perfor
 bölümünü içerir. Ayrıntılı kanıt `docs/performance/<işe-özel-dizin>/` altında veya
 kalıcı CI artifact'inde saklanır; kısa işte PR'daki yeniden çalıştırılabilir komut
 ve ham sonuç yeterlidir. Başka PR'ın/eski SHA'nın yeşil sonucu kopyalanmaz.
+
+PR'da kademe (N/A / L1 / L2) ve karar birlikte yazılır.
 
 - **PASS:** İlgili kapılar, veri/doğruluk eşdeğerliği ve önceden yazılmış bütçeler
   son kaynakta geçer; kalan platform sınırları açık yazılır.
