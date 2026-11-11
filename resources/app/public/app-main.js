@@ -39257,6 +39257,11 @@ function refreshSharedMasterClient(area){
   if(area==='endeksmatik'){
     return Promise.resolve(refreshEndeksmatikStatus({silent:true})).then(()=>{ if(typeof renderKol==='function')renderKol(); });
   }
+  if(area==='merchCalendar'){
+    // Moderatörün yayımladığı LCW iş takvimi: BLDateDimension yeniden beslenir,
+    // takvime bağlı ekranlar 'bl:merch-calendar-change' olayıyla yenilenir.
+    return Promise.resolve(window.BLMerchCalendarRuntime?.reload?.());
+  }
   if(area==='transitAnalysis'){
     // Analiz yalnız Yol Süreleri penceresinde okunur; hesaplamaları etkilemez.
     window.BLTransitAnalysisUI?.invalidate?.();
@@ -39311,7 +39316,7 @@ function initLiveSync(){
     }
     // Kendi yazdığın değişiklik için kendine yenileme tetikleme; ekran zaten güncel.
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
-    if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
+    if(['fx','endeksmatik','merchCalendar','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
     }else if(payload.area==='cpManagedRules'||payload.area==='master-rules'){
       // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kuralları.
@@ -39450,6 +39455,7 @@ window.addEventListener('bl-shared-revision',event=>{
   const changed=new Set(event.detail&&event.detail.changed||[]);
   if(changed.has('fx')&&!liveSyncConnected)void refreshSharedMasterClient('fx').catch(()=>{});
   if(changed.has('endeksmatik')&&!liveSyncConnected)void refreshSharedMasterClient('endeksmatik').catch(()=>{});
+  if(changed.has('merchCalendar')&&!liveSyncConnected)void refreshSharedMasterClient('merchCalendar').catch(()=>{});
   if(changed.has('transitRules')&&!liveSyncConnected)void refreshSharedMasterClient('transitRules').catch(()=>{});
   if(changed.has('emailGroups')&&!liveSyncConnected)void refreshSharedMasterClient('emailGroups').catch(()=>{});
   for(const area of ['transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
