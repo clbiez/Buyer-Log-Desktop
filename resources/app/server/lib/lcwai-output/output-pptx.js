@@ -162,14 +162,14 @@ function chrome(s, slide, index, total, deck, p, lang) {
   // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı. Model
   // galerisi (line sheet) A3 sunum formatındaki gibi koyu banttır.
   if (!(LAYOUT.studio && LAYOUT.studio.headerHidden)) {
-  const dark = slide.layout === 'gallery';
+  const dark = slide.layout === 'gallery' && !LAYOUT.studio?.matrix;
   const ink = dark ? 'FFFFFF' : p.logo;
   s.box({ x: 0, y: 0, w: W, h: BAND, fill: dark ? p.logo : p.headBg, name: 'HeadBand' });
   s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: dark ? 'FFFFFF' : p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
   s.box({ x: 0, y: BAND, w: W, h: pt(1), fill: dark ? p.logo : p.headLine, name: 'HeadLine' });
-  const titleSize = slide.title.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize;
+  const titleSize = !LAYOUT.studio?.matrix && slide.title.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize;
   // Alt başlık (ör. "36-41 HFT · KK1-2-3" ya da "3 grup · 11 model") başlığın altında.
-  const sub = slide.subtitle && BAND >= pt(56) ? Math.max(9, Math.round(titleSize * 0.45)) : 0;
+  const sub = slide.subtitle && BAND >= pt(56) ? (LAYOUT.studio?.matrix ? LAYOUT.studio.subtitleSize : Math.max(9, Math.round(titleSize * 0.45))) : 0;
   const subH = sub ? pt(sub * 1.35) : 0;
   s.text(MARGIN, Math.round(BAND * 0.08), W - MARGIN * 2, BAND - Math.round(BAND * 0.08) - pt(16) - subH, slide.title, { size: titleSize, bold: true, color: ink }, { anchor: 'b' });
   if (sub) s.text(MARGIN, BAND - pt(14) - subH, W - MARGIN * 2, subH, slide.subtitle, { size: sub, color: dark ? 'C9CDD2' : p.headInk }, { anchor: 't' });
@@ -269,7 +269,7 @@ function renderCard(s, cell, item, page, p, lang, records) {
     const runs = [];
     line.forEach((field, i) => {
       if (i) runs.push({ text: '  ·  ', size: box.detail, color: p.line });
-      if (LAYOUT.showFieldLabels) runs.push({ text: `${field.label} `, size: box.detail, color: p.muted });
+      if (LAYOUT.showFieldLabels) runs.push({ text: `${field.label} `, size: LAYOUT.studio?.matrix ? LAYOUT.studio.labelSize : box.detail, color: p.muted });
       runs.push({ text: field.value, size: box.detail, bold: Boolean(field.tone), color: toneOf(field.tone) });
     });
     lines.push(richParagraph(runs, p, lang, { size: box.detail }));
