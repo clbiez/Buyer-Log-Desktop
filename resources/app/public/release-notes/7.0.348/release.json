@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.348",
+  "channel": "stable",
+  "publishedAt": "2026-11-11",
+  "title": {
+    "tr": "Sütun matrisiyle sunum düzenleme ve analiz iyileştirmeleri",
+    "en": "Column matrix presentation editing and analysis improvements"
+  },
+  "summary": {
+    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz. Sunum editöründe sütun rollerini tek matristen seçebilir, sabit puntolu çıktıyı alt alta ön izleyebilir ve kartlarla grupları slaytlar arasında taşıyabilirsiniz.",
+    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters. In the presentation editor, choose column roles in one matrix, preview fixed-font output in a continuous slide stream and move cards and groups across slides."
+  },
+  "stats": {
+    "features": 1,
+    "improvements": 3,
+    "fixes": 3
+  },
+  "changes": [
+    {
+      "id": "backlog-synthetic-approval",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Üretim bakiyesinde eski yükleme onayı taşınmaz",
+        "en": "Production remainders no longer inherit shipment approval"
+      },
+      "body": {
+        "tr": "IAS kaydı olmayan otomatik bakiye satırlarında yükleme onay tarihi boş bırakılır. Önceki yüklemeye ait sipariş onayı, üretimde kalan miktarı yanlışlıkla handover bekliyor olarak riskli göstermez. Ekran, detay raporu ve Excel aynı kuralı kullanır; gerçek Retail gecikmesi ve yol süresi aşımı riskleri korunur.",
+        "en": "Automatic remainder rows without an IAS record leave shipment approval blank. An order approval from an earlier shipment no longer incorrectly flags the remaining production quantity as awaiting handover. The screen, detail report and Excel use the same rule; genuine Retail delays and transit overdue risks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-synthetic-approval.png",
+        "alt": {
+          "tr": "İki IAS parsiyeli ve onay tarihi taşınmadan oluşturulan risksiz üretim bakiyesi",
+          "en": "Two IAS partials and a production remainder without an inherited approval or false risk"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisi. 300 + 300 IAS adedi ve 400 adet Üretimde bakiyesi; üretim satırının riski YOK.",
+          "en": "Actual post-change Buyer Log with isolated demo data. Two IAS partials of 300 units and a production remainder of 400 units; the production row has no risk."
+        }
+      }
+    },
+    {
+      "id": "checklist-set-roster-sync",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Kontrol Listesi",
+        "en": "CP / Checklist"
+      },
+      "title": {
+        "tr": "Set parçası onayları takılmadan kaydedilir",
+        "en": "Set part approvals save without getting stuck"
+      },
+      "body": {
+        "tr": "Set parçası onaylarında sipariş ve ortak model/renk kayıtlarının parça listeleri birlikte korunur. Toplu kayıtta parça listesi önce gönderilir. Eski bekleyen ortak onayların eksik listesi yalnız eşleşen güncel siparişten kurtarılır. Kalıcı doğrulama hataları uygulama yeniden açılsa da sürekli denenmez; bekleyen değişiklik ve ek bilgileri korunur. Düzeltilen kayıt veya kurtarılan parça listesi kaydı yeniden göndermeyi sağlar.",
+        "en": "Set part approvals preserve rosters for both the order and reusable model/colour records. Batch saves send rosters first. Missing rosters for older pending reusable approvals are recovered only from a matching current order. Permanent validation errors do not retry endlessly, including after restart; pending edits and evidence are preserved. Correcting the record or recovering its roster allows a new save attempt."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-set-roster-sync.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda setin B parçası onaylandı ve durum menüsünde Onaylandı seçili.",
+          "en": "Set part B is approved in the actual Buyer Log CP table, with Approved selected in the status menu."
+        },
+        "caption": {
+          "tr": "İzole demo oturumu: sipariş ve ortak model/renk onayları sunucuda doğrulandı.",
+          "en": "Isolated demo session: order and reusable model/colour approvals verified on the server."
+        }
+      }
+    },
+    {
+      "id": "supplier-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Filtrelerde tümünü seç ve temizle",
+        "en": "Select all and clear filter values"
+      },
+      "body": {
+        "tr": "Standart ve eklenen sütun filtrelerinde Tümünü seç ve Temizle düğmeleri bulunur. Tüm seçenekleri seçip yalnız istemediklerinizi kaldırabilirsiniz. Arama sırasında toplu işlemler yalnız eşleşen değerleri değiştirir; diğer seçimler korunur.",
+        "en": "Standard and added column filters offer Select all and Clear buttons. Select every option and then uncheck only the ones you want to exclude. Bulk actions during search change only matching values and preserve other selections."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-supplier.png",
+        "alt": {
+          "tr": "Fiyat & Üretici Analizi filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in Price & Supplier Analysis filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    },
+    {
+      "id": "lfl-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL filtrelerinde toplu seçim",
+        "en": "Bulk selection in LFL filters"
+      },
+      "body": {
+        "tr": "LFL filtrelerindeki Hepsi kutusu yerine CP düzeninde Tümünü seç ve Temizle düğmeleri eklendi. Arama dışındaki seçimler korunur ve toplu işlemden sonra çekmece açık kalır.",
+        "en": "LFL filters replace the All reset checkbox with CP-style Select all and Clear buttons. Selections outside the search are preserved and the drawer stays open after bulk actions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-lfl.png",
+        "alt": {
+          "tr": "LFL Analizi filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in LFL Analysis filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    },
+    {
+      "id": "pricing-analysis-bulk-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Analiz filtrelerinde pratik çoklu seçim",
+        "en": "Convenient multiple selection in analysis filters"
+      },
+      "body": {
+        "tr": "Fiyat Masası analizindeki sezon, klasman, üretici ve diğer çoklu filtrelere Tümünü seç ve Temizle düğmeleri eklendi. Seçimler kaydedilir, diğer filtreler korunur ve çekmece açık kalır.",
+        "en": "Season, classification, manufacturer and other multiple-selection filters in Pricing Desk analysis now offer Select all and Clear buttons. Selections are saved, other filters are preserved and the drawer stays open."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-bulk-pricing.png",
+        "alt": {
+          "tr": "Fiyat Masası filtrelerinde toplu seçim düğmeleri",
+          "en": "Bulk selection buttons in Pricing Desk filters"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: tüm seçimden sonra üç seçenek çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: three options unchecked after selecting all."
+        }
+      }
+    },
+    {
+      "id": "fabric-card-offline-translation-review-repairs",
+      "type": "fix",
+      "module": {
+        "tr": "Kumaş Kartları",
+        "en": "Fabric Cards"
+      },
+      "title": {
+        "tr": "Bekleyen kumaş kayıtları ve otomatik çeviri daha güvenli",
+        "en": "Safer pending fabric saves and automatic translation"
+      },
+      "body": {
+        "tr": "Aynı kartın art arda bekleyen kayıtları bağlantı sonrasında kendi kendisiyle çakışmaz; gerçek başka kullanıcı değişiklikleri korunur. Çeviri beklerken veya başarısızken kaynak dili değiştirmek eski karşılığın kaydına izin vermez. İngilizce editör doğru dilde açılır; sabit TR/EN etiketleri ve iki dildeki metinler ekranın genel çevirisinden korunur.",
+        "en": "Repeated pending saves for one card no longer conflict with themselves after reconnection; genuine changes from another user remain protected. Switching source language during a pending or failed translation cannot allow an outdated counterpart to be saved. The English editor opens in the correct language, and fixed TR/EN labels and bilingual content are protected from generic page translation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-segments-review-repairs.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içinde İngilizce parçalı kumaş kartı editörü ve elle düzeltilen çeviri",
+          "en": "English segmented fabric card editor and manually corrected translation in the actual Buyer Log app"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda Türkçe kaynak ve İngilizce düzeltme birlikte görülüyor; kayıt API üzerinden yeniden okunarak doğrulandı.",
+          "en": "An isolated demo session shows the Turkish source and English correction together; persistence was verified by reading the record back through the API."
+        }
+      }
+    },
+    {
+      "id": "presentation-column-matrix",
+      "type": "feature",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Sütun matrisi ve kesintisiz sunum ön izlemesi",
+        "en": "Column matrix and continuous deck preview"
+      },
+      "body": {
+        "tr": "Geniş editörde koleksiyon sütunlarını model kartı, başlık, alt başlık ve alt grup olarak seçin; punto ve yerleşimi aynı satırdan ayarlayın. Slaytlar alt alta gösterilir; kartları ve başlıklarıyla grupları slaytlar arasında taşıyın ve geri alın. Sabit puntolu uzun bilgiler devam kartlarına ayrılır. Gelişmiş AI düzenleme isteklerine manuel yerleşimden türeyen kaynak grup değerleri eklenmez.",
+        "en": "Choose collection columns for model cards, titles, subtitles and subgroups in the enlarged editor; adjust typography and placement in the same row. Slides appear vertically; move cards and groups with their titles between slides and undo changes. Long details continue on additional cards at a fixed font size. Advanced AI layout requests exclude source group values derived from manual placement."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-column-matrix.png",
+        "alt": {
+          "tr": "Gerçek sunum editöründe örnek koleksiyonla sütun matrisi ve slayt akışı",
+          "en": "Column matrix and slide stream in the actual editor with demo collection data"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek sunum editörü; yalnız örnek koleksiyon verisi.",
+          "en": "Actual post-change presentation editor with demo collection data only."
+        }
+      }
+    }
+  ]
+}

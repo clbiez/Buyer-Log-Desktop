@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.348",
+      "publishedAt": "2026-11-11",
+      "title": {
+        "tr": "Sütun matrisiyle sunum düzenleme ve analiz iyileştirmeleri",
+        "en": "Column matrix presentation editing and analysis improvements"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 3,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.348/release.json"
+    },
+    {
       "version": "7.0.346",
       "publishedAt": "2026-11-10",
       "title": {
