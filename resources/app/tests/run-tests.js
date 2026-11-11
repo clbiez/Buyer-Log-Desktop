@@ -21,7 +21,12 @@ function rel(file) {
   return path.relative(APP_ROOT, file).split(path.sep).join('/');
 }
 
-const filters = process.argv.slice(2).map(v => String(v || '').trim().toLowerCase()).filter(Boolean);
+const args = process.argv.slice(2).map(v => String(v || '').trim()).filter(Boolean);
+// Varsayılan kompakt çıktı: yalnız başarısız testler + özet (agent/CI log ve token
+// maliyetini düşürür). Tam spec/TAP akışı için --verbose veya BUYER_LOG_TEST_VERBOSE=1.
+const verbose = args.includes('--verbose') || process.env.BUYER_LOG_TEST_VERBOSE === '1';
+const filters = args.filter(v => v !== '--verbose').map(v => v.toLowerCase());
+const COMPACT_REPORTER = path.join(TEST_ROOT, 'compact-reporter.js');
 let tests = collectTests(TEST_ROOT);
 if (filters.length) {
   tests = tests.filter(file => filters.some(filter => rel(file).toLowerCase().includes(filter)));
@@ -76,7 +81,8 @@ for (let i = 0; i < batches.length; i += 1) {
   const files = batches[i];
   console.log(`\n[Buyer Log tests] Batch ${i + 1}/${batches.length} (${files.length} dosya)`);
   const batchStartedAt = Date.now();
-  const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${testConcurrency}`, ...files], {
+  const reporterArgs = verbose ? [] : [`--test-reporter=${COMPACT_REPORTER}`];
+  const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${testConcurrency}`, ...reporterArgs, ...files], {
     cwd: APP_ROOT,
     env: { ...process.env, BUYER_LOG_TEST_SUITE: '1' },
     stdio: 'inherit',
@@ -89,7 +95,7 @@ for (let i = 0; i < batches.length; i += 1) {
   }
   if (result.status !== 0) {
     console.error(`[Buyer Log tests] Batch ${i + 1} başarısız. ZIP teslim edilmemeli.`);
-    console.error('[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.');
+    console.error(verbose ? '[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.' : '[Buyer Log tests] Hatanın kaynağı için üstteki ✖ kayıtlarını (dosya:satır + hata) inceleyin; tam akış için --verbose.');
     process.exit(result.status || 1);
   }
 }

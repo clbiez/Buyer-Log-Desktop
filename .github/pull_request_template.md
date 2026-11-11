@@ -9,11 +9,12 @@ Gerçek PASS/FAIL/SKIP/CANCEL ve ölçülmeyen sınırlar / Actual results and l
 
 ## Performans kabulü / Performance acceptance
 
-<!-- CLAUDE.md §3.2 and docs/PERFORMANCE_ACCEPTANCE.md apply to every change.
-     Record budgets before implementation; do not invent results or loosen gates.
-     For runtime changes fill the fields below. For runtime-neutral changes use
-     N/A and list the changed files and why product runtime cost is unaffected. -->
+<!-- CLAUDE.md §3.2 and docs/PERFORMANCE_ACCEPTANCE.md §0 tiers apply to every change.
+     N/A: changed files + why runtime cost is unaffected (other fields may be left empty).
+     L1: one Main/candidate run of the affected scenario (fill scenario, before → after, commands).
+     L2: hot path / large data / sync / startup — fill every field. Do not invent results. -->
 
+- Kademe / Tier: N/A | L1 | L2
 - Karar / Decision: PASS | FAIL | BLOCKED | N/A
 - Taban Main SHA / final kaynak SHA / Base Main and final source:
 - Kullanıcı senaryosu, veri/hash, ortam/runtime / Scenario, fixture, environment:

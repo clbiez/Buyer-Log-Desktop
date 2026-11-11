@@ -113,13 +113,15 @@ async function renderArchive(active){
   list.innerHTML=rows.length?rows.map(row=>'<button type="button" class="blRnReleaseRow'+(row.version===active?' is-active':'')+'" data-rn-version="'+esc(row.version)+'"><span><b>v'+esc(row.version)+'</b><small>'+esc(row.publishedAt||row.date||'')+'</small></span><em>'+esc(pick(row.title)||L('Bakım ve güncelleme','Maintenance and updates'))+'</em>'+(row.legacy?'<i>'+esc(L('Metin arşivi','Text archive'))+'</i>':'')+'</button>').join(''):'<div class="blRnEmpty">'+esc(L('Henüz arşivlenmiş stable sürüm yok.','There are no archived stable releases yet.'))+'</div>';
   list.querySelectorAll('[data-rn-version]').forEach(b=>b.addEventListener('click',()=>openVersion(b.dataset.rnVersion)));
 }
-function fallbackVisual(release,change,reason){
+function fallbackVisual(release,change,reason,label){
   const title=pick(change?.title)||pick(release?.title)||('v'+String(release?.version||'')),module=pick(change?.module)||'Buyer Log';
   const note=reason||L('Doğrulanmış ekran görüntüsü bulunamadığı için görsel gösterilmedi.','The visual was hidden because a verified screenshot is not available.');
-  return '<div class="blRnFallbackVisual blRnFallbackVisual--safe" role="img" aria-label="'+esc(L('Doğrulanmış görsel yok','No verified visual'))+'"><div class="blRnFallbackMark">BL</div><div><span>'+esc(module)+'</span><b>'+esc(title)+'</b><small>'+esc(note)+'</small></div></div>';
+  return '<div class="blRnFallbackVisual blRnFallbackVisual--safe" role="img" aria-label="'+esc(label||L('Doğrulanmış görsel yok','No verified visual'))+'"><div class="blRnFallbackMark">BL</div><div><span>'+esc(module)+'</span><b>'+esc(title)+'</b><small>'+esc(note)+'</small></div></div>';
 }
 function visualHtml(change,release){
-  const v=change?.visual;if(!v?.src)return fallbackVisual(release,change);
+  const v=change?.visual;
+  if(v?.kind==='none')return fallbackVisual(release,change,pick(v.reason)||L('Arka plan düzeltmesi; ekranda görünür bir değişiklik yok.','Background fix; nothing changes on screen.'),L('Ekranda görünmeyen değişiklik','Change not visible on screen'));
+  if(!v?.src)return fallbackVisual(release,change);
   if(v.kind==='screenshot'&&!/\.png(?:\?|$)/i.test(String(v.src||'')))return fallbackVisual(release,change,L('Eski veya doğrulanmamış ekran görüntüsü güvenli şekilde gösterilmedi.','An old or unverified screenshot was hidden safely.'));
   const src=visualSource(release,v),focus=v.focus;
   const focusHtml=focus?'<i class="blRnFocus" style="left:'+Number(focus.x)+'%;top:'+Number(focus.y)+'%;width:'+Number(focus.w)+'%;height:'+Number(focus.h)+'%"></i>':'';
