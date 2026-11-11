@@ -24,6 +24,7 @@
     let mode='exact';
     if(text[0]==='/'&&text.length>1){mode='contains';text=clean(text.slice(1));}
     else if(text[0]==='!'&&text.length>1){mode='notContains';text=clean(text.slice(1));}
+    else if(text.length>1&&text[text.length-1]==='!'){mode='notContains';text=clean(text.slice(0,-1));}
     if(!text)return null;
     return {mode,value:text.toLocaleLowerCase('tr-TR')};
   }

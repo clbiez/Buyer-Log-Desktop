@@ -19,9 +19,55 @@ function helper(name, args) {
 test('arama kriterlerini trim eder, operatorü yalnız başta tanır ve boş kriterleri atar', () => {
   const parse = helper('parseTableSearchTerms', 'value');
   assert.deepEqual(parse('  /MINE,   !STUMB, , BRAW  '), [
-    { mode: 'contains', value: 'mine' },
-    { mode: 'notContains', value: 'stumb' },
-    { mode: 'exact', value: 'braw' },
+    [{ mode: 'contains', value: 'mine' }, { mode: 'exact', value: 'braw' }],
+    [{ mode: 'notContains', value: 'stumb' }],
+  ]);
+});
+
+test('hariç tutma (! önek veya sonek) yazıldığı VEYA grubundan çıkarılıp tüm aramaya VE DEĞİL olarak uygulanır', () => {
+  const parse = helper('parseTableSearchTerms', 'value');
+  const matches = helper('tableSearchMatches', 'haystack,terms,options');
+  const opts = { plainMode: 'contains' };
+
+  const suffix = parse('LE SHA; FORM, MINE, 14! SAD!');
+  assert.deepEqual(suffix, [
+    [{ mode: 'exact', value: 'le sha' }],
+    [{ mode: 'exact', value: 'form' }, { mode: 'exact', value: 'mine' }],
+    [{ mode: 'notContains', value: '14' }],
+    [{ mode: 'notContains', value: 'sad' }],
+  ]);
+  // Eski çalışan yazım ile aynı sonucu üretir.
+  assert.deepEqual(suffix, parse('LE SHA; FORM, MINE; !14; !SAD'));
+  // Önek de VEYA grubunun içinde artık gerçekten eler.
+  assert.deepEqual(parse('LE SHA; FORM, MINE, !14, !SAD'), suffix);
+
+  assert.equal(matches('LE SHARK KK.BDY,MINECRAFT-13-YD', suffix, opts), true);
+  assert.equal(matches('LE SHARK KK.BDY,FORMULA-13-YD', suffix, opts), true);
+  assert.equal(matches('LE SHARK KK.BDY,MINECRAFT-14-YD', suffix, opts), false);
+  assert.equal(matches('LE SHARK KK.BDY,MINECRAFT-SAD-YD', suffix, opts), false);
+  assert.equal(matches('LE SHARK KK.BDY,BRAWLS-6-YD', suffix, opts), false);
+  assert.equal(matches('OTHER KK.BDY,MINECRAFT-13-YD', suffix, opts), false);
+
+  // Yalnız hariç tutma: her biri ayrıca uygulanır.
+  assert.deepEqual(parse('14!'), [{ mode: 'notContains', value: '14' }]);
+  assert.deepEqual(parse('!14'), [{ mode: 'notContains', value: '14' }]);
+  assert.deepEqual(parse('!14, SAD!'), [
+    [{ mode: 'notContains', value: '14' }],
+    [{ mode: 'notContains', value: 'sad' }],
+  ]);
+  assert.equal(matches('MINECRAFT-14', parse('!14, SAD!'), opts), false);
+  assert.equal(matches('MINECRAFT-13', parse('!14, SAD!'), opts), true);
+
+  // Çok kelimeli sonek bir bütün olarak elenir; ortadaki ! değer içinde kalır.
+  assert.deepEqual(parse('LE SHA!'), [{ mode: 'notContains', value: 'le sha' }]);
+  assert.deepEqual(parse('ABC!DEF'), [{ mode: 'exact', value: 'abc!def' }]);
+  assert.deepEqual(parse('!'), []);
+  // Önek operatörden sonraki boşluk eski davranışı korur.
+  assert.deepEqual(parse('! RED'), [{ mode: 'notContains', value: 'red' }]);
+  assert.deepEqual(parse('SHIRT; ! RED, BLUE'), [
+    [{ mode: 'exact', value: 'shirt' }],
+    [{ mode: 'exact', value: 'blue' }],
+    [{ mode: 'notContains', value: 'red' }],
   ]);
 });
 

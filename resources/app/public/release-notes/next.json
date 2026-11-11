@@ -33,6 +33,35 @@
           "en": "No UI change; the fix is in how the server reads the LCW AI upload response."
         }
       }
+    },
+    {
+      "id": "table-search-suffix-exclude",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo araması",
+        "en": "Table search"
+      },
+      "title": {
+        "tr": "Aramada ! ile hariç tutma her yerde çalışır",
+        "en": "Exclude with ! works anywhere in search"
+      },
+      "body": {
+        "tr": "Hariç tutmak istediğiniz değerin önüne veya sonuna ! yazabilirsiniz; örneğin “Sweatshirt, T-shirt; Looney, FCB, Haki! Mavi!”. Hariç tutma, virgüllü bir VEYA listesinin içine yazılsa bile tüm aramaya uygulanır ve “!Haki; !Mavi” yazımıyla aynı sonucu verir. Boşlukla yan yana yazılan “Haki! Mavi!” iki ayrı hariç tutmadır. Sözcük ortasındaki ! (ABC!DEF) değerin parçası kalır.",
+        "en": "Put ! before or after a value to exclude it, for example “Sweatshirt, T-shirt; Looney, FCB, Haki! Mavi!”. An exclusion now applies to the whole search even when it is written inside a comma OR list, giving the same result as “!Haki; !Mavi”. “Haki! Mavi!” separated by a space are two separate exclusions. A ! inside a word (ABC!DEF) stays part of the value."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-search-suffix-exclude.png",
+        "alt": {
+          "tr": "CP Tracker araması: sonek ! ile Haki ve Mavi satırları elenmiş demo sonuç",
+          "en": "CP Tracker search: demo result with Haki and Mavi rows excluded by suffix !"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; demo veride 4 eşleşmeden hariç tutulan 2 satır elendi.",
+          "en": "Actual Buyer Log UI; on demo data the 2 excluded rows were removed from 4 matches."
+        }
+      }
     }
   ]
 }
