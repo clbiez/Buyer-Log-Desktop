@@ -41,6 +41,35 @@
       }
     },
     {
+      "id": "oab-new-seasons",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB filtresine W7, S8 ve W8 sezonları eklendi",
+        "en": "W7, S8 and W8 seasons added to the OAB filter"
+      },
+      "body": {
+        "tr": "OAB Season listesinde artık W7-2027 SONBAHAR KIŞ, S8-2028 YAZ ve W8-2028 SONBAHAR KIŞ seçilebilir. Yeni sezonlarda MAG ve Buyer Group seçenekleri, aynı tipteki son sezondan alınmıştır; PASS listesi farklıysa bazı kombinasyonlar boş sonuç döndürebilir.",
+        "en": "W7-2027 AUTUMN WINTER, S8-2028 SUMMER and W8-2028 AUTUMN WINTER can now be selected in the OAB Season list. MAG and Buyer Group options for the new seasons are taken from the latest season of the same type; some combinations may return no results if the PASS list differs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-new-seasons.png",
+        "alt": {
+          "tr": "Yeni sezonları gösteren OAB Season açılır listesi",
+          "en": "OAB Season dropdown showing the new seasons"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle doğrulandı.",
+          "en": "Actual Buyer Log UI; verified with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "sync-remote-cp-changes-visible",
       "type": "fix",
       "module": {
