@@ -250,6 +250,9 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Yerel DB'deki bütün delta kayıtlarını belleğe yükler. Açılışta ve uzak
      delta uygulandıktan sonra çağrılır. Tek bir DB okuması yapar. */
+  let remoteApplyRevisions = {};
+  /* Son hydrate anındaki uzaktan uygulama sayacı (local-db). Senkron okuma. */
+  function remoteApplyRevision(collection) { return Number(remoteApplyRevisions[collection]) || 0; }
   async function hydrate() {
     try {
       const state = await localDb.read();
@@ -265,6 +268,8 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
       // plan senkronunun hydrate'i yeni kaydı bellekten düşürüyor, sonraki kayıt
       // bu bayat bellekten hesaplanıp kaydı kalıcı olarak siliyordu.
       for (const item of inflight) stage(item.collection, item.entries);
+      // Uzak uygulama sayacı aynı okumadan alınır: overlay ile anahtar tutarlı kalır.
+      remoteApplyRevisions = { ...(state.remoteApplyRevisions && typeof state.remoteApplyRevisions === 'object' ? state.remoteApplyRevisions : {}) };
       hydrated = true;
       return { ok: true, collections: memory.size, records: [...memory.values()].reduce((sum, bucket) => sum + bucket.size, 0) };
     } catch (error) {
@@ -380,7 +385,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     return { ok: pendingMirrors === 0, pending: pendingMirrors };
   }
 
-  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, flush, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
+  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, flush, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, remoteApplyRevision, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
 }
 
 /* ===================================================================

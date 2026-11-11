@@ -190,7 +190,13 @@ test('v7.19 görünürlük kararı otoriter sipariş anlık görüntüsünden al
 });
 
 test('v7.19 satır yazma uçları incremental yama taşır; tam checkpoint hydration ayrı full-refresh olayıdır', () => {
-  const calls = [...SERVER.matchAll(/liveEvents\.notifyChange\('orders'[^\n]*/g)].map(match => match[0]);
+  // Ortak klasör senkronuyla gelen uzak cp-order değişikliği bir satır yazma ucu
+  // değildir; checkpoint hydration gibi hafif yeniden yükleme ister. Bu tek
+  // istisna yalnız kendi bloğunda ve hydrate SONRASI çağrıda izinlidir.
+  const remoteAnnounce = blockOf(SERVER, 'function announceRemoteCpChanges', 'function afterSharedSyncCompleted');
+  assert.equal((remoteAnnounce.match(/liveEvents\.notifyChange\('orders'/g) || []).length, 1);
+  assert.match(blockOf(SERVER, 'function afterSharedSyncCompleted', 'let masterCheckpointTimer'), /await deltaStore\.hydrate\(\);\s*announceRemoteCpChanges\(\);/);
+  const calls = [...SERVER.replace(remoteAnnounce, '').matchAll(/liveEvents\.notifyChange\('orders'[^\n]*/g)].map(match => match[0]);
   assert.ok(calls.length >= 4, `orders bildirimi beklenenden az: ${calls.length}`);
   const checkpointCalls = calls.filter(call => /notifyChange\('orders',null\)/.test(call));
   assert.equal(checkpointCalls.length, 1, 'yalnız business-checkpoint hydration full-refresh bildirimi kullanmalı');
