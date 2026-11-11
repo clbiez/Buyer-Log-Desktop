@@ -1225,7 +1225,7 @@
   function pptxPreview(stage, prepared = null, pageIndex = null) {
     const slides = ed.data.slides || [];
     const l = LAY().normalizeLayout('pptx', ed.data.layout);
-    const g = LAY().pptxGeometry(l);
+    let g = LAY().pptxGeometry(l);
     const pages = prepared || LAY().expandGalleries(slides, l, { english: isEn(), records: ed.draft.records || {} });
     if (pageIndex === null && isStudio()) {
       ed.previewPages = pages;
@@ -1268,6 +1268,7 @@
     ed.previewPage = current;
     if (pageIndex !== null) current = pageIndex;
     const entry = pages[current];
+    if (entry?.page?.headerHeight) g = { ...g, band: entry.page.headerHeight, contentTop: entry.page.headerHeight + 14, contentH: g.size.height - entry.page.headerHeight - 14 - LAY().SLIDE.footer - g.note };
     const slide = entry && (entry.slide || { layout: 'gallery', title: entry.page.title, subtitle: entry.page.subtitle });
     const s = Math.max(0.3, Math.min(1.1, (stage.clientWidth - 40) / g.size.width));
     const px = value => `${(value * s).toFixed(1)}px`;
@@ -1281,10 +1282,11 @@
       const dark = slide.layout === 'gallery' && !l.studio?.matrix;
       const titleSize = l.studio ? l.titleSize : slide.title.length > 60 ? Math.round(l.titleSize * 0.8) : l.titleSize;
       const sub = slide.subtitle && g.band >= 56 ? (l.studio ? l.studio.subtitleSize : Math.max(9, Math.round(titleSize * 0.45))) : 0;
+      const subHeight = entry?.page?.subtitleHeight || sub * 1.35;
       const headerStart = body.length;
       body += box(0, 0, g.size.width, g.band, `is-band${dark ? ' is-dark' : ''}`);
-      body += box(g.margin, g.band * 0.08, g.width, g.band - g.band * 0.08 - 16 - (sub ? sub * 1.35 : 0), `is-title${dark ? ' is-dark' : ''}`, text(titleSize, `<b>${esc(slide.title)}</b>`));
-      if (sub) body += box(g.margin, g.band - 14 - sub * 1.35, g.width, sub * 1.35, `is-plain${dark ? ' is-dark' : ''}`, text(sub, esc(slide.subtitle), 'is-muted'));
+      body += box(g.margin, g.band * 0.08, g.width, g.band - g.band * 0.08 - 16 - (sub ? subHeight : 0), `is-title${dark ? ' is-dark' : ''}`, text(titleSize, `<b>${esc(slide.title)}</b>`));
+      if (sub) body += box(g.margin, g.band - 14 - subHeight, g.width, subHeight, `is-plain${dark ? ' is-dark' : ''}`, text(sub, esc(slide.subtitle), 'is-muted'));
       body += box(g.margin, g.band - 10, 64, 3, `is-rule${dark ? ' is-dark' : ''}`);
       if (l.studio && l.studio.headerHidden) body = body.slice(0, headerStart);
       body += box(g.margin, g.size.height - 30, 480, 18, 'is-plain', text(9, esc(`${isStudio() ? 'Buyer Log' : 'Buyer Log · LCW AI'} · ${ed.title}`), 'is-muted'));

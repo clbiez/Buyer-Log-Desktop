@@ -41,3 +41,9 @@ test('matrix: moving gallery groups keeps the cover before the gallery',()=>{
  const pages=L.expandGalleries(deck,{...layout,studio:{...layout.studio,manualPages:[[{title:'A',tokens:['KOL-1']}]]}},{records});
  assert.equal(pages[0].slide.title,'Cover');assert.deepEqual(pages[0].sources,[0]);
 });
+test('matrix: long headings reserve more vertical space at the selected size',()=>{
+ const raw={...layout,titleSize:44,pageTitle:{mode:'manual',text:'A full supported heading '.repeat(5)}};
+ const pages=L.expandGalleries(slides,raw,{records});
+ assert.ok(pages[0].page.headerHeight>L.defaults('pptx').headerHeight);
+ assert.ok(pages[0].page.cells.every(c=>c.y>=pages[0].page.headerHeight));
+});
