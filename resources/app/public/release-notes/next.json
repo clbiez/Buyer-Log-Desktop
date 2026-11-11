@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-10",
+  "publishedAt": "2026-11-11",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Analiz filtrelerinde toplu seçim",
-    "en": "Bulk selection in analysis filters"
+    "tr": "Sütun matrisiyle sunum düzenleme ve analiz iyileştirmeleri",
+    "en": "Column matrix presentation editing and analysis improvements"
   },
   "summary": {
-    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz.",
-    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters."
+    "tr": "Fiyat & Üretici Analizi, LFL ve Fiyat Masası analiz filtrelerinde tümünü seçip istemediğiniz seçenekleri kolayca çıkarabilirsiniz. Sunum editöründe sütun rollerini tek matristen seçebilir, sabit puntolu çıktıyı alt alta ön izleyebilir ve kartlarla grupları slaytlar arasında taşıyabilirsiniz.",
+    "en": "Select all options and easily uncheck unwanted values in Price & Supplier Analysis, LFL and Pricing Desk analysis filters. In the presentation editor, choose column roles in one matrix, preview fixed-font output in a continuous slide stream and move cards and groups across slides."
   },
   "changes": [
     {
