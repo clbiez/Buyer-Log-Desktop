@@ -173,6 +173,7 @@ function mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType,pars
     delType:normalizeTransitDelType(row.delType)||'Gemi', supplier, fob:positive(row.fob)??'', suppFob:suppFob??'',
     trFiyatTl:positive(row.trPrice)??'', kur:positive(row.trFx)??'',
     ...(row._trLicense&&typeof row._trLicense==='object'?row._trLicense:{}),
+    ...(row._ydLicense&&typeof row._ydLicense==='object'?row._ydLicense:{}),
   };
 }
 return {compute,transitDays,landedMultipliers,roundFx,mapCPRow,mapCollectionRow,collectionShippingModelKey};

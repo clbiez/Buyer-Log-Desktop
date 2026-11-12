@@ -20629,6 +20629,9 @@ function mapCollectionRowToShip(row){
   if(kolLandedIsNonDtr(row)){
     const k=kolLandedCalc(row);
     effective._trLicense=k.trRuleMissing?{_trLicenseRuleMissing:true}:{trRoyaltyPct:k.trRoyaltyPct,trHologramCost:k.trHologramCost};
+    // Yurt dışı FOB'un içindeki royalty/hologram yalnız gösterim kırılımı için taşınır;
+    // FOB'un kendisi Koleksiyon'da hesaplanmış hâliyle gelir, burada yeniden hesaplanmaz.
+    if(!k.ruleMissing&&(k.royaltyPct>0||k.hologramCost>0))effective._ydLicense={ydRoyaltyPct:k.royaltyPct,ydHologramCost:k.hologramCost};
   }
   return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
@@ -20760,6 +20763,33 @@ function shipPct(v){
 }
 
 /*
+ * FOB'a eklenen lisans maliyeti kırılımı (yalnız gösterim):
+ *   Domestic FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram   (shipping-engine.js)
+ *   Overseas FOB = Supp. FOB ÷ (1 − royalty) + hologram     (Koleksiyon kuralı)
+ * Royalty/hologram eklendiyse kart kısa not basar; eklenmediyse hiçbir şey basılmaz.
+ */
+function shipLicenseNote(royaltyRaw,hologramRaw,tr,domestic){
+  const num=v=>(v===''||v==null||!Number.isFinite(Number(v)))?0:Number(v);
+  const royalty=num(royaltyRaw), hologram=num(hologramRaw);
+  const parts=[];
+  const pct=royalty.toLocaleString(tr?'tr-TR':'en-GB',{maximumFractionDigits:3});
+  if(royalty>0)parts.push(tr?'Roy. %'+pct:'Roy. '+pct+'%');
+  if(hologram>0)parts.push((tr?'Holo. ':'Holo. ')+shipMoney(hologram));
+  if(!parts.length)return null;
+  const detail=[royalty>0?(tr?'Royalty %'+pct:'Royalty '+pct+'%'):'',hologram>0?'Hologram '+shipMoney(hologram):''].filter(Boolean).join(' + ');
+  const formula=domestic
+    ?(tr?'FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram':'FOB = (TL ÷ FX) ÷ (1 − royalty) + hologram')
+    :(tr?'FOB = Supp. FOB ÷ (1 − royalty) + hologram':'FOB = Supp. FOB ÷ (1 − royalty) + hologram');
+  const lead=domestic
+    ?(tr?'TL fiyatına eklenen lisans maliyeti: ':'License cost added to the TL price: ')
+    :(tr?'Baz fiyata eklenen lisans maliyeti: ':'License cost added to the base price: ');
+  // Parçalar kendi içinde bölünmez (NBSP); dar sütunda yalnız parçalar arasında satır kırılır.
+  return {text:parts.map(part=>'+'+part.replace(/ /g,'\u00a0')).join(' '), title:lead+detail+'\n'+formula};
+}
+function shipDomesticLicenseNote(row,tr){ return shipLicenseNote(row&&row.trRoyaltyPct,row&&row.trHologramCost,tr,true); }
+function shipOverseasLicenseNote(row,tr){ return shipLicenseNote(row&&row.ydRoyaltyPct,row&&row.ydHologramCost,tr,false); }
+
+/*
  * Fiyat kartları soldan sağa sabit sıradadır:
  * FOB / Domestic FOB / SEA Landed / SEA+AIR Landed / AIR Landed.
  * Domestic FOB yüzde karşılaştırmasının referansıdır. Ham FOB karar alternatifi
@@ -20777,10 +20807,12 @@ function shipDecisionOptions(row){
   const days=shipTransitDays(row);
   return [
     {key:'fob', name:tr?'Overseas FOB':'Overseas FOB', source:true, decision:false, priceOnly:true,
-     unit:fob, pct:null, date:null},
+     unit:fob, pct:null, date:null,
+     license:fob!=null?shipOverseasLicenseNote(row,tr):null},
     {key:'tr', name:tr?'Domestic Landed':'Domestic Landed', baseline:true, priceOnly:true,
      unit:num(row.trFiyatFobUsdLanded), pct:null, date:null,
      sub:trUnit!=null?(tr?'FOB '+shipMoney(trUnit):'FOB '+shipMoney(trUnit)):'',
+     license:trUnit!=null?shipDomesticLicenseNote(row,tr):null,
      inputs:[{key:'trFiyatTl', label:'TL'},
              {key:'kur', label:tr?'Kur':'FX'}]},
     {key:'gemi', name:'SEA Landed',
@@ -20955,7 +20987,7 @@ function shipCompareCards(row){
     // ağırlık. Yüzde ikinci sıraya, metrik satırına indi.
     const head=`<b class="shipCardPrice" data-ship-unit>${priceText}</b>`;
     const sub=option.priceOnly
-      ? `<span class="shipCardRow${option.sub?'':' isEmpty'}">${escapeHtml(option.sub||'')}</span><span class="shipCardRow isEmpty" data-ship-pct></span><span class="shipCardRow isEmpty" data-ship-date></span><span class="shipCardRow isEmpty" data-ship-total></span>`
+      ? `${option.license?`<span class="shipCardRow shipCardLicense" data-ship-license title="${escapeHtml(option.license.title)}">${escapeHtml(option.license.text)}</span>`:''}<span class="shipCardRow${option.sub?'':' isEmpty'}">${escapeHtml(option.sub||'')}</span><span class="shipCardRow isEmpty" data-ship-pct></span><span class="shipCardRow isEmpty" data-ship-date></span><span class="shipCardRow isEmpty" data-ship-total></span>`
       : `<span class="shipCardRow ${pctClass}" data-ship-pct>${pctText||'—'}</span><span class="shipCardRow${dateText?'':' isEmpty'}" data-ship-date title="${escapeHtml(tr?'Tahmini antrepo giriş':'Est. warehouse arrival')}">${escapeHtml(dateText)}</span><span class="shipCardRow shipTransit" title="${escapeHtml(tr?'Transit süresi':'Transit time')}">${Number(option.transit)||0}${tr?'g':'d'}</span><span class="shipCardRow isEmpty" data-ship-total></span>`;
     return `<td class="shipCard${option.source?' isSource':''}${option.baseline?' isBaseline':''}${option.priceOnly?' isPriceOnly':''}${missing?' isMissing':''}${priceEditable?' isPriceEditable':''}" data-ship-option="${escapeHtml(option.key)}">
       <div class="shipCardTop">${head}<span class="shipCardBadges" data-ship-badges>${shipDecisionBadges(option,state,tr)}</span></div>

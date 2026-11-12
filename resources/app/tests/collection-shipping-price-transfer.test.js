@@ -48,7 +48,7 @@ test('collection wrapper sends effective prices with confirmed → best priority
     kolConfirmedPricing: row => (row.confirmedManufacturer ? { name: row.confirmedManufacturer, price: Groups.kolParseMoneyNum(pricing[row.confirmedManufacturer]) } : null),
     kolBestPricing: () => Groups.bestPricing(pricing, Groups.kolParseMoneyNum),
     kolLandedIsNonDtr: row => Boolean(row.licensor && row.licensor !== 'DTR'),
-    kolLandedCalc: row => (row.licensor === 'NO-RULE' ? { trRuleMissing: true } : { trRuleMissing: false, trRoyaltyPct: 12, trHologramCost: 0.05 }),
+    kolLandedCalc: row => (row.licensor === 'NO-RULE' ? { trRuleMissing: true } : { trRuleMissing: false, trRoyaltyPct: 12, trHologramCost: 0.05, ruleMissing: false, royaltyPct: 15, hologramCost: 0.03 }),
   };
   vm.createContext(ctx); vm.runInContext(fn, ctx);
   const best = ctx.mapCollectionRowToShip({ plmId: 'P3', modelKod: 'NBA TEE 5', targetPrice: '1,50', fob: '' });
@@ -60,6 +60,8 @@ test('collection wrapper sends effective prices with confirmed → best priority
   const licensed = ctx.mapCollectionRowToShip({ plmId: 'P4', modelKod: 'NBA TKM 3', licensor: 'NBA' });
   assert.equal(licensed.trRoyaltyPct, 12);
   assert.equal(licensed.trHologramCost, 0.05);
+  assert.deepEqual([licensed.ydRoyaltyPct, licensed.ydHologramCost], [15, 0.03], 'overseas FOB licence breakdown is carried for display');
+  assert.equal(confirmed.ydRoyaltyPct, undefined, 'DTR rows carry no overseas licence breakdown');
   assert.equal(ctx.mapCollectionRowToShip({ plmId: 'P5', modelKod: 'X', licensor: 'NO-RULE' })._trLicenseRuleMissing, true);
 });
 
@@ -95,4 +97,7 @@ test('re-sending a collection model fills prices previously transferred as 0 wit
   const r3 = db.loadShipping(userId).rows.find(r => r._modelKey === 'PLM:R3');
   assert.equal(r3._trLicenseRuleMissing, undefined, 'a newly configured rule clears the missing-rule marker');
   assert.deepEqual([r3.trRoyaltyPct, r3.trHologramCost], [10, 0.2]);
+  db.addShippingRows([{ _sourceModule: 'collection', _modelKey: 'PLM:R3', ydRoyaltyPct: 15, ydHologramCost: 0.03 }], db.loadShipping(userId)._revision, userId);
+  const r3b = db.loadShipping(userId).rows.find(r => r._modelKey === 'PLM:R3');
+  assert.deepEqual([r3b.ydRoyaltyPct, r3b.ydHologramCost], [15, 0.03], 'resend syncs the overseas licence breakdown');
 });

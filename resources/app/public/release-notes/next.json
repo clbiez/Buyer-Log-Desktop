@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yalnız Fiyat Masası’na gönderme",
-    "en": "Send to the Pricing Desk only"
+    "tr": "FOB lisans maliyeti kırılımı · Yalnız Fiyat Masası’na gönderme",
+    "en": "FOB licence cost breakdown · Send to the Pricing Desk only"
   },
   "summary": {
-    "tr": "Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
-    "en": "Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
+    "tr": "Nakliye Kıyaslama'da Yurt Dışı FOB ve Yurt İçi Landed kartları FOB'a eklenen royalty ve hologramı gösterir. Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
+    "en": "In Shipping Comparison the Overseas FOB and Domestic Landed cards show the royalty and hologram added to FOB. Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
   },
   "changes": [
+    {
+      "id": "shipping-domestic-license-note",
+      "type": "improvement",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Yurt Dışı FOB ve Yurt İçi Landed kartları FOB'a eklenen royalty ve hologramı gösterir",
+        "en": "Overseas FOB and Domestic Landed cards show the royalty and hologram added to FOB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shipping-domestic-license-note.png",
+        "alt": {
+          "tr": "Nakliye Kıyaslama'da Yurt Dışı FOB fiyatının altında ve Yurt İçi Landed kartında FOB satırının solunda royalty ve hologram notu",
+          "en": "Royalty and hologram notes under the Overseas FOB price and left of the FOB line in the Domestic Landed card of Shipping Comparison"
+        },
+        "caption": {
+          "tr": "Lisanslı modellerde FOB'a eklenen royalty yüzdesi ve hologram maliyeti görünür; lisans maliyeti olmayan modelde ek bir şey gösterilmez.",
+          "en": "For licensed models the royalty percentage and hologram cost added to FOB are shown; nothing extra appears for a model without licence cost."
+        }
+      },
+      "body": {
+        "tr": "Yurt Dışı FOB, Koleksiyon baz fiyatına royalty ve hologram eklenerek hesaplandıysa fiyatın altında; Yurt İçi FOB, girilen TL fiyatına eklenerek hesaplandıysa \"FOB $x\" satırının solunda neyin eklendiği yazar. Üzerine gelince formül görünür. Koleksiyon'dan daha önce gönderilmiş modellerde yurt dışı kırılımı için model yeniden gönderilmelidir.",
+        "en": "If the Overseas FOB was calculated by adding royalty and hologram to the Collection base price, the breakdown appears under the price; if the Domestic FOB was calculated by adding them to the entered TL price, it appears left of the \"FOB $x\" line. Hovering shows the formula. For models sent from Collection earlier, resend the model to get the overseas breakdown."
+      }
+    },
     {
       "id": "send-to-pricing-desk-only",
       "type": "feature",
