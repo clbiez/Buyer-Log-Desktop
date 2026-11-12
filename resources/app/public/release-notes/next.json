@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Send to Pricing düzeltmesi",
-    "en": "Send to Pricing fix"
+    "tr": "Send to Pricing ve PLM ID listesi düzeltmeleri · PLM Sync kumaş düzeltmesi · Nakliye fiyat aktarımı",
+    "en": "Send to Pricing and PLM ID list fixes · PLM Sync fabric fix · Shipping price transfer"
   },
   "summary": {
-    "tr": "E-posta adresi tanımsız üretici için fiyat talebi taslağı alıcısız oluşturulur.",
-    "en": "Pricing request drafts are created without a recipient for manufacturers with no e-mail address."
+    "tr": "Adressiz üretici için alıcısız fiyat talebi taslağı; listeden eklenen modellerin görsel ve teknik föyleri artık atlanmaz. PLM Sync, elle düzenlenmiş çok renkli modellerde de kumaşı tabloya yansıtır ve eksik kumaş kartlarını oluşturur. Koleksiyon’dan Nakliye Kıyaslama’ya aktarılan modeller fiyat, lisans komisyonu ve hologram maliyetiyle gelir.",
+    "en": "Recipient-less pricing drafts for manufacturers without an address; images and technical sheets of models added from a list are no longer skipped. PLM Sync now shows fabric for manually edited multi-colour models and creates missing fabric cards. Models sent from Collection to Shipping Comparison arrive with their prices, licence royalty and hologram cost."
   },
   "changes": [
     {
@@ -32,6 +32,58 @@
       "body": {
         "tr": "E-Mail Grupları'nda adresi tanımlı olmayan üretici seçildiğinde Send to Pricing artık işlemi durdurmaz; taslak alıcı alanı boş olarak oluşturulur ve alıcı e-posta istemcisinde eklenebilir.",
         "en": "Send to Pricing no longer stops when a selected manufacturer has no address in E-Mail Groups; the draft is created with an empty recipient field and the recipient can be added in the e-mail client."
+      }
+    },
+    {
+      "id": "plm-list-import-images-technical-sheets",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "PLM ID listesinden eklenen modellerin görsel ve teknik föyleri eksiksiz gelir",
+        "en": "Models added from a PLM ID list now get all images and technical sheets"
+      },
+      "body": {
+        "tr": "PLM ID Listesinden Ekle ve PLM’de Seçili Modelleri Aktar, görselleri artık tablo filtresine bakmadan eklenen/güncellenen modellerin hepsi için ister; etkin bir filtre yeni satırları gizlediğinde görseller atlanmıyordu. Teknik föy indirme aynı modelin renk satırlarını tek istek sayar ve 500’den büyük listeleri parçalara böler; önceden bazı modellerin dosyası sessizce atlanıyordu.",
+        "en": "Add from PLM ID List and Import PLM-Selected Models now request images for every added/updated model regardless of the table filter; previously an active filter that hid the new rows skipped their images. Technical sheet download counts the colour rows of one model as a single request and splits lists larger than 500; previously some models’ files were silently skipped."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda yeni bir öğe yok; düzeltme görsel ve teknik föy isteğinin hangi modelleri kapsadığındadır.",
+          "en": "No new screen element; the fix is in which models the image and technical sheet requests cover."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-grouped-fabric",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM Sync kumaş bilgisi her kullanıcıda görünür",
+        "en": "PLM Sync fabric information now appears for every user"
+      },
+      "body": {
+        "tr": "Çok renkli bir modelin kumaşı daha önce elle düzenlendiyse PLM Sync yeni kumaşı yazıyor ama tabloda eski (boş) değer kalıyor, sonraki sync “hepsi güncel” diyordu. Onaylanan PLM değeri artık modelin ve rengin gösterilen değerine de yazılır; bu durumda kalmış modeller bir sonraki PLM Sync’te değişiklik olarak listelenir. Kumaş metni zaten güncel olsa da eksik kumaş kartları da oluşturulur.",
+        "en": "If a multi-colour model’s fabric had been edited manually, PLM Sync wrote the new fabric but the table kept showing the old (empty) value and the next sync reported “all up to date”. The approved PLM value is now written to the value the model and colour actually display; models stuck in this state are listed as changes on the next PLM Sync. Missing fabric cards are also created even when the fabric text is already up to date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-grouped-fabric.png",
+        "alt": {
+          "tr": "PLM Sync sonrası çok renkli demo modellerin Kumaş sütununda kumaş kartı özetleri",
+          "en": "Fabric card summaries in the Fabric column of multi-colour demo models after PLM Sync"
+        },
+        "caption": {
+          "tr": "PLM Sync sonrası her renk satırında kumaş kartı özeti görünür; ikinci sync “hepsi güncel” der.",
+          "en": "After PLM Sync every colour row shows its fabric card summary; a second sync reports “all up to date”."
+        }
       }
     },
     {

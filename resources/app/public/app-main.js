@@ -30962,6 +30962,8 @@ function kolImportFieldLabel(key, knownByKey){
   return col?L(col.label):key;
 }
 function kolImportReadField(row,key){return window.BLCollectionModelGroups.kolImportReadField(row,key,{norm,turknorm});}
+// Mevcut satırın tabloda görünen (model/renk katmanlı) değeri; içe aktarma farkı buna göre kurulur.
+function kolImportReadTargetField(row,key){return window.BLCollectionModelGroups.kolImportReadTargetField(row,key,kolEffectiveValue,{norm,turknorm});}
 // Excel ile ASLA tasinmayacak alanlar. Gorsel alanlarinin Koleksiyon sutun tanimlarinda
 // karsiligi olmadigi icin bugun zaten eslesemiyorlar; bu liste bunu tesadufe birakmaz.
 // Ileride "Gorsel" adinda bir sutun eklense bile ice aktarim gorseli yazamaz.
@@ -30972,10 +30974,13 @@ function kolImportIsProtectedKey(key){
 function kolImportWriteField(row, key, value){
   if(kolImportIsProtectedKey(key)) return;
   if(key.startsWith('pricing:')){ row.pricing=row.pricing||{}; row.pricing[key.slice(8)]=value; return; }
-  if(key==='buyingSampleApproved'){row[key]=kolStyleBooleanValue(value);return;}
-  if(key==='inStoreMonth'){row[key]=kolMonthDisplay(value);return;}
-  if(key==='inStoreWeek'){row[key]=kolWeekCode(value,row.inStore)||norm(value);return;}
-  row[key]=value;
+  if(key==='buyingSampleApproved')row[key]=kolStyleBooleanValue(value);
+  else if(key==='inStoreMonth')row[key]=kolMonthDisplay(value);
+  else if(key==='inStoreWeek')row[key]=kolWeekCode(value,row.inStore)||norm(value);
+  else row[key]=value;
+  // Çok renkli modelde değer model/renk katmanındaysa onaylanan değer oraya da yazılır;
+  // aksi halde tablo eski katman değerini göstermeye devam eder.
+  window.BLCollectionModelGroups?.adoptImportedValue?.(kolRows,row,key);
 }
 // Iceri alinan satirlari mevcut koleksiyonla karsilastirir. Yalniz Excel'de GERCEKTEN
 // bulunan sutunlar (touched) kiyaslanir; sayfada olmayan bir alan asla silinmez.
@@ -31004,7 +31009,7 @@ function kolBuildImportPlan(parsedRows, touchedKeys, knownByKey){
       // eşleştirme anahtarını korumaya devam ederiz.
       if(!matchedById&&(fieldKey==='plmId'||fieldKey==='modelKod')) return;
       if(kolImportIsProtectedKey(fieldKey)) return;
-      const from=kolImportReadField(target,fieldKey);
+      const from=kolImportReadTargetField(target,fieldKey);
       const to=kolImportReadField(parsed,fieldKey);
       if(from!==to) changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
     });
@@ -31771,7 +31776,7 @@ function kolPlmSyncCandidateRows(){
 }
 function kolPlmSyncMissingRows(){
   const keys=PLM_MANAGED_FIELDS();
-  return kolPlmSyncCandidateRows().filter(row=>keys.some(key=>!kolImportReadField(row,key)));
+  return kolPlmSyncCandidateRows().filter(row=>keys.some(key=>!kolImportReadTargetField(row,key)));
 }
 function kolPlmSyncSelectedRows(){
   return kolPlmSyncCandidateRows().filter(row=>selectionHasId(kolSelected,row.id));
@@ -31882,6 +31887,16 @@ async function kolPlmFetchSelectedRecords(button,language=''){
     return kolPlmWatchBomJob(await kolPlmFetchWithRetry({selectedOnly:true,existingBrowserOnly:true,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''},span));
   } finally { stopProgress(); if(span)span.textContent=old; }
 }
+/* İçe aktarılan satırların görsel kapsamı: Collection sağlayıcısının bağlamı
+   (contextType/viewToken/repaint) korunur, kimlikler ise filtrelenmiş
+   görünümden değil yazılan satırlardan gelir. Sağlayıcı yoksa null döner ve
+   updateModelImages eski davranışla güncel kapsamı kullanır. */
+function kolImportedRowsImageScope(rows){
+  const api=modelAssetScopeApi(),base=api?.scopeForProvider?.('koleksiyon');
+  if(!base||typeof api.dedupe!=='function')return null;
+  const identities=api.dedupe((rows||[]).filter(row=>kolPlmNormalizeId(row&&row.plmId)).map(row=>({modelId:row.id,rowId:row.id,plmId:row.plmId,styleName:row.modelKod,specialCode:row.specialCode,colourCode:row.colourCode,colour:row.colour})));
+  return {...base,identities,selectedIdentities:identities};
+}
 const KOL_PLM_DIRECT_MAPPED_FIELDS=['plmId','modelKod','specialCode','seasonRaw','magRaw','mmygRaw','buyingGroup','categoryRaw','lineRaw','fabric','fit','colourCode','colour'];
 async function importSelectedKolPlmModels(button,{downloadFile=false,language=''}={}){
   if(!kolRequireWorkspaceEdit())return {ok:false,reason:'view-only'};
@@ -31917,13 +31932,14 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     const teachable=translated.translationInfo?.reviewedMappings||[];
     if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM selected translation save failed:',err);}}
     const fileRows=[...created,...decisions.approved.map(item=>item.target)];
-    /* Selected-import görseli ayrı bir downloader ile çekmez. İçe aktarılan
-       model kümesi yukarıda Collection seçimi olarak kurulmuştur; bu nedenle
-       mevcut PLM image pipeline'ı aynı selection/provider kimlikleriyle reuse
-       edilir. Manual image protection, canonical storage ve repaint davranışı
-       updateModelImages içinde tek source-of-truth olarak kalır. */
+    /* Selected-import görseli ayrı bir downloader ile çekmez; mevcut PLM
+       image pipeline'ı reuse edilir. Kapsam tablonun filtre ∩ seçimi DEĞİL,
+       yazılan satırların kendisidir (kolImportedRowsImageScope): etkin bir
+       filtre yeni satırları gizlese de görselleri istenir. Manual image
+       protection, canonical storage ve repaint davranışı updateModelImages
+       içinde tek source-of-truth olarak kalır. */
     const images=fileRows.length
-      ?await updateModelImages({source:MODEL_ASSET_SOURCE_PLM,mode:'selected',button:null})
+      ?await updateModelImages({source:MODEL_ASSET_SOURCE_PLM,mode:'selected',button:null,scope:kolImportedRowsImageScope(fileRows)})
       :{ok:true,skipped:true};
     const files=downloadFile&&fileRows.length
       ?await kolPlmSyncModelFilesRun(button,fileRows,{language})
@@ -32336,7 +32352,9 @@ async function kolFabricCardsCreateForRows(rows,{auto=false}={}){
   if(auto||kolFabricCardsState!=='ready'){
     try{await kolFabricCardsRequest('/api/fabric-cards',{cache:'no-store'});}catch(err){console.warn('Fabric cards could not be loaded:',err);return {ok:false,created:0};}
   }
-  const missing=api.missingCodes(rows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
+  // Tabloda görünen kumaş (model/renk katmanı dahil) esas alınır.
+  const fabricRows=(Array.isArray(rows)?rows:[]).map(row=>({fabric:kolEffectiveValue(row,'fabric')}));
+  const missing=api.missingCodes(fabricRows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
   if(!missing.length){if(!auto)showToast(en?'Every fabric code in the Collection already has a card.':'Koleksiyondaki her kumaş kodunun zaten bir kartı var.');return {ok:true,created:0};}
   kolFabricBatchRunning=true;
   try{
@@ -32858,7 +32876,7 @@ async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
   const teachable=translated.translationInfo?.reviewedMappings||[];
   if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM list translation save failed:',err);}}
   const fileRows=[...created,...decisions.approved.map(item=>item.target)];
-  const images=fileRows.length?await updateModelImages({source:MODEL_ASSET_SOURCE_PLM,mode:'selected',button:null}):{ok:true,skipped:true};
+  const images=fileRows.length?await updateModelImages({source:MODEL_ASSET_SOURCE_PLM,mode:'selected',button:null,scope:kolImportedRowsImageScope(fileRows)}):{ok:true,skipped:true};
   const files=config.downloadFile&&fileRows.length?await kolPlmSyncModelFilesRun(button,fileRows,{language:config.language}):{ok:true,skipped:true};
   const imageSaved=Number(images?.data?.imagesSaved)||0;
   const imageSummary=images?.ok===false
@@ -32912,7 +32930,7 @@ function kolPlmSyncModelLevelItem(row,parsed,knownByKey){
   PLM_MANAGED_FIELDS().forEach(fieldKey=>{
     if(KOL_PLM_COLOUR_FIELDS.has(fieldKey))return;
     const to=kolImportReadField(parsed,fieldKey);if(!to)return;
-    const from=kolImportReadField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
+    const from=kolImportReadTargetField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
   });
   return {target:row,parsed,changes,hasImage:false,matchedByPlm:true,colourMissing:true};
 }
@@ -33214,6 +33232,9 @@ async function kolPlmSyncRun(mode,button,options={}){
   }
   if(!summary.changed.length&&!(summary.newColours||[]).length){
     kolPlmSyncStampStatus(targetRows,summary,{applied:false});
+    // Kumaş metni zaten güncel olsa da kartı eksik kod kalabilir (önceki
+    // oluşturma başarısız/yarım kalmış olabilir); eksik kartlar yine üretilir.
+    kolFabricCardsAfterImport(targetRows);
     // Alan değişikliği olmasa bile görseller eksik olabilir — tek buton
     // vaadi gereği görsel adımı yine de çalışır.
     const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
@@ -33233,7 +33254,7 @@ async function kolPlmSyncRun(mode,button,options={}){
   // farkı oluşmasın diye burada FAZLADAN bir adım (ör. fiyat kuralı
   // yeniden hesaplama) eklenmez.
   saveKolRows();renderKol();renderCP();renderOrders();
-  kolFabricCardsAfterImport([...summary.changed.map(item=>item.target),...addedColours]);
+  kolFabricCardsAfterImport([...targetRows,...summary.changed.map(item=>item.target),...addedColours]);
   // Görseller alan yazımından SONRA çekilir: yazma hızlı ve geri alınabilir
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.
@@ -34412,6 +34433,7 @@ function kolPlmSyncModelFileRows(){
   const selected=kolRows.filter(row=>selectionHasId(kolSelected,row.id));
   return (selected.length?selected:filteredKol()).filter(row=>kolPlmNormalizeId(row&&row.plmId));
 }
+const KOL_PLM_TECHNICAL_SHEET_BATCH=500;
 async function kolPlmSyncModelFilesRun(button, suppliedRows=null, options={}){
   if(!kolRequireWorkspaceEdit())return {ok:false,reason:'view-only'};
   const rows=(Array.isArray(suppliedRows)?suppliedRows:kolPlmSyncModelFileRows()).filter(row=>kolPlmNormalizeId(row&&row.plmId));
@@ -34421,21 +34443,30 @@ async function kolPlmSyncModelFilesRun(button, suppliedRows=null, options={}){
   }
   const language=options.language==='tr'||options.language==='en'?options.language:await showPlmSyncLanguageChooser();
   if(!language)return {ok:true,cancelled:true};
-  const items=rows.map(row=>({
-    plmId:kolPlmNormalizeId(row.plmId),
-    modelKey:kolCanonicalTechnicalSheetKey(row),
-    modelLabel:kolModelFileLabel(row),
-    filename:kolPlmSyncModelFileName(row),
-  }));
+  /* Teknik föy PLM stiline aittir: aynı PLM ID'nin renk satırları tek istek
+     olur ve liste sunucunun tek istek sınırına (500 model) göre bölünür.
+     Eskiden 500'ü aşan liste sessizce kırpılıyordu. */
+  const seen=new Set(),items=[];
+  rows.forEach(row=>{
+    const plmId=kolPlmNormalizeId(row.plmId);
+    if(!plmId||seen.has(plmId))return;
+    seen.add(plmId);
+    items.push({plmId,modelKey:kolCanonicalTechnicalSheetKey(row),modelLabel:kolModelFileLabel(row),filename:kolPlmSyncModelFileName(row)});
+  });
   const span=button&&button.querySelector('span'),old=span&&span.textContent;
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
   const stopProgress=watchModelOperationProgress(button);
   try{
     if(span)span.textContent=appLang==='en'?'Checking PLM API connection…':'PLM API bağlantısı kontrol ediliyor…';
     if(!await ensureCoreNectumApiConnection())return {ok:false,reason:'api-not-configured'};
-    if(span)span.textContent=appLang==='en'?`Downloading ${items.length} file(s)…`:`${items.length} dosya indiriliyor…`;
-    const data=await plmJsonRequest('/api/plm-sync/model-files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,language})});
-    const saved=Number(data.saved)||0,failed=Array.isArray(data.failedItems)?data.failedItems:[];
+    let saved=0;const failed=[];
+    for(let index=0;index<items.length;index+=KOL_PLM_TECHNICAL_SHEET_BATCH){
+      const batch=items.slice(index,index+KOL_PLM_TECHNICAL_SHEET_BATCH);
+      if(span)span.textContent=appLang==='en'?`Downloading files ${index+1}–${index+batch.length} / ${items.length}…`:`Dosyalar indiriliyor ${index+1}–${index+batch.length} / ${items.length}…`;
+      const data=await plmJsonRequest('/api/plm-sync/model-files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:batch,language})});
+      saved+=Number(data.saved)||0;
+      if(Array.isArray(data.failedItems))failed.push(...data.failedItems);
+    }
     // Style ID'si olmayan modeller ayrı gösterilir: çözümü farklıdır
     // (önce PLM Sync ile model linklerini almak gerekir).
     const missingStyle=failed.filter(item=>item&&item.code==='CORENECTUM_STYLE_ID_REQUIRED');

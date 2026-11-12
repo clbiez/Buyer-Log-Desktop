@@ -220,6 +220,31 @@
     return next;
   }
 
+  /* İçe aktarma (PLM Sync / PLM Excel) row[key]'e yazdıktan sonra çağrılır.
+     Tablo değeri modelSharedValues / variantOverrides katmanından okur; yalnız
+     ham alan yazılırsa onaylanan PLM değeri görünmez kalır ve sonraki sync
+     "güncel" der. Değeri, satırın değerini gerçekten taşıyan katmana yerinde
+     taşır (kolRows dizisi değişmez; içe aktarma döngüsündeki referanslar geçerli kalır). */
+  function adoptImportedValue(rows, row, key) {
+    if (!row || !key || String(key).startsWith('pricing:')) return false;
+    const value = row[key];
+    let changed = false;
+    if (hasVariantOverride(row, key)) {
+      row.variantOverrides = { ...row.variantOverrides, [key]: clone(value) };
+      changed = true;
+    }
+    // effectiveValue() ile aynı koşul: bir variant'ta (ör. birleştirme sonrası)
+    // kalan modelSharedValues grubun değeri değildir; gruba yayılmaz.
+    if (row.modelGroupRole !== 'variant' && fieldMetadata(key).inheritance === 'model' && row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) {
+      row.modelSharedValues = { ...row.modelSharedValues, [key]: clone(value) };
+      groupFor(rows, row.modelGroupId).forEach(member => {
+        if (member !== row && !hasVariantOverride(member, key)) member[key] = clone(value);
+      });
+      changed = true;
+    }
+    return changed;
+  }
+
   function writeGroupedValue(rows,id,key,value) {
     const row=rows.find(item=>String(item.id)===String(id));
     if(!row)return rows;
@@ -438,6 +463,13 @@ function kolImportReadField(row, key,helpers){
   if(key==='buyingSampleApproved') return row[key]?'true':'false';
   return norm(row[key]);
 }
+/* Mevcut Koleksiyon satırının KULLANICININ GÖRDÜĞÜ değeri (model/renk katmanı
+   dahil). İçe aktarma farkı buna göre kurulur; ham alan kıyaslanırsa katmanda
+   eski kalan değer "güncel" sayılır. reader: createValueReader(rows) sonucu. */
+function kolImportReadTargetField(row, key, reader, helpers){
+  if(!row || !reader || key.startsWith('pricing:') || key==='buyingSampleApproved' || !row.modelGroupId) return kolImportReadField(row,key,helpers);
+  return kolImportReadField({[key]:reader(row,key)},key,helpers);
+}
 function kolPlmCodePrefix(value,helpers){
   const {norm,turknorm}=helpers;
   const raw=norm(value);if(!raw)return '';
@@ -493,6 +525,7 @@ function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
   });
 
   const existing=[],creates=[],ambiguous=[],inputDuplicates=[],seenInputPlm=new Set();
+  const targetReader=createValueReader(kolRows||[],{lazy:true});
   // Rengi olmayan tek Koleksiyon satırı yalnız PLM'nin İLK rengine bağlanır;
   // aynı modelin diğer renkleri o satırı ezmez, yeni renk satırı adayıdır.
   const claimedUncoloured=new Set();
@@ -529,7 +562,7 @@ function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
     const changes=[];
     touched.forEach(fieldKey=>{
       const to=kolImportReadField(parsed,fieldKey);if(!to)return; // PLM'de olmayan/çevirisi onaylanmamış alan mevcut değeri silmez.
-      const from=kolImportReadField(target,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
+      const from=kolImportReadTargetField(target,fieldKey,targetReader,{norm,turknorm});if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
     });
     // PLM ID Koleksiyon'da mevcutsa değişiklik olmasa bile kullanıcıya model model sorulur.
     // Güncelleme yalnız changes içindeki PLM-kaynaklı alanları yazar; pricing/notlar ve
@@ -571,5 +604,5 @@ function kolParseMoneyNum(v){
   }else value=value.replace(',','.');
   return Number(value);
 }
-  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

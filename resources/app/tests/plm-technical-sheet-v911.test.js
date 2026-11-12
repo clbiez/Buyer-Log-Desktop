@@ -189,11 +189,11 @@ test('dil çalıştırma başına BİR kez sorulur, model başına değil', () =
   const block = APP.slice(start, end);
   // Tek çağrı, üstelik satır döngüsünden ÖNCE.
   assert.equal((block.match(/showPlmSyncLanguageChooser\(\)/g) || []).length, 1);
-  assert.ok(block.indexOf('showPlmSyncLanguageChooser') < block.indexOf('rows.map'));
+  assert.ok(block.indexOf('showPlmSyncLanguageChooser') < block.indexOf('rows.forEach'));
   // Vazgeçilirse hiçbir istek atılmaz.
   assert.match(block, /if\(!language\)return \{ok:true,cancelled:true\}/);
   // Seçilen dil isteğe gerçekten konur.
-  assert.match(block, /JSON\.stringify\(\{items,language\}\)/);
+  assert.match(block, /JSON\.stringify\(\{items:batch,language\}\)/);
 });
 
 /* v11.10 — Model Dosyaları artık kendi başına bir işlemdir (Eksikleri
