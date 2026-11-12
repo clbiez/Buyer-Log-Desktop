@@ -1,0 +1,133 @@
+{
+  "source": "resources/app/server/lib/local-db.js",
+  "main": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "sourceSha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+  "copiedBlocks": [
+    {
+      "range": "SHARED_CP_FIELDS through emptyState",
+      "sha256": "40696e8d510e43f3289222d9276ae4f8e1cb497cccebc66eab9227eae8a7c52b"
+    },
+    {
+      "symbol": "retiredDeviceIds",
+      "startLine": 130,
+      "endLine": 132,
+      "sha256": "18c8496d4153f01e4f958aab440ca6226ca190b7fbe74ebfcd752289b3cc5ebf"
+    },
+    {
+      "symbol": "isRetiredDeviceId",
+      "startLine": 133,
+      "endLine": 136,
+      "sha256": "fd8bae5a3cfecc8d0fe06d2d3963ff2e9ed1a667c056da208c0c7e1eff4ad313"
+    },
+    {
+      "symbol": "normalizeState",
+      "startLine": 144,
+      "endLine": 175,
+      "sha256": "c418193c5b73e5edf5436f6bbc568212d2ea95ec1e5cca955b11212db85ab690"
+    },
+    {
+      "symbol": "pruneResolvedConflict",
+      "startLine": 180,
+      "endLine": 185,
+      "sha256": "74a074f3c9ef33663e717ffa58fdc6cf2d64a5a722b2d7de041ee6b1260c2210"
+    },
+    {
+      "range": "DOCUMENT_REVISION_META_FIELD through fieldMerge",
+      "sha256": "c11a1c441b589d3d01d6643fec9d348b6294915c71fb2d3cb1309c211c049f9b"
+    },
+    {
+      "symbol": "setSharedOwnerResolver",
+      "sha256": "d83d1d76bc0c16019b6b761262dffa4243a5d6b029cf9e0849c05ada4d1fb634"
+    },
+    {
+      "symbol": "sharedOwnerOf",
+      "startLine": 550,
+      "endLine": 553,
+      "sha256": "4015159a658a20d584d2aeed21b6365f7158d9878e6576181d878ff51cd68905"
+    },
+    {
+      "symbol": "closeIfLocalOnly",
+      "startLine": 555,
+      "endLine": 562,
+      "sha256": "3481e17efaff2d71c2227b73fdc3832d42706961326e4075913badc5e748fdee"
+    },
+    {
+      "symbol": "validateTransportClocks",
+      "startLine": 731,
+      "endLine": 734,
+      "sha256": "5f0aabfa90d98d76bae3c68cb34da3a30f48d8d10f9560a93b5529fedc74448a"
+    },
+    {
+      "symbol": "restoreHlc",
+      "startLine": 735,
+      "endLine": 739,
+      "sha256": "e75ccdcc3189a9a9eaa92ddfee4e2c88dbedf802d7994a3974555d5061c464d0"
+    },
+    {
+      "symbol": "stampOperation",
+      "startLine": 760,
+      "endLine": 784,
+      "sha256": "9ba5df75ecd7056d114ef63781dc3e15535b8a255317437f5421f22ada4924b5"
+    },
+    {
+      "symbol": "applyLocalPatch",
+      "startLine": 914,
+      "endLine": 946,
+      "sha256": "1f867ee3ede2a5d22049dd45f7e33e3972acdab28cb2c4daf904a3ee292f636d"
+    },
+    {
+      "symbol": "applyLocalTombstone",
+      "startLine": 948,
+      "endLine": 966,
+      "sha256": "d999a3ffd80e4094a6df92cfea2f8d7b6e6cf2389c40ebc8115d2fe3469ea641"
+    },
+    {
+      "symbol": "recordSyncReceipt",
+      "startLine": 968,
+      "endLine": 994,
+      "sha256": "c2f23d34804e60c1640795289f75c4dfd44b575edf8f73a6991a97ce877c07f6"
+    },
+    {
+      "symbol": "applyRemoteDelta",
+      "startLine": 996,
+      "endLine": 1049,
+      "sha256": "79158aeaa4a0259f5225fe048e38728e77fa62e7f9f2beec8ec12ff9b3537ef9"
+    },
+    {
+      "symbol": "resolvePatch",
+      "startLine": 1053,
+      "endLine": 1059,
+      "sha256": "c4d78341e5fb4418f2179ecc0f2ee9bc4fdd479fe9d5fc2c9f2ed546442669f0"
+    },
+    {
+      "symbol": "applyMarkSynced",
+      "startLine": 1202,
+      "endLine": 1212,
+      "sha256": "86cd9a70b96ef46ec3487f2782e0955e5968a6e1debf84029a6e729c6ba7a69a"
+    },
+    {
+      "symbol": "applyMarkAcknowledged",
+      "startLine": 1213,
+      "endLine": 1238,
+      "sha256": "e5055acc581fd670de6ed9d2d23092faa18deb886ba39b21a21bde534dd4e287"
+    },
+    {
+      "symbol": "applyMarkAcknowledgedThrough",
+      "startLine": 1239,
+      "endLine": 1260,
+      "sha256": "65639809f57de3be515b162be6ae47a7ff68a3048151ce596a17348da26601db"
+    },
+    {
+      "symbol": "compactedPendingAckCount",
+      "startLine": 1302,
+      "endLine": 1313,
+      "sha256": "c366e7ecb81eec913875af502549677874c26ebab6434ff317d024c3e11d9515"
+    }
+  ],
+  "unchangedPureDependencies": [
+    "hlc.js",
+    "hlc-email-list.js",
+    "quotation-ledger.js"
+  ],
+  "note": "Copied pure transitions only. SQL adapter never calls createLocalDb or reads JSON/WAL files."
+}

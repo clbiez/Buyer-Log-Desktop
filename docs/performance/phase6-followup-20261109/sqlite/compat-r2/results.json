@@ -1,0 +1,47 @@
+{
+  "gates-green": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "prototype-green": {
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "behavior-green": {
+    "tests": 12,
+    "pass": 12,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "related-runtime": {
+    "tests": 84,
+    "pass": 84,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "npm-test": {
+    "tests": 9217,
+    "pass": 9152,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "files": 1331,
+    "batches": 10,
+    "concurrency": 4,
+    "seconds": 302.4428811150001
+  },
+  "sourceCommit": "f9d2dc55ceeccb98e43d14527bfe8d7accd82feb",
+  "baseMain": "2cb965f74af807fcf94231644e01ca2c671ba656",
+  "fixtureTraceSha256": "7772b34a7c29a71d727e7577aa9d5cc3e8c8148fefab84f51657fe944105c5d2",
+  "productionDecision": "WAIT",
+  "productRuntimePerformance": "N/A: protected product trees equal Main",
+  "adoptionPerformancePlatformBackup": "BLOCKED; not measured or closed by R2"
+}

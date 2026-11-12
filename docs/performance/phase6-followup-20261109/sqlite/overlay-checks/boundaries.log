@@ -1,0 +1,2 @@
+local seed 10000/10000
+sqlite seed 10000/10000

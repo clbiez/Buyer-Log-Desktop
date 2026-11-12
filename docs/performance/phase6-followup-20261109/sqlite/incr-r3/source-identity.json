@@ -1,0 +1,108 @@
+{
+  "codeSha": "4991cff2d669d776566f8506670ad0b2d72f47eb",
+  "main": "2b7762ef60e7b17a0e581e0eca57078783080f7f",
+  "r2": "4ac2ed4847ce4c3af32bc82d13681b101d749d20",
+  "merge": "8c5bd5ebdc880624dcd6e54cf06f67bb80b0c19a",
+  "unavailableCopiedConversationSha": "eec7896e (GitHub API 422, no local object/ref; no results reused)",
+  "files": {
+    "scripts/prototypes/sqlite-decision-20261109/sqlite-compat.cjs": "c9c33c573a519616539e9d2ef0d30be839d5e7dd5159cc93450c5046f29a820c",
+    "scripts/prototypes/sqlite-decision-20261109/compat-transitions.cjs": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e",
+    "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs": "43fc236ddb025b01ebd871e4f5367b7867f7926fd0de39db7b53cecddafb9966",
+    "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
+    "scripts/prototypes/sqlite-decision-20261109/prototype.test.cjs": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994",
+    "scripts/prototypes/sqlite-decision-20261109/incr-r3-worker.cjs": "991ae2d0427139808867b5c5a328ab737e03f9f2b7fd5e80bc90507ab7604c57",
+    "scripts/prototypes/sqlite-decision-20261109/incr-r3-benchmark.cjs": "de4b5f4b0bc1f4ba51153df85eed21c4c0e3c509c54441baddcbb545e56804c3",
+    "scripts/prototypes/sqlite-decision-20261109/incremental-r3.test.cjs": "8cf577f9674f9d02d80bb43c75427a2cca7ecdff5a1be67f928bb72811639674",
+    "scripts/prototypes/sqlite-decision-20261109/workload.cjs": "69dd09bb6e3e7df3bb8a70ac513a03e68ce562212a9d2b78da9db0835ac7078a",
+    "scripts/prototypes/sqlite-decision-20261109/oracle.cjs": "d8a298682924728d9f6d83db60f4ef84435d00cb82b02c8aa2ff5735151243bc"
+  },
+  "treeEquality": {
+    "resources/app": {
+      "main": "a9cdfdc9ce05afecc32e06332242a1acbc2109ad",
+      "candidate": "a9cdfdc9ce05afecc32e06332242a1acbc2109ad"
+    },
+    ".github": {
+      "main": "16f1aca3a9a8327f4ca6dbd214fb8acfb5450123",
+      "candidate": "16f1aca3a9a8327f4ca6dbd214fb8acfb5450123"
+    },
+    "AGENTS.md": {
+      "main": "0d94b08fac88b0d342aa769217b210a2a5873a18",
+      "candidate": "0d94b08fac88b0d342aa769217b210a2a5873a18"
+    },
+    "CLAUDE.md": {
+      "main": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701",
+      "candidate": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701"
+    },
+    "docs/PERFORMANCE_ACCEPTANCE.md": {
+      "main": "d4a5361c29e15b9ab47fbc695a77091721454020",
+      "candidate": "d4a5361c29e15b9ab47fbc695a77091721454020"
+    }
+  },
+  "runtimeZipSha256": "8b49b9efdd73c0f467edc3c1cd5678392c384ccf224f34ff54179f736e2f384b",
+  "runtimeZip": "https://github.com/electron/electron/releases/download/v44.3.0/electron-v44.3.0-linux-x64.zip",
+  "filesystem": "overlayfs",
+  "hostNode": "v24.19.0",
+  "kernel": "6.18.57",
+  "cgroupMemoryMax": "8589934592",
+  "cgroupCpuMax": "200000 100000",
+  "validationCodeSha": "b29941e484e3ac2d2d2ec29e94dac386dfb01106",
+  "measurementCodeSha": "4991cff2d669d776566f8506670ad0b2d72f47eb",
+  "postValidationChange": "Final integrated b29941e4 validated after Main 4dab3493 merge. SQLite adapter, prototype tests and complete server/runtime/dependency source are byte-identical to measured 4991cff2 / Main 2b7762ef; later delivery changes are documentation/evidence only.",
+  "priorValidationCodeSha": "e791fa2b6412e95291c2f1ef26e71828b8ace671",
+  "runtimeManifest": {
+    "path": ".github/installer/runtime.json",
+    "sha256": "69a0857e6fbbe72c9db5416d47b9d615963858a4da16ad648ef2b090b609f0f9"
+  },
+  "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+  "measurementTreeEquality": {
+    "resources/app": {
+      "main": "e8b9ed266884170a3f548b2c9fb16f6906a10732",
+      "candidate": "e8b9ed266884170a3f548b2c9fb16f6906a10732"
+    },
+    ".github": {
+      "main": "d097f4c1f135851036fef32b021abf67ca874dd6",
+      "candidate": "d097f4c1f135851036fef32b021abf67ca874dd6"
+    },
+    "AGENTS.md": {
+      "main": "0d94b08fac88b0d342aa769217b210a2a5873a18",
+      "candidate": "0d94b08fac88b0d342aa769217b210a2a5873a18"
+    },
+    "CLAUDE.md": {
+      "main": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701",
+      "candidate": "339dc8955ec5c8629193f2eca4bb90d5d2fe4701"
+    },
+    "docs/PERFORMANCE_ACCEPTANCE.md": {
+      "main": "d4a5361c29e15b9ab47fbc695a77091721454020",
+      "candidate": "d4a5361c29e15b9ab47fbc695a77091721454020"
+    }
+  },
+  "finalMainVerified": "4dab3493331b4c0c9361efd77833b28124e6ae28",
+  "finalIntegrationCodeSha": "b29941e484e3ac2d2d2ec29e94dac386dfb01106",
+  "worktreeAtMeasurement": "/workspace/Buyer-Log-Desktop/work/sqlite-incr-r3",
+  "finalWorktree": "/workspace/work/sqlite-incr-r3",
+  "originalCheckout": {
+    "path": "/workspace/Buyer-Log-Desktop",
+    "branch": "work",
+    "sha": "95b154d5d1be5c19162bc25ea6d02e9123ce9d34",
+    "status": ""
+  },
+  "measurementMainToFinalMainRuntimeEquality": {
+    "resources/app/server": {
+      "measuredMain": "9226dc0e82a80c0a6f2dc87b027610b45f786656",
+      "finalMain": "9226dc0e82a80c0a6f2dc87b027610b45f786656"
+    },
+    "resources/app/package.json": {
+      "measuredMain": "24f2d3738ba4c76e7aea1cfb1d8eec5991c87ac5",
+      "finalMain": "24f2d3738ba4c76e7aea1cfb1d8eec5991c87ac5"
+    },
+    "resources/app/package-lock.json": {
+      "measuredMain": "e37507c8df488a37c7b9affbb7070cff4e3e1c61",
+      "finalMain": "e37507c8df488a37c7b9affbb7070cff4e3e1c61"
+    },
+    ".github/installer/runtime.json": {
+      "measuredMain": "3a1c5ce07ffe19a52e91353ddd62eebf6bcdb0d1",
+      "finalMain": "3a1c5ce07ffe19a52e91353ddd62eebf6bcdb0d1"
+    }
+  },
+  "finalMainChanges": "Only Horizon data-management-filter UI, its UI acceptance script and fast-check workflow selection changed; complete server/runtime/dependency sources and all SQLite prototype/test code byte-identical. No benchmark repeat warranted; final integrated full suite repeated."
+}

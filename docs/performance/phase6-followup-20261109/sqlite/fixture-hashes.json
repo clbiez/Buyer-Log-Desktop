@@ -1,0 +1,16 @@
+[
+  {
+    "events": 10000,
+    "seedJsonLinesSha256": "3e47eb25038a58297aca020c3ca67dfc56014f96d4883c7210c3ebfc08e0bb9e",
+    "mixed630JsonLinesSha256": "2a85b80857221d2693c15e331376917dd25d7236627cd8f2405f23d140177068",
+    "seedBusinessOracle": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+    "finalBusinessOracle": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4"
+  },
+  {
+    "events": 200000,
+    "seedJsonLinesSha256": "9388d7c55e1601f002f496826ba6c6abad1f3d220c92dbc8cf20e3817852fc15",
+    "mixed630JsonLinesSha256": "2f8eab2812cb790f150b53f13b3dfc0902fe53205baf59b8028fa6821fd97204",
+    "seedBusinessOracle": "984e57133f4c42e7141fc7533dce571b6bc12a5d58cd2b6f993b2898ced53462",
+    "finalBusinessOracle": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462"
+  }
+]
