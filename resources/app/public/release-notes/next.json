@@ -1,14 +1,38 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM ID listesinden eklemede görsel ve teknik föy düzeltmesi",
+    "en": "Image and technical sheet fix for PLM ID list import"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Listeden eklenen modellerin görselleri ve teknik föyleri artık atlanmaz.",
+    "en": "Images and technical sheets of models added from a list are no longer skipped."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "plm-list-import-images-technical-sheets",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "PLM ID listesinden eklenen modellerin görsel ve teknik föyleri eksiksiz gelir",
+        "en": "Models added from a PLM ID list now get all images and technical sheets"
+      },
+      "body": {
+        "tr": "PLM ID Listesinden Ekle ve PLM’de Seçili Modelleri Aktar, görselleri artık tablo filtresine bakmadan eklenen/güncellenen modellerin hepsi için ister; etkin bir filtre yeni satırları gizlediğinde görseller atlanmıyordu. Teknik föy indirme aynı modelin renk satırlarını tek istek sayar ve 500’den büyük listeleri parçalara böler; önceden bazı modellerin dosyası sessizce atlanıyordu.",
+        "en": "Add from PLM ID List and Import PLM-Selected Models now request images for every added/updated model regardless of the table filter; previously an active filter that hid the new rows skipped their images. Technical sheet download counts the colour rows of one model as a single request and splits lists larger than 500; previously some models’ files were silently skipped."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda yeni bir öğe yok; düzeltme görsel ve teknik föy isteğinin hangi modelleri kapsadığındadır.",
+          "en": "No new screen element; the fix is in which models the image and technical sheet requests cover."
+        }
+      }
+    }
+  ]
 }

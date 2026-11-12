@@ -152,7 +152,10 @@ function prepareTechnicalSheetItems(rawItems) {
   const links = loadPlmStyleLinks().links || {};
   const seen = new Set();
   const items = [];
-  for (const raw of rawItems.slice(0, 500)) {
+  // Sınır TEKİL modele uygulanır: aynı PLM ID'nin renk satırları kapasiteyi
+  // tüketip sonraki modelleri sessizce düşürmemeli.
+  for (const raw of rawItems) {
+    if (items.length >= 500) break;
     const plmId = normalizePlmId(raw && raw.plmId);
     if (!plmId || seen.has(plmId)) continue;
     seen.add(plmId);
