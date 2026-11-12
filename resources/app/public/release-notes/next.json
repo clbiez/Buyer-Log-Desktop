@@ -33,6 +33,35 @@
         "tr": "E-Mail Grupları'nda adresi tanımlı olmayan üretici seçildiğinde Send to Pricing artık işlemi durdurmaz; taslak alıcı alanı boş olarak oluşturulur ve alıcı e-posta istemcisinde eklenebilir.",
         "en": "Send to Pricing no longer stops when a selected manufacturer has no address in E-Mail Groups; the draft is created with an empty recipient field and the recipient can be added in the e-mail client."
       }
+    },
+    {
+      "id": "collection-shipping-price-transfer",
+      "type": "fix",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Koleksiyon’dan aktarılan modellerin fiyatları Nakliye Kıyaslama’ya gelir",
+        "en": "Prices of models sent from Collection now reach Shipping Comparison"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-shipping-prices.png",
+        "alt": {
+          "tr": "Koleksiyon’dan aktarılan üç demo modelin Yurt Dışı FOB ve Sea Landed fiyatlarıyla Nakliye Kıyaslama tablosu",
+          "en": "Shipping Comparison table showing Overseas FOB and Sea Landed prices for three demo models sent from Collection"
+        },
+        "caption": {
+          "tr": "Aktarım sonrası: FOB ve landed fiyatlar dolu geliyor.",
+          "en": "After the transfer: FOB and landed prices are filled."
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon’dan Nakliye Kıyaslama’ya gönderilen modeller artık $0 yerine Koleksiyon’daki FOB (lisans komisyonu ve hologram dahil), baz fiyat (Onaylı → Best → Target) ve TR fiyatıyla gelir. Non-DTR modellerde Yurt İçi tarafına da TR lisans komisyonu ve hologram maliyeti uygulanır; kural yoksa eksik maliyet hesaplanmaz. Daha önce fiyatsız aktarılmış model yeniden gönderildiğinde yalnız boş alanlar doldurulur; elle girilen değerler korunur.",
+        "en": "Models sent from Collection to Shipping Comparison now arrive with their Collection FOB (including licence royalty and hologram cost), base price (Approved → Best → Target) and TR price instead of $0. For Non-DTR models the TR licence royalty and hologram cost are also applied on the Domestic side; without a matching rule no understated cost is calculated. Re-sending a model previously transferred without prices fills only empty fields; manually entered values are kept."
+      }
     }
   ]
 }

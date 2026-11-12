@@ -20619,7 +20619,18 @@ function collectionShippingModelKey(row){
   return BLShippingEngine.collectionShippingModelKey(row);
 }
 function mapCollectionRowToShip(row){
-  return BLShippingEngine.mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType});
+  if(!row)return null;
+  // Gruplu modellerde fiyat alanları ana modelden miras gelir; görünen (etkin) değer taşınır.
+  const effective={...row};
+  ['fob','targetPrice','trPrice','trFx'].forEach(key=>{effective[key]=kolEffectiveValue(row,key);});
+  const confirmed=kolConfirmedPricing(row)||kolBestPricing(row);
+  // Yurt dışı FOB zaten royalty + hologram içerir (kolApplyRulePricing). TR tarafı
+  // için Koleksiyon TR Landed ile aynı Country Group = TR kuralı taşınır.
+  if(kolLandedIsNonDtr(row)){
+    const k=kolLandedCalc(row);
+    effective._trLicense=k.trRuleMissing?{_trLicenseRuleMissing:true}:{trRoyaltyPct:k.trRoyaltyPct,trHologramCost:k.trHologramCost};
+  }
+  return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
 function collectionShippingColourOptions(row){
   const clean=value=>String(value==null?'':value).trim();

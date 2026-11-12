@@ -35,7 +35,14 @@ function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers}){
   const opd = row.opd ? coerceDateLoose(row.opd) : null;
   row.leadTime = (exf && opd && !isNaN(exf) && !isNaN(opd)) ? Math.round((exf-opd)/86400000) : '';
   const trTl = toNum(row.trFiyatTl), kur = toNum(row.kur);
-  row.trFiyatUsd = (trTl!=null && kur) ? (trTl/kur) : '';
+  /* Koleksiyon'dan gelen Non-DTR satırlar TR lisans komisyonu (royalty %) ve
+     hologram maliyetini taşır: TR USD = (TL ÷ kur) ÷ (1 − royalty) + hologram.
+     Alan yoksa (CP / DTR) eski davranış aynen korunur. Kural eksikse TR
+     maliyeti royaltysiz (sessizce düşük) hesaplanmaz, boş kalır. */
+  const trRoyalty = toNum(row.trRoyaltyPct), trHologram = toNum(row.trHologramCost);
+  const trDenom = 1 - ((trRoyalty!=null && trRoyalty>0) ? trRoyalty/100 : 0);
+  row.trFiyatUsd = (row._trLicenseRuleMissing || trDenom<=0) ? ''
+    : (trTl!=null && kur) ? (trTl/kur/trDenom + ((trHologram!=null && trHologram>0) ? trHologram : 0)) : '';
   row.trFiyatFobUsdLanded = (row.trFiyatUsd!=='' ) ? (row.trFiyatUsd*multipliers.tr) : '';
   const fob = toNum(row.fob);
   row.ydFiyatUsd = fob!=null ? fob : '';
@@ -136,8 +143,19 @@ function collectionShippingModelKey(row){
   return order?`ORDER:${order}`:'';
 }
 
-function mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType}){
+function mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney,basePrice}){
   if(!row)return null;
+  /* Koleksiyon para alanları yerel biçimde saklanır ("4,33"). Number() bunları
+     NaN, boş metni ise 0 yapıyordu; aktarılan modeller $0 fiyatla geliyordu. */
+  const money=value=>{
+    if(typeof parseMoney!=='function')return toNum(value);
+    if(value==null||value==='')return null;
+    const n=parseMoney(value);return Number.isFinite(n)?n:null;
+  };
+  const positive=value=>{const n=money(value);return n!=null&&n>0?n:null;};
+  /* Supp. FOB = Koleksiyon'un baz fiyatı (Onaylı → Best → Target). */
+  const base=Number(basePrice);
+  const suppFob=Number.isFinite(base)&&base>0?base:positive(row.targetPrice);
   const date=value=>value instanceof Date?(toISODate(value)||''):String(value||'').trim();
   const modelKey=collectionShippingModelKey(row);
   if(!modelKey)return null;
@@ -148,8 +166,9 @@ function mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType}){
     category:row.urunTipi||'', line:row.line||'', retailDate:date(row.retail), opd:'', exFactory:date(row.exFactory),
     specialCode:row.specialCode||'', plm:row.plmId||'', _imageRef:row.imgRef||row.img||'', styleName:row.modelKod||'',
     colour:row.colour||'', colorCode:row.colourCode||'', quantity:toNum(row.quantity)??'', country:row.country||'', season:row.season||'',
-    delType:normalizeTransitDelType(row.delType)||'Gemi', supplier, fob:toNum(row.fob)??'', suppFob:toNum(row.targetPrice)??'',
-    trFiyatTl:toNum(row.trPrice)??'', kur:toNum(row.trFx)??'',
+    delType:normalizeTransitDelType(row.delType)||'Gemi', supplier, fob:positive(row.fob)??'', suppFob:suppFob??'',
+    trFiyatTl:positive(row.trPrice)??'', kur:positive(row.trFx)??'',
+    ...(row._trLicense&&typeof row._trLicense==='object'?row._trLicense:{}),
   };
 }
 return {compute,transitDays,landedMultipliers,roundFx,mapCPRow,mapCollectionRow,collectionShippingModelKey};

@@ -1779,6 +1779,24 @@ function shippingModelKey(record) {
   const order = Number(String(rawOrder == null ? '' : rawOrder).replace(/\./g, '').trim());
   return Number.isFinite(order) ? `ORDER:${order}` : '';
 }
+// Koleksiyon'dan yeniden gönderilen model, daha önce fiyatsız ($0/boş) aktarılmış
+// satırın yalnız BOŞ fiyat girdilerini doldurur; kullanıcının girdiği değerler korunur.
+const COLLECTION_SHIPPING_PRICE_KEYS = ['fob', 'suppFob', 'trFiyatTl'];
+function fillMissingCollectionShippingPrices(target, incoming) {
+  if (!target || !incoming || incoming._sourceModule !== 'collection') return false;
+  let changed = false;
+  COLLECTION_SHIPPING_PRICE_KEYS.forEach(key => {
+    const current = target[key], next = Number(incoming[key]);
+    const empty = current == null || current === '' || Number(current) === 0;
+    if (empty && Number.isFinite(next) && next > 0) { target[key] = next; changed = true; }
+  });
+  // Eski aktarımlarda TR lisans komisyonu/hologram hiç yoktu: yalnız hiç
+  // tanımlanmamışsa eklenir.
+  ['trRoyaltyPct', 'trHologramCost', '_trLicenseRuleMissing'].forEach(key => {
+    if (!Object.prototype.hasOwnProperty.call(target, key) && incoming[key] != null) { target[key] = incoming[key]; changed = true; }
+  });
+  return changed;
+}
 function addShippingRows(newRows, expectedRevision = null, userId = null, options = {}) {
   const store = loadShipping(userId); assertRevision('Nakliye kıyaslama', store, expectedRevision);
   const existingKeys = new Set(store.rows.map(shippingModelKey).filter(Boolean));
@@ -1788,6 +1806,7 @@ function addShippingRows(newRows, expectedRevision = null, userId = null, option
     const key = shippingModelKey(row);
     if (key && existingKeys.has(key)) {
       mergeShippingColourOptions(existingByKey.get(key), row);
+      fillMissingCollectionShippingPrices(existingByKey.get(key), row);
       skipped.push(key); return;
     }
     if (key) existingKeys.add(key);
