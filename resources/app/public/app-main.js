@@ -38695,7 +38695,9 @@ function renderKolMfrModal(ctx){
     prepareEmailFillFromShared();
     const checked=[..._mfrPicked].sort((a,b)=>a-b).map(i=>kolManufacturers[i]).filter(Boolean);
     if(!checked.length){ showToast(appLang==='en'?'Select at least one manufacturer.':'En az bir üretici seç.'); return; }
-    const missing=checked.filter(m=>!String(m.email||'').trim());
+    // Send to Pricing: alıcısı olmayan üretici için taslak yine oluşturulur; To alanı
+    // boş kalır ve kullanıcı alıcıyı e-posta istemcisinde ekler. Prepare E-Mail engeli sürer.
+    const missing=selectedTopic.kind==='pricing'?[]:checked.filter(m=>!String(m.email||'').trim());
     if(missing.length){ showToast(appLang==='en'?`${missing[0].name} has no valid e-mail in Settings > E-Mail Groups.`:`${missing[0].name} için Ayarlar > E-Mail Grupları alanında geçerli e-posta yok.`); return; }
     const selRows=getRows();
     if(!selRows.length){ showToast(appLang==='en'?'The selected models could not be found.':'Seçili modeller bulunamadı.'); return; }

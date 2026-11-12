@@ -35,9 +35,11 @@ test('Send to Pricing V3 is a two-panel workflow and does not expose inline e-ma
   assert.match(CSS,/\.sendPricingV2 \.sendPricingTwoPanel/);
 });
 
-test('Send to Pricing blocks creation when a selected manufacturer has no canonical recipient',()=>{
-  assert.match(APP,/const missing=checked\.filter\(m=>!String\(m\.email\|\|''\)\.trim\(\)\)/);
-  assert.match(APP,/Settings > E-Mail Groups/);
+test('Send to Pricing creates a recipient-less draft when a manufacturer has no e-mail; Prepare E-Mail still blocks',()=>{
+  const confirm=APP.slice(APP.indexOf("modal.querySelector('#kolMfrConfirm')"),APP.indexOf('const selRows=getRows();',APP.indexOf("modal.querySelector('#kolMfrConfirm')")));
+  assert.match(confirm,/const missing=selectedTopic\.kind==='pricing'\?\[\]:checked\.filter\(m=>!String\(m\.email\|\|''\)\.trim\(\)\)/);
+  assert.match(confirm,/Settings > E-Mail Groups/);
+  assert.match(APP,/to:email\|\|'',subject/);
 });
 
 

@@ -12701,7 +12701,8 @@ function buildPricingEml(payload) {
   const inlineImages = Array.isArray(payload.inlineImages) ? payload.inlineImages : [];
   const lines = [
     'X-Unsent: 1',
-    `To: ${to}`,
+    // Alıcısız taslak (ör. e-posta grubu tanımsız üretici): boş To başlığı yazılmaz.
+    ...(to ? [`To: ${to}`] : []),
     ...(cc ? [`Cc: ${cc}`] : []),
     `Subject: ${mimeHeader(subject)}`,
     `Date: ${new Date().toUTCString()}`,
