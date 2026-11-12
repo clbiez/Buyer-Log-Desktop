@@ -30951,6 +30951,8 @@ function kolImportFieldLabel(key, knownByKey){
   return col?L(col.label):key;
 }
 function kolImportReadField(row,key){return window.BLCollectionModelGroups.kolImportReadField(row,key,{norm,turknorm});}
+// Mevcut satırın tabloda görünen (model/renk katmanlı) değeri; içe aktarma farkı buna göre kurulur.
+function kolImportReadTargetField(row,key){return window.BLCollectionModelGroups.kolImportReadTargetField(row,key,kolEffectiveValue,{norm,turknorm});}
 // Excel ile ASLA tasinmayacak alanlar. Gorsel alanlarinin Koleksiyon sutun tanimlarinda
 // karsiligi olmadigi icin bugun zaten eslesemiyorlar; bu liste bunu tesadufe birakmaz.
 // Ileride "Gorsel" adinda bir sutun eklense bile ice aktarim gorseli yazamaz.
@@ -30961,10 +30963,13 @@ function kolImportIsProtectedKey(key){
 function kolImportWriteField(row, key, value){
   if(kolImportIsProtectedKey(key)) return;
   if(key.startsWith('pricing:')){ row.pricing=row.pricing||{}; row.pricing[key.slice(8)]=value; return; }
-  if(key==='buyingSampleApproved'){row[key]=kolStyleBooleanValue(value);return;}
-  if(key==='inStoreMonth'){row[key]=kolMonthDisplay(value);return;}
-  if(key==='inStoreWeek'){row[key]=kolWeekCode(value,row.inStore)||norm(value);return;}
-  row[key]=value;
+  if(key==='buyingSampleApproved')row[key]=kolStyleBooleanValue(value);
+  else if(key==='inStoreMonth')row[key]=kolMonthDisplay(value);
+  else if(key==='inStoreWeek')row[key]=kolWeekCode(value,row.inStore)||norm(value);
+  else row[key]=value;
+  // Çok renkli modelde değer model/renk katmanındaysa onaylanan değer oraya da yazılır;
+  // aksi halde tablo eski katman değerini göstermeye devam eder.
+  window.BLCollectionModelGroups?.adoptImportedValue?.(kolRows,row,key);
 }
 // Iceri alinan satirlari mevcut koleksiyonla karsilastirir. Yalniz Excel'de GERCEKTEN
 // bulunan sutunlar (touched) kiyaslanir; sayfada olmayan bir alan asla silinmez.
@@ -30993,7 +30998,7 @@ function kolBuildImportPlan(parsedRows, touchedKeys, knownByKey){
       // eşleştirme anahtarını korumaya devam ederiz.
       if(!matchedById&&(fieldKey==='plmId'||fieldKey==='modelKod')) return;
       if(kolImportIsProtectedKey(fieldKey)) return;
-      const from=kolImportReadField(target,fieldKey);
+      const from=kolImportReadTargetField(target,fieldKey);
       const to=kolImportReadField(parsed,fieldKey);
       if(from!==to) changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
     });
@@ -31760,7 +31765,7 @@ function kolPlmSyncCandidateRows(){
 }
 function kolPlmSyncMissingRows(){
   const keys=PLM_MANAGED_FIELDS();
-  return kolPlmSyncCandidateRows().filter(row=>keys.some(key=>!kolImportReadField(row,key)));
+  return kolPlmSyncCandidateRows().filter(row=>keys.some(key=>!kolImportReadTargetField(row,key)));
 }
 function kolPlmSyncSelectedRows(){
   return kolPlmSyncCandidateRows().filter(row=>selectionHasId(kolSelected,row.id));
@@ -32325,7 +32330,9 @@ async function kolFabricCardsCreateForRows(rows,{auto=false}={}){
   if(auto||kolFabricCardsState!=='ready'){
     try{await kolFabricCardsRequest('/api/fabric-cards',{cache:'no-store'});}catch(err){console.warn('Fabric cards could not be loaded:',err);return {ok:false,created:0};}
   }
-  const missing=api.missingCodes(rows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
+  // Tabloda görünen kumaş (model/renk katmanı dahil) esas alınır.
+  const fabricRows=(Array.isArray(rows)?rows:[]).map(row=>({fabric:kolEffectiveValue(row,'fabric')}));
+  const missing=api.missingCodes(fabricRows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
   if(!missing.length){if(!auto)showToast(en?'Every fabric code in the Collection already has a card.':'Koleksiyondaki her kumaş kodunun zaten bir kartı var.');return {ok:true,created:0};}
   kolFabricBatchRunning=true;
   try{
@@ -32901,7 +32908,7 @@ function kolPlmSyncModelLevelItem(row,parsed,knownByKey){
   PLM_MANAGED_FIELDS().forEach(fieldKey=>{
     if(KOL_PLM_COLOUR_FIELDS.has(fieldKey))return;
     const to=kolImportReadField(parsed,fieldKey);if(!to)return;
-    const from=kolImportReadField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
+    const from=kolImportReadTargetField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
   });
   return {target:row,parsed,changes,hasImage:false,matchedByPlm:true,colourMissing:true};
 }
@@ -33203,6 +33210,9 @@ async function kolPlmSyncRun(mode,button,options={}){
   }
   if(!summary.changed.length&&!(summary.newColours||[]).length){
     kolPlmSyncStampStatus(targetRows,summary,{applied:false});
+    // Kumaş metni zaten güncel olsa da kartı eksik kod kalabilir (önceki
+    // oluşturma başarısız/yarım kalmış olabilir); eksik kartlar yine üretilir.
+    kolFabricCardsAfterImport(targetRows);
     // Alan değişikliği olmasa bile görseller eksik olabilir — tek buton
     // vaadi gereği görsel adımı yine de çalışır.
     const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
@@ -33222,7 +33232,7 @@ async function kolPlmSyncRun(mode,button,options={}){
   // farkı oluşmasın diye burada FAZLADAN bir adım (ör. fiyat kuralı
   // yeniden hesaplama) eklenmez.
   saveKolRows();renderKol();renderCP();renderOrders();
-  kolFabricCardsAfterImport([...summary.changed.map(item=>item.target),...addedColours]);
+  kolFabricCardsAfterImport([...targetRows,...summary.changed.map(item=>item.target),...addedColours]);
   // Görseller alan yazımından SONRA çekilir: yazma hızlı ve geri alınabilir
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.

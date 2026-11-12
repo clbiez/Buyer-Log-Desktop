@@ -135,7 +135,7 @@ test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe akta
   assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
   assert.match(APP, /\.kolFabricTd\[data-fabric-id\]'\)\.forEach\(cell=>cell\.addEventListener\('dblclick'/);
   assert.match(APP, /if\(key==='fabric'\)return kolFabricDisplay\(effective\);/);
-  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 6, 'tanım + dört PLM içe aktarma akışı + kuyruk devamı');
+  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 7, 'tanım + dört PLM içe aktarma akışı + PLM Sync "güncel" yolu + kuyruk devamı');
   // PLM Sync: AI/rule kartları onay penceresi olmadan yalnız eksik kodlara kaydedilir.
   assert.match(APP, /if\(auto\)\{[\s\S]{0,250}const cards=still\.map\([\s\S]{0,200}kolFabricCardsSave\(cards,\{onlyMissing:true\}\)/);
   assert.match(APP, /context:api\.aiContext\(batch,approvedStyles\)/);
