@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.353",
+      "publishedAt": "2026-11-12",
+      "title": {
+        "tr": "Send to Pricing ve PLM ID listesi düzeltmeleri · PLM Sync kumaş düzeltmesi · Nakliye fiyat aktarımı",
+        "en": "Send to Pricing and PLM ID list fixes · PLM Sync fabric fix · Shipping price transfer"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 4
+      },
+      "file": "release-notes/7.0.353/release.json"
+    },
+    {
       "version": "7.0.352",
       "publishedAt": "2026-11-11",
       "title": {
