@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yalnız Fiyat Masası’na gönderme",
+    "en": "Send to the Pricing Desk only"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
+    "en": "Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "send-to-pricing-desk-only",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyatlamaya Gönder",
+        "en": "Send to Pricing"
+      },
+      "title": {
+        "tr": "E-posta hazırlamadan yalnız Fiyat Masası’na gönder",
+        "en": "Send to the Pricing Desk only, without preparing an e-mail"
+      },
+      "body": {
+        "tr": "Fiyatlamaya Gönder penceresindeki “Yalnız Fiyat Masası’na Gönder” butonu, seçili modeller ve üreticiler için Fiyat Masası kaydını e-posta taslağı, Excel veya ek hazırlamadan oluşturur. Üretici seçimi yine gereklidir; e-posta adresi gerekmez. Modeller Koleksiyon’da seçili üreticiler için “Fiyatlamada” olarak işaretlenir.",
+        "en": "The new “Send to Pricing Desk Only” button in the Send to Pricing dialog creates the Pricing Desk request for the selected models and manufacturers without preparing an e-mail draft, Excel or attachments. Selecting a manufacturer is still required; an e-mail address is not. In Collection, the models are marked “In Pricing” for the selected manufacturers."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "send-to-pricing-desk-only.png",
+        "alt": {
+          "tr": "Demo üreticilerle Fiyatlamaya Gönder penceresi ve Yalnız Fiyat Masası’na Gönder butonu",
+          "en": "Send to Pricing dialog with demo manufacturers and the Send to Pricing Desk Only button"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle Fiyat Masası kaydı oluşturulduğu doğrulandı.",
+          "en": "Actual Buyer Log UI; Pricing Desk request creation verified with isolated demo data."
+        }
+      }
+    }
+  ]
 }
