@@ -20629,6 +20629,9 @@ function mapCollectionRowToShip(row){
   if(kolLandedIsNonDtr(row)){
     const k=kolLandedCalc(row);
     effective._trLicense=k.trRuleMissing?{_trLicenseRuleMissing:true}:{trRoyaltyPct:k.trRoyaltyPct,trHologramCost:k.trHologramCost};
+    // Yurt dışı FOB'un içindeki royalty/hologram yalnız gösterim kırılımı için taşınır;
+    // FOB'un kendisi Koleksiyon'da hesaplanmış hâliyle gelir, burada yeniden hesaplanmaz.
+    if(!k.ruleMissing&&(k.royaltyPct>0||k.hologramCost>0))effective._ydLicense={ydRoyaltyPct:k.royaltyPct,ydHologramCost:k.hologramCost};
   }
   return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
@@ -20760,25 +20763,31 @@ function shipPct(v){
 }
 
 /*
- * Domestic FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram (shipping-engine.js).
- * Girilen TL fiyatına lisans maliyeti eklendiyse kart, "FOB $x" satırının
- * solunda neyin eklendiğini gösterir; eklenmediyse hiçbir şey basılmaz.
+ * FOB'a eklenen lisans maliyeti kırılımı (yalnız gösterim):
+ *   Domestic FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram   (shipping-engine.js)
+ *   Overseas FOB = Supp. FOB ÷ (1 − royalty) + hologram     (Koleksiyon kuralı)
+ * Royalty/hologram eklendiyse kart kısa not basar; eklenmediyse hiçbir şey basılmaz.
  */
-function shipDomesticLicenseNote(row,tr){
+function shipLicenseNote(royaltyRaw,hologramRaw,tr,domestic){
   const num=v=>(v===''||v==null||!Number.isFinite(Number(v)))?0:Number(v);
-  const royalty=num(row&&row.trRoyaltyPct), hologram=num(row&&row.trHologramCost);
+  const royalty=num(royaltyRaw), hologram=num(hologramRaw);
   const parts=[];
   const pct=royalty.toLocaleString(tr?'tr-TR':'en-GB',{maximumFractionDigits:3});
   if(royalty>0)parts.push(tr?'Roy. %'+pct:'Roy. '+pct+'%');
   if(hologram>0)parts.push((tr?'Holo. ':'Holo. ')+shipMoney(hologram));
   if(!parts.length)return null;
   const detail=[royalty>0?(tr?'Royalty %'+pct:'Royalty '+pct+'%'):'',hologram>0?'Hologram '+shipMoney(hologram):''].filter(Boolean).join(' + ');
-  return {
-    text:'+'+parts.join(' +'),
-    title:(tr?'TL fiyatına eklenen lisans maliyeti: ':'License cost added to the TL price: ')+detail
-      +(tr?'\nFOB = (TL ÷ kur) ÷ (1 − royalty) + hologram':'\nFOB = (TL ÷ FX) ÷ (1 − royalty) + hologram'),
-  };
+  const formula=domestic
+    ?(tr?'FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram':'FOB = (TL ÷ FX) ÷ (1 − royalty) + hologram')
+    :(tr?'FOB = Supp. FOB ÷ (1 − royalty) + hologram':'FOB = Supp. FOB ÷ (1 − royalty) + hologram');
+  const lead=domestic
+    ?(tr?'TL fiyatına eklenen lisans maliyeti: ':'License cost added to the TL price: ')
+    :(tr?'Baz fiyata eklenen lisans maliyeti: ':'License cost added to the base price: ');
+  // Parçalar kendi içinde bölünmez (NBSP); dar sütunda yalnız parçalar arasında satır kırılır.
+  return {text:parts.map(part=>'+'+part.replace(/ /g,'\u00a0')).join(' '), title:lead+detail+'\n'+formula};
 }
+function shipDomesticLicenseNote(row,tr){ return shipLicenseNote(row&&row.trRoyaltyPct,row&&row.trHologramCost,tr,true); }
+function shipOverseasLicenseNote(row,tr){ return shipLicenseNote(row&&row.ydRoyaltyPct,row&&row.ydHologramCost,tr,false); }
 
 /*
  * Fiyat kartları soldan sağa sabit sıradadır:
@@ -20798,7 +20807,8 @@ function shipDecisionOptions(row){
   const days=shipTransitDays(row);
   return [
     {key:'fob', name:tr?'Overseas FOB':'Overseas FOB', source:true, decision:false, priceOnly:true,
-     unit:fob, pct:null, date:null},
+     unit:fob, pct:null, date:null,
+     license:fob!=null?shipOverseasLicenseNote(row,tr):null},
     {key:'tr', name:tr?'Domestic Landed':'Domestic Landed', baseline:true, priceOnly:true,
      unit:num(row.trFiyatFobUsdLanded), pct:null, date:null,
      sub:trUnit!=null?(tr?'FOB '+shipMoney(trUnit):'FOB '+shipMoney(trUnit)):'',

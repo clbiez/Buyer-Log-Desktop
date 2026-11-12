@@ -1793,7 +1793,7 @@ function fillMissingCollectionShippingPrices(target, incoming) {
   // TR lisans komisyonu/hologram kullanıcı girdisi değil, lisans kuralından
   // türetilir: yeniden gönderimde güncel kuralla eşitlenir (kural sonradan
   // eklendiyse eksik-kural işareti kalkar; DTR olduysa alanlar silinir).
-  ['trRoyaltyPct', 'trHologramCost', '_trLicenseRuleMissing'].forEach(key => {
+  ['trRoyaltyPct', 'trHologramCost', '_trLicenseRuleMissing', 'ydRoyaltyPct', 'ydHologramCost'].forEach(key => {
     if (incoming[key] != null) { if (target[key] !== incoming[key]) { target[key] = incoming[key]; changed = true; } }
     else if (Object.prototype.hasOwnProperty.call(target, key)) { delete target[key]; changed = true; }
   });
