@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yurt İçi Landed lisans maliyeti notu",
+    "en": "Domestic Landed licence cost note"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Nakliye Kıyaslama'da TL fiyatına eklenen royalty ve hologram FOB satırının solunda görünür.",
+    "en": "Shipping Comparison shows the royalty and hologram added to the TL price left of the FOB line."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "shipping-domestic-license-note",
+      "type": "improvement",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Yurt İçi Landed kartı TL fiyatına eklenen royalty ve hologramı gösterir",
+        "en": "Domestic Landed card shows the royalty and hologram added to the TL price"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shipping-domestic-license-note.png",
+        "alt": {
+          "tr": "Nakliye Kıyaslama'da Yurt İçi Landed kartında FOB satırının solunda royalty ve hologram notu",
+          "en": "Royalty and hologram note to the left of the FOB line in the Domestic Landed card of Shipping Comparison"
+        },
+        "caption": {
+          "tr": "Lisanslı modellerde FOB'a eklenen royalty yüzdesi ve hologram maliyeti FOB satırının solunda görünür; lisans maliyeti yoksa not gösterilmez.",
+          "en": "For licensed models the royalty percentage and hologram cost added to FOB appear left of the FOB line; no note is shown when there is no license cost."
+        }
+      },
+      "body": {
+        "tr": "Girilen TL fiyatı lisans komisyonu (royalty) ve hologram maliyetiyle yükseltildiğinde Yurt İçi Landed kartındaki \"FOB $x\" satırının solunda neyin eklendiği yazar; üzerine gelince hesap formülü görünür.",
+        "en": "When the entered TL price is increased by the licence royalty and hologram cost, the Domestic Landed card states what was added to the left of the \"FOB $x\" line; hovering shows the formula."
+      }
+    }
+  ]
 }

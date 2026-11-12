@@ -1812,6 +1812,7 @@ td.num .revPair{justify-content:flex-end;}
 }
 .shipCardRow{ white-space:nowrap;}
 .shipCardRow.isEmpty{display:none;}
+.shipCardLicense{cursor:help;}
 .shipTransit{opacity:.75;}
 .shipCard:not(.isPriceOnly) [data-ship-date],.shipCard:not(.isPriceOnly) .shipTransit{ opacity:1;
 }

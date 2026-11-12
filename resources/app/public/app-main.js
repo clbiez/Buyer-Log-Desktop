@@ -20760,6 +20760,27 @@ function shipPct(v){
 }
 
 /*
+ * Domestic FOB = (TL ÷ kur) ÷ (1 − royalty) + hologram (shipping-engine.js).
+ * Girilen TL fiyatına lisans maliyeti eklendiyse kart, "FOB $x" satırının
+ * solunda neyin eklendiğini gösterir; eklenmediyse hiçbir şey basılmaz.
+ */
+function shipDomesticLicenseNote(row,tr){
+  const num=v=>(v===''||v==null||!Number.isFinite(Number(v)))?0:Number(v);
+  const royalty=num(row&&row.trRoyaltyPct), hologram=num(row&&row.trHologramCost);
+  const parts=[];
+  const pct=royalty.toLocaleString(tr?'tr-TR':'en-GB',{maximumFractionDigits:3});
+  if(royalty>0)parts.push(tr?'Roy. %'+pct:'Roy. '+pct+'%');
+  if(hologram>0)parts.push((tr?'Holo. ':'Holo. ')+shipMoney(hologram));
+  if(!parts.length)return null;
+  const detail=[royalty>0?(tr?'Royalty %'+pct:'Royalty '+pct+'%'):'',hologram>0?'Hologram '+shipMoney(hologram):''].filter(Boolean).join(' + ');
+  return {
+    text:'+'+parts.join(' +'),
+    title:(tr?'TL fiyatına eklenen lisans maliyeti: ':'License cost added to the TL price: ')+detail
+      +(tr?'\nFOB = (TL ÷ kur) ÷ (1 − royalty) + hologram':'\nFOB = (TL ÷ FX) ÷ (1 − royalty) + hologram'),
+  };
+}
+
+/*
  * Fiyat kartları soldan sağa sabit sıradadır:
  * FOB / Domestic FOB / SEA Landed / SEA+AIR Landed / AIR Landed.
  * Domestic FOB yüzde karşılaştırmasının referansıdır. Ham FOB karar alternatifi
@@ -20781,6 +20802,7 @@ function shipDecisionOptions(row){
     {key:'tr', name:tr?'Domestic Landed':'Domestic Landed', baseline:true, priceOnly:true,
      unit:num(row.trFiyatFobUsdLanded), pct:null, date:null,
      sub:trUnit!=null?(tr?'FOB '+shipMoney(trUnit):'FOB '+shipMoney(trUnit)):'',
+     license:trUnit!=null?shipDomesticLicenseNote(row,tr):null,
      inputs:[{key:'trFiyatTl', label:'TL'},
              {key:'kur', label:tr?'Kur':'FX'}]},
     {key:'gemi', name:'SEA Landed',
@@ -20955,7 +20977,7 @@ function shipCompareCards(row){
     // ağırlık. Yüzde ikinci sıraya, metrik satırına indi.
     const head=`<b class="shipCardPrice" data-ship-unit>${priceText}</b>`;
     const sub=option.priceOnly
-      ? `<span class="shipCardRow${option.sub?'':' isEmpty'}">${escapeHtml(option.sub||'')}</span><span class="shipCardRow isEmpty" data-ship-pct></span><span class="shipCardRow isEmpty" data-ship-date></span><span class="shipCardRow isEmpty" data-ship-total></span>`
+      ? `${option.license?`<span class="shipCardRow shipCardLicense" data-ship-license title="${escapeHtml(option.license.title)}">${escapeHtml(option.license.text)}</span>`:''}<span class="shipCardRow${option.sub?'':' isEmpty'}">${escapeHtml(option.sub||'')}</span><span class="shipCardRow isEmpty" data-ship-pct></span><span class="shipCardRow isEmpty" data-ship-date></span><span class="shipCardRow isEmpty" data-ship-total></span>`
       : `<span class="shipCardRow ${pctClass}" data-ship-pct>${pctText||'—'}</span><span class="shipCardRow${dateText?'':' isEmpty'}" data-ship-date title="${escapeHtml(tr?'Tahmini antrepo giriş':'Est. warehouse arrival')}">${escapeHtml(dateText)}</span><span class="shipCardRow shipTransit" title="${escapeHtml(tr?'Transit süresi':'Transit time')}">${Number(option.transit)||0}${tr?'g':'d'}</span><span class="shipCardRow isEmpty" data-ship-total></span>`;
     return `<td class="shipCard${option.source?' isSource':''}${option.baseline?' isBaseline':''}${option.priceOnly?' isPriceOnly':''}${missing?' isMissing':''}${priceEditable?' isPriceEditable':''}" data-ship-option="${escapeHtml(option.key)}">
       <div class="shipCardTop">${head}<span class="shipCardBadges" data-ship-badges>${shipDecisionBadges(option,state,tr)}</span></div>

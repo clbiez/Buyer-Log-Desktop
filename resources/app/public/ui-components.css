@@ -14144,6 +14144,8 @@ html[data-ui-system="manifest"] .shipCardRow.isGood {color:var(--ui-success,var(
 }
 html[data-ui-system="manifest"] .shipCardRow.isBad {color:var(--ui-danger,var(--ui-accent)) !important; font-weight:700 !important
 }
+html[data-ui-system="manifest"] .shipCardLicense {font-weight:650 !important; color:var(--ui-text) !important
+}
 html[data-ui-system="manifest"] .shipCard:not(.isPriceOnly) [data-ship-date],html[data-ui-system="manifest"] .shipCard:not(.isPriceOnly) .shipTransit {
   font-size:var(--ui-font-sm) !important; font-weight:650 !important; color:var(--ui-text) !important
 }
