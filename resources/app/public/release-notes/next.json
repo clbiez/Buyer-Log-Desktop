@@ -1,14 +1,38 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-12",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Send to Pricing düzeltmesi",
+    "en": "Send to Pricing fix"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "E-posta adresi tanımsız üretici için fiyat talebi taslağı alıcısız oluşturulur.",
+    "en": "Pricing request drafts are created without a recipient for manufacturers with no e-mail address."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "send-to-pricing-draft-without-recipient",
+      "type": "fix",
+      "module": {
+        "tr": "Send to Pricing",
+        "en": "Send to Pricing"
+      },
+      "title": {
+        "tr": "E-posta adresi olmayan üretici için de fiyat talebi taslağı oluşturulur",
+        "en": "Pricing request drafts are created even when a manufacturer has no e-mail address"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranında yeni bir arayüz yok; yalnız engel kaldırıldı ve taslak e-posta istemcisinde alıcısız açılır.",
+          "en": "There is no new Buyer Log interface; only the block is removed and the draft opens in the e-mail client without a recipient."
+        }
+      },
+      "body": {
+        "tr": "E-Mail Grupları'nda adresi tanımlı olmayan üretici seçildiğinde Send to Pricing artık işlemi durdurmaz; taslak alıcı alanı boş olarak oluşturulur ve alıcı e-posta istemcisinde eklenebilir.",
+        "en": "Send to Pricing no longer stops when a selected manufacturer has no address in E-Mail Groups; the draft is created with an empty recipient field and the recipient can be added in the e-mail client."
+      }
+    }
+  ]
 }
