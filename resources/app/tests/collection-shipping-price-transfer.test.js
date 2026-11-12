@@ -73,6 +73,9 @@ test('shipping engine applies TR royalty and hologram like Collection TR Landed,
   const missing = compute({ trFiyatTl: 400, kur: 40, fob: 5, _trLicenseRuleMissing: true });
   assert.equal(missing.trFiyatUsd, '');
   assert.equal(missing.trFiyatFobUsdLanded, '');
+  const noTrPrice = compute({ trFiyatTl: '', kur: 40, fob: 5, trRoyaltyPct: 20, trHologramCost: 0.1 });
+  assert.equal(noTrPrice.trFiyatUsd, '', 'blank TR price must not become a hologram-only domestic cost');
+  assert.equal(noTrPrice.gemiAvantaj, '');
 });
 
 test('re-sending a collection model fills prices previously transferred as 0 without overwriting user values', () => {
@@ -87,4 +90,9 @@ test('re-sending a collection model fills prices previously transferred as 0 wit
   db.addShippingRows([{ _sourceModule: 'collection', _modelKey: 'PLM:R1', trRoyaltyPct: 12, trHologramCost: 0.05 }], db.loadShipping(userId)._revision, userId);
   const r1b = db.loadShipping(userId).rows.find(r => r._modelKey === 'PLM:R1');
   assert.deepEqual([r1b.trRoyaltyPct, r1b.trHologramCost], [12, 0.05]);
+  db.addShippingRows([{ _sourceModule: 'collection', _modelKey: 'PLM:R3', trFiyatTl: 400, _trLicenseRuleMissing: true }], db.loadShipping(userId)._revision, userId);
+  db.addShippingRows([{ _sourceModule: 'collection', _modelKey: 'PLM:R3', trRoyaltyPct: 10, trHologramCost: 0.2 }], db.loadShipping(userId)._revision, userId);
+  const r3 = db.loadShipping(userId).rows.find(r => r._modelKey === 'PLM:R3');
+  assert.equal(r3._trLicenseRuleMissing, undefined, 'a newly configured rule clears the missing-rule marker');
+  assert.deepEqual([r3.trRoyaltyPct, r3.trHologramCost], [10, 0.2]);
 });

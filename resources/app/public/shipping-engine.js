@@ -41,7 +41,11 @@ function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers}){
      maliyeti royaltysiz (sessizce düşük) hesaplanmaz, boş kalır. */
   const trRoyalty = toNum(row.trRoyaltyPct), trHologram = toNum(row.trHologramCost);
   const trDenom = 1 - ((trRoyalty!=null && trRoyalty>0) ? trRoyalty/100 : 0);
-  row.trFiyatUsd = (row._trLicenseRuleMissing || trDenom<=0) ? ''
+  // Lisans maliyeti yalnız gerçek (pozitif) TR fiyatına uygulanır; boş fiyat
+  // tek başına hologramdan oluşan sahte bir yurt içi maliyet üretmez.
+  const trLicensed = row._trLicenseRuleMissing || (trRoyalty!=null && trRoyalty>0) || (trHologram!=null && trHologram>0);
+  if(trLicensed && !(trTl!=null && trTl>0)) row.trFiyatUsd = '';
+  else row.trFiyatUsd = (row._trLicenseRuleMissing || trDenom<=0) ? ''
     : (trTl!=null && kur) ? (trTl/kur/trDenom + ((trHologram!=null && trHologram>0) ? trHologram : 0)) : '';
   row.trFiyatFobUsdLanded = (row.trFiyatUsd!=='' ) ? (row.trFiyatUsd*multipliers.tr) : '';
   const fob = toNum(row.fob);

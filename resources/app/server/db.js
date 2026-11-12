@@ -1790,10 +1790,12 @@ function fillMissingCollectionShippingPrices(target, incoming) {
     const empty = current == null || current === '' || Number(current) === 0;
     if (empty && Number.isFinite(next) && next > 0) { target[key] = next; changed = true; }
   });
-  // Eski aktarımlarda TR lisans komisyonu/hologram hiç yoktu: yalnız hiç
-  // tanımlanmamışsa eklenir.
+  // TR lisans komisyonu/hologram kullanıcı girdisi değil, lisans kuralından
+  // türetilir: yeniden gönderimde güncel kuralla eşitlenir (kural sonradan
+  // eklendiyse eksik-kural işareti kalkar; DTR olduysa alanlar silinir).
   ['trRoyaltyPct', 'trHologramCost', '_trLicenseRuleMissing'].forEach(key => {
-    if (!Object.prototype.hasOwnProperty.call(target, key) && incoming[key] != null) { target[key] = incoming[key]; changed = true; }
+    if (incoming[key] != null) { if (target[key] !== incoming[key]) { target[key] = incoming[key]; changed = true; } }
+    else if (Object.prototype.hasOwnProperty.call(target, key)) { delete target[key]; changed = true; }
   });
   return changed;
 }
