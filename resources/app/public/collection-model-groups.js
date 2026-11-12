@@ -233,7 +233,9 @@
       row.variantOverrides = { ...row.variantOverrides, [key]: clone(value) };
       changed = true;
     }
-    if (fieldMetadata(key).inheritance === 'model' && row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) {
+    // effectiveValue() ile aynı koşul: bir variant'ta (ör. birleştirme sonrası)
+    // kalan modelSharedValues grubun değeri değildir; gruba yayılmaz.
+    if (row.modelGroupRole !== 'variant' && fieldMetadata(key).inheritance === 'model' && row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) {
       row.modelSharedValues = { ...row.modelSharedValues, [key]: clone(value) };
       groupFor(rows, row.modelGroupId).forEach(member => {
         if (member !== row && !hasVariantOverride(member, key)) member[key] = clone(value);

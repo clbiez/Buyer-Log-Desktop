@@ -89,3 +89,17 @@ test('app import writer and PLM sync use effective values and create cards for e
   const create = APP.slice(APP.indexOf('async function kolFabricCardsCreateForRows('), APP.indexOf('let kolFabricAutoQueue'));
   assert.match(create, /kolEffectiveValue\(row,'fabric'\)/);
 });
+
+test('a variant that kept stale shared metadata after a merge does not overwrite its group', () => {
+  // mergeGroups() leaves the old parent's modelSharedValues on the row that becomes a variant.
+  const rows = [
+    { id: 1, plmId: 'P1', modelKod: 'M', colourCode: 'A', modelGroupId: 'g', modelGroupRole: 'parent', fabric: '1111-A' },
+    { id: 2, plmId: 'P1', modelKod: 'M', colourCode: 'B', modelGroupId: 'g', modelGroupRole: 'variant', fabric: '2222-B',
+      modelSharedValues: { fabric: '2222-B' }, variantOverrides: { fabric: '2222-B' } },
+  ];
+  rows[1].fabric = '3333-C';
+  Groups.adoptImportedValue(rows, rows[1], 'fabric');
+  assert.equal(Groups.effectiveValue(rows[1], 'fabric', rows), '3333-C');
+  assert.equal(rows[0].fabric, '1111-A');
+  assert.equal(Groups.effectiveValue(rows[0], 'fabric', rows), '1111-A');
+});
