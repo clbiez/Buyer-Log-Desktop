@@ -427,6 +427,29 @@
           "en": "The range selection uses the same theme tint as CP; Ctrl+C / Ctrl+V apply to the selected cells."
         }
       }
+    },
+    {
+      "id": "local-db-large-data-startup",
+      "type": "improvement",
+      "module": {
+        "tr": "Yerel veri · Açılış · Senkronizasyon",
+        "en": "Local data · Startup · Sync"
+      },
+      "title": {
+        "tr": "Büyük yerel veride daha hızlı açılış ve takılmayan kayıt",
+        "en": "Faster startup and smoother saving with large local data"
+      },
+      "body": {
+        "tr": "Yerel veritabanı her açılışta gereksiz yere baştan yazılmaz; bu yazım büyük veride arka planda uzun süre kayıtları bekletip uygulamayı dondurabiliyordu. Shared Hub'a yüklenip onaylanmış eski değişikliklerin tam kopyaları artık sınırsız birikmez: yalnız tanılama için son 1.000 kayıt tam kalır, bekleyen veya onaylanmamış hiçbir değişikliğe dokunulmaz ve iş verisi aynen korunur. Büyük veritabanında kayıt sırasında yapılan tam dosya yazımı da seyrekleşti.",
+        "en": "The local database is no longer rewritten needlessly at every startup; with large data this write could hold saves for a long time in the background and freeze the app. Full copies of old changes that were uploaded to and acknowledged by Shared Hub no longer accumulate without limit: only the latest 1,000 stay complete for diagnostics, pending or unacknowledged changes are never touched and business data is preserved as is. Full-file rewrites while saving on a large database are now much rarer."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik yerel veritabanı depolama ve açılış sırasındaki arka plan işini etkiler; ekranda değişen arayüz öğesi yoktur.",
+          "en": "The change affects local database storage and background startup work; no on-screen interface element changes."
+        }
+      }
     }
   ]
 }

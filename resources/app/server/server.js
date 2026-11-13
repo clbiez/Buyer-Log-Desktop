@@ -190,6 +190,12 @@ async function runLocalDbMaintenance() {
     await licenseCardSync.flushOutbox();
     if (loaded.ok) markStartup('DELTA_STORE_HYDRATED', { collections: loaded.collections, records: loaded.records });
   } catch (error) { logRuntimeFailure('deltaStoreSeed', error); }
+  try {
+    // Yüklenmiş+onaylanmış eski journal payload'ları eşik aşıldıysa TEK bir
+    // anlık görüntü yazımıyla düşer; sonraki açılışlar daha küçük DB okur.
+    const retained = await localDb.pruneJournal();
+    if (retained.pruned) markStartup('LOCAL_DB_JOURNAL_RETAINED', retained);
+  } catch (error) { logRuntimeFailure('localDbJournalRetention', error); }
   for (const folder of new Set([dbFolder, LOCAL_DATA_ROOT, path.join(dbFolder, '.buyerlog-db-recovery')])) {
     try {
       const swept = await sweepWriteDebris(folder);
@@ -1829,7 +1835,11 @@ async function hydrateBusinessCheckpointIfNeeded(){
   // business records merely because an older snapshot does not contain them.
   const before=await localDb.read();
   const repair=await applyMissingCheckpointRecords('business',checked.root,checked.manifest,before,snapshot);
-  await localDb.transaction(async next=>{
+  // Checkpoint'ler yalnız ileri gider; hiçbiri ilerlemiyorsa tam anlık görüntü
+  // yazan transaction açılmaz (büyük DB'de saniyeler süren boş yazım).
+  const latest=await localDb.read(),known=latest.syncCheckpoints||{};
+  const headsAdvance=Object.entries(syncHeads).some(([deviceId,seq])=>(Number(seq)||0)>(Number(known[deviceId])||0));
+  if(headsAdvance)await localDb.transaction(async next=>{
     next.syncCheckpoints=next.syncCheckpoints&&typeof next.syncCheckpoints==='object'?next.syncCheckpoints:{};
     for(const [deviceId,seq] of Object.entries(syncHeads))next.syncCheckpoints[deviceId]=Math.max(Number(next.syncCheckpoints[deviceId])||0,Number(seq)||0);
     return {syncHeads:Object.keys(syncHeads).length};
