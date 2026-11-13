@@ -253,6 +253,35 @@
         "tr": "Veri Yönetimi filtre düzenleyicisinde mevcut koşulları \"Favori olarak kaydet\" ile adlandırıp saklayın; favoriye tıklayınca koşullar yüklenir, Kaydet ile uygulanır. Kişisel favoriler artık yönetim yetkisi olmayan kullanıcılara da açık ve yalnız sahibine görünür. Favori adı panelin içinde yazılır; masaüstü uygulamasında kaydetme penceresinin açılmaması sorunu giderildi. Favoriyi herkesle paylaşmak ve paylaşılanı silmek yine yönetim yetkisi ister.",
         "en": "In the Data Management filter editor, name and keep the current conditions with \"Save as favourite\"; clicking a favourite loads its conditions and Save applies them. Personal favourites are now available to users without management permission and are visible only to their owner. The favourite name is typed inside the panel, fixing the save dialog that did not open in the desktop app. Sharing a favourite with everyone and deleting a shared one still require management permission."
       }
+    },
+    {
+      "id": "table-redraw-button",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP Tracker · Siparişler",
+        "en": "Collection · CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Tabloyu yeniden çizmek için mini yenileme butonu",
+        "en": "Mini button to redraw the table"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-redraw-button.png",
+        "alt": {
+          "tr": "CP Tracker araç satırının sağında, satır sayısı seçicisinin solundaki yenileme ikonu",
+          "en": "Refresh icon at the right of the CP Tracker toolbar, left of the row-count selector"
+        },
+        "caption": {
+          "tr": "Sayfalama alanının solundaki ikon tabloyu filtrelere dokunmadan yeniden hesaplayıp çizer.",
+          "en": "The icon left of the pagination recalculates and redraws the table without touching filters."
+        }
+      },
+      "body": {
+        "tr": "Bir hücreyi düzenledikten sonra ona bağlı diğer hücreler güncel görünmüyorsa, sayfalama alanının solundaki yenileme ikonuna tıklayın: tablo hesaplanan sütunlar ve toplamlarla birlikte yeniden çizilir, kaydırma konumu korunur. Veri yeniden çekilmez; filtre açıp kapatmaya gerek kalmaz.",
+        "en": "If other cells that depend on a cell you edited do not look up to date, click the refresh icon left of the pagination: the table is redrawn with its calculated columns and totals, and the scroll position is kept. Data is not reloaded, and there is no need to toggle a filter."
+      }
     }
   ]
 }
