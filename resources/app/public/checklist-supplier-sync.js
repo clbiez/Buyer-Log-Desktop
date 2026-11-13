@@ -744,7 +744,7 @@
            4-6 kez yeniden hesaplanıyordu; 25 bin satırlık CP'nin ilk çiziminin
            ~%85'i (≈7,7 sn) bu tekrarlı alan aramalarıydı. */
         const parts = componentParts(analysis);
-        const setRow = Components.tracksParts(analysis, answersNow) && (parts.length > 0 || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp'));
+        const setRow = (parts.length > 0 || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')) && Components.tracksParts(analysis, answersNow);
         items.forEach(function (item) {
           const key = columnKey(item.id);
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan

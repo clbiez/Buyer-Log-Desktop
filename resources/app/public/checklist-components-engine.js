@@ -55,7 +55,7 @@
     return explicit!==1;
   }
   function partsFor(analysis,answers,item){
-    if(!analysis||!tracksParts(analysis,answers,item))return [];
+    if(!analysis||item&&item.separateSetParts===false)return [];
     const saved=answers&&answers[configKey(analysis)];
     const n=validCount(saved&&saved.componentCount)||count(analysis.sourceRow||analysis,'cp');
     return labels(n).map(id=>({id,label:id}));

@@ -448,7 +448,7 @@
       const item = context.item || context.itemDefinitions?.[itemId];
       const parts = componentsFor(analysis, { ...context, item });
       if (parts.length) return Components.aggregate(parts.map(part => statusOf(analysis, Components.itemId(itemId, part.id), context)), isResolved);
-      if (Components.tracksParts(analysis, answers, item) && Components.isSet(analysis.sourceRow || analysis, 'cp')) return 'open';
+      if (Components.isSet(analysis.sourceRow || analysis, 'cp') && Components.tracksParts(analysis, answers, item)) return 'open';
     }
     const answer = answers[answerKey(analysis.orderKey, itemId)];
     // A date revision is context, never permission to undo a user's decision.
