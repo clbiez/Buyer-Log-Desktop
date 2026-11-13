@@ -1,0 +1,47 @@
+{
+  "mode": "perf",
+  "appRoot": "/home/user/Buyer-Log-Desktop/resources/app",
+  "rows": 30000,
+  "ordersRows": 30000,
+  "bootReadyMs": 5819,
+  "ordersReadyMs": 127,
+  "engine": true,
+  "cpOpenMs": 10079,
+  "scroll": {
+    "ms": 2031.6999999999534,
+    "longTasks": 0,
+    "maxLongTaskMs": 0,
+    "scrollTop": 1475,
+    "scrollRoom": 1475,
+    "scroller": "ordersTableWrap"
+  },
+  "silent": {
+    "longTasks": 1,
+    "maxLongTaskMs": 77,
+    "rowMutations": 0,
+    "toasts": 0,
+    "opsOpened": 0,
+    "toastCalls": [],
+    "stats": {
+      "ticks": 2,
+      "requests": 1,
+      "items": 12,
+      "resolved": 0,
+      "negative": 0,
+      "deferred": 0,
+      "errors": 1,
+      "skippedBusy": 0,
+      "skippedStale": 1,
+      "negativeSize": 0,
+      "started": true,
+      "inFlight": false,
+      "viewToken": "table:orders"
+    },
+    "requests": []
+  },
+  "sessionLongTasks": {
+    "count": 22,
+    "maxMs": 5985
+  },
+  "errors": []
+}

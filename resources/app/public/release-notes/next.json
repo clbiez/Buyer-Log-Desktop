@@ -282,6 +282,35 @@
         "tr": "Bir hücreyi düzenledikten sonra ona bağlı diğer hücreler güncel görünmüyorsa, sayfalama alanının solundaki yenileme ikonuna tıklayın: tablo hesaplanan sütunlar ve toplamlarla birlikte yeniden çizilir, kaydırma konumu korunur. Veri yeniden çekilmez; filtre açıp kapatmaya gerek kalmaz.",
         "en": "If other cells that depend on a cell you edited do not look up to date, click the refresh icon left of the pagination: the table is redrawn with its calculated columns and totals, and the scroll position is kept. Data is not reloaded, and there is no need to toggle a filter."
       }
+    },
+    {
+      "id": "silent-missing-image-complete",
+      "type": "feature",
+      "module": {
+        "tr": "Model Görselleri",
+        "en": "Model Images"
+      },
+      "title": {
+        "tr": "Eksik model görselleri arka planda, hissettirmeden tamamlanır",
+        "en": "Missing model images are completed quietly in the background"
+      },
+      "body": {
+        "tr": "Görseli olmayan modellerin görselleri; açık alt detay raporlarında (LFL, Sezon karşılaştırma, Backlog detayı, Pricing History vb.) ve CP / Orders tablolarında ekranda görünen satırlarda, siz uygulamayı kullanmıyorken küçük paketlerle tamamlanır. Pencere, bildirim veya ilerleme çubuğu açılmaz; tablo yeniden çizilmez, kaydırma ve seçim korunur. Sıra LOCAL → SHARED → PLM'dir; elle konmuş görsel ezilmez. PLM'de bulunamayan model 24 saat yeniden istenmez. Koleksiyon ana tablosu, model dosyaları ve QTX kapsam dışıdır. Görsel Boyut Limiti penceresinden kapatılabilir.",
+        "en": "Images for models without one are completed in small batches while you are not using the app, in open detail reports (LFL, Season comparison, Backlog detail, Pricing History, etc.) and in the rows visible on screen in the CP / Orders tables. No window, notification or progress bar opens; the table is not redrawn and scrolling and selection are kept. The order is LOCAL → SHARED → PLM and manually set images are never overwritten. A model not found in PLM is not requested again for 24 hours. The Collection main table, model files and QTX are excluded. It can be turned off in the Image Size Limit window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "silent-missing-image-complete.png",
+        "alt": {
+          "tr": "Görsel Boyut Limiti penceresinde açık durumdaki 'Eksik görselleri arka planda tamamla' anahtarı",
+          "en": "The 'Complete missing images in the background' switch turned on in the Image Size Limit window"
+        },
+        "caption": {
+          "tr": "Anahtar varsayılan olarak açıktır; kapatıldığında arka planda hiçbir görsel isteği gönderilmez.",
+          "en": "The switch is on by default; when turned off, no background image request is sent."
+        }
+      }
     }
   ]
 }

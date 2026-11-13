@@ -1,0 +1,57 @@
+{
+  "mode": "functional",
+  "appRoot": "/home/user/Buyer-Log-Desktop/resources/app",
+  "rows": 40,
+  "ordersRows": 40,
+  "bootReadyMs": 2426,
+  "ordersReadyMs": 127,
+  "engine": true,
+  "functional": {
+    "target": {
+      "id": "0",
+      "plmId": 880000,
+      "colourCode": "E03",
+      "colour": "EKRU"
+    },
+    "before": {
+      "hasImage": "0",
+      "src": "",
+      "scrollTop": 0
+    },
+    "after": {
+      "sameNode": true,
+      "hasImage": "1",
+      "src": "/api/collection-images/ci_1794567212109_fa9f9f3c2705",
+      "rowMutations": 0,
+      "scrollTop": 0,
+      "toastCalls": [],
+      "stats": {
+        "ticks": 2,
+        "requests": 1,
+        "items": 12,
+        "resolved": 0,
+        "negative": 0,
+        "deferred": 0,
+        "errors": 0,
+        "skippedBusy": 0,
+        "skippedStale": 0,
+        "negativeSize": 0,
+        "started": true,
+        "inFlight": true,
+        "viewToken": "table:orders"
+      }
+    },
+    "requests": [
+      {
+        "at": 1794567220298,
+        "silent": true,
+        "items": 12
+      }
+    ]
+  },
+  "sessionLongTasks": {
+    "count": 10,
+    "maxMs": 175
+  },
+  "errors": []
+}
