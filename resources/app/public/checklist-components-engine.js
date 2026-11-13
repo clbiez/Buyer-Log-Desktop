@@ -48,8 +48,14 @@
   }
   function parseItem(id){const match=String(id||'').match(/^(.*)~part~([A-Z])$/);return match?{baseId:match[1],partId:match[2]}:null;}
   function configKey(analysis){return String(analysis.orderKey)+'::'+CONFIG_ITEM;}
-  function partsFor(analysis,answers){
-    if(!analysis)return [];
+  function tracksParts(analysis,answers,item){
+    if(!analysis||item&&item.separateSetParts===false)return false;
+    const saved=answers&&answers[configKey(analysis)];
+    const explicit=validCount(saved&&saved.componentCount)||validCount(cachedFact(analysis.sourceRow||analysis,'cp','setPieceCount',()=>Fields.value(analysis.sourceRow||analysis,'cp','setPieceCount')));
+    return explicit!==1;
+  }
+  function partsFor(analysis,answers,item){
+    if(!analysis||item&&item.separateSetParts===false)return [];
     const saved=answers&&answers[configKey(analysis)];
     const n=validCount(saved&&saved.componentCount)||count(analysis.sourceRow||analysis,'cp');
     return labels(n).map(id=>({id,label:id}));
@@ -123,6 +129,6 @@
     const label=typeof statusLabel==='function'?statusLabel:(v=>v);
     return (Array.isArray(list)?list:[]).map(item=>item.name+' · '+label(item.state)).join(' | ');
   }
-  return {CONFIG_ITEM,withRowCache,validCount,isSet,count,labels,itemId,parseItem,configKey,partsFor,aggregate,valueParts,updateValue,
+  return {CONFIG_ITEM,withRowCache,validCount,isSet,count,labels,itemId,parseItem,configKey,tracksParts,partsFor,aggregate,valueParts,updateValue,
     MAX_ELEMENTS,ELEMENT_SUGGESTIONS,elementName,elementKey,normalizeElements,upsertElement,elementsState,elementsLabel};
 });

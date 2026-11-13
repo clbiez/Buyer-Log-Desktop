@@ -1,19 +1,22 @@
 'use strict';
 
-/* PLM SYNC hiçbir ekranda otomatik başlamaz (v7.0.250).
+/* EKSİK GÖRSEL TAMAMLAMA — RENDER/HÜCRE TETİKLEYİCİSİ YOK.
  *
- * Eskiden görselsiz hücreler açılışta sessizce /api/model-images/import-plm
- * kuyruğuna giriyordu; kullanıcı bu işin uygulamayı yavaşlattığını bildirdi.
- * Eksik görseller yalnız kullanıcı PLM SYNC'i elle başlatınca gelir.
+ * Tarihçe: 7.0.250'de açılışta otomatik görsel tamamlama kaldırıldı; eski
+ * mimaride tetikleyici RENDER/HÜCRE idi (görselsiz hücre gözlemlenince
+ * /api/model-images/import-plm kuyruğuna giriyordu) ve her açılış, filtre ve
+ * kaydırma yeni istek doğurduğu için uygulamayı yavaşlatıyordu.
  *
- * Aşağıdaki eski not tarihçe içindir:
+ * Güncel sözleşme (ürün sahibi kararı, sessiz eksik görsel tamamlama):
+ * eksik görseller arka planda HİSSETTİRMEDEN tamamlanır, ama tetikleyici
+ * yine render/hücre DEĞİLDİR. BLImageRuntime (hücre/gözlemci katmanı) hâlâ
+ * PLM'e istek atmaz; tek istek yolu model-image-silent-complete.js'in TEK
+ * zamanlayıcısıdır (boşta + kullanıcı sessizken, küçük paket, negatif
+ * önbellek). Bu dosya her iki kuralı da korur.
  *
- * Regresyon: görünür tablo hücresinde görseli olmayan modeller açılışta
- * boş kalıyor, yalnız kullanıcı PLM Sync'e bastığında "Remote added N" ile
- * bir anda geliyordu. BLImageRuntime görünür kimlikleri eskiden
+ * Daha eski not (tarihçe): BLImageRuntime görünür kimlikleri eskiden
  * /api/model-images/shared/hydrate'e gönderiyordu; o uç ownerId zorunlu
- * tuttuğu için istek HER ZAMAN 400 ile düşüyordu ve hiçbir görsel
- * tamamlanmıyordu. */
+ * tuttuğu için istek HER ZAMAN 400 ile düşüyordu. */
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -62,7 +65,7 @@ function placeholder(plmId, colourCode = 'HFB') {
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-test('görselsiz hücre PLM SYNC\'i otomatik başlatmaz (istek yok)', async () => {
+test('görselsiz hücre (render/gözlemci) PLM isteği tetiklemez', async () => {
   const { runtime, calls } = createRuntime();
   runtime.observe(placeholder('1202929'));
   runtime.observe(placeholder('1202930'));
@@ -127,4 +130,31 @@ test('kullanıcı işi eskisi gibi etkileşimli yenileme kullanır', async () =>
   const { root, authCalls } = fakeRoot();
   await root.fetch(PLM_IMAGE_URL, { method: 'POST', body: '{}' });
   assert.equal(authCalls[0].interactive, true);
+});
+
+function silentGlueSource() {
+  const start = APP.indexOf('/* SESSİZ EKSİK GÖRSEL TAMAMLAMA — bağlantı');
+  const end = APP.indexOf('BLSilentImageComplete?.engine.start();', start);
+  assert.ok(start >= 0 && end > start, 'sessiz tamamlama bağlantısı bulunmalı');
+  return APP.slice(start, end);
+}
+
+test('tek PLM görsel yolu sessiz zamanlayıcıdır: sessiz istek, missing modu, ilerleme/toast yok', () => {
+  const glue = silentGlueSource();
+  assert.match(glue, /window\.BLPlmSilentRequest\('\/api\/model-images\/import-plm'/);
+  assert.match(glue, /mode:'missing'/);
+  assert.doesNotMatch(glue, /plmJsonRequest\(/, 'etkileşimli istek (Operasyon Merkezi/login) kullanılmaz');
+  assert.doesNotMatch(glue, /showToast|openModelAssetProgress|watchModelOperationProgress|BLPlmOps/);
+  // Tablo yeniden çizilmez; yalnız hücre yaması.
+  assert.doesNotMatch(glue, /renderCP\(|renderOrders\(|renderKol\(|plmSyncRepaintAll\(|modelAssetRepaint\(|__blModelAssetRepaint\(/);
+  // Koleksiyon ana tablosu kapsam dışıdır ve yazılmaz.
+  assert.doesNotMatch(glue, /kolPictureCell|saveKolRows|applySyncedPlmImages\(/);
+  assert.match(glue, /const SILENT_IMAGE_TABLE_WRAPS=\{cp:'cpTableWrap',orders:'ordersTableWrap'\};/);
+  // Etkileşim dinleyicileri yalnız zaman damgası yazar.
+  assert.match(glue, /const touch=\(\)=>engine\.notifyInteraction\(\);/);
+});
+
+test('model dosyaları ve QTX sessiz işe girmez', () => {
+  const glue = silentGlueSource().replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert.doesNotMatch(glue, /model-files|updateModelFiles|kolPlmSyncModelFilesRun|qtx/i);
 });

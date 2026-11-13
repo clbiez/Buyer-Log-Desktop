@@ -70,3 +70,21 @@ test('server template worker clones Manufacturer column styling for Alt Üretici
   const worker = fs.readFileSync(path.join(__dirname, '../server/workers/excel-worker.js'), 'utf8');
   assert.match(worker, /header === 'Alt Üretici'[\s\S]*oldHeaderIndex\.get\('Üretici'\)/);
 });
+
+// Regresyon: Backlog satırı alanı 'Alt Üretici' başlığıyla taşır; canonical
+// backlog bağlaması bu başlığı okumazsa Genel Bakış Alt Üretici kırılımı
+// her satırı "(boş)" gösterir. Uçtan uca: sunucu satırı → V3 normalizasyonu.
+test('Backlog Genel Bakış Alt Üretici kırılımı sunucu satırındaki Alt Üretici değerini okur', () => {
+  const canonical = require('../server/lib/canonical-fields.js');
+  global.BLCanonicalFields = global.BLCanonicalFields || canonical;
+  const V3 = require('../public/backlog-v3-report.js');
+  const parse = loadParseWithoutXlsx();
+  const rows = parse.buildBacklogTemplateRows([
+    order(1001, 'Ana Fabrika'), order(1002, 'Ana Fabrika'), order(1003, 'Ana Fabrika', 'Disney'),
+  ], {}, overrides({1001:'Alt Fabrika'}), [1001, 1002, 1003]);
+  const sub = Object.fromEntries(rows.map(r => [r['Sipariş Kod'], canonical.value(r, 'backlog', 'subManufacturer') || '']));
+  assert.deepEqual(sub, {1001:'Alt Fabrika', 1002:'', 1003:'Ana Fabrika'});
+  const items = V3.normalizeRows(rows);
+  assert.deepEqual(items.map(it => it.subManufacturer).sort(), ['', 'Alt Fabrika', 'Ana Fabrika']);
+  assert.equal(canonical.value({'Alt Üretici':'X'}, 'overview', 'subManufacturer'), 'X');
+});

@@ -100,21 +100,24 @@ test('silme yalnız hedefi düşürür', () => {
 
 /* --- Sunucu uçları ------------------------------------------------------ */
 
-test('uçlar filtre yazma ile AYNI yetki kapısından geçer', () => {
-  /* Şablon uygulanınca ortak filtreye dönüşüyor; daha gevşek bir kapı,
-     filtre yazma yetkisini dolaylı yoldan dağıtmak olurdu. */
-  for (const route of [
-    "app.get('/api/horizon-templates'",
-    "app.post('/api/horizon-templates'",
-    "app.delete('/api/horizon-templates/:id'",
-    "app.post('/api/horizon-templates/:id/share'",
-  ]) {
-    const at = SERVER.indexOf(route);
-    assert.ok(at > -1, `${route} yok`);
-    const line = SERVER.slice(at, SERVER.indexOf('\n', at));
-    assert.match(line, /userAccess\.requireArea\('source'\)/, `${route} alan kontrolü yok`);
-    assert.match(line, /userAccess\.requirePermission\('manageModelConnections'\)/, `${route} yetki kontrolü yok`);
+test('kişisel favori uçları source alanını, paylaşılan listeye yazım yönetim yetkisini ister', () => {
+  /* v2026-11-13 (kullanıcı kararı): favori ön ayarlar herkese. Kişisel favori
+     yalnız sahibinin deposuna yazar; uygulanınca ortak filtreye değil kişisel
+     kayda gider. Ortak filtre yazımı /api/data-management/filter içinde
+     manageModelConnections ister — favori bu kapıyı dolaşamaz. */
+  const line = route => { const at = SERVER.indexOf(route); assert.ok(at > -1, `${route} yok`); return SERVER.slice(at, SERVER.indexOf('\n', at)); };
+  for (const route of ["app.get('/api/horizon-templates'", "app.post('/api/horizon-templates'", "app.delete('/api/horizon-templates/:id'"]) {
+    assert.match(line(route), /userAccess\.requireArea\('source'\)/, `${route} alan kontrolü yok`);
   }
+  assert.match(line("app.post('/api/horizon-templates/:id/share'"), /userAccess\.requirePermission\('manageModelConnections'\)/, 'paylaşım yetki kontrolü yok');
+  const post = SERVER.slice(SERVER.indexOf("app.post('/api/horizon-templates'"), SERVER.indexOf("app.delete('/api/horizon-templates/:id'"));
+  assert.match(post, /if\(args\.shared\)requireTemplateManager\(req\)/);
+  const del = SERVER.slice(SERVER.indexOf("app.delete('/api/horizon-templates/:id'"), SERVER.indexOf("app.post('/api/horizon-templates/:id/share'"));
+  assert.match(del, /if\(args\.shared\)requireTemplateManager\(req\)/);
+  const filter = line("app.post('/api/data-management/filter'");
+  assert.doesNotMatch(filter, /requirePermission/, 'kişisel filtre kaydı herkese açık kalmalı');
+  const filterBlock = SERVER.slice(SERVER.indexOf("app.post('/api/data-management/filter'"), SERVER.indexOf("app.post('/api/data-management/filter-pair'"));
+  assert.match(filterBlock, /if \(!userAccess\.hasPermission\(req\.currentUser, 'manageModelConnections'\)\)/, 'ortak filtre yazımı yönetim yetkisi istemeli');
 });
 
 test('paylaşılan şablonu herkes silemez — sahibi veya moderatör', () => {
@@ -168,9 +171,12 @@ test('şablonlar yüklenemezse editör çalışmaya devam eder', () => {
 });
 
 test('şerit filtre editörünün içinde çiziliyor', () => {
-  // v7.0.183: şablon uçları yönetim yetkisi istediği için şerit yalnız yetkiliye çizilir.
-  assert.match(EDITOR, /\$\{canShare \? templateBar\(\) : ''\}/, 'şerit render edilmiyor');
-  for (const hook of ['data-apply-template', 'data-share-template', 'data-delete-template', 'data-save-template']) {
+  // v2026-11-13: favori şeridi herkese çizilir; yetki isteyen düğmeler canShare ile süzülür.
+  assert.match(EDITOR, /\$\{templateBar\(canShare\)\}/, 'şerit render edilmiyor');
+  assert.match(EDITOR, /\$\{shared \|\| !canShare \? '' : `<button[^`]*data-share-template/, 'paylaş düğmesi yalnız yetkiliye');
+  assert.match(EDITOR, /\$\{shared && !canShare \? '' : `<button[^`]*data-delete-template/, 'paylaşılanı silme yalnız yetkiliye');
+  assert.doesNotMatch(EDITOR, /window\.prompt\(/, 'Electron prompt() desteklemez');
+  for (const hook of ['data-apply-template', 'data-share-template', 'data-delete-template', 'data-save-template', 'data-dmf-tpl-name', 'data-dmf-tpl-confirm', 'data-dmf-tpl-cancel']) {
     assert.ok(EDITOR.includes(hook), `${hook} kancası yok`);
   }
 });

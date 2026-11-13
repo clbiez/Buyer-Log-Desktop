@@ -53,28 +53,40 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
    normal ortak filtre yazma yolundan (/api/data-management/filter) geçer;
    ikinci bir yazma yolu YOKTUR, yoksa iki ayrı doğruluk kaynağı olurdu.
    =================================================================== */
+/* v2026-11-13 — FAVORİ ÖN AYARLAR HERKESE (kullanıcı kararı).
+   Kişisel favori kaydetmek/silmek, kişisel filtre kaydıyla AYNI kapıdan
+   geçer ('source' alanı): yalnız sahibinin deposuna yazar ve uygulanınca
+   ortak filtreye değil, kullanıcının "Kaydet (yalnız benim için)" yoluna
+   gider. Ortak varsayılan filtre yazımı /api/data-management/filter içinde
+   manageModelConnections ister; favori bu kapıyı DOLAŞAMAZ.
+   Paylaşılan listeye yazmak (paylaş / paylaşılanı sil) yönetim yetkisi ister.
+   İki bağlam da kontrolü dosya kilidi içinde yeniden yapar. */
 const templateContext=req=>({...sourceGuard(req),ownerId:req.currentUser.id,profile:req.currentUser});
-app.get('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
+const personalTemplateContext=req=>{const ownerId=req.currentUser.id;return {ownerId,profile:req.currentUser,assertAuthority:()=>currentSession(req,ownerId)};};
+const requireTemplateManager=req=>{if(!userAccess.hasPermission(req.currentUser,'manageModelConnections'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});};
+app.get('/api/horizon-templates', userAccess.requireArea('source'), async (req, res) => {
   try {
-    const ctx=templateContext(req),personal=await horizonTemplateService.capture('create',{shared:false},ctx),shared=await horizonTemplateService.capture('create',{shared:true},ctx);
+    const ctx=personalTemplateContext(req),personal=await horizonTemplateService.capture('create',{shared:false},ctx),shared=await horizonTemplateService.capture('create',{shared:true},ctx);
     const mapItem=(item,isShared)=>({id:item.id,name:item.name,definition:item.data||null,shared:isShared,ownerId:item.userId||null,updatedAt:item.updatedAt||item.createdAt||null});
     res.set('Cache-Control','no-store').json({ok:true,personal:personal.store.items.map(item=>mapItem(item,false)),shared:shared.store.items.map(item=>mapItem(item,true)),personalRevision:personal.store._revision,sharedRevision:shared.store._revision});
   } catch (err) { apiError(res,err,'Horizon şablonları okunamadı.'); }
 });
-app.post('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), async (req,res)=>{
+app.post('/api/horizon-templates', userAccess.requireArea('source'), express.json({ limit: '256kb' }), async (req,res)=>{
   try {
     const body=req.body||{},args={name:String(body.name||'').trim(),definition:body.definition,shared:body.shared===true};
     if(!args.name)return res.status(400).json({error:'Şablon adı zorunlu.',code:'VALIDATION_ERROR'});
     if(!args.definition||typeof args.definition!=='object')return res.status(400).json({error:'Şablon tanımı zorunlu.',code:'VALIDATION_ERROR'});
-    const saved=await horizonTemplateService.execute('create',args,null,templateContext(req));
+    if(args.shared)requireTemplateManager(req);
+    const saved=await horizonTemplateService.execute('create',args,null,args.shared?templateContext(req):personalTemplateContext(req));
     userAccess.appendAudit(req.currentUser,'HORIZON_TEMPLATE_CREATE',args.name,{shared:args.shared});res.json({ok:true,shared:saved.shared,revision:saved.revision,id:saved.id});
   } catch (err) { apiError(res,err,'Horizon şablonu kaydedilemedi.'); }
 });
-app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), async(req,res)=>{
+app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), express.json({ limit: '64kb' }), async(req,res)=>{
   try {
     const args={id:req.params.id,shared:String(req.query&&req.query.shared||'')==='1'};
     // NOT_OWNER: the native service rechecks ownership/manageAllOrders under its real lease.
-    await horizonTemplateService.execute('delete',args,null,templateContext(req));
+    if(args.shared)requireTemplateManager(req);
+    await horizonTemplateService.execute('delete',args,null,args.shared?templateContext(req):personalTemplateContext(req));
     userAccess.appendAudit(req.currentUser,'HORIZON_TEMPLATE_DELETE',args.id,{shared:args.shared});res.json({ok:true});
   } catch(err){apiError(res,err,'Horizon şablonu silinemedi.');}
 });

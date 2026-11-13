@@ -6237,7 +6237,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const clTaskFlag=clTasks.length?`<span class="clTaskFlag" title="${escapeHtml(clTaskTitle)}">Buying ${clTasks.length}</span>`:'';
       const clTone=window.BLCpChecklistEngine?.statusTone?.(status)||'gray';
       if(!canEdit) return clTasks.length?`<td title="${escapeHtml(clTaskTitle)}">${escapeHtml(label)} ${clTaskFlag}</td>`:viewOnly(label);
-      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)} tone-${escapeHtml(clTone)}${clTasks.length?' has-task':''}" data-id="${id}"${editorIdentity} data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)} tone-${escapeHtml(clTone)}${clTasks.length?' has-task':''}" data-id="${id}"${editorIdentity} data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button>${r._checklistSingleSet?`<button type="button" class="clPartsConfigure" data-cl-config-parts data-id="${id}"${editorIdentity} aria-label="${escapeHtml(appLang==='en'?'Set components':'Set parçaları')}">⋯</button>`:''}</td>`;
     }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
@@ -7751,6 +7751,20 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount){
 }
 
 const _tableRangeViews=new WeakMap();
+/* Mini "yeniden çiz" düğmesi: hücre düzenlemesinden sonra bağımlı (türetilmiş)
+   hücreler güncel görünmediğinde filtreyi açıp kapatmaya gerek bırakmaz.
+   Sayfa önbelleğini değil modülün tam render yolunu (filtre/hesap dahil)
+   çalıştırır; kaydırma konumu korunur. Veri yeniden çekilmez. */
+function redrawTableModule(tableKey){
+  const tableId=tableKey==='koleksiyon'?'kolTable':`${tableKey}Table`;
+  const host=document.getElementById(tableId)?.closest('.tablewrap');
+  const top=host?host.scrollTop:0,left=host?host.scrollLeft:0;
+  if(tableKey==='cp')renderCPNow();
+  else if(tableKey==='orders')renderOrdersNow();
+  else if(tableKey==='koleksiyon')renderKol();
+  else return;
+  if(host){host.scrollTop=top;host.scrollLeft=left;const tb=host.querySelector('tbody');tb?._virtualState?.paint?.();}
+}
 function renderTableRangeControls(table,tableKey,rows,rerender){
   if(!window.BLTableRange)return rows;
   const T=(tr,en)=>appLang==='en'?en:tr;
@@ -7758,7 +7772,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   if(!view){
     let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
     const bar=document.createElement('div');bar.className='tableRangeBar';
-    bar.innerHTML='<select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
+    bar.innerHTML='<button type="button" class="tableRangeRedraw" data-range-redraw><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button><select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
     /* CP, Siparişler ve Koleksiyon'da ayrı satır açmadan araç satırının en
        sağına yerleşir; sayfalama taşma menüsüne düşmez. */
     const toolbarId=tableKey==='koleksiyon'?'kolTableToolbar':
@@ -7773,6 +7787,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
       try{(window.BLStorage||localStorage).setItem(`bl.tableRange.${tableKey}.v1`,String(view.controller.snapshot().size));}catch(_){}
       draw();
     });
+    bar.querySelector('[data-range-redraw]').addEventListener('click',()=>redrawTableModule(tableKey));
     bar.querySelector('[data-range-prev]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page-1);draw();});
     bar.querySelector('[data-range-next]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page+1);draw();});
     bar.querySelector('[data-range-page]').addEventListener('change',event=>{view.controller.go(Number(event.target.value)-1);draw();});
@@ -7782,6 +7797,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   const range=view.controller.update(rows),bar=view.bar;
   bar.title=T('Filtreler, toplamlar ve dışa aktarma tüm eşleşen satırları kapsar.','Filters, totals and exports include all matching rows.');
   const select=bar.querySelector('[data-range-size]');select.value=String(range.size);select.lastElementChild.textContent=T('Tümü','All');
+  const redraw=bar.querySelector('[data-range-redraw]');redraw.title=T('Tabloyu yeniden çiz','Redraw table');redraw.setAttribute('aria-label',redraw.title);
   select.title=T('Görünür satır aralığı','Visible row range');select.setAttribute('aria-label',select.title);
   bar.querySelector('[data-range-info]').textContent=`${range.total?range.start+1:0}–${range.end} / ${range.total.toLocaleString(appLang==='en'?'en-GB':'tr-TR')}`;
   const page=bar.querySelector('[data-range-page]');page.value=range.page+1;page.max=range.pages;page.disabled=range.pages===1;
@@ -16492,10 +16508,12 @@ async function openModelImageLimitModal(){
   const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=appLang==='en'?'Image Size Limit':'Görsel Boyut Limiti',help=appLang==='en'?'Enter the maximum size in KB. New PLM/manual images use this limit; existing larger images are optimized once in the background.':'Maksimum boyutu KB olarak girin. Yeni PLM/manuel görseller bu sınırı kullanır; daha büyük mevcut görseller arka planda bir kez optimize edilir.';
   const maxKb=Math.min(1024,Math.max(1,Number(current.maxKb)||5));
-  modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
+  modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><label class="modelImageSilentToggle"><input type="checkbox" id="_modelImageSilentComplete" ${window.BLSilentImageComplete?.isEnabled?.()===false?'':'checked'}><span><span>${escapeHtml(appLang==='en'?'Complete missing images in the background':'Eksik görselleri arka planda tamamla')}</span><small>${escapeHtml(appLang==='en'?'Visible CP/Orders rows and open detail reports; never the Collection main table. No windows or notifications.':'Görünür CP/Orders satırları ve açık detay raporları; Koleksiyon ana tablosu hariç. Pencere veya bildirim açılmaz.')}</small></span></label><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
   document.body.appendChild(modal);const sample=modal.querySelector('.modelImageSample');if(sample)sample.innerHTML='<div class="modelImageSamplePreview" id="_modelImageSamplePreview"><img id="_modelImageSampleImg" alt="Model preview" hidden><span id="_modelImageSampleMeta"></span></div><span>'+escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')+'</span>';const previewSource=findModelImagePreviewSource();const close=()=>{window.BLLayerSystem?.closeDialog?.(modal);modal.remove();};modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});window.BLLayerSystem?.openDialog?.(modal,{onClose:close,initialFocus:'#_modelImageLimitInput'});
   const range=modal.querySelector('#_modelImageLimitRange'),input=modal.querySelector('#_modelImageLimitInput'),output=modal.querySelector('#_modelImageLimitOutput');
   const syncValue=value=>{const next=Math.min(1024,Math.max(1,Math.round(Number(value)||1)));range.value=String(next);input.value=String(next);output.textContent=`${next} KB`;};
+  // Sessiz eksik görsel tamamlama anahtarı: kullanıcıya ayrılmış depo, hemen uygulanır.
+  modal.querySelector('#_modelImageSilentComplete')?.addEventListener('change',e=>{window.BLSilentImageComplete?.setEnabled?.(e.currentTarget.checked);});
   range.addEventListener('input',e=>{syncValue(e.target.value);void updateModelImageSamplePreview(modal,range.value,previewSource);});input.addEventListener('input',e=>{syncValue(e.target.value);void updateModelImageSamplePreview(modal,input.value,previewSource);});void updateModelImageSamplePreview(modal,maxKb,previewSource);
   modal.querySelector('[data-delete-all]')?.addEventListener('click',async e=>{
     const status=modal.querySelector('#_modelImageLimitStatus'),button=e.currentTarget;
@@ -26196,6 +26214,7 @@ async function kolAddCustomColumn(panelEl){
    Hiç madde yoksa Checklist başlığı tabloda hiç açılmaz. */
 const KOL_CHECKLIST_STATUSES = Object.freeze(['open','approved','rejected','notRequired']);
 function kolChecklistStatus(value){
+  if(value&&typeof value==='object'&&value.singleState)return kolChecklistStatus(value.singleState);
   if(value&&typeof value==='object'&&Array.isArray(value.parts))return window.BLChecklistComponents.aggregate(value.parts.map(part=>part.state));
   const status=String(value==null?'':value).trim();
   return KOL_CHECKLIST_STATUSES.includes(status)?status:'open';
@@ -26210,6 +26229,7 @@ function kolChecklistStatusLabel(status){
 function kolChecklistColumns(){return kolCustomCols.filter(c=>c.checklist);}
 function kolChecklistParts(row,value){
   const api=window.BLChecklistComponents;
+  if(Number(row.setPieceCount)===1)return [];
   return api.valueParts(value,api.count(row,'collection'));
 }
 function kolChecklistDisplay(value,row){
@@ -26219,7 +26239,7 @@ function kolChecklistDisplay(value,row){
 function kolConfigureChecklistParts(row,key){
   if(!kolRequireWorkspaceEdit()||kolCellLinkedToModel(row,key))return;
   const api=window.BLChecklistComponents,value=kolEffectiveValue(row,key),parts=kolChecklistParts(row,value);
-  window.BLChecklistSupplierSync.openComponentCountDialog(parts.length,Math.max(2,parts.length),count=>{
+  window.BLChecklistSupplierSync.openComponentCountDialog(Number(row.setPieceCount)||parts.length,1,count=>{
     kolPushUndo();
     kolWriteGroupedStorageValue(row,'setPieceCount',count);
     // Freeze every editable checklist cell's roster before the next source refresh.
@@ -26227,14 +26247,14 @@ function kolConfigureChecklistParts(row,key){
       if(kolCellLinkedToModel(row,col.k))continue;
       const previous=kolEffectiveValue(row,col.k),existing=api.valueParts(previous,count);
       const all=api.labels(Math.max(count,existing.length)).map(id=>existing.find(part=>part.id===id)||{id,label:id,state:'open'});
-      kolWriteGroupedStorageValue(row,col.k,{schemaVersion:1,legacyStatus:previous&&typeof previous==='object'?previous.legacyStatus||'':String(previous||''),parts:all});
+      kolWriteGroupedStorageValue(row,col.k,{schemaVersion:1,legacyStatus:previous&&typeof previous==='object'?previous.legacyStatus||'':String(previous||''),parts:all,...(count===1?{singleState:previous&&typeof previous==='object'?previous.singleState||previous.legacyStatus||'open':String(previous||'open')}:{})});
     }
     const saved=saveKolRows();void kolSaveWorkspaceNow();renderKol();return saved;
   });
 }
 function kolChecklistCellHtml(row,c,value,rc){
   const parts=kolChecklistParts(row,value),api=window.BLChecklistComponents;
-  if(parts.length||api.isSet(row,'collection')){
+  if(parts.length||(Number(row.setPieceCount)!==1&&api.isSet(row,'collection'))){
     const buttons=parts.map(part=>`<button type="button" class="kolChecklistStatusBtn is-${escapeHtml(part.state)}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" data-kol-checklist-part="${part.id}" title="${escapeHtml(part.label+' · '+kolChecklistStatusLabel(part.state))}" aria-label="${escapeHtml(part.label+' · '+kolChecklistStatusLabel(part.state))}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><b class="clPartLabel">${part.label}</b><span class="kolChecklistDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(kolChecklistStatusLabel(part.state))}</span></button>`).join('');
     const configureLabel=appLang==='en'?'Parts':'Parçalar';
     const summary=parts.length?`${parts.filter(part=>part.state==='approved').length}/${parts.length}`:(appLang==='en'?'Define the part count':'Parça sayısını belirleyin');
@@ -26242,7 +26262,7 @@ function kolChecklistCellHtml(row,c,value,rc){
   }
   const status=kolChecklistStatus(value),label=kolChecklistStatusLabel(status);
   const title=appLang==='en'?`${kolColumnLabel(c)}: ${label} · Click to change`:`${kolColumnLabel(c)}: ${label} · Değiştirmek için tıklayın`;
-  return `<td class="kolChecklistTd"${rc}><button type="button" class="kolChecklistStatusBtn is-${status}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" title="${escapeHtml(title)}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(label)}</span></button></td>`;
+  return `<td class="kolChecklistTd"${rc}><button type="button" class="kolChecklistStatusBtn is-${status}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" title="${escapeHtml(title)}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(label)}</span></button>${kolWorkspaceCanEdit&&Number(row.setPieceCount)===1?`<button type="button" class="clPartsConfigure" data-kol-config-parts="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" aria-label="${escapeHtml(appLang==='en'?'Set components':'Set parçaları')}">⋯</button>`:''}</td>`;
 }
 function kolSetChecklistStatus(rowId,key,status,partId){
   if(!kolRequireWorkspaceEdit())return false;
@@ -26260,8 +26280,9 @@ function kolSetChecklistStatus(rowId,key,status,partId){
     if(parts.find(part=>part.id===partId).state===status&&value&&typeof value==='object')return true;
     next=window.BLChecklistComponents.updateValue(value,parts.length,partId,status);
   }else{
-    if(typeof window!=='undefined'&&window.BLChecklistComponents&&(kolChecklistParts(row,value).length||window.BLChecklistComponents.isSet(row,'collection')))return false;
+    if(typeof window!=='undefined'&&window.BLChecklistComponents&&(kolChecklistParts(row,value).length||(Number(row.setPieceCount)!==1&&window.BLChecklistComponents.isSet(row,'collection'))))return false;
     if(kolChecklistStatus(value)===status)return true;
+    if(value&&typeof value==='object')next={...value,singleState:status};
   }
   kolPushUndo();
   kolWriteGroupedStorageValue(row,key,next);
@@ -34437,6 +34458,181 @@ function openCurrentViewImageAction(button){
 window.BLModelAssets={updateModelLinks,updateModelImages,updateModelFiles,openCurrentViewImageAction,openModelImageSourceChooser,registerModelAssetProviders};
 registerModelAssetProviders();
 registerCurrentViewModelAssetProvider();
+
+/* SESSİZ EKSİK GÖRSEL TAMAMLAMA — bağlantı (motor: model-image-silent-complete.js).
+
+   7.0.250 kuralı bilinçli olarak güncellendi: eksik görseller artık arka
+   planda, kullanıcıya HİSSETTİRMEDEN tamamlanır. Eski mimari KURULMAZ:
+   render, hücre, IntersectionObserver ve kaydırma istek BAŞLATMAZ; yalnız
+   motorun tek zamanlayıcısı, tarayıcı boştayken ve kullanıcı birkaç saniyedir
+   etkileşimde değilken karar verir.
+
+   Kapsam: etkin alt detay/drilldown raporu (current-view sağlayıcısı; Koleksiyon
+   LFL/SEASON karşılaştırmaları dahil) ya da CP / Orders ana tablolarında YALNIZ
+   ekranda görünen satırlar. Koleksiyon ANA tablosu, model dosyaları ve QTX
+   HARİÇ. Sunucu sırası (LOCAL → SHARED → PLM) ve elle konmuş görseli ezmeme
+   kuralı "Eksikleri Tamamla" ile aynıdır (mode:'missing').
+
+   Gelen görsel YALNIZ ilgili hücreye yazılır: tablo yeniden çizilmez, Motion+
+   satır girişi tetiklenmez, kaydırma/seçim/odak/düzenleme korunur. Toast,
+   ilerleme, Operasyon Merkezi yok (plmSilentJsonRequest). Koleksiyon satırları
+   (kolRows) yazılmaz: Koleksiyon ana tablosu kapsam dışıdır. */
+const SILENT_IMAGE_TABLE_WRAPS={cp:'cpTableWrap',orders:'ordersTableWrap'};
+const silentImageRowIndex=new WeakMap();
+function silentImageRowFor(tab,id){
+  const rows=tab==='cp'?state.cp?.rows:state.orders?.rows;if(!Array.isArray(rows))return null;
+  let index=silentImageRowIndex.get(rows);
+  if(!index||index.size!==rows.length){index=new Map(rows.map(row=>[String(row&&row._id),row]));silentImageRowIndex.set(rows,index);}
+  return index.get(String(id))||null;
+}
+function silentImageInViewport(el){
+  if(!el||!el.isConnected)return false;
+  const rect=el.getBoundingClientRect();
+  return rect.bottom>0&&rect.right>0&&rect.top<(window.innerHeight||0)&&rect.left<(window.innerWidth||0);
+}
+function silentImageRowColour(row){return row?norm(row.Colour||row['Colour']||row.Color||row['Color']||''):'';}
+function silentImageEntry(raw){
+  const api=modelAssetScopeApi();if(!api||!raw)return null;
+  const styleName=norm(raw.styleName);
+  const plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  if(!plmId&&!styleName)return null;
+  const identity={plmId,colourCode:norm(raw.colourCode),colour:norm(raw.colour),styleName,orderCode:norm(raw.orderCode),hasImage:null};
+  if(!modelAssetIdentityMissing(identity))return null;
+  const key=api.identityKey(api.normalizePlmId(plmId),identity.colourCode,identity.colour,styleName,identity.orderCode);
+  return key?{key,identity,item:modelAssetImageItems([identity])[0]}:null;
+}
+function silentImageThumbIdentity(img){
+  const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
+  return {plmId:img.dataset.plmId||img.dataset.modelId||'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
+}
+/* Görünür satırlar önce; liste `limit` ile sınırlıdır (30k satırda tarama yok). */
+function silentImageCollect({limit,skip}){
+  const out=[],seen=new Set(),known=new Set();
+  const push=raw=>{
+    if(out.length>=limit)return;
+    const entry=silentImageEntry(raw);
+    if(!entry){
+      /* Görsel kanonik kayıtta zaten var ama görünür hücre hâlâ yer tutucu
+         (ör. arka plan senkronu durumu tazeledi, tablo çizilmedi): ağ isteği
+         YOK, hücre yerinde bağlanır. */
+      const key=silentImageEntryKey(raw);if(key)known.add(key);
+      return;
+    }
+    if(seen.has(entry.key))return;seen.add(entry.key);
+    if(!skip(entry))out.push(entry);
+  };
+  const finish=scope=>{if(known.size)silentImagePatchCells(known);return scope;};
+  const host=activeModelAssetViewHost();
+  if(host){
+    if(!host.dataset.blModelAssetToken)host.dataset.blModelAssetToken=`view-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+    const token=host.dataset.blModelAssetToken;
+    for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){if(out.length>=limit)break;if(silentImageInViewport(img))push(silentImageThumbIdentity(img));}
+    for(const item of modelAssetIdentitiesFromHost(host)){if(out.length>=limit)break;push(item);}
+    return finish({viewToken:token,contextType:host.dataset.blModelAssetScope||'current-view',identities:out,
+      isStillCurrent:()=>{const current=activeModelAssetViewHost();return Boolean(current&&current===host&&current.dataset.blModelAssetToken===token);}});
+  }
+  // Koleksiyon ANA tablosu bilerek listede YOK.
+  const tab=document.body.dataset.activeTab||'',wrapId=SILENT_IMAGE_TABLE_WRAPS[tab];
+  if(!wrapId)return null;
+  const wrap=document.getElementById(wrapId);
+  if(!wrap||!modelAssetHostIsVisible(wrap))return null;
+  for(const img of wrap.querySelectorAll('td.cpPictureCell>img[data-has-image="0"]')){
+    if(out.length>=limit)break;
+    const plmId=normalizePlmLinkId(img.dataset.modelId);
+    if(!plmId||!silentImageInViewport(img))continue;
+    push({plmId,colourCode:img.dataset.colourCode||'',colour:silentImageRowColour(silentImageRowFor(tab,img.dataset.id))});
+  }
+  return finish({viewToken:`table:${tab}`,contextType:tab,identities:out,isStillCurrent:()=>document.body.dataset.activeTab===tab});
+}
+/* Kanonik kayıt artımlı uygulanır (tam overrides ve satır döngüsü YOK). */
+function silentImageApplyPatch(data){
+  const patch=data&&data.imagemapPatch&&typeof data.imagemapPatch==='object'?data.imagemapPatch:null;
+  if(!patch)return 0;
+  if(!state.overrides||typeof state.overrides!=='object')state.overrides={};
+  const map=state.overrides.imagemap&&typeof state.overrides.imagemap==='object'?state.overrides.imagemap:(state.overrides.imagemap={});
+  const changedUrls=[];
+  for(const [key,value] of Object.entries(patch)){
+    const old=map[key];
+    if(value===null||value===undefined)delete map[key];else map[key]=String(value);
+    if(old&&old!==value)changedUrls.push(modelImageRefUrl(old));
+  }
+  const cache=window.BLModelImageCache;
+  if(typeof cache?.patchRegistryMap==='function')cache.patchRegistryMap(patch);else syncModelImageRegistry();
+  if(changedUrls.length)BLImageRuntime.invalidate(changedUrls);
+  return Object.keys(patch).length;
+}
+/* Yalnız bu partinin kimliklerine ait yer tutucu hücreler güncellenir. */
+function silentImagePatchCells(keys){
+  const api=modelAssetScopeApi();if(!api||!keys.size)return 0;
+  let patched=0;
+  const keyOf=raw=>{const entry=silentImageEntryKey(raw);return entry&&keys.has(entry)?entry:'';};
+  const host=activeModelAssetViewHost();
+  if(host){
+    for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){
+      const raw=silentImageThumbIdentity(img);if(!keyOf(raw))continue;
+      const plmId=modelAssetCanonicalPlmId(raw.plmId,raw.styleName);
+      const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
+      if(!source)continue;
+      img.dataset.src=source;img.dataset.blImageLoaded='0';img.classList.remove('isPlaceholder');
+      delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
+      BLImageRuntime.observe(img);patched++;
+    }
+    return patched;
+  }
+  const tab=document.body.dataset.activeTab||'',wrap=document.getElementById(SILENT_IMAGE_TABLE_WRAPS[tab]||'');
+  if(!wrap)return 0;
+  const dims=tab==='cp'?cpImageDims():ordersImageDims();
+  for(const img of wrap.querySelectorAll('td.cpPictureCell>img[data-has-image="0"]')){
+    const plmId=normalizePlmLinkId(img.dataset.modelId);if(!plmId)continue;
+    const colour=silentImageRowColour(silentImageRowFor(tab,img.dataset.id));
+    if(!keyOf({plmId,colourCode:img.dataset.colourCode||'',colour}))continue;
+    const source=canonicalModelImageSource(plmId,img.dataset.colourCode,colour);
+    if(!source)continue;
+    img.dataset.src=modelImageUrl(source);img.dataset.hasImage='1';img.dataset.imgBox=`${dims.w}x${dims.h}`;img.dataset.blImageLoaded='0';
+    img.style.maxWidth=`${dims.w}px`;img.style.maxHeight=`${dims.h}px`;img.style.opacity='1';
+    delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
+    BLImageRuntime.observe(img);patched++;
+  }
+  return patched;
+}
+function silentImageEntryKey(raw){
+  const api=modelAssetScopeApi();if(!api||!raw)return '';
+  const styleName=norm(raw.styleName),plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  return api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode));
+}
+const BLSilentImageComplete=(()=>{
+  const factory=window.BLSilentImageCompleteFactory;
+  if(!factory||typeof window.BLPlmSilentRequest!=='function')return null;
+  const storage=(()=>{try{return window.BLStorage||window.localStorage||null;}catch(_){return null;}})();
+  const engine=factory.createSilentImageCompleter({
+    storage,
+    isOnline:()=>typeof navigator==='undefined'||navigator.onLine!==false,
+    isHidden:()=>document.visibilityState==='hidden',
+    isBusy:()=>{const snap=window.BLModulePreparation?.snapshot?.();return Boolean(snap&&Object.values(snap).some(item=>item&&item.status==='loading'));},
+    requestIdle:(cb,opts)=>typeof window.requestIdleCallback==='function'?window.requestIdleCallback(cb,opts):setTimeout(()=>cb({didTimeout:false,timeRemaining:()=>8}),50),
+    collect:silentImageCollect,
+    request:(items,{contextType})=>window.BLPlmSilentRequest('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:'missing',scope:contextType})}),
+    apply:(data,{identities,current})=>{
+      silentImageApplyPatch(data);
+      if(current)silentImagePatchCells(new Set(identities.map(item=>item.key)));
+    },
+    isResolved:entry=>!modelAssetIdentityMissing(entry.identity),
+  });
+  // Etkileşim yalnız zaman damgası yazar; istek BAŞLATMAZ.
+  const touch=()=>engine.notifyInteraction();
+  ['pointerdown','keydown','wheel','touchstart','input'].forEach(type=>window.addEventListener(type,touch,{capture:true,passive:true}));
+  window.addEventListener('scroll',touch,{capture:true,passive:true});
+  // Sekme değişimi (programatik dahil) etkileşim sayılır: yeni modül açılırken sessiz iş beklemede kalır.
+  try{new MutationObserver(touch).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});}catch(_){}
+  return {
+    engine,
+    isEnabled:()=>factory.readEnabled(storage),
+    setEnabled:enabled=>{factory.writeEnabled(storage,Boolean(enabled));},
+    stats:()=>engine.stats(),
+  };
+})();
+window.BLSilentImageComplete=BLSilentImageComplete;
+BLSilentImageComplete?.engine.start();
 /* CP ve Orders'ın MODEL VARLIKLARI menüsü — ÜÇ BAĞIMSIZ İŞLEM.
 
    Eskiden buradaki tek "PLM Sync" komutu link ve görsel adımlarını

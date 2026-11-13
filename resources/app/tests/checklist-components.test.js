@@ -151,6 +151,12 @@ test('Collection native setter journals separate A/B/C decisions without copying
   assert.deepEqual(ctx.saved[0].check.parts.map(p=>p.state),['approved','rejected','open']);
   assert.equal(ctx.saved[0].check.legacyStatus,'approved');
   assert.equal(ctx.kolChecklistStatus(ctx.saved[0].check),'rejected');
+  ctx.kolRows[0].setPieceCount=1;
+  assert.equal(ctx.kolSetChecklistStatus(1,'check','approved'),true);
+  assert.equal(ctx.kolChecklistStatus(ctx.saved[0].check),'approved');
+  assert.equal(ctx.saved[0].check.parts[1].state,'rejected','single status retains archived B evidence');
+  ctx.kolRows[0].setPieceCount=3;
+  assert.equal(ctx.kolChecklistParts(ctx.kolRows[0],ctx.kolRows[0].check)[1].state,'rejected');
 });
 
 test('rule evaluation and priority facts use the part aggregate instead of legacy or whole-set automation',()=>{
@@ -286,4 +292,62 @@ test('legacy pending option parts recover a rejected transaction after restart',
   assert.equal(entries.find(e=>e.orderKey===option&&e.itemId===Components.CONFIG_ITEM)?.componentCount,3);
   assert.equal(entries.find(e=>e.orderKey===option&&e.itemId==='shared-set~part~B')?.note,'Legacy evidence');
   assert.ok(entries.some(e=>e.orderKey===analysis.orderKey&&e.itemId==='shared-set~part~B'),'the rejected companion PO edit is recovered too');
+});
+
+test('count 1 switches to a single status and restoring the roster restores part evidence',()=>{
+  const b=browser();
+  b.assistant.setChecklistAnswer(analysis,'tests~part~B','rejected',{note:'B retained'});
+  assert.equal(b.assistant.setChecklistComponents(analysis,1),true);
+  assert.deepEqual(Checklist.componentsFor(analysis,{answers:b.assistant._state.answers}),[]);
+  assert.equal(b.assistant.setChecklistAnswer(analysis,'tests','approved'),true);
+  assert.equal(Checklist.statusOf(analysis,'tests',{answers:b.assistant._state.answers}),'approved');
+  assert.equal(b.assistant.setChecklistAnswer(analysis,'tests~part~A','approved'),false);
+  const restarted=browser(b.saved);
+  assert.equal(Checklist.componentsFor(analysis,{answers:restarted.assistant._state.answers}).length,0);
+  assert.equal(restarted.assistant.setChecklistComponents(analysis,3),true);
+  assert.equal(Checklist.statusOf(analysis,'tests',{answers:restarted.assistant._state.answers}),'rejected');
+  assert.equal(restarted.assistant._state.answers['SET-PO::tests~part~B'].note,'B retained');
+});
+test('each checklist controls set tracking independently, including rule facts and native writes',()=>{
+  const Rules=require('../public/cp-rules-engine');
+  const make=(id,separateSetParts)=>Rules.normalizeRule({id,kind:'checklist',separateSetParts,conditions:[{field:'@daysToLoad',operator:'lte',value:60}]});
+  const single=make('single',false),parts=make('parts',true),a={...analysis,daysToLoad:10};
+  assert.equal(Rules.normalizeRule(JSON.parse(JSON.stringify(single))).separateSetParts,false);
+  assert.equal(make('legacy').separateSetParts,true);
+  const b=browser();b.assistant._state.rules.push(single,parts);
+  assert.equal(b.assistant.setChecklistAnswer(a,'single','approved'),true);
+  assert.equal(b.assistant.setChecklistAnswer(a,'single~part~A','approved'),false);
+  assert.equal(b.assistant.setChecklistAnswer(a,'parts','approved'),false);
+  const result=Rules.evaluateOrder(a,{rules:[single,parts],answers:b.assistant._state.answers});
+  assert.equal(result.checklistState.single,'approved');assert.equal(result.checklistState.parts,'open');
+  const prepared=Rules.prepareEvaluation([single,parts]);
+  assert.equal(Rules.evaluateOrder(a,{rules:prepared.rules,preparedRules:prepared,answers:b.assistant._state.answers}).checklistState.single,'approved');
+});
+test('supplier workbook mixes whole-model and part checklists and round trips both',async()=>{
+  const ExcelJS=require('../public/vendor/exceljs.min.js'),Sync=require('../public/checklist-supplier-sync');
+  const items=[{id:'single',tr:'Tek',en:'Single',separateSetParts:false},{id:'parts',tr:'Parçalar',en:'Parts'}];
+  const built=await Sync.buildSupplierWorkbook({ExcelJS,rows:[analysis.sourceRow],items,language:'en',columnIds:['order'],analysisFor:()=>analysis,itemApplies:()=>true,answerFor:()=>({state:'approved'}),prepareImage:async()=>null});
+  const wb=new ExcelJS.Workbook();await wb.xlsx.load(built.buffer);
+  const meta=wb.getWorksheet('__BL_META'),ids=[];for(let r=5;r<=meta.rowCount;r++)ids.push(meta.getRow(r).getCell(6).text);
+  assert.deepEqual(ids,['single','parts~part~A','parts~part~B','parts~part~C']);
+  const parsed=Sync.parseSupplierWorkbook(wb,{analysisFor:()=>analysis,catalog:new Map(items.map(i=>[i.id,i])),applies:()=>true,english:true});
+  assert.ok(parsed.entries.some(e=>e.itemId==='single'&&e.state==='approved'));
+  assert.ok(parsed.entries.some(e=>e.itemId==='parts~part~B'&&e.state==='approved'));
+});
+test('server persists count 1 without deleting evidence and accepts restoration',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-single-set-'));
+  try{
+    const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))}),actor={id:'buyer'};
+      await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:3},{orderKey:'P',itemId:'tests~part~B',state:'rejected',note:'Retained'}],actor);
+      await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:1},{orderKey:'P',itemId:'tests',state:'approved'}],actor);
+      await store.replaceDefinitions([{id:'single',kind:'checklist',name:'Single',separateSetParts:false}],actor);
+      const single=store.publicPayload();let code;try{await store.applyEntries([{orderKey:'P',itemId:'tests~part~B',state:'approved'}],actor);}catch(e){code=e.code;}
+      await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:3}],actor);
+      process.stdout.write(JSON.stringify({single,code,restored:store.publicPayload()}));`;
+    const r=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
+    assert.equal(r.single.tombstones['P::@set-components'].componentCount,1);
+    assert.equal(r.single.definitions[0].separateSetParts,false);
+    assert.equal(r.single.answers['P::tests'].state,'approved');assert.equal(r.code,'CHECKLIST_COMPONENTS_INVALID');
+    assert.equal(r.restored.answers['P::tests~part~B'].note,'Retained');
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
