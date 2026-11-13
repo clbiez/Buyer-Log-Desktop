@@ -126,7 +126,8 @@
     ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(type => {
       try { root.addEventListener(type, markInput, { capture: true, passive: true }); } catch (_) {}
     });
-    const storage = (() => { try { return root.localStorage; } catch (_) { return null; } })();
+    // Tercih kullanıcıya ayrılır (user-storage.js 'bl.cpPlmSilentBom.' öneki); BLStorage yoksa yerel depo.
+    const storage = (() => { try { return root.BLStorage || root.localStorage; } catch (_) { return null; } })();
     const silentRequest = (url, plmIds) => {
       const request = root.BLPlmSilentRequest;
       if (typeof request !== 'function') return Promise.reject(Object.assign(new Error('silent request unavailable'), { code: 'PLM_SILENT_UNAVAILABLE' }));
