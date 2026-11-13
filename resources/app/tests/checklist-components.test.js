@@ -340,11 +340,13 @@ test('server persists count 1 without deleting evidence and accepts restoration'
     const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))}),actor={id:'buyer'};
       await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:3},{orderKey:'P',itemId:'tests~part~B',state:'rejected',note:'Retained'}],actor);
       await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:1},{orderKey:'P',itemId:'tests',state:'approved'}],actor);
+      await store.replaceDefinitions([{id:'single',kind:'checklist',name:'Single',separateSetParts:false}],actor);
       const single=store.publicPayload();let code;try{await store.applyEntries([{orderKey:'P',itemId:'tests~part~B',state:'approved'}],actor);}catch(e){code=e.code;}
       await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:3}],actor);
       process.stdout.write(JSON.stringify({single,code,restored:store.publicPayload()}));`;
     const r=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
     assert.equal(r.single.tombstones['P::@set-components'].componentCount,1);
+    assert.equal(r.single.definitions[0].separateSetParts,false);
     assert.equal(r.single.answers['P::tests'].state,'approved');assert.equal(r.code,'CHECKLIST_COMPONENTS_INVALID');
     assert.equal(r.restored.answers['P::tests~part~B'].note,'Retained');
   }finally{fs.rmSync(dir,{recursive:true,force:true});}

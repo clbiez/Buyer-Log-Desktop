@@ -268,6 +268,7 @@ function normalizeDefinition(raw) {
     // Custom checklist definitions default to reusable approval scope. An
     // explicit per-PO choice remains authoritative.
     approvalScope: raw.approvalScope === 'order' ? 'order' : 'option',
+    ...(raw.separateSetParts === false ? { separateSetParts: false } : {}),
     evidenceFields: {
       reportNumber: Boolean(raw.evidenceFields && raw.evidenceFields.reportNumber === true),
       actualDate: Boolean(raw.evidenceFields && raw.evidenceFields.actualDate === true),

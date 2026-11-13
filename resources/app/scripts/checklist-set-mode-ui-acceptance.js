@@ -73,6 +73,15 @@ let browser;
   await page.locator('[data-cpa-rule-set-parts]').selectOption('no');
   await page.locator('[data-cpa-apply-drafts]').click();
   assert.equal(await page.evaluate(id=>BLCpAssistant._state.rules.find(r=>r.id===id).separateSetParts,id),false);
+  const definitionWrite = await page.evaluate(async id=>{
+    const start=performance.now(),rule=BLCpAssistant._state.rules.find(r=>r.id===id);
+    const response=await fetch('/api/checklist-supplier/definitions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({definitions:[rule]})});
+    const body=await response.json();
+    return {ok:response.ok,elapsedMs:performance.now()-start,value:body.definitions?.[0]?.separateSetParts};
+  },id);
+  assert.equal(definitionWrite.ok,true);assert.equal(definitionWrite.value,false);
+  assert.ok(definitionWrite.elapsedMs<200,JSON.stringify(definitionWrite));
+  console.log('Shared definition write:',JSON.stringify(definitionWrite));
   await page.locator('[data-cpa-rule-set-parts]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(captureRoot,'checklist-set-mode.png')});
   assert.equal(await page.evaluate(()=>BLCpAssistant.setChecklistAnswer(__setDemo.analysis,__setDemo.id,'approved')),true);
