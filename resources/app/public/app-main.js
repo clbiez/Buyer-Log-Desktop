@@ -24031,7 +24031,8 @@ const KOL_COLS = [
   {k:'exFactory', label:'Ex-Factory', w:110, date:true, group:'Tarihler & Sevkiyat'},
   {k:'retail', label:'Retail', w:110, date:true, group:'Tarihler & Sevkiyat'},
   {k:'exToRetail', label:'Ex→Retail', w:90, exToRetail:true, group:'Tarihler & Sevkiyat'},
-  {k:'inStore', label:'In Store', w:110, date:true, group:'Tarihler & Sevkiyat'},
+  // MB Date (Model Budget tarihi): MB Week/Month bu tarihten LCW Merch Calendar ile türetilir.
+  {k:'inStore', label:'MB Date', w:110, date:true, group:'Tarihler & Sevkiyat'},
   {k:'targetPrice', label:'Target Price', w:100, money:true, group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
   {k:'fob', label:'FOB', w:90, money:true, formulaReadonly:true, group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
   // Endeksmatik bir fiyat alanını otomatik değiştirmez; hesaplanan benchmark
@@ -24307,6 +24308,15 @@ function kolScheduleFromWeekMonday(value){
   if(!period||!period.valid||!period.businessValid)return null;
   return {inStoreMonth:period.monthCode,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
 }
+// Yapıştırılan çıplak hafta numarası ("7") hedef satırın LCW yılını (yoksa bugünün
+// LCW yılını) kullanır; yıl taşıyan "2027-07" / "2027W07" olduğu gibi kalır.
+function kolWeekPasteCode(value,row){
+  const raw=norm(value),m=/^(\d{1,2})$/.exec(raw);if(!m)return raw;
+  const week=Number(m[1]);if(week<1||week>52)return raw;
+  const current=row?kolWeekCode(kolEffectiveValue(row,'inStoreWeek'),kolEffectiveValue(row,'inStore')):'';
+  const year=current?current.slice(0,4):(kolWeekCodeForDate(new Date()).slice(0,4)||String(new Date().getFullYear()));
+  return `${year}-${String(week).padStart(2,'0')}`;
+}
 function kolScheduleFromWeekCode(value){
   const code=kolWeekCode(value);if(!code)return null;
   const monday=kolMondayFromIsoWeek(Number(code.slice(0,4)),Number(code.slice(5)));return monday?kolScheduleFromWeekMonday(monday):null;
@@ -24343,6 +24353,27 @@ function kolApplyInStoreScheduleFields(row,schedule,{preserveKeys=null,applyReta
     }
   }
   return {row:current,changed};
+}
+// MB Date (inStore) kaynak tarihtir: değiştiğinde MB Week/Month, tarihin düştüğü
+// LCW Merch Calendar haftasından yeniden türetilir; yazılan tarihin kendisi korunur.
+// Takvim dışı tarihte dönem alanlarına dokunulmaz, yalnız Perakende bağımlılığı uygulanır.
+function kolScheduleFromInStoreDate(value){
+  const iso=toISODate(value);if(!iso)return null;
+  return kolScheduleFromWeekMonday(window.BLDateDimension?.parseDate?.(iso)||iso);
+}
+function kolApplyInStoreDateSchedule(row,inStoreValue,{preserveKeys=null}={}){
+  const keep=new Set(preserveKeys instanceof Set?preserveKeys:(Array.isArray(preserveKeys)?preserveKeys:[]));keep.add('inStore');
+  const schedule=kolScheduleFromInStoreDate(inStoreValue);
+  if(schedule)return kolApplyInStoreScheduleFields(row,schedule,{preserveKeys:keep,applyRetail:!keep.has('retail')});
+  let changed=0;
+  const iso=toISODate(inStoreValue);
+  if(iso&&!keep.has('retail')&&!kolCellLinkedToModel(row,'retail')){
+    const before=kolEffectiveValue(row,'retail');
+    kolApplyInStoreRetailDependency(row,iso);
+    const current=kolRows.find(item=>Number(item.id)===Number(row.id))||row;
+    if(!editableValuesEqual(before,kolEffectiveValue(current,'retail')))changed++;
+  }
+  return {row:kolRows.find(item=>Number(item.id)===Number(row.id))||row,changed};
 }
 function kolApplyInStoreSchedule(row,schedule){
   if(!row||!schedule||!kolWorkspaceCanEdit)return false;
@@ -29182,7 +29213,8 @@ function commitKolEditor(el, options={}){
   // düzenlensin ister dönem seçicisinden gelsin aynı helper kullanılır. Sevk Tarihi
   // Collection'da user-owned'dır ve hiçbir dependency tarafından yazılmaz.
   if(k==='inStore'){
-    if(val&&!deferDependencies)kolApplyInStoreRetailDependency(row,val);
+    // MB Date → MB Week/Month (+ Perakende) tek yerden türetilir.
+    if(val&&!deferDependencies)kolApplyInStoreDateSchedule(row,val);
     needsRerender=true;
   }
   else if(k==='retail'||k==='exFactory'){
@@ -29848,6 +29880,14 @@ function kolSpreadsheetRawValue(row,key){
   if(d.kind==='priceStrip'||d.kind==='landedSummary')return kolPriceViewCellText(d,row);
   if(d.kind==='priceDetail')return kolPriceDetailText(d.field,row);
   const c=d.col;if(!c)return '';if(c.exToRetail)return kolExToRetailDays(row);
+  // MB Week/Month panoya yeniden yapıştırılabilir kanonik biçimde gider: hafta
+  // yıl-hafta ("2027-07"; ekranda MB Date'ten türetilen hafta dahil), ay "ŞUBAT 2027".
+  // Eski "7" veya boş ham değer başka satıra yapıştırılamıyordu.
+  if(c.inStorePeriod){
+    const groups=window.BLCollectionModelGroups,stored=groups?.effectiveValue?groups.effectiveValue(row,c.k,kolRows):row[c.k];
+    if(c.inStorePeriod==='week'){const date=groups?.effectiveValue?groups.effectiveValue(row,'inStore',kolRows):row.inStore;return kolWeekCode(stored,date)||String(stored??'');}
+    return kolMonthDisplay(stored)||String(stored??'');
+  }
   if(c.checklist)return kolChecklistDisplay(kolEffectiveValue(row,c.k),row);
   if(c.endeksmatik)return endeksmatikExcelText(kolEffectiveEndeksmatikRow(row));
   if(c.ydLanded)return kolCopyMoney(kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded);
@@ -29918,7 +29958,7 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   if(c?.select&&raw){const match=c.select.find(v=>turknorm(String(v))===turknorm(raw));if(!match)return {ok:false,reason:'invalid-option'};value=match;}
   if(c?.inStorePeriod&&['inStoreWeek','inStoreMonth','inStore'].some(periodKey=>kolCellLinkedToModel(row,periodKey)))return {ok:false,reason:'linked'};
   if(c?.inStorePeriod==='month'&&raw){const schedule=kolScheduleFromMonthCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=kolMonthDisplay(schedule.inStoreMonth);}
-  if(c?.inStorePeriod==='week'&&raw){const schedule=kolScheduleFromWeekCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=schedule.inStoreWeek;}
+  if(c?.inStorePeriod==='week'&&raw){const schedule=kolScheduleFromWeekCode(kolWeekPasteCode(raw,row));if(!schedule)return {ok:false,reason:'invalid-period'};value=schedule.inStoreWeek;}
   if(c?.date&&raw&&!parseKeyboardDateToISO(raw))return {ok:false,reason:'invalid-date'};
   if(c?.qty&&raw&&!Number.isFinite(kolParseQuantityNum(raw)))return {ok:false,reason:'invalid-number'};
   if(meta.type==='number'&&raw&&!Number.isFinite(kolParseMoneyNum(raw)))return {ok:false,reason:'invalid-number'};
@@ -30199,13 +30239,13 @@ function kolSpreadsheetBatchEdit(operations,summary={}){
           const applied=kolApplyInStoreScheduleFields(row,schedule,{preserveKeys:preserve,applyRetail:true});
           dependentChanged+=applied.changed||0;row=applied.row||row;
         }
-      }else if(preserve.has('inStore')&&!preserve.has('retail')){
+      }else if(preserve.has('inStore')){
+        // MB Date yapıştırıldı/yazıldı: aynı satırda açıkça yazılmayan MB Week/Month
+        // ve Perakende bu tarihten türetilir (açık yazılan alanlar korunur).
         const finalInStore=toISODate(kolEffectiveValue(row,'inStore'));
-        if(finalInStore&&!kolCellLinkedToModel(row,'retail')){
-          const beforeRetail=kolEffectiveValue(row,'retail');
-          kolApplyInStoreRetailDependency(row,finalInStore);
-          row=kolRows.find(r=>String(r.id)===rowId)||row;
-          if(!editableValuesEqual(beforeRetail,kolEffectiveValue(row,'retail')))dependentChanged++;
+        if(finalInStore){
+          const applied=kolApplyInStoreDateSchedule(row,finalInStore,{preserveKeys:preserve});
+          dependentChanged+=applied.changed||0;row=applied.row||row;
         }
       }
     }
@@ -30997,7 +31037,7 @@ function kolImportHeaderAliases(){
   add('delType','DEL TYPE','DEL. TYPE','YUKLEME TIPI','YÜKLEME TİPİ');
   add('exFactory','EX FACTORY','EX-FACTORY','SEVK TARIHI','SEVK TARİHİ','YUKLEME TERMIN','YÜKLEME TERMİN');
   add('retail','RETAIL','RETAIL DATE','RETAIL TARIHI','RETAIL TARİHİ','PERAKENDE');
-  add('inStore','IN STORE','IN-STORE','MODEL BUTCE','MODEL BÜTÇE','MAGAZAYA GIRIS','MAĞAZAYA GİRİŞ');
+  add('inStore','IN STORE','IN-STORE','MB DATE','MB TARIHI','MB TARİHİ','MODEL BUTCE','MODEL BÜTÇE','MAGAZAYA GIRIS','MAĞAZAYA GİRİŞ');
   add('inStoreWeek','IN STORE WEEK','IN-STORE WEEK','MAGAZA HAFTA','MAĞAZA HAFTA','MAGAZA HAFTASI','MAĞAZA HAFTASI');
   add('inStoreMonth','IN STORE MONTH','MAGAZA AYI','MAĞAZA AYI');
   add('targetPrice','TARGET PRICE','HEDEF FIYAT','HEDEF FİYAT');
@@ -40820,7 +40860,7 @@ const KOL_EN_TR_DICT = {
   'Picture':'Görsel','Model Name':'Model Adı','Product Main Definition':'Ürün Ana Tanım','License':'Lisans','Category':'Kategori','Special Code':'Özel Kod','Line':'Line',
   'Order Type':'Sipariş Tipi','Colour Code':'Renk Kodu','Colour':'Renk','Fabric':'Kumaş','Fabric Supplier S6':'Kumaşçı S6','Fabric Price S6':'Kumaş Fiyatı S6','Fabric Supplier S7':'Kumaşçı S7','Fabric Price S7':'Kumaş Fiyatı S7','Fit':'Kalıp','Buying Sample':'Buying Numunesi','Quantity':'Adet','Licensor':'Lisans Veren',
   'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail':'Perakende','Ex→Retail':'Sevk→Perakende',
-  'In Store':'Mağazaya Giriş','In Store Week':'Model Bütçe Hafta','In Store Month':'Model Bütçe Ayı','Model Budget Week':'Model Bütçe Hafta','Model Budget Month':'Model Bütçe Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
+  'MB Date':'MB Tarihi','In Store':'Mağazaya Giriş','In Store Week':'Model Bütçe Hafta','In Store Month':'Model Bütçe Ayı','Model Budget Week':'Model Bütçe Hafta','Model Budget Month':'Model Bütçe Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
   'Supp. FOB':'Tedarikçi FOB','Royalty':'Royalti','Hologram Cost':'Hologram Maliyeti','FOB':'FOB',
   'Notes':'Notlar','Durum':'Durum','Status':'Durum',
   'Manufacturer':'Üretici','Best Price':'En İyi Fiyat',

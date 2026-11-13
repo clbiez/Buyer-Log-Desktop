@@ -46,7 +46,7 @@ test('period paste is normalized and cannot bypass the picker linked-field owner
   const validate=between(APP,'function kolSpreadsheetValidateValue(','function kolSpreadsheetMakeEditor');
   assert.match(validate,/c\?\.inStorePeriod&&\['inStoreWeek','inStoreMonth','inStore'\]\.some\(periodKey=>kolCellLinkedToModel\(row,periodKey\)\)/);
   assert.match(validate,/c\?\.inStorePeriod==='month'[\s\S]*?kolScheduleFromMonthCode\(raw\)[\s\S]*?kolMonthDisplay\(schedule\.inStoreMonth\)/);
-  assert.match(validate,/c\?\.inStorePeriod==='week'[\s\S]*?kolScheduleFromWeekCode\(raw\)[\s\S]*?value=schedule\.inStoreWeek/);
+  assert.match(validate,/c\?\.inStorePeriod==='week'[\s\S]*?kolScheduleFromWeekCode\(kolWeekPasteCode\(raw,row\)\)[\s\S]*?value=schedule\.inStoreWeek/);
 });
 
 test('multi-cell paste applies explicit values first, recomputes dependencies after, and preserves explicit Retail',()=>{
@@ -55,7 +55,9 @@ test('multi-cell paste applies explicit values first, recomputes dependencies af
   assert.ok(batch.indexOf('for(const op of validated)')<batch.indexOf('for(const info of periodByRow.values())'),'dependency pass must run after explicit writes');
   assert.match(batch,/preserve=explicitByRow\.get\(rowId\)\|\|new Set\(\)/);
   assert.match(batch,/kolApplyInStoreScheduleFields\(row,schedule,\{preserveKeys:preserve,applyRetail:true\}\)/);
-  assert.match(batch,/preserve\.has\('inStore'\)&&!preserve\.has\('retail'\)/);
+  // MB Date yapıştırması aynı satırda MB Week/Month ve Perakende'yi türetir; açık yazılanlar korunur.
+  assert.match(batch,/else if\(preserve\.has\('inStore'\)\)/);
+  assert.match(batch,/kolApplyInStoreDateSchedule\(row,finalInStore,\{preserveKeys:preserve\}\)/);
   assert.doesNotMatch(batch,/shipment|sevk/i,'paste dependency transaction must never auto-fill Shipment Date');
 });
 
@@ -117,7 +119,74 @@ test('explicit multi-column Retail wins over period recomputation',()=>{
   assert.match(helper,/!preserve\.has\('retail'\)/);
   const batch=between(APP,'function kolSpreadsheetBatchEdit(','function kolSpreadsheetSetColumnWidth');
   assert.match(batch,/explicitByRow\.get\(rowId\)/);
-  assert.match(batch,/preserve\.has\('inStore'\)&&!preserve\.has\('retail'\)/);
+  const dateHelper=between(APP,'function kolApplyInStoreDateSchedule(','function kolApplyInStoreSchedule(row,schedule){');
+  assert.match(dateHelper,/applyRetail:!keep\.has\('retail'\)/);
+  assert.match(dateHelper,/!keep\.has\('retail'\)&&!kolCellLinkedToModel\(row,'retail'\)/);
+});
+
+function loadDateScheduleHelpers(){
+  const source=between(APP,'function kolApplyInStoreScheduleFields(','function kolApplyInStoreSchedule(row,schedule){').trim();
+  return new Function('deps',`
+    let kolRows=deps.kolRows;
+    const kolCellLinkedToModel=deps.kolCellLinkedToModel;
+    const kolEffectiveValue=(r,k)=>r[k]??'';
+    const kolSetModelSharedField=(r,k,v)=>{r[k]=v;return r;};
+    const editableValuesEqual=(a,b)=>String(a??'')===String(b??'');
+    const kolMonthDisplay=v=>String(v||'');
+    const toISODate=v=>/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v||''))?String(v):'';
+    const kolScheduleFromWeekMonday=deps.kolScheduleFromWeekMonday;
+    const window={BLDateDimension:null};
+    const kolApplyInStoreRetailDependency=(r,iso)=>{const d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-14);r.retail=d.toISOString().slice(0,10);return true;};
+    ${source}
+    return {kolApplyInStoreDateSchedule};
+  `);
+}
+
+test('editing MB Date re-derives MB Week/Month and Retail while keeping the typed date',()=>{
+  const row={id:7,inStore:'2027-05-15',inStoreWeek:'2027-07',inStoreMonth:'202702',retail:''};
+  const seen=[];
+  const {kolApplyInStoreDateSchedule}=loadDateScheduleHelpers()({
+    kolRows:[row],kolCellLinkedToModel:()=>false,
+    kolScheduleFromWeekMonday:value=>{seen.push(value);return {inStoreWeek:'2027-19',inStoreMonth:'202705',inStore:'2027-05-10'};},
+  });
+  const result=kolApplyInStoreDateSchedule(row,'2027-05-15');
+  assert.deepEqual(seen,['2027-05-15']);
+  assert.equal(row.inStore,'2027-05-15','the MB Date itself is never moved to the week Monday');
+  assert.equal(row.inStoreWeek,'2027-19');
+  assert.equal(row.inStoreMonth,'202705');
+  assert.equal(row.retail,'2027-05-01');
+  assert.equal(result.changed,3);
+});
+
+test('MB Date derivation respects explicit pasted values and model-linked fields',()=>{
+  const row={id:8,inStore:'2027-05-15',inStoreWeek:'2027-30',inStoreMonth:'202707',retail:'2027-01-01'};
+  const {kolApplyInStoreDateSchedule}=loadDateScheduleHelpers()({
+    kolRows:[row],kolCellLinkedToModel:(_r,key)=>key==='inStoreMonth',
+    kolScheduleFromWeekMonday:()=>({inStoreWeek:'2027-19',inStoreMonth:'202705',inStore:'2027-05-10'}),
+  });
+  kolApplyInStoreDateSchedule(row,'2027-05-15',{preserveKeys:new Set(['inStore','retail'])});
+  assert.equal(row.inStoreWeek,'2027-19');
+  assert.equal(row.inStoreMonth,'202707','linked month is not overwritten');
+  assert.equal(row.retail,'2027-01-01','explicit Retail wins');
+  assert.equal(row.inStore,'2027-05-15');
+});
+
+test('MB Week/Month copy as canonical values and a bare pasted week number takes the target row year',()=>{
+  const raw=between(APP,'function kolSpreadsheetRawValue(','const KOL_TR_LANDED_COPY_PREFIX');
+  assert.match(raw,/c\.inStorePeriod==='week'[\s\S]*?kolWeekCode\(stored,date\)/);
+  assert.match(raw,/kolMonthDisplay\(stored\)/);
+  const source=between(APP,'function kolWeekPasteCode(','function kolScheduleFromWeekCode(');
+  const kolWeekPasteCode=new Function('norm','kolWeekCode','kolEffectiveValue','kolWeekCodeForDate',`${source};return kolWeekPasteCode;`)(
+    v=>String(v??'').trim(),
+    (value,date)=>value==='2026-50'?'2026-50':(date==='2027-02-15'?'2027-07':''),
+    (r,k)=>r[k]??'',
+    ()=>'2028-01',
+  );
+  assert.equal(kolWeekPasteCode('7',{inStore:'2027-02-15'}),'2027-07');
+  assert.equal(kolWeekPasteCode('3',{inStoreWeek:'2026-50'}),'2026-03');
+  assert.equal(kolWeekPasteCode('9',null),'2028-09');
+  assert.equal(kolWeekPasteCode('2027-11',{}),'2027-11');
+  assert.equal(kolWeekPasteCode('60',{}),'60','out-of-range numbers stay invalid');
 });
 
 test('pricing paste uses the exact manual price commit path so FOB/rule pricing is recomputed',()=>{

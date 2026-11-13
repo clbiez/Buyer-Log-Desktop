@@ -10,31 +10,35 @@ const app=read('public/app-main.js');
 const css=read('public/collection-spreadsheet.css');
 function between(src,a,b){const i=src.indexOf(a);assert.ok(i>=0,`missing ${a}`);const j=src.indexOf(b,i+a.length);assert.ok(j>i,`missing ${b}`);return src.slice(i,j);}
 
-test('plain left click uses the single-click pointer edit controller',()=>{
+// Ürün kararı (CP/Excel ile aynı): tek tık yalnız seçer, düzenleme çift tık/F2/yazma ile açılır.
+// Davranış testleri: tests/collection-double-click-edit.test.js.
+test('plain left click selects through the pointer controller; double click is the edit entry',()=>{
   const bind=between(sheet,'function bind(){','function init()');
   assert.match(bind,/kolSpreadsheetHandlePointerEdit\(e,td\)/);
-  assert.doesNotMatch(bind,/addEventListener\('dblclick'[\s\S]*beginEdit/);
+  assert.match(bind,/addEventListener\('dblclick',kolSpreadsheetHandleDoubleClick\)/);
+  const pointer=between(sheet,'function kolSpreadsheetHandlePointerEdit','function editorAtPoint');
+  assert.doesNotMatch(pointer,/beginEdit|focusEditor|markPointerEditing/);
 });
 
-test('single-click edit keeps native editors pointer-addressable for first-click caret/select behavior',()=>{
-  assert.match(css,/Single-click editing/);
+test('editors stay pointer-addressable once a cell is in edit mode',()=>{
+  assert.match(css,/Double-click editing/);
   assert.match(css,/#kolTable td \.editCell\{pointer-events:auto\}/);
   assert.doesNotMatch(css,/td:not\(\.kolSpreadsheetEditing\)[^\n]*\.editCell\{pointer-events:none\}/);
 });
 
 test('Shift click remains range selection and cannot enter edit mode',()=>{
   const fn=between(sheet,'function kolSpreadsheetHandlePointerEdit','function kolSpreadsheetResumePendingPointerEdit');
-  const shift=fn.slice(fn.indexOf('if(event.shiftKey)'),fn.indexOf('if(!editable)'));
+  const shift=fn.slice(fn.indexOf('if(event.shiftKey)'),fn.indexOf('if(directEditor&&state.editingCell===td'));
   assert.match(shift,/setActive\(td,\{extend:true\}\)/);
   assert.doesNotMatch(shift,/beginEdit/);
 });
 
-test('read-only/calculated cells select only and do not call beginEdit',()=>{
-  const fn=between(sheet,'function kolSpreadsheetHandlePointerEdit','function kolSpreadsheetResumePendingPointerEdit');
-  const ro=fn.slice(fn.indexOf('if(!editable)'),fn.indexOf('const identity='));
-  assert.match(ro,/setActive\(td\)/);
-  assert.doesNotMatch(ro,/beginEdit/);
-  assert.match(fn,/meta\?\.editable&&bridge\(\)\?\.canEdit/);
+test('read-only/calculated cells cannot be opened by double click or typing',()=>{
+  const dbl=between(sheet,'function kolSpreadsheetHandleDoubleClick','function kolSpreadsheetStartTypingEdit');
+  assert.match(dbl,/columnMeta\?\.\(td\.dataset\.key\)\?\.editable/);
+  assert.match(dbl,/bridge\(\)\?\.canEdit\?\.\(\)/);
+  const typing=between(sheet,'function kolSpreadsheetStartTypingEdit','function seedMultiFromRange');
+  assert.match(typing,/\?\.editable\)return false/);
 });
 
 test('buttons links pictures and row numbers retain special non-edit behavior',()=>{
@@ -48,7 +52,7 @@ test('pointer edit does not select-all while keyboard F2 keeps existing select b
   const begin=between(sheet,'function beginEdit','function pointerEditIdentity');
   assert.match(begin,/source='keyboard'/);
   assert.match(begin,/selectAll=source!==\'pointer\'/);
-  const pointer=between(sheet,'function kolSpreadsheetHandlePointerEdit','function kolSpreadsheetResumePendingPointerEdit');
+  const pointer=between(sheet,'function kolSpreadsheetHandleDoubleClick','function kolSpreadsheetStartTypingEdit');
   assert.match(pointer,/source:'pointer',selectAll:false/);
 });
 

@@ -15250,6 +15250,11 @@ html[data-ui-system="manifest"] #cpTable tbody td.blGridRangeCell,
 html[data-ui-system="manifest"] #ordersTable tbody td.blGridRangeCell {
   background-color:var(--ui-selected) !important;
 }
+/* Collection range / Ctrl multi-cell selection is visible like CP: the same theme
+   range tint; the active and editing cell keep their own selected surface + outline. */
+html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolSpreadsheetRangeCell:not(.kolSpreadsheetActiveCell):not(.kolSpreadsheetEditing) {
+  background-color:var(--ui-grid-range-bg) !important;
+}
 /* Smart Layout Studio shares Manifest surfaces, type and focus. */
 html[data-ui-system="manifest"] .lcwaiStudioSource h2{font:600 var(--ui-font-xl)/1.2 var(--ui-font-heading);color:var(--ui-text)}
 html[data-ui-system="manifest"] .lcwaiStudioThumb{background:var(--ui-surface-soft)}

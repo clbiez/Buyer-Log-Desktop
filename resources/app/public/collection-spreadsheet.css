@@ -8,9 +8,10 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable{--kol-spreadsheet-row-h:30px}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr{height:var(--kol-spreadsheet-row-h)}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td{position:relative}
-/* Single-click editing: real editors stay pointer-addressable so the browser can place
-   the caret/open native selects on the first click. Spreadsheet capture still guards
-   Shift-range selection, read-only cells, buttons, links and pictures. */
+/* Double-click editing (CP/Excel): the spreadsheet pointerdown capture cancels the
+   native mousedown, so a single click only selects/drags a range. Real editors stay
+   pointer-addressable so that, once a cell is in edit mode, clicks place the caret or
+   open native selects. Buttons, links and pictures keep their own behaviour. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td .editCell{pointer-events:auto}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;white-space:normal;pointer-events:none}
 .kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;min-width:0}

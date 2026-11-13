@@ -282,6 +282,64 @@
         "tr": "Bir hücreyi düzenledikten sonra ona bağlı diğer hücreler güncel görünmüyorsa, sayfalama alanının solundaki yenileme ikonuna tıklayın: tablo hesaplanan sütunlar ve toplamlarla birlikte yeniden çizilir, kaydırma konumu korunur. Veri yeniden çekilmez; filtre açıp kapatmaya gerek kalmaz.",
         "en": "If other cells that depend on a cell you edited do not look up to date, click the refresh icon left of the pagination: the table is redrawn with its calculated columns and totals, and the scroll position is kept. Data is not reloaded, and there is no need to toggle a filter."
       }
+    },
+    {
+      "id": "collection-mb-date-period",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "In Store sütunu artık MB Date; değişince MB Week ve MB Month güncellenir",
+        "en": "The In Store column is now MB Date; changing it updates MB Week and MB Month"
+      },
+      "body": {
+        "tr": "Koleksiyon’daki In Store tarih sütununun adı MB Date (Türkçe: MB Tarihi) oldu. MB Date elle yazıldığında veya yapıştırıldığında, tarihin düştüğü LCW Merch Calendar haftasından MB Week ve MB Month yeniden hesaplanır; Perakende tarihi de eskisi gibi 14 gün önceye ayarlanır. Aynı işlemde açıkça yazılan hafta/ay/perakende değerleri ve modele bağlı alanlar korunur.",
+        "en": "The In Store date column in Collection is renamed MB Date (Turkish: MB Tarihi). When MB Date is typed or pasted, MB Week and MB Month are recalculated from the LCW Merch Calendar week that contains the date; Retail is still set 14 days earlier. Week/month/retail values written explicitly in the same action and model-linked fields are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-mb-date-period.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda MB Tarihi sütunu ve her satırda bu tarihten türetilen Model Bütçe Hafta ve Ay değerleri",
+          "en": "Collection table with the MB Date column and the Model Budget Week and Month derived from it on each row"
+        },
+        "caption": {
+          "tr": "MB Tarihi 15.05.27 olan satırda hafta 19 ve ay MAYIS 2027 otomatik gelir.",
+          "en": "The row with MB Date 15.05.27 automatically gets week 19 and MAY 2027."
+        }
+      }
+    },
+    {
+      "id": "collection-cell-selection-double-click",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon’da CP gibi hücre seçimi ve çift tıkla düzenleme",
+        "en": "CP-style cell selection and double-click editing in Collection"
+      },
+      "body": {
+        "tr": "Tek tık hücreyi artık yalnız seçer; sürükleyerek aralık, Shift+tık ile genişletme ve Ctrl+tık ile çoklu hücre seçimi CP’deki gibi renkli görünür. Düzenleme çift tık, F2 veya seçili hücrede yazmaya başlamakla açılır. MB Week ve MB Month hücreleri kopyalanıp tek ya da çoklu satıra yapıştırılabilir: hafta yıl ile birlikte (ör. 2027-07) kopyalanır, yalnız MB Date’ten görünen hafta da dahil.",
+        "en": "A single click now only selects a cell; drag ranges, Shift+click extensions and Ctrl+click multi-cell selections are highlighted as in CP. Editing opens with a double click, F2 or by starting to type on the selected cell. MB Week and MB Month cells can be copied and pasted into one or many rows: the week is copied with its year (e.g. 2027-07), including a week shown only from MB Date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cell-selection-double-click.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda Model Bütçe Hafta ve Ay sütunlarında dört satırlık renkli aralık seçimi",
+          "en": "Collection table with a highlighted four-row range selection across the Model Budget Week and Month columns"
+        },
+        "caption": {
+          "tr": "Aralık seçimi CP ile aynı tema rengiyle görünür; Ctrl+C / Ctrl+V seçili hücrelere uygulanır.",
+          "en": "The range selection uses the same theme tint as CP; Ctrl+C / Ctrl+V apply to the selected cells."
+        }
+      }
     }
   ]
 }
