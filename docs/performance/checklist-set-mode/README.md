@@ -39,3 +39,5 @@ BUYER_LOG_STUDIO_CAPTURE_ROOT=/path/to/captures node resources/app/scripts/check
 ```
 
 Repeat the benchmark with 400 rows, alternating Main and candidate three times. Native/Electron/Windows/SMB and corporate upstream are unchanged and not measured; Chromium acceptance is not presented as native acceptance. Full regression: PASS, 1358 test files / 9347 passing tests / 65 skipped / 0 failures, 208.4 s. The 65 skips remain explicit; they are not counted as executed passes. Final i18n and release-note guards pass. CI status is recorded separately in the PR. TEST/STABLE are separate and are not requested.
+
+Final Main integration: `0ee78404` was merged after the full regression. It adds an LCW AI file-upload response fix and its tests, plus a separate release note. Checklist sources and measured paths are unchanged. The new LCW AI tests and final i18n/release-note guards are run after conflict resolution; PR CI checks the resulting merge head.
