@@ -68,6 +68,64 @@
           "en": "Actual Buyer Log UI; Pricing Desk request creation verified with isolated demo data."
         }
       }
+    },
+    {
+      "id": "endeksmatik-shared-target-adjustment",
+      "type": "feature",
+      "module": {
+        "tr": "Endeksmatik",
+        "en": "Endeksmatik"
+      },
+      "title": {
+        "tr": "Hedef düzeltme % Endeksmatik Setleri’nden tüm kullanıcılar için ayarlanır",
+        "en": "Target adjustment % is set for all users in Endeksmatik Sets"
+      },
+      "body": {
+        "tr": "Endeksmatik Setleri penceresindeki yeni “Hedef düzeltme %” sütunundan her setin düzeltme oranı değiştirilebilir. Ayar tüm kullanıcılara ortak yansır ve o setle yapılan yeni hesaplar bu değerle başlar; dosyadaki orijinal değer yanında gösterilir. Değeri boş bırakmak dosya değerine döndürür. Daha önce kaydedilmiş hesaplar kendi düzeltme değerlerini korur; model bazında elle değiştirme devam eder. Ayarı değiştirmek Endeksmatik yükleme yetkisi ister.",
+        "en": "A new “Target adj. %” column in the Endeksmatik Sets dialog lets you change the adjustment rate of each set. The setting is shared with all users and new calculations with that set start from it; the original workbook value is shown next to it. Leaving the value empty returns to the workbook value. Previously saved calculations keep their own adjustment, and per-model overrides still work. Changing it requires the Endeksmatik upload permission."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-shared-target-adjustment.png",
+        "alt": {
+          "tr": "Endeksmatik Setleri penceresinde Hedef düzeltme % sütunu: ortak ayar %2, dosya değeri %3",
+          "en": "Target adjustment % column in the Endeksmatik Sets dialog: shared setting 2%, workbook value 3%"
+        },
+        "caption": {
+          "tr": "Ortak ayar yapılmış sette “Ortak ayar · dosya %3”, ayarlanmamış sette “Dosyadan” yazar.",
+          "en": "A set with a shared setting shows “Shared setting · workbook 3%”; an unchanged set shows “From workbook”."
+        }
+      }
+    },
+    {
+      "id": "endeksmatik-delete-calculation",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Endeksmatik",
+        "en": "Collection · Endeksmatik"
+      },
+      "title": {
+        "tr": "Kayıtlı Endeksmatik hesabı silinebilir",
+        "en": "A saved Endeksmatik calculation can be deleted"
+      },
+      "body": {
+        "tr": "Koleksiyon’da Endeksmatik hesabı kaydedilmiş bir modelin Endeksmatik penceresinde “Hesabı sil” butonu çıkar. Onay sonrası modeldeki kayıtlı sonuç ve girdiler kaldırılır; işlem Geri Al ile geri getirilebilir. Yalnız görüntüleme yetkisi olan sayfada buton kapalıdır.",
+        "en": "In Collection, the Endeksmatik window of a model with a saved calculation now has a “Delete calculation” button. After confirmation the saved result and inputs are removed from the model; Undo brings them back. The button is disabled on view-only pages."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-delete-calculation.png",
+        "alt": {
+          "tr": "Kayıtlı hesabı olan demo modelin Endeksmatik penceresinde alt çubukta Hesabı sil butonu",
+          "en": "Delete calculation button in the footer of the Endeksmatik window for a demo model with a saved calculation"
+        },
+        "caption": {
+          "tr": "“Hesabı sil” yalnız kayıtlı bir Endeksmatik sonucu varsa görünür.",
+          "en": "“Delete calculation” appears only when a saved Endeksmatik result exists."
+        }
+      }
     }
   ]
 }

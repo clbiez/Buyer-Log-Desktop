@@ -6447,6 +6447,18 @@ app.patch('/api/endeksmatik/sets/:id', userAccess.requirePermission('manageModel
     res.json({ ok: true, set: meta });
   } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik seti güncellenemedi.'); }
 });
+// Hedef düzeltme % set başına ortak ayardır; null dosyadaki orijinal değere döner.
+app.put('/api/endeksmatik/sets/:id/adjustment', userAccess.requirePermission('manageModelConnections'), async (req, res) => {
+  try {
+    const actor = req.currentUser && (req.currentUser.displayName || req.currentUser.name || req.currentUser.id) || '';
+    const pct = req.body ? req.body.targetAdjustmentPct : null;
+    const status = await endeksmatik.setTargetAdjustment(req.params.id, pct, actor);
+    publishSharedMasterChange('endeksmatik', req);
+    const set = (status.sets || []).find(item => item.id === req.params.id) || null;
+    userAccess.appendAudit(req.currentUser, 'ENDEKSMATIK_SET_ADJUSTMENT', req.params.id, { targetAdjustmentPct: set ? set.targetAdjustmentPct : null, source: set ? set.targetAdjustmentSource : '' });
+    res.json(status);
+  } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik hedef düzeltme ayarı kaydedilemedi.'); }
+});
 app.delete('/api/endeksmatik/sets/:id', userAccess.requirePermission('manageModelConnections'), async (req, res) => {
   try {
     const status = await endeksmatik.deleteSet(req.params.id);

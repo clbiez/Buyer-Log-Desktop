@@ -24498,6 +24498,21 @@ function endeksmatikSourceBarHtml(set){
 /* Hedef düzeltme yüzdesinin ORİJİNAL değeri, yüklenen ENDEKSMATİK dosyasından
    gelir (v6.02). Boş bırakılırsa sunucu da aynı değere düşer; alan yalnız bu
    model için elle değiştirmek isteyenler içindir. */
+function endeksmatikAdjustmentLabel(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return '—';
+  const text=n.toLocaleString(appLang==='en'?'en-US':'tr-TR',{maximumFractionDigits:4});
+  return appLang==='en'?`${text}%`:`%${text}`;
+}
+function endeksmatikAdjustmentHelp(set,fallback){
+  const en=appLang==='en',value=endeksmatikAdjustmentLabel(set&&Number.isFinite(Number(set.targetAdjustmentPct))?set.targetAdjustmentPct:fallback);
+  if(set&&set.targetAdjustmentSource==='shared')return en
+    ?`Shared setting from Endeksmatik Sets (${value}; workbook ${endeksmatikAdjustmentLabel(set.workbookTargetAdjustmentPct)}); type another value to override it for this model.`
+    :`Endeksmatik Setleri’ndeki ortak ayardan gelir (${value}; dosya ${endeksmatikAdjustmentLabel(set.workbookTargetAdjustmentPct)}); bu model için başka bir değer yazarak değiştirebilirsiniz.`;
+  return en
+    ?`Comes from the ENDEKSMATIK workbook (${value}); type another value to override it for this model.`
+    :`ENDEKSMATİK dosyasından gelir (${value}); bu model için başka bir değer yazarak değiştirebilirsiniz.`;
+}
 function endeksmatikDefaultAdjustment(){
   const value=Number(endeksmatikStatus&&endeksmatikStatus.targetAdjustmentPct);
   return Number.isFinite(value)?value:0;
@@ -24651,6 +24666,8 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   const calendarSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const monthField=(name,label,value,help='')=>`<label class="endeksmatikField" data-em-month-wrap="${name}"><span>${escapeHtml(label)}</span><div class="endeksmatikMonthControl"><input type="text" autocomplete="off" data-em-field="${name}" value="${endeksmatikInputValue(kolMonthDisplay(value)||value)}" placeholder="${escapeHtml(en?'e.g. JULY 2026 / 202607':'örn. TEMMUZ 2026 / 202607')}"><button type="button" class="endeksmatikMonthPickerBtn" data-em-picker-button="${name}" title="${escapeHtml(en?'Choose month and year':'Ay ve yıl seç')}">${calendarSvg}</button><input type="month" class="endeksmatikNativeMonthPicker" data-em-picker="${name}" value="${endeksmatikMonthPickerValue(value)}"${pickerMin?` min="${pickerMin}"`:''}${pickerMax?` max="${pickerMax}"`:''} tabindex="-1" aria-hidden="true"></div>${help?`<small>${escapeHtml(help)}</small>`:''}</label>`;
   const clipboard=endeksmatikClipboardRead();
+  const savedEndeksmatik=mode==='collection'?kolEffectiveValue(row,'endeksmatikData'):null;
+  const hasSavedEndeksmatik=Boolean(savedEndeksmatik&&typeof savedEndeksmatik==='object'&&savedEndeksmatik.result);
   overlay.innerHTML=`<div class="endeksmatikModalCard">
     <div class="endeksmatikModalHead"><div><strong>Endeksmatik</strong><span>${escapeHtml(ctx.modelName||'-')}${ctx.orderCode?` · ${escapeHtml(ctx.orderCode)}`:''}</span></div><button type="button" class="verHistClose" data-em-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div>
     <div class="endeksmatikModalBody">
@@ -24692,9 +24709,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       <div class="endeksmatikPriceGrid">
         <label class="endeksmatikField"><span data-em-usd-label>${escapeHtml(en?'Previous overseas price (USD)':'Geçen YD fiyatı (USD)')}</span><div class="endeksmatikMoneyInput"><i>$</i><input type="text" inputmode="decimal" data-em-field="previousUsdPrice" value="${endeksmatikInputValue(ctx.previousUsdPrice)}" placeholder="0,00"></div><small>${escapeHtml(mode==='collection'?(en?'Previous Season FOB is only the default; manual entry is allowed.':'Previous Season FOB yalnız varsayılandır; manuel giriş serbesttir.'):(en?'Selected order FOB is only the default; manual entry is allowed.':'Seçili sipariş FOB’u yalnız varsayılandır; manuel giriş serbesttir.'))}</small></label>
         <label class="endeksmatikField"><span data-em-try-label>${escapeHtml(en?'Previous TR price (TRY)':'Geçen TR fiyatı (TRY)')}</span><div class="endeksmatikMoneyInput"><i>₺</i><input type="text" inputmode="decimal" data-em-field="previousTryPrice" value="${endeksmatikInputValue(ctx.previousTryPrice)}" placeholder="0,00"></div><small>${escapeHtml(en?'Optional manual reference price':'Opsiyonel manuel referans fiyat')}</small></label>
-        <label class="endeksmatikField"><span>${escapeHtml(en?'Target adjustment %':'Hedef düzeltme %')}</span><div class="endeksmatikMoneyInput"><i>%</i><input type="text" inputmode="decimal" data-em-field="adjustmentPct" value="${endeksmatikInputValue(ctx.adjustmentPct)}" placeholder="${escapeHtml(String(ctx.defaultAdjustmentPct))}" aria-label="${escapeHtml(en?'Adjustment rate percent':'Adjustment rate yüzde')}"></div><small>${escapeHtml(en
-          ? `Comes from the ENDEKSMATIK workbook (${ctx.defaultAdjustmentPct}%); type another value to override it for this model.`
-          : `ENDEKSMATİK dosyasından gelir (%${ctx.defaultAdjustmentPct}); bu model için başka bir değer yazarak değiştirebilirsiniz.`)}</small></label>
+        <label class="endeksmatikField"><span>${escapeHtml(en?'Target adjustment %':'Hedef düzeltme %')}</span><div class="endeksmatikMoneyInput"><i>%</i><input type="text" inputmode="decimal" data-em-field="adjustmentPct" value="${endeksmatikInputValue(ctx.adjustmentPct)}" placeholder="${escapeHtml(String(ctx.defaultAdjustmentPct))}" aria-label="${escapeHtml(en?'Adjustment rate percent':'Adjustment rate yüzde')}"></div><small data-em-adjustment-note>${escapeHtml(endeksmatikAdjustmentHelp(selectedSet,ctx.defaultAdjustmentPct))}</small></label>
         <label class="endeksmatikField endeksmatikRoyaltyField"><span>${escapeHtml(en?'Are royalty and hologram included in the prices above?':'Yukarıdaki fiyatlara Royalty ve Hologram dahil mi?')}</span>
           <select data-em-field="royaltyIncluded">
             <option value="0"${ctx.royaltyIncluded?'':' selected'}>${escapeHtml(en?'No — prices are net':'Hayır — fiyatlar masrafsız')}</option>
@@ -24720,7 +24735,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       </details>
       <div id="_endeksmatikResult" class="endeksmatikResultArea">${ctx.row&&ctx.row.endeksmatikData&&ctx.row.endeksmatikData.result?endeksmatikResultHtml(ctx.row.endeksmatikData.result):''}</div>
     </div>
-    <div class="endeksmatikModalFoot"><div class="endeksmatikCopyActions"><button type="button" class="tbtn" data-em-copy title="${escapeHtml(en?'Copy periods, prices and calculation settings; the target model will be recalculated with its own class.':'Dönem, fiyat ve hesap ayarlarını kopyalar; hedef model kendi klasmanıyla yeniden hesaplanır.')}">${escapeHtml(en?'Copy setup':'Hesabı kopyala')}</button><button type="button" class="tbtn" data-em-paste${clipboard?'':' disabled'}>${escapeHtml(en?'Apply copied setup':'Kopyalananı uygula')}</button></div><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-em-calc>${escapeHtml(mode==='collection'?(en?'Calculate & save benchmark':'Hesapla ve benchmarkı kaydet'):(en?'Calculate':'Hesapla'))}</button></div>
+    <div class="endeksmatikModalFoot"><div class="endeksmatikCopyActions"><button type="button" class="tbtn" data-em-copy title="${escapeHtml(en?'Copy periods, prices and calculation settings; the target model will be recalculated with its own class.':'Dönem, fiyat ve hesap ayarlarını kopyalar; hedef model kendi klasmanıyla yeniden hesaplanır.')}">${escapeHtml(en?'Copy setup':'Hesabı kopyala')}</button><button type="button" class="tbtn" data-em-paste${clipboard?'':' disabled'}>${escapeHtml(en?'Apply copied setup':'Kopyalananı uygula')}</button></div>${hasSavedEndeksmatik?`<button type="button" class="tbtn danger" data-em-delete-saved${kolWorkspaceCanEdit?'':' disabled'} title="${escapeHtml(en?'Removes the saved Endeksmatik result and inputs from this model. Undo is available.':'Bu modeldeki kayıtlı Endeksmatik sonucunu ve girdilerini kaldırır. Geri alınabilir.')}">${escapeHtml(en?'Delete calculation':'Hesabı sil')}</button>`:''}<button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-em-calc>${escapeHtml(mode==='collection'?(en?'Calculate & save benchmark':'Hesapla ve benchmarkı kaydet'):(en?'Calculate':'Hesapla'))}</button></div>
   </div>`;
   // Endeksmatik'in tarih bağlamında yalnız görünür metni adlandırılır;
   // data-em-field ve kayıtlı inStore anahtarları teknik olarak aynı kalır.
@@ -24881,11 +24896,21 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       if(!String(adjustmentInput.value||'').trim()||(lastAdjustmentDefault!=null&&current===lastAdjustmentDefault))adjustmentInput.value=String(nextDefault);
       adjustmentInput.placeholder=String(nextDefault);lastAdjustmentDefault=nextDefault;
     }
+    const adjustmentNote=overlay.querySelector('[data-em-adjustment-note]');if(adjustmentNote&&selectedSet)adjustmentNote.textContent=endeksmatikAdjustmentHelp(selectedSet,nextDefault);
     if(clearResult){const resultEl=overlay.querySelector('#_endeksmatikResult');if(resultEl)resultEl.innerHTML='';}
   };
   setSelect?.addEventListener('change',()=>updateSetUi({clearResult:true}));
   levelSelect?.addEventListener('change',()=>{const resultEl=overlay.querySelector('#_endeksmatikResult');if(resultEl)resultEl.innerHTML='';});
   updateSetUi();
+  overlay.querySelector('[data-em-delete-saved]')?.addEventListener('click',()=>{
+    if(mode!=='collection'||!kolRequireWorkspaceEdit())return;
+    const name=ctx.modelName||ctx.orderCode||'';
+    if(!window.confirm(en?`Delete the saved Endeksmatik calculation${name?` for ${name}`:''}? You can undo this.`:`${name?`${name} için `:''}kayıtlı Endeksmatik hesabı silinsin mi? Geri alabilirsiniz.`))return;
+    const current=kolRows.find(item=>String(item?.id)===String(row?.id))||row;
+    kolPushUndo();kolWriteGroupedStorageValue(current,'endeksmatikData',{});
+    saveKolRows();renderKol();close();
+    showToast(en?'Endeksmatik calculation deleted.':'Endeksmatik hesabı silindi.');
+  });
   overlay.querySelector('[data-em-copy]')?.addEventListener('click',()=>{
     let payload;try{payload=buildPayload();}catch(err){showToast(err.message);return;}
     const copied={schemaVersion:1,sourceModel:ctx.modelName||ctx.orderCode||'',copiedAt:new Date().toISOString(),priceReference:payload.priceReference||'previous',previousOrderMonth:payload.previousOrderMonth,previousInStoreMonth:payload.previousInStoreMonth,newOrderMonth:payload.newOrderMonth,newInStoreMonth:payload.newInStoreMonth,separateTryPeriods:payload.separateTryPeriods,previousTryOrderMonth:payload.previousTryOrderMonth,previousTryInStoreMonth:payload.previousTryInStoreMonth,previousUsdPrice:get('previousUsdPrice'),previousTryPrice:get('previousTryPrice'),adjustmentPct:get('adjustmentPct'),royaltyIncluded:payload.royaltyIncluded};
@@ -25090,6 +25115,7 @@ async function openEndeksmatikSetManager(){
       <td>${escapeHtml(set.sourceUpdatedAt||'—')}${set.pivotRefreshedAt?`<small>${escapeHtml((en?'pivot ':'pivot ')+String(set.pivotRefreshedAt).slice(0,10))}</small>`:''}</td>
       <td>${escapeHtml(String(set.uploadedAt||'').slice(0,16).replace('T',' ')||'—')}${set.uploadedBy?`<small>${escapeHtml(set.uploadedBy)}</small>`:''}</td>
       <td class="num">${escapeHtml(String(set.recordCount||0))}<small>${escapeHtml(`${kolMonthDisplay(set.firstMonth)||set.firstMonth||''} → ${kolMonthDisplay(set.lastMonth)||set.lastMonth||''}`)}</small></td>
+      <td class="endeksmatikSetAdjustment"><button type="button" class="tbtn" data-em-set-adjustment${canManage?'':' disabled'} title="${escapeHtml(en?'Shared for all users. New calculations with this set start from this value.':'Tüm kullanıcılar için ortaktır. Bu setle yapılan yeni hesaplar bu değerle başlar.')}">${escapeHtml(endeksmatikAdjustmentLabel(set.targetAdjustmentPct))}</button><small>${escapeHtml(set.targetAdjustmentSource==='shared'?(en?`Shared setting · workbook ${endeksmatikAdjustmentLabel(set.workbookTargetAdjustmentPct)}`:`Ortak ayar · dosya ${endeksmatikAdjustmentLabel(set.workbookTargetAdjustmentPct)}`):(en?'From workbook':'Dosyadan'))}</small></td>
       <td class="endeksmatikSetValidation">${usd||knownTl?`<span class="endeksmatikBadge ${v.reconciliationOk?'isGood':'isWarn'}">${escapeHtml(v.reconciliationOk?(en?`Verified · ${v.checks} checks`:`Doğrulandı · ${v.checks} kontrol`):knownTl?(en?'Formula verified · sample result unavailable':'Formül doğrulandı · örnek sonuç doğrulanamadı'):(en?'Not verified':'Doğrulanmadı'))}</span><small>${escapeHtml(knownTl?(en?'TL workbook · all four components':'TL çalışma kitabı · dört bileşen'):`${set.model} · parser v${set.parserVersion||1}`)}</small>${warningText.length?`<small title="${escapeHtml(warningText.join('\n'))}">${escapeHtml(knownTl?warningText.join(' '):en?`${warningText.length} warning(s) — hover for details`:`${warningText.length} uyarı — ayrıntı için üzerine gelin`)}</small>`:''}`:`<span class="endeksmatikBadge">${escapeHtml(en?'Legacy TRY model':'Eski TL modeli')}</span>`}</td>
       <td class="endeksmatikSetActions">${active?`<span class="endeksmatikBadge isGood">${escapeHtml(en?'Default':'Varsayılan')}</span>`:`<button type="button" class="tbtn" data-em-set-activate${canManage?'':' disabled'}>${escapeHtml(en?'Make default':'Varsayılan yap')}</button>`}${set.id!=='legacy'?`<button type="button" class="tbtn" data-em-set-rename${canManage?'':' disabled'}>${escapeHtml(en?'Rename':'Adlandır')}</button><button type="button" class="tbtn danger" data-em-set-delete${canManage?'':' disabled'}>${escapeHtml(en?'Delete':'Sil')}</button>`:''}</td>
     </tr>`;
@@ -25098,7 +25124,7 @@ async function openEndeksmatikSetManager(){
     <div class="endeksmatikModalHead"><div><strong>${escapeHtml(en?'Endeksmatik Sets':'Endeksmatik Setleri')}</strong><span>${escapeHtml(en?'Country/region workbooks. The default set is used unless a calculation chooses another one.':'Ülke/bölge dosyaları. Hesapta başka set seçilmedikçe varsayılan set kullanılır.')}</span></div><button type="button" class="verHistClose" data-em-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div>
     <div class="endeksmatikModalBody">
       <div class="endeksmatikNotice">${escapeHtml(en?'USD and supported S7/W6 TRY workbooks require their own formula contract. Available numeric Excel results are compared separately; missing results or invalid source dates remain visible as unverified. Each upload creates a separate set and preserves the original Legacy data.':'USD ve desteklenen S7/W6 TL dosyalarında kendi formül sözleşmesi aranır. Sayısal Excel sonuçları ayrıca karşılaştırılır; eksik sonuç veya geçersiz kaynak tarihi doğrulanmış sayılmaz. Her yükleme ayrı set oluşturur ve orijinal Legacy verisi korunur.')}</div>
-      <div class="endeksmatikComponentWrap"><table class="endeksmatikSetTable"><thead><tr><th>${escapeHtml(en?'Set':'Endeksmatik seti')}</th><th>${escapeHtml(en?'Region':'Bölge')}</th><th>${escapeHtml(en?'Season':'Sezon')}</th><th>${escapeHtml(en?'Workbook date':'Dosya tarihi')}</th><th>${escapeHtml(en?'Uploaded':'Yüklendi')}</th><th>${escapeHtml(en?'Classes':'Klasman')}</th><th>${escapeHtml(en?'Validation':'Doğrulama')}</th><th></th></tr></thead><tbody>${sets.map(rowHtml).join('')||`<tr><td colspan="8">${escapeHtml(en?'No Endeksmatik data yet.':'Henüz Endeksmatik verisi yok.')}</td></tr>`}</tbody></table></div>
+      <div class="endeksmatikComponentWrap"><table class="endeksmatikSetTable"><thead><tr><th>${escapeHtml(en?'Set':'Endeksmatik seti')}</th><th>${escapeHtml(en?'Region':'Bölge')}</th><th>${escapeHtml(en?'Season':'Sezon')}</th><th>${escapeHtml(en?'Workbook date':'Dosya tarihi')}</th><th>${escapeHtml(en?'Uploaded':'Yüklendi')}</th><th>${escapeHtml(en?'Classes':'Klasman')}</th><th>${escapeHtml(en?'Target adj. %':'Hedef düzeltme %')}</th><th>${escapeHtml(en?'Validation':'Doğrulama')}</th><th></th></tr></thead><tbody>${sets.map(rowHtml).join('')||`<tr><td colspan="9">${escapeHtml(en?'No Endeksmatik data yet.':'Henüz Endeksmatik verisi yok.')}</td></tr>`}</tbody></table></div>
     </div>
     <div class="endeksmatikModalFoot"><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Close':'Kapat')}</button><button type="button" class="tbtn" data-em-structure-report${canManage?'':' disabled'} title="${escapeHtml(en?'Reads a workbook on this computer and downloads a small report with masked values (headers, formulas, key overlap). Nothing is saved.':'Dosyayı bu bilgisayarda okur; değerleri maskeli küçük bir rapor indirir (başlıklar, formüller, anahtar örtüşmesi). Hiçbir şey kaydedilmez.')}">${escapeHtml(en?'Structure report':'Yapı raporu')}</button><button type="button" class="tbtn primary" data-em-set-upload${canManage?'':' disabled'}>${escapeHtml(en?'Upload new workbook':'Yeni dosya yükle')}</button></div>
   </div>`;
@@ -25124,6 +25150,14 @@ async function openEndeksmatikSetManager(){
     tr.querySelector('[data-em-set-rename]')?.addEventListener('click',async()=>{
       const label=await openHorizonTextInput({title:en?'Rename Endeksmatik set':'Endeksmatik setini adlandır',label:en?'Set name':'Set adı',initial:set&&set.label||'',confirmLabel:en?'Save':'Kaydet'});if(label==null)return;
       void call(`/api/endeksmatik/sets/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({label})},en?'Set renamed.':'Set adı güncellendi.');
+    });
+    tr.querySelector('[data-em-set-adjustment]')?.addEventListener('click',async()=>{
+      const workbook=endeksmatikAdjustmentLabel(set&&set.workbookTargetAdjustmentPct);
+      const raw=await openHorizonTextInput({title:en?`Target adjustment % · ${endeksmatikSetTitle(set)}`:`Hedef düzeltme % · ${endeksmatikSetTitle(set)}`,label:en?`Shared for all users. Leave empty to use the workbook value (${workbook}).`:`Tüm kullanıcılar için ortaktır. Dosyadaki değeri (${workbook}) kullanmak için boş bırakın.`,initial:set&&set.targetAdjustmentSource==='shared'?String(set.targetAdjustmentPct):'',maxLength:12,confirmLabel:en?'Save':'Kaydet'});
+      if(raw==null)return;
+      const value=raw===''?null:endeksmatikNumber(raw);
+      if(raw!==''&&!(Number.isFinite(value)&&value>-100&&value<100)){showToast(en?'Enter a number between -100 and 100.':'-100 ile 100 arasında bir sayı girin.');return;}
+      void call(`/api/endeksmatik/sets/${encodeURIComponent(id)}/adjustment`,{method:'PUT',body:JSON.stringify({targetAdjustmentPct:value})},value==null?(en?`Target adjustment reset to workbook value (${workbook}).`:`Hedef düzeltme dosya değerine döndü (${workbook}).`):(en?`Target adjustment set to ${endeksmatikAdjustmentLabel(value)} for all users.`:`Hedef düzeltme tüm kullanıcılar için ${endeksmatikAdjustmentLabel(value)} oldu.`));
     });
     tr.querySelector('[data-em-set-delete]')?.addEventListener('click',()=>{
       if(!window.confirm(en?`Delete “${endeksmatikSetTitle(set)}”? Saved results keep their values and will show “Update available”.`:`“${endeksmatikSetTitle(set)}” silinsin mi? Kayıtlı sonuçlar değerlerini korur ve “Yeni veri var” gösterir.`))return;

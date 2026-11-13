@@ -2364,6 +2364,7 @@ tfoot .collectionWeightedAverage strong{display:inline-block;min-width:0;max-wid
 .endeksmatikSetTable td:first-child{max-width:220px;white-space:normal;overflow-wrap:anywhere;}
 .endeksmatikSetTable td.endeksmatikSetValidation{min-width:200px;max-width:260px;white-space:normal;}
 .endeksmatikSetValidation small,.endeksmatikSetValidation .endeksmatikBadge,.endeksmatikSetTable td.num small{white-space:normal;overflow-wrap:anywhere;}
+.endeksmatikSetTable td.endeksmatikSetAdjustment{min-width:120px;white-space:normal;}
 .endeksmatikSetActions{white-space:nowrap;text-align:right!important;}.endeksmatikSetActions .tbtn{margin-left:4px;}
 .endeksmatikBadge{display:inline-block;padding:2px 7px;}
 @media(max-width:900px){.endeksmatikSetRow,.endeksmatikPriceGrid.isFour,.endeksmatikResultGrid.isFour{grid-template-columns:repeat(2,minmax(0,1fr));}}
