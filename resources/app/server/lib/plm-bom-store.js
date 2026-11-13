@@ -144,6 +144,8 @@ function normalizeEntry(raw, fallbackPlmId) {
     styleBomId: bomApi.coreId(raw && raw.styleBomId),
     isSetStyle,
     fetchedAt: text(raw && raw.fetchedAt, 80) || null,
+    // PLM okumasının başladığı an (ms). Eski kayıtlarda 0: sıralama koruması devre dışı.
+    bomReadAt: Math.max(0, Math.trunc(Number(raw && raw.bomReadAt)) || 0),
     sourceCreatedDate: text(raw && raw.sourceCreatedDate, 80) || null,
     sourceModifiedDate: text(raw && raw.sourceModifiedDate, 80) || null,
     fingerprint: text(raw && raw.fingerprint, 128),
@@ -257,12 +259,19 @@ function createStore(file = DEFAULT_FILE) {
     const current = load();
     // Önbellekteki paylaşılan nesne yazma başarısız olursa bozulmasın.
     const store = { ...current, models: { ...current.models } };
-    let written = 0;
+    let written = 0, stale = 0;
+    const writtenIds = [];
     for (const raw of Array.isArray(results) ? results : []) {
       const normalized = normalizeEntry({ ...raw, fetchedAt: raw && raw.fetchedAt || now });
       if (!normalized) continue;
+      /* Daha önce başlamış bir okuma (ör. kullanıcı işine yol verip iptal
+         edilen sessiz iş) geç kaydedilirse, o arada yazılmış daha taze okumayı
+         ezmez. Okuma zamanı taşımayan çağrı eski davranışla yazar. */
+      const existing = store.models[normalized.plmId];
+      if (normalized.bomReadAt && existing && Number(existing.bomReadAt) > normalized.bomReadAt) { stale += 1; continue; }
       store.models[normalized.plmId] = normalized;
       written += 1;
+      writtenIds.push(normalized.plmId);
     }
     if (Object.keys(store.models).length > MAX_MODELS) {
       throw Object.assign(new Error(`PLM BOM model sınırı aşıldı (${MAX_MODELS}).`), { statusCode: 413, code: 'PLM_BOM_LIMIT' });
@@ -273,7 +282,7 @@ function createStore(file = DEFAULT_FILE) {
       writeCompact(file, store);
       remember(store);
     }
-    return { written, revision: store._revision, updatedAt: store._updatedAt };
+    return { written, writtenIds, stale, revision: store._revision, updatedAt: store._updatedAt };
   }
   function publicPayload(store = load()) {
     return { models: store.models, count: Object.keys(store.models).length, revision: store._revision, updatedAt: store._updatedAt };

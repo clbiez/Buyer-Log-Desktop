@@ -697,15 +697,42 @@ async function restoreBackupFromFile(file) {
 // ---- Collection images ----
 const COLLECTION_IMAGES_INDEX = path.join(COLLECTION_IMAGES_ROOT, 'index.json');
 const COLLECTION_IMAGES_OPTIMIZATION = path.join(COLLECTION_IMAGES_ROOT, 'optimization-v1.json');
-function readCollectionImageIndex() {
+/* İNDEKS ÖNBELLEĞİ. getCollectionImage her kimlik için çağrılır (dağıtım
+   planı, ingest kararı, hover). Eskiden her çağrı index.json'u diskten okuyup
+   parse ediyordu: 20.000 görsellik depoda 129 modelin yerel planı ~2,8 sn,
+   1.000 model ~21 sn sunucu olay döngüsünü kilitliyordu. Artık dosya kimliği
+   (inode + boyut + mtime) değişmedikçe tek parse yapılır; kendi yazmalarımız
+   önbelleği ayrıca hemen düşürür. Önbellek yalnız birincil dosya geçerliyken
+   tutulur; .bak'a düşüş eskisi gibi her seferinde diskten okunur. */
+let collectionImageIndexCache = null;
+function collectionImageIndexSignature() {
+  try { const st = fs.statSync(COLLECTION_IMAGES_INDEX); return `${st.ino}:${st.size}:${st.mtimeMs}`; }
+  catch (_) { return ''; }
+}
+function cachedCollectionImageIndex() {
   ensureDir(COLLECTION_IMAGES_ROOT);
+  const signature = collectionImageIndexSignature();
+  if (signature && collectionImageIndexCache && collectionImageIndexCache.signature === signature) return collectionImageIndexCache;
+  collectionImageIndexCache = null;
   for (const file of [COLLECTION_IMAGES_INDEX, COLLECTION_IMAGES_INDEX + '.bak']) {
     if (!fs.existsSync(file)) continue;
-    try { const parsed = JSON.parse(fs.readFileSync(file, 'utf8')); if (Array.isArray(parsed)) return parsed; } catch (_) {}
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!Array.isArray(parsed)) continue;
+      const entry = { signature, items: parsed, byId: new Map(parsed.filter(item => item && item.id).map(item => [item.id, item])) };
+      if (signature && file === COLLECTION_IMAGES_INDEX) collectionImageIndexCache = entry;
+      return entry;
+    } catch (_) {}
   }
-  return [];
+  return { signature: '', items: [], byId: new Map() };
 }
-function writeCollectionImageIndex(items) { atomicWriteJson(COLLECTION_IMAGES_INDEX, items); }
+// Çağıranlar diziyi değiştirip yazar: önbellek paylaşılmaz, sığ kopya döner.
+function readCollectionImageIndex() { return cachedCollectionImageIndex().items.slice(); }
+function writeCollectionImageIndex(items) {
+  collectionImageIndexCache = null;
+  try { atomicWriteJson(COLLECTION_IMAGES_INDEX, items); }
+  finally { collectionImageIndexCache = null; }
+}
 // SVG bilerek dışarıda bırakılır: içine gömülü <script> barındırabilir ve
 // tarayıcı doğrudan /api/collection-images/:id üzerinden image/svg+xml olarak
 // açtığında origin içinde çalışabilir (stored XSS). Koleksiyon fotoğrafları
@@ -798,7 +825,7 @@ function completeCollectionImageOptimization() {
 }
 function getCollectionImage(id) {
   const clean = String(id || '').replace(/[^A-Za-z0-9_-]/g, '');
-  const item = readCollectionImageIndex().find(x => x.id === clean);
+  const item = cachedCollectionImageIndex().byId.get(clean);
   if (!item) return null;
   const full = resolveStoredFile(COLLECTION_IMAGES_ROOT, item.storedName);
   if (!fs.existsSync(full)) return null;

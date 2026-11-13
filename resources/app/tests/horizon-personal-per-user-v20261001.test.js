@@ -147,9 +147,10 @@ test('arayüz: varsayılan kaydetme kişiseldir; ortak kaydetme yalnız yetkiliy
   assert.match(code, /forgetLocalHorizonMirror/);
 });
 
-test('arayüz: yetki isteyen şablon ve eşleme düğmeleri yalnız yetkiliye görünür', () => {
-  assert.match(FILTER_UI, /\$\{canShare \? templateBar\(\) : ''\}/);
-  assert.match(FILTER_UI, /if \(context\.canShare === true\) void loadTemplates\(\)\.then\(render\);/);
+test('arayüz: yetki isteyen paylaşım ve eşleme düğmeleri yalnız yetkiliye görünür', () => {
+  // v2026-11-13: kişisel favori şeridi herkese; paylaş/paylaşılanı sil yalnız yetkiliye.
+  assert.match(FILTER_UI, /\$\{templateBar\(canShare\)\}/);
+  assert.match(FILTER_UI, /\$\{shared \|\| !canShare \? '' : `<button[^`]*data-share-template/);
   const fn = UI.match(/function openFilterEditor\(moduleId, sourceId(?:, slotOverride = null)?\) \{[\s\S]*?\n  \}/)[0];
   // v2026-10-30: yan yana kipte eşleme canlıdır; ayrı "eşle" düğmesi de çıkmaz.
   assert.match(fn, /mapFrom: \(\(\) => \{\s*(?:\/\/[^\n]*\n\s*)+if \(!model\.canManage \|\| paired\) return null;/);

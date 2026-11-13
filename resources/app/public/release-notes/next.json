@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-12",
+  "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "FOB lisans maliyeti kırılımı · Yalnız Fiyat Masası’na gönderme",
-    "en": "FOB licence cost breakdown · Send to the Pricing Desk only"
+    "tr": "Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri · Favori filtreler · Koleksiyon MB Date",
+    "en": "Silent PLM image and BOM completion · LCW AI file attachments · Favourite filters · Collection MB Date"
   },
   "summary": {
-    "tr": "Nakliye Kıyaslama'da Yurt Dışı FOB ve Yurt İçi Landed kartları FOB'a eklenen royalty ve hologramı gösterir. Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
-    "en": "In Shipping Comparison the Overseas FOB and Domestic Landed cards show the royalty and hologram added to FOB. Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
+    "tr": "Eksik model görselleri ile CP/Siparişler Artwork ve Fabric (PLM) alanları arka planda, hissettirmeden tamamlanır; PLM ve LCW AI oturumu düşünce sessizce yeniden bağlanır. LCW AI’a dosya ve görsel ekleme yeniden çalışır. Backlog ve Database filtreleri favori olarak kaydedilir; set modellerde parça takibi, tablolarda mini yeniden çiz butonu ve yalnız Fiyat Masası’na gönderme eklendi. Koleksiyon'da MB Tarihi, hafta/ay türetmesi, çoklu hücre seçimi ve klavye düzenlemesi iyileştirildi.",
+    "en": "Missing model images and the CP/Orders Artwork and Fabric (PLM) fields are completed silently in the background; PLM and LCW AI sessions reconnect silently when they drop. Attaching files and images to LCW AI works again. Backlog and Database filters can be saved as favourites; set models get per-part tracking, tables get a mini redraw button, and requests can be sent to the Pricing Desk only. Collection now supports MB Date week/month derivation, multi-cell selection and improved keyboard editing."
   },
   "changes": [
     {
@@ -66,6 +66,365 @@
         "caption": {
           "tr": "Gerçek Buyer Log arayüzü; izole demo verisiyle Fiyat Masası kaydı oluşturulduğu doğrulandı.",
           "en": "Actual Buyer Log UI; Pricing Desk request creation verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "row-note-copy-paste",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Satırlar arasında not kopyalama ve boş satırsız yapıştırma",
+        "en": "Copy notes between rows and paste without extra blank lines"
+      },
+      "body": {
+        "tr": "CP ve Siparişler tablolarındaki Not ve Ek Not hücrelerine satırlar arasında yapıştırma yapılabilir. Yapıştırma mevcut toplu kayıt ve geri alma akışını kullanır; hedef notun eski biçimlendirmesi yeni metni örtmez. Koleksiyon ve sipariş not editörlerinde yapıştırılan metnin başına veya sonuna gelen boş satırlar temizlenir; içerideki satır araları ve biçimlendirme korunur.",
+        "en": "Notes and Additional Note cells in CP and Orders accept paste between rows. Pasting uses the existing bulk save and undo flow; old target formatting no longer hides the new text. Collection and order note editors remove empty lines added around pasted content while preserving internal line breaks and formatting."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Düzeltme pano, kayıt ve geri alma davranışını değiştirir; arayüz düzeninde görsel değişiklik yoktur.",
+          "en": "This fix changes clipboard, save and undo behavior; the interface layout is unchanged."
+        }
+      }
+    },
+    {
+      "id": "corporate-session-auto-reconnect",
+      "type": "improvement",
+      "module": {
+        "tr": "Kurumsal Bağlantılar",
+        "en": "Corporate Connections"
+      },
+      "title": {
+        "tr": "PLM ve LCW AI oturumu düşünce kendiliğinden ve sessizce yeniden bağlanır",
+        "en": "PLM and LCW AI sessions reconnect on their own, silently, when they drop"
+      },
+      "body": {
+        "tr": "PLM (CoreNectum) ve LCW AI oturumu düştüğünde, süresi dolmak üzereyken veya ağ geri geldiğinde Buyer Log, kalıcı kurumsal oturumu kullanarak arka planda yeniden bağlanır; bağlanmak için komut vermeniz gerekmez. Pencere, uyarı veya giriş ekranı açılmaz; deneme başarısızsa artan aralıklarla yeniden denenir, ağ yokken denenmez. Süresi dolmuş PLM oturumu artık bağlı görünmez. Oturumu bilerek kapatırsanız siz yeniden bağlanana kadar otomatik bağlanma yapılmaz. OAB bu davranışa dahil değildir. Parola Buyer Log'a kaydedilmez.",
+        "en": "When the PLM (CoreNectum) or LCW AI session drops, is about to expire or the network comes back, Buyer Log reconnects in the background using your persistent corporate session; you no longer need to click connect. No window, warning or sign-in screen opens; failed attempts are retried at growing intervals and never while offline. An expired PLM session no longer shows as connected. If you disconnect on purpose, automatic reconnection stays off until you connect again. OAB is not included. Passwords are never stored by Buyer Log."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arka planda çalışan bir oturum yenilemesidir; ekranda yeni bir öğe yoktur, mevcut bağlantı göstergesi yalnız kendiliğinden güncellenir.",
+          "en": "This is a background session renewal; nothing new appears on screen, the existing connection indicator simply updates by itself."
+        }
+      }
+    },
+    {
+      "id": "lcwai-upload-file-id",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a dosya ve görsel ekleme yeniden çalışıyor",
+        "en": "Attaching files and images to LCW AI works again"
+      },
+      "body": {
+        "tr": "LCW AI dosya yükleme yanıtını değiştirdiği için (blobName yerine fileId) görselden arama ve LCW AI sohbetindeki ekler “Dosya LCW AI’a yüklenemedi” hatası veriyordu. Buyer Log artık yeni fileId biçimini kullanır; eski biçim de desteklenmeye devam eder.",
+        "en": "LCW AI changed its file upload response (fileId instead of blobName), so attachments in image search and LCW AI chat failed with “The file could not be uploaded to LCW AI”. Buyer Log now uses the new fileId format; the old format is still supported."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde değişiklik yok; düzeltme sunucunun LCW AI yükleme yanıtını işlemesindedir.",
+          "en": "No UI change; the fix is in how the server handles the LCW AI upload response."
+        }
+      }
+    },
+    {
+      "id": "checklist-set-mode",
+      "type": "feature",
+      "module": {
+        "tr": "Checklist",
+        "en": "Checklist"
+      },
+      "title": {
+        "tr": "Set modellerde tek durum veya ayrı parça takibi",
+        "en": "Single status or separate part tracking for sets"
+      },
+      "body": {
+        "tr": "Checklist ayarından set parçalarının A/B/C olarak ayrı takip edilip edilmeyeceğini seçebilirsiniz. Set parça sayısını elle 1 yaparak model için tek durum girebilirsiniz. Eski parça durumları ve kanıtları silinmez; parça takibine dönünce yeniden görünür. Excel ve test raporu aktarımı seçilen ayarı izler.",
+        "en": "Choose in each checklist whether set parts are tracked separately as A/B/C. Set the part count to 1 manually to enter a single status for the model. Previous part statuses and evidence are kept and reappear when part tracking is restored. Excel and test report imports follow the selected setting."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-set-mode.png",
+        "alt": {
+          "tr": "Checklist ayarında set modeller için tek durum seçimi",
+          "en": "Checklist setting for a single status on set models"
+        },
+        "caption": {
+          "tr": "Her checklistte parça takibi ayrı seçilebilir; model adedi 1 olarak da ayarlanabilir.",
+          "en": "Choose part tracking for each checklist independently, or set the model count to 1."
+        }
+      }
+    },
+    {
+      "id": "backlog-filter-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Analiz Filtreleri favori olarak kaydedilip tek tıkla uygulanır",
+        "en": "Analysis Filters can be saved as favourites and applied in one click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-filter-favorites.png",
+        "alt": {
+          "tr": "Backlog Analiz Filtreleri çekmecesinde Favoriler satırı: iki kayıtlı favori, aktif olan işaretli, sağda Yeni favori düğmesi",
+          "en": "Favourites row in the Backlog Analysis Filters drawer: two saved favourites, the active one ticked, New favourite button on the right"
+        },
+        "caption": {
+          "tr": "Aktif filtrelere uyan favori işaretlenir; favori silmek aktif filtreleri değiştirmez.",
+          "en": "The favourite matching the active filters is ticked; deleting a favourite leaves the active filters unchanged."
+        }
+      },
+      "body": {
+        "tr": "Analiz Filtreleri çekmecesinde seçtiğiniz filtre kombinasyonunu \"Favori olarak kaydet\" ile adlandırın. Favoriye tıklamak aktif filtrelerin yerine onu uygular ve tüm Backlog görünümleri ile çıktıları yenilenir. Aynı adla kaydetmek favoriyi onayınızla günceller. Favoriler kullanıcınıza özeldir.",
+        "en": "In the Analysis Filters drawer, name the filter combination you selected with \"Save as favourite\". Clicking a favourite applies it in place of the active filters and refreshes all Backlog views and exports. Saving with an existing name updates that favourite after confirmation. Favourites are personal to your user."
+      }
+    },
+    {
+      "id": "backlog-sub-manufacturer-breakdown",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog Genel Bakış Alt Üretici kırılımı artık tüm satırları boş göstermiyor",
+        "en": "Backlog Overview Sub-Manufacturer breakdown no longer shows every row as blank"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-sub-manufacturer-breakdown.png",
+        "alt": {
+          "tr": "Operasyon Dağılımı Alt Üretici kırılımında üretici adlarına göre ayrılmış çubuklar",
+          "en": "Operational Distribution Sub-Manufacturer breakdown with bars split by manufacturer name"
+        },
+        "caption": {
+          "tr": "DTR siparişlerde Alt Üretici = Üretici; Non-DTR siparişlerde girilen Alt Üretici, girilmemişse (boş).",
+          "en": "For DTR orders Sub-Manufacturer = Manufacturer; for Non-DTR orders the entered Sub-Manufacturer, or (blank) if none was entered."
+        }
+      },
+      "body": {
+        "tr": "Operasyon Dağılımı ve Backlog Report çıktısındaki Alt Üretici kırılımı sunucunun hesapladığı Alt Üretici değerini okumuyordu ve her satır (boş) altında toplanıyordu. Artık DTR siparişler Üretici adıyla, Non-DTR siparişler girilen Alt Üretici ile gruplanır; Alt Üretici girilmemiş Non-DTR siparişler (boş) olarak kalır.",
+        "en": "The Sub-Manufacturer breakdown in Operational Distribution and the Backlog Report export did not read the Sub-Manufacturer value computed by the server, so every row fell under (blank). DTR orders are now grouped by Manufacturer and Non-DTR orders by the entered Sub-Manufacturer; Non-DTR orders without a Sub-Manufacturer stay (blank)."
+      }
+    },
+    {
+      "id": "data-management-filter-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Database filtrelerinde favori ön ayarlar herkese açık",
+        "en": "Favourite presets for database filters are available to everyone"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-filter-favorites.png",
+        "alt": {
+          "tr": "Veri Yönetimi filtre düzenleyicisinde Favori ön ayarlar satırı: kaydedilmiş W26 Örme favorisi ve Favori olarak kaydet düğmesi",
+          "en": "Favourite presets row in the Data Management filter editor: the saved W26 Örme favourite and the Save as favourite button"
+        },
+        "caption": {
+          "tr": "Favoriye tıklamak koşulları doldurur; uygulamak için Kaydet'e basılır.",
+          "en": "Clicking a favourite fills the conditions; press Save to apply."
+        }
+      },
+      "body": {
+        "tr": "Veri Yönetimi filtre düzenleyicisinde mevcut koşulları \"Favori olarak kaydet\" ile adlandırıp saklayın; favoriye tıklayınca koşullar yüklenir, Kaydet ile uygulanır. Kişisel favoriler artık yönetim yetkisi olmayan kullanıcılara da açık ve yalnız sahibine görünür. Favori adı panelin içinde yazılır; masaüstü uygulamasında kaydetme penceresinin açılmaması sorunu giderildi. Favoriyi herkesle paylaşmak ve paylaşılanı silmek yine yönetim yetkisi ister.",
+        "en": "In the Data Management filter editor, name and keep the current conditions with \"Save as favourite\"; clicking a favourite loads its conditions and Save applies them. Personal favourites are now available to users without management permission and are visible only to their owner. The favourite name is typed inside the panel, fixing the save dialog that did not open in the desktop app. Sharing a favourite with everyone and deleting a shared one still require management permission."
+      }
+    },
+    {
+      "id": "table-redraw-button",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP Tracker · Siparişler",
+        "en": "Collection · CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Tabloyu yeniden çizmek için mini yenileme butonu",
+        "en": "Mini button to redraw the table"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-redraw-button.png",
+        "alt": {
+          "tr": "CP Tracker araç satırının sağında, satır sayısı seçicisinin solundaki yenileme ikonu",
+          "en": "Refresh icon at the right of the CP Tracker toolbar, left of the row-count selector"
+        },
+        "caption": {
+          "tr": "Sayfalama alanının solundaki ikon tabloyu filtrelere dokunmadan yeniden hesaplayıp çizer.",
+          "en": "The icon left of the pagination recalculates and redraws the table without touching filters."
+        }
+      },
+      "body": {
+        "tr": "Bir hücreyi düzenledikten sonra ona bağlı diğer hücreler güncel görünmüyorsa, sayfalama alanının solundaki yenileme ikonuna tıklayın: tablo hesaplanan sütunlar ve toplamlarla birlikte yeniden çizilir, kaydırma konumu korunur. Veri yeniden çekilmez; filtre açıp kapatmaya gerek kalmaz.",
+        "en": "If other cells that depend on a cell you edited do not look up to date, click the refresh icon left of the pagination: the table is redrawn with its calculated columns and totals, and the scroll position is kept. Data is not reloaded, and there is no need to toggle a filter."
+      }
+    },
+    {
+      "id": "silent-missing-image-complete",
+      "type": "feature",
+      "module": {
+        "tr": "Model Görselleri",
+        "en": "Model Images"
+      },
+      "title": {
+        "tr": "Eksik model görselleri arka planda, hissettirmeden tamamlanır",
+        "en": "Missing model images are completed quietly in the background"
+      },
+      "body": {
+        "tr": "Görseli olmayan modellerin görselleri; açık alt detay raporlarında (LFL, Sezon karşılaştırma, Backlog detayı, Pricing History vb.) ve CP / Orders tablolarında ekranda görünen satırlarda, siz uygulamayı kullanmıyorken küçük paketlerle tamamlanır. Pencere, bildirim veya ilerleme çubuğu açılmaz; tablo yeniden çizilmez, kaydırma ve seçim korunur. Sıra LOCAL → SHARED → PLM'dir; elle konmuş görsel ezilmez. PLM'de bulunamayan model 24 saat yeniden istenmez. Koleksiyon ana tablosu, model dosyaları ve QTX kapsam dışıdır. Görsel Boyut Limiti penceresinden kapatılabilir.",
+        "en": "Images for models without one are completed in small batches while you are not using the app, in open detail reports (LFL, Season comparison, Backlog detail, Pricing History, etc.) and in the rows visible on screen in the CP / Orders tables. No window, notification or progress bar opens; the table is not redrawn and scrolling and selection are kept. The order is LOCAL → SHARED → PLM and manually set images are never overwritten. A model not found in PLM is not requested again for 24 hours. The Collection main table, model files and QTX are excluded. It can be turned off in the Image Size Limit window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "silent-missing-image-complete.png",
+        "alt": {
+          "tr": "Görsel Boyut Limiti penceresinde açık durumdaki 'Eksik görselleri arka planda tamamla' anahtarı",
+          "en": "The 'Complete missing images in the background' switch turned on in the Image Size Limit window"
+        },
+        "caption": {
+          "tr": "Anahtar varsayılan olarak açıktır; kapatıldığında arka planda hiçbir görsel isteği gönderilmez.",
+          "en": "The switch is on by default; when turned off, no background image request is sent."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-silent-plm-bom",
+      "type": "feature",
+      "module": {
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
+      },
+      "title": {
+        "tr": "CP ve Siparişler'de Artwork ve Fabric (PLM) arka planda güncel kalır",
+        "en": "Artwork and Fabric (PLM) in CP and Orders stay up to date in the background"
+      },
+      "body": {
+        "tr": "Buyer Log, açılıştan birkaç dakika sonra ve yalnız siz uygulamayı kullanmıyorken, CP ve Siparişler'deki modellerin PLM BOM bilgisini günde en fazla bir kez sessizce okur. Yalnız değişen Artwork Detail ve Fabric (PLM) hücreleri yerinde güncellenir; tablo yeniden çizilmez, kaydırma ve seçim korunur. Uyarı, ilerleme veya Operasyon Merkezi açılmaz; siz bir PLM işi başlattığınızda arka plan işi hemen yol verir. LCW AI kullanılmaz: AI gerektiren baskı/Set Style özetleri bir sonraki elle PLM senkronunuzda tamamlanır. Koleksiyon satırlarına, görsellere ve model dosyalarına dokunulmaz. PLM Kullanıcı Girişi penceresinden kapatılabilir.",
+        "en": "A few minutes after start-up and only while you are not using the app, Buyer Log silently reads the PLM BOM of the models in CP and Orders, at most once a day. Only changed Artwork Detail and Fabric (PLM) cells are updated in place; the table is not redrawn and scrolling and selection are kept. No alert, progress or Operations Center appears, and the background work yields as soon as you start a PLM job. LCW AI is not used: print/Set Style summaries that need AI are completed in your next manual PLM sync. Collection rows, images and model files are not touched. It can be turned off in the PLM User Sign-In window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-silent-plm-bom.png",
+        "alt": {
+          "tr": "PLM Kullanıcı Girişi penceresinde, varsayılan olarak işaretli \"CP / Orders Artwork ve Fabric bilgisini arka planda güncel tut\" seçeneği",
+          "en": "The \"Keep CP / Orders Artwork and Fabric up to date in the background\" option, checked by default, in the PLM User Sign-In window"
+        },
+        "caption": {
+          "tr": "Arka plan güncellemesi varsayılan olarak açıktır; işaret kaldırılarak kapatılabilir.",
+          "en": "Background updating is on by default; clear the checkbox to turn it off."
+        }
+      }
+    },
+    {
+      "id": "overview-collection-drill-month-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Genel Bakış Koleksiyon grafiğinden açılan tablo artık boş gelmiyor",
+        "en": "Collection table opened from the Overview chart is no longer empty"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-collection-drill-month-filter.png",
+        "alt": {
+          "tr": "Genel Bakış'tan Haziran 2027 · Pending File ile açılan Koleksiyon tablosunda eşleşen model listeleniyor",
+          "en": "Collection table opened from Overview with June 2027 · Pending File lists the matching model"
+        },
+        "caption": {
+          "tr": "Grafikten açılan ay ve statü filtresi Koleksiyon tablosundaki modelleri doğru gösterir.",
+          "en": "The month and status filter opened from the chart shows the matching Collection models."
+        }
+      },
+      "body": {
+        "tr": "Aynı ay farklı yazımlarla girildiğinde (ör. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\") Genel Bakış Koleksiyon kartı artık tek satırda toplar. Ay satırına veya statü dilimine tıklayınca açılan Koleksiyon filtresi tablodaki değerle eşleşir; tablo boş gelmez.",
+        "en": "When the same month is entered in different spellings (e.g. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\"), the Overview Collection card now groups it into one row. Clicking a month row or status segment opens a Collection filter that matches the table values, so the table is no longer empty."
+      }
+    },
+    {
+      "id": "collection-mb-date-period",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "In Store sütunu artık MB Date; değişince MB Week ve MB Month güncellenir",
+        "en": "The In Store column is now MB Date; changing it updates MB Week and MB Month"
+      },
+      "body": {
+        "tr": "Koleksiyon’daki In Store tarih sütununun adı MB Date (Türkçe: MB Tarihi) oldu. MB Date elle yazıldığında veya yapıştırıldığında, tarihin düştüğü LCW Merch Calendar haftasından MB Week ve MB Month yeniden hesaplanır; Perakende tarihi de eskisi gibi 14 gün önceye ayarlanır. Aynı işlemde açıkça yazılan hafta/ay/perakende değerleri ve modele bağlı alanlar korunur.",
+        "en": "The In Store date column in Collection is renamed MB Date (Turkish: MB Tarihi). When MB Date is typed or pasted, MB Week and MB Month are recalculated from the LCW Merch Calendar week that contains the date; Retail is still set 14 days earlier. Week/month/retail values written explicitly in the same action and model-linked fields are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-mb-date-period.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda MB Tarihi sütunu ve her satırda bu tarihten türetilen Model Bütçe Hafta ve Ay değerleri",
+          "en": "Collection table with the MB Date column and the Model Budget Week and Month derived from it on each row"
+        },
+        "caption": {
+          "tr": "MB Tarihi 15.05.27 olan satırda hafta 19 ve ay MAYIS 2027 otomatik gelir.",
+          "en": "The row with MB Date 15.05.27 automatically gets week 19 and MAY 2027."
+        }
+      }
+    },
+    {
+      "id": "collection-cell-selection-double-click",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon’da CP gibi hücre seçimi ve çift tıkla düzenleme",
+        "en": "CP-style cell selection and double-click editing in Collection"
+      },
+      "body": {
+        "tr": "Tek tık hücreyi artık yalnız seçer; sürükleyerek aralık, Shift+tık ile genişletme ve Ctrl+tık ile çoklu hücre seçimi CP’deki gibi renkli görünür. Düzenleme çift tık, F2 veya seçili hücrede yazmaya başlamakla açılır. MB Week ve MB Month hücreleri kopyalanıp tek ya da çoklu satıra yapıştırılabilir: hafta yıl ile birlikte (ör. 2027-07) kopyalanır, yalnız MB Date’ten görünen hafta da dahil. Klavyede yön tuşları, Tab veya Enter ile gidilen düzenlenebilir hücre içerik seçili olarak giriş modunda açılır; yön tuşları yazılan değeri kaydedip komşu hücreye geçer. Hesaplanan, dönem, onay kutusu ve checklist hücreleri yalnız seçilir. F2 veya çift tık tam düzenlemeye geçer; yön tuşları metin imlecini hareket ettirir.",
+        "en": "A single click now only selects a cell; drag ranges, Shift+click extensions and Ctrl+click multi-cell selections are highlighted as in CP. Editing opens with a double click, F2 or by starting to type on the selected cell. MB Week and MB Month cells can be copied and pasted into one or many rows: the week is copied with its year (e.g. 2027-07), including a week shown only from MB Date. Navigating to an editable cell with the arrow keys, Tab or Enter opens it in entry mode with its contents selected; arrow keys save the typed value and move to the adjacent cell. Calculated, period, checkbox and checklist cells remain selection-only. F2 or double-click switches to full editing, where arrow keys move the text cursor."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cell-selection-double-click.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda Model Bütçe Hafta ve Ay sütunlarında dört satırlık renkli aralık seçimi",
+          "en": "Collection table with a highlighted four-row range selection across the Model Budget Week and Month columns"
+        },
+        "caption": {
+          "tr": "Aralık seçimi CP ile aynı tema rengiyle görünür; Ctrl+C / Ctrl+V seçili hücrelere uygulanır.",
+          "en": "The range selection uses the same theme tint as CP; Ctrl+C / Ctrl+V apply to the selected cells."
         }
       }
     },

@@ -91,6 +91,24 @@
     }
     return registryMap;
   };
+  /* Artımlı yayın: sessiz görsel tamamlama yalnız değişen birkaç anahtarı
+     getirir. Tüm haritayı yeniden indekslemek (on binlerce anahtar) ana iş
+     parçacığında gereksiz bir tur olurdu. null = anahtar kaldırıldı. */
+  const patchRegistryMap=patch=>{
+    let changed=0;
+    for(const [key,value] of Object.entries(patch&&typeof patch==='object'?patch:{})){
+      // Harita uygulama durumuyla aynı nesne olabilir: değer zaten yazılmış
+      // olsa bile adlı-renk indeksi her durumda güncellenir.
+      if(value===null||value===undefined)delete registryMap[key];
+      else registryMap[key]=String(value);
+      changed++;
+      const split=key.indexOf('|name:');if(split<0)continue;
+      const base=key.slice(0,split),keys=(registryNamed.get(base)||[]).filter(item=>item!==key);
+      if(Object.prototype.hasOwnProperty.call(registryMap,key))keys.push(key);
+      if(keys.length)registryNamed.set(base,keys);else registryNamed.delete(base);
+    }
+    return changed;
+  };
   /* TEK GÖRSEL = TEK URL. /api/cp-images/:id ve /api/collection-images/:id
      aynı dosyayı sunar; Koleksiyon satırları ayrıca ?v=<updatedAt> taşıyordu.
      Aynı görsel CP, Orders, Koleksiyon ve Quotations'ta farklı URL'lerle
@@ -297,5 +315,5 @@
     return true;
   }
   const stats=()=>({thumbnailMemoryEntries:thumbnailMemory.size,originalMemoryEntries:originalMemory.size,thumbnailInFlight:thumbnailInFlight.size,originalInFlight:originalInFlight.size});
-  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
+  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,patchRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
 });

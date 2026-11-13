@@ -2,6 +2,7 @@
 
 const plmBomSync = require('../lib/plm-bom-sync');
 const plmBomStore = require('../lib/plm-bom-store');
+const plmBomSilentSync = require('../lib/plm-bom-silent-sync');
 const setStyleApi = require('../lib/corenectum-set-style-api');
 const coreNectumApiSettings = require('../lib/corenectum-api-settings');
 
@@ -121,6 +122,44 @@ app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp'
       updatedAt: store._updatedAt || null,
     });
   } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
+});
+
+/* CP / Orders sessiz arka plan BOM tazelemesi (lib/plm-bom-silent-sync).
+   Yalnız istemci zamanlayıcısı (public/cp-plm-silent-bom.js) çağırır: plan
+   CoreNectum'a gitmez; run sessiz başlık ister, LCW AI kullanmaz, Koleksiyon
+   satırlarına ve model dosyası/görsellere dokunmaz. */
+const silentBomService = plmBomSilentSync.createSilentBomService({
+  ledger: plmBomSilentSync.createSilentScanLedger(),
+  withPlmJob,
+  plmJobs,
+  tokenReady: userId => {
+    const status = coreNectumApiSettings.publicSettings(userId);
+    return Boolean(status && status.configured && !status.expired && !status.rejected);
+  },
+  collectStyleLinks: (ownerId, items, options) => agentBrowserConnector.collectCoreNectumStyleLinks(ownerId, items, { ...getModelImageSettings(), ...options }),
+  syncPlmBoms: (records, options) => plmBomSync.syncPlmBoms(records, options),
+});
+function silentPlmIds(body) {
+  const raw = Array.isArray(body && body.plmIds) ? body.plmIds : null;
+  return raw ? [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 5000) : null;
+}
+app.post('/api/plm-sync/bom/silent/plan', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '256kb' }), (req, res) => {
+  try {
+    const plmIds = silentPlmIds(req.body);
+    if (!plmIds) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    res.set('Cache-Control', 'no-store').json(silentBomService.plan(req.currentUser, plmIds));
+  } catch (err) { apiError(res, err, 'Sessiz PLM BOM planı okunamadı.'); }
+});
+app.post('/api/plm-sync/bom/silent/run', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '64kb' }), async (req, res) => {
+  try {
+    // Kullanıcı işi gibi çalışıp başka sessiz işleri iptal etmesin: sessiz başlık zorunlu.
+    if (!(deps.plmPriority && deps.plmPriority.isBackgroundRequest(req))) {
+      return res.status(400).json({ error: 'Bu uç yalnız sessiz arka plan isteği kabul eder.', code: 'PLM_SILENT_HEADER_REQUIRED' });
+    }
+    const plmIds = silentPlmIds(req.body);
+    if (!plmIds) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    res.set('Cache-Control', 'no-store').json(await silentBomService.run(req.currentUser, plmIds, { request: req }));
+  } catch (err) { apiError(res, err, 'Sessiz PLM BOM tazelemesi yapılamadı.'); }
 });
 
 /* PLM Sync sırasında saklanan son normalize BOM analizi. Bu uç yalnız
@@ -331,6 +370,9 @@ return {...fetchService,technicalSheets:{prepare:prepareTechnicalSheetItems,hand
 function createPlmFetchService(deps){
   const {normalizePlmId,setModelOperationProgress,withPlmJob,agentBrowserConnector,getModelImageSettings,plmJobs,upsertPlmStyleLinks,userAccess,clearModelOperationProgress}=deps;
   async function fetch(profile,input={}, {request,assertAuthority=()=>{},allowAi=false}={}){
+  /* Sessiz (arka plan) istek: kullanıcının buton ilerleme alanına yazmaz,
+     temizlemez; doğan iş ve ikinci faz BOM işi "background" kalır. */
+  const background=Boolean(deps.plmPriority&&deps.plmPriority.isBackgroundRequest(request));
   try {
      const requestedScope=String(input.scope||'koleksiyon');
      const scope=['koleksiyon','cp','orders'].includes(requestedScope)?requestedScope:'koleksiyon';
@@ -349,7 +391,7 @@ function createPlmFetchService(deps){
      // selectedOnly modunda CoreNectum Style List'teki mevcut DOM checkbox'ları
      // connector okur; istemciden PLM ID listesi beklenmez.
      const items = selectedOnly ? [] : plmIds.map(plmId => ({ plmId, needImage: false }));
-    setModelOperationProgress(profile.id, { kind: 'plm-sync', phase: 'PLM verisi aranıyor', current: 0, total: items.length, model: '' });
+    setModelOperationProgress(profile.id, { kind: 'plm-sync', phase: 'PLM verisi aranıyor', current: 0, total: items.length, model: '' },{background});
     /* İş kaydı: bu iş Koleksiyon kapsamına yazılır, böylece CP/Orders
        ekranlarında görünmez ama sayfa değişince de durmaz. */
     const fetchRun = await withPlmJob(request||{currentUser:profile}, {
@@ -362,7 +404,7 @@ function createPlmFetchService(deps){
          language,
          isCancelled: job.cancelled,
          onProgress: progress => {
-           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
+           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress },{background});
            job.report({
              phase: progress && progress.phase,
              processed: progress && progress.current,
@@ -382,7 +424,7 @@ function createPlmFetchService(deps){
          language,
          isCancelled: job.cancelled,
          onProgress: progress => {
-           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
+           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress },{background});
            job.report({
              phase: progress && progress.phase,
              processed: progress && progress.current,
@@ -463,7 +505,7 @@ function createPlmFetchService(deps){
     try { styleLinks = upsertPlmStyleLinks(collected.links, profile); } catch (_) {}
     // Kullanıcı ilk fazı durdurduysa arka plan BOM işi de başlatılmaz.
     const bomJob = backgroundBom && !(fetchRun.job && fetchRun.job.status === 'cancelled') && Array.isArray(collected.backgroundRecords) && collected.backgroundRecords.length
-      ? startBackgroundBom(profile, collected.backgroundRecords, { scope, language, allowAi, assertAuthority })
+      ? startBackgroundBom(profile, collected.backgroundRecords, { scope, language, allowAi, assertAuthority, background })
       : null;
     userAccess.appendAudit(profile, 'PLM_SYNC_FETCH', 'corenectum', {
       scope, requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
@@ -486,7 +528,7 @@ function createPlmFetchService(deps){
       styleLinks, jobId: fetchRun.job.id,
     };
 
-  }finally{clearModelOperationProgress(profile.id);}
+  }finally{clearModelOperationProgress(profile.id,{background});}
   }
 
   /* Faz 2: BOM + LCW AI arka plan işi. HTTP isteğine bağlı değildir; ilerleme
@@ -494,19 +536,26 @@ function createPlmFetchService(deps){
      ile izleyip bitince Artwork/Fabric projeksiyonunu tazeler. Kullanıcının
      düğme ilerlemesine (setModelOperationProgress) yazmaz; o alan o anda
      başka bir işleme ait olabilir. */
-  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority, authWait = deps.bomAuthWait }) {
+  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority, background = false, authWait = deps.bomAuthWait }) {
     let jobId = '';
     const run = withPlmJob({ currentUser: profile }, {
+      background,
       kind: 'plm-bom', scope, total: records.length,
       label: `PLM BOM · ${records.length} model`,
       phase: language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor',
     }, async job => {
       jobId = job.id;
+      /* Sessiz iş oturum yenilemesini BEKLEMEZ ve "oturum bekleniyor" fazı
+         yazmaz: yetki biterse doğrudan durur, tamamlanan BOM'lar kaydedilir.
+         Oturumu oturum koruyucu sessizce yeniler; iş sonraki turda denenir. */
+      const authOptions = background ? {} : {
+        waitForAuth: error => waitForFreshToken(profile, job, { language, failedGeneration: error && error.details && error.details.tokenGeneration, ...(authWait || {}) }),
+        currentTokenGeneration: () => coreNectumApiSettings.currentTokenGeneration(),
+      };
       const result = await plmBomSync.syncPlmBoms(records, {
         ownerId: profile.id, assertAuthority, allowAi, language,
         isCancelled: job.cancelled,
-        waitForAuth: error => waitForFreshToken(profile, job, { language, failedGeneration: error && error.details && error.details.tokenGeneration, ...(authWait || {}) }),
-        currentTokenGeneration: () => coreNectumApiSettings.currentTokenGeneration(),
+        ...authOptions,
         onProgress: progress => job.report({
           phase: progress && progress.phase,
           processed: progress && progress.current,

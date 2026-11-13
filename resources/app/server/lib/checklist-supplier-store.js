@@ -268,6 +268,7 @@ function normalizeDefinition(raw) {
     // Custom checklist definitions default to reusable approval scope. An
     // explicit per-PO choice remains authoritative.
     approvalScope: raw.approvalScope === 'order' ? 'order' : 'option',
+    ...(raw.separateSetParts === false ? { separateSetParts: false } : {}),
     evidenceFields: {
       reportNumber: Boolean(raw.evidenceFields && raw.evidenceFields.reportNumber === true),
       actualDate: Boolean(raw.evidenceFields && raw.evidenceFields.actualDate === true),
@@ -336,7 +337,7 @@ function applyEntries(entries, actor, options = {}) {
       const previousAt = previous && text(previous.at, 80), at = iso(entry.at), baseAt = text(entry.baseAt, 80);
       // A stale/skipped roster cannot authorize a new part in the same batch.
       if (previousAt && (previousAt > at || (source === 'supplier_excel' && baseAt && previousAt > baseAt))) continue;
-      if (normalizeState(entry.state) !== 'open' || !Number.isInteger(entry.componentCount) || entry.componentCount < 2 || entry.componentCount > 26) throw Object.assign(new Error('Invalid set component count.'), {orderKey:text(entry.orderKey,300),itemId:text(entry.itemId,200),code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
+      if (normalizeState(entry.state) !== 'open' || !Number.isInteger(entry.componentCount) || entry.componentCount < 1 || entry.componentCount > 26) throw Object.assign(new Error('Invalid set component count.'), {orderKey:text(entry.orderKey,300),itemId:text(entry.itemId,200),code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
       pendingRosters.set(order, Math.max(pendingRosters.get(order) || 0, entry.componentCount));
     }
     // Validate every part against the saved roster or a roster in this same
@@ -380,8 +381,8 @@ function applyEntries(entries, actor, options = {}) {
       if (Object.prototype.hasOwnProperty.call(raw, 'attachments') && !Array.isArray(raw.attachments)) throw Object.assign(new Error('Checklist attachments must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       if (String(raw.note || '').length > 2000 || String(raw.reportNumber || '').length > 300) throw Object.assign(new Error('Checklist evidence exceeds the allowed field length.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       const componentCount = Object.prototype.hasOwnProperty.call(raw, 'componentCount') ? raw.componentCount : previousEvidence && previousEvidence.componentCount;
-      if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 2 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
-      if (itemId === '@set-components' && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
+      if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 1 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
+      if (itemId === '@set-components' && componentCount !== 1 && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { orderKey,itemId,code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
       // v7.0.290 — bileşen sonuçları (Main Fabric / Neck RIB …); gönderilmezse korunur.
       if (Object.prototype.hasOwnProperty.call(raw, 'elements') && raw.elements != null && !Array.isArray(raw.elements)) throw Object.assign(new Error('Checklist components must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       let elements = ElementParts.normalizeElements(Object.prototype.hasOwnProperty.call(raw, 'elements') ? raw.elements : previousEvidence && previousEvidence.elements, value => normalizeState(value) || 'open');

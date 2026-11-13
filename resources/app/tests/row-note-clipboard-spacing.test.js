@@ -54,3 +54,7 @@ test('HTML whitespace-only newline boundaries are removed from the cloned fragme
  const value=node('#text','\n\nasd\n'),fragment=node('DIV',value);trim(fragment);assert.equal(value.data,'asd');
  const empty=node('DIV',node('BR'));trim(empty);assert.equal(empty.childNodes.length,0);
 });
+test('clipboard padding containing spaces or non-breaking spaces is removed at both edges',()=>{
+ const text=node('#text','one line'),fragment=node('DIV',node('#text','  '),node('P',node('#text','\u00a0')),node('DIV',text),node('P',node('#text','\u00a0')));
+ trim(fragment);assert.equal(fragment.childNodes.length,1);assert.equal(fragment.firstChild.firstChild,text);
+});

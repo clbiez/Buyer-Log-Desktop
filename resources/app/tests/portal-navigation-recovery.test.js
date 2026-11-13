@@ -98,3 +98,20 @@ test('üç portal (CoreNectum, LCW AI, OAB) aynı kurtarma merdivenini kullanır
   const oabFail = main.slice(main.indexOf("authWindow.webContents.on('did-fail-load'"), main.indexOf("authWindow.webContents.on('render-process-gone'"));
   assert.match(oabFail, /if \(navigationBusy\) return;/, 'loadURL sürerken did-fail-load akışı bitirmemeli');
 });
+
+test('sessiz (arka plan) denemede bozuk bölüm teşhisi SSO çerezlerini silmez; durur', async () => {
+  const portal = fakeSession({ reachable: false });
+  const step = await recovery.nextPortalRecoveryStep({ error: ERR, attempt: 1, portalSession: portal, baselineSession: fakeSession(), url: URL_, allowFullReset: false });
+  assert.equal(step.action, 'fail');
+  assert.equal(step.diagnosis.verdict, 'partition');
+  assert.ok(!portal.calls.some(call => call[0] === 'clearStorageData' || call[0] === 'clearAuthCache'), 'arka plan denemesi oturum bölümünü silmemeli');
+});
+
+test('CoreNectum ve LCW AI sessiz girişleri tam sıfırlamayı yalnız etkileşimli modda açar', () => {
+  const main = fs.readFileSync(path.join(__dirname, '../electron/main.js'), 'utf8');
+  for (const label of ['CoreNectum', 'LCW AI']) {
+    const call = main.match(new RegExp("nextPortalRecoveryStep\\(\\{[^}]*label: '" + label + "'[^}]*\\}"));
+    assert.ok(call, label + ' kurtarma çağrısı bulunmalı');
+    assert.match(call[0], /allowFullReset: interactive/);
+  }
+});

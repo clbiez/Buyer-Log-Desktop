@@ -418,12 +418,12 @@
     if (!analysis || !analysis.orderKey || !itemId) return false;
     const Components = Checklist.Components;
     const scoped = Components.parseItem(itemId);
-    const parts = Checklist.componentsFor(analysis, { answers: state.answers });
+    const rule = state.rules.find(item => item && item.kind === 'checklist' && item.id === (scoped ? scoped.baseId : itemId));
+    const parts = Checklist.componentsFor(analysis, { answers: state.answers, item: rule });
     if (scoped && !parts.some(part => part.id === scoped.partId)) return false;
-    if (!scoped && itemId !== Components.CONFIG_ITEM && (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp'))) return false;
+    if (!scoped && itemId !== Components.CONFIG_ITEM && (parts.length || (Components.tracksParts(analysis, state.answers, rule) && Components.isSet(analysis.sourceRow || analysis, 'cp')))) return false;
     const key = Checklist.answerKey(analysis.orderKey, itemId);
     const next = Checklist.normalizeStatus(status) || 'open';
-    const rule = state.rules.find(item => item && item.kind === 'checklist' && item.id === (scoped ? scoped.baseId : itemId));
     const reusable = Boolean(rule && rule.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function');
     const optionKey = reusable ? Checklist.optionAnswerKey(analysis, itemId) : '';
     const by = (window.BL_USER_CONTEXT || {}).id || '';
@@ -468,9 +468,9 @@
   }
   function setChecklistComponents(analysis, count) {
     const Components = Checklist.Components, n = Components.validCount(count);
-    if (!analysis || !analysis.orderKey || n < 2) return false;
+    if (!analysis || !analysis.orderKey || !n) return false;
     const previous = state.answers[Components.configKey(analysis)];
-    if (previous && previous.componentCount > n) return false;
+    if (n !== 1 && previous && previous.componentCount > n) return false;
     return setChecklistAnswer(analysis, Components.CONFIG_ITEM, 'open', { componentCount: n });
   }
 
@@ -478,7 +478,9 @@
     if (state.answerStoreError) throw new Error(L('Checklist kaydı okunamıyor.', 'Checklist record cannot be read.'));
     const decision = computeDecisionsForRows(rows);
     if (rows.some(row => !String(window.BLCanonicalFields.value(row, 'cp', 'orderCode') || '').trim() || !decision.byRow.get(row)?.orderKey)) throw new Error(L('Sipariş kimliği çözülemedi.', 'Order identity could not be resolved.'));
-    if (rows.some(row => { const analysis = decision.byRow.get(row); return Checklist.Components.isSet(analysis.sourceRow || analysis, 'cp') && !Checklist.componentsFor(analysis, { answers: state.answers }).length; })) throw new Error(L('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.'));
+    const token = value => String(value || '').toLowerCase().replace(/[^a-z]/g, '');
+    const item = state.rules.find(rule => rule.kind === 'checklist' && [rule.id, rule.name, rule.nameEn, rule.tr, rule.en].some(value => ['hologramcheck', 'hologramkontrol', 'hologramkontrolu'].includes(token(value))));
+    if (rows.some(row => { const analysis = decision.byRow.get(row); return Checklist.Components.tracksParts(analysis, state.answers, item) && Checklist.Components.isSet(analysis.sourceRow || analysis, 'cp') && !Checklist.componentsFor(analysis, { answers: state.answers }).length; })) throw new Error(L('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.'));
     return decision;
   }
   function markHologramOrdered(rows) {
@@ -487,7 +489,7 @@
     if (!item) item = createChecklistItem({ tr: 'Hologram Check', en: 'Hologram Check' });
     batchChecklistAnswers(() => {
       for (const row of rows) {
-        const analysis = decision.byRow.get(row), parts = Checklist.componentsFor(analysis, { answers: state.answers });
+        const analysis = decision.byRow.get(row), parts = Checklist.componentsFor(analysis, { answers: state.answers, item });
         const targets = parts.length ? parts.map(part => Checklist.Components.itemId(item.id, part.id)) : [item.id];
         for (const target of targets) if (!setChecklistAnswer(analysis, target, 'custom:ordered')) throw new Error(L('Checklist kaydedilemedi.', 'Checklist could not be saved.'));
       }
@@ -2080,6 +2082,13 @@
           </select>
           <small>${esc(L('Aynı PLM + Model + Renk için Onaylandı diğer PO’lara taşınır; Reddedildi PO’ya özel kalır.', 'Approved carries across POs of the same PLM + Model + Colour; Rejected stays PO-specific.'))}</small>
         </label>
+        <label class="cpaRuleTarget"><span>${esc(L('Set modellerin her parçası için ayrı durum', 'Separate status for each set part'))}</span>
+          <select data-cpa-rule-set-parts>
+            <option value="yes"${rule.separateSetParts !== false ? ' selected' : ''}>${esc(L('Evet, A/B/C ayrı takip edilsin', 'Yes, track A/B/C separately'))}</option>
+            <option value="no"${rule.separateSetParts === false ? ' selected' : ''}>${esc(L('Hayır, model için tek durum', 'No, one status for the model'))}</option>
+          </select>
+          <small>${esc(L('Önceki parça kayıtları saklanır; tek durum ayrıca girilir.', 'Previous part records are kept; enter the single status separately.'))}</small>
+        </label>
         <div class="cpaRuleTarget cpaRuleEvidenceFields"><span>${esc(L('Ek bilgi alanları', 'Evidence fields'))}</span>
           <div class="cpaRuleEvidenceChecks">
             <label class="cpaCheck"><input type="checkbox" data-cpa-rule-evidence="reportNumber"${rule.evidenceFields?.reportNumber ? ' checked' : ''}><span>${esc(L('Rapor numarası', 'Report number'))}</span></label>
@@ -2690,7 +2699,7 @@
       const suppliers = new Set();
       const entries = [];
       const needle = qSearch.trim().toLocaleLowerCase(locale());
-      const answerContext = { answers: state.answers, plmEvidence, itemScopes: Object.fromEntries(state.rules.filter(rule => rule.kind === 'checklist').map(rule => [rule.id, rule.approvalScope])) };
+      const answerContext = { answers: state.answers, plmEvidence, itemDefinitions: Object.fromEntries(state.rules.map(rule => [rule.id, rule])), itemScopes: Object.fromEntries(state.rules.filter(rule => rule.kind === 'checklist').map(rule => [rule.id, rule.approvalScope])) };
       for (const bucket of activeBuckets) {
         const pool = bucket.allOrders || bucket.orders || [];
         const bLabel = itemLabel(bucket);
@@ -2698,7 +2707,7 @@
           if (!analysis || !analysis.orderKey) continue;
           const supplier = String(analysis.dims && analysis.dims.manufacturer || '—');
           suppliers.add(supplier);
-          const parts = Checklist.componentsFor(analysis, { answers: state.answers });
+          const parts = Checklist.componentsFor(analysis, { answers: state.answers, item: state.rules.find(rule => rule.id === bucket.id) });
           const stateCode = analysis.checklistState?.[bucket.id] || Checklist.statusOf(analysis, bucket.id, answerContext);
           const resolved = Checklist.isResolved(stateCode);
           const overdue = !resolved && analysis.daysToLoad != null && Number(analysis.daysToLoad) <= 7;
@@ -2753,10 +2762,10 @@
 
       const rowsHtml = shown.map(entry => {
         const { analysis, itemId, bucketLabel, supplier, parts, stateCode } = entry;
-        const isSetUnconfigured = Checklist.Components.isSet(analysis.sourceRow || analysis, 'cp') && !parts.length;
+        const isSetUnconfigured = Checklist.Components.tracksParts(analysis, state.answers, state.rules.find(rule => rule.id === itemId)) && Checklist.Components.isSet(analysis.sourceRow || analysis, 'cp') && !parts.length;
         let statusControl = '';
         if (isSetUnconfigured) {
-          statusControl = `<div class="cpaSetPartsInline"><span>${esc(L('Set parça sayısı:', 'Set parts:'))}</span>${[2, 3, 4].map(n =>
+          statusControl = `<div class="cpaSetPartsInline"><span>${esc(L('Set parça sayısı:', 'Set parts:'))}</span>${[1, 2, 3, 4].map(n =>
             `<button type="button" class="cpaBtn sm" data-cpa-set-parts="${esc(analysis.orderKey)}:${n}">${n}</button>`).join('')}</div>`;
         } else if (parts.length) {
           statusControl = `<div class="cpaPartSelectList">${parts.map(part => {
@@ -3519,6 +3528,13 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         rule.approvalScope = el.value === 'option' ? 'option' : 'order';
+        stageRuleChange(rule);
+      });
+
+      modal.querySelectorAll('[data-cpa-rule-set-parts]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        if (!rule) return;
+        rule.separateSetParts = el.value !== 'no';
         stageRuleChange(rule);
       });
 

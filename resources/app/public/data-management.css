@@ -458,6 +458,9 @@
 .dmfTplSave { cursor: pointer; padding: 3px 9px;
 }
 .dmfTplMsg { margin: 0; }
+.dmfTplSave:disabled { opacity: .45; cursor: default; }
+.dmfTplForm { display: inline-flex; align-items: center; gap: 6px; }
+.dmfTplForm input { width: 210px; padding: 3px 8px; }
 
 /* v7.81 — ASAS→IAS filtre eşleme teklifi ve onayı.
    Şablon çubuğuyla aynı ölçü ve token ailesi: ikinci bir görsel dil değil,

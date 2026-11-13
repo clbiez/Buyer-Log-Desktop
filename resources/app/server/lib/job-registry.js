@@ -62,6 +62,8 @@ function describeJob(job, now) {
     etaMs,
     cancelRequested: !!job.cancelRequested,
     waitingAuth: !!job.waitingAuth,
+    // Sessiz arka plan işi: Operasyon Merkezi'ni/şeridi kendiliğinden açmaz.
+    background: !!job.background,
     failureCount: job.failures.length,
     error: job.error || null,
     running: !TERMINAL.has(job.status),
@@ -123,6 +125,7 @@ function createJobRegistry(options = {}) {
       error: null,
       // Yalnızca başarısızları yeniden denemek için gereken girdi.
       retryPayload: input.retryPayload || null,
+      background: input.background === true,
     };
     jobs.set(job.id, job);
     prune(jobs);
@@ -210,6 +213,35 @@ function createJobRegistry(options = {}) {
 
   /* Kapsam süzgeci sayfalar arası karışmayı bitiren yerdir: bir ekran yalnız
      kendi işlerini ister. scope verilmezse hepsi döner (operasyon merkezi). */
+  /* Kullanıcının elle başlattığı PLM işi başlarken o kullanıcının çalışan
+     sessiz (arka plan) işleri durdurulur; iş döngüleri bir sonraki kontrol
+     noktasında durur ve o ana kadarki sonucu kaydeder. */
+  function cancelBackground(userId) {
+    const cancelled = [];
+    for (const job of bucket(userId).values()) {
+      if (!job.background || TERMINAL.has(job.status) || job.cancelRequested) continue;
+      job.cancelRequested = true;
+      job.updatedAt = clock();
+      cancelled.push(job.id);
+    }
+    return cancelled;
+  }
+
+  /* Bitmiş bir işi geçmişten çıkarır. Sessiz (arka plan) PLM işleri bitince
+     kaldırılır ki kullanıcının kendi iş geçmişini (historyLimit) doldurmasın.
+     Çalışan iş kaldırılmaz: iptal sinyali ona bu kayıt üzerinden ulaşır. */
+  function remove(userId, jobId) {
+    const jobs = bucket(userId), id = clean(jobId), job = jobs.get(id);
+    if (!job || !TERMINAL.has(job.status)) return false;
+    return jobs.delete(id);
+  }
+
+  // Kullanıcının elle başlattığı, hâlâ çalışan bir PLM işi var mı?
+  function hasForeground(userId) {
+    for (const job of bucket(userId).values()) if (!job.background && !TERMINAL.has(job.status)) return true;
+    return false;
+  }
+
   function list(userId, filter = {}) {
     const scope = clean(filter.scope);
     const now = clock();
@@ -243,7 +275,7 @@ function createJobRegistry(options = {}) {
   }
 
   return {
-    create, get, update, addFailure, finish, requestCancel, isCancelled,
+    create, get, update, addFailure, finish, requestCancel, isCancelled, cancelBackground, hasForeground, remove,
     list, describe, failures, failedIds, clearFinished,
     TERMINAL,
   };

@@ -58,6 +58,10 @@
      listelerde gelir; paylaşılanı herkes görür, kişiseli yalnız sahibi. */
   let templates = { personal: [], shared: [] };
   let templateMessage = '';
+  /* v2026-11-13 — Favori ön ayar adı panel içinde yazılır. window.prompt
+     masaüstü (Electron) kabuğunda desteklenmiyor; kaydetme hiç açılmıyordu. */
+  let templateNaming = false;
+  let templateDraft = '';
 
   /* v7.81 — ASAS→IAS eşleme teklifi. `mapping` doluyken panel açıktır;
      ONAYLANANA KADAR koşullara hiçbir şey yazılmaz. */
@@ -191,7 +195,7 @@
     context.table = String(definition.table || context.table || '');
     groups = editableGroups(definition);
     if (!filterName) filterName = item.name;
-    templateMessage = T(`"${item.name}" yüklendi — kaydetmek için Kaydet'e basın.`, `"${item.name}" loaded — press Save to apply.`);
+    templateMessage = T(`"${item.name}" favorisi yüklendi — uygulamak için Kaydet'e basın.`, `"${item.name}" favourite loaded — press Save to apply.`);
     render();
     /* Yan yana kipte eş, açılıştaki IAS filtresine göre TEK toplu istekle
        yeniden kurulur: mevcut IAS koşulları yine "mevcut" olarak eşleşir,
@@ -199,18 +203,24 @@
     if (pair) void reinitPair();
   }
 
-  async function saveAsTemplate() {
-    const name = String(window.prompt(T('Şablon adı:', 'Template name:'), filterName || '') || '').trim();
-    if (!name) return;
+  function hasTemplateConditions() {
+    return groups.some(group => (group.conditions || []).some(condition => condition && condition.field));
+  }
+
+  async function saveAsTemplate(rawName) {
+    const name = String(rawName || '').trim().slice(0, 80);
+    if (!name || !hasTemplateConditions()) return;
     try {
       const response = await fetch('/api/horizon-templates', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, definition: { table: context.table || '', groups } }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) throw new Error(payload.error || T('Şablon kaydedilemedi.', 'Could not save template.'));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || T('Favori kaydedilemedi.', 'Could not save favourite.'));
       await loadTemplates();
-      templateMessage = T(`"${name}" şablon olarak kaydedildi.`, `"${name}" saved as a template.`);
+      templateNaming = false;
+      templateDraft = '';
+      templateMessage = T(`"${name}" favori olarak kaydedildi.`, `"${name}" saved as a favourite.`);
     } catch (error) {
       templateMessage = String(error && error.message || error);
     }
@@ -341,29 +351,41 @@
       </div>
     </div>`;
   }
-  function templateChip(item, shared) {
+  function templateChip(item, shared, canShare) {
     return `<span class="dmfTplChip${shared ? ' isShared' : ''}">
       <button type="button" class="dmfTplName" data-apply-template="${esc(item.id)}" data-shared="${shared ? '1' : '0'}"
-        title="${esc(T('Bu şablonu yükle', 'Load this template'))}">${esc(item.name)}</button>
-      ${shared ? '' : `<button type="button" class="dmfTplAct" data-share-template="${esc(item.id)}"
+        title="${esc(shared ? T('Paylaşılan favoriyi yükle', 'Load shared favourite') : T('Bu favoriyi yükle', 'Load this favourite'))}">${esc(item.name)}</button>
+      ${shared || !canShare ? '' : `<button type="button" class="dmfTplAct" data-share-template="${esc(item.id)}"
         title="${esc(T('Herkesle paylaş', 'Share with everyone'))}" aria-label="${esc(T('Herkesle paylaş', 'Share with everyone'))}">↗</button>`}
-      <button type="button" class="dmfTplAct" data-delete-template="${esc(item.id)}" data-shared="${shared ? '1' : '0'}"
-        title="${esc(T('Sil', 'Delete'))}" aria-label="${esc(T('Sil', 'Delete'))}">×</button>
+      ${shared && !canShare ? '' : `<button type="button" class="dmfTplAct" data-delete-template="${esc(item.id)}" data-shared="${shared ? '1' : '0'}"
+        title="${esc(T('Sil', 'Delete'))}" aria-label="${esc(T('Sil', 'Delete'))}">×</button>`}
     </span>`;
   }
 
-  function templateBar() {
+  /* Kişisel favoriler herkese açıktır; paylaşmak ve paylaşılanı silmek yalnız
+     yönetim yetkisiyle görünür (sunucu da aynı kuralı uygular). */
+  function templateBar(canShare) {
     const personal = templates.personal || [];
     const shared = templates.shared || [];
     const empty = !personal.length && !shared.length;
+    const canSave = hasTemplateConditions();
+    const action = templateNaming && canSave
+      ? `<span class="dmfTplForm">
+          <input type="text" data-dmf-tpl-name maxlength="80" value="${esc(templateDraft)}" autocomplete="off"
+            placeholder="${esc(T('Favori adı (ör. W26 Örme)', 'Favourite name (e.g. W26 Knit)'))}" aria-label="${esc(T('Favori adı', 'Favourite name'))}">
+          <button type="button" class="dmfTplSave" data-dmf-tpl-confirm>${esc(T('Kaydet', 'Save'))}</button>
+          <button type="button" class="dmfTplSave" data-dmf-tpl-cancel>${esc(T('Vazgeç', 'Cancel'))}</button>
+        </span>`
+      : `<button type="button" class="dmfTplSave" data-save-template ${canSave ? '' : 'disabled'}
+          title="${esc(canSave ? T('Mevcut koşulları adlandırıp favori olarak saklayın', 'Name the current conditions and keep them as a favourite') : T('Kaydetmek için önce bir koşul ekleyin', 'Add a condition first to save'))}">${esc(T('Favori olarak kaydet', 'Save as favourite'))}</button>`;
     return `<div class="dmfTemplates">
       <div class="dmfTplRow">
-        <span class="dmLabel">${esc(T('Hazır ufuklar', 'Saved horizons'))}</span>
-        ${empty ? `<span class="dmfTplEmpty">${esc(T('henüz kayıt yok', 'none saved yet'))}</span>` : ''}
-        ${personal.map(item => templateChip(item, false)).join('')}
-        ${shared.map(item => templateChip(item, true)).join('')}
+        <span class="dmLabel">${esc(T('Favori ön ayarlar', 'Favourite presets'))}</span>
+        ${empty ? `<span class="dmfTplEmpty">${esc(T('Sık kullandığınız filtreyi kaydedip tek tıkla yükleyin.', 'Save filters you use often and load them in one click.'))}</span>` : ''}
+        ${personal.map(item => templateChip(item, false, canShare)).join('')}
+        ${shared.map(item => templateChip(item, true, canShare)).join('')}
         <span class="dmfSpacer"></span>
-        <button type="button" class="dmfTplSave" data-save-template>${esc(T('Şablon olarak kaydet', 'Save as template'))}</button>
+        ${action}
       </div>
       ${templateMessage ? `<p class="dmfTplMsg">${esc(templateMessage)}</p>` : ''}
     </div>`;
@@ -1296,6 +1318,10 @@
   }
 
   function onKeydown(event) {
+    if (event.target && event.target.matches && event.target.matches('[data-dmf-tpl-name]')) {
+      if (event.key === 'Enter') { event.preventDefault(); void saveAsTemplate(event.target.value); return; }
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); templateNaming = false; templateDraft = ''; render(); return; }
+    }
     if (event.key === 'Enter' && event.target.matches && event.target.matches('[data-dmf-free]')) {
       event.preventDefault();
       addFreeValue(event.target);
@@ -1345,7 +1371,7 @@
       <div class="dmfBody">
       ${layerBanner()}
 
-      ${canShare ? templateBar() : ''}
+      ${templateBar(canShare)}
 
       ${pair ? '' : mappingPanel()}
 
@@ -1675,7 +1701,20 @@
     if (shareTpl) { void shareTemplate(shareTpl.dataset.shareTemplate); return; }
     const deleteTpl = event.target.closest('[data-delete-template]');
     if (deleteTpl) { void deleteTemplate(deleteTpl.dataset.deleteTemplate, deleteTpl.dataset.shared === '1'); return; }
-    if (event.target.closest('[data-save-template]')) { void saveAsTemplate(); return; }
+    if (event.target.closest('[data-save-template]')) {
+      templateNaming = true;
+      templateDraft = filterName || '';
+      render();
+      host.querySelector('[data-dmf-tpl-name]')?.focus();
+      return;
+    }
+    if (event.target.closest('[data-dmf-tpl-confirm]')) {
+      const input = host.querySelector('[data-dmf-tpl-name]');
+      if (!String(input && input.value || '').trim()) { input?.focus(); return; }
+      void saveAsTemplate(input.value);
+      return;
+    }
+    if (event.target.closest('[data-dmf-tpl-cancel]')) { templateNaming = false; templateDraft = ''; render(); return; }
     if (event.target.closest('[data-request-mapping]')) { void requestMapping(); return; }
     if (event.target.closest('[data-approve-mapping]')) { approveMapping(); return; }
     if (event.target.closest('[data-dismiss-mapping]')) { dismissMapping(); return; }
@@ -1817,6 +1856,7 @@
 
   function onInput(event) {
     if (event.target && event.target.id === '_dmfName') { filterName = event.target.value; return; }
+    if (event.target && event.target.matches && event.target.matches('[data-dmf-tpl-name]')) { templateDraft = event.target.value; return; }
     if (event.target) onSimpleInput(event);
   }
 
@@ -1876,8 +1916,10 @@
     host.innerHTML = `<p class="dmfEmpty">${esc(T('Alanlar yükleniyor…', 'Loading fields…'))}</p>`;
 
     templateMessage = '';
-    // Şablon uçları yönetim yetkisi ister; yetkisiz kullanıcıda istek atılmaz.
-    if (context.canShare === true) void loadTemplates().then(render);
+    templateNaming = false;
+    templateDraft = '';
+    // Kişisel favoriler herkese açık; paylaşma düğmeleri yalnız yetkiliye çizilir.
+    void loadTemplates().then(render);
     try { await loadFields(); }
     catch (error) {
       message = String(error && error.message || error);
