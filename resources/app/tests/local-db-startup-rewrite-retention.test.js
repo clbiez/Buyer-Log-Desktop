@@ -113,3 +113,24 @@ test('WAL döndürme eşiği küçük DB için aynı kalır, büyük DB için s�
   assert.deepEqual(walRotationLimits(2 * 1024 * 1024 * 1024), { bytes: 32 * 1024 * 1024, entries: 20000 });
   assert.deepEqual(walRotationLimits(2 * 1024 * 1024 * 1024, 4096), { bytes: 4096, entries: 2000 }, 'explicit limit wins');
 });
+
+test('cihaz kimliği küçük DB için de tüm dosya senkron parse edilmeden başlıktan okunur', async t => {
+  const { file, db } = await tempDb(t);
+  await db.queuePatches(Array.from({ length: 50 }, (_, i) => ({ id: `cp-order:${i}`, patch: { note: 'x'.repeat(200) } })));
+  await db.transaction(async () => null);
+  const expected = (await db.read()).deviceId;
+  const original = fs.readFileSync;
+  const fullReads = [];
+  fs.readFileSync = function (target, ...rest) { if (path.resolve(String(target)) === file) fullReads.push(target); return original.call(this, target, ...rest); };
+  try { assert.equal(createLocalDb(file).getDeviceId(), expected); }
+  finally { fs.readFileSync = original; }
+  assert.deepEqual(fullReads, [], 'boot must not synchronously read/parse the whole snapshot for the device id');
+});
+
+test('başlığı farklı sıralı eski DB dosyasında cihaz kimliği yine bulunur', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-deviceid-'));
+  t.after(() => fsp.rm(root, { recursive: true, force: true }));
+  const file = path.join(root, 'BuyerLogLocal.db');
+  fs.writeFileSync(file, JSON.stringify({ records: { a: { x: 1 } }, deviceId: 'legacy-device-1', schemaVersion: 3 }));
+  assert.equal(createLocalDb(file).getDeviceId(), 'legacy-device-1');
+});

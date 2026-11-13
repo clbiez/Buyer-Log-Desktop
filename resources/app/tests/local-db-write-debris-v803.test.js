@@ -112,8 +112,11 @@ test('createLocalDb açılışta diske hiç dokunmaz', async t => {
 
   const readFileSync = fs.readFileSync;
   const readdirSync = fs.readdirSync;
+  const openSync = fs.openSync;
   let reads = 0, scans = 0;
   fs.readFileSync = (...args) => { if (String(args[0]).includes('BuyerLogLocal')) reads += 1; return readFileSync(...args); };
+  // Kimlik başlıktan (open+read) da okunabilir; ikisi de gerçek dosya okumasıdır.
+  fs.openSync = (...args) => { if (String(args[0]).includes('BuyerLogLocal')) reads += 1; return openSync(...args); };
   fs.readdirSync = (...args) => { if (String(args[0]).includes('recovery')) scans += 1; return readdirSync(...args); };
   try {
     const db = createLocalDb(file);
@@ -124,7 +127,7 @@ test('createLocalDb açılışta diske hiç dokunmaz', async t => {
     assert.equal(db.getDeviceId(), 'cihaz-1');
     assert.ok(reads > 0 && scans > 0, 'ilk gerçek erişimde okuma ve kurtarma çalışmalı');
     assert.equal((await db.read()).deviceId, 'cihaz-1', 'kimlik yazma yolunda da korunmalı');
-  } finally { fs.readFileSync = readFileSync; fs.readdirSync = readdirSync; }
+  } finally { fs.readFileSync = readFileSync; fs.readdirSync = readdirSync; fs.openSync = openSync; }
 });
 
 test('yeni bir kurulumda cihaz kimliği bir kez üretilip kalıcı olur', async t => {

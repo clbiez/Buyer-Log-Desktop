@@ -628,17 +628,21 @@ function parseWal(text) {
    gereği schemaVersion/revision'dan hemen sonra gelir) dosyanın başından okunur. */
 function readDeviceIdSync(file) {
   const size = fs.statSync(file).size;
-  if (size <= DIRECT_PARSE_MAX_BYTES) {
-    const existing = JSON.parse(fs.readFileSync(file, 'utf8'));
-    return existing && existing.deviceId ? String(existing.deviceId) : '';
-  }
+  /* Başlık her boyutta önce denenir: kayıtlı anlık görüntülerde deviceId
+     dosyanın ilk satırlarındadır. Eskiden 256 MB altındaki DB yalnız kimlik
+     için açılışta SENKRON okunup tamamen parse ediliyordu (110 MB'da ~2 sn,
+     ardından loadState aynı dosyayı yeniden parse ediyordu). Başlıkta yoksa
+     (farklı anahtar sırası) küçük dosyada eski tam okuma yolu korunur. */
   const handle = fs.openSync(file, 'r');
   try {
     const head = Buffer.alloc(Math.min(size, 64 * 1024));
     fs.readSync(handle, head, 0, head.length, 0);
     const match = head.toString('utf8').match(/^\s*\{(?:\s*"(?:schemaVersion|revision)"\s*:\s*-?[\d.eE+-]+\s*,)*\s*"deviceId"\s*:\s*("(?:[^"\\]|\\.)*")/);
-    return match ? String(JSON.parse(match[1])) : '';
+    if (match) return String(JSON.parse(match[1]));
   } finally { fs.closeSync(handle); }
+  if (size > DIRECT_PARSE_MAX_BYTES) return '';
+  const existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+  return existing && existing.deviceId ? String(existing.deviceId) : '';
 }
 
 function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = null, encodeSnapshot = null, journalRetention = {} } = {}) {
