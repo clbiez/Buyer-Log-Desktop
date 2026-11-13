@@ -58,42 +58,15 @@ test('calculated Collection cells are flat, hide Overseas FOB, and make symbols 
   assert.match(APP, /<i aria-hidden="true">\$<\/i><input/);
 });
 
-test('Landed compound-cell inputs stay editable through the shared spreadsheet pointer handler', () => {
-  const handlerBlock = functionBlock(SPREADSHEET, 'kolSpreadsheetHandlePointerEdit', 'kolSpreadsheetResumePendingPointerEdit');
-  const state = { pendingPointerEdit: null };
-  const calls = [];
-  const bridgeValue = {
-    canEdit: () => true,
-    columnMeta: key => ({ editable: key !== 'trLanded' && key !== 'ydLanded' }),
-  };
-  const handler = new Function(
-    'bridgeValue', 'state', 'pointerEditIdentity', 'markPointerEditing',
-    'schedulePendingPointerFallback', 'beginEdit', 'setActive',
-    `const bridge=()=>bridgeValue;${handlerBlock};return kolSpreadsheetHandlePointerEdit;`,
-  )(
-    bridgeValue,
-    state,
-    () => ({ rowId: 'row-1', key: 'trLanded' }),
-    () => calls.push('mark'),
-    () => calls.push('fallback'),
-    () => calls.push('begin'),
-    () => calls.push('set-active'),
-  );
-  const editor = {
-    dataset: { k: 'trPrice' },
-    closest: selector => selector === '.editCell:not(:disabled)' ? editor : null,
-  };
-  let prevented = false;
-  const result = handler({
-    shiftKey: false,
-    target: editor,
-    preventDefault: () => { prevented = true; },
-    stopImmediatePropagation: () => { prevented = true; },
-  }, { dataset: { key: 'trLanded' } });
-
-  assert.equal(result, true);
-  assert.equal(prevented, false);
-  assert.deepEqual(calls, ['mark', 'fallback']);
+test('Landed compound-cell inputs: single click selects the cell, double click edits the input under the pointer', () => {
+  // Tek tık CP/Excel gibi yalnız seçer; düzenleme çift tıkla imlecin altındaki
+  // girdiye (trPrice/trFx/çarpan) açılır — davranış: collection-double-click-edit.test.js.
+  const pointer = functionBlock(SPREADSHEET, 'kolSpreadsheetHandlePointerEdit', 'editorAtPoint');
+  assert.doesNotMatch(pointer, /beginEdit|focusEditor/);
+  assert.match(pointer, /setActive\(td\);state\.dragging=true/);
+  const dbl = functionBlock(SPREADSHEET, 'kolSpreadsheetHandleDoubleClick', 'kolSpreadsheetStartTypingEdit');
+  assert.match(dbl, /editorAtPoint\(td,event\.clientX,event\.clientY\)/);
+  assert.match(dbl, /columnMeta\?\.\(editorKey\)\?\.editable/);
 });
 
 test('Landed manual input metadata is editable while calculated output metadata stays read-only', () => {

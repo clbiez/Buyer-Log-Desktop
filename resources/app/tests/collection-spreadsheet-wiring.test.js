@@ -40,10 +40,11 @@ test('active-cell navigation is independent from business checkbox selection and
   assert.doesNotMatch(sheet,/rowChk.*checked\s*=/s);
 });
 
-test('single click enters editable Collection cells while F2 remains a keyboard edit entry',()=>{
+test('single click selects; double click, F2 or typing enters editable Collection cells',()=>{
   assert.match(sheet,/pointerdown[\s\S]*kolSpreadsheetHandlePointerEdit\(e,td\)/);
   assert.match(sheet,/function kolSpreadsheetHandlePointerEdit\(/);assert.match(sheet,/beginEdit\(td,\{source:'pointer'/);assert.match(sheet,/e\.key==='F2'/);
-  assert.doesNotMatch(sheet,/addEventListener\('dblclick'[\s\S]*beginEdit\(td\)/);
+  assert.match(sheet,/addEventListener\('dblclick',kolSpreadsheetHandleDoubleClick\)/);
+  assert.match(sheet,/kolSpreadsheetStartTypingEdit\(e\)/);
   assert.match(app,/if\(window\.BLCollectionSpreadsheet\?\.enabled\?\.\(\)\)return;/);
 });
 
