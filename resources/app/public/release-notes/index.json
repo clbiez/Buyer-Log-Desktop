@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.355",
+      "publishedAt": "2026-11-13",
+      "title": {
+        "tr": "Büyük veride hızlı açılış · Koleksiyon MB Date · Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri",
+        "en": "Fast startup with large data · Collection MB Date · Silent PLM image and BOM completion · LCW AI file attachments"
+      },
+      "stats": {
+        "features": 7,
+        "improvements": 5,
+        "fixes": 5
+      },
+      "file": "release-notes/7.0.355/release.json"
+    },
+    {
       "version": "7.0.353",
       "publishedAt": "2026-11-12",
       "title": {
