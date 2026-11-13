@@ -389,6 +389,7 @@ const plmMainColour = require('./lib/plm-main-colour');
    tablo hiçbir zaman ağdan okumaz. */
 const sharedImageStoreLib = require('./lib/shared-image-store');
 const modelImageDistributionLib = require('./lib/model-image-distribution');
+const plmImageSilentResponse = require('./lib/plm-image-silent-response');
 const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const modelImageRefreshLeases = require('./lib/model-image-refresh-leases');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
@@ -4872,6 +4873,8 @@ async function runPlmImageImport(req,res){
   const imageJobRef = { id: null };
   let apiSession = null;
   let checkpoint = null;
+  let beforeImagemap = {};
+  let requestedPlmIds = [];
   try {
     const raw=Array.isArray(req.body&&req.body.items)?req.body.items:null,mode=modelImageMode(req.body&&req.body.mode);
     // "Tümünü Yenile" otomatik görselleri tazeler; kullanıcının ELLE koyduğu
@@ -4903,6 +4906,7 @@ async function runPlmImageImport(req,res){
       phaseLog('lock');
       reportStage('preparing');
       const before=loadOverrides(),imagemap=before.imagemap||{},styleLinks=loadPlmStyleLinks().links||{};
+      beforeImagemap={...imagemap};
       // İstekler TEKİLLEŞTİRİLİR: aynı PLM+Renk iki kez API'ye gitmez.
       /* PLM ID taşımayan alt detay kalemleri önce model adı üzerinden çözülür;
          çözülemeyenler SESSİZCE ATILMAZ, hata kalemi olarak raporlanır. */
@@ -4920,6 +4924,7 @@ async function runPlmImageImport(req,res){
         const styleLink=styleLinks[plmStyleLinks.normalizeNumericId(plmId)];
         requests.push({plmId,colourCode,colour,imageRole:coreNectumStyleApi.normalizeImageRole(item&&item.imageRole),groupRole:item&&item.groupRole,styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
       }
+      requestedPlmIds=requests.map(item=>item.plmId);
       phaseLog('identity',{requests:requests.length,unresolved:identity.unresolved.length});
       const mainColourRoles=plmMainColourRoles(req.currentUser.id,requests);
       if(!requests.length)return {overrides:before,requested:0,images:[],imagesSaved:0,failedItems:identity.unresolved,imageFailedItems:identity.unresolved,mode,counts:plmImageJobCounts({}),status:plmImageJobStore.STATUS_COMPLETED};
@@ -5031,6 +5036,23 @@ async function runPlmImageImport(req,res){
         metadataCalls: run.metadataCalls||0,
         uniqueDownloads: run.uniqueDownloads||0,
       };
+      } catch (upstreamError) {
+        /* SESSİZ İŞ: üst kaynak (PLM) yoksa/iptal edildiyse yerel ve paylaşılan
+           sonuç KAYBOLMAZ. Kullanıcı işi eski davranışı korur (hata fırlatır);
+           arka plan işi, istemcinin "bulunamadı" sanmaması için açık bir
+           `upstreamDeferred` koduyla yerel sonucu döndürür. Giriş istenmez. */
+        if(!background)throw upstreamError;
+        try{checkpoint.finish(plmImageJobStore.STATUS_PARTIAL,{error:upstreamError&&upstreamError.message});}catch(_){}
+        checkpoint=null;
+        plmImageRefreshLog('PLM_IMAGE_BACKGROUND_UPSTREAM_DEFERRED',{code:(upstreamError&&upstreamError.code)||'PLM_UPSTREAM_FAILED'});
+        return {
+          overrides: first.overrides || before, requested: requests.length, images: sharedImages,
+          imagesSaved: first.installed.linksUpdated || 0, failedItems: identity.unresolved, imageFailedItems: identity.unresolved, mode,
+          status: plmImageJobStore.STATUS_PARTIAL,
+          counts: plmImageJobCounts({ requested: requests.length, cacheHits: first.plan.counts.localAvailable, manualPreserved: first.plan.counts.manualProtected }),
+          distribution: distributionCounts,
+          upstreamDeferred: { code: String((upstreamError&&upstreamError.code)||'PLM_UPSTREAM_FAILED').slice(0,60) },
+        };
       } finally {
         reportStage('releasing');
         const releaseStarted = Date.now();
@@ -5046,7 +5068,8 @@ async function runPlmImageImport(req,res){
     plmImageRefreshLog('PLM_IMAGE_CACHE_INVALIDATED',{mode:result.mode,changed:result.imagesReplaced||0});
     plmImageRefreshLog('PLM_IMAGE_REFRESH_COMPLETE',{mode:result.mode,...result.counts});
     userAccess.appendAudit(req.currentUser,'PLM_IMAGE_IMPORT','corenectum',{mode:result.mode,...result.counts});
-    res.json({ok:true,...result});
+    // Sessiz iş tam overrides yerine yalnız değişen imagemap anahtarlarını alır.
+    res.json({ok:true,...(background?plmImageSilentResponse.compactBackgroundImageResult(result,beforeImagemap,{relevantKeys:map=>requestedPlmIds.flatMap(plmId=>parseLib.plmImageKeysFor(map,plmId))}):result)});
     finishImageJob(req, imageJobRef, result.status===plmImageJobStore.STATUS_FAILED ? new Error('PLM gorsel isi basarisiz.') : null);
   } catch(err){ if(checkpoint)try{checkpoint.finish(plmImageJobStore.STATUS_FAILED,{error:err&&err.message});}catch(_){} finishImageJob(req, imageJobRef, err); automationError(res,err,'PLM model görselleri içe aktarılamadı.');}
   finally { if(apiSession)await apiSession.close().catch(()=>{}); clearModelOperationProgress(req.currentUser&&req.currentUser.id,{background:plmJobBackground(req)}); }
