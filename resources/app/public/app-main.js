@@ -3922,8 +3922,52 @@ function cpPlmDetailsSync(){
   if(!details)return;
   void details.sync({
     cpRows:state.cp?.rows||[],ordersRows:state.orders?.rows||[],
-    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();}
+    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();},
+    patch:cpPlmPatchCells
   });
+}
+/* Sessiz arka plan BOM tazelemesi (cp-plm-silent-bom.js) yalnız değişen
+   Artwork/Fabric hücrelerini yerinde günceller: tablo yeniden çizilmez,
+   kaydırma, satır/hücre seçimi, odak ve Motion+ satır animasyonu korunur.
+   Henüz çizilmemiş satır sonraki doğal çizimde güncel değeri okur. */
+function cpPlmPatchCells(changes){
+  // Çizili satırlar bir kez indekslenir (yalnız görünür dilim DOM'dadır); satır başına belge araması yok.
+  const visible={cp:null,orders:null},rendered={cp:null,orders:null},work=[];
+  for(const change of Array.isArray(changes)?changes:[]){
+    const tableKey=change&&change.table==='orders'?'orders':'cp',row=change&&change.row;
+    if(!row||row._id==null)continue;
+    if(!rendered[tableKey]){rendered[tableKey]=new Map();document.querySelectorAll(`#${tableKey==='orders'?'ordersTable':'cpTable'} tbody tr[data-id]`).forEach(tr=>rendered[tableKey].set(tr.dataset.id,tr));}
+    const tr=rendered[tableKey].get(String(row._id));
+    if(!tr)continue;
+    visible[tableKey]=visible[tableKey]||visibleCols(tableKey);
+    work.push({tableKey,tr,row,change,columns:visible[tableKey]});
+  }
+  /* Aynı karede onlarca görünür satırı değiştirmek tablo stil/yerleşim
+     hesabını tek uzun göreve toplar. Satırlar küçük parçalar hâlinde, ayrı
+     görevlerde yamanır; satır verisi zaten günceldir. */
+  const PATCH_ROWS_PER_TASK=6;
+  const step=start=>{
+    for(const item of work.slice(start,start+PATCH_ROWS_PER_TASK))cpPlmPatchRow(item);
+    if(start+PATCH_ROWS_PER_TASK<work.length)setTimeout(()=>step(start+PATCH_ROWS_PER_TASK),0);
+  };
+  if(work.length)step(0);
+}
+function cpPlmPatchRow({tableKey,tr,row,change,columns}){
+  if(!tr.isConnected)return; // satır bu arada yeniden çizildiyse güncel değeri zaten gösterir
+  const esc=value=>window.CSS?.escape?CSS.escape(String(value)):String(value).replace(/["\\]/g,'\\$&');
+  const flags=computeFlags(row);
+  for(const key of Array.isArray(change.keys)?change.keys:[]){
+    const td=tr.querySelector(`:scope > td[data-key="${esc(key)}"]`),column=columns.find(c=>c.k===key);
+    if(!td||!column||td.contains(document.activeElement))continue;
+    const render=current=>{const tpl=document.createElement('template');tpl.innerHTML=(tableKey==='orders'?ordersCellHtml(column,current,flags,tableKey):cellHtml(column,current,flags,tableKey)).trim();return tpl.content.firstElementChild;};
+    const next=render(row);if(!next)continue;
+    // Yalnız çizicinin ürettiği sınıflar değişir; seçim/sınır gibi durum sınıfları korunur.
+    const before=render({...row,[key]:change.previous?.[key]??''}),owned=new Set([...(before?.classList||[])]);
+    [...td.classList].forEach(cls=>{if(owned.has(cls))td.classList.remove(cls);});
+    next.classList.forEach(cls=>td.classList.add(cls));
+    for(const attr of ['title','data-cp-fabric']){if(next.hasAttribute(attr))td.setAttribute(attr,next.getAttribute(attr));else td.removeAttribute(attr);}
+    td.innerHTML=next.innerHTML;
+  }
 }
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
@@ -33687,6 +33731,7 @@ async function openCoreNectumApiSettings({required=false}={}){
           <div class="muted">${escapeHtml(en?'Buyer Log reuses the protected persistent CoreNectum browser session and keeps any temporary API credential only in backend memory. The token is never displayed, logged, or written to Buyer Log storage.':'Buyer Log korumalı persistent CoreNectum browser session’ını yeniden kullanır; geçici API kimliği yalnız backend belleğinde tutulur. Token gösterilmez, loglanmaz ve Buyer Log depolamasına yazılmaz.')}</div>
           <div class="muted">${escapeHtml(en?'A Buyer Log restart does not invalidate that browser session. Sign-in is requested again only after a real authentication/session failure.':'Buyer Log yeniden başlatıldığında browser oturumu geçersiz sayılmaz. Yeniden giriş yalnız gerçek bir authentication/session hatası doğrulandığında istenir.')}</div>
           <div data-plm-api-message class="muted"></div>
+          ${window.BLCPPlmSilentBom?`<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-plm-silent-bom style="margin-top:3px"${window.BLCPPlmSilentBom.isEnabled()?' checked':''}><span style="display:grid;gap:2px"><strong>${escapeHtml(en?'Keep CP / Orders Artwork and Fabric up to date in the background':'CP / Orders Artwork ve Fabric bilgisini arka planda güncel tut')}</strong><span class="muted">${escapeHtml(en?'At most once a day, a few minutes after start-up and only while Buyer Log is idle. LCW AI is not used and Collection rows are not changed.':'Günde en fazla bir kez, açılıştan birkaç dakika sonra ve yalnız Buyer Log boştayken. LCW AI kullanılmaz, Koleksiyon satırları değiştirilmez.')}</span></span></label>`:''}
         </div>
         <div class="verHistFoot"><button type="button" class="tbtn" data-plm-api-clear>${escapeHtml(en?'Clear PLM session':'PLM oturumunu temizle')}</button><span style="flex:1"></span><button type="button" class="tbtn" data-plm-api-test>${escapeHtml(en?'Test connection':'Bağlantıyı test et')}</button><button type="button" class="tbtn primary" data-plm-api-connect>${escapeHtml(status.configured?(en?'Renew automatically':'Otomatik yenile'):(en?'Connect automatically':'Otomatik bağlan'))}</button><button type="button" class="tbtn" data-plm-api-close>${escapeHtml(en?'Close':'Kapat')}</button></div>
       </div>`;
@@ -33697,6 +33742,7 @@ async function openCoreNectumApiSettings({required=false}={}){
   const close=()=>{releaseKeyboard();modal.remove();resolve(Boolean(status.configured));};
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
       modal.querySelectorAll('[data-plm-api-close]').forEach(button=>button.addEventListener('click',close));
+      modal.querySelector('[data-plm-silent-bom]')?.addEventListener('change',event=>window.BLCPPlmSilentBom?.setEnabled?.(event.target.checked));
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
       modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';window.BLCorporateSessionKeeper?.pause?.('plm');if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
       modal.querySelector('[data-plm-api-test]')?.addEventListener('click',async()=>{try{message.textContent=en?'Testing…':'Test ediliyor…';await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});message.textContent=en?'Connection successful.':'Bağlantı başarılı.';}catch(error){message.textContent=plmSyncErrorMessage(error)||String(error&&error.message||error);}});

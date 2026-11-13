@@ -311,6 +311,35 @@
           "en": "The switch is on by default; when turned off, no background image request is sent."
         }
       }
+    },
+    {
+      "id": "cp-orders-silent-plm-bom",
+      "type": "feature",
+      "module": {
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
+      },
+      "title": {
+        "tr": "CP ve Siparişler'de Artwork ve Fabric (PLM) arka planda güncel kalır",
+        "en": "Artwork and Fabric (PLM) in CP and Orders stay up to date in the background"
+      },
+      "body": {
+        "tr": "Buyer Log, açılıştan birkaç dakika sonra ve yalnız siz uygulamayı kullanmıyorken, CP ve Siparişler'deki modellerin PLM BOM bilgisini günde en fazla bir kez sessizce okur. Yalnız değişen Artwork Detail ve Fabric (PLM) hücreleri yerinde güncellenir; tablo yeniden çizilmez, kaydırma ve seçim korunur. Uyarı, ilerleme veya Operasyon Merkezi açılmaz; siz bir PLM işi başlattığınızda arka plan işi hemen yol verir. LCW AI kullanılmaz: AI gerektiren baskı/Set Style özetleri bir sonraki elle PLM senkronunuzda tamamlanır. Koleksiyon satırlarına, görsellere ve model dosyalarına dokunulmaz. PLM Kullanıcı Girişi penceresinden kapatılabilir.",
+        "en": "A few minutes after start-up and only while you are not using the app, Buyer Log silently reads the PLM BOM of the models in CP and Orders, at most once a day. Only changed Artwork Detail and Fabric (PLM) cells are updated in place; the table is not redrawn and scrolling and selection are kept. No alert, progress or Operations Center appears, and the background work yields as soon as you start a PLM job. LCW AI is not used: print/Set Style summaries that need AI are completed in your next manual PLM sync. Collection rows, images and model files are not touched. It can be turned off in the PLM User Sign-In window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-silent-plm-bom.png",
+        "alt": {
+          "tr": "PLM Kullanıcı Girişi penceresinde, varsayılan olarak işaretli \"CP / Orders Artwork ve Fabric bilgisini arka planda güncel tut\" seçeneği",
+          "en": "The \"Keep CP / Orders Artwork and Fabric up to date in the background\" option, checked by default, in the PLM User Sign-In window"
+        },
+        "caption": {
+          "tr": "Arka plan güncellemesi varsayılan olarak açıktır; işaret kaldırılarak kapatılabilir.",
+          "en": "Background updating is on by default; clear the checkbox to turn it off."
+        }
+      }
     }
   ]
 }
