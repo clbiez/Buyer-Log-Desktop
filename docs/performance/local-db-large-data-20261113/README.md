@@ -50,6 +50,29 @@ Yorum:
 - Kalan maliyet: DB hâlâ tek JSON zarfı; açılışta canlı kayıtlar ve uzak olay meta verisi tam parse edilir
   (328 MB'da ~4,5 sn). Bu artık geçmişle değil canlı veriyle ölçeklenir.
 
+## Ek aşama — ilk ekran DB parse'ını beklemez (aday `f567903`)
+
+Açılış sırası: DB konumu → yarım kalmış tam geri yükleme kurtarması → DB yükleme. `/api/data` yalnız ilk ikisini
+bekler; DB arka planda kooperatif (≤8 ms dilimler) yüklenir, eşzamanlı yüklemeler tek parse'ı paylaşır.
+Aynı protokol, yeni üretilmiş aynı boyutlu fixture (`f5/ab-*-results.json`):
+
+| Senaryo | İlk veri | DB hazır (arka plan) | En uzun donma | Toplam donma | Disk yazımı |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1× main | 4,14 sn | 3,77 sn | 2,90 sn | 6,65 sn | 927 MB |
+| 1× aday ilk açılış | **0,82 sn** | 4,97 sn | 1,04 sn | 2,32 sn | 529 MB |
+| 1× aday kalıcı | **0,75 sn** | 2,68 sn | **0,54 sn** | 0,55 sn | 0 |
+| 3× main | 14,23 sn | 13,87 sn | **61,21 sn** | 77,09 sn | 2.786 MB |
+| 3× aday ilk açılış | **0,89 sn** | 15,94 sn | 5,03 sn | 9,49 sn | 1.585 MB |
+| 3× aday kalıcı | **0,81 sn** | 7,48 sn | **0,56 sn** | 0,95 sn | 0 |
+
+Ham ilk veri: 1× main 4158/4143/3830, ilk 945/823/799, kalıcı 790/752/655; 3× main 13554/15915/14233,
+ilk 806/885/920, kalıcı 792/809/837 ms.
+
+- İlk ekran artık veri boyutundan **bağımsız** (~0,8 sn, 1× ve 3× aynı).
+- **Ödünleşim:** DB'nin arka planda tam hazır olması kooperatif parse yüzünden uzar (3× kalıcı: 4,47 → 7,48 sn
+  önceki adaya göre). Bu sürede yazım/senkron isteği DB yüklenene kadar bekler; arayüz donmaz.
+- Yükseltme sonrası ilk açılıştaki 3,6–5,5 sn donma, tek seferlik budama yazımının serileştirmesidir (928 MB).
+
 ## Ölçülmeyen / sınırlar
 
 - Gerçek kullanıcı DB'sinin bileşimi (journal/olay/kayıt oranı) **[Bilinmiyor]**; kazanım oranı ona bağlıdır. Data Maintenance → yerel DB istatistiği bunu gösterir.
@@ -58,9 +81,7 @@ Yorum:
 
 ## Sonraki adımlar (bu PR'da yok, gerekçeli)
 
-1. **İlk ekranı DB parse'ından ayırma:** mevcut `parseJsonBufferAsync` olay döngüsünü ≤45 ms'de tutuyor ama 309 MB'da 6,6 sn
-   (senkron 2,6 sn); hızlandırılmış varyant 4,0–4,7 sn. Yalnız `/api/data` kapısı kaldırılırsa kazanç verir; bu da tam
-   geri yükleme kurtarması ve DB konumu sıralamasıyla etkileşir (P1). Ayrı iş olarak ölçülmeli.
+1. ~~İlk ekranı DB parse'ından ayırma~~ — yukarıdaki ek aşamada yapıldı.
 2. Uzak olay meta verisi (`events` + `appliedEvents`) sınırsız büyüyor; cihaz başı kesintisiz checkpoint ile sınırlanabilir —
    senkron dedupe semantiği değiştiği için ayrı P1 iş.
 3. SQLite (`node:sqlite`) uzun vadeli seçenek; ancak tüm tüketiciler `localDb.read()` ile tam durumu belleğe alıyor.
