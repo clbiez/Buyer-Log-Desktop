@@ -707,6 +707,9 @@ const { createJobRegistry } = require('./lib/job-registry');
    kullanıcı başına tek slotta tutulduğu için bir sayfanın işi diğerinde
    görünüyordu (bkz. job-registry.js başındaki not). */
 const plmJobs = createJobRegistry();
+const { createPlmPriority } = require('./lib/plm-priority');
+// Önce kullanıcı: sessiz PLM işleri kullanıcının başlattığı PLM işine yol verir.
+const plmPriority = createPlmPriority({ jobs: plmJobs });
 const asasTechnicalImages = require('./lib/asas-technical-images');
 const webScriptStore = require('./lib/web-script-store');
 const webScriptRegistry = require('./lib/web-script-registry');
@@ -4200,10 +4203,11 @@ app.post('/api/plm-style-links/browser/prepare', userAccess.requireAnyArea('cp',
   } catch (err) { automationError(res, err, 'Edge bağlantısı hazırlanamadı.'); }
 });
 
-const modelImageImportLocks = new Set();
+// userId -> { background }: kilidi sessiz bir iş mi tutuyor (bkz. lib/plm-priority).
+const modelImageImportLocks = new Map();
 const modelOperationProgress = new Map();
-function setModelOperationProgress(userId, value){ modelOperationProgress.set(String(userId||'moderator'), { ...(value||{}), updatedAt:Date.now() }); }
-function clearModelOperationProgress(userId){ modelOperationProgress.delete(String(userId||'moderator')); }
+function setModelOperationProgress(userId, value, options){ if(options&&options.background)return; modelOperationProgress.set(String(userId||'moderator'), { ...(value||{}), updatedAt:Date.now() }); }
+function clearModelOperationProgress(userId, options){ if(options&&options.background)return; modelOperationProgress.delete(String(userId||'moderator')); }
 function modelImageMode(value){ return value === 'all' ? 'all' : 'missing'; }
 function modelImageItemKey(item){ return parseLib.plmImageKey(item && item.plmId); }
 function plmImageRefreshLog(event,payload={}){
@@ -4223,11 +4227,17 @@ function assertModelImageMutable(){
   const error=new Error('Model görselleri sıfırlanırken görsel kaydedilemez. İşlem bitince yeniden deneyin.');
   error.statusCode=409;error.code='MODEL_IMAGE_RESET_BUSY';throw error;
 }
-async function withModelImageImportLock(userId, fn){
-  const key=String(userId||'moderator');
+/* Görsel içe aktarma kullanıcı başına tektir. Kilidi SESSİZ bir iş tutuyorsa
+   kullanıcının başlattığı iş 409 almaz: sessiz iş durdurulur ve kilit sınırlı
+   süre beklenir (lib/plm-priority). İki kullanıcı işi için eski kural aynen. */
+async function withModelImageImportLock(userId, fn, options = {}){
   assertModelImageMutable();
-  if(modelImageImportLocks.has(key)){const error=new Error('Başka bir model görseli içe aktarma işlemi devam ediyor.');error.statusCode=409;error.code='MODEL_IMAGE_IMPORT_BUSY';throw error;}
-  modelImageImportLocks.add(key);try{return await fn();}finally{modelImageImportLocks.delete(key);}
+  return plmPriority.withLock(modelImageImportLocks, String(userId||'moderator'), {
+    background: options.background === true,
+    busyMessage: 'Başka bir model görseli içe aktarma işlemi devam ediyor.',
+    busyCode: 'MODEL_IMAGE_IMPORT_BUSY',
+    onWait: options.onWait,
+  }, fn);
 }
 app.post('/api/plm-style-links/sync-links', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '16mb' }), async (req, res) => {
   try {
@@ -4869,11 +4879,15 @@ async function runPlmImageImport(req,res){
     const overwriteManual=Boolean(req.body&&req.body.overwriteManual);
     if(!raw)return res.status(400).json({error:'items (dizi) zorunlu.',code:'VALIDATION_ERROR'});
     plmImageRefreshLog('PLM_IMAGE_REFRESH_START',{mode,requested:raw.length,overwriteManual});
-    setModelOperationProgress(req.currentUser.id,{kind:'images',phase:'Download',current:0,total:raw.length,model:''});
+    const background=plmJobBackground(req);
+    // Önce kullanıcı: kullanıcı işi sessiz işleri durdurur; kullanıcı işi sürerken sessiz başlamaz.
+    plmPriority.admit(req.currentUser.id, { background });
+    setModelOperationProgress(req.currentUser.id,{kind:'images',phase:'Download',current:0,total:raw.length,model:''},{background});
     imageJobRef.id = plmJobs.create(req.currentUser.id, {
       kind: 'plm-images', scope: plmJobScope(req), total: raw.length,
       label: 'Model gorseli · ' + raw.length + ' model (PLM)',
       phase: 'PLM cozumleniyor',
+      background,
     }).id;
     if(typeof req.onPlmJob==='function')req.onPlmJob(imageJobRef.id);
 
@@ -5023,7 +5037,7 @@ async function runPlmImageImport(req,res){
         const released = await upstreamLease.release();
         plmImageRefreshLog('PLM_IMAGE_LEASE_RELEASE', { ms:Date.now()-releaseStarted, protected:upstreamLease.protectedCount, ...released });
       }
-    });
+    }, { background, onWait: () => reportStage('waiting-lock') });
 
     reportStage('finalizing');
     phaseLog('done');
@@ -5035,7 +5049,7 @@ async function runPlmImageImport(req,res){
     res.json({ok:true,...result});
     finishImageJob(req, imageJobRef, result.status===plmImageJobStore.STATUS_FAILED ? new Error('PLM gorsel isi basarisiz.') : null);
   } catch(err){ if(checkpoint)try{checkpoint.finish(plmImageJobStore.STATUS_FAILED,{error:err&&err.message});}catch(_){} finishImageJob(req, imageJobRef, err); automationError(res,err,'PLM model görselleri içe aktarılamadı.');}
-  finally { if(apiSession)await apiSession.close().catch(()=>{}); clearModelOperationProgress(req.currentUser&&req.currentUser.id); }
+  finally { if(apiSession)await apiSession.close().catch(()=>{}); clearModelOperationProgress(req.currentUser&&req.currentUser.id,{background:plmJobBackground(req)}); }
 }
 app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '16mb' }), async (req,res)=>{
   const imageJobRef = { id: null };
@@ -5199,7 +5213,7 @@ function finishImageJob(req, jobRef, error) {
    yazılır. Eski uç korunuyor ki ona bakan mevcut istemci kodu bozulmasın. */
 function reportImageProgress(req, jobRef, progress) {
   const value = progress || {};
-  setModelOperationProgress(req.currentUser.id, { kind: 'images', ...value });
+  setModelOperationProgress(req.currentUser.id, { kind: 'images', ...value }, { background: plmPriority.isBackgroundRequest(req) });
   if (!jobRef || !jobRef.id) return;
   // Image stages count different units (models, styles, attachments). Keep
   // those counters separate from the requested records and final outcomes.
@@ -5223,10 +5237,20 @@ function plmJobScope(req) {
 /* Bir PLM işini iş kaydıyla sarmalar. Eski setModelOperationProgress çağrıları
    KORUNUR: hâlen o uca bakan istemci kodu bozulmasın diye ikisi bir arada
    yürür; yeni arayüz jobId üzerinden okur. */
+/* İstemcinin sessiz (arka plan) PLM isteği: public/plm-auth-recovery.js ile
+   aynı başlık sözleşmesi. Böyle bir istekten doğan iş "background" işaretlenir;
+   Operasyon Merkezi/sayfa şeridi onu kendiliğinden göstermez. */
+function plmJobBackground(req) {
+  return plmPriority.isBackgroundRequest(req);
+}
 async function withPlmJob(req, meta, fn) {
   const userId = req.currentUser.id;
+  const background = meta.background === true || plmJobBackground(req);
+  // Önce kullanıcı: kullanıcı işi sessizleri durdurur; kullanıcı işi sürerken sessiz başlamaz.
+  plmPriority.admit(userId, { background });
   const job = plmJobs.create(userId, {
     kind: meta.kind, scope: meta.scope, label: meta.label, total: meta.total, phase: meta.phase,
+    background,
   });
   const report = patch => plmJobs.update(userId, job.id, patch || {});
   const fail = failure => plmJobs.addFailure(userId, job.id, failure || {});
@@ -5342,6 +5366,7 @@ const agentPlmSyncService=require('./routes/plm-sync-routes')(app, {
   withPlmJob,
   writeModelFilesIndex,
   getModelImageSettings,
+  plmPriority,
 });
 /* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
 const sampleRequestStore = require('./lib/plm-sample-requests-store');

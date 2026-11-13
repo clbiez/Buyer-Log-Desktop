@@ -131,12 +131,13 @@ async function fullResetPortalSession(targetSession) {
 /*
  * Bir giriş penceresi loadURL hatası için sonraki adım:
  *   attempt 0 → hafif sıfırlama + yeniden dene
- *   attempt 1 → teşhis; bölüm bozuksa tam sıfırlama + yeniden dene,
+ *   attempt 1 → teşhis; bölüm bozuksa tam sıfırlama + yeniden dene
+ *               (allowFullReset=false, yani sessiz denemede: dur),
  *               geçiciyse yeniden dene, ağ ise dur
  *   attempt 2+ → dur
  * ERR_ABORTED (SSO yönlendirmesi sürüyor) hata sayılmaz.
  */
-async function nextPortalRecoveryStep({ error, attempt = 0, portalSession, baselineSession, url, label = 'Portal', log = () => {}, timeoutMs } = {}) {
+async function nextPortalRecoveryStep({ error, attempt = 0, portalSession, baselineSession, url, label = 'Portal', log = () => {}, timeoutMs, allowFullReset = true } = {}) {
   const errno = navigationErrno(error);
   const name = chromiumErrorName(error) || 'ERR_UNKNOWN';
   if (errno === ERR_ABORTED) return { action: 'ignore', errno };
@@ -148,6 +149,13 @@ async function nextPortalRecoveryStep({ error, attempt = 0, portalSession, basel
   if (attempt === 1) {
     const diagnosis = await diagnosePortalNavigation({ portalSession, baselineSession, url, timeoutMs });
     log(label + ' gezinme teşhisi (' + name + ' ' + errno + '): ' + describeDiagnosis(diagnosis));
+    if (diagnosis.verdict === 'partition' && !allowFullReset) {
+      /* Arka plan (sessiz) denemesi kullanıcının SSO oturumunu asla silmez:
+         yanlış bir teşhis bile kullanıcıyı yeniden girişe zorlamamalı. Tam
+         sıfırlama yalnız kullanıcının başlattığı (etkileşimli) girişte yapılır. */
+      log(label + ' oturum bölümü bozuk görünüyor; sessiz denemede bölüm korunuyor.');
+      return { action: 'fail', errno, diagnosis, detail: name + ' (' + errno + ') · ' + describeDiagnosis(diagnosis) };
+    }
     if (diagnosis.verdict === 'partition') {
       log(label + ' oturum bölümü bozuk görünüyor; bölüm verisi tamamen sıfırlanıp yeniden deneniyor (SSO yeniden istenebilir).');
       await fullResetPortalSession(portalSession);
