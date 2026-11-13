@@ -162,14 +162,19 @@ function createPlmImageIngest(deps = {}) {
 
   /* 2. AŞAMA — indirme öncesi. Kaynak kimliği (styleOptionImageId /
      attachmentAssociationId / paket özeti) kayıttakiyle aynıysa bayt
-     indirmeye GEREK YOK. */
-  function decideBeforeWrite(decided, selection, { store, overwriteManual = false } = {}) {
+     indirmeye GEREK YOK.
+
+     İSTİSNA — revalidate (dar açık yenileme: Seçili / tek model): CoreNectum
+     PLM revizyonunda yeni görseli AYNI Attachment adresiyle verebilir; kimlik
+     eşitliği "içerik değişmedi" kanıtı değildir. Bu modda bayt indirilir ve
+     commit içerik özetini karşılaştırır: aynıysa hiçbir şey yazılmaz. */
+  function decideBeforeWrite(decided, selection, { store, overwriteManual = false, revalidate = false } = {}) {
     const sourceIdentity = clean(selection && selection.sourceIdentity, 200);
     const base = { ...decided, sourceType: clean(selection && selection.sourceType, 40), sourceIdentity, imageUrl: clean(selection && selection.imageUrl, 2000) };
     if (decided.decision === DECISION_MANUAL || decided.decision === DECISION_INVALID) return base;
     const permission = ownership.canWriteAutomatic(store, decided.key, decided.currentRef, { overwriteManual });
     if (!permission.allowed) return { ...base, decision: DECISION_MANUAL, ownershipState: permission.state, reason: 'Kullanıcının elle seçtiği görsel korunur.' };
-    if (ownership.isCacheHit(store, decided.key, decided.currentRef, sourceIdentity, { hasStoredFile: hasStoredFile(decided.currentRef) })) {
+    if (!revalidate && ownership.isCacheHit(store, decided.key, decided.currentRef, sourceIdentity, { hasStoredFile: hasStoredFile(decided.currentRef) })) {
       return { ...base, decision: DECISION_CACHED, reason: 'Aynı CoreNectum görsel kimliği zaten kayıtlı.' };
     }
     return { ...base, decision: DECISION_FETCH };

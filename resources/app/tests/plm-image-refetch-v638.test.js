@@ -115,7 +115,7 @@ test('görsel güncelleme listesi PLM için renk bazlı, ASAS için model bazlı
   // Eksik/tümü kararı server endpointinde uygulanır.
   // v9.15: gövdeye iş kaydı için "scope" eklendi (işin hangi ekrana ait
   // olduğunu sunucu bilmeli). Sınanan kural aynı: items + mode gönderilir.
-  assert.match(APP, /body:JSON\.stringify\(\{items,mode:requestMode,scope:source\}\)/);
+  assert.match(APP, /body:JSON\.stringify\(\{items,mode:requestMode,revalidate:mode==='selected',scope:source\}\)/);
 });
 
 test('v6.38 istemci ve sunucu kuralı aynı sonucu veriyor', () => {

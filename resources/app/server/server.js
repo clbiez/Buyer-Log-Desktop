@@ -5019,6 +5019,9 @@ async function runPlmImageImport(req,res){
       });
       const run = await plmImageSyncService.runPlmImageSync({
         requests: upstreamRequests, mode, overwriteManual, checkpoint,
+        // Revize görsel doğrulaması yalnız DAR açık yenilemede (Seçili / tek
+        // model) istenir; "Tümünü Yenile" kimlik önbelleğiyle hızlı kalır.
+        revalidate: mode==='all' && Boolean(req.body && req.body.revalidate===true),
         imagemap: (first.overrides && first.overrides.imagemap) || imagemap, store: first.store,
         ingest: canonicalPlmImageIngest(plmImageOwnership.OWNER_PLM),
         styleListLookup: codes => apiSession.styleListLookup(codes),

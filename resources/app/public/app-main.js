@@ -33969,7 +33969,7 @@ async function kolSetPlmMainColour(row){
 async function fetchPlmImageForModel({plmId,colourCode,colour,styleName}={}){
   const id=normalizePlmLinkId(plmId);if(!id)throw new Error(appLang==='en'?'This row has no PLM ID.':'Bu satırda PLM ID yok.');
   if(!await ensureCoreNectumApiConnection())throw new Error(appLang==='en'?'PLM API connection is not configured.':'PLM API bağlantısı ayarlı değil.');
-  const requestedColour=norm(colourCode),requestedColourName=norm(colour),data=await plmJsonRequest('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'all',items:[{plmId:id,colourCode:requestedColour,colour:requestedColourName,styleName:norm(styleName)||''}]})});
+  const requestedColour=norm(colourCode),requestedColourName=norm(colour),data=await plmJsonRequest('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'all',revalidate:true,items:[{plmId:id,colourCode:requestedColour,colour:requestedColourName,styleName:norm(styleName)||''}]})});
   applySyncedPlmImages(data);const images=Array.isArray(data&&data.images)?data.images:[],sameColour=item=>!requestedColourName||turknorm(item&&item.colour)===turknorm(requestedColourName),hit=images.find(item=>normalizePlmLinkId(item&&item.plmId)===id&&item&&item.imageRef&&(!requestedColour||turknorm(item.colourCode)===turknorm(requestedColour))&&sameColour(item));
   if(!hit){const failed=(Array.isArray(data&&data.imageFailedItems)?data.imageFailedItems:[]).find(item=>normalizePlmLinkId(item&&item.plmId)===id&&(!requestedColour||turknorm(item.colourCode)===turknorm(requestedColour))&&sameColour(item));throw new Error(failed&&failed.error?failed.error:(appLang==='en'?'PLM returned no image for this model.':'PLM bu model için görsel döndürmedi.'));}
   showToast(appLang==='en'?'Image fetched from PLM.':'Görsel PLM\'den çağrıldı.');return hit;
@@ -34011,7 +34011,7 @@ async function plmSyncImagesStep(source,mode,imageSource,setLabel){
   if(!items.length)return {saved:0,requested:0,failed:0,skipped:true};
   if(setLabel)setLabel(appLang==='en'?`Updating ${items.length} images…`:`${items.length} görsel güncelleniyor…`);
   const endpoint=imageSource==='asas'?'/api/model-images/import-asas':'/api/model-images/import-plm';
-  const data=await plmJsonRequest(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:requestMode,scope:source})});
+  const data=await plmJsonRequest(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:requestMode,revalidate:mode==='selected',scope:source})});
   applySyncedPlmImages(data);
   return {
     saved:Number(data.imagesSaved??data.saved)||0,
@@ -34405,7 +34405,7 @@ async function updateModelImages({source=MODEL_ASSET_SOURCE_PLM,mode='missing',b
        the one allowed interactive retry only when the backend proves a real
        CoreNectum authentication failure. */
     if(span)span.textContent=appLang==='en'?`Updating ${items.length} images…`:`${items.length} görsel güncelleniyor…`;
-    const data=await plmJsonRequest(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:requestMode,scope:operation.contextType})});
+    const data=await plmJsonRequest(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:requestMode,revalidate:mode==='selected',scope:operation.contextType})});
     // Kanonik kalıcılık HER HÂLÜKÂRDA uygulanır; yalnız yeniden çizim
     // görünüm jetonuna bağlıdır.
     applySyncedPlmImages(data);
