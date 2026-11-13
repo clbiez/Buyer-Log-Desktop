@@ -224,6 +224,35 @@
         "tr": "Operasyon Dağılımı ve Backlog Report çıktısındaki Alt Üretici kırılımı sunucunun hesapladığı Alt Üretici değerini okumuyordu ve her satır (boş) altında toplanıyordu. Artık DTR siparişler Üretici adıyla, Non-DTR siparişler girilen Alt Üretici ile gruplanır; Alt Üretici girilmemiş Non-DTR siparişler (boş) olarak kalır.",
         "en": "The Sub-Manufacturer breakdown in Operational Distribution and the Backlog Report export did not read the Sub-Manufacturer value computed by the server, so every row fell under (blank). DTR orders are now grouped by Manufacturer and Non-DTR orders by the entered Sub-Manufacturer; Non-DTR orders without a Sub-Manufacturer stay (blank)."
       }
+    },
+    {
+      "id": "data-management-filter-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Database filtrelerinde favori ön ayarlar herkese açık",
+        "en": "Favourite presets for database filters are available to everyone"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-filter-favorites.png",
+        "alt": {
+          "tr": "Veri Yönetimi filtre düzenleyicisinde Favori ön ayarlar satırı: kaydedilmiş W26 Örme favorisi ve Favori olarak kaydet düğmesi",
+          "en": "Favourite presets row in the Data Management filter editor: the saved W26 Örme favourite and the Save as favourite button"
+        },
+        "caption": {
+          "tr": "Favoriye tıklamak koşulları doldurur; uygulamak için Kaydet'e basılır.",
+          "en": "Clicking a favourite fills the conditions; press Save to apply."
+        }
+      },
+      "body": {
+        "tr": "Veri Yönetimi filtre düzenleyicisinde mevcut koşulları \"Favori olarak kaydet\" ile adlandırıp saklayın; favoriye tıklayınca koşullar yüklenir, Kaydet ile uygulanır. Kişisel favoriler artık yönetim yetkisi olmayan kullanıcılara da açık ve yalnız sahibine görünür. Favori adı panelin içinde yazılır; masaüstü uygulamasında kaydetme penceresinin açılmaması sorunu giderildi. Favoriyi herkesle paylaşmak ve paylaşılanı silmek yine yönetim yetkisi ister.",
+        "en": "In the Data Management filter editor, name and keep the current conditions with \"Save as favourite\"; clicking a favourite loads its conditions and Save applies them. Personal favourites are now available to users without management permission and are visible only to their owner. The favourite name is typed inside the panel, fixing the save dialog that did not open in the desktop app. Sharing a favourite with everyone and deleting a shared one still require management permission."
+      }
     }
   ]
 }

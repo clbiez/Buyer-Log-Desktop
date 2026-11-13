@@ -7643,7 +7643,9 @@ html[data-ui-system="manifest"] .dmfTplAct:hover { color: var(--ui-text) !import
 }
 html[data-ui-system="manifest"] .dmfTplSave { background: var(--ui-surface) !important; font-size: var(--ui-font-xs) !important; color: var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .dmfTplSave:hover { background: var(--ui-surface-strong) !important; color: var(--ui-text) !important
+html[data-ui-system="manifest"] .dmfTplForm input { background: var(--ui-surface) !important; color: var(--ui-text) !important; font: inherit !important; font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .dmfTplSave:hover:not(:disabled) { background: var(--ui-surface-strong) !important; color: var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .dmfTplMsg { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
