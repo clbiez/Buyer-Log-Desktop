@@ -8,7 +8,7 @@
  *     gelen çoklu hücre o hücreden başlayarak dağıtılır.
  *  3) CP yalnız elle girilen alanlara, tek hücre düzenlemesiyle aynı
  *     commitCpEditor yolundan yazar ve tüm yapıştırma tek geri alma adımıdır.
- *     Orders salt kopyalama kalır.
+ *     Orders yalnız not alanlarına yapıştırır.
  */
 
 const test = require('node:test');
@@ -159,10 +159,10 @@ test('hücre düzenleyicisinde tek değer yerel kalır, Excel çoklu hücresi o 
   restore();
 });
 
-test('CP elle girilen alanlara yazar; Orders yapıştırma almaz', () => {
+test('CP elle girilen alanlara, Orders yalnız not alanlarına yazar', () => {
   const register = extractFunction(APP, 'registerManagedGridClipboard');
-  assert.match(register, /applyPaste:tableKey==='cp'\?applyCpGridPaste:undefined/);
-  assert.match(register, /pasteTarget:tableKey==='cp'\?cpPasteTarget:undefined/);
+  assert.match(register, /applyPaste:tableKey==='cp'\?applyCpGridPaste:applyOrdersGridPaste/);
+  assert.match(register, /pasteTarget:tableKey==='cp'\?cpPasteTarget:ordersPasteTarget/);
   const cpPasteTarget = new Function('turknorm', 'licenseLicensorStateForRow', 'norm', 'window', 'BLRevision',
     `${extractFunction(APP, 'cpPasteTarget')}; return cpPasteTarget;`)(
     value => String(value || '').toUpperCase(),
@@ -179,7 +179,7 @@ test('CP elle girilen alanlara yazar; Orders yapıştırma almaz', () => {
   assert.equal(cpPasteTarget(row, { k: 'Sub-Manufacturer', type: 'submfr' }), 'submfr');
   assert.equal(cpPasteTarget(row, { k: 'Importance', type: 'importance' }), 'importance');
   assert.equal(cpPasteTarget(row, { k: 'Order Qty', type: 'int' }), null);
-  assert.equal(cpPasteTarget(row, { k: 'Notes', type: 'text' }), null);
+  assert.equal(cpPasteTarget(row, { k: 'Notes', type: 'text' }), 'note');
   assert.equal(cpPasteTarget({ ...row, Licensor: 'DTR' }, { k: 'Sub-Manufacturer', type: 'submfr' }), null);
   assert.equal(cpPasteTarget({ ...row, _canEdit: false }, { k: 'Supp. FOB', type: 'moneyEdit' }), null);
   assert.equal(cpPasteTarget({ ...row, _canEditShared: false }, { k: 'Supp. FOB', type: 'moneyEdit' }), null);
