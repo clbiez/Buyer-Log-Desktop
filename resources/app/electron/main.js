@@ -1149,7 +1149,7 @@ async function acquireCoreNectumToken(options = {}) {
           // sonra teşhis edilir; bölüm bozuksa sıfırlanır, ağ sorunuysa kanıtla
           // raporlanır (bkz. portal-navigation-recovery.js).
           const step = await nextPortalRecoveryStep({
-            error, attempt, url: CORENECTUM_HOME, label: 'CoreNectum', log,
+            error, attempt, url: CORENECTUM_HOME, label: 'CoreNectum', log, allowFullReset: interactive,
             portalSession: authSession, baselineSession: session.defaultSession,
           });
           if (step.diagnosis) lastDiagnosis = step.diagnosis;
@@ -1260,7 +1260,7 @@ async function acquireLcwAiToken(options = {}) {
       catch (error) {
         if (settled || win.isDestroyed()) return;
         const step = await nextPortalRecoveryStep({
-          error, attempt, url: LCWAI_HOME, label: 'LCW AI', log,
+          error, attempt, url: LCWAI_HOME, label: 'LCW AI', log, allowFullReset: interactive,
           portalSession: authSession, baselineSession: session.defaultSession,
         });
         if (step.diagnosis) lastDiagnosis = step.diagnosis;

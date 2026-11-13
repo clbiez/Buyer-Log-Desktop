@@ -33570,6 +33570,20 @@ async function plmJsonRequest(url,options){
     throw error;
   }
 }
+/* SESSİZ (ARKA PLAN) PLM İSTEĞİ — kullanıcının başlatmadığı işler için.
+   plmJsonRequest'ten farkı: Operasyon Merkezi açılmaz, toast/uyarı/login
+   penceresi gösterilmez, ağ yokken PLM'e hiç gidilmez. "X-BuyerLog-Auth-Mode:
+   silent" başlığıyla plm-auth-recovery yalnız gizli SSO yenilemesini oturum
+   koruyucunun geri çekilme kuralıyla dener; sunucu doğan işi "background"
+   işaretler. Hata çağırana sessiz bir hata (error.silent) olarak döner. */
+async function plmSilentJsonRequest(url,options={}){
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){const error=new Error('PLM offline');error.code='PLM_OFFLINE';error.silent=true;throw error;}
+  const headers=new Headers(options.headers||{});headers.set('X-BuyerLog-Auth-Mode','silent');
+  const res=await fetch(url,{...options,headers}),data=await res.json().catch(()=>({}));
+  if(!res.ok){const error=new Error(data.error||res.statusText);error.code=data.code||'PLM_REQUEST_FAILED';error.details=data.details;error.silent=true;throw error;}
+  return data;
+}
+window.BLPlmSilentRequest=plmSilentJsonRequest;
 function openPlmSignInAfterAuthFailure(){try{void openCoreNectumApiSettings();}catch(_){}}
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;
 async function coreNectumApiRaw(url,options){
@@ -33590,6 +33604,8 @@ async function runCoreNectumAutoAuth({interactive=true,force=false}={}){
     }
     const result=await window.buyerLogDesktop.ensureCoreNectumAuth({interactive});
     if(!result||!result.ok){const error=new Error(result?.error||(appLang==='en'?'CoreNectum sign-in could not be completed.':'CoreNectum oturumu tamamlanamadı.'));error.code=result?.code||'CORENECTUM_AUTH_FAILED';error.diagnosis=result?.diagnosis||'';throw error;}
+    // Kullanıcı bilerek yeniden bağlandı: oturum koruyucu bu anahtarı yine izler.
+    if(interactive)window.BLCorporateSessionKeeper?.resume?.('plm');
     const tested=await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     return tested.status||{configured:true,source:'desktop-sso',automatic:true};
   })();
@@ -33628,7 +33644,7 @@ async function openCoreNectumApiSettings({required=false}={}){
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
       modal.querySelectorAll('[data-plm-api-close]').forEach(button=>button.addEventListener('click',close));
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
-      modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
+      modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';window.BLCorporateSessionKeeper?.pause?.('plm');if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
       modal.querySelector('[data-plm-api-test]')?.addEventListener('click',async()=>{try{message.textContent=en?'Testing…':'Test ediliyor…';await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});message.textContent=en?'Connection successful.':'Bağlantı başarılı.';}catch(error){message.textContent=plmSyncErrorMessage(error)||String(error&&error.message||error);}});
       connect?.addEventListener('click',async()=>{connect.disabled=true;try{message.textContent=en?'Connecting automatically…':'Otomatik bağlanıyor…';status=await runCoreNectumAutoAuth({interactive:true,force:true});message.textContent=en?'CoreNectum authorization obtained automatically.':'CoreNectum yetkilendirmesi otomatik alındı.';refreshBadge();}catch(error){message.textContent=error&&error.code==='CORENECTUM_AUTH_NAVIGATION_FAILED'&&error.diagnosis==='network'?`${en?'This computer cannot reach CoreNectum from any Buyer Log session (diagnosis: network). Check the company network/VPN; if the page opens in Edge, ask IT to allow BuyerLog.exe through the proxy/security software. Details are in data\\logs\\desktop.log.':'Bu bilgisayar CoreNectum’a Buyer Log’un hiçbir oturumundan ulaşamıyor (teşhis: ağ). Şirket ağı/VPN bağlantısını kontrol edin; sayfa Edge’de açılıyorsa BT’den BuyerLog.exe için proxy/güvenlik yazılımı izni isteyin. Ayrıntı: data\\logs\\desktop.log.'} (${String(error.message||error.code)})`:error&&error.code==='CORENECTUM_AUTH_NAVIGATION_FAILED'?`${en?'The CoreNectum page could not be opened. Check that you are on the company network/VPN, then try again; if it persists, use Clear PLM session and connect again.':'CoreNectum sayfası açılamadı. Şirket ağına/VPN’e bağlı olduğunuzu kontrol edip yeniden deneyin; sürerse PLM oturumunu temizle ile oturumu sıfırlayıp tekrar bağlanın.'} (${String(error.message||error.code)})`:String(error&&error.message||error);}finally{connect.disabled=false;}});
     });

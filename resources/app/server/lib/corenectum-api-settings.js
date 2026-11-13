@@ -19,6 +19,10 @@ const tokens = new Map();
    hangi yetkiyle alındığını ayırt etmek içindir (eşzamanlı isteklerde geç
    dönen eski-token 401'i, tamamlanmış bir yenilemeyi beklemeye yol açmasın). */
 let tokenGeneration = 0;
+/* CoreNectum'un 401/403 ile reddettiği kuşak. Token silinmez (eşzamanlı işler
+   aynı kuşağı beklemeye devam eder); yalnız durum "reddedildi" der ki oturum
+   koruyucu kullanıcı komutu beklemeden sessiz yenileme yapsın. */
+let rejectedGeneration = -1;
 let desktopToken = '';
 let desktopTokenUpdatedAt = 0;
 let desktopStyleListTemplate = null;
@@ -165,9 +169,12 @@ function tokenExpiresAt(token) {
 }
 function publicSettings(userId) {
   const source = sourceFor(userId);
+  const expiresAt = source === 'none' ? '' : tokenExpiresAt(getToken(userId));
   return {
-    expiresAt: source === 'none' ? '' : tokenExpiresAt(getToken(userId)),
+    expiresAt,
     configured: source !== 'none',
+    expired: Boolean(expiresAt) && Date.parse(expiresAt) <= Date.now(),
+    rejected: source !== 'none' && rejectedGeneration === tokenGeneration,
     source,
     mode: source === 'desktop-sso' ? 'direct-api-auto-auth' : 'direct-bearer',
     persistence: source === 'environment' ? 'environment' : source === 'desktop-sso' ? 'persistent-browser-session' : 'session-memory',
@@ -207,12 +214,16 @@ function clearDesktopToken() {
   clearDesktopStyleListTemplate();
   return publicSettings('desktop');
 }
+function markTokenRejected(generation) {
+  // Geç dönen eski-kuşak 401'i yeni (geçerli) token'ı reddedilmiş saydırmaz.
+  if (Number(generation) === tokenGeneration) rejectedGeneration = tokenGeneration;
+}
 function hasDesktopToken() { return Boolean(desktopToken); }
 function currentTokenGeneration() { return tokenGeneration; }
 
 module.exports = {
   normalizeToken, getToken, publicSettings, tokenExpiresAt, saveToken, clearToken,
-  setDesktopToken, clearDesktopToken, hasDesktopToken, currentTokenGeneration,
+  setDesktopToken, clearDesktopToken, hasDesktopToken, currentTokenGeneration, markTokenRejected,
   sanitizeStyleListTemplate, paginateStyleListTemplate,
   setDesktopStyleListTemplate, getStyleListTemplate, clearDesktopStyleListTemplate,
 };

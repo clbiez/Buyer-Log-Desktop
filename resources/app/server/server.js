@@ -4874,6 +4874,7 @@ async function runPlmImageImport(req,res){
       kind: 'plm-images', scope: plmJobScope(req), total: raw.length,
       label: 'Model gorseli · ' + raw.length + ' model (PLM)',
       phase: 'PLM cozumleniyor',
+      background: plmJobBackground(req),
     }).id;
     if(typeof req.onPlmJob==='function')req.onPlmJob(imageJobRef.id);
 
@@ -5223,10 +5224,18 @@ function plmJobScope(req) {
 /* Bir PLM işini iş kaydıyla sarmalar. Eski setModelOperationProgress çağrıları
    KORUNUR: hâlen o uca bakan istemci kodu bozulmasın diye ikisi bir arada
    yürür; yeni arayüz jobId üzerinden okur. */
+/* İstemcinin sessiz (arka plan) PLM isteği: public/plm-auth-recovery.js ile
+   aynı başlık sözleşmesi. Böyle bir istekten doğan iş "background" işaretlenir;
+   Operasyon Merkezi/sayfa şeridi onu kendiliğinden göstermez. */
+function plmJobBackground(req) {
+  try { return String(req && req.headers && req.headers['x-buyerlog-auth-mode'] || '').trim().toLowerCase() === 'silent'; }
+  catch (_) { return false; }
+}
 async function withPlmJob(req, meta, fn) {
   const userId = req.currentUser.id;
   const job = plmJobs.create(userId, {
     kind: meta.kind, scope: meta.scope, label: meta.label, total: meta.total, phase: meta.phase,
+    background: meta.background === true || plmJobBackground(req),
   });
   const report = patch => plmJobs.update(userId, job.id, patch || {});
   const fail = failure => plmJobs.addFailure(userId, job.id, failure || {});

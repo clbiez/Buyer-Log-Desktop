@@ -85,6 +85,8 @@ async function request(userId, url, body, options = {}, decodeJson = false) {
       if (!controlled) clearTimeout(timer);
       if (response.status === 401 || response.status === 403) {
         if (controlled) await response.body?.cancel();
+        // Açık test token'ı (options.token) masaüstü/oturum kuşağını işaretlemez.
+        if (!options.token) settings.markTokenRejected(generation);
         throw apiError(`CoreNectum yetkilendirmesi reddedildi (HTTP ${response.status}). Kurumsal oturumun süresi dolmuş olabilir; Buyer Log otomatik yenileme yapmalıdır.`,'CORENECTUM_API_TOKEN_INVALID',409,{remoteStatus:response.status,tokenGeneration:generation});
       }
       if (!response.ok) {

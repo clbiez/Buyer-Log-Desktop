@@ -62,6 +62,8 @@ function describeJob(job, now) {
     etaMs,
     cancelRequested: !!job.cancelRequested,
     waitingAuth: !!job.waitingAuth,
+    // Sessiz arka plan işi: Operasyon Merkezi'ni/şeridi kendiliğinden açmaz.
+    background: !!job.background,
     failureCount: job.failures.length,
     error: job.error || null,
     running: !TERMINAL.has(job.status),
@@ -123,6 +125,7 @@ function createJobRegistry(options = {}) {
       error: null,
       // Yalnızca başarısızları yeniden denemek için gereken girdi.
       retryPayload: input.retryPayload || null,
+      background: input.background === true,
     };
     jobs.set(job.id, job);
     prune(jobs);

@@ -68,6 +68,29 @@
           "en": "Actual Buyer Log UI; Pricing Desk request creation verified with isolated demo data."
         }
       }
+    },
+    {
+      "id": "corporate-session-auto-reconnect",
+      "type": "improvement",
+      "module": {
+        "tr": "Kurumsal Bağlantılar",
+        "en": "Corporate Connections"
+      },
+      "title": {
+        "tr": "PLM ve LCW AI oturumu düşünce kendiliğinden ve sessizce yeniden bağlanır",
+        "en": "PLM and LCW AI sessions reconnect on their own, silently, when they drop"
+      },
+      "body": {
+        "tr": "PLM (CoreNectum) ve LCW AI oturumu düştüğünde, süresi dolmak üzereyken veya ağ geri geldiğinde Buyer Log, kalıcı kurumsal oturumu kullanarak arka planda yeniden bağlanır; bağlanmak için komut vermeniz gerekmez. Pencere, uyarı veya giriş ekranı açılmaz; deneme başarısızsa artan aralıklarla yeniden denenir, ağ yokken denenmez. Süresi dolmuş PLM oturumu artık bağlı görünmez. Oturumu bilerek kapatırsanız siz yeniden bağlanana kadar otomatik bağlanma yapılmaz. OAB bu davranışa dahil değildir. Parola Buyer Log'a kaydedilmez.",
+        "en": "When the PLM (CoreNectum) or LCW AI session drops, is about to expire or the network comes back, Buyer Log reconnects in the background using your persistent corporate session; you no longer need to click connect. No window, warning or sign-in screen opens; failed attempts are retried at growing intervals and never while offline. An expired PLM session no longer shows as connected. If you disconnect on purpose, automatic reconnection stays off until you connect again. OAB is not included. Passwords are never stored by Buyer Log."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arka planda çalışan bir oturum yenilemesidir; ekranda yeni bir öğe yoktur, mevcut bağlantı göstergesi yalnız kendiliğinden güncellenir.",
+          "en": "This is a background session renewal; nothing new appears on screen, the existing connection indicator simply updates by itself."
+        }
+      }
     }
   ]
 }

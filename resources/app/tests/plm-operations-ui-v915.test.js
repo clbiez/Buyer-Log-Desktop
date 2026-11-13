@@ -50,7 +50,8 @@ test('sayfa şeridi YALNIZ kendi kapsamının işlerini gösterir', () => {
   const start = OPS.indexOf('function renderStrip');
   const block = OPS.slice(start, OPS.indexOf('function renderPanel', start));
   assert.match(block, /const scope = activeScope\(\)/);
-  assert.match(block, /jobsForScope\(scope\)\.filter\(job => job\.running\)/);
+  // Sessiz arka plan işleri şeritte gösterilmez (kullanıcıya hissettirilmez).
+  assert.match(block, /jobsForScope\(scope\)\.filter\(job => job\.running && !job\.background\)/);
   // Kapsam yoksa şerit hiç gösterilmez; başka sayfanın işi sızmaz.
   assert.match(block, /if \(!scope \|\| !running\.length\)/);
 });
@@ -146,7 +147,8 @@ test('yeniden deneme, model artık tabloda yoksa sessizce başarısız olmaz', (
 test('yoklama yalnız gerektiğinde çalışır', () => {
   const start = OPS.indexOf('function syncPolling');
   const block = OPS.slice(start, OPS.indexOf('function jobsForScope', start));
-  assert.match(block, /state\.panelOpen \|\| state\.jobs\.some\(job => job\.running\)/);
+  // Yalnız arka plan işi çalışıyorsa yoklama başlamaz.
+  assert.match(block, /state\.panelOpen \|\| state\.jobs\.some\(job => job\.running && !job\.background\)/);
   assert.match(block, /clearInterval\(state\.timer\)/);
 });
 
