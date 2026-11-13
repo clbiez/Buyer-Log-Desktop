@@ -56,7 +56,7 @@ function failureFor(error, reason) {
   return isLcwAiError(error) ? error : errorForTransport(error);
 }
 
-const UPLOAD_FAILURE_REASONS = new Set(['upload-json', 'upload-response', 'blob-name', 'attachment-url', 'empty-file']);
+const UPLOAD_FAILURE_REASONS = new Set(['upload-json', 'upload-response', 'blob-name', 'file-id', 'attachment-url', 'empty-file']);
 
 function createLcwAiClient(options = {}) {
   const auth = options.auth;
