@@ -255,6 +255,9 @@ async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
         i=skipWs(data,keyEnd,stop);if(data[i]!==0x3a)throw new SyntaxError('Expected colon in JSON');i=skipWs(data,i+1,stop);
       }
       const childEnd=yield* scan(i,stop);
+      // A JSON value is never empty. Without this, a trailing comma after a
+      // flushed large member became an empty batch that parsed as nothing.
+      if(childEnd===i)throw new SyntaxError('Unexpected token in JSON');
       if(childEnd-i<=ASYNC_NATIVE_CHILD_BYTES){
         if(batchStart<0)batchStart=memberStart;
         batchEnd=childEnd;
