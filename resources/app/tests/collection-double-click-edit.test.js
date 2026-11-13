@@ -183,6 +183,13 @@ test('keyboard arrows, Tab and Enter open selected editors, but not calculated, 
   assert.equal(period.state.active.key, 'flag');
   assert.equal(period.state.editingCell, null);
 
+  const checklist = harness({ keys: ['a', 'checklist'], editable: key => key !== 'checklist' });
+  checklist.api.setActive(checklist.tds[0][0]);
+  checklist.keydown('ArrowRight');
+  assert.equal(checklist.state.active.key, 'checklist');
+  assert.equal(checklist.state.editingCell, null);
+  assert.equal(checklist.document.activeElement, checklist.table);
+
   const tab = harness();
   tab.api.setActive(tab.tds[0][0]);
   tab.keydown('Tab');
