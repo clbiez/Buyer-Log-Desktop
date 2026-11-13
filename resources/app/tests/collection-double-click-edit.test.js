@@ -19,23 +19,23 @@ function classes(initial = []) {
   return { set, add: (...c) => c.forEach(x => set.add(x)), remove: (...c) => c.forEach(x => set.delete(x)), toggle: (c, on) => (on ? set.add(c) : set.delete(c)), contains: c => set.has(c) };
 }
 
-function harness({ editable = key => key !== 'calc' && key !== 'trLanded', keys = ['a', 'b', 'calc'], extraClass = {} } = {}) {
-  const tableListeners = {}, docListeners = {}, focused = [];
+function harness({ editable = key => key !== 'calc' && key !== 'trLanded', keys = ['a', 'b', 'calc'], extraClass = {}, catalogOpen = false } = {}) {
+  const tableListeners = {}, docListeners = {}, focused = [], writes = [];
   const data = [{ id: 1 }, { id: 2 }];
   const document = {
     readyState: 'complete', body: { dataset: { activeTab: 'koleksiyon' }, appendChild() {} }, documentElement: { lang: 'tr' },
     activeElement: null,
     addEventListener(name, cb) { (docListeners[name] = docListeners[name] || []).push(cb); }, removeEventListener() {},
     querySelectorAll() { return []; }, querySelector() { return null; }, createElement: () => ({ remove() {}, addEventListener() {}, querySelector() { return null; } }),
-    getElementById(id) { return id === 'kolTable' ? table : id === 'view-koleksiyon' ? { classList: classes() } : null; },
+    getElementById(id) { return id === 'kolTable' ? table : id === 'view-koleksiyon' ? { classList: classes() } : id === 'kolCatalogDropSingleton' && catalogOpen ? { isConnected: true, getClientRects: () => [{}] } : null; },
   };
   const table = { addEventListener(name, cb) { (tableListeners[name] = tableListeners[name] || []).push(cb); }, setAttribute() {}, removeAttribute() {}, focus() { document.activeElement = table; }, tHead: null };
   const makeEditor = (k, tagName = 'TEXTAREA', rect = { left: 0, right: 100, top: 0, bottom: 20 }) => {
     const editor = {
-      tagName, type: tagName === 'INPUT' ? 'text' : '', dataset: { k }, value: 'old', selected: false,
-      focus() { document.activeElement = editor; focused.push(k); }, select() { editor.selected = true; },
+      tagName, type: k === 'flag' ? 'checkbox' : tagName === 'INPUT' ? 'text' : '', dataset: { k }, value: 'old', selected: false,
+      focus() { document.activeElement = editor; focused.push(k); (docListeners.focusin || []).forEach(cb => cb({ target: editor })); }, blur() { if(document.activeElement !== editor) return; if(editor.value !== editor.originalValue){const row = data.find(row => String(row.id) === editor.td.closest('tr').dataset.id);row[k]=editor.value;writes.push({ rowId: row.id, key: k, value: editor.value });editor.originalValue=editor.value;}document.activeElement=null;(docListeners.focusout || []).forEach(cb => cb({ target: editor })); }, select() { editor.selected = true; },
       setSelectionRange() {}, getBoundingClientRect: () => rect,
-      closest(sel) { return sel.includes('.editCell') ? editor : null; },
+      closest(sel) { return sel.includes('td[data-key]') ? editor.td : sel.includes('.editCell') ? editor : null; },
     };
     return editor;
   };
@@ -43,12 +43,13 @@ function harness({ editable = key => key !== 'calc' && key !== 'trLanded', keys 
     const tr = { dataset: { id: String(row.id) }, querySelector() { return null; } };
     const editors = key === 'trLanded'
       ? [makeEditor('trPrice', 'INPUT', { left: 0, right: 40, top: 0, bottom: 20 }), makeEditor('trFx', 'INPUT', { left: 50, right: 90, top: 0, bottom: 20 })]
-      : [makeEditor(key)];
+      : [makeEditor(key, key === 'inStore' || key === 'flag' ? 'INPUT' : 'TEXTAREA')];
     const td = {
       dataset: { key }, classList: classes(extraClass[key] || []), id: '', setAttribute() {}, removeAttribute() {},
       editors, querySelector: sel => (sel.includes('.editCell') ? editors[0] : null), querySelectorAll: sel => (sel.includes('.editCell') ? editors : []),
       closest(sel) { return sel === 'tr' ? tr : null; }, contains: el => editors.includes(el),
     };
+    editors.forEach(editor => { editor.td = td; editor.originalValue = editor.value; });
     return td;
   }));
   const window = {
@@ -76,7 +77,12 @@ function harness({ editable = key => key !== 'calc' && key !== 'trLanded', keys 
     (tableListeners.keydown || []).forEach(cb => cb(event));
     return event;
   };
-  return { api, state, tds, table, document, focused, pointerEvent, cellTarget, dblclick, keydown, tableListeners };
+  const editorKeydown = (editor, key, extra = {}) => {
+    const event = { target: editor, key, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, prevented: false, preventDefault() { this.prevented = true; }, stopImmediatePropagation() {}, ...extra };
+    (docListeners.keydown || []).forEach(cb => cb(event));
+    return event;
+  };
+  return { api, state, tds, table, document, data, writes, focused, pointerEvent, cellTarget, dblclick, keydown, editorKeydown, tableListeners };
 }
 
 test('plain single click selects the cell and starts a drag range without entering edit mode', () => {
@@ -153,4 +159,111 @@ test('Shift and Ctrl clicks keep range / multi-cell selection without editing', 
   h.api.kolSpreadsheetHandlePointerEdit(h.pointerEvent(h.cellTarget(h.tds[0][2]), { ctrlKey: true }), h.tds[0][2]);
   assert.equal(h.state.multiCells.size, 5);
   assert.deepEqual(h.focused, []);
+});
+
+test('keyboard arrows, Tab and Enter open selected editors, but not calculated, period or checkbox cells', () => {
+  const arrow = harness();
+  arrow.api.setActive(arrow.tds[0][0]);
+  arrow.keydown('ArrowRight');
+  assert.equal(arrow.state.active.key, 'b');
+  assert.equal(arrow.state.keyboardEntry, true);
+  assert.equal(arrow.document.activeElement, arrow.tds[0][1].editors[0]);
+  assert.equal(arrow.tds[0][1].editors[0].selected, true);
+  arrow.editorKeydown(arrow.tds[0][1].editors[0], 'ArrowRight');
+  assert.equal(arrow.state.active.key, 'calc');
+  assert.equal(arrow.state.keyboardEntry, false);
+  assert.equal(arrow.document.activeElement, arrow.table);
+
+  const period = harness({ keys: ['a', 'inStoreWeek', 'flag'], extraClass: { inStoreWeek: ['kolPeriodTd'] } });
+  period.api.setActive(period.tds[0][0]);
+  period.keydown('ArrowRight');
+  assert.equal(period.state.active.key, 'inStoreWeek');
+  assert.equal(period.state.editingCell, null);
+  period.keydown('ArrowRight');
+  assert.equal(period.state.active.key, 'flag');
+  assert.equal(period.state.editingCell, null);
+
+  const tab = harness();
+  tab.api.setActive(tab.tds[0][0]);
+  tab.keydown('Tab');
+  assert.equal(tab.state.active.key, 'b');
+  assert.equal(tab.state.keyboardEntry, true);
+
+  const enter = harness();
+  enter.api.setActive(enter.tds[0][0]);
+  enter.keydown('Enter');
+  assert.equal(enter.state.active.rowId, '2');
+  assert.equal(enter.state.keyboardEntry, true);
+});
+test('F2 from keyboard entry switches to full editing with native arrows; double-click does too', () => {
+  const h = harness();
+  h.api.setActive(h.tds[0][0]);
+  h.keydown('ArrowRight');
+  const editor=h.tds[0][1].editors[0];
+  const f2=h.editorKeydown(editor,'F2');
+  assert.equal(f2.prevented,true);
+  assert.equal(h.state.keyboardEntry,false);
+  const left=h.editorKeydown(editor,'ArrowLeft');
+  assert.equal(left.prevented,false);
+  assert.equal(h.state.active.key,'b');
+
+  const d = harness();
+  d.dblclick(d.tds[0][0]);
+  assert.equal(d.state.keyboardEntry,false);
+  const nativeArrow=d.editorKeydown(d.tds[0][0].editors[0],'ArrowRight');
+  assert.equal(nativeArrow.prevented,false);
+  assert.equal(d.state.active.key,'a');
+});
+test('Escape clears entry immediately and Shift+Arrow extends range without editing', () => {
+  const h=harness();
+  h.api.setActive(h.tds[0][0]);
+  h.keydown('ArrowRight');
+  const editor=h.tds[0][1].editors[0];
+  const shift=h.editorKeydown(editor,'ArrowLeft',{shiftKey:true});
+  assert.equal(shift.prevented,true);
+  assert.equal(h.state.keyboardEntry,false);
+  assert.equal(h.state.editingCell,null);
+  assert.equal(Engine.cellsInRange(Engine.rangeBounds(h.state.anchor,h.state.focus)).length,2);
+
+  const esc=harness();
+  esc.api.setActive(esc.tds[0][0]);
+  esc.keydown('ArrowRight');
+  const edit=esc.tds[0][1].editors[0];
+  esc.editorKeydown(edit,'Escape');
+  assert.equal(esc.state.keyboardEntry,false,'capture clears mode even if a date editor swallows Escape');
+  esc.state.keyboardEntry=true;
+  esc.api.endEdit();
+  assert.equal(esc.state.keyboardEntry,false,'legacy Escape/endEdit clears mode synchronously');
+});
+test('catalogue dropdown owns vertical arrows while open', () => {
+  const h=harness({catalogOpen:true});
+  h.api.setActive(h.tds[0][0]);
+  h.keydown('ArrowRight');
+  const editor=h.tds[0][1].editors[0];
+  const down=h.editorKeydown(editor,'ArrowDown');
+  assert.equal(down.prevented,false);
+  assert.equal(h.state.active.key,'b');
+  assert.equal(h.state.keyboardEntry,true);
+});
+test('blur/change commits typed text and MB Date before arrow navigation', () => {
+  const h=harness();
+  h.api.setActive(h.tds[0][0]);
+  h.keydown('ArrowRight');
+  const editor=h.tds[0][1].editors[0];
+  editor.value='Sand';
+  const down=h.editorKeydown(editor,'ArrowDown');
+  assert.equal(down.prevented,true);
+  assert.deepEqual(h.writes,[{rowId:1,key:'b',value:'Sand'}]);
+  assert.equal(h.data[0].b,'Sand');
+  assert.equal(h.state.active.rowId,'2');
+  assert.equal(h.state.editingCell,h.tds[1][1]);
+
+  const date=harness({keys:['a','inStore']});
+  date.api.setActive(date.tds[0][0]);
+  date.keydown('ArrowRight');
+  const dateEditor=date.tds[0][1].editors[0];
+  dateEditor.value='15.05.27';
+  date.editorKeydown(dateEditor,'ArrowLeft');
+  assert.equal(date.data[0].inStore,'15.05.27');
+  assert.equal(date.state.active.key,'a');
 });
