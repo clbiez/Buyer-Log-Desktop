@@ -15,7 +15,7 @@ const crypto = require('crypto');
 const { withFileLeaseAsync, replaceFileWithRetry, assertHeldFileLeases } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
-const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
+const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, parseJsonBufferAsync, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
 
 const hybridClock = require('./hlc');
 const emailClockLists = require('./hlc-email-list');
@@ -215,12 +215,19 @@ function summarizeConflict(item, previewChars = 4000) {
   return out;
 }
 /* Anlık görüntü dosyası; V8 string sınırını aşan boyutta da okunur. */
-async function readJsonFile(file) { return parseJsonBuffer(await fsp.readFile(file)); }
-async function readState(file, deviceId = null) {
+/* cooperative: büyük anlık görüntü olay döngüsünü kilitlemeden, ~8 ms'lik
+   dilimler arasında kontrolü bırakarak çözülür (açılışta HTTP istekleri
+   beklemez). Toplam süre senkron parse'tan uzundur; yalnız açılış yükü için. */
+const yieldToEventLoop = () => new Promise(resolve => setImmediate(resolve));
+async function readJsonFile(file, { cooperative = false } = {}) {
+  const bytes = await fsp.readFile(file);
+  return cooperative ? parseJsonBufferAsync(bytes, { yieldControl: yieldToEventLoop }) : parseJsonBuffer(bytes);
+}
+async function readState(file, deviceId = null, { cooperative = false } = {}) {
   const errors = [];
   for (const candidate of [file, `${file}.bak`]) {
     try {
-      const state = normalizeState(await readJsonFile(candidate), deviceId);
+      const state = normalizeState(await readJsonFile(candidate, { cooperative }), deviceId);
       if (candidate !== file) {
         // Keep the unreadable primary for forensics, then restore the validated
         // backup. writeState must not copy the corrupt primary over the backup.
@@ -486,6 +493,97 @@ const WAL_VERSION = 1;
    açılıştaki oynatma maliyetini sınırlı tutmak. */
 const WAL_MAX_BYTES = 1024 * 1024;
 const WAL_MAX_ENTRIES = 2000;
+/* Büyük DB'de sabit 1 MB eşik, her ~1 MB'lık işlemde bütün anlık görüntünün
+   (ölçüm: 309 MB) yeniden serileştirilip hash'lenip iki kez yazılması demekti:
+   yazma büyütmesi DB boyutuyla doğrusal. Varsayılan eşik anlık görüntünün
+   1/16'sına kadar büyür (üst sınır 32 MB / 20.000 satır). Böylece büyütme
+   ~16x ile sınırlanır; açılıştaki ek oynatma maliyeti de tam parse'ın küçük
+   bir kesri olarak kalır. Açık walMaxBytes veren çağıranlar (testler) aynen
+   eski sabit eşiği kullanır. */
+const WAL_SNAPSHOT_RATIO = 16;
+const WAL_SCALED_MAX_BYTES = 32 * 1024 * 1024;
+const WAL_SCALED_MAX_ENTRIES = 20000;
+const WAL_ENTRY_BUDGET_BYTES = 1024;
+function walRotationLimits(snapshotBytes, explicitMaxBytes = null) {
+  if (explicitMaxBytes != null) return { bytes: explicitMaxBytes, entries: WAL_MAX_ENTRIES };
+  const share = Math.max(0, Number(snapshotBytes) || 0) / WAL_SNAPSHOT_RATIO;
+  return {
+    bytes: Math.max(WAL_MAX_BYTES, Math.min(WAL_SCALED_MAX_BYTES, Math.floor(share))),
+    entries: Math.max(WAL_MAX_ENTRIES, Math.min(WAL_SCALED_MAX_ENTRIES, Math.floor(share / WAL_ENTRY_BUDGET_BYTES))),
+  };
+}
+
+/* ===================================================================
+   OTOMATİK JOURNAL SAKLAMA (yerleşik, sınırlı büyüme)
+
+   PROBLEM. Her yerel olay journal'da TAM payload ile, `events` haritasında da
+   ayrıca tutuluyor; yüklenip Shared Hub tarafından onaylandıktan sonra bile
+   hiç atılmıyordu. Elle "sıkıştır" düğmesine basılmadıkça DB yaşamı boyunca
+   büyüyor (gerçek kullanıcıda 295 MB görüldü) ve açılıştaki tam parse, her
+   anlık görüntü yazımı ve bellek bu geçmişle doğrusal artıyordu.
+
+   ÇÖZÜM. Anlık görüntü zaten yazılırken (ek I/O yok) "yerleşmiş" önek budanır.
+   Yerleşmiş = yüklendi VE onaylandı. Yalnız sıra numarası, journal'daki ilk
+   açık (yüklenmemiş ya da onaylanmamış) olayın ALTINDA kalanlar adaydır; en
+   yeni `keepTail` aday tanılama için tam kalır. Bu, elle sıkıştırmadan
+   (yalnız `uploaded`) bilerek daha temkinlidir: yeniden gönderim gerekebilecek
+   hiçbir payload atılmaz ve yayımlanan sıra (`compactedThrough`) hiçbir zaman
+   bekleyen bir olayın üzerine çıkmaz.
+
+   Atılan olayın kimliği ve sırası `syncLedger.eventIds`'te kalır: WAL
+   yeniden oynatması ve uzak yankılar duplicate sayılır. Kesintisiz onay
+   noktasının üstünde onaylanmış olaylar `acknowledgedEventIds`'e yazılır;
+   bekleyen-onay sayısı değişmez. İş verisi (records/tombstones/conflicts/
+   assets/migrations/revision) hiç değişmez. */
+const JOURNAL_RETAIN_TAIL = 1000;
+const JOURNAL_PRUNE_MIN_BATCH = 2000;
+
+function settledJournalPlan(state, { keepTail = JOURNAL_RETAIN_TAIL, minBatch = JOURNAL_PRUNE_MIN_BATCH } = {}) {
+  const journal = Array.isArray(state && state.journal) ? state.journal : [];
+  const tail = Math.max(0, Number(keepTail) || 0), batch = Math.max(1, Number(minBatch) || 1);
+  if (journal.length < tail + batch) return null;
+  let firstOpen = Infinity;
+  for (const item of journal) {
+    if (!item || (item.uploaded && item.acknowledged)) continue;
+    const seq = Number(item.localSequence) || 0;
+    if (seq < firstOpen) firstOpen = seq;
+  }
+  const candidates = [];
+  for (let index = 0; index < journal.length; index += 1) {
+    const item = journal[index];
+    const seq = item ? Number(item.localSequence) || 0 : 0;
+    if (!item || !item.uploaded || !item.acknowledged || !eventId(item.eventId) || seq < 1 || seq >= firstOpen) continue;
+    candidates.push({ index, seq });
+  }
+  if (candidates.length - tail < batch) return null;
+  candidates.sort((a, b) => a.seq - b.seq || a.index - b.index);
+  return { prune: candidates.slice(0, candidates.length - tail) };
+}
+function pruneSettledJournal(state, options = {}) {
+  const plan = settledJournalPlan(state, options);
+  if (!plan) return { pruned: 0 };
+  const at = options.at || now();
+  const ledger = state.syncLedger = state.syncLedger && typeof state.syncLedger === 'object' ? state.syncLedger : { version: 1 };
+  ledger.eventIds = ledger.eventIds && typeof ledger.eventIds === 'object' ? ledger.eventIds : {};
+  ledger.acknowledgedEventIds = ledger.acknowledgedEventIds && typeof ledger.acknowledgedEventIds === 'object' ? ledger.acknowledgedEventIds : {};
+  const through = Math.max(0, Number(ledger.acknowledgedThrough) || 0);
+  const drop = new Set();
+  let firstSeq = 0, lastSeq = 0;
+  for (const { index, seq } of plan.prune) {
+    const item = state.journal[index], id = eventId(item.eventId);
+    drop.add(index);
+    ledger.eventIds[id] = seq;
+    if (seq > through && !ledger.acknowledgedEventIds[id]) ledger.acknowledgedEventIds[id] = item.acknowledgedAt || at;
+    if (state.events && state.events[id]) delete state.events[id];
+    if (!firstSeq || seq < firstSeq) firstSeq = seq;
+    if (seq > lastSeq) lastSeq = seq;
+  }
+  state.journal = state.journal.filter((_, index) => !drop.has(index));
+  ledger.compactedEvents = (Number(ledger.compactedEvents) || 0) + drop.size;
+  ledger.compactedThrough = Math.max(Number(ledger.compactedThrough) || 0, lastSeq);
+  ledger.ranges = (Array.isArray(ledger.ranges) ? ledger.ranges : []).concat({ firstSequence: firstSeq, lastSequence: lastSeq, count: drop.size, compactedAt: at, automatic: true }).slice(-200);
+  return { pruned: drop.size, firstSequence: firstSeq, lastSequence: lastSeq };
+}
 
 function walLine(operation, payload) {
   const entry = { v: WAL_VERSION, op: operation, payload };
@@ -537,20 +635,24 @@ function parseWal(text) {
    gereği schemaVersion/revision'dan hemen sonra gelir) dosyanın başından okunur. */
 function readDeviceIdSync(file) {
   const size = fs.statSync(file).size;
-  if (size <= DIRECT_PARSE_MAX_BYTES) {
-    const existing = JSON.parse(fs.readFileSync(file, 'utf8'));
-    return existing && existing.deviceId ? String(existing.deviceId) : '';
-  }
+  /* Başlık her boyutta önce denenir: kayıtlı anlık görüntülerde deviceId
+     dosyanın ilk satırlarındadır. Eskiden 256 MB altındaki DB yalnız kimlik
+     için açılışta SENKRON okunup tamamen parse ediliyordu (110 MB'da ~2 sn,
+     ardından loadState aynı dosyayı yeniden parse ediyordu). Başlıkta yoksa
+     (farklı anahtar sırası) küçük dosyada eski tam okuma yolu korunur. */
   const handle = fs.openSync(file, 'r');
   try {
     const head = Buffer.alloc(Math.min(size, 64 * 1024));
     fs.readSync(handle, head, 0, head.length, 0);
     const match = head.toString('utf8').match(/^\s*\{(?:\s*"(?:schemaVersion|revision)"\s*:\s*-?[\d.eE+-]+\s*,)*\s*"deviceId"\s*:\s*("(?:[^"\\]|\\.)*")/);
-    return match ? String(JSON.parse(match[1])) : '';
+    if (match) return String(JSON.parse(match[1]));
   } finally { fs.closeSync(handle); }
+  if (size > DIRECT_PARSE_MAX_BYTES) return '';
+  const existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+  return existing && existing.deviceId ? String(existing.deviceId) : '';
 }
 
-function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL_MAX_BYTES, encodeSnapshot = null } = {}) {
+function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = null, encodeSnapshot = null, journalRetention = {}, cooperativeLoad = false } = {}) {
   let dbFile = path.resolve(file);
   let deviceId = null;
   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
@@ -671,23 +773,36 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   async function currentTags() {
     return `${await fileTag(dbFile)}|${await fileTag(walFile())}|${await fileTag(`${walFile()}.bak`)}`;
   }
-  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; }
+  let loading = null, loadGeneration = 0;
+  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; loading = null; loadGeneration += 1; }
   async function withDbLease(operation) {
     try { return await withFileLeaseAsync(dbFile, operation); }
     catch (error) { invalidateCache(); throw error; }
   }
 
+  /* Aynı dosya imzası için eşzamanlı yüklemeler TEK okumayı paylaşır. Açılış
+     yüklemesi arka planda sürerken gelen ilk yazım/okuma ikinci bir tam parse
+     başlatmaz. Yükleme sürerken önbellek düşürülürse (hata/kira kaybı) sonuç
+     önbelleğe yazılmaz; sonraki çağrı diskten taze okur. */
   async function loadState() {
     const tags = await currentTags();
     if (cachedState && cachedTags === tags) return cachedState;
-    const state = await loadStateFromDisk();
-    cachedState = state;
-    cachedTags = await currentTags();
-    return state;
+    if (loading && loading.tags === tags) return loading.promise;
+    const generation = loadGeneration;
+    const entry = { tags, promise: null };
+    entry.promise = (async () => {
+      const state = await loadStateFromDisk();
+      const settledTags = await currentTags();
+      if (generation === loadGeneration) { cachedState = state; cachedTags = settledTags; }
+      return state;
+    })();
+    loading = entry;
+    try { return await entry.promise; }
+    finally { if (loading === entry) loading = null; }
   }
 
   async function loadStateFromDisk() {
-    const state = await readState(dbFile, loadDeviceId());
+    const state = await readState(dbFile, loadDeviceId(), { cooperative: cooperativeLoad });
     deviceId = state.deviceId;
     const previous = await readWalEntries(`${walFile()}.bak`);
     const current = await readWalEntries(walFile());
@@ -709,8 +824,14 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
     const target = dbFile, revision = state.revision;
     const assertCurrent = () => { if (dbFile !== target || state.revision !== revision) throw dataIntegrityError(target); };
     await inspectWalForWrite(true);
+    // Anlık görüntü zaten yazılıyor: yerleşmiş journal öneki aynı yazımda
+    // düşer, ayrı bir tam yazım gerekmez (bkz. OTOMATİK JOURNAL SAKLAMA).
+    // Yazım başarısız olursa çağıran önbelleği düşürür ve diskten yeniden
+    // okur; budama yalnız kalıcı anlık görüntüyle birlikte görünür olur.
+    const retention = journalRetention === false ? { pruned: 0 } : pruneSettledJournal(state, journalRetention || {});
     await writeState(target, state, { encodeSnapshot, assertCurrent });
     assertCurrent();
+    if (retention.pruned && typeof trace === 'function') { try { trace('LOCAL_DB_JOURNAL_RETAINED', retention); } catch (_) {} }
     try { await replaceFileWithRetry(`${target}.wal`, `${target}.wal.bak`); }
     catch (error) { if (error && error.code !== 'ENOENT') throw error; }
     walMetadata = null;
@@ -836,7 +957,10 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
           endsWithNewline: lines ? lines.endsWith('\n') : appendWal.endsWithNewline,
           truncated: false, tornTail: false,
         };
-        if (walStat.size > walMaxBytes || walMetadata.entryCount > WAL_MAX_ENTRIES) await writeSnapshot(state);
+        let snapshotBytes = 0;
+        if (walMaxBytes == null) { try { snapshotBytes = (await fsp.stat(dbFile)).size; } catch (_) {} }
+        const limits = walRotationLimits(snapshotBytes, walMaxBytes);
+        if (walStat.size > limits.bytes || walMetadata.entryCount > limits.entries) await writeSnapshot(state);
         // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
         // sıradaki okuma diski boşuna baştan okumasın.
         cachedState = state; cachedTags = await currentTags();
@@ -881,6 +1005,22 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       await writeSnapshot(state);
       cachedState = state; cachedTags = await currentTags();
       return result;
+    });
+  }
+  /* Arka plan bakımı: birikmiş yerleşmiş geçmiş eşiği aşıyorsa TEK bir
+     anlık görüntü yazımıyla düşürür; aşmıyorsa diske hiç yazmaz. */
+  async function pruneJournal() {
+    if (journalRetention === false) return { pruned: 0, skipped: true };
+    const quick = await loadState();
+    if (!settledJournalPlan(quick, journalRetention || {})) return { pruned: 0, skipped: true };
+    return withDbLease(async () => {
+      recoverPendingWrites();
+      const state = await loadState();
+      if (!settledJournalPlan(state, journalRetention || {})) return { pruned: 0, skipped: true };
+      const before = state.journal.length;
+      await writeSnapshot(state);
+      cachedState = state; cachedTags = await currentTags();
+      return { pruned: before - state.journal.length, skipped: false, journal: state.journal.length };
     });
   }
   async function ensure() {
@@ -1611,7 +1751,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, privateRecordTransaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, privateRecordTransaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, pruneJournal, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================
@@ -1697,4 +1837,4 @@ async function migrateLegacyFiles(db, roots = []) {
   return [];
 }
 
-module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, bumpRemoteApplyRevision, summarizeConflict, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };
+module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, walRotationLimits, bumpRemoteApplyRevision, summarizeConflict, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };

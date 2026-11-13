@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri · Favori filtreler · Koleksiyon MB Date",
-    "en": "Silent PLM image and BOM completion · LCW AI file attachments · Favourite filters · Collection MB Date"
+    "tr": "Büyük veride hızlı açılış · Koleksiyon MB Date · Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri",
+    "en": "Fast startup with large data · Collection MB Date · Silent PLM image and BOM completion · LCW AI file attachments"
   },
   "summary": {
-    "tr": "Eksik model görselleri ile CP/Siparişler Artwork ve Fabric (PLM) alanları arka planda, hissettirmeden tamamlanır; PLM ve LCW AI oturumu düşünce sessizce yeniden bağlanır. LCW AI’a dosya ve görsel ekleme yeniden çalışır. Backlog ve Database filtreleri favori olarak kaydedilir; set modellerde parça takibi, tablolarda mini yeniden çiz butonu ve yalnız Fiyat Masası’na gönderme eklendi. Koleksiyon'da MB Tarihi, hafta/ay türetmesi, çoklu hücre seçimi ve klavye düzenlemesi iyileştirildi.",
-    "en": "Missing model images and the CP/Orders Artwork and Fabric (PLM) fields are completed silently in the background; PLM and LCW AI sessions reconnect silently when they drop. Attaching files and images to LCW AI works again. Backlog and Database filters can be saved as favourites; set models get per-part tracking, tables get a mini redraw button, and requests can be sent to the Pricing Desk only. Collection now supports MB Date week/month derivation, multi-cell selection and improved keyboard editing."
+    "tr": "Büyük yerel veride açılış ekranı veritabanının tamamen okunmasını beklemez; veritabanı arka planda donmadan yüklenir, gereksiz tam yeniden yazımlar kalktı ve onaylanmış eski değişiklik geçmişi sınırsız birikmez. Eksik model görselleri ile CP/Siparişler Artwork ve Fabric (PLM) alanları arka planda, hissettirmeden tamamlanır; PLM ve LCW AI oturumu düşünce sessizce yeniden bağlanır. LCW AI’a dosya ve görsel ekleme yeniden çalışır. Backlog ve Database filtreleri favori olarak kaydedilir; set modellerde parça takibi, tablolarda mini yeniden çiz butonu ve yalnız Fiyat Masası’na gönderme eklendi. Koleksiyon'da MB Tarihi, hafta/ay türetmesi, çoklu hücre seçimi ve klavye düzenlemesi iyileştirildi. Seçili veya tek model yenilemesi, PLM'de revize edilen görseli aynı adreste olsa da günceller.",
+    "en": "With large local data the startup screen no longer waits for the whole database; it loads in the background without freezing, needless full rewrites are gone and acknowledged change history no longer grows without limit. Missing model images and the CP/Orders Artwork and Fabric (PLM) fields are completed silently in the background; PLM and LCW AI sessions reconnect silently when they drop. Attaching files and images to LCW AI works again. Backlog and Database filters can be saved as favourites; set models get per-part tracking, tables get a mini redraw button, and requests can be sent to the Pricing Desk only. Collection now supports MB Date week/month derivation, multi-cell selection and improved keyboard editing. Refreshing selected or single models now updates images revised in PLM even at the same address."
   },
   "changes": [
     {
@@ -449,6 +449,29 @@
       "body": {
         "tr": "Seçili Modelleri Yenile ve satırdan tek model görsel çağırma, PLM görseli aynı adreste kalsa bile içeriği yeniden kontrol eder; görsel değiştiyse eskisinin yerine yazılır, değişmediyse hiçbir şey yazılmaz. Revize modelleri seçip yenilemek yeterli; görseli silip yeniden senkronlamak gerekmez. Tümünü Yenile ve Eksikleri tamamla hızlı kalır; elle konan görseller korunur.",
         "en": "Refresh Selected Models and fetching a single model image from a row now re-check the PLM image content even when its address is unchanged; a changed image replaces the old one and an unchanged one writes nothing. Selecting and refreshing revised models is enough; deleting the image and syncing again is no longer needed. Refresh All and Fetch Missing stay fast and manually set images are preserved."
+      }
+    },
+    {
+      "id": "local-db-large-data-startup",
+      "type": "improvement",
+      "module": {
+        "tr": "Yerel veri · Açılış · Senkronizasyon",
+        "en": "Local data · Startup · Sync"
+      },
+      "title": {
+        "tr": "Büyük yerel veride hızlı açılış ve takılmayan kayıt",
+        "en": "Fast startup and smooth saving with large local data"
+      },
+      "body": {
+        "tr": "Açılış ekranı artık yerel veritabanının tamamen okunmasını beklemez; veritabanı arka planda, arayüzü dondurmadan yüklenir. Yerel veritabanı her açılışta gereksiz yere baştan yazılmaz; bu yazım büyük veride kayıtları uzun süre bekletip uygulamayı dondurabiliyordu. Shared Hub'a yüklenip onaylanmış eski değişikliklerin tam kopyaları artık sınırsız birikmez: tanılama için son 1.000 kayıt tam kalır, bekleyen veya onaylanmamış hiçbir değişikliğe dokunulmaz ve iş verisi aynen korunur. Büyük veritabanında kayıt sırasındaki tam dosya yazımı da seyrekleşti.",
+        "en": "The startup screen no longer waits for the whole local database to be read; the database loads in the background without freezing the interface. The local database is no longer rewritten needlessly at every startup; with large data this write could hold saves for a long time and freeze the app. Full copies of old changes that were uploaded to and acknowledged by Shared Hub no longer accumulate without limit: the latest 1,000 stay complete for diagnostics, pending or unacknowledged changes are never touched and business data is preserved as is. Full-file rewrites while saving on a large database are now much rarer."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik yerel veritabanı depolama ve açılış sırasındaki arka plan işini etkiler; ekranda değişen arayüz öğesi yoktur.",
+          "en": "The change affects local database storage and background startup work; no on-screen interface element changes."
+        }
       }
     }
   ]

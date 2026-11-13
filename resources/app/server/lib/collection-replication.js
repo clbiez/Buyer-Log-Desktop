@@ -97,6 +97,18 @@ async function readEnvelope(file, ownerId) {
 async function quarantineLegacyCollectionDeltas({ localDb, workspaceFileForOwner, onTrace = null } = {}) {
   if (!localDb || typeof localDb.transaction !== 'function') throw new Error('Local DB transaction desteği zorunludur.');
   if (typeof workspaceFileForOwner !== 'function') throw new Error('Collection workspace dosya çözümleyicisi zorunludur.');
+  /* Tamamlanmış geçiş tam yazma transaction'ı açmaz: transaction() her
+     çağrıda bütün anlık görüntüyü yeniden yazar. Her açılışta çalışan bu
+     kontrol büyük DB'de (ölçüm: 309 MB) diskte ~3x DB yazımı ve onlarca saniye
+     DB kirası/olay döngüsü kilidi üretiyordu. İşaret transaction içinde yine
+     denetlenir; aradaki yarış yalnız işi bir kez daha atlatır. */
+  const current = typeof localDb.read === 'function' ? await localDb.read() : null;
+  const done = current && current.migrations && current.migrations[LEGACY_DELTA_QUARANTINE_MARKER];
+  if (done) {
+    const outcome = { ...done, skipped: true };
+    try { if (typeof onTrace === 'function') onTrace('COLLECTION_LEGACY_DELTA_QUARANTINED', outcome); } catch (_) {}
+    return outcome;
+  }
   const outcome = await localDb.transaction(async state => {
     state.migrations = state.migrations && typeof state.migrations === 'object' ? state.migrations : {};
     if (state.migrations[LEGACY_DELTA_QUARANTINE_MARKER]) return { ...state.migrations[LEGACY_DELTA_QUARANTINE_MARKER], skipped: true };
