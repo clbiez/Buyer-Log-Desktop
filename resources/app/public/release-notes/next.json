@@ -340,6 +340,35 @@
           "en": "Background updating is on by default; clear the checkbox to turn it off."
         }
       }
+    },
+    {
+      "id": "overview-collection-drill-month-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Genel Bakış Koleksiyon grafiğinden açılan tablo artık boş gelmiyor",
+        "en": "Collection table opened from the Overview chart is no longer empty"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-collection-drill-month-filter.png",
+        "alt": {
+          "tr": "Genel Bakış'tan Haziran 2027 · Pending File ile açılan Koleksiyon tablosunda eşleşen model listeleniyor",
+          "en": "Collection table opened from Overview with June 2027 · Pending File lists the matching model"
+        },
+        "caption": {
+          "tr": "Grafikten açılan ay ve statü filtresi Koleksiyon tablosundaki modelleri doğru gösterir.",
+          "en": "The month and status filter opened from the chart shows the matching Collection models."
+        }
+      },
+      "body": {
+        "tr": "Aynı ay farklı yazımlarla girildiğinde (ör. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\") Genel Bakış Koleksiyon kartı artık tek satırda toplar. Ay satırına veya statü dilimine tıklayınca açılan Koleksiyon filtresi tablodaki değerle eşleşir; tablo boş gelmez.",
+        "en": "When the same month is entered in different spellings (e.g. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\"), the Overview Collection card now groups it into one row. Clicking a month row or status segment opens a Collection filter that matches the table values, so the table is no longer empty."
+      }
     }
   ]
 }
