@@ -166,6 +166,93 @@
           "en": "Choose part tracking for each checklist independently, or set the model count to 1."
         }
       }
+    },
+    {
+      "id": "backlog-filter-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Analiz Filtreleri favori olarak kaydedilip tek tıkla uygulanır",
+        "en": "Analysis Filters can be saved as favourites and applied in one click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-filter-favorites.png",
+        "alt": {
+          "tr": "Backlog Analiz Filtreleri çekmecesinde Favoriler satırı: iki kayıtlı favori, aktif olan işaretli, sağda Yeni favori düğmesi",
+          "en": "Favourites row in the Backlog Analysis Filters drawer: two saved favourites, the active one ticked, New favourite button on the right"
+        },
+        "caption": {
+          "tr": "Aktif filtrelere uyan favori işaretlenir; favori silmek aktif filtreleri değiştirmez.",
+          "en": "The favourite matching the active filters is ticked; deleting a favourite leaves the active filters unchanged."
+        }
+      },
+      "body": {
+        "tr": "Analiz Filtreleri çekmecesinde seçtiğiniz filtre kombinasyonunu \"Favori olarak kaydet\" ile adlandırın. Favoriye tıklamak aktif filtrelerin yerine onu uygular ve tüm Backlog görünümleri ile çıktıları yenilenir. Aynı adla kaydetmek favoriyi onayınızla günceller. Favoriler kullanıcınıza özeldir.",
+        "en": "In the Analysis Filters drawer, name the filter combination you selected with \"Save as favourite\". Clicking a favourite applies it in place of the active filters and refreshes all Backlog views and exports. Saving with an existing name updates that favourite after confirmation. Favourites are personal to your user."
+      }
+    },
+    {
+      "id": "backlog-sub-manufacturer-breakdown",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog Genel Bakış Alt Üretici kırılımı artık tüm satırları boş göstermiyor",
+        "en": "Backlog Overview Sub-Manufacturer breakdown no longer shows every row as blank"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-sub-manufacturer-breakdown.png",
+        "alt": {
+          "tr": "Operasyon Dağılımı Alt Üretici kırılımında üretici adlarına göre ayrılmış çubuklar",
+          "en": "Operational Distribution Sub-Manufacturer breakdown with bars split by manufacturer name"
+        },
+        "caption": {
+          "tr": "DTR siparişlerde Alt Üretici = Üretici; Non-DTR siparişlerde girilen Alt Üretici, girilmemişse (boş).",
+          "en": "For DTR orders Sub-Manufacturer = Manufacturer; for Non-DTR orders the entered Sub-Manufacturer, or (blank) if none was entered."
+        }
+      },
+      "body": {
+        "tr": "Operasyon Dağılımı ve Backlog Report çıktısındaki Alt Üretici kırılımı sunucunun hesapladığı Alt Üretici değerini okumuyordu ve her satır (boş) altında toplanıyordu. Artık DTR siparişler Üretici adıyla, Non-DTR siparişler girilen Alt Üretici ile gruplanır; Alt Üretici girilmemiş Non-DTR siparişler (boş) olarak kalır.",
+        "en": "The Sub-Manufacturer breakdown in Operational Distribution and the Backlog Report export did not read the Sub-Manufacturer value computed by the server, so every row fell under (blank). DTR orders are now grouped by Manufacturer and Non-DTR orders by the entered Sub-Manufacturer; Non-DTR orders without a Sub-Manufacturer stay (blank)."
+      }
+    },
+    {
+      "id": "data-management-filter-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Database filtrelerinde favori ön ayarlar herkese açık",
+        "en": "Favourite presets for database filters are available to everyone"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-filter-favorites.png",
+        "alt": {
+          "tr": "Veri Yönetimi filtre düzenleyicisinde Favori ön ayarlar satırı: kaydedilmiş W26 Örme favorisi ve Favori olarak kaydet düğmesi",
+          "en": "Favourite presets row in the Data Management filter editor: the saved W26 Örme favourite and the Save as favourite button"
+        },
+        "caption": {
+          "tr": "Favoriye tıklamak koşulları doldurur; uygulamak için Kaydet'e basılır.",
+          "en": "Clicking a favourite fills the conditions; press Save to apply."
+        }
+      },
+      "body": {
+        "tr": "Veri Yönetimi filtre düzenleyicisinde mevcut koşulları \"Favori olarak kaydet\" ile adlandırıp saklayın; favoriye tıklayınca koşullar yüklenir, Kaydet ile uygulanır. Kişisel favoriler artık yönetim yetkisi olmayan kullanıcılara da açık ve yalnız sahibine görünür. Favori adı panelin içinde yazılır; masaüstü uygulamasında kaydetme penceresinin açılmaması sorunu giderildi. Favoriyi herkesle paylaşmak ve paylaşılanı silmek yine yönetim yetkisi ister.",
+        "en": "In the Data Management filter editor, name and keep the current conditions with \"Save as favourite\"; clicking a favourite loads its conditions and Save applies them. Personal favourites are now available to users without management permission and are visible only to their owner. The favourite name is typed inside the panel, fixing the save dialog that did not open in the desktop app. Sharing a favourite with everyone and deleting a shared one still require management permission."
+      }
     }
   ]
 }

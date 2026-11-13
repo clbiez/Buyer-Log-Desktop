@@ -79,7 +79,7 @@ test('shared filter drawer loads column values without fetching overview rows wh
   const source=fs.readFileSync(require.resolve('../public/backlog-overview.js'),'utf8');
   const start=source.indexOf('async function openFilterPanel()'),end=source.indexOf('\nfunction closeFilterPanel',start);
   let loads=0;const field={id:'cp:Sezon'};
-  const sandbox={filterOpen:false,filterRoot:()=>({querySelector:()=>null,classList:{add(){}},hidden:true}),window:{},requestAnimationFrame:fn=>fn(),updateFilterButton(){},renderFilterPanel(){},ensureFilterCatalog:async()=>{},ensureFilterValues:async f=>{assert.equal(f,field);loads++;},overviewFilters:()=>[field],filterEditorId:field.id,refresh:()=>{throw Error('Full row request is unnecessary for filter values');}};
+  const sandbox={filterOpen:false,loadFavorites:()=>[],favorites:[],favoriteNaming:false,favoriteDraft:'',filterRoot:()=>({querySelector:()=>null,classList:{add(){}},hidden:true}),window:{},requestAnimationFrame:fn=>fn(),updateFilterButton(){},renderFilterPanel(){},ensureFilterCatalog:async()=>{},ensureFilterValues:async f=>{assert.equal(f,field);loads++;},overviewFilters:()=>[field],filterEditorId:field.id,refresh:()=>{throw Error('Full row request is unnecessary for filter values');}};
   await vm.runInNewContext(source.slice(start,end)+'\nopenFilterPanel()',sandbox);
   assert.equal(loads,1);
 });
