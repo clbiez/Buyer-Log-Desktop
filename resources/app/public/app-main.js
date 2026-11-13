@@ -7707,6 +7707,20 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount){
 }
 
 const _tableRangeViews=new WeakMap();
+/* Mini "yeniden çiz" düğmesi: hücre düzenlemesinden sonra bağımlı (türetilmiş)
+   hücreler güncel görünmediğinde filtreyi açıp kapatmaya gerek bırakmaz.
+   Sayfa önbelleğini değil modülün tam render yolunu (filtre/hesap dahil)
+   çalıştırır; kaydırma konumu korunur. Veri yeniden çekilmez. */
+function redrawTableModule(tableKey){
+  const tableId=tableKey==='koleksiyon'?'kolTable':`${tableKey}Table`;
+  const host=document.getElementById(tableId)?.closest('.tablewrap');
+  const top=host?host.scrollTop:0,left=host?host.scrollLeft:0;
+  if(tableKey==='cp')renderCPNow();
+  else if(tableKey==='orders')renderOrdersNow();
+  else if(tableKey==='koleksiyon')renderKol();
+  else return;
+  if(host){host.scrollTop=top;host.scrollLeft=left;const tb=host.querySelector('tbody');tb?._virtualState?.paint?.();}
+}
 function renderTableRangeControls(table,tableKey,rows,rerender){
   if(!window.BLTableRange)return rows;
   const T=(tr,en)=>appLang==='en'?en:tr;
@@ -7714,7 +7728,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   if(!view){
     let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
     const bar=document.createElement('div');bar.className='tableRangeBar';
-    bar.innerHTML='<select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
+    bar.innerHTML='<button type="button" class="tableRangeRedraw" data-range-redraw><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button><select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
     /* CP, Siparişler ve Koleksiyon'da ayrı satır açmadan araç satırının en
        sağına yerleşir; sayfalama taşma menüsüne düşmez. */
     const toolbarId=tableKey==='koleksiyon'?'kolTableToolbar':
@@ -7729,6 +7743,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
       try{(window.BLStorage||localStorage).setItem(`bl.tableRange.${tableKey}.v1`,String(view.controller.snapshot().size));}catch(_){}
       draw();
     });
+    bar.querySelector('[data-range-redraw]').addEventListener('click',()=>redrawTableModule(tableKey));
     bar.querySelector('[data-range-prev]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page-1);draw();});
     bar.querySelector('[data-range-next]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page+1);draw();});
     bar.querySelector('[data-range-page]').addEventListener('change',event=>{view.controller.go(Number(event.target.value)-1);draw();});
@@ -7738,6 +7753,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   const range=view.controller.update(rows),bar=view.bar;
   bar.title=T('Filtreler, toplamlar ve dışa aktarma tüm eşleşen satırları kapsar.','Filters, totals and exports include all matching rows.');
   const select=bar.querySelector('[data-range-size]');select.value=String(range.size);select.lastElementChild.textContent=T('Tümü','All');
+  const redraw=bar.querySelector('[data-range-redraw]');redraw.title=T('Tabloyu yeniden çiz','Redraw table');redraw.setAttribute('aria-label',redraw.title);
   select.title=T('Görünür satır aralığı','Visible row range');select.setAttribute('aria-label',select.title);
   bar.querySelector('[data-range-info]').textContent=`${range.total?range.start+1:0}–${range.end} / ${range.total.toLocaleString(appLang==='en'?'en-GB':'tr-TR')}`;
   const page=bar.querySelector('[data-range-page]');page.value=range.page+1;page.max=range.pages;page.disabled=range.pages===1;
