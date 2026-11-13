@@ -134,3 +134,32 @@ test('başlığı farklı sıralı eski DB dosyasında cihaz kimliği yine bulun
   fs.writeFileSync(file, JSON.stringify({ records: { a: { x: 1 } }, deviceId: 'legacy-device-1', schemaVersion: 3 }));
   assert.equal(createLocalDb(file).getDeviceId(), 'legacy-device-1');
 });
+
+test('eşzamanlı ilk yüklemeler tek tam okumayı paylaşır; kooperatif yükleme aynı durumu verir', async t => {
+  const { file, db } = await tempDb(t);
+  await db.queuePatches(Array.from({ length: 300 }, (_, i) => ({ id: `cp-order:${i}`, patch: { note: 'z'.repeat(300), suppFob: String(i) } })));
+  await db.transaction(async () => null);
+  const expected = await db.businessHash();
+  const original = fsp.readFile;
+  let snapshotReads = 0;
+  fsp.readFile = function (target, ...rest) { if (path.resolve(String(target)) === file) snapshotReads += 1; return original.call(this, target, ...rest); };
+  try {
+    const cooperative = createLocalDb(file, { cooperativeLoad: true });
+    const [a, b] = await Promise.all([cooperative.read(), cooperative.read()]);
+    assert.equal(a, b, 'both callers receive the same loaded state');
+    assert.equal(snapshotReads, 1, 'concurrent loads must not parse the snapshot twice');
+    assert.equal(await cooperative.businessHash(), expected);
+  } finally { fsp.readFile = original; }
+});
+
+test('açılış sırası: konum → geri yükleme kurtarması → DB yükleme; ilk ekran tam DB yüklemesini beklemez', () => {
+  const SERVER = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
+  assert.match(SERVER, /createLocalDb\(LOCAL_DB_FILE, \{[^}]*cooperativeLoad:true/);
+  assert.match(SERVER, /const restoreRecoveryPromise = localDbLocationPromise\.then\(/, 'recovery runs once the DB location is known, before the DB is loaded');
+  assert.match(SERVER, /const startupDataGate = restoreRecoveryPromise\.then\(/);
+  const ready = SERVER.slice(SERVER.indexOf('const localDbReadyPromise = (async () => {'));
+  assert.ok(ready.indexOf('await startupDataGate') > 0 && ready.indexOf('await startupDataGate') < ready.indexOf('await localDb.ensure()'), 'DB load waits for restore recovery');
+  const data = SERVER.slice(SERVER.indexOf("app.get('/api/data'"), SERVER.indexOf("app.get('/api/data'") + 600);
+  assert.match(data, /await startupDataGate;/);
+  assert.doesNotMatch(data, /await localDbReadyPromise/, 'first screen must not wait for the full DB parse');
+});

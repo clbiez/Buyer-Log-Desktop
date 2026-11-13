@@ -86,7 +86,7 @@ if (backendCompileCacheState.status !== 'disabled') markStartup('COMPILE_CACHE_'
 
 // Local-first bootstrap. The retired whole-folder legacy import is deliberately
 // not part of startup; business data remains in the local DB + delta registry.
-const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup, encodeSnapshot:state=>require('./lib/compute-runtime').getComputeService().encodeLocalDbSnapshot(state) });
+const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup, cooperativeLoad:true, encodeSnapshot:state=>require('./lib/compute-runtime').getComputeService().encodeLocalDbSnapshot(state) });
 let rejectedOwnerDeltas = 0;
 function sharedHubDeltaFilter(direction) {
   return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction).filter(delta => {
@@ -217,13 +217,38 @@ function ensureLocalDbMaintenanceReady() {
   return localDbMaintenancePromise;
 }
 
-const localDbReadyPromise = (async () => {
+/* AÇILIŞ SIRASI: DB konumu → yarım kalmış tam geri yükleme kurtarması → DB
+   yükleme. İlk ekran (/api/data) yalnız ilk ikisini bekler (startupDataGate),
+   yerel DB'nin tamamının çözülmesini beklemez: o iş veriyle büyür (328 MB'ta
+   ~4,5 sn ana iş parçacığı kilidi ölçüldü) ve ilk ekran ondan okumaz. DB
+   arka planda kooperatif olarak (olay döngüsünü ~8 ms dilimlerle bırakarak)
+   yüklenir; ona ihtiyaç duyan her yazım/okuma aynı yüklemeyi bekler
+   (local-db loadState tek uçuş). Konum yazımlardan ÖNCE çözülür: aksi hâlde
+   erken bir yazım varsayılan yoldaki yanlış DB dosyasına gidebilirdi.
+   Kurtarma artık DB belleğe alınmadan önce çalışır; geri alınan dosyanın
+   eski hâli hiç yüklenmez. */
+const localDbLocationPromise = (async () => {
   try {
     const configuredSync = await syncSettings.read();
     const configuredLocalDbPath = path.resolve(configuredSync.localDbPath || localDb.getFile());
     markStartup('LOCAL_DB_CONFIG_PATH', { path: configuredLocalDbPath });
     markStartup('SHARED_SYNC_ROOT', { path: configuredSync.sharedSyncRoot || '' });
     if (configuredLocalDbPath !== path.resolve(localDb.getFile())) localDb.setFolder(path.dirname(configuredLocalDbPath));
+    return configuredLocalDbPath;
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error);
+    markStartup('LOCAL_DB_READY_FAILED', { error: message });
+    console.error('BuyerLogLocal.db local setup failed:', message);
+    return null;
+  }
+})();
+const localDbReadyPromise = (async () => {
+  const configuredLocalDbPath = await localDbLocationPromise;
+  if (!configuredLocalDbPath) return;
+  try {
+    // Modül değerlendirmesi ilk await'ten önce bitmiş olur; aşağıda tanımlı
+    // kurtarma sözü burada güvenle beklenir.
+    await startupDataGate;
     await localDb.ensure();
     const activeLocalDbPath = path.resolve(localDb.getFile());
     if (configuredLocalDbPath !== activeLocalDbPath) throw new Error(`Local DB config/active connection mismatch: ${configuredLocalDbPath} != ${activeLocalDbPath}`);
@@ -2208,13 +2233,15 @@ const fullRestoreService = createFullRestoreService({
     const job = fullRestoreJobs.get(restoreId); if (job) job.commitStarted = Boolean(committing);
   },
 });
-const restoreRecoveryPromise = localDbReadyPromise.then(() => {
+const restoreRecoveryPromise = localDbLocationPromise.then(() => {
   try {
     const recovered = recoverInterruptedRestoresSync({ roots: fullRestoreRoots, onEvent: (name, detail) => markStartup(name, detail) });
     if (recovered.recovered || recovered.failures.length) markStartup('RESTORE_RECOVERY', recovered);
     return recovered;
   } catch (error) { logRuntimeFailure('restoreRecovery', error); return { recovered: 0, cleaned: 0, failures: [{ error: error.message }] }; }
 });
+// İlk ekran kapısı: konum + kurtarma. Yerel DB'nin tam yüklenmesini beklemez.
+const startupDataGate = restoreRecoveryPromise.then(() => undefined, () => undefined);
 // Full restore owns the write boundary. Read-only pages and restore progress
 // remain available, but unrelated mutations cannot race the commit/rollback.
 app.use((req, res, next) => {
@@ -8638,7 +8665,7 @@ async function prepareComputeBacklog(req){
 app.get('/api/data', async (req, res) => {
   const started = process.hrtime.bigint();
   try {
-    await localDbReadyPromise;
+    await startupDataGate;
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     const response = await buildResponse(req.currentUser, { startup: String(req.query.mode || '') === 'initial' });
     if (process.env.NODE_ENV !== 'production') {

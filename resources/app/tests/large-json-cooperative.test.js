@@ -15,3 +15,11 @@ test('cooperative parser rejects malformed containers and trailing data like the
   assert.throws(()=>JSON.parse(text),SyntaxError);await assert.rejects(parseJsonBufferAsync(Buffer.from(text),{yieldControl}),SyntaxError);
  }
 });
+test('toplu çözümleme: çok sayıda küçük üye, batch sınırını aşan yinelenen anahtarlar ve iç __proto__ JSON.parse ile aynı',async()=>{
+ const members=[];for(let i=0;i<40000;i++)members.push(JSON.stringify('k'+i)+':'+JSON.stringify({i,t:'Türkçe 💙 \\" '+'x'.repeat(i%50)}));
+ members.splice(5,0,'"dup":1');members.push('"dup":{"late":true}');members.splice(20000,0,'"__proto__":{"polluted":true}');
+ const text='{"outer":{'+members.join(',')+'},"list":['+Array.from({length:50000},(_,i)=>i%7?JSON.stringify({i}):'[]').join(',')+'],"empty":{},"tail":[]}';
+ const actual=await parseJsonBufferAsync(Buffer.from(text),{yieldControl});
+ assert.deepEqual(actual,JSON.parse(text));assert.deepEqual(Object.keys(actual.outer),Object.keys(JSON.parse(text).outer));
+ assert.equal(Object.getPrototypeOf(actual.outer),Object.prototype);assert.equal({}.polluted,undefined);assert.deepEqual(actual.outer.dup,{late:true});
+});

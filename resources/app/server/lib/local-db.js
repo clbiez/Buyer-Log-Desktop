@@ -15,7 +15,7 @@ const crypto = require('crypto');
 const { withFileLeaseAsync, replaceFileWithRetry, assertHeldFileLeases } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
-const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
+const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, parseJsonBufferAsync, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
 
 const hybridClock = require('./hlc');
 const emailClockLists = require('./hlc-email-list');
@@ -215,12 +215,19 @@ function summarizeConflict(item, previewChars = 4000) {
   return out;
 }
 /* Anlık görüntü dosyası; V8 string sınırını aşan boyutta da okunur. */
-async function readJsonFile(file) { return parseJsonBuffer(await fsp.readFile(file)); }
-async function readState(file, deviceId = null) {
+/* cooperative: büyük anlık görüntü olay döngüsünü kilitlemeden, ~8 ms'lik
+   dilimler arasında kontrolü bırakarak çözülür (açılışta HTTP istekleri
+   beklemez). Toplam süre senkron parse'tan uzundur; yalnız açılış yükü için. */
+const yieldToEventLoop = () => new Promise(resolve => setImmediate(resolve));
+async function readJsonFile(file, { cooperative = false } = {}) {
+  const bytes = await fsp.readFile(file);
+  return cooperative ? parseJsonBufferAsync(bytes, { yieldControl: yieldToEventLoop }) : parseJsonBuffer(bytes);
+}
+async function readState(file, deviceId = null, { cooperative = false } = {}) {
   const errors = [];
   for (const candidate of [file, `${file}.bak`]) {
     try {
-      const state = normalizeState(await readJsonFile(candidate), deviceId);
+      const state = normalizeState(await readJsonFile(candidate, { cooperative }), deviceId);
       if (candidate !== file) {
         // Keep the unreadable primary for forensics, then restore the validated
         // backup. writeState must not copy the corrupt primary over the backup.
@@ -645,7 +652,7 @@ function readDeviceIdSync(file) {
   return existing && existing.deviceId ? String(existing.deviceId) : '';
 }
 
-function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = null, encodeSnapshot = null, journalRetention = {} } = {}) {
+function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = null, encodeSnapshot = null, journalRetention = {}, cooperativeLoad = false } = {}) {
   let dbFile = path.resolve(file);
   let deviceId = null;
   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
@@ -766,23 +773,36 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = nul
   async function currentTags() {
     return `${await fileTag(dbFile)}|${await fileTag(walFile())}|${await fileTag(`${walFile()}.bak`)}`;
   }
-  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; }
+  let loading = null, loadGeneration = 0;
+  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; loading = null; loadGeneration += 1; }
   async function withDbLease(operation) {
     try { return await withFileLeaseAsync(dbFile, operation); }
     catch (error) { invalidateCache(); throw error; }
   }
 
+  /* Aynı dosya imzası için eşzamanlı yüklemeler TEK okumayı paylaşır. Açılış
+     yüklemesi arka planda sürerken gelen ilk yazım/okuma ikinci bir tam parse
+     başlatmaz. Yükleme sürerken önbellek düşürülürse (hata/kira kaybı) sonuç
+     önbelleğe yazılmaz; sonraki çağrı diskten taze okur. */
   async function loadState() {
     const tags = await currentTags();
     if (cachedState && cachedTags === tags) return cachedState;
-    const state = await loadStateFromDisk();
-    cachedState = state;
-    cachedTags = await currentTags();
-    return state;
+    if (loading && loading.tags === tags) return loading.promise;
+    const generation = loadGeneration;
+    const entry = { tags, promise: null };
+    entry.promise = (async () => {
+      const state = await loadStateFromDisk();
+      const settledTags = await currentTags();
+      if (generation === loadGeneration) { cachedState = state; cachedTags = settledTags; }
+      return state;
+    })();
+    loading = entry;
+    try { return await entry.promise; }
+    finally { if (loading === entry) loading = null; }
   }
 
   async function loadStateFromDisk() {
-    const state = await readState(dbFile, loadDeviceId());
+    const state = await readState(dbFile, loadDeviceId(), { cooperative: cooperativeLoad });
     deviceId = state.deviceId;
     const previous = await readWalEntries(`${walFile()}.bak`);
     const current = await readWalEntries(walFile());
