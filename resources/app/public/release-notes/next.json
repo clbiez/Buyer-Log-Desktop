@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-12",
+  "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "FOB lisans maliyeti kırılımı · Yalnız Fiyat Masası’na gönderme",
-    "en": "FOB licence cost breakdown · Send to the Pricing Desk only"
+    "tr": "Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri · Favori filtreler",
+    "en": "Silent PLM image and BOM completion · LCW AI file attachments · Favourite filters"
   },
   "summary": {
-    "tr": "Nakliye Kıyaslama'da Yurt Dışı FOB ve Yurt İçi Landed kartları FOB'a eklenen royalty ve hologramı gösterir. Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
-    "en": "In Shipping Comparison the Overseas FOB and Domestic Landed cards show the royalty and hologram added to FOB. Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
+    "tr": "Eksik model görselleri ile CP/Siparişler Artwork ve Fabric (PLM) alanları arka planda, hissettirmeden tamamlanır; PLM ve LCW AI oturumu düşünce sessizce yeniden bağlanır. LCW AI’a dosya ve görsel ekleme yeniden çalışır. Backlog ve Database filtreleri favori olarak kaydedilir; set modellerde parça takibi, tablolarda mini yeniden çiz butonu ve yalnız Fiyat Masası’na gönderme eklendi.",
+    "en": "Missing model images and the CP/Orders Artwork and Fabric (PLM) fields are completed silently in the background; PLM and LCW AI sessions reconnect silently when they drop. Attaching files and images to LCW AI works again. Backlog and Database filters can be saved as favourites; set models get per-part tracking, tables get a mini redraw button, and requests can be sent to the Pricing Desk only."
   },
   "changes": [
     {
