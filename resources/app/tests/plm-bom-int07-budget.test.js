@@ -99,7 +99,7 @@ test('INT07: partial failure preserves last successful model; successful set con
   } };
   const r = await syncPlmBoms([...records(1), { plmId: '999', styleId: '999' }], opts);
   const baseline = await syncPlmBoms(records(1), { ownerId: 'int07-baseline', store: store(), ...transport(counters(), 'baseline') });
-  const normalize = entry => { const result = structuredClone(entry); delete result.fetchedAt; return result; };
+  const normalize = entry => { const result = structuredClone(entry); delete result.fetchedAt; delete result.bomReadAt; return result; };
   assert.deepEqual(normalize(r.entries.get('100')), normalize(baseline.entries.get('100')));
   assert.strictEqual(r.entries.get('999'), old); assert.equal(r.failed.length, 1); assert.equal(saved.length, 1);
 });

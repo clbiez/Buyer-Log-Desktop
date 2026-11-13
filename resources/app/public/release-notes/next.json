@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-12",
+  "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "FOB lisans maliyeti kırılımı · Yalnız Fiyat Masası’na gönderme",
-    "en": "FOB licence cost breakdown · Send to the Pricing Desk only"
+    "tr": "Sessiz PLM görsel ve BOM tamamlama · LCW AI dosya ekleri · Favori filtreler · Koleksiyon MB Date",
+    "en": "Silent PLM image and BOM completion · LCW AI file attachments · Favourite filters · Collection MB Date"
   },
   "summary": {
-    "tr": "Nakliye Kıyaslama'da Yurt Dışı FOB ve Yurt İçi Landed kartları FOB'a eklenen royalty ve hologramı gösterir. Fiyatlamaya Gönder penceresinden e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı oluşturulabilir.",
-    "en": "In Shipping Comparison the Overseas FOB and Domestic Landed cards show the royalty and hologram added to FOB. Send to Pricing can now create only the Pricing Desk request, without preparing an e-mail draft."
+    "tr": "Eksik model görselleri ile CP/Siparişler Artwork ve Fabric (PLM) alanları arka planda, hissettirmeden tamamlanır; PLM ve LCW AI oturumu düşünce sessizce yeniden bağlanır. LCW AI’a dosya ve görsel ekleme yeniden çalışır. Backlog ve Database filtreleri favori olarak kaydedilir; set modellerde parça takibi, tablolarda mini yeniden çiz butonu ve yalnız Fiyat Masası’na gönderme eklendi. Koleksiyon'da MB Tarihi, hafta/ay türetmesi, çoklu hücre seçimi ve klavye düzenlemesi iyileştirildi.",
+    "en": "Missing model images and the CP/Orders Artwork and Fabric (PLM) fields are completed silently in the background; PLM and LCW AI sessions reconnect silently when they drop. Attaching files and images to LCW AI works again. Backlog and Database filters can be saved as favourites; set models get per-part tracking, tables get a mini redraw button, and requests can be sent to the Pricing Desk only. Collection now supports MB Date week/month derivation, multi-cell selection and improved keyboard editing."
   },
   "changes": [
     {
@@ -281,6 +281,93 @@
       "body": {
         "tr": "Bir hücreyi düzenledikten sonra ona bağlı diğer hücreler güncel görünmüyorsa, sayfalama alanının solundaki yenileme ikonuna tıklayın: tablo hesaplanan sütunlar ve toplamlarla birlikte yeniden çizilir, kaydırma konumu korunur. Veri yeniden çekilmez; filtre açıp kapatmaya gerek kalmaz.",
         "en": "If other cells that depend on a cell you edited do not look up to date, click the refresh icon left of the pagination: the table is redrawn with its calculated columns and totals, and the scroll position is kept. Data is not reloaded, and there is no need to toggle a filter."
+      }
+    },
+    {
+      "id": "silent-missing-image-complete",
+      "type": "feature",
+      "module": {
+        "tr": "Model Görselleri",
+        "en": "Model Images"
+      },
+      "title": {
+        "tr": "Eksik model görselleri arka planda, hissettirmeden tamamlanır",
+        "en": "Missing model images are completed quietly in the background"
+      },
+      "body": {
+        "tr": "Görseli olmayan modellerin görselleri; açık alt detay raporlarında (LFL, Sezon karşılaştırma, Backlog detayı, Pricing History vb.) ve CP / Orders tablolarında ekranda görünen satırlarda, siz uygulamayı kullanmıyorken küçük paketlerle tamamlanır. Pencere, bildirim veya ilerleme çubuğu açılmaz; tablo yeniden çizilmez, kaydırma ve seçim korunur. Sıra LOCAL → SHARED → PLM'dir; elle konmuş görsel ezilmez. PLM'de bulunamayan model 24 saat yeniden istenmez. Koleksiyon ana tablosu, model dosyaları ve QTX kapsam dışıdır. Görsel Boyut Limiti penceresinden kapatılabilir.",
+        "en": "Images for models without one are completed in small batches while you are not using the app, in open detail reports (LFL, Season comparison, Backlog detail, Pricing History, etc.) and in the rows visible on screen in the CP / Orders tables. No window, notification or progress bar opens; the table is not redrawn and scrolling and selection are kept. The order is LOCAL → SHARED → PLM and manually set images are never overwritten. A model not found in PLM is not requested again for 24 hours. The Collection main table, model files and QTX are excluded. It can be turned off in the Image Size Limit window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "silent-missing-image-complete.png",
+        "alt": {
+          "tr": "Görsel Boyut Limiti penceresinde açık durumdaki 'Eksik görselleri arka planda tamamla' anahtarı",
+          "en": "The 'Complete missing images in the background' switch turned on in the Image Size Limit window"
+        },
+        "caption": {
+          "tr": "Anahtar varsayılan olarak açıktır; kapatıldığında arka planda hiçbir görsel isteği gönderilmez.",
+          "en": "The switch is on by default; when turned off, no background image request is sent."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-silent-plm-bom",
+      "type": "feature",
+      "module": {
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
+      },
+      "title": {
+        "tr": "CP ve Siparişler'de Artwork ve Fabric (PLM) arka planda güncel kalır",
+        "en": "Artwork and Fabric (PLM) in CP and Orders stay up to date in the background"
+      },
+      "body": {
+        "tr": "Buyer Log, açılıştan birkaç dakika sonra ve yalnız siz uygulamayı kullanmıyorken, CP ve Siparişler'deki modellerin PLM BOM bilgisini günde en fazla bir kez sessizce okur. Yalnız değişen Artwork Detail ve Fabric (PLM) hücreleri yerinde güncellenir; tablo yeniden çizilmez, kaydırma ve seçim korunur. Uyarı, ilerleme veya Operasyon Merkezi açılmaz; siz bir PLM işi başlattığınızda arka plan işi hemen yol verir. LCW AI kullanılmaz: AI gerektiren baskı/Set Style özetleri bir sonraki elle PLM senkronunuzda tamamlanır. Koleksiyon satırlarına, görsellere ve model dosyalarına dokunulmaz. PLM Kullanıcı Girişi penceresinden kapatılabilir.",
+        "en": "A few minutes after start-up and only while you are not using the app, Buyer Log silently reads the PLM BOM of the models in CP and Orders, at most once a day. Only changed Artwork Detail and Fabric (PLM) cells are updated in place; the table is not redrawn and scrolling and selection are kept. No alert, progress or Operations Center appears, and the background work yields as soon as you start a PLM job. LCW AI is not used: print/Set Style summaries that need AI are completed in your next manual PLM sync. Collection rows, images and model files are not touched. It can be turned off in the PLM User Sign-In window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-silent-plm-bom.png",
+        "alt": {
+          "tr": "PLM Kullanıcı Girişi penceresinde, varsayılan olarak işaretli \"CP / Orders Artwork ve Fabric bilgisini arka planda güncel tut\" seçeneği",
+          "en": "The \"Keep CP / Orders Artwork and Fabric up to date in the background\" option, checked by default, in the PLM User Sign-In window"
+        },
+        "caption": {
+          "tr": "Arka plan güncellemesi varsayılan olarak açıktır; işaret kaldırılarak kapatılabilir.",
+          "en": "Background updating is on by default; clear the checkbox to turn it off."
+        }
+      }
+    },
+    {
+      "id": "overview-collection-drill-month-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Genel Bakış Koleksiyon grafiğinden açılan tablo artık boş gelmiyor",
+        "en": "Collection table opened from the Overview chart is no longer empty"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-collection-drill-month-filter.png",
+        "alt": {
+          "tr": "Genel Bakış'tan Haziran 2027 · Pending File ile açılan Koleksiyon tablosunda eşleşen model listeleniyor",
+          "en": "Collection table opened from Overview with June 2027 · Pending File lists the matching model"
+        },
+        "caption": {
+          "tr": "Grafikten açılan ay ve statü filtresi Koleksiyon tablosundaki modelleri doğru gösterir.",
+          "en": "The month and status filter opened from the chart shows the matching Collection models."
+        }
+      },
+      "body": {
+        "tr": "Aynı ay farklı yazımlarla girildiğinde (ör. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\") Genel Bakış Koleksiyon kartı artık tek satırda toplar. Ay satırına veya statü dilimine tıklayınca açılan Koleksiyon filtresi tablodaki değerle eşleşir; tablo boş gelmez.",
+        "en": "When the same month is entered in different spellings (e.g. \"JUNE 2027\", \"Haziran 2027\", \"2027-06\"), the Overview Collection card now groups it into one row. Clicking a month row or status segment opens a Collection filter that matches the table values, so the table is no longer empty."
       }
     },
     {

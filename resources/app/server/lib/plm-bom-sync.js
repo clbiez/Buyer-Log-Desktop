@@ -230,6 +230,10 @@ async function syncPlmBoms(records, options = {}) {
 
   const processTarget = async (target, firstPass) => {
     if (stopped()) { skipped.push(target); return; }
+    /* Okuma kuşağı: bu modelin PLM'den okunmaya başladığı an. Daha geç
+       başlamış bir okumanın kaydı, daha önce başlamış (ör. iptal edilen sessiz
+       işin) geç kaydı tarafından ezilmez (plm-bom-store saveResults). */
+    const readAt = Date.now();
     if (!budgets.has(target.plmId)) budgets.set(target.plmId, createTargetBudget(ownerId, checkStop, options));
     const read = budgets.get(target.plmId);
     try {
@@ -289,6 +293,7 @@ async function syncPlmBoms(records, options = {}) {
           kind: 'set',
           children: withAnalysis,
           fingerprint: aggregateSetFingerprint(withAnalysis),
+          readAt,
         });
       } else {
         const payload = await read('POST',
@@ -301,7 +306,7 @@ async function syncPlmBoms(records, options = {}) {
           throw Object.assign(new Error(`BOM styleId uyuşmuyor: beklenen ${target.styleId}, gelen ${analysis.styleId}.`), { code: 'PLM_BOM_STYLE_MISMATCH' });
         }
         read.checkResult();
-        fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
+        fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint, readAt });
       }
     } catch (error) {
       if (error === STOP) { skipped.push(target); return; }
@@ -429,13 +434,17 @@ async function syncPlmBoms(records, options = {}) {
     const fullComponents=item.kind==='set'?item.children.flatMap(child=>(child.analysis.fullComponents||[]).map(component=>({...component,setPart:child.label,childPlmId:child.childPlmId,childStyleId:child.childStyleId}))):(item.analysis.fullComponents||[]);
     const fullFingerprint=require('crypto').createHash('sha256').update(JSON.stringify(fullComponents)).digest('hex');
     const fullEvidence={fullComponents,fullFingerprint,fullComponentCount:fullComponents.length,fullCoverage:'all-normalized'};
-    const aiPending = Boolean(old && old.ai && ['failed', 'deferred'].includes(old.ai.status));
+    /* AI'a izin verilmeyen (sessiz) koşu ertelenmiş kaydı çözemez: aynı BOM'u
+       yeniden yazmak yalnız revizyonu artırıp CP/Orders'ı boşuna yeniden
+       okutur. Bu durumda kayıt değişmemiş sayılır; kumaş/tam kanıt farkı yine
+       aşağıdaki yükseltmeyle yazılır. */
+    const aiPending = options.allowAi !== false && Boolean(old && old.ai && ['failed', 'deferred'].includes(old.ai.status));
     if (old && !aiPending && old.styleId === target.styleId && old.fingerprint && old.fingerprint === item.fingerprint) {
       unchanged += 1;
       if (old.hasPrint) withPrint += 1;
       const currentFabric=item.kind==='set'?(old.fabricSummary||target.fabric):target.fabric;
       const upgraded=old.fullFingerprint===fullFingerprint&&old.fabric===currentFabric
-        ?old:{...old,...fullEvidence,fabric:currentFabric,fetchedAt:new Date().toISOString()};
+        ?old:{...old,...fullEvidence,fabric:currentFabric,fetchedAt:new Date().toISOString(),bomReadAt:item.readAt};
       if(upgraded!==old)toSave.push(upgraded);
       entries.set(target.plmId, upgraded);
       if (item.kind === 'set') {
@@ -559,7 +568,7 @@ async function syncPlmBoms(records, options = {}) {
       };
     }
 
-    Object.assign(entry,fullEvidence);
+    Object.assign(entry,fullEvidence,{bomReadAt:item.readAt});
     if (entry.hasPrint) withPrint += 1;
     entries.set(target.plmId, entry);
     toSave.push(entry);
@@ -591,14 +600,22 @@ async function syncPlmBoms(records, options = {}) {
   }
 
   options.assertAuthority?.();
-  const saved = toSave.length ? store.saveResults(toSave) : { written: 0, revision: snapshot._revision || 0, updatedAt: snapshot._updatedAt || null };
+  const saved = toSave.length ? store.saveResults(toSave) : { written: 0, writtenIds: [], revision: snapshot._revision || 0, updatedAt: snapshot._updatedAt || null };
+  // Daha taze bir okuma tarafından geçilen kayıt yazılmaz; döndürülen kanıt da depodaki güncel kayıttır.
+  const writtenIds = Array.isArray(saved.writtenIds) ? saved.writtenIds : toSave.map(entry => entry.plmId);
+  if (writtenIds.length !== toSave.length) {
+    const written = new Set(writtenIds);
+    for (const entry of toSave) if (!written.has(entry.plmId)) { const current = store.entry(entry.plmId); if (current) entries.set(entry.plmId, current); }
+  }
   return {
     stopped: authError ? 'auth' : isCancelled() ? 'cancelled' : null,
     stopError: authError,
     skipped: skipped.length,
+    skippedIds: skipped.map(target => target.plmId),
     requested: targets.length,
     fetched: fetched.length,
-    changed: toSave.length,
+    changed: writtenIds.length,
+    changedIds: writtenIds,
     unchanged,
     withPrint,
     aiConsulted,

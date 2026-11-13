@@ -1,0 +1,29 @@
+{
+  "mode": "perf",
+  "appRoot": "/tmp/claude-0/-home-user-Buyer-Log-Desktop/dd9c29db-078f-55ea-b4be-43636d74d749/scratchpad/main-wt/resources/app",
+  "rows": 30000,
+  "ordersRows": 30000,
+  "bootReadyMs": 5087,
+  "ordersReadyMs": 117,
+  "engine": false,
+  "cpOpenMs": 7922,
+  "scroll": {
+    "ms": 2030.7999999999302,
+    "longTasks": 0,
+    "maxLongTaskMs": 0,
+    "scrollTop": 1475,
+    "scrollRoom": 1475,
+    "scroller": "ordersTableWrap"
+  },
+  "silent": {
+    "longTasks": 0,
+    "maxLongTaskMs": 0,
+    "rowMutations": 0,
+    "toasts": 0,
+    "opsOpened": 0,
+    "toastCalls": [],
+    "stats": null,
+    "requests": []
+  },
+  "errors": []
+}

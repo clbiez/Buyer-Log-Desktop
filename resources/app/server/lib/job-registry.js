@@ -227,6 +227,15 @@ function createJobRegistry(options = {}) {
     return cancelled;
   }
 
+  /* Bitmiş bir işi geçmişten çıkarır. Sessiz (arka plan) PLM işleri bitince
+     kaldırılır ki kullanıcının kendi iş geçmişini (historyLimit) doldurmasın.
+     Çalışan iş kaldırılmaz: iptal sinyali ona bu kayıt üzerinden ulaşır. */
+  function remove(userId, jobId) {
+    const jobs = bucket(userId), id = clean(jobId), job = jobs.get(id);
+    if (!job || !TERMINAL.has(job.status)) return false;
+    return jobs.delete(id);
+  }
+
   // Kullanıcının elle başlattığı, hâlâ çalışan bir PLM işi var mı?
   function hasForeground(userId) {
     for (const job of bucket(userId).values()) if (!job.background && !TERMINAL.has(job.status)) return true;
@@ -266,7 +275,7 @@ function createJobRegistry(options = {}) {
   }
 
   return {
-    create, get, update, addFailure, finish, requestCancel, isCancelled, cancelBackground, hasForeground,
+    create, get, update, addFailure, finish, requestCancel, isCancelled, cancelBackground, hasForeground, remove,
     list, describe, failures, failedIds, clearFinished,
     TERMINAL,
   };

@@ -1,0 +1,15 @@
+{
+  "base": "390bff627d38cf4c8a57cf43b04e5974a2490b3d",
+  "writtenBeforeMeasurement": true,
+  "risk": "P1: scheduler + PLM load + per-installation BOM store ordering; no Collection, image, QTX or LCW AI path",
+  "scenario": "Real Buyer Log server + Chromium, isolated synthetic 30,000-row CP/Orders fixture (scripts/benchmark-startup-orders.js); Main worktree vs candidate, >=3 alternating pairs",
+  "budgets": {
+    "cpOrdersOpen": "CP and Orders module open on 30k fixture: no repeatable regression vs Main median (A/A noise recorded if needed)",
+    "scroll30k": "CP table scroll on 30k fixture: longest task and summed blocking during a fixed scroll sweep, no repeatable regression vs Main",
+    "startupNetwork": "0 PLM/CoreNectum/LCW AI requests and 0 /api/plm-sync/bom/silent/* requests before the scheduler start delay (>=3 min); only passive input listeners + one timer added",
+    "silentRun": "per batch <=100 models: 1 Style List call + <=100 BOM calls, BOM concurrency <=2, 0 LCW AI calls, each model read at most once per local day",
+    "cellPatch": "applying 100 changed models: 0 full CP/Orders re-render, synchronous patch task <=50 ms",
+    "visibility": "0 toasts, 0 Operations Center auto-open, 0 progress writes, background job record removed after run"
+  },
+  "scope": "Server + client JS. Electron/preload/native and Windows/SMB/corporate CoreNectum not measurable in this Linux cloud container; those gates are reported BLOCKED, not PASS."
+}

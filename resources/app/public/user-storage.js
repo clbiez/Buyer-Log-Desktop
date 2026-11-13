@@ -6,6 +6,7 @@
   var prefixes=[
     'bl.excelTemplates.',
     'bl.dataManagement.', // Veri Yönetimi panel aç/kapa tercihi kişiseldir (cihazda kalır, eşitlenmez).
+    'bl.cpPlmSilentBom.', // CP/Orders sessiz PLM BOM tazelemesi aç/kapa tercihi kişiseldir.
     'lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','lcw.startup.',
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.table.density.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',

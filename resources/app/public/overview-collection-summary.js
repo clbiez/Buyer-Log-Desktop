@@ -14,6 +14,13 @@
     const actual=fields[key]||key;
     return text(row&&row[actual]);
   };
+  /* Ay/statü kimliği: columnValue verilmişse modülün filtre değeri (Koleksiyon'da
+     kolFilterValue → ay kodu, model grubu etkin statüsü) esas alınır; böylece
+     gruplar ve drill değerleri tablo filtresiyle birebir eşleşir. */
+  const scopedValue=(row,key,fields,options)=>{
+    if(typeof options.columnValue!=='function')return fieldValue(row,key,fields);
+    return text(options.columnValue(row,fields[key]||key));
+  };
   const uniqueSorted=values=>[...new Set((values||[]).map(text).filter(Boolean))]
     .sort(businessRules.compareChronologicalValues);
   const monthParts=businessRules.monthParts;
@@ -99,7 +106,7 @@
     const columnFilters=options.columnFilters&&typeof options.columnFilters==='object'?options.columnFilters:{};
     const valueFor=typeof options.columnValue==='function'?options.columnValue:(row,key)=>row&&row[key];
     return (Array.isArray(rows)?rows:[]).filter((row,index)=>{
-      const month=fieldValue(row,'month',fields),status=fieldValue(row,'status',fields);
+      const month=scopedValue(row,'month',fields,options),status=scopedValue(row,'status',fields,options);
       if(months&&months.size&&!months.has(month))return false;
       if(statuses&&statuses.size&&!statuses.has(status))return false;
       const confirmed=isConfirmed(row,options.isConfirmed);
@@ -132,7 +139,7 @@
     const pivotGroups=new Map();
     const pivotColumnPaths=new Map();
     filtered.forEach((row,index)=>{
-      const model=modelKeyFor(row,index,fields),status=fieldValue(row,'status',fields)||'—',confirmed=isConfirmed(row,options.isConfirmed);
+      const model=modelKeyFor(row,index,fields),status=scopedValue(row,'status',fields,options)||'—',confirmed=isConfirmed(row,options.isConfirmed);
       const modelEntry=modelMap.get(model)||{confirmed:false,optionCount:0};modelEntry.confirmed=modelEntry.confirmed||confirmed;modelEntry.optionCount++;modelMap.set(model,modelEntry);
       const statusEntry=statusMap.get(status)||new Map();
       const statusModel=statusEntry.get(model)||{confirmed:false,optionCount:0};
@@ -183,7 +190,7 @@
     const imageFor=typeof options.imageFor==='function'?options.imageFor:()=>'';
     const groups=new Map();
     filterRows(rows,options).forEach((row,index)=>{
-      const month=fieldValue(row,'month',fields),model=modelKeyFor(row,index,fields),status=fieldValue(row,'status',fields)||'—';
+      const month=scopedValue(row,'month',fields,options),model=modelKeyFor(row,index,fields),status=scopedValue(row,'status',fields,options)||'—';
       const group=groups.get(month)||{month,quantity:0,optionCount:0,models:new Map(),statuses:new Map()};
       const quantity=Number(quantityFor(row));
       if(Number.isFinite(quantity)&&quantity>0)group.quantity+=quantity;

@@ -3922,8 +3922,52 @@ function cpPlmDetailsSync(){
   if(!details)return;
   void details.sync({
     cpRows:state.cp?.rows||[],ordersRows:state.orders?.rows||[],
-    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();}
+    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();},
+    patch:cpPlmPatchCells
   });
+}
+/* Sessiz arka plan BOM tazelemesi (cp-plm-silent-bom.js) yalnız değişen
+   Artwork/Fabric hücrelerini yerinde günceller: tablo yeniden çizilmez,
+   kaydırma, satır/hücre seçimi, odak ve Motion+ satır animasyonu korunur.
+   Henüz çizilmemiş satır sonraki doğal çizimde güncel değeri okur. */
+function cpPlmPatchCells(changes){
+  // Çizili satırlar bir kez indekslenir (yalnız görünür dilim DOM'dadır); satır başına belge araması yok.
+  const visible={cp:null,orders:null},rendered={cp:null,orders:null},work=[];
+  for(const change of Array.isArray(changes)?changes:[]){
+    const tableKey=change&&change.table==='orders'?'orders':'cp',row=change&&change.row;
+    if(!row||row._id==null)continue;
+    if(!rendered[tableKey]){rendered[tableKey]=new Map();document.querySelectorAll(`#${tableKey==='orders'?'ordersTable':'cpTable'} tbody tr[data-id]`).forEach(tr=>rendered[tableKey].set(tr.dataset.id,tr));}
+    const tr=rendered[tableKey].get(String(row._id));
+    if(!tr)continue;
+    visible[tableKey]=visible[tableKey]||visibleCols(tableKey);
+    work.push({tableKey,tr,row,change,columns:visible[tableKey]});
+  }
+  /* Aynı karede onlarca görünür satırı değiştirmek tablo stil/yerleşim
+     hesabını tek uzun göreve toplar. Satırlar küçük parçalar hâlinde, ayrı
+     görevlerde yamanır; satır verisi zaten günceldir. */
+  const PATCH_ROWS_PER_TASK=6;
+  const step=start=>{
+    for(const item of work.slice(start,start+PATCH_ROWS_PER_TASK))cpPlmPatchRow(item);
+    if(start+PATCH_ROWS_PER_TASK<work.length)setTimeout(()=>step(start+PATCH_ROWS_PER_TASK),0);
+  };
+  if(work.length)step(0);
+}
+function cpPlmPatchRow({tableKey,tr,row,change,columns}){
+  if(!tr.isConnected)return; // satır bu arada yeniden çizildiyse güncel değeri zaten gösterir
+  const esc=value=>window.CSS?.escape?CSS.escape(String(value)):String(value).replace(/["\\]/g,'\\$&');
+  const flags=computeFlags(row);
+  for(const key of Array.isArray(change.keys)?change.keys:[]){
+    const td=tr.querySelector(`:scope > td[data-key="${esc(key)}"]`),column=columns.find(c=>c.k===key);
+    if(!td||!column||td.contains(document.activeElement))continue;
+    const render=current=>{const tpl=document.createElement('template');tpl.innerHTML=(tableKey==='orders'?ordersCellHtml(column,current,flags,tableKey):cellHtml(column,current,flags,tableKey)).trim();return tpl.content.firstElementChild;};
+    const next=render(row);if(!next)continue;
+    // Yalnız çizicinin ürettiği sınıflar değişir; seçim/sınır gibi durum sınıfları korunur.
+    const before=render({...row,[key]:change.previous?.[key]??''}),owned=new Set([...(before?.classList||[])]);
+    [...td.classList].forEach(cls=>{if(owned.has(cls))td.classList.remove(cls);});
+    next.classList.forEach(cls=>td.classList.add(cls));
+    for(const attr of ['title','data-cp-fabric']){if(next.hasAttribute(attr))td.setAttribute(attr,next.getAttribute(attr));else td.removeAttribute(attr);}
+    td.innerHTML=next.innerHTML;
+  }
 }
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
@@ -16464,10 +16508,12 @@ async function openModelImageLimitModal(){
   const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=appLang==='en'?'Image Size Limit':'Görsel Boyut Limiti',help=appLang==='en'?'Enter the maximum size in KB. New PLM/manual images use this limit; existing larger images are optimized once in the background.':'Maksimum boyutu KB olarak girin. Yeni PLM/manuel görseller bu sınırı kullanır; daha büyük mevcut görseller arka planda bir kez optimize edilir.';
   const maxKb=Math.min(1024,Math.max(1,Number(current.maxKb)||5));
-  modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
+  modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><label class="modelImageSilentToggle"><input type="checkbox" id="_modelImageSilentComplete" ${window.BLSilentImageComplete?.isEnabled?.()===false?'':'checked'}><span><span>${escapeHtml(appLang==='en'?'Complete missing images in the background':'Eksik görselleri arka planda tamamla')}</span><small>${escapeHtml(appLang==='en'?'Visible CP/Orders rows and open detail reports; never the Collection main table. No windows or notifications.':'Görünür CP/Orders satırları ve açık detay raporları; Koleksiyon ana tablosu hariç. Pencere veya bildirim açılmaz.')}</small></span></label><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
   document.body.appendChild(modal);const sample=modal.querySelector('.modelImageSample');if(sample)sample.innerHTML='<div class="modelImageSamplePreview" id="_modelImageSamplePreview"><img id="_modelImageSampleImg" alt="Model preview" hidden><span id="_modelImageSampleMeta"></span></div><span>'+escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')+'</span>';const previewSource=findModelImagePreviewSource();const close=()=>{window.BLLayerSystem?.closeDialog?.(modal);modal.remove();};modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});window.BLLayerSystem?.openDialog?.(modal,{onClose:close,initialFocus:'#_modelImageLimitInput'});
   const range=modal.querySelector('#_modelImageLimitRange'),input=modal.querySelector('#_modelImageLimitInput'),output=modal.querySelector('#_modelImageLimitOutput');
   const syncValue=value=>{const next=Math.min(1024,Math.max(1,Math.round(Number(value)||1)));range.value=String(next);input.value=String(next);output.textContent=`${next} KB`;};
+  // Sessiz eksik görsel tamamlama anahtarı: kullanıcıya ayrılmış depo, hemen uygulanır.
+  modal.querySelector('#_modelImageSilentComplete')?.addEventListener('change',e=>{window.BLSilentImageComplete?.setEnabled?.(e.currentTarget.checked);});
   range.addEventListener('input',e=>{syncValue(e.target.value);void updateModelImageSamplePreview(modal,range.value,previewSource);});input.addEventListener('input',e=>{syncValue(e.target.value);void updateModelImageSamplePreview(modal,input.value,previewSource);});void updateModelImageSamplePreview(modal,maxKb,previewSource);
   modal.querySelector('[data-delete-all]')?.addEventListener('click',async e=>{
     const status=modal.querySelector('#_modelImageLimitStatus'),button=e.currentTarget;
@@ -33725,6 +33771,7 @@ async function openCoreNectumApiSettings({required=false}={}){
           <div class="muted">${escapeHtml(en?'Buyer Log reuses the protected persistent CoreNectum browser session and keeps any temporary API credential only in backend memory. The token is never displayed, logged, or written to Buyer Log storage.':'Buyer Log korumalı persistent CoreNectum browser session’ını yeniden kullanır; geçici API kimliği yalnız backend belleğinde tutulur. Token gösterilmez, loglanmaz ve Buyer Log depolamasına yazılmaz.')}</div>
           <div class="muted">${escapeHtml(en?'A Buyer Log restart does not invalidate that browser session. Sign-in is requested again only after a real authentication/session failure.':'Buyer Log yeniden başlatıldığında browser oturumu geçersiz sayılmaz. Yeniden giriş yalnız gerçek bir authentication/session hatası doğrulandığında istenir.')}</div>
           <div data-plm-api-message class="muted"></div>
+          ${window.BLCPPlmSilentBom?`<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-plm-silent-bom style="margin-top:3px"${window.BLCPPlmSilentBom.isEnabled()?' checked':''}><span style="display:grid;gap:2px"><strong>${escapeHtml(en?'Keep CP / Orders Artwork and Fabric up to date in the background':'CP / Orders Artwork ve Fabric bilgisini arka planda güncel tut')}</strong><span class="muted">${escapeHtml(en?'At most once a day, a few minutes after start-up and only while Buyer Log is idle. LCW AI is not used and Collection rows are not changed.':'Günde en fazla bir kez, açılıştan birkaç dakika sonra ve yalnız Buyer Log boştayken. LCW AI kullanılmaz, Koleksiyon satırları değiştirilmez.')}</span></span></label>`:''}
         </div>
         <div class="verHistFoot"><button type="button" class="tbtn" data-plm-api-clear>${escapeHtml(en?'Clear PLM session':'PLM oturumunu temizle')}</button><span style="flex:1"></span><button type="button" class="tbtn" data-plm-api-test>${escapeHtml(en?'Test connection':'Bağlantıyı test et')}</button><button type="button" class="tbtn primary" data-plm-api-connect>${escapeHtml(status.configured?(en?'Renew automatically':'Otomatik yenile'):(en?'Connect automatically':'Otomatik bağlan'))}</button><button type="button" class="tbtn" data-plm-api-close>${escapeHtml(en?'Close':'Kapat')}</button></div>
       </div>`;
@@ -33735,6 +33782,7 @@ async function openCoreNectumApiSettings({required=false}={}){
   const close=()=>{releaseKeyboard();modal.remove();resolve(Boolean(status.configured));};
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
       modal.querySelectorAll('[data-plm-api-close]').forEach(button=>button.addEventListener('click',close));
+      modal.querySelector('[data-plm-silent-bom]')?.addEventListener('change',event=>window.BLCPPlmSilentBom?.setEnabled?.(event.target.checked));
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
       modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';window.BLCorporateSessionKeeper?.pause?.('plm');if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
       modal.querySelector('[data-plm-api-test]')?.addEventListener('click',async()=>{try{message.textContent=en?'Testing…':'Test ediliyor…';await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});message.textContent=en?'Connection successful.':'Bağlantı başarılı.';}catch(error){message.textContent=plmSyncErrorMessage(error)||String(error&&error.message||error);}});
@@ -34450,6 +34498,181 @@ function openCurrentViewImageAction(button){
 window.BLModelAssets={updateModelLinks,updateModelImages,updateModelFiles,openCurrentViewImageAction,openModelImageSourceChooser,registerModelAssetProviders};
 registerModelAssetProviders();
 registerCurrentViewModelAssetProvider();
+
+/* SESSİZ EKSİK GÖRSEL TAMAMLAMA — bağlantı (motor: model-image-silent-complete.js).
+
+   7.0.250 kuralı bilinçli olarak güncellendi: eksik görseller artık arka
+   planda, kullanıcıya HİSSETTİRMEDEN tamamlanır. Eski mimari KURULMAZ:
+   render, hücre, IntersectionObserver ve kaydırma istek BAŞLATMAZ; yalnız
+   motorun tek zamanlayıcısı, tarayıcı boştayken ve kullanıcı birkaç saniyedir
+   etkileşimde değilken karar verir.
+
+   Kapsam: etkin alt detay/drilldown raporu (current-view sağlayıcısı; Koleksiyon
+   LFL/SEASON karşılaştırmaları dahil) ya da CP / Orders ana tablolarında YALNIZ
+   ekranda görünen satırlar. Koleksiyon ANA tablosu, model dosyaları ve QTX
+   HARİÇ. Sunucu sırası (LOCAL → SHARED → PLM) ve elle konmuş görseli ezmeme
+   kuralı "Eksikleri Tamamla" ile aynıdır (mode:'missing').
+
+   Gelen görsel YALNIZ ilgili hücreye yazılır: tablo yeniden çizilmez, Motion+
+   satır girişi tetiklenmez, kaydırma/seçim/odak/düzenleme korunur. Toast,
+   ilerleme, Operasyon Merkezi yok (plmSilentJsonRequest). Koleksiyon satırları
+   (kolRows) yazılmaz: Koleksiyon ana tablosu kapsam dışıdır. */
+const SILENT_IMAGE_TABLE_WRAPS={cp:'cpTableWrap',orders:'ordersTableWrap'};
+const silentImageRowIndex=new WeakMap();
+function silentImageRowFor(tab,id){
+  const rows=tab==='cp'?state.cp?.rows:state.orders?.rows;if(!Array.isArray(rows))return null;
+  let index=silentImageRowIndex.get(rows);
+  if(!index||index.size!==rows.length){index=new Map(rows.map(row=>[String(row&&row._id),row]));silentImageRowIndex.set(rows,index);}
+  return index.get(String(id))||null;
+}
+function silentImageInViewport(el){
+  if(!el||!el.isConnected)return false;
+  const rect=el.getBoundingClientRect();
+  return rect.bottom>0&&rect.right>0&&rect.top<(window.innerHeight||0)&&rect.left<(window.innerWidth||0);
+}
+function silentImageRowColour(row){return row?norm(row.Colour||row['Colour']||row.Color||row['Color']||''):'';}
+function silentImageEntry(raw){
+  const api=modelAssetScopeApi();if(!api||!raw)return null;
+  const styleName=norm(raw.styleName);
+  const plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  if(!plmId&&!styleName)return null;
+  const identity={plmId,colourCode:norm(raw.colourCode),colour:norm(raw.colour),styleName,orderCode:norm(raw.orderCode),hasImage:null};
+  if(!modelAssetIdentityMissing(identity))return null;
+  const key=api.identityKey(api.normalizePlmId(plmId),identity.colourCode,identity.colour,styleName,identity.orderCode);
+  return key?{key,identity,item:modelAssetImageItems([identity])[0]}:null;
+}
+function silentImageThumbIdentity(img){
+  const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
+  return {plmId:img.dataset.plmId||img.dataset.modelId||'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
+}
+/* Görünür satırlar önce; liste `limit` ile sınırlıdır (30k satırda tarama yok). */
+function silentImageCollect({limit,skip}){
+  const out=[],seen=new Set(),known=new Set();
+  const push=raw=>{
+    if(out.length>=limit)return;
+    const entry=silentImageEntry(raw);
+    if(!entry){
+      /* Görsel kanonik kayıtta zaten var ama görünür hücre hâlâ yer tutucu
+         (ör. arka plan senkronu durumu tazeledi, tablo çizilmedi): ağ isteği
+         YOK, hücre yerinde bağlanır. */
+      const key=silentImageEntryKey(raw);if(key)known.add(key);
+      return;
+    }
+    if(seen.has(entry.key))return;seen.add(entry.key);
+    if(!skip(entry))out.push(entry);
+  };
+  const finish=scope=>{if(known.size)silentImagePatchCells(known);return scope;};
+  const host=activeModelAssetViewHost();
+  if(host){
+    if(!host.dataset.blModelAssetToken)host.dataset.blModelAssetToken=`view-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+    const token=host.dataset.blModelAssetToken;
+    for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){if(out.length>=limit)break;if(silentImageInViewport(img))push(silentImageThumbIdentity(img));}
+    for(const item of modelAssetIdentitiesFromHost(host)){if(out.length>=limit)break;push(item);}
+    return finish({viewToken:token,contextType:host.dataset.blModelAssetScope||'current-view',identities:out,
+      isStillCurrent:()=>{const current=activeModelAssetViewHost();return Boolean(current&&current===host&&current.dataset.blModelAssetToken===token);}});
+  }
+  // Koleksiyon ANA tablosu bilerek listede YOK.
+  const tab=document.body.dataset.activeTab||'',wrapId=SILENT_IMAGE_TABLE_WRAPS[tab];
+  if(!wrapId)return null;
+  const wrap=document.getElementById(wrapId);
+  if(!wrap||!modelAssetHostIsVisible(wrap))return null;
+  for(const img of wrap.querySelectorAll('td.cpPictureCell>img[data-has-image="0"]')){
+    if(out.length>=limit)break;
+    const plmId=normalizePlmLinkId(img.dataset.modelId);
+    if(!plmId||!silentImageInViewport(img))continue;
+    push({plmId,colourCode:img.dataset.colourCode||'',colour:silentImageRowColour(silentImageRowFor(tab,img.dataset.id))});
+  }
+  return finish({viewToken:`table:${tab}`,contextType:tab,identities:out,isStillCurrent:()=>document.body.dataset.activeTab===tab});
+}
+/* Kanonik kayıt artımlı uygulanır (tam overrides ve satır döngüsü YOK). */
+function silentImageApplyPatch(data){
+  const patch=data&&data.imagemapPatch&&typeof data.imagemapPatch==='object'?data.imagemapPatch:null;
+  if(!patch)return 0;
+  if(!state.overrides||typeof state.overrides!=='object')state.overrides={};
+  const map=state.overrides.imagemap&&typeof state.overrides.imagemap==='object'?state.overrides.imagemap:(state.overrides.imagemap={});
+  const changedUrls=[];
+  for(const [key,value] of Object.entries(patch)){
+    const old=map[key];
+    if(value===null||value===undefined)delete map[key];else map[key]=String(value);
+    if(old&&old!==value)changedUrls.push(modelImageRefUrl(old));
+  }
+  const cache=window.BLModelImageCache;
+  if(typeof cache?.patchRegistryMap==='function')cache.patchRegistryMap(patch);else syncModelImageRegistry();
+  if(changedUrls.length)BLImageRuntime.invalidate(changedUrls);
+  return Object.keys(patch).length;
+}
+/* Yalnız bu partinin kimliklerine ait yer tutucu hücreler güncellenir. */
+function silentImagePatchCells(keys){
+  const api=modelAssetScopeApi();if(!api||!keys.size)return 0;
+  let patched=0;
+  const keyOf=raw=>{const entry=silentImageEntryKey(raw);return entry&&keys.has(entry)?entry:'';};
+  const host=activeModelAssetViewHost();
+  if(host){
+    for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){
+      const raw=silentImageThumbIdentity(img);if(!keyOf(raw))continue;
+      const plmId=modelAssetCanonicalPlmId(raw.plmId,raw.styleName);
+      const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
+      if(!source)continue;
+      img.dataset.src=source;img.dataset.blImageLoaded='0';img.classList.remove('isPlaceholder');
+      delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
+      BLImageRuntime.observe(img);patched++;
+    }
+    return patched;
+  }
+  const tab=document.body.dataset.activeTab||'',wrap=document.getElementById(SILENT_IMAGE_TABLE_WRAPS[tab]||'');
+  if(!wrap)return 0;
+  const dims=tab==='cp'?cpImageDims():ordersImageDims();
+  for(const img of wrap.querySelectorAll('td.cpPictureCell>img[data-has-image="0"]')){
+    const plmId=normalizePlmLinkId(img.dataset.modelId);if(!plmId)continue;
+    const colour=silentImageRowColour(silentImageRowFor(tab,img.dataset.id));
+    if(!keyOf({plmId,colourCode:img.dataset.colourCode||'',colour}))continue;
+    const source=canonicalModelImageSource(plmId,img.dataset.colourCode,colour);
+    if(!source)continue;
+    img.dataset.src=modelImageUrl(source);img.dataset.hasImage='1';img.dataset.imgBox=`${dims.w}x${dims.h}`;img.dataset.blImageLoaded='0';
+    img.style.maxWidth=`${dims.w}px`;img.style.maxHeight=`${dims.h}px`;img.style.opacity='1';
+    delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
+    BLImageRuntime.observe(img);patched++;
+  }
+  return patched;
+}
+function silentImageEntryKey(raw){
+  const api=modelAssetScopeApi();if(!api||!raw)return '';
+  const styleName=norm(raw.styleName),plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  return api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode));
+}
+const BLSilentImageComplete=(()=>{
+  const factory=window.BLSilentImageCompleteFactory;
+  if(!factory||typeof window.BLPlmSilentRequest!=='function')return null;
+  const storage=(()=>{try{return window.BLStorage||window.localStorage||null;}catch(_){return null;}})();
+  const engine=factory.createSilentImageCompleter({
+    storage,
+    isOnline:()=>typeof navigator==='undefined'||navigator.onLine!==false,
+    isHidden:()=>document.visibilityState==='hidden',
+    isBusy:()=>{const snap=window.BLModulePreparation?.snapshot?.();return Boolean(snap&&Object.values(snap).some(item=>item&&item.status==='loading'));},
+    requestIdle:(cb,opts)=>typeof window.requestIdleCallback==='function'?window.requestIdleCallback(cb,opts):setTimeout(()=>cb({didTimeout:false,timeRemaining:()=>8}),50),
+    collect:silentImageCollect,
+    request:(items,{contextType})=>window.BLPlmSilentRequest('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,mode:'missing',scope:contextType})}),
+    apply:(data,{identities,current})=>{
+      silentImageApplyPatch(data);
+      if(current)silentImagePatchCells(new Set(identities.map(item=>item.key)));
+    },
+    isResolved:entry=>!modelAssetIdentityMissing(entry.identity),
+  });
+  // Etkileşim yalnız zaman damgası yazar; istek BAŞLATMAZ.
+  const touch=()=>engine.notifyInteraction();
+  ['pointerdown','keydown','wheel','touchstart','input'].forEach(type=>window.addEventListener(type,touch,{capture:true,passive:true}));
+  window.addEventListener('scroll',touch,{capture:true,passive:true});
+  // Sekme değişimi (programatik dahil) etkileşim sayılır: yeni modül açılırken sessiz iş beklemede kalır.
+  try{new MutationObserver(touch).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});}catch(_){}
+  return {
+    engine,
+    isEnabled:()=>factory.readEnabled(storage),
+    setEnabled:enabled=>{factory.writeEnabled(storage,Boolean(enabled));},
+    stats:()=>engine.stats(),
+  };
+})();
+window.BLSilentImageComplete=BLSilentImageComplete;
+BLSilentImageComplete?.engine.start();
 /* CP ve Orders'ın MODEL VARLIKLARI menüsü — ÜÇ BAĞIMSIZ İŞLEM.
 
    Eskiden buradaki tek "PLM Sync" komutu link ve görsel adımlarını

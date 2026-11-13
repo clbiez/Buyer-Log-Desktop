@@ -281,13 +281,26 @@
     return progress;
   }
 
+  function isSilentRequest(input,init){
+    const read=headers=>{
+      if(!headers)return '';
+      try{
+        if(typeof headers.get==='function')return headers.get('X-BuyerLog-Auth-Mode')||'';
+        for(const [name,value] of Array.isArray(headers)?headers:Object.entries(headers))if(String(name).toLowerCase()==='x-buyerlog-auth-mode')return String(value||'');
+      }catch(_){}
+      return '';
+    };
+    return String(read(init&&init.headers)||read(input&&input.headers)).trim().toLowerCase()==='silent';
+  }
   const originalFetch=window.fetch.bind(window);
   window.fetch=function(input,init){
     const raw=typeof input==='string'?input:(input&&input.url)||'';
     let path=raw;
     try{path=new URL(raw,location.href).pathname;}catch(_){}
     const method=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
-    const watched=method==='POST'&&syncEndpoints.has(path);
+    /* Sessiz (arka plan) istek — ör. eksik görsel tamamlama — kullanıcıya
+       bildirim/rehber göstermez (X-BuyerLog-Auth-Mode: silent). */
+    const watched=method==='POST'&&syncEndpoints.has(path)&&!isSilentRequest(input,init);
     const category=path==='/api/model-images/import-asas'?'asas':'plm';
     let panel=null;
     if(watched)panel=progressFor(path,usesBrowser(path,init));

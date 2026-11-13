@@ -1504,6 +1504,8 @@ html[data-ui-system="manifest"] .modelImageSample small {color:var(--ui-text-mut
 }
 html[data-ui-system="manifest"] .modelImageLimitDanger {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
 }
+html[data-ui-system="manifest"] .modelImageSilentToggle small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
 html[data-ui-system="manifest"] .modelImageLimitDanger .danger {color:var(--ui-danger) !important
 }
 html[data-ui-system="manifest"] .modelImageLimitStatus {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
