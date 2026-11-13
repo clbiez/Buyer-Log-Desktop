@@ -676,6 +676,7 @@
       // option: Approved, PLM ID + Model Name + Colour Code eşleşen PO'larda
       // yeniden kullanılır. Kullanıcının oluşturduğu checklistlerde varsayılan
       // option'dır; yerleşik kontroller güvenli tarafta kalıp PO bazında başlar.
+      base.separateSetParts = item.separateSetParts !== false;
       const approvalScope = text(item.approvalScope);
       base.approvalScope = approvalScope === 'order' || approvalScope === 'option'
         ? approvalScope
@@ -1056,6 +1057,7 @@
       id: rule.id, group: 'custom', custom: true,
       tr: rule.tr || rule.name, en: rule.en || rule.name,
       questionTr: rule.questionTr || rule.name, questionEn: rule.questionEn || rule.name,
+      separateSetParts: rule.separateSetParts !== false,
       approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
     }));
   }
@@ -1170,7 +1172,7 @@
     const checklistRules=list.filter(rule=>rule.kind==='checklist');
     const conditions=new Map();
     for(const rule of list)for(const condition of (rule.conditions||[]))conditions.set(condition,normalizeCondition(condition));
-    return {rules:list,byId:new Map(list.map(rule=>[rule.id,rule])),checklistRules,
+    return {rules:list,byId:new Map(list.map(rule=>[rule.id,rule])),itemDefinitions:Object.fromEntries(list.map(rule=>[rule.id,rule])),checklistRules,
       priorityRules:list.filter(rule=>rule.kind==='priority'),conditions,
       itemScopes:Object.fromEntries(checklistRules.map(rule=>[rule.id,rule.approvalScope==='option'?'option':'order']))};
   }
@@ -1196,7 +1198,7 @@
       rules.filter(rule => rule && rule.kind === 'checklist')
         .map(rule => [rule.id, rule.approvalScope === 'option' ? 'option' : 'order'])
     );
-    const statusContext = { answers: opts.answers || {}, plmEvidence: opts.plmEvidence, itemScopes };
+    const statusContext = { answers: opts.answers || {}, plmEvidence: opts.plmEvidence, itemScopes, itemDefinitions: prepared ? prepared.itemDefinitions : Object.fromEntries(byId) };
     const memo = new Map();
     const visiting = new Set();
     const facts = factsFor(analysis, {});
@@ -1231,7 +1233,7 @@
     const statusOf = id => {
       // A whole-set legacy decision or automatic formula is not evidence for
       // individual pieces. Every consumer must use the same part aggregate.
-      if (componentTracking) return Checklist.statusOf(analysis, id, statusContext);
+      if (componentTracking && Checklist.Components.tracksParts(analysis, opts.answers, byId.get(id))) return Checklist.statusOf(analysis, id, statusContext);
       const rule = byId.get(id);
       const directKey = Checklist.answerKey ? Checklist.answerKey(analysis.orderKey, id) : '';
       const direct = directKey && opts.answers && opts.answers[directKey];
@@ -1260,6 +1262,7 @@
       id: rule.id, group: 'custom', custom: true,
       tr: rule.tr || rule.name, en: rule.en || rule.name,
       questionTr: rule.questionTr || rule.name, questionEn: rule.questionEn || rule.name,
+      separateSetParts: rule.separateSetParts !== false,
       approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
     }));
     const checklistState = {};

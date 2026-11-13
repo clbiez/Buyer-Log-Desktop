@@ -1,0 +1,112 @@
+{
+  "label": "main-40-1",
+  "rows": 40,
+  "sha": "390bff627d38cf4c8a57cf43b04e5974a2490b3d",
+  "fixtureHash": "e8aaf3e3b72c39b82a2a1faa92e31c6b3d86ca5de99d7ede9bd493bedef2f962",
+  "startupMs": 4230.173566,
+  "samples": [
+    {
+      "feedbackMs": 6.300000000046566,
+      "elapsedMs": 514.0999999999767,
+      "requests": 1,
+      "heapUsed": 13669516
+    },
+    {
+      "feedbackMs": 6.599999999976717,
+      "elapsedMs": 474.5,
+      "requests": 1,
+      "heapUsed": 14028464
+    },
+    {
+      "feedbackMs": 5.599999999976717,
+      "elapsedMs": 487.30000000004657,
+      "requests": 1,
+      "heapUsed": 14064708
+    },
+    {
+      "feedbackMs": 6,
+      "elapsedMs": 496.5999999999767,
+      "requests": 1,
+      "heapUsed": 14121824
+    },
+    {
+      "feedbackMs": 6.5,
+      "elapsedMs": 481.5999999999767,
+      "requests": 1,
+      "heapUsed": 14242788
+    }
+  ],
+  "neighbor": [
+    204.30000000004657,
+    168.19999999995343,
+    178.5,
+    178.70000000006985,
+    174.90000000002328
+  ],
+  "network": {
+    "requests": 5,
+    "bytes": 1576,
+    "peak": 1,
+    "active": 0,
+    "longTasks": [
+      {
+        "start": 4947,
+        "duration": 262
+      },
+      {
+        "start": 5210.5,
+        "duration": 203
+      },
+      {
+        "start": 5824.099999999977,
+        "duration": 240
+      },
+      {
+        "start": 6064.900000000023,
+        "duration": 188
+      },
+      {
+        "start": 6595.300000000047,
+        "duration": 249
+      },
+      {
+        "start": 6845,
+        "duration": 188
+      },
+      {
+        "start": 7280.800000000047,
+        "duration": 270
+      },
+      {
+        "start": 7552.199999999953,
+        "duration": 192
+      },
+      {
+        "start": 7979.199999999953,
+        "duration": 249
+      },
+      {
+        "start": 8229.300000000047,
+        "duration": 193
+      },
+      {
+        "start": 8611,
+        "duration": 188
+      },
+      {
+        "start": 8826.900000000023,
+        "duration": 160
+      },
+      {
+        "start": 9019.300000000047,
+        "duration": 173
+      },
+      {
+        "start": 9228.5,
+        "duration": 167
+      }
+    ]
+  },
+  "browser": "154.0.8037.57",
+  "node": "v24.19.0"
+}
