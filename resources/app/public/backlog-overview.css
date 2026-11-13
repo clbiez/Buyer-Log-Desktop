@@ -94,6 +94,24 @@
 .blvFilterHeadActions .ic{width:16px;height:16px}
 .blvFilterSummary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 20px}
 .blvFilterSummary div{display:flex;align-items:baseline;gap:4px}
+/* Favori filtre setleri — yalnız yerleşim; görünüm ui-components.css (manifest). */
+.blvFilterFavs{display:flex;align-items:center;gap:8px;padding:6px 20px}
+.blvFavLabel{flex:none}
+.blvFavList{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;padding:2px 0}
+.blvFavEmpty{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blvFavChip{flex:none;display:inline-flex;align-items:stretch;overflow:hidden}
+.blvFavChip button{cursor:pointer}
+.blvFavChip>button:first-child{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;max-width:260px}
+.blvFavChip>button:first-child b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blvFavChip>button:first-child small{white-space:nowrap}
+.blvFavChip .ic{width:13px;height:13px;flex:none}
+.blvFavDelete{width:24px;display:grid;place-items:center}
+.blvFavSave,.blvFavForm button{flex:none;display:inline-flex;align-items:center;gap:5px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.blvFavSave:disabled{opacity:.45;cursor:default}
+.blvFavSave .ic{width:13px;height:13px}
+.blvFavForm{flex:none;display:flex;gap:6px;align-items:center}
+.blvFavForm input{width:220px;padding:5px 8px}
+@media(max-width:760px){.blvFilterFavs{flex-wrap:wrap}.blvFavForm{width:100%}.blvFavForm input{flex:1;width:auto}}
 .blvFilterActive{display:flex;align-items:stretch;gap:4px;padding:8px 20px;overflow-x:auto}
 .blvFilterActive>button[data-blvf-edit]{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:6px;min-width:150px;max-width:240px;text-align:left;padding:6px 8px;cursor:pointer}
 .blvFilterActive>button[data-blvf-edit] span{grid-row:1/3;align-self:center;writing-mode:vertical-rl;transform:rotate(180deg)}

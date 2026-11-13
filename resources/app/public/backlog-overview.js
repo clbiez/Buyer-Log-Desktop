@@ -37,18 +37,83 @@ function loadState(){
     const raw=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'null');
     if(raw&&typeof raw==='object'){
       const merged={...defaults,...raw};
-      merged.filters=Array.isArray(raw.filters)?raw.filters.filter(f=>f&&f.id&&f.rowKey).map(f=>({
-        id:String(f.id),source:String(f.source||'cp'),header:String(f.header||f.rowKey),rowKey:String(f.rowKey),
-        label:String(f.label||f.header||f.rowKey),values:Array.isArray(f.values)?f.values.map(v=>String(v)):[],
-        from:String(f.from||''),to:String(f.to||'')
-      })):[];
+      merged.filters=normalizeFilters(raw.filters);
       return merged;
     }
   }catch(_){}
   return defaults;
 }
+function normalizeFilters(list){
+  return Array.isArray(list)?list.filter(f=>f&&f.id&&f.rowKey).map(f=>({
+    id:String(f.id),source:String(f.source||'cp'),header:String(f.header||f.rowKey),rowKey:String(f.rowKey),
+    label:String(f.label||f.header||f.rowKey),values:Array.isArray(f.values)?f.values.map(v=>String(v)):[],
+    from:String(f.from||''),to:String(f.to||'')
+  })):[];
+}
 function saveState(){try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
 function fmtDay(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}.${m[2]}.${m[1]}`:'—'}
+
+/* ------------------------------------------------ Favori filtre setleri */
+/* Kullanıcının adlandırdığı analiz filtresi kombinasyonları. Anahtar
+   lcw.backlog.overview. önekinde olduğu için BLStorage ile kullanıcıya özeldir.
+   Favori yalnız kriteri olan filtreleri saklar; uygulamak aktif filtreleri değiştirir. */
+const FAVORITES_KEY='lcw.backlog.overview.favorites.v1';
+const FAVORITES_MAX=40;
+let favorites=loadFavorites(),favoriteNaming=false,favoriteDraft='';
+function loadFavorites(){
+  try{
+    const raw=JSON.parse((window.BLStorage||localStorage).getItem(FAVORITES_KEY)||'[]');
+    return (Array.isArray(raw)?raw:[]).filter(f=>f&&f.id&&String(f.name||'').trim()).map(f=>({
+      id:String(f.id),name:String(f.name).trim().slice(0,60),filters:normalizeFilters(f.filters),savedAt:String(f.savedAt||'')
+    })).filter(f=>f.filters.length).slice(0,FAVORITES_MAX);
+  }catch(_){return [];}
+}
+function saveFavorites(){try{(window.BLStorage||localStorage).setItem(FAVORITES_KEY,JSON.stringify(favorites));}catch(_){}}
+function favoriteSignature(filters){
+  return JSON.stringify(normalizeFilters(filters).filter(filterHasCriteria).map(f=>[f.id,[...f.values].sort(),f.from,f.to]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0));
+}
+function currentFavoriteId(){
+  if(!activeFilterCount())return '';
+  const sig=favoriteSignature(overviewFilters());
+  return favorites.find(f=>favoriteSignature(f.filters)===sig)?.id||'';
+}
+function saveCurrentFavorite(name){
+  name=String(name||'').trim().slice(0,60);
+  const filters=normalizeFilters(overviewFilters()).filter(filterHasCriteria);
+  if(!name||!filters.length)return false;
+  const existing=favorites.find(f=>f.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'));
+  if(existing){
+    if(!window.confirm(L(`"${existing.name}" favorisi mevcut filtrelerle güncellensin mi?`,`Update the "${existing.name}" favourite with the current filters?`)))return false;
+    existing.filters=filters;existing.savedAt=new Date().toISOString();
+  }else{
+    if(favorites.length>=FAVORITES_MAX){window.alert(L(`En fazla ${FAVORITES_MAX} favori kaydedilebilir. Önce birini silin.`,`You can save up to ${FAVORITES_MAX} favourites. Delete one first.`));return false;}
+    favorites=[...favorites,{id:'fav_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,filters,savedAt:new Date().toISOString()}];
+  }
+  saveFavorites();return true;
+}
+function applyFavorite(id){
+  const fav=favorites.find(f=>f.id===id);if(!fav)return;
+  state.filters=normalizeFilters(fav.filters);
+  filterEditorId='';filterValueSearch='';signature='';
+  cancelFilterValues();
+  reapplyOverviewFilters();
+}
+function deleteFavorite(id){
+  const fav=favorites.find(f=>f.id===id);if(!fav)return;
+  if(!window.confirm(L(`"${fav.name}" favorisi silinsin mi? Aktif filtreler değişmez.`,`Delete the "${fav.name}" favourite? Active filters stay unchanged.`)))return;
+  favorites=favorites.filter(f=>f.id!==id);saveFavorites();renderFilterPanel();
+}
+function favoriteTitle(fav){
+  return fav.filters.map(f=>`${filterSourceLabel(f.source)} · ${f.label}: ${filterCriterionText(f)}`).join('\n');
+}
+function renderFavoriteBar(){
+  const current=currentFavoriteId(),canSave=activeFilterCount()>0;
+  const chips=favorites.map(fav=>`<span class="blvFavChip${fav.id===current?' is-current':''}"><button type="button" data-blvf-fav-apply="${esc(encodeURIComponent(fav.id))}" title="${esc(favoriteTitle(fav))}"><svg class="ic"><use href="#${fav.id===current?'i-check':'i-filter'}"/></svg><b>${esc(fav.name)}</b><small>${esc(L(`${fav.filters.length} filtre`,fav.filters.length===1?'1 filter':`${fav.filters.length} filters`))}</small></button><button type="button" class="blvFavDelete" data-blvf-fav-delete="${esc(encodeURIComponent(fav.id))}" title="${esc(L('Favoriyi sil','Delete favourite'))}"><svg class="ic"><use href="#i-x"/></svg></button></span>`).join('');
+  const naming=favoriteNaming&&canSave
+    ?`<form class="blvFavForm" data-blvf-fav-form><input type="text" data-blvf-fav-name maxlength="60" value="${esc(favoriteDraft)}" placeholder="${esc(L('Favori adı (ör. SS27 Bangladeş)','Favourite name (e.g. SS27 Bangladesh)'))}" aria-label="${esc(L('Favori adı','Favourite name'))}"><button type="submit" data-blvf-fav-confirm>${esc(L('Kaydet','Save'))}</button><button type="button" data-blvf-fav-cancel>${esc(L('Vazgeç','Cancel'))}</button></form>`
+    :`<button type="button" class="blvFavSave" data-blvf-fav-new${canSave?'':' disabled'} title="${esc(canSave?L('Aktif filtreleri adlandırıp favori olarak saklayın','Name the active filters and keep them as a favourite'):L('Kaydetmek için önce filtre seçin','Select filters first to save'))}"><svg class="ic"><use href="#i-plus"/></svg>${esc(current?L('Yeni favori','New favourite'):L('Favori olarak kaydet','Save as favourite'))}</button>`;
+  return `<div class="blvFilterFavs"><span class="blvFavLabel">${esc(L('Favoriler','Favourites'))}</span><div class="blvFavList">${chips||`<span class="blvFavEmpty">${esc(L('Sık kullandığınız filtre setlerini kaydedip tek tıkla uygulayın.','Save filter sets you use often and apply them in one click.'))}</span>`}</div>${naming}</div>`;
+}
 
 /* ------------------------------------------------ Ortak Backlog analiz filtreleri */
 function overviewFilters(){return Array.isArray(state.filters)?state.filters:[]}
@@ -485,6 +550,13 @@ function filterRoot(){
   document.body.appendChild(root);
   root.addEventListener('click',e=>{
     const close=e.target.closest('[data-blvf-close]');if(close){closeFilterPanel();return;}
+    const favApply=e.target.closest('[data-blvf-fav-apply]');if(favApply){favoriteNaming=false;applyFavorite(decodeURIComponent(favApply.dataset.blvfFavApply||''));return;}
+    const favDelete=e.target.closest('[data-blvf-fav-delete]');if(favDelete){deleteFavorite(decodeURIComponent(favDelete.dataset.blvfFavDelete||''));return;}
+    const favNew=e.target.closest('[data-blvf-fav-new]');if(favNew){
+      favoriteNaming=true;favoriteDraft='';renderFilterPanel();
+      requestAnimationFrame(()=>root.querySelector('[data-blvf-fav-name]')?.focus({preventScroll:true}));return;
+    }
+    const favCancel=e.target.closest('[data-blvf-fav-cancel]');if(favCancel){favoriteNaming=false;favoriteDraft='';renderFilterPanel();return;}
     const source=e.target.closest('[data-blvf-source]');if(source){filterSource=source.dataset.blvfSource||'cp';filterSearch='';renderFilterPanel();return;}
     const reset=e.target.closest('[data-blvf-reset]');if(reset){state.filters=[];filterEditorId='';filterValueSearch='';signature='';reapplyOverviewFilters();return;}
     const add=e.target.closest('[data-blvf-add]');if(add){void addOverviewFilter(decodeURIComponent(add.dataset.blvfAdd||''));return;}
@@ -510,7 +582,19 @@ function filterRoot(){
       const filter=overviewFilters().find(f=>f.id===filterEditorId);if(filter){filter.values=[];reapplyOverviewFilters();}return;
     }
   });
+  root.addEventListener('submit',e=>{
+    if(!e.target.matches('[data-blvf-fav-form]'))return;
+    e.preventDefault();
+    const input=e.target.querySelector('[data-blvf-fav-name]');
+    if(!String(input?.value||'').trim()){input?.focus();return;}
+    if(saveCurrentFavorite(input.value)){favoriteNaming=false;favoriteDraft='';}
+    renderFilterPanel();
+  });
+  root.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&e.target.matches('[data-blvf-fav-name]')){e.preventDefault();e.stopPropagation();favoriteNaming=false;favoriteDraft='';renderFilterPanel();}
+  });
   root.addEventListener('input',e=>{
+    if(e.target.matches('[data-blvf-fav-name]')){favoriteDraft=e.target.value||'';return;}
     if(e.target.matches('[data-blvf-search]')){
       filterSearch=e.target.value||'';const pos=e.target.selectionStart;renderFilterPanel();
       requestAnimationFrame(()=>{const input=root.querySelector('[data-blvf-search]');if(input){input.focus({preventScroll:true});try{input.setSelectionRange(pos,pos)}catch(_){}}});return;
@@ -533,6 +617,7 @@ function filterRoot(){
   return root;
 }
 async function openFilterPanel(){
+  favorites=loadFavorites();favoriteNaming=false;favoriteDraft='';
   filterOpen=true;const root=filterRoot();root.hidden=false;window.BLMotionPlus?.play?.('overlay',root.querySelector('.blvFilterDrawer'));requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
   try{await ensureFilterCatalog();if(!filterOpen)return;await ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId));renderFilterPanel();}catch(_){renderFilterPanel();}
 }
@@ -590,6 +675,7 @@ function renderFilterPanel(){
   const active=overviewFilters();
   mount.innerHTML=`<header class="blvFilterHead"><div><span class="blvFilterKicker">${esc(L('BACKLOG ORTAK FİLTRELER','SHARED BACKLOG FILTERS'))}</span><h3 id="blvFilterTitle">${esc(L('Analiz Filtreleri','Analysis Filters'))}</h3><p>${esc(L('Bu filtreler tüm Backlog görünümlerini, Legacy Excel ve Backlog Report çıktılarını etkiler.','These filters apply to all Backlog views, Legacy Excel and Backlog Report exports.'))}</p></div><div class="blvFilterHeadActions"><button type="button" data-blvf-reset${active.length?'':' disabled'}>${esc(L('Tümünü sıfırla','Reset all'))}</button><button type="button" data-blvf-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
     <div class="blvFilterSummary"><div><b>${n(lastData?.totalRows||0)}</b><span>${esc(L('satır','rows'))}</span></div><span>${esc(L(`${activeFilterCount()} aktif filtre`,`${activeFilterCount()} active filters`))}</span></div>
+    ${renderFavoriteBar()}
     <div class="blvFilterActive">${active.map(filter=>`<button type="button" class="${filter.id===filterEditorId?'is-active':''}" data-blvf-edit="${esc(encodeURIComponent(filter.id))}"><span>${esc(filterSourceLabel(filter.source))}</span><b>${esc(filter.label)}</b><small>${esc(filterCriterionText(filter))}</small></button><button type="button" class="blvFilterRemove" data-blvf-remove="${esc(encodeURIComponent(filter.id))}" title="${esc(L('Filtreyi kaldır','Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>`).join('')||`<span class="blvFilterNoActive">${esc(L('Henüz analiz filtresi eklenmedi.','No analysis filters added yet.'))}</span>`}</div>
     <div class="blvFilterWorkspace"><div class="blvFilterCatalogue"><div class="blvFilterSourceTabs">${['cp','asas','antrepo'].map(source=>`<button type="button" class="${source===filterSource?'is-active':''}" data-blvf-source="${source}">${filterSourceLabel(source)} <b>${n(sourceCount(source))}</b></button>`).join('')}</div><input class="blvFilterSearch" type="search" data-blvf-search value="${esc(filterSearch)}" placeholder="${esc(L('Sütun ara…','Search columns…'))}"><div class="blvFilterColumns">${visibleFields.map(field=>`<button type="button" class="${activeIds.has(field.id)?'is-added':''}" data-blvf-add="${esc(encodeURIComponent(field.id))}" title="${esc(field.header)}"><span>${esc(field.header)}</span><svg class="ic"><use href="#${activeIds.has(field.id)?'i-check':'i-plus'}"/></svg></button>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen sütun yok.','No matching columns.'))}</div>`}</div>${sourceItems.length>visibleFields.length?`<div class="blvFilterRangeHint">${esc(L(`${sourceItems.length} sütunun ilk 300'ü gösteriliyor. Aramayı kullanın.`,`Showing the first 300 of ${sourceItems.length} columns. Use search.`))}</div>`:''}</div><div class="blvFilterEditor">${renderFilterEditor(editor)}</div></div>`;
   requestAnimationFrame(()=>{

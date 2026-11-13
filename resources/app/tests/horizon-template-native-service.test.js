@@ -12,7 +12,21 @@ test('actual native template routes preserve copy-not-move and shared owner auth
  assert.equal((await f.invoke('delete','/api/horizon-templates/:id',{}, {id:created.response.id})).status,200);assert.equal(db.loadHorizonTemplates(f.profile.id).items.length,0);
 });
 test('native template transaction repeats current IAM inside the actual file lease',async()=>{
- const f=fixture(),original=db.mutateHorizonTemplates;db.mutateHorizonTemplates=(owner,work)=>{f.profile.permissions=[];return original(owner,work);};try{const result=await f.invoke('post','/api/horizon-templates',{name:'No effect',definition:H});assert.equal(result.status,403);assert.equal(db.loadHorizonTemplates(f.profile.id).items.length,0);}finally{db.mutateHorizonTemplates=original;}
+ // Kişisel favori: oturumun source alanı kilit içinde yeniden doğrulanır.
+ const f=fixture(),original=db.mutateHorizonTemplates;db.mutateHorizonTemplates=(owner,work)=>{f.profile.areas=[];return original(owner,work);};try{const result=await f.invoke('post','/api/horizon-templates',{name:'No effect',definition:H});assert.equal(result.status,403);assert.equal(db.loadHorizonTemplates(f.profile.id).items.length,0);}finally{db.mutateHorizonTemplates=original;}
+ // Paylaşılan liste: yönetim yetkisi kilit içinde yeniden doğrulanır.
+ const g=fixture(),before=db.loadHorizonTemplates().items.length;db.mutateHorizonTemplates=(owner,work)=>{g.profile.permissions=[];return original(owner,work);};try{const result=await g.invoke('post','/api/horizon-templates',{name:'No shared effect',definition:H,shared:true});assert.equal(result.status,403);assert.equal(db.loadHorizonTemplates().items.length,before);}finally{db.mutateHorizonTemplates=original;}
+});
+test('user without source management keeps personal favourites but cannot write the shared list',async()=>{
+ const admin=fixture(),created=await admin.invoke('post','/api/horizon-templates',{name:'Team',definition:H}),shared=await admin.invoke('post','/api/horizon-templates/:id/share',{}, {id:created.response.id});assert.equal(shared.status,200);
+ const f=fixture();f.profile.permissions=[];
+ const mine=await f.invoke('post','/api/horizon-templates',{name:'Mine',definition:H});assert.equal(mine.status,200);
+ const list=await f.invoke('get','/api/horizon-templates');assert.equal(list.status,200);assert.deepEqual(list.response.personal.map(item=>item.name),['Mine']);assert.ok(list.response.shared.some(item=>item.id===shared.response.id),'paylaşılan favoriler herkese görünür');
+ const before=db.loadHorizonTemplates().items.length;
+ assert.equal((await f.invoke('post','/api/horizon-templates',{name:'Sneak',definition:H,shared:true})).status,403);assert.equal(db.loadHorizonTemplates().items.length,before);
+ assert.equal((await f.invoke('delete','/api/horizon-templates/:id',{}, {id:shared.response.id},{shared:'1'})).status,403);assert.ok(db.loadHorizonTemplates().items.some(item=>item.id===shared.response.id));
+ assert.equal((await f.invoke('delete','/api/horizon-templates/:id',{}, {id:mine.response.id})).status,200);assert.equal(db.loadHorizonTemplates(f.profile.id).items.length,0);
+ assert.deepEqual(db.loadHorizonTemplates(admin.profile.id).items.map(item=>item.name),['Team'],'başka kullanıcının kişisel favorisi etkilenmez');
 });
 test('native list returns stable revisions and normalized definitions; invalid create leaves no item',async()=>{
  const f=fixture();assert.equal((await f.invoke('post','/api/horizon-templates',{name:'Demo',definition:H})).status,200);const first=await f.invoke('get','/api/horizon-templates'),next=await f.invoke('get','/api/horizon-templates');assert.equal(first.status,200);assert.deepEqual(next.response,first.response);assert.deepEqual(first.response.personal[0].definition.groups[0].conditions[0].values,['W26']);assert.equal((await f.invoke('post','/api/horizon-templates',{name:'Invalid'})).status,400);assert.equal(db.loadHorizonTemplates(f.profile.id).items.length,1);
