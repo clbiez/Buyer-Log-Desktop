@@ -1,0 +1,107 @@
+'use strict';
+// Real Buyer Log runtime acceptance on isolated, generated demo data only.
+// Requires Playwright + Chromium. No TEST/STABLE workflow or remote publication.
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const assert = require('node:assert/strict');
+const { spawn, spawnSync } = require('node:child_process');
+const { chromium } = require('playwright');
+const app = path.resolve(__dirname, '..');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-studio-ui-'));
+const captureRoot = process.env.BUYER_LOG_STUDIO_CAPTURE_ROOT || root;
+const port = Number(process.env.BUYER_LOG_STUDIO_TEST_PORT || 6478);
+const base = `http://127.0.0.1:${port}`;
+const env = { ...process.env, BUYER_LOG_DATA_ROOT: path.join(root, 'app'), BUYER_LOG_SERVER_DATA_ROOT: path.join(root, 'server'), BUYER_LOG_LOCAL_DATA_ROOT: path.join(root, 'local'), BUYER_LOG_TEMP_ROOT: path.join(root, 'temp'), BUYER_LOG_AUTH_DATA_ROOT: path.join(root, 'server'), BUYER_LOG_CONFIG_PATH: path.join(root, 'config.json') };
+for (const folder of ['app', 'server', 'local', 'temp']) fs.mkdirSync(path.join(root, folder));
+fs.mkdirSync(captureRoot, { recursive: true });
+const generated = spawnSync(process.execPath, ['scripts/generate-demo-data.js', path.join(root, 'source'), '--rows', '40'], { cwd: app, encoding: 'utf8' });
+assert.equal(generated.status, 0, generated.stderr);
+fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH, JSON.stringify({ port, sourceFolder: path.join(root, 'source') }));
+const log = fs.openSync(path.join(root, 'server.log'), 'a');
+const server = spawn(process.execPath, ['server/server.js'], { cwd: app, env, stdio: ['ignore', log, log] });
+let browser;
+(async () => {
+  for (let i = 0; i < 160; i++) {
+    try { if ((await fetch(base + '/api/health')).status < 500) break; } catch (_) {}
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  console.log('Demo server ready');
+  const login = await fetch(base + '/api/user-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: 'moderator', password: 'studio-demo-2026', newPassword: 'studio-demo-2026' }) });
+  assert.equal(login.status, 200, await login.text());
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+  const refresh = await fetch(base + '/api/refresh', { method: 'POST', headers: { cookie, 'Content-Type': 'application/json' }, body: '{}' });
+  assert.ok(refresh.ok, `Demo refresh: ${refresh.status}`);
+  browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
+  const separator = cookie.indexOf('=');
+  await context.addCookies([{ name: cookie.slice(0, separator), value: cookie.slice(separator + 1), domain: '127.0.0.1', path: '/', httpOnly: true }]);
+  await context.addInitScript(() => { localStorage.setItem('bl.releaseNotes.lastSeenStable.v1', '99.0.0'); });
+  console.log('Demo login and refresh accepted');
+  const page = await context.newPage();
+  page.setDefaultTimeout(15000);
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.BLPerf && typeof window.switchTab === 'function', null, { timeout: 60000 });
+  await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({ timeout: 60000 });
+  await page.waitForFunction(() => !document.getElementById('blBootGuard'), null, { timeout: 60000 });
+  await page.evaluate(async () => { document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); await BLPerf.ensureFeature('cpAssistant'); });
+  console.log('App booted');
+  await page.waitForFunction(() => state.cp?.rows?.length > 0);
+  await page.evaluate(() => BLCpAssistant.onOverviewRendered(state.cp.rows, { dataRevision: 1 }));
+  console.log('Demo CP loaded');
+  const id = await page.evaluate(async () => {
+    const item=BLCpRulesEngine.normalizeRule({id:'demo-set-check',kind:'checklist',name:'Demo set kontrolü',tr:'Demo set kontrolü',en:'Demo set check'});
+    BLCpAssistant._state.rules.push(item);
+    const rule=BLCpAssistant._state.rules.find(r=>r.id===item.id);
+    rule.mode='formula';rule.formula='=[@qty]>0';
+    const row=state.cp.rows.find(r=>r._canEdit!==false),analysis=BLCpAssistant.computeDecisionsForRows([row]).byRow.get(row);
+    BLCpAssistant.setChecklistComponents(analysis,3);
+    BLCpAssistant.setChecklistAnswer(analysis,item.id+'~part~B','rejected',{note:'Demo B evidence'});
+    await BLChecklistSupplierSync.syncAnswerChanges();
+    window.__setDemo={row,analysis,id:item.id};
+    return item.id;
+  });
+  await page.evaluate(() => switchTab('overview'));
+  await page.locator('#cpAssistant [data-cpa-rules]').first().click();
+  await page.locator('[data-cpa-studio-tab="checklist"]').click();
+  await page.locator(`[data-cpa-rule-select="${id}"]`).click();
+  const manual=page.locator('[data-cpa-manual-editor]');
+  if(!await manual.evaluate(el=>el.open))await manual.locator('summary').first().click();
+  await page.locator('[data-cpa-rule-set-parts]').selectOption('no');
+  await page.locator('[data-cpa-apply-drafts]').click();
+  assert.equal(await page.evaluate(id=>BLCpAssistant._state.rules.find(r=>r.id===id).separateSetParts,id),false);
+  await page.locator('[data-cpa-rule-set-parts]').scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(captureRoot,'checklist-set-mode.png')});
+  assert.equal(await page.evaluate(()=>BLCpAssistant.setChecklistAnswer(__setDemo.analysis,__setDemo.id,'approved')),true);
+  await page.locator('[data-cpa-rule-set-parts]').selectOption('yes');
+  await page.locator('[data-cpa-apply-drafts]').click();
+  await page.evaluate(()=>document.querySelectorAll('.cpaModalOverlay').forEach(el=>el.remove()));
+  await page.evaluate(async()=>{await switchTab('cp');BLChecklistSupplierSync.refreshColumns({render:true});});
+  await page.evaluate(()=>BLChecklistSupplierSync.openComponentCountDialog(3,1,async n=>{
+    const ok=BLCpAssistant.setChecklistComponents(__setDemo.analysis,n);
+    await BLChecklistSupplierSync.syncAnswerChanges();BLChecklistSupplierSync.refreshColumns({render:true});return ok;
+  }));
+  await page.locator('[data-parts-count]').fill('1');
+  await page.screenshot({path:path.join(captureRoot,'checklist-set-count-one.png')});
+  await page.locator('[data-parts-save]').click();
+  await page.locator('[data-parts-count]').waitFor({state:'detached'});
+  assert.equal(await page.evaluate(()=>BLCpAssistant._state.answers[BLCpChecklistEngine.Components.configKey(__setDemo.analysis)].componentCount),1);
+  assert.equal(await page.evaluate(()=>BLCpAssistant.setChecklistAnswer(__setDemo.analysis,__setDemo.id,'approved')),true);
+  await page.evaluate(()=>BLChecklistSupplierSync.syncAnswerChanges());
+  const payload=await page.evaluate(async()=>await(await fetch('/api/checklist-supplier')).json());
+  const key=await page.evaluate(()=>__setDemo.analysis.orderKey);
+  assert.equal(payload.answers[key+'::'+id].state,'approved');
+  assert.equal(payload.answers[key+'::'+id+'~part~B'].note,'Demo B evidence');
+  assert.equal(await page.evaluate(()=>BLCpAssistant.setChecklistComponents(__setDemo.analysis,3)),true);
+  assert.equal(await page.evaluate(()=>BLCpChecklistEngine.statusOf(__setDemo.analysis,__setDemo.id,{answers:BLCpAssistant._state.answers})),'rejected');
+  assert.deepEqual(errors,[]);
+  console.log('PASS: rule setting, single status, count 1, server persistence and restored B evidence; real TR UI PNGs captured.');
+})().catch(async error => {
+  console.error(error);
+  const page = browser?.contexts()[0]?.pages()[0];
+  if (page) await page.screenshot({ path: path.join(captureRoot, 'failure.png') }).catch(() => {});
+  process.exitCode = 1;
+}).finally(async () => { await browser?.close(); server.kill(); fs.closeSync(log); });

@@ -468,6 +468,7 @@
         questionTr: rule.questionTr || rule.name || rule.id,
         questionEn: rule.questionEn || rule.name || rule.id,
         builtIn: rule.builtIn === true,
+        separateSetParts: rule.separateSetParts !== false,
         approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
         evidenceFields: {
           reportNumber: Boolean(rule.evidenceFields && rule.evidenceFields.reportNumber),
@@ -480,9 +481,9 @@
     return list;
   }
 
-  function componentParts(analysis, answers) {
+  function componentParts(analysis, answers, item) {
     const s = assistantState();
-    return Components.partsFor(analysis, answers || (s && s.answers));
+    return Components.partsFor(analysis, answers || (s && s.answers), item);
   }
   function scopedItem(item, partId) {
     return { ...item, id: Components.itemId(item.id, partId), baseId: item.id, partId,
@@ -496,8 +497,8 @@
   function expandedItems(items, analyses, answers) {
     return items.flatMap(item => {
       if (Components.parseItem(item.id)) return [item];
-      const parts = [...new Set(analyses.flatMap(analysis => componentParts(analysis, answers).map(part => part.id)))];
-      const whole = analyses.some(analysis => !componentParts(analysis, answers).length && !Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp'));
+      const parts = [...new Set(analyses.flatMap(analysis => componentParts(analysis, answers, item).map(part => part.id)))];
+      const whole = analyses.some(analysis => !componentParts(analysis, answers, item).length && (!Components.tracksParts(analysis, answers, item) || !Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')));
       return [...(whole || !parts.length ? [item] : []), ...parts.map(id => scopedItem(item, id))];
     });
   }
@@ -548,7 +549,7 @@
   }
   function openComponentCountDialog(current, minimum, onSave) {
     const modal = root.document.createElement('div'); modal.className = 'cpaModalOverlay';
-    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true" aria-labelledby="clPartsTitle"><header><b id="clPartsTitle">' + T('Set / Takım parçaları', 'Set components') + '</b><button type="button" data-parts-close aria-label="' + T('Kapat', 'Close') + '">×</button></header><div class="cpaModalBody"><label class="cpaSettingRow"><span>' + T('Parça sayısı (2–26)', 'Part count (2–26)') + '</span><input data-parts-count type="number" min="' + minimum + '" max="26" step="1" value="' + (current || 2) + '"></label><p class="cpaNote">' + T('Parçalar A, B, C olarak etiketlenir. Mevcut parçalar ve eski set kaydı korunur; onaylar parçalara otomatik dağıtılmaz.', 'Parts are labelled A, B, C. Existing parts and the legacy set record are preserved; approvals are not automatically copied to parts.') + '</p><p data-parts-error role="alert"></p></div><footer><button type="button" class="cpaBtn" data-parts-close>' + T('Vazgeç', 'Cancel') + '</button><button type="button" class="cpaBtn primary" data-parts-save>' + T('Kaydet', 'Save') + '</button></footer></div>';
+    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true" aria-labelledby="clPartsTitle"><header><b id="clPartsTitle">' + T('Set / Takım parçaları', 'Set components') + '</b><button type="button" data-parts-close aria-label="' + T('Kapat', 'Close') + '">×</button></header><div class="cpaModalBody"><label class="cpaSettingRow"><span>' + T('Parça sayısı (1–26)', 'Part count (1–26)') + '</span><input data-parts-count type="number" min="1" max="26" step="1" value="' + (current || 2) + '"></label><p class="cpaNote">' + T('Tek durum için 1 girin. 2–26 parça A, B, C olarak takip edilir. Önceki parça kayıtları silinmez.', 'Enter 1 for a single status. 2–26 parts are tracked as A, B, C. Previous part records are kept.') + '</p><p data-parts-error role="alert"></p></div><footer><button type="button" class="cpaBtn" data-parts-close>' + T('Vazgeç', 'Cancel') + '</button><button type="button" class="cpaBtn primary" data-parts-save>' + T('Kaydet', 'Save') + '</button></footer></div>';
     root.document.body.appendChild(modal);
     const close = () => modal.remove();
     modal.querySelectorAll('[data-parts-close]').forEach(button => {button.onclick = close;});
@@ -569,7 +570,7 @@
     const decision = analysesForRows([row]), analysis = decision.byRow.get(row);
     if (!analysis) return;
     const saved = assistantState().answers[Components.configKey(analysis)];
-    return openComponentCountDialog(componentParts(analysis).length, saved && saved.componentCount || 2, async count => {
+    return openComponentCountDialog(saved && saved.componentCount || componentParts(analysis).length, 1, async count => {
       if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
       if (!assistant.setChecklistComponents(analysis, count)) return false;
       refreshColumns({ render: true });
@@ -602,7 +603,7 @@
     if (!analysis) return true;
     const part = Components.parseItem(item.id);
     if (part) {
-      const parts = rowParts || componentParts(analysis);
+      const parts = item.separateSetParts === false ? [] : rowParts || componentParts(analysis, null, item);
       if (!parts.some(entry => entry.id === part.partId)) return false;
       item = { ...item, id: part.baseId };
     }
@@ -629,7 +630,7 @@
     if (!analysis) return null;
     const s = assistantState(), Checklist = root.BLCpChecklistEngine;
     if (!s || !Checklist) return null;
-    if (!Components.parseItem(item.id) && (rowParts || componentParts(analysis)).length) return { state: Checklist.statusOf(analysis, item.id, { answers: s.answers, item }) };
+    if (item.separateSetParts !== false && !Components.parseItem(item.id) && (rowParts || componentParts(analysis, null, item)).length) return { state: Checklist.statusOf(analysis, item.id, { answers: s.answers, item }) };
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
     if (answer) return answer;
@@ -738,11 +739,12 @@
         if (scope && analysis && appliedAnalyses.get(row) === analysis && !scope.orderKeys.has(analysis.orderKey)
           && !(scope.optionIds.size && scope.optionIds.has(optionIdOf(analysis)))) return;
         const statuses = {}, partCells = {}, elementCells = {};
+        Object.defineProperty(row, '_checklistSingleSet', { value: answersNow[Components.configKey(analysis || {})]?.componentCount === 1, enumerable: false, configurable: true });
         /* Parça listesi ve set bilgisi satıra bağlıdır, kaleme değil. Hücre başına
            4-6 kez yeniden hesaplanıyordu; 25 bin satırlık CP'nin ilk çiziminin
            ~%85'i (≈7,7 sn) bu tekrarlı alan aramalarıydı. */
         const parts = componentParts(analysis);
-        const setRow = parts.length > 0 || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp');
+        const setRow = Components.tracksParts(analysis, answersNow) && (parts.length > 0 || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp'));
         items.forEach(function (item) {
           const key = columnKey(item.id);
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
@@ -752,9 +754,9 @@
           // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
           // Set satırının durumu aşağıda parçalardan toplanır; bütün kalem cevabı okunmaz.
-          const answer = computed || setRow ? null : answerFor(item, analysis, parts);
+          const answer = computed || (setRow && item.separateSetParts !== false) ? null : answerFor(item, analysis, parts);
           const status = (computed && computed !== 'notApplicable' ? computed : '') || normalizeState(answer && answer.state) || 'open';
-          if (setRow) {
+          if (setRow && item.separateSetParts !== false) {
             const Checklist = root.BLCpChecklistEngine, s = assistantState();
             const states = parts.map(part => ({ ...part, state: Checklist.statusOf(analysis, Components.itemId(item.id, part.id), { answers: s.answers, item }) }));
             partCells[item.id] = { parts: states, legacy: s.answers[Checklist.answerKey(analysis.orderKey, item.id)] || null };
@@ -1576,9 +1578,9 @@
     const items = expandedItems(o.items || [], rows.map(analysisFor), o.answers);
     const baseApplies = typeof o.itemApplies === 'function' ? o.itemApplies : itemApplies;
     const applies = (item, analysis) => {
-      const part = Components.parseItem(item.id), parts = componentParts(analysis, o.answers);
+      const part = Components.parseItem(item.id), parts = componentParts(analysis, o.answers, item);
       if (part) return parts.some(entry => entry.id === part.partId) && baseApplies({ ...item, id: part.baseId }, analysis);
-      if (parts.length || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')) return false;
+      if (parts.length || (Components.tracksParts(analysis, o.answers, item) && Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp'))) return false;
       return baseApplies(item, analysis);
     };
     const answerOf = typeof o.answerFor === 'function' ? o.answerFor : answerFor;
@@ -2121,8 +2123,8 @@
         const baseItem = catalog.get(scoped ? scoped.baseId : metaItem.id);
         const item = scoped && baseItem ? scopedItem(baseItem, scoped.partId) : baseItem;
         if (!item) { invalid += 1; return; }
-        const parts = componentParts(analysis, opts.answers);
-        if ((!scoped && (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp'))) || (scoped && !parts.some(part => part.id === scoped.partId))) { notApplicable += 1; return; }
+        const parts = componentParts(analysis, opts.answers, item);
+        if ((!scoped && (parts.length || (Components.tracksParts(analysis, opts.answers, item) && Components.isSet(analysis.sourceRow || analysis, 'cp')))) || (scoped && !parts.some(part => part.id === scoped.partId))) { notApplicable += 1; return; }
         if (analysis && !applies(scoped ? { ...item, id: scoped.baseId } : item, analysis)) { notApplicable += 1; return; }
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
         const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;

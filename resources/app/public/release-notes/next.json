@@ -114,6 +114,35 @@
           "en": "This is a background session renewal; nothing new appears on screen, the existing connection indicator simply updates by itself."
         }
       }
+    },
+    {
+      "id": "checklist-set-mode",
+      "type": "feature",
+      "module": {
+        "tr": "Checklist",
+        "en": "Checklist"
+      },
+      "title": {
+        "tr": "Set modellerde tek durum veya ayrı parça takibi",
+        "en": "Single status or separate part tracking for sets"
+      },
+      "body": {
+        "tr": "Checklist ayarından set parçalarının A/B/C olarak ayrı takip edilip edilmeyeceğini seçebilirsiniz. Set parça sayısını elle 1 yaparak model için tek durum girebilirsiniz. Eski parça durumları ve kanıtları silinmez; parça takibine dönünce yeniden görünür. Excel ve test raporu aktarımı seçilen ayarı izler.",
+        "en": "Choose in each checklist whether set parts are tracked separately as A/B/C. Set the part count to 1 manually to enter a single status for the model. Previous part statuses and evidence are kept and reappear when part tracking is restored. Excel and test report imports follow the selected setting."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-set-mode.png",
+        "alt": {
+          "tr": "Checklist ayarında set modeller için tek durum seçimi",
+          "en": "Checklist setting for a single status on set models"
+        },
+        "caption": {
+          "tr": "Her checklistte parça takibi ayrı seçilebilir; model adedi 1 olarak da ayarlanabilir.",
+          "en": "Choose part tracking for each checklist independently, or set the model count to 1."
+        }
+      }
     }
   ]
 }

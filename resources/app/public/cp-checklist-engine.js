@@ -445,9 +445,10 @@
     const context = ctx || {};
     const answers = context.answers || {};
     if (!Components.parseItem(itemId)) {
-      const parts = componentsFor(analysis, context);
+      const item = context.item || context.itemDefinitions?.[itemId];
+      const parts = componentsFor(analysis, { ...context, item });
       if (parts.length) return Components.aggregate(parts.map(part => statusOf(analysis, Components.itemId(itemId, part.id), context)), isResolved);
-      if (Components.isSet(analysis.sourceRow || analysis, 'cp')) return 'open';
+      if (Components.tracksParts(analysis, answers, item) && Components.isSet(analysis.sourceRow || analysis, 'cp')) return 'open';
     }
     const answer = answers[answerKey(analysis.orderKey, itemId)];
     // A date revision is context, never permission to undo a user's decision.
@@ -465,7 +466,7 @@
     if (!Components.parseItem(itemId) && plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
     return 'open';
   }
-  function componentsFor(analysis, context) { return Components.partsFor(analysis, context && context.answers); }
+  function componentsFor(analysis, context) { return Components.partsFor(analysis, context && context.answers, context && context.item); }
   function isResolved(status) {
     const id = normalizeStatus(status);
     return RESOLVED_STATES.includes(id) || Boolean(customStatuses().find(item => item.id === id && item.resolved));

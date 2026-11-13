@@ -1,0 +1,15 @@
+{
+  "baseSha": "b9dd246e",
+  "sourceBeforeAcceptanceSha": null,
+  "scenario": "Real Chromium Buyer Log CP; deterministic seed 7; 40 and 400 source rows; 5 order-scoped part status/evidence edits plus CP/Orders revisits",
+  "budgets": {
+    "existingFlows": "No repeatable regression against paired Main; investigate noise using baseline A/A samples",
+    "newFeedbackMs": 200,
+    "newBlockingTaskMs": 50,
+    "requestsPerExplicitEdit": 1,
+    "concurrency": 1,
+    "cleanup": "No retained request or monotonic post-GC heap growth across five cycles"
+  },
+  "sampling": "3 alternating Main/candidate pairs per size, no p95 claim",
+  "scope": "Checklist policy, count 1, CP writer and server validation; existing part edits and CP/Orders revisits. Native/preload unchanged."
+}

@@ -108,7 +108,7 @@
     const s = assistantState();
     return (s && Array.isArray(s.rules) ? s.rules : [])
       .filter(function (rule) { return rule && rule.kind === 'checklist' && rule.enabled !== false; })
-      .map(function (rule) { return { id: rule.id, tr: rule.tr || rule.name || rule.id, en: rule.en || rule.nameEn || rule.name || rule.id }; });
+      .map(function (rule) { return { id: rule.id, separateSetParts: rule.separateSetParts !== false, tr: rule.tr || rule.name || rule.id, en: rule.en || rule.nameEn || rule.name || rule.id }; });
   }
   function itemLabel(itemId) {
     const part = Checklist().Components.parseItem(itemId);
@@ -210,7 +210,7 @@
   function isBuyerEntry(entry) { return Boolean(entry && (entry.manualMatch || !aiReady() || !reviewFor(entry))); }
   function partsOf(entry) {
     const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
-    return analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers }) : [];
+    return analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers, item: catalog().find(item => item.id === ((Checklist().Components.parseItem(entry.itemId) || {}).baseId || entry.itemId)) }) : [];
   }
   /* Takım siparişinde aynı rapor birden çok set parçasına yazılabilir: her
      ek parça ayrı bir önizleme satırıdır (kendi durumu ve doğrulaması). */
@@ -292,10 +292,11 @@
     const analysis = analysisFor(row);
     if (!analysis) { out.reason = T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.'); return out; }
     const s = assistantState();
-    const components = Checklist().Components, parts = Checklist().componentsFor(analysis, { answers: s && s.answers });
+    const item = catalog().find(item => item.id === baseItem);
+    const components = Checklist().Components, parts = Checklist().componentsFor(analysis, { answers: s && s.answers, item });
     const part = components.parseItem(entry.itemId);
     if (part && !parts.some(p => p.id === part.partId)) { out.reason = T('Bu siparişe ait geçerli checklist adımını seçin.', 'Choose a valid checklist step for this order.'); return out; }
-    if ((parts.length || components.isSet(analysis.sourceRow || analysis, 'cp')) && (!part || !parts.some(p => p.id === part.partId))) {
+    if ((parts.length || (components.tracksParts(analysis, s && s.answers, item) && components.isSet(analysis.sourceRow || analysis, 'cp'))) && (!part || !parts.some(p => p.id === part.partId))) {
       out.reason = parts.length ? T('Checklist adımını ve set parçasını seçin.', 'Choose the checklist step and set part.') : T('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.');
       return out;
     }
@@ -420,8 +421,11 @@
   }
   function itemOptions(selected, entry) {
     const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
-    const parts = analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers }) : [];
-    const items = parts.length ? catalog().flatMap(item => parts.map(part => ({ ...item, id: Checklist().Components.itemId(item.id, part.id), tr: item.tr + ' · ' + part.label, en: item.en + ' · ' + part.label }))) : catalog();
+    const parts = analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers, item: catalog().find(item => item.id === ((Checklist().Components.parseItem(entry.itemId) || {}).baseId || entry.itemId)) }) : [];
+    const items = catalog().flatMap(item => {
+      const itemParts = analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers, item }) : [];
+      return itemParts.length ? itemParts.map(part => ({ ...item, id: Checklist().Components.itemId(item.id, part.id), tr: item.tr + ' · ' + part.label, en: item.en + ' · ' + part.label })) : [item];
+    });
     return '<option value="">' + html(T('Adım seçin…', 'Choose a step…')) + '</option>'
       + items.map(function (item) { return '<option value="' + html(item.id) + '"' + (item.id === selected ? ' selected' : '') + '>' + html(isEn() ? item.en : item.tr) + '</option>'; }).join('')
       + '<option value="' + NEW_ITEM + '">' + html(T('+ Yeni checklist adımı oluştur…', '+ Create a new checklist step…')) + '</option>';
