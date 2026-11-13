@@ -91,6 +91,29 @@
           "en": "This fix changes clipboard, save and undo behavior; the interface layout is unchanged."
         }
       }
+    },
+    {
+      "id": "lcwai-upload-file-id",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a dosya ve görsel ekleme yeniden çalışıyor",
+        "en": "Attaching files and images to LCW AI works again"
+      },
+      "body": {
+        "tr": "LCW AI dosya yükleme yanıtını değiştirdiği için (blobName yerine fileId) görselden arama ve LCW AI sohbetindeki ekler “Dosya LCW AI’a yüklenemedi” hatası veriyordu. Buyer Log artık yeni fileId biçimini kullanır; eski biçim de desteklenmeye devam eder.",
+        "en": "LCW AI changed its file upload response (fileId instead of blobName), so attachments in image search and LCW AI chat failed with “The file could not be uploaded to LCW AI”. Buyer Log now uses the new fileId format; the old format is still supported."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde değişiklik yok; düzeltme sunucunun LCW AI yükleme yanıtını işlemesindedir.",
+          "en": "No UI change; the fix is in how the server handles the LCW AI upload response."
+        }
+      }
     }
   ]
 }

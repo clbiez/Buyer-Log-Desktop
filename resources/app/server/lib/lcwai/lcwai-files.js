@@ -89,6 +89,37 @@ function responseShape(value) {
   }).join(',').slice(0, 200);
 }
 
+/* fileId biçimi: kimlik yalnız güvenli karakterlerden oluşur (yol/boşluk
+   yok); sayı ise sayı olarak korunur. sessionId ve quota mesaja taşınmaz. */
+function fileIdRecord(value, depth = 0) {
+  const record = Array.isArray(value) ? value[0] : value;
+  if (!isRecord(record)) return null;
+  if (field(record, 'fileId') != null) return record;
+  if (depth >= 2) return null;
+  for (const key of ENVELOPE_KEYS) {
+    const found = fileIdRecord(field(record, key), depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+function fileIdAttachment(record, fallback = {}) {
+  const raw = field(record, 'fileId');
+  const fileId = typeof raw === 'number' ? raw : clean(raw);
+  const valid = typeof fileId === 'number' ? Number.isSafeInteger(fileId) && fileId >= 0 : /^[A-Za-z0-9._:-]{1,200}$/.test(fileId) && !fileId.includes('..');
+  if (!valid) throw lcwAiError('UPLOAD_FAILED', { detail: 'file-id' });
+  const sha256 = clean(field(record, 'sha256'));
+  if (sha256 && !/^[a-f0-9]{64}$/i.test(sha256)) throw lcwAiError('UPLOAD_FAILED', { detail: 'file-id' });
+  const size = Number(field(record, 'size'));
+  const out = {
+    fileId,
+    contentType: clean(field(record, 'contentType')) || clean(fallback.contentType) || 'application/octet-stream',
+    fileName: sanitizeFileName(field(record, 'fileName') || fallback.fileName),
+    size: Number.isFinite(size) && size >= 0 ? size : Number(fallback.size) || 0,
+  };
+  if (sha256) out.sha256 = sha256;
+  return out;
+}
+
 /* Yükleme yanıtını mesaj ekine çevirir. Eksik/garip alan varsa ek
    gönderilmez: yanlış bir blobName başka bir dosyayı işaret edebilir. */
 function toAttachment(response, fallback = {}) {
@@ -98,7 +129,13 @@ function toAttachment(response, fallback = {}) {
   let value = response;
   if (typeof response.blobName !== 'string') {
     const record = attachmentRecord(response);
-    if (!record) { const error = lcwAiError('UPLOAD_FAILED', { detail: 'blob-name' }); error.responseShape = responseShape(response); throw error; }
+    if (!record) {
+      // LCW AI 11.2026 sonrası yükleme yanıtı blobName/url taşımaz; dosya
+      // fileId ile anılır: { sessionId, fileId, sha256, fileName, contentType, size, quota }.
+      const byId = fileIdRecord(response);
+      if (byId) return fileIdAttachment(byId, fallback);
+      const error = lcwAiError('UPLOAD_FAILED', { detail: 'blob-name' }); error.responseShape = responseShape(response); throw error;
+    }
     value = { blobName: field(record, 'blobName'), url: field(record, 'url'), size: field(record, 'size'), contentType: field(record, 'contentType'), fileName: field(record, 'fileName') };
   }
   const blobName = clean(value.blobName);
