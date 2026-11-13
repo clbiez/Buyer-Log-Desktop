@@ -1,0 +1,22 @@
+{
+  "base": "b54f62fccffa7af95549a1fbf8315756b325fe5d",
+  "node": "v24.19.0",
+  "browser": "154.0.8037.57",
+  "fixture": "two leading empty divs, bold one-line note, one trailing empty div",
+  "samples": [
+    {
+      "name": "main",
+      "synchronousMs": 13.800000000046566,
+      "feedbackMs": 18.599999999976717,
+      "text": "\n\n\n\nPrint approval pending. Parcel received 22.10.\n\n",
+      "html": "<div><br></div><div><br></div><div><b>Print approval pending. Parcel received 22.10.</b></div><div><br></div>"
+    },
+    {
+      "name": "candidate",
+      "synchronousMs": 8.099999999976717,
+      "feedbackMs": 10.199999999953434,
+      "text": "Print approval pending. Parcel received 22.10.",
+      "html": "<div><b>Print approval pending. Parcel received 22.10.</b></div>"
+    }
+  ]
+}

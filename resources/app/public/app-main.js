@@ -10530,6 +10530,17 @@ function commitCpEditor(t, options={}){
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
+  if(kind==='note'){
+    if(!['Notes','Ek Not'].includes(key))return false;
+    const prev=String(row[key]??''),prevHtml=String(row[key+'Html']||''),next=String(t.value??'');
+    if(prev===next&&!prevHtml)return false;
+    row[key]=next;row[key+'Html']='';
+    markDirty(id);
+    syncOrderLinePeersFromCpRow(row,[key,key+'Html'],{render:refresh});
+    pushUndo({id,fields:[{key,prev,next},{key:key+'Html',prev:prevHtml,next:''}]});
+    if(refresh)refreshRowEverywhere(id);
+    return true;
+  }
   const prev = row[key];
   if(editableValuesEqual(prev,t.value)) return false;
   const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
@@ -14168,7 +14179,8 @@ const TABLE_META = {
 /* CP hücreler arası çoklu yapıştırma (Ctrl+V). Yalnız elle girilebilen hücreler
    yazılır ve her hücre, tek hücre düzenlemesiyle AYNI commitCpEditor yolundan
    geçer (override, yetki, revizyon ve formül davranışı aynı kalır). Hesaplanan,
-   salt-okunur, yetkisiz veya modal ile düzenlenen (Notes / Ek Not) hücreler atlanır. */
+   salt-okunur ve yetkisiz hücreler atlanır. Notlar metin ve HTML birlikte
+   güncellenerek aynı toplu kayıt/geri alma yolundan geçer. */
 function cpPasteTarget(row,column){
   if(!row||!column||row._canEdit===false) return null;
   if(column.k==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return null;
@@ -14180,7 +14192,7 @@ function cpPasteTarget(row,column){
     case 'retailEdit': return 'retail';
     case 'instoreEdit': return 'instore';
     case 'deltype': return 'deltype';
-    case 'text': return (column.k==='Notes'||column.k==='Ek Not') ? null : 'text';
+    case 'text': return (column.k==='Notes'||column.k==='Ek Not') ? 'note' : 'text';
     case 'submfr': return turknorm(row.Licensor)==='DTR' ? null : 'submfr';
     case 'licensor': {
       const resolution=licenseLicensorStateForRow(row);
@@ -14217,6 +14229,28 @@ function cpPasteValue(raw,kind){
   return {ok:true,value:text};
 }
 const CP_PASTE_ROW_REFRESH_LIMIT=40;
+function ordersPasteTarget(row,column){
+  if(!row||!['Notes','Ek Not'].includes(column?.k))return null;
+  // Orders görünümü normal alanları salt okunur işaretler. Not yetkisi asıl CP
+  // satırından alınır; CP henüz yüklenmediyse yapıştırma anında yüklenir.
+  if(!state.cp)return 'note';
+  const canonical=orderLinePeerRows('cp',row)[0];
+  return canonical?cpPasteTarget(canonical,column):null;
+}
+async function applyOrdersGridPaste(plan,range){
+  // Orders görünüm kimlikleri CP'den bağımsızdır. Mevcut revizyonlu işleme
+  // girmeden asıl sipariş satırını çöz; görünüm sırasıyla kayıt yapılmaz.
+  if(isAreaFrozen('orders'))return {ok:false};
+  if(!state.cp&&!(await ensureCpLoaded({deferRender:true,reason:'orders-note-paste'})))return {ok:false};
+  if(isAreaFrozen('orders'))return {ok:false};
+  const ops=[];
+  for(const op of plan.ops){
+    const row=orderLinePeerRows('cp',op.row)[0];
+    if(!row||ordersPasteTarget(op.row,op.column)!=='note')return {ok:false};
+    ops.push({...op,row});
+  }
+  return applyCpGridPaste({...plan,ops,clipboardModule:'orders'},range);
+}
 function cpBulkUniqueOperations(operations){
   const seen=new Set();return operations.filter(op=>{const key=lineKeyOfRow(op.row)+'|'+op.column.k;if(seen.has(key))return false;seen.add(key);return true;});
 }
@@ -14228,12 +14262,12 @@ async function applyCpGridPaste(plan,range){
     await settleOverrideWrites();
     const owner=orderLinePeerOwner(),revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
     const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
-    const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
+    const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&!(plan.clipboardModule==='orders'&&isAreaFrozen('orders'))&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
       const current=state.cp?.rows?.find(row=>row._id===Number(op.row._partialViewSourceId??op.row._id));
       return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
     });
     const items=snapshots.map(({op,key,value})=>({key:key+'|'+op.column.k,label:String(op.row['Order Code'])+' · '+op.column.k,before:value,after:op.value}));
-    const receipt=await window.BLBulkOperations.run({module:'cp',owner,expected:{orders:revision,suppFob},title:appLang==='en'?'CP paste preview':'CP yapıştırma önizlemesi',counts:plan,items,guard,
+    const receipt=await window.BLBulkOperations.run({module:plan.clipboardModule||'cp',owner,expected:{orders:revision,suppFob},title:plan.clipboardModule==='orders'?(appLang==='en'?'Orders paste preview':'Siparişler yapıştırma önizlemesi'):(appLang==='en'?'CP paste preview':'CP yapıştırma önizlemesi'),counts:plan,items,guard,
       hint:appLang==='en'?'Date dependencies follow the same rules as cell editing.':'Tarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.',
       async send(){
         cpBulkInFlight=true;
@@ -14337,10 +14371,9 @@ function registerManagedGridClipboard(tableId,tableKey){
       : cellPlainText(column,row,meta.computeFn?meta.computeFn(row):null),
     exporter:BLTableExport,
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
-    // Çoklu yapıştırma yalnız CP'de; Orders salt kopyalama kalır.
-    pasteTarget:tableKey==='cp'?cpPasteTarget:undefined,
-    pasteValue:tableKey==='cp'?cpPasteValue:undefined,
-    applyPaste:tableKey==='cp'?applyCpGridPaste:undefined,
+    pasteTarget:tableKey==='cp'?cpPasteTarget:ordersPasteTarget,
+    pasteValue:cpPasteValue,
+    applyPaste:tableKey==='cp'?applyCpGridPaste:applyOrdersGridPaste,
     copy:async (matrix,range,selectionState,options={})=>{
       const payload=window.BLGridClipboard.serialize(matrix,BLTableExport,options),plain=payload.plain,html=payload.html;
       const ok=await copyRichToClipboard(html,plain);
@@ -39877,7 +39910,7 @@ function trimRichNoteClipboard(fragment){
     while((node=start?parent.firstChild:parent.lastChild)){
       if(node.nodeType===3){
         node.data=node.data.replace(start?/^(?:[ \t]*\r?\n)+/:/(?:\r?\n[ \t]*)+$/g,'');
-        if(node.data!=='')break;
+        if(!/^[\s\u00a0]*$/.test(node.data))break;
       }else if(node.nodeType===1){
         if(node.tagName==='IMG')break;
         trim(node,start);
@@ -39972,7 +40005,12 @@ function bindRichNoteEditor(host,ta,accept=()=>true){
       const files=[...(e.clipboardData?.files||[])];
       if(files.length){addImages(files);return;}
       const html=e.clipboardData?.getData('text/html');
-      insertHtml(html||escapeHtml(e.clipboardData?.getData('text/plain')||'').replace(/\n/g,'<br>'));
+      // Tarayıcıdan/eski sürümden gelen HTML, editör sarmalayıcıları ve boş
+      // paragraflar taşıyabilir. insertHTML öncesinde gelen kopyayı da temizle.
+      const fragment=document.createElement('div');
+      fragment.innerHTML=todoSanitize(html||escapeHtml(e.clipboardData?.getData('text/plain')||'').replace(/\r\n?/g,'\n').replace(/\n/g,'<br>'));
+      trimRichNoteClipboard(fragment);
+      insertHtml(fragment.innerHTML);
     });
     ta.addEventListener('dragover',e=>e.preventDefault());
     ta.addEventListener('drop',e=>{
