@@ -181,11 +181,12 @@ test('job registry carries the background flag for silent jobs', () => {
 
 test('silent request header marks server PLM jobs as background', () => {
   const server = read('server/server.js');
-  assert.match(server, /function plmJobBackground\(req\)/);
-  assert.match(server, /background: meta\.background === true \|\| plmJobBackground\(req\)/);
-  const importPlm = server.slice(server.indexOf("app.post('/api/model-images/import-plm'"));
-  assert.match(server.slice(server.indexOf('async function runPlmImageImport'), server.indexOf('async function runPlmImageImport') + 2500), /background: plmJobBackground\(req\)/);
-  assert.ok(importPlm.length > 0);
+  assert.match(server, /function plmJobBackground\(req\) \{\s*return plmPriority\.isBackgroundRequest\(req\);/);
+  assert.match(server, /const background = meta\.background === true \|\| plmJobBackground\(req\);/);
+  const start = server.indexOf('async function runPlmImageImport');
+  const run = server.slice(start, server.indexOf('\nasync function ', start + 10));
+  assert.match(run, /const background=plmJobBackground\(req\);/);
+  assert.match(run, /phase: 'PLM cozumleniyor',\s*background,/);
 });
 
 test('background jobs never open the Operations Center or the page strip', () => {

@@ -213,6 +213,26 @@ function createJobRegistry(options = {}) {
 
   /* Kapsam süzgeci sayfalar arası karışmayı bitiren yerdir: bir ekran yalnız
      kendi işlerini ister. scope verilmezse hepsi döner (operasyon merkezi). */
+  /* Kullanıcının elle başlattığı PLM işi başlarken o kullanıcının çalışan
+     sessiz (arka plan) işleri durdurulur; iş döngüleri bir sonraki kontrol
+     noktasında durur ve o ana kadarki sonucu kaydeder. */
+  function cancelBackground(userId) {
+    const cancelled = [];
+    for (const job of bucket(userId).values()) {
+      if (!job.background || TERMINAL.has(job.status) || job.cancelRequested) continue;
+      job.cancelRequested = true;
+      job.updatedAt = clock();
+      cancelled.push(job.id);
+    }
+    return cancelled;
+  }
+
+  // Kullanıcının elle başlattığı, hâlâ çalışan bir PLM işi var mı?
+  function hasForeground(userId) {
+    for (const job of bucket(userId).values()) if (!job.background && !TERMINAL.has(job.status)) return true;
+    return false;
+  }
+
   function list(userId, filter = {}) {
     const scope = clean(filter.scope);
     const now = clock();
@@ -246,7 +266,7 @@ function createJobRegistry(options = {}) {
   }
 
   return {
-    create, get, update, addFailure, finish, requestCancel, isCancelled,
+    create, get, update, addFailure, finish, requestCancel, isCancelled, cancelBackground, hasForeground,
     list, describe, failures, failedIds, clearFinished,
     TERMINAL,
   };

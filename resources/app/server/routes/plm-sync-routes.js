@@ -331,6 +331,9 @@ return {...fetchService,technicalSheets:{prepare:prepareTechnicalSheetItems,hand
 function createPlmFetchService(deps){
   const {normalizePlmId,setModelOperationProgress,withPlmJob,agentBrowserConnector,getModelImageSettings,plmJobs,upsertPlmStyleLinks,userAccess,clearModelOperationProgress}=deps;
   async function fetch(profile,input={}, {request,assertAuthority=()=>{},allowAi=false}={}){
+  /* Sessiz (arka plan) istek: kullanıcının buton ilerleme alanına yazmaz,
+     temizlemez; doğan iş ve ikinci faz BOM işi "background" kalır. */
+  const background=Boolean(deps.plmPriority&&deps.plmPriority.isBackgroundRequest(request));
   try {
      const requestedScope=String(input.scope||'koleksiyon');
      const scope=['koleksiyon','cp','orders'].includes(requestedScope)?requestedScope:'koleksiyon';
@@ -349,7 +352,7 @@ function createPlmFetchService(deps){
      // selectedOnly modunda CoreNectum Style List'teki mevcut DOM checkbox'ları
      // connector okur; istemciden PLM ID listesi beklenmez.
      const items = selectedOnly ? [] : plmIds.map(plmId => ({ plmId, needImage: false }));
-    setModelOperationProgress(profile.id, { kind: 'plm-sync', phase: 'PLM verisi aranıyor', current: 0, total: items.length, model: '' });
+    setModelOperationProgress(profile.id, { kind: 'plm-sync', phase: 'PLM verisi aranıyor', current: 0, total: items.length, model: '' },{background});
     /* İş kaydı: bu iş Koleksiyon kapsamına yazılır, böylece CP/Orders
        ekranlarında görünmez ama sayfa değişince de durmaz. */
     const fetchRun = await withPlmJob(request||{currentUser:profile}, {
@@ -362,7 +365,7 @@ function createPlmFetchService(deps){
          language,
          isCancelled: job.cancelled,
          onProgress: progress => {
-           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
+           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress },{background});
            job.report({
              phase: progress && progress.phase,
              processed: progress && progress.current,
@@ -382,7 +385,7 @@ function createPlmFetchService(deps){
          language,
          isCancelled: job.cancelled,
          onProgress: progress => {
-           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
+           setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress },{background});
            job.report({
              phase: progress && progress.phase,
              processed: progress && progress.current,
@@ -463,7 +466,7 @@ function createPlmFetchService(deps){
     try { styleLinks = upsertPlmStyleLinks(collected.links, profile); } catch (_) {}
     // Kullanıcı ilk fazı durdurduysa arka plan BOM işi de başlatılmaz.
     const bomJob = backgroundBom && !(fetchRun.job && fetchRun.job.status === 'cancelled') && Array.isArray(collected.backgroundRecords) && collected.backgroundRecords.length
-      ? startBackgroundBom(profile, collected.backgroundRecords, { scope, language, allowAi, assertAuthority })
+      ? startBackgroundBom(profile, collected.backgroundRecords, { scope, language, allowAi, assertAuthority, background })
       : null;
     userAccess.appendAudit(profile, 'PLM_SYNC_FETCH', 'corenectum', {
       scope, requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
@@ -486,7 +489,7 @@ function createPlmFetchService(deps){
       styleLinks, jobId: fetchRun.job.id,
     };
 
-  }finally{clearModelOperationProgress(profile.id);}
+  }finally{clearModelOperationProgress(profile.id,{background});}
   }
 
   /* Faz 2: BOM + LCW AI arka plan işi. HTTP isteğine bağlı değildir; ilerleme
@@ -494,9 +497,10 @@ function createPlmFetchService(deps){
      ile izleyip bitince Artwork/Fabric projeksiyonunu tazeler. Kullanıcının
      düğme ilerlemesine (setModelOperationProgress) yazmaz; o alan o anda
      başka bir işleme ait olabilir. */
-  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority, authWait = deps.bomAuthWait }) {
+  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority, background = false, authWait = deps.bomAuthWait }) {
     let jobId = '';
     const run = withPlmJob({ currentUser: profile }, {
+      background,
       kind: 'plm-bom', scope, total: records.length,
       label: `PLM BOM · ${records.length} model`,
       phase: language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor',
