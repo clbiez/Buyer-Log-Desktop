@@ -99,7 +99,8 @@
   // Yoklama yalnız GEREKTİĞİNDE çalışır: çalışan iş yoksa ve panel kapalıysa
   // durur. Boşuna istek atıp sunucuyu meşgul etmez.
   function syncPolling() {
-    const needed = state.panelOpen || state.jobs.some(job => job.running);
+    // Sessiz arka plan işi tek başına yoklama başlatmaz (kullanıcıya maliyet yok).
+    const needed = state.panelOpen || state.jobs.some(job => job.running && !job.background);
     if (needed && !state.timer) state.timer = setInterval(refresh, POLL_MS);
     else if (!needed && state.timer) { clearInterval(state.timer); state.timer = null; }
   }
@@ -252,8 +253,9 @@
   function renderStrip() {
     const host = stripHost();
     const scope = activeScope();
-    // KAPSAM KURALI: sayfa yalnız kendi işlerini görür.
-    const running = jobsForScope(scope).filter(job => job.running);
+    // KAPSAM KURALI: sayfa yalnız kendi işlerini görür. Sessiz arka plan
+    // işleri şeritte görünmez (kullanıcıya hissettirilmez); merkezde listelenir.
+    const running = jobsForScope(scope).filter(job => job.running && !job.background);
     if (!scope || !running.length) {
       host.hidden = true;
       host.innerHTML = '';

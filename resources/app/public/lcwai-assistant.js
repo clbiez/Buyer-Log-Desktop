@@ -191,6 +191,7 @@
           const result = (await silentDesktopAuth({ force: true })) ? { ok: true } : await desktop.ensureLcwAiAuth({ interactive: true });
           const status = publishStatus((await api('/api/lcwai/status')).status);
           if (result && result.ok && status && status.connected) {
+            try { root.BLCorporateSessionKeeper && root.BLCorporateSessionKeeper.resume('lcwai'); } catch (_) {}
             if (!quiet && typeof root.showToast === 'function') root.showToast(L('LCW AI bağlı (arka plan oturumu).', 'LCW AI is connected (background session).'), { kind: 'success' });
             return status;
           }
@@ -220,6 +221,8 @@
     // Masaüstü arka plan oturumu da kapatılır (çerezler silinir; sonraki
     // bağlantıda yeniden giriş istenir).
     const desktop = root.buyerLogDesktop;
+    // Bilinçli bağlantı kesme: oturum koruyucu kullanıcı yeniden bağlanana kadar yeniden bağlamaz.
+    try { root.BLCorporateSessionKeeper && root.BLCorporateSessionKeeper.pause('lcwai'); } catch (_) {}
     if (desktop && typeof desktop.clearLcwAiAuth === 'function') { try { await desktop.clearLcwAiAuth(); } catch (_) {} }
     silentAuthAt = Date.now();
     const data = await api('/api/lcwai/disconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });

@@ -10,7 +10,9 @@ const ops = read('public/plm-operations.js');
 
 function reporter(registry, legacy) {
   const start = server.indexOf('function reportImageProgress(');
-  return new Function('plmJobs', 'setModelOperationProgress', server.slice(start, server.indexOf('// İstek gövdesinden', start))+'\nreturn reportImageProgress;')(registry, (id,p) => legacy.push(p));
+  // plmPriority: sessiz (arka plan) istek kullanıcının buton ilerleme alanına yazmaz.
+  const plmPriority = { isBackgroundRequest: req => Boolean(req && req.background) };
+  return new Function('plmJobs', 'setModelOperationProgress', 'plmPriority', server.slice(start, server.indexOf('// İstek gövdesinden', start))+'\nreturn reportImageProgress;')(registry, (id,p,options) => { if (!(options && options.background)) legacy.push(p); }, plmPriority);
 }
 function ui(language) {
   const labels = ops.slice(ops.indexOf('  const STAGE_LABEL'), ops.indexOf('  function activeScope'));
@@ -43,6 +45,14 @@ test('stage counters cannot replace requested totals or leak last model into loc
   registry.finish('demo',job.id,{status:'failed'});
   at = 9000;
   assert.equal(registry.describe('demo',job.id).stageElapsedMs,4000);
+});
+
+test('silent image job updates its own job record but never the user progress slot', () => {
+  const registry = createJobRegistry(), job = registry.create('demo',{total:3,background:true});
+  const legacy = [];
+  reporter(registry,legacy)({currentUser:{id:'demo'},background:true},job,{phase:'Download',current:2,total:3,model:'123'});
+  assert.equal(registry.describe('demo',job.id).processed,2);
+  assert.deepEqual(legacy, []);
 });
 
 test('legacy non-stage image reports keep their original counters', () => {

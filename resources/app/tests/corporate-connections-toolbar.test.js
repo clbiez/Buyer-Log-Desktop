@@ -24,7 +24,7 @@ function mount(states = {}, bridge = {}) {
     calls.push({ url, options });
     let status = {};
     if (url.startsWith('/api/lcwai/status')) status = { connected: Boolean(states.lcwai) };
-    if (url === '/api/corenectum-api/status') status = { configured: Boolean(states.plm) };
+    if (url === '/api/corenectum-api/status') status = { configured: Boolean(states.plm), expired: Boolean(states.plmExpired), rejected: Boolean(states.plmRejected) };
     if (url === '/api/oab/auth/status') status = { authenticated: Boolean(states.oab) };
     if (url === '/api/oab/auth/connect') status = { connected: true };
     return { ok: true, json: async () => ({ ok: true, status }) };
@@ -95,4 +95,24 @@ test('LCW AI click uses the shared engine without exposing an auth token', async
   await mounted.window.BLTopCorporateConnections.connect('lcwai');
   assert.equal(mounted.buttons.lcwai.dataset.state, 'connected');
   assert.doesNotMatch(code, /Authorization|accessToken|password/);
+});
+
+test('expired or CoreNectum-rejected PLM token is shown as disconnected, not green', async () => {
+  const expired = mount({ plm: true, plmExpired: true });
+  const rejected = mount({ plm: true, plmRejected: true });
+  await tick();
+  assert.equal(expired.buttons.plm.dataset.state, 'disconnected');
+  assert.equal(rejected.buttons.plm.dataset.state, 'disconnected');
+});
+
+test('silent keeper reconnect repaints the indicator without a click or toast', async () => {
+  const states = { plm: false };
+  const mounted = mount(states);
+  await tick();
+  assert.equal(mounted.buttons.plm.dataset.state, 'disconnected');
+  states.plm = true;
+  mounted.events['bl:corporate-session-reconnected']({ detail: { key: 'plm' } });
+  await tick();
+  assert.equal(mounted.buttons.plm.dataset.state, 'connected');
+  assert.equal(mounted.messages.length, 0, 'sessiz yeniden bağlanma toast göstermez');
 });

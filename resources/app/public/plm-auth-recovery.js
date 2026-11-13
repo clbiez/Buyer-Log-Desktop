@@ -104,6 +104,11 @@
 
     const task = (async () => {
       try {
+        /* A silent session-keeper attempt may be in flight; Electron would
+           answer this user action with that (non-interactive) attempt's
+           result. Let it finish first so the login window can still appear. */
+        const keeper = root && root.BLCorporateSessionKeeper;
+        if (keeper && typeof keeper.settle === 'function') await keeper.settle('plm');
         /*
          * interactive:true already performs the required two-stage behavior
          * inside Electron main:
@@ -132,13 +137,23 @@
     }
   }
 
-  /* Yalnız gizli, kalıcı CoreNectum oturumu denenir; pencere gösterilmez. */
+  /* Yalnız gizli, kalıcı CoreNectum oturumu denenir; pencere gösterilmez.
+     Oturum koruyucu varsa deneme onun geri çekilme (backoff) kuralından
+     geçer: art arda başarısız arka plan istekleri her seferinde yeni bir
+     gizli SSO penceresi açmaz. */
   async function renewCoreNectumSessionSilently(root) {
     if (silentRecoveryInFlight) return silentRecoveryInFlight;
     const bridge = desktopBridge(root);
     if (!bridge) return { ok: false, code: 'CORENECTUM_DESKTOP_BRIDGE_UNAVAILABLE' };
+    const keeper = root && root.BLCorporateSessionKeeper;
     const task = (async () => {
       try {
+        if (keeper && typeof keeper.check === 'function') {
+          keeper.reportAuthFailure('plm');
+          const outcome = await keeper.check('plm');
+          if (outcome === 'busy') await keeper.settle('plm');
+          return { ok: outcome === 'reconnected' || outcome === 'healthy' || outcome === 'busy', code: outcome };
+        }
         return await bridge.ensureCoreNectumAuth({ interactive: false, reason: 'plm-background-silent' });
       } catch (error) {
         return {

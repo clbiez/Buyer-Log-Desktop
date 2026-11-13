@@ -60,8 +60,8 @@
     }
     if (key === 'plm') {
       const data = await getJson('/api/corenectum-api/status');
-      // Only an existing server-side token counts as an available PLM session.
-      return Boolean(data.status && data.status.configured);
+      // Only an existing, unexpired and not-rejected server-side token counts as a PLM session.
+      return Boolean(data.status && data.status.configured && !data.status.expired && !data.status.rejected);
     }
     const desktop = root.buyerLogDesktop && typeof root.buyerLogDesktop.ensureOabAuth === 'function';
     const data = await getJson('/api/oab/auth/status', {
@@ -126,7 +126,11 @@
     busy.add(key);
     ++revision[key]; // Ignore any status check started before this user action.
     paint(key, 'connecting');
+    const keeper = root.BLCorporateSessionKeeper;
     try {
+      // A silent background attempt may be in flight; let it finish so this
+      // explicit click is not answered by that attempt's result.
+      if (keeper && key !== 'oab') { await keeper.settle(key); keeper.resume(key); }
       const result = await openSession(key);
       if (result === 'deferred') {
         notify(t('PLM giriş ekranı açıldı. Giriş tamamlanınca bağlantı durumu güncellenecek.', 'PLM sign-in opened. The status will update after sign-in.'));
@@ -170,6 +174,11 @@
       if (event.key === 'Escape' && !host.hidden) { setOpen(false); trigger.focus(); }
     });
   }
+  // The session keeper reconnected silently (PLM / LCW AI): repaint at once.
+  root.addEventListener('bl:corporate-session-reconnected', event => {
+    const key = event && event.detail && event.detail.key;
+    if (keys.includes(key)) void refreshOne(key);
+  });
   root.addEventListener('focus', () => { void refresh(false); });
   root.addEventListener('bl:startup-complete', () => { void refresh(true); });
   root.document.addEventListener('visibilitychange', () => { if (!root.document.hidden) void refresh(false); });
