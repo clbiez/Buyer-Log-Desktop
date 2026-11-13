@@ -70,6 +70,29 @@
       }
     },
     {
+      "id": "row-note-copy-paste",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Satırlar arasında not kopyalama ve boş satırsız yapıştırma",
+        "en": "Copy notes between rows and paste without extra blank lines"
+      },
+      "body": {
+        "tr": "CP ve Siparişler tablolarındaki Not ve Ek Not hücrelerine satırlar arasında yapıştırma yapılabilir. Yapıştırma mevcut toplu kayıt ve geri alma akışını kullanır; hedef notun eski biçimlendirmesi yeni metni örtmez. Koleksiyon ve sipariş not editörlerinde yapıştırılan metnin başına veya sonuna gelen boş satırlar temizlenir; içerideki satır araları ve biçimlendirme korunur.",
+        "en": "Notes and Additional Note cells in CP and Orders accept paste between rows. Pasting uses the existing bulk save and undo flow; old target formatting no longer hides the new text. Collection and order note editors remove empty lines added around pasted content while preserving internal line breaks and formatting."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Düzeltme pano, kayıt ve geri alma davranışını değiştirir; arayüz düzeninde görsel değişiklik yoktur.",
+          "en": "This fix changes clipboard, save and undo behavior; the interface layout is unchanged."
+        }
+      }
+    },
+    {
       "id": "corporate-session-auto-reconnect",
       "type": "improvement",
       "module": {
