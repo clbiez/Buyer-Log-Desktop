@@ -128,20 +128,25 @@ test('renk başına Option Image seçilir; GetStyleList görseli yalnız yedekti
   assert.equal(Object.keys(fake.imagemap).length, 2);
 });
 
-test('aynı kaynak kimliği zaten kayıtlıysa görsel TEKRAR İNDİRİLMEZ', async () => {
+/* Kullanıcı kararı (PLM revizyonu): açık yenileme aynı kaynak kimliğinde de
+   içeriği doğrular; CoreNectum revize görseli aynı adresle verebilir. Korunan
+   asıl sözleşme: içerik aynıysa yeni dosya/kayıt YAZILMAZ. */
+test('aynı kaynak kimliği kayıtlıysa yenileme içeriği doğrular, değişmeyeni YENİDEN YAZMAZ', async () => {
   const first = harness();
   const run1 = await service.runPlmImageSync(first.input);
   assert.equal(run1.counts.downloadsCompleted, 1);
+  const filesBefore = first.fake.files.size;
+  const mapBefore = { ...first.fake.imagemap };
 
-  // İkinci koşum: aynı styleOptionImageId, aynı dosya.
+  // İkinci koşum: aynı styleOptionImageId, aynı baytlar.
   const second = { ...first.input, store: first.fake.store(), imagemap: first.fake.imagemap };
-  second.downloadImage = async url => { first.calls.downloads.push(url); return { url, mimeType: 'image/png', buffer: png(url), size: 1 }; };
   const run2 = await service.runPlmImageSync(second);
-  assert.equal(run2.counts.downloadsCompleted, 0, 'önbellek isabetinde indirme olmamalı');
-  assert.equal(run2.counts.cacheHits, 1);
+  assert.equal(run2.counts.cacheHits, 0, 'açık yenileme kimlik önbelleğine güvenmez');
+  assert.equal(first.fake.files.size, filesBefore, 'aynı içerik için yeni dosya yazılmamalı');
+  assert.deepEqual(first.fake.imagemap, mapBefore);
 });
 
-test('129 model ölçeğinde eksikleri tamamla hiçbir API indirmesi yapmaz; tümünü yenile değişmeyeni tekrar indirmez', async () => {
+test('129 model ölçeğinde eksikleri tamamla hiçbir API indirmesi yapmaz; tümünü yenile değişmeyeni yeniden yazmaz', async () => {
   const requests = Array.from({length:129}, (_, i) => ({ plmId:String(2124000+i), colourCode:'CVL', colour:'NEW BLACK' }));
   const {fake,calls,input} = harness({requests});
   const first = await service.runPlmImageSync(input);
@@ -155,10 +160,11 @@ test('129 model ölçeğinde eksikleri tamamla hiçbir API indirmesi yapmaz; tü
   assert.equal(calls.styleList.length, listCalls, 'eksikler yerel kontrol ile dönmeli');
   assert.equal(calls.downloads.length, downloadCalls);
 
+  const filesBefore = fake.files.size;
   const refresh = await service.runPlmImageSync({ ...input, mode:'all', imagemap:fake.imagemap, store:fake.store() });
-  assert.equal(refresh.counts.downloadsCompleted, 0);
-  assert.equal(refresh.counts.cacheHits, 129, 'aynı kaynak kimliği için yeni dosya yazılmaz');
-  assert.equal(calls.downloads.length, downloadCalls);
+  assert.equal(refresh.counts.cacheHits, 0, 'tümünü yenile PLM revizyonunu yakalamak için içeriği doğrular');
+  assert.equal(calls.downloads.length, downloadCalls + 129);
+  assert.equal(fake.files.size, filesBefore, 'aynı içerik için yeni dosya yazılmaz');
 });
 
 test('Eksikleri Tamamla ana renkte eski otomatik OPTION kaydını cache saymaz ve ön+arka görsele geçirir', async () => {

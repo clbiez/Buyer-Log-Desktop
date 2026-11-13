@@ -68,6 +68,29 @@
           "en": "Actual Buyer Log UI; Pricing Desk request creation verified with isolated demo data."
         }
       }
+    },
+    {
+      "id": "plm-sync-image-revision-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Sync",
+        "en": "PLM Sync"
+      },
+      "title": {
+        "tr": "PLM'de revize edilen model görseli senkronda güncellenir",
+        "en": "Model images revised in PLM are updated on sync"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arka plan senkron düzeltmesi; ekranda yeni bir öğe yok, yalnız revize görselin içeriği güncellenir.",
+          "en": "Background sync fix; no new on-screen element, only the revised image content is updated."
+        }
+      },
+      "body": {
+        "tr": "Tüm/Seçili model yenileme ve tek model görsel çağırma, PLM görseli aynı adreste kalsa bile içeriği yeniden kontrol eder; görsel değiştiyse eskisinin yerine yazılır, değişmediyse hiçbir şey yazılmaz. Görseli silip yeniden senkronlamak gerekmez. Eksikleri tamamla modu hızlı kalır; elle konan görseller korunur.",
+        "en": "Refreshing all/selected models and fetching a single model image now re-check the PLM image content even when its address is unchanged; a changed image replaces the old one and an unchanged one writes nothing. Deleting the image and syncing again is no longer needed. Fetch-missing mode stays fast and manually set images are preserved."
+      }
     }
   ]
 }

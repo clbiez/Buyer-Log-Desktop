@@ -304,7 +304,8 @@ async function runPlmImageSync(input = {}) {
       continue;
     }
 
-    const gated = ingest.decideBeforeWrite(item, selection, { store, overwriteManual });
+    // Açık yenileme PLM revizyonunu yakalamak için içeriği yeniden doğrular.
+    const gated = ingest.decideBeforeWrite(item, selection, { store, overwriteManual, revalidate: mode === 'all' });
     if (gated.decision === ingestLib.DECISION_CACHED) {
       counts.cacheHits += 1;
       skipped.push(gated);
