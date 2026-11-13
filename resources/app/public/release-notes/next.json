@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tek hücre yapıştırma",
+    "en": "Collection single-cell paste"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tablosunda seçili tek hücreye Ctrl+V yeniden önizleme penceresi açmadan doğrudan yapıştırır.",
+    "en": "In the Collection table, Ctrl+V into a single selected cell pastes directly again, without a preview window."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-single-cell-paste-direct",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Tek hücreye kopyala-yapıştır her sütunda doğrudan çalışır",
+        "en": "Copy-paste into a single cell works directly in every column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-single-cell-paste-direct.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda üst satırdan kopyalanan sezon değeri alttaki seçili hücreye yapıştırılmış ve bilgi mesajı görünüyor",
+          "en": "In the Collection table the season value copied from the row above is pasted into the selected cell below with an info message"
+        },
+        "caption": {
+          "tr": "Tek tıkla seçilen hücreye Ctrl+V değeri hemen yazar; Ctrl+Z tek adımda geri alır.",
+          "en": "Ctrl+V writes the value into the cell selected with a single click at once; Ctrl+Z reverts it in one step."
+        }
+      },
+      "body": {
+        "tr": "Tek tık artık yalnız hücreyi seçtiği için Ctrl+V her seferinde toplu yapıştırma önizlemesi açıyordu. Tek hücre yapıştırma ve temizleme artık yazarak düzenleme gibi doğrudan uygulanır; birden çok hücreye yapıştırmada önizleme korunur. Bekleyen kayıt nedeniyle yapıştırma uygulanamazsa artık uyarı gösterilir.",
+        "en": "Because a single click now only selects the cell, Ctrl+V opened the bulk paste preview every time. Pasting into or clearing a single cell is now applied directly, like typing; pasting into several cells still shows the preview. If a paste cannot be applied because of a pending save, a warning is now shown."
+      }
+    }
+  ]
 }
