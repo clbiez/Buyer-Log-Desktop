@@ -164,7 +164,7 @@ function createPlmImageIngest(deps = {}) {
      attachmentAssociationId / paket özeti) kayıttakiyle aynıysa bayt
      indirmeye GEREK YOK.
 
-     İSTİSNA — revalidate (açık yenileme: Tümü/Seçili/tek model): CoreNectum
+     İSTİSNA — revalidate (dar açık yenileme: Seçili / tek model): CoreNectum
      PLM revizyonunda yeni görseli AYNI Attachment adresiyle verebilir; kimlik
      eşitliği "içerik değişmedi" kanıtı değildir. Bu modda bayt indirilir ve
      commit içerik özetini karşılaştırır: aynıysa hiçbir şey yazılmaz. */

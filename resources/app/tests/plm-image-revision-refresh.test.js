@@ -5,8 +5,10 @@
  * Kullanıcı kararı: PLM'de model revize edildiğinde Buyer Log senkronu yeni
  * görseli getirmelidir. CoreNectum revize görseli AYNI Attachment adresiyle
  * verebildiği için kaynak kimliği (URL yolu) tek başına "değişmedi" kanıtı
- * değildir. Açık yenileme ('all' = Tümü/Seçili/tek model) baytları indirip
- * içerik özetiyle karşılaştırır; "Eksikleri tamamla" ('missing') hızlı kalır.
+ * değildir. DAR açık yenileme (Seçili / tek model: mode 'all' + revalidate)
+ * baytları indirip içerik özetiyle karşılaştırır. "Tümünü Yenile" (revalidate
+ * yok) ve "Eksikleri tamamla" kimlik önbelleğiyle hızlı kalır: L2 ölçümünde
+ * tüm koleksiyonu yeniden indirmek +%83 süre / 500 modelde ~73 MB getirdi.
  */
 
 const test = require('node:test');
@@ -61,9 +63,10 @@ function setup() {
   const fake = createFakeStore();
   let content = 'v1';
   const downloads = [];
-  const input = mode => ({
+  const input = (mode, revalidate = mode === 'all') => ({
     requests: [{ plmId: '2123595', colourCode: 'CVL', colour: 'NEW BLACK', imageRole: 'main' }],
     mode,
+    revalidate,
     ingest: fake.ingest,
     imagemap: fake.imagemap,
     store: fake.store(),
@@ -80,7 +83,7 @@ function setup() {
   return { fake, input, downloads, currentBytes, revise: next => { content = next; } };
 }
 
-test('PLM aynı Attachment adresiyle revize görsel verirse Tümü/Seçili yenileme yeni görseli yazar', async () => {
+test('PLM aynı Attachment adresiyle revize görsel verirse Seçili/tek model yenileme yeni görseli yazar', async () => {
   const ctx = setup();
   await service.runPlmImageSync(ctx.input('all'));
   assert.match(ctx.currentBytes(), /v1$/);
@@ -110,4 +113,31 @@ test('Eksikleri tamamla modu mevcut görseli yeniden indirmez', async () => {
   await service.runPlmImageSync(ctx.input('missing'));
   assert.equal(ctx.downloads.length, 1);
   assert.match(ctx.currentBytes(), /v1$/);
+});
+
+test('Tümünü Yenile (revalidate yok) kimlik önbelleğini korur: değişmeyen kimlik yeniden indirilmez', async () => {
+  const ctx = setup();
+  await service.runPlmImageSync(ctx.input('all'));
+  const run = await service.runPlmImageSync(ctx.input('all', false));
+  assert.equal(run.counts.cacheHits, 1);
+  assert.equal(ctx.downloads.length, 1);
+});
+
+test('revalidate yalnız mode=all ile geçerlidir', async () => {
+  const ctx = setup();
+  await service.runPlmImageSync(ctx.input('all'));
+  ctx.revise('v2-revised');
+  await service.runPlmImageSync(ctx.input('missing', true));
+  assert.equal(ctx.downloads.length, 1);
+  assert.match(ctx.currentBytes(), /v1$/);
+});
+
+test('istemci revalidate bayrağını yalnız Seçili ve tek model çağrısında gönderir; sunucu iletir', () => {
+  const root = path.join(__dirname, '..');
+  const main = fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8');
+  const server = fs.readFileSync(path.join(root, 'server', 'server.js'), 'utf8');
+  assert.equal((main.match(/revalidate:mode==='selected'/g) || []).length, 2, 'Koleksiyon ve güncel görünüm görsel adımları');
+  assert.match(main, /mode:'all',revalidate:true,items:\[\{plmId:id/, 'tek model görsel çağırma');
+  assert.doesNotMatch(main, /revalidate:mode!==|revalidate:mode==='all'/, 'Tümünü Yenile revalidate göndermez');
+  assert.match(server, /revalidate: mode==='all' && Boolean\(req\.body && req\.body\.revalidate===true\)/);
 });

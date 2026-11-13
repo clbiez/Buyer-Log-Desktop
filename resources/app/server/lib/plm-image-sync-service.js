@@ -186,6 +186,7 @@ async function runPlmImageSync(input = {}) {
   const checkpoint = input.checkpoint || null;
   const mode = input.mode === 'all' ? 'all' : 'missing';
   const overwriteManual = input.overwriteManual === true;
+  const revalidate = mode === 'all' && input.revalidate === true;
   const isCancelled = typeof input.isCancelled === 'function' ? input.isCancelled : () => false;
   const onProgress = typeof input.onProgress === 'function' ? input.onProgress : () => {};
   const store = input.store;
@@ -304,8 +305,9 @@ async function runPlmImageSync(input = {}) {
       continue;
     }
 
-    // Açık yenileme PLM revizyonunu yakalamak için içeriği yeniden doğrular.
-    const gated = ingest.decideBeforeWrite(item, selection, { store, overwriteManual, revalidate: mode === 'all' });
+    // Dar açık yenileme (Seçili / tek model) PLM revizyonunu yakalamak için
+    // içeriği yeniden doğrular; "Tümünü Yenile" kimlik önbelleğini kullanır.
+    const gated = ingest.decideBeforeWrite(item, selection, { store, overwriteManual, revalidate });
     if (gated.decision === ingestLib.DECISION_CACHED) {
       counts.cacheHits += 1;
       skipped.push(gated);

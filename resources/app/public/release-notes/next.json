@@ -447,8 +447,8 @@
         }
       },
       "body": {
-        "tr": "Tüm/Seçili model yenileme ve tek model görsel çağırma, PLM görseli aynı adreste kalsa bile içeriği yeniden kontrol eder; görsel değiştiyse eskisinin yerine yazılır, değişmediyse hiçbir şey yazılmaz. Görseli silip yeniden senkronlamak gerekmez. Eksikleri tamamla modu hızlı kalır; elle konan görseller korunur.",
-        "en": "Refreshing all/selected models and fetching a single model image now re-check the PLM image content even when its address is unchanged; a changed image replaces the old one and an unchanged one writes nothing. Deleting the image and syncing again is no longer needed. Fetch-missing mode stays fast and manually set images are preserved."
+        "tr": "Seçili Modelleri Yenile ve satırdan tek model görsel çağırma, PLM görseli aynı adreste kalsa bile içeriği yeniden kontrol eder; görsel değiştiyse eskisinin yerine yazılır, değişmediyse hiçbir şey yazılmaz. Revize modelleri seçip yenilemek yeterli; görseli silip yeniden senkronlamak gerekmez. Tümünü Yenile ve Eksikleri tamamla hızlı kalır; elle konan görseller korunur.",
+        "en": "Refresh Selected Models and fetching a single model image from a row now re-check the PLM image content even when its address is unchanged; a changed image replaces the old one and an unchanged one writes nothing. Selecting and refreshing revised models is enough; deleting the image and syncing again is no longer needed. Refresh All and Fetch Missing stay fast and manually set images are preserved."
       }
     }
   ]
