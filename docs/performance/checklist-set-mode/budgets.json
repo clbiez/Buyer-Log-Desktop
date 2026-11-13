@@ -1,6 +1,6 @@
 {
-  "baseSha": "b9dd246e",
-  "sourceBeforeAcceptanceSha": null,
+  "baseSha": "390bff627d38cf4c8a57cf43b04e5974a2490b3d",
+  "sourceBeforeAcceptanceSha": "1c55d8404c5c47fcaeb30c995490a5a3b2dc8b19",
   "scenario": "Real Chromium Buyer Log CP; deterministic seed 7; 40 and 400 source rows; 5 order-scoped part status/evidence edits plus CP/Orders revisits",
   "budgets": {
     "existingFlows": "No repeatable regression against paired Main; investigate noise using baseline A/A samples",
