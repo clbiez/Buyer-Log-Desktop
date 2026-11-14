@@ -5874,6 +5874,17 @@ function intakeErrorResponse(err) {
   }
   return { status: Number(err && err.statusCode) >= 500 ? Number(err.statusCode) : 502, code: 'INTAKE_SOURCE_UNAVAILABLE', message: intakeSafeSourceMessage() };
 }
+/* Canlı kaynak hatası snapshot'a düşerken gerçek neden yutulmasın: DNS/VPN,
+   katalog adı ve DAX hatası ancak bu kayıtla birbirinden ayrılabilir. */
+function intakeSourceFailure(route, err) {
+  const code = String(err && err.code || 'UNKNOWN');
+  const detail = redactSecrets(String(err && err.message || err || '')).replace(/\s+/g, ' ').trim().slice(0, 500);
+  let connection = null;
+  try { connection = intakeConnection(); } catch (_) { connection = null; }
+  const source = connection ? ` source=${connection.server} / ${connection.catalog}` : '';
+  console.error(`[${new Date().toISOString()}] [INTAKE] ${route} failed code=${code}${source} error=${detail}`);
+  return { code, detail };
+}
 function intakeFieldToken(field) {
   // WAVG ağırlığı sorguya ek measure olarak girer; anahtarda olmazsa eski
   // önbellek ağırlık sütunu olmadan dönerdi.
@@ -6019,12 +6030,13 @@ app.get('/api/intake/metadata', userAccess.requireAnyArea('overview'), userAcces
       provider: found.schema.provider || '', schemaErrors: found.schema.errors || [], offline: false,
     });
   } catch (err) {
+    const sourceError = intakeSourceFailure('metadata', err);
     const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
     if (snapshot && snapshot.fields.length) {
-      return res.json({ ...intakeStateResponse(req, snapshot, snapshot.fields, true, intakeSafeSourceMessage()), source: 'snapshot' });
+      return res.json({ ...intakeStateResponse(req, snapshot, snapshot.fields, true, intakeSafeSourceMessage()), source: 'snapshot', sourceError });
     }
     const failure = intakeErrorResponse(err);
-    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: true });
+    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: true, sourceError });
   }
 });
 app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '64kb' }), async (req, res) => {
@@ -6060,8 +6072,9 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
       .sort(BLBusinessRules.compareChronologicalValues);
     res.json({ ok: true, fieldId: field.id, values, valueType, provider: result.provider || '', fromCache: false });
   } catch (err) {
+    const sourceError = intakeSourceFailure('distinct', err);
     const failure = intakeErrorResponse(err);
-    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE' });
+    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
 app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
@@ -6096,14 +6109,15 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
     res.json({ ok: true, rows, fields: found.fields, viewConfig: built.viewConfig, queryKey, fromCache: false, offline: false, fetchedAt: record.fetchedAt, provider: result.provider || '', rowLimit: built.maxRows, truncated: rows.length >= built.maxRows });
   } catch (err) {
     const code = String(err && err.code || '');
+    const sourceError = intakeSourceFailure('report', err);
     if (previous && Array.isArray(previous.rows) && INTAKE_RECOVERABLE_ERRORS.has(code)) {
       const fallback = intakeStateResponse(req, previous, previous.fields, true, intakeSafeSourceMessage());
       // İstemci tabloyu `rows` ile çizer; snapshot satırları üst düzeyde de verilir,
       // yoksa bağlantı kesintisinde tablo boşalıyordu.
-      return res.json({ ...fallback, rows: fallback.snapshot.rows, fetchedAt: previous.fetchedAt, source: 'snapshot', fromCache: true });
+      return res.json({ ...fallback, rows: fallback.snapshot.rows, fetchedAt: previous.fetchedAt, source: 'snapshot', fromCache: true, sourceError });
     }
     const failure = intakeErrorResponse(err);
-    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE' });
+    res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
 

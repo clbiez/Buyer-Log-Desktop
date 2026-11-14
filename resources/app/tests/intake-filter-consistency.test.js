@@ -67,7 +67,7 @@ test('sunucu önbellek anahtarı değersiz filtreleri ve değer sırasını yok 
 
 test('canlı kaynak kesintisinde rapor yanıtı snapshot satırlarını üst düzeyde döndürür', () => {
   // Satırlar güncel görünüm id'lerine yeniden eşlenmiş snapshot'tan gelir (v7.191).
-  assert.match(server, /return res\.json\(\{ \.\.\.fallback, rows: fallback\.snapshot\.rows, fetchedAt: previous\.fetchedAt, source: 'snapshot', fromCache: true \}\);/);
+  assert.match(server, /return res\.json\(\{ \.\.\.fallback, rows: fallback\.snapshot\.rows, fetchedAt: previous\.fetchedAt, source: 'snapshot', fromCache: true, sourceError \}\);/);
   assert.match(server, /rows: intakeReport\.remapRows\(snapshot\.rows, snapshot\.viewConfig, viewConfig\)/);
   const run = fnBody(ui, 'runReport');
   assert.match(run, /result\.snapshot && Array\.isArray\(result\.snapshot\.rows\)/);

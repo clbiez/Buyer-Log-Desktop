@@ -236,6 +236,35 @@
         "tr": "CP verisi okunurken bir düzenleme kaydı veya senkron aynı anda veriyi değiştirirse okuma reddediliyor ve CP ekranı \"Hazır ekran önbelleği okunamadı\" hatasıyla boş kalıyordu. Okuma artık güncel veriyle otomatik yeniden denenir; arka plan yenilemesi yine de başarısız olursa açık CP tablosu ve kaydedilmemiş değişiklikler yerinde kalır.",
         "en": "If an edit save or a sync changed the data while CP was being read, the read was rejected and the CP screen stayed empty with \"The prepared screen cache could not be read\". The read is now retried automatically with the current data; if a background refresh still fails, the open CP table and unsaved changes stay in place."
       }
+    },
+    {
+      "id": "intake-source-error-detail",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE canlı kaynağa ulaşamadığında gerçek neden gösterilir",
+        "en": "INTAKE shows the real reason when the live source cannot be reached"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-source-error-detail.png",
+        "alt": {
+          "tr": "INTAKE tablosunun üstündeki uyarıda son snapshot bilgisine ek olarak kaynak hatasının ayrıntısı görünüyor",
+          "en": "The warning above the INTAKE table shows the source error detail next to the last snapshot notice"
+        },
+        "caption": {
+          "tr": "Uyarı artık bağlantı, model adı veya sorgu hatasını ayrıntısıyla gösterir.",
+          "en": "The warning now shows the connection, model name or query error in detail."
+        }
+      },
+      "body": {
+        "tr": "Canlı INTAKE modeli okunamadığında son snapshot gösteriliyor ama hatanın nedeni hiçbir yere yazılmıyordu; ağ/VPN sorunu, model adı değişikliği ve sorgu hatası birbirinden ayrılamıyordu. Uyarı artık ayrıntıyı içerir ve hata sunucu günlüğüne kaynak adıyla kaydedilir.",
+        "en": "When the live INTAKE model could not be read, the last snapshot was shown but the cause was not recorded anywhere, so network/VPN problems, a renamed model and query errors could not be told apart. The warning now includes the detail and the error is written to the server log with the source name."
+      }
     }
   ]
 }

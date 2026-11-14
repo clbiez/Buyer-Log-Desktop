@@ -1027,7 +1027,10 @@
     state.offline = Boolean(result.offline);
     state.fetchedAt = result.fetchedAt || (result.snapshot && result.snapshot.fetchedAt) || state.fetchedAt;
     state.error = '';
-    setStatus(result.offline ? text('Canlı kaynak kullanılamıyor; son başarılı INTAKE snapshot gösteriliyor. Seçili filtreler bu veriye uygulanmamış olabilir.', 'Live source is unavailable; showing the last successful INTAKE snapshot. The selected filters may not be applied to this data.') : (result.truncated ? text(`Özet görünüm ilk ${(result.rowLimit||state.rows.length).toLocaleString('tr-TR')} satırla sınırlandı. Filtre ekleyerek daraltın.`, `The aggregate view is limited to the first ${(result.rowLimit||state.rows.length).toLocaleString('en-GB')} rows. Narrow it with filters.`) : ''), result.offline || result.truncated ? 'warning' : 'ok');
+    // Gerçek kaynak hatası (DNS/VPN, katalog, DAX) gösterilmezse kullanıcı ve
+    // destek kesintinin nedenini ayıramaz.
+    const sourceDetail = result.offline && result.sourceError && result.sourceError.detail ? ` ${text('Ayrıntı', 'Detail')}: ${result.sourceError.detail}` : '';
+    setStatus(result.offline ? text('Canlı kaynak kullanılamıyor; son başarılı INTAKE snapshot gösteriliyor. Seçili filtreler bu veriye uygulanmamış olabilir.', 'Live source is unavailable; showing the last successful INTAKE snapshot. The selected filters may not be applied to this data.') + sourceDetail : (result.truncated ? text(`Özet görünüm ilk ${(result.rowLimit||state.rows.length).toLocaleString('tr-TR')} satırla sınırlandı. Filtre ekleyerek daraltın.`, `The aggregate view is limited to the first ${(result.rowLimit||state.rows.length).toLocaleString('en-GB')} rows. Narrow it with filters.`) : ''), result.offline || result.truncated ? 'warning' : 'ok');
   }
 
   /* Yükleme sürerken gelen yenileme istekleri düşürülmez: sıraya alınır ve
