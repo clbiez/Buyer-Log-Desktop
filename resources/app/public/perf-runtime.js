@@ -267,6 +267,11 @@
       return box;
     }catch(_){return null;}
   }
+  /* Arka plan zincirinde düşmesi diğer dosyaları engellememesi gereken
+     dosyalar. LCW AI istemcisi deferredUi'nin başındadır; tek başına
+     yüklenemezse (ör. 30 sn zaman aşımı) zincirin tamamı kesilip ham dosya adıyla
+     uyarı gösteriliyordu. AI paneli açan modüller istemciyi zaten kendileri ister. */
+  const optionalFeatureFiles={deferredUi:new Set(['lcwai-assistant.js?rev=1'])};
   async function ensureFeature(name){
     const files=features[name];if(!files)throw new Error((uiEn()?'Unknown feature module: ':'Bilinmeyen özellik modülü: ')+name);
     const key='feature:'+name;
@@ -286,7 +291,16 @@
         try{
           await Promise.all((featureStyles[name]||[]).map(loadStyle));
           if(!codeReady){
-            for(const file of files)await loadScriptWithRetry(file);
+            for(const file of files){
+              try{await loadScriptWithRetry(file);}
+              catch(error){
+                // İsteğe bağlı dosya düşerse zincirin geri kalanı (kullanıcı
+                // erişimi, sağ tık menüsü, kur…) yine yüklenir; o dosyayı
+                // gerçekten kullanan modül onu kendi _loadScript çağrısıyla ister.
+                if(!optionalFeatureFiles[name]?.has(file))throw error;
+                console.warn('İsteğe bağlı modül yüklenemedi:',file,error);
+              }
+            }
           }
           loadedFeatures.add(name);
         }finally{
