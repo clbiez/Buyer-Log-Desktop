@@ -23393,7 +23393,10 @@ function kolCaptureBaseline(){
 function kolRowEqual(a,b){
   if(a===b)return true;
   if(!a||!b)return false;
-  const keysA=Object.keys(a).filter(k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl'),keysB=Object.keys(b).filter(k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl');
+  // kolPersistableRow'un temelden sildiği sunucu görsel projeksiyonları da yok sayılır;
+  // aksi halde PLM görselli her satır kalıcı olarak "değişmiş" görünür.
+  const ignored=k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl'&&k!=='_serverPlmImageUrl';
+  const keysA=Object.keys(a).filter(ignored),keysB=Object.keys(b).filter(ignored);
   if(keysA.length!==keysB.length)return false;
   for(const key of keysA){
     const left=a[key],right=b[key];

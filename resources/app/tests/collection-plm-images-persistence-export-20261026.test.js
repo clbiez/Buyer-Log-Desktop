@@ -86,3 +86,22 @@ test('Collection server rehydrates ONLY accessible workspace row assets and stri
   assert.equal(persisted(result.rows[0])._serverPlmImageUrl, undefined);
   assert.equal(persisted(result.rows[0])._sharedCollectionImageUrl, undefined);
 });
+
+test('server image projections never make a saved row look dirty (baseline vs live row)', () => {
+  // Regression: baseline rows are stored through kolPersistableRow (projections
+  // stripped) while live rows keep _serverPlmImageUrl. If kolRowEqual does not
+  // ignore every stripped projection, each PLM-image row stays "changed" forever,
+  // every save re-sends it and the Collection bulk paste preview refuses to start.
+  const fns = new Function(
+    functionSource(APP, 'kolPersistableRow') + '\n' +
+    functionSource(APP, 'kolRowEqual') + '\n' +
+    functionSource(APP, 'kolValueEqual') +
+    '\nreturn { kolPersistableRow, kolRowEqual };')();
+  const live = { id: 7, season: 'S7', _rev: 3,
+    _serverPlmImageUrl: '/api/collection-images/ci_plm',
+    _sharedCollectionImageUrl: '/api/collection-images/ci_shared' };
+  const baseline = fns.kolPersistableRow(live);
+  assert.equal(fns.kolRowEqual(baseline, live), true);
+  assert.equal(fns.kolRowEqual(live, baseline), true);
+  assert.equal(fns.kolRowEqual(baseline, { ...live, season: 'W7' }), false);
+});
