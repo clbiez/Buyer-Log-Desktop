@@ -126,6 +126,35 @@
         "tr": "LCW AI istemcisi açılıştan sonra arka planda yüklenemediğinde (ör. sunucu geçici olarak meşgulken) diğer yardımcı modüllerin yüklenmesi de duruyor ve CP/Siparişler ekranında 'lcwai-assistant.js?rev=1 yüklenemedi' uyarısı çıkıyordu. Artık bu dosya düşse de kullanıcı erişimi, sağ tık menüsü ve kur gibi modüller yüklenir; AI paneli istemciyi açıldığında yeniden ister. Zorunlu bir modül yüklenemezse dosya adı yerine anlaşılır bir mesaj gösterilir.",
         "en": "When the LCW AI client failed to load in the background after startup (e.g. while the server was briefly busy), loading of the other helper modules stopped too and CP/Orders showed 'lcwai-assistant.js?rev=1 could not be loaded'. Now modules such as user access, the context menu and FX still load if that file fails; the AI panel requests the client again when opened. If a required module cannot be loaded, a clear message is shown instead of a file name."
       }
+    },
+    {
+      "id": "orders-image-preview-closes-on-scroll",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Model görseli önizlemesi kaydırınca kapanır",
+        "en": "Model image preview closes when you scroll"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-image-preview-closes-on-scroll.png",
+        "alt": {
+          "tr": "Siparişler tablosu fare görsel sütunundayken aşağı kaydırılmış; büyük görsel önizlemesi açık kalmamış",
+          "en": "The Orders table scrolled down with the pointer on the picture column; no large image preview is left open"
+        },
+        "caption": {
+          "tr": "Kaydırma sonrası önceki modelin büyük görseli ekranda kalmaz.",
+          "en": "After scrolling, the previous model's large image no longer stays on screen."
+        }
+      },
+      "body": {
+        "tr": "Fare model görselinin üzerindeyken tablo kaydırıldığında veya yeniden çizildiğinde son görselin büyük önizlemesi açık kalıyordu. Önizleme artık kaydırmada, imleç görselden çıktığında ya da görsel tablodan kalktığında kapanır; bekleyen önizleme de kaydırmadan sonra açılmaz. Düzeltme ortak önizlemeyi kullanan tüm tablolarda geçerlidir.",
+        "en": "When the table was scrolled or redrawn while the pointer was over a model image, the large preview of the last image stayed open. The preview now closes on scroll, when the pointer leaves the image, or when the image is removed from the table, and a pending preview no longer opens after scrolling. The fix applies to every table that uses the shared preview."
+      }
     }
   ]
 }
