@@ -68,6 +68,35 @@
         "tr": "Koleksiyon tablosunda sürükleyerek, Shift veya Ctrl ile seçilen hücreler yalnız zemin rengiyle gösteriliyordu ve işaretli satırların üzerinde neredeyse görünmüyordu. Seçim artık CP Tracker ve Siparişler ile aynı ortak stili kullanır: alanın çevresine tek bir dış çerçeve çizilir, zemin işaretli satır renginden ayrıdır ve aktif hücre kalın mavi çerçeveyle belirtilir.",
         "en": "In the Collection table, cells selected by dragging, Shift or Ctrl were shown only with a background tint and were almost invisible over checked rows. The selection now uses the same shared style as CP Tracker and Orders: one outer outline is drawn around the area, its background differs from the checked-row colour and the active cell has a bold blue frame."
       }
+    },
+    {
+      "id": "lfl-borders-compact-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL kartları çerçeveli, filtre çubuğu kompakt",
+        "en": "Framed LFL cards and a compact filter bar"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-borders-compact-filters.png",
+        "alt": {
+          "tr": "LFL analiz koşulları kartı ve KPI kartları ince çerçeveyle; dönem seçimi tek birleşik kontrol, boyut filtreleri eşit yükseklikte kompakt düğmeler",
+          "en": "LFL analysis conditions card and KPI cards with a thin frame; the period picker is one combined control and dimension filters are compact, equal-height buttons"
+        },
+        "caption": {
+          "tr": "Tarih alanı ve ay seçimi tek kutuda birleşir; dönem filtreleri boyut filtrelerinden ince bir ayraçla ayrılır.",
+          "en": "The date field and month picker form one box; period filters are separated from dimension filters by a thin divider."
+        }
+      },
+      "body": {
+        "tr": "LFL sayfasındaki tüm kartlar, karşılaştırma senaryoları ve eylem düğmeleri ortak ince çerçeveyi kullanır. Üstteki filtre çubuğunda düğmeler aynı yükseklikte ve daha sıkı aralıklıdır; tarih alanı seçimi ay seçimiyle tek kontrolde birleşti.",
+        "en": "All cards, comparison scenarios and action buttons on the LFL page now use the shared thin frame. In the filter bar at the top, buttons have the same height and tighter spacing; the date field picker is merged with the month picker into one control."
+      }
     }
   ]
 }

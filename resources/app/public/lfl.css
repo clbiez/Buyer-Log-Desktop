@@ -651,3 +651,19 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 
 /* Page-section visibility must not hide the nested scenario form sections. */
 .lflScenarioPeriodBlock,.lflScenarioFilterEditor{display:block;}
+
+/* 7.0.356 — Kompakt filtre çubuğu: tüm tetikleyiciler tek yükseklikte, dönem
+   seçimi (tarih alanı + ay) tek birleşik kontrol, dönem grubu boyut
+   filtrelerinden ince bir ayraçla ayrılır. Görünüm ui-components.css'tedir. */
+#view-lfl .lflFacetBar{gap:6px;margin-top:12px;padding-top:12px;}
+#view-lfl .lflFacetBar .lflDimBtn,
+#view-lfl .lflFacetBar .lflPeriodDimWrap .lflDateFieldSelect{height:calc(var(--ui-control-height,34px) - 4px);}
+#view-lfl .lflFacetBar .lflDimBtn{max-width:210px;padding:0 8px;gap:5px;}
+#view-lfl .lflFacetBar .lflDimBtn>.ic:first-child{width:12px;height:12px;}
+#view-lfl .lflFacetBar .lflDimChevron{width:10px;height:10px;margin-left:2px;}
+#view-lfl .lflPeriodDimWrap .lflDateFieldSelect{min-width:0;max-width:100px;padding:0 20px 0 8px;}
+#view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap){margin-left:7px;}
+#view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap)::before{content:"";position:absolute;left:-7px;top:4px;bottom:4px;width:1px;}
+#view-lfl .lflFilterActions{margin-top:12px;padding-top:10px;}
+#view-lfl .lflFilterActions .lflButton{height:calc(var(--ui-control-height,34px) - 4px);padding:0 10px;}
+@media(max-width:980px){#view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap){margin-left:0;}#view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap)::before{content:none;}}
