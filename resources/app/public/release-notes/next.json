@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-13",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Koleksiyon tablo seçimi ve yapıştırma",
-    "en": "Collection table selection and paste"
+    "tr": "Tablolarda hücre seçimi, düzenleme ve yapıştırma",
+    "en": "Cell selection, editing and paste in tables"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda tek hücreye Ctrl+V doğrudan yapıştırır; hücre aralığı seçimi CP Tracker'daki gibi kenarlıkla ve işaretli satırlardan ayrı renkte görünür.",
-    "en": "In the Collection table, Ctrl+V pastes directly into a single cell; a cell-range selection now shows an outline like CP Tracker, in a colour distinct from checked rows."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border."
   },
   "changes": [
     {
@@ -67,6 +67,35 @@
       "body": {
         "tr": "Koleksiyon tablosunda sürükleyerek, Shift veya Ctrl ile seçilen hücreler yalnız zemin rengiyle gösteriliyordu ve işaretli satırların üzerinde neredeyse görünmüyordu. Seçim artık CP Tracker ve Siparişler ile aynı ortak stili kullanır: alanın çevresine tek bir dış çerçeve çizilir, zemin işaretli satır renginden ayrıdır ve aktif hücre kalın mavi çerçeveyle belirtilir.",
         "en": "In the Collection table, cells selected by dragging, Shift or Ctrl were shown only with a background tint and were almost invisible over checked rows. The selection now uses the same shared style as CP Tracker and Orders: one outer outline is drawn around the area, its background differs from the checked-row colour and the active cell has a bold blue frame."
+      }
+    },
+    {
+      "id": "cp-orders-double-click-edit",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Hücre düzenleme çift tıkla açılır, klavyeyle doğrudan düzenlenir",
+        "en": "Cell editing opens with a double click, keyboard moves edit directly"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-double-click-edit.png",
+        "alt": {
+          "tr": "CP Tracker tablosunda iki satır ve iki sütunluk hücre aralığı tek tıkla sürüklenerek seçilmiş, araç çubuğunda 2×2 · 4 hücre yazıyor",
+          "en": "In the CP Tracker table a two-row, two-column cell range is selected by dragging, and the toolbar shows 2×2 · 4 cells"
+        },
+        "caption": {
+          "tr": "Tek tık hücreyi seçer ve düzenlenebilir hücreler üzerinde de sürükleyerek aralık seçilir; çift tık düzenlemeyi açar.",
+          "en": "A single click selects the cell and ranges can be dragged across editable cells too; a double click opens editing."
+        }
+      },
+      "body": {
+        "tr": "Tek tık artık hücreyi seçer; düzenleme Koleksiyon'daki gibi çift tıkla açılır. Del. Type, önem, checklist, tarih ve not hücreleri de ilk tıkta değil çift tıkla açılır. Ok, Tab ve Enter ile varılan düzenlenebilir hücre doğrudan düzenleme modunda açılır; seçili hücrede yazmaya başlamak ya da F2 de düzenlemeyi açar, Esc değişikliği geri alır. Çoklu hücre kopyala-yapıştır aynen çalışır; Shift+ok aralığı genişletir, tek hücreye tek değer önizlemesiz yapıştırılır. Düzenleme sırasında açılan takvim, öneri listesi ve seçim menüleri artık başka bir yere tıklayınca kapanır.",
+        "en": "A single click now selects the cell; editing opens with a double click, as in Collection. Del. Type, importance, checklist, date and note cells also open on a double click instead of the first click. An editable cell reached with the arrow keys, Tab or Enter opens directly in edit mode; typing in a selected cell or F2 also starts editing, and Esc reverts the change. Multi-cell copy-paste works as before; Shift+arrow extends the range and a single value pastes into a single cell without a preview. The calendar, suggestion list and choice menus opened while editing now close when you click elsewhere."
       }
     }
   ]
