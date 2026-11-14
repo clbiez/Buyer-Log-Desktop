@@ -106,6 +106,18 @@ test('Line component rules are scoped to the style and add no frames, shadows or
   }
   assert.match(section, /\.blLineFrame \{position:fixed;overflow:visible;pointer-events:none;z-index:var\(--ui-z-tooltip\)/);
   assert.match(section, /nav\.tabs button\.active > span\[data-i18n-tr\]::after \{content:"";[^}]*background:var\(--ui-line-ink\)/);
+  // Work-area surfaces drop their frame only by scoping the shared token; controls inside keep ink.
+  assert.match(section, /:is\(\.panel,\.cardBox,\.sourcebar,\.tablewrap,\.cpaFrame,\.cpaCard\) \*,[^{]*\{--ui-group-divider:var\(--ui-line-ink\)/);
+  assert.match(section, /:is\(\.panel,\.cardBox,\.sourcebar,\.tablewrap,\.cpaFrame,\.cpaCard\),[^{]*\{--ui-group-divider:transparent/);
+  assert.doesNotMatch(section, /modalCard|blvFilterDrawer|bpaDrawer|blDetailDrawerPanel/, 'dialogs and drawers stay framed');
+  // Ratio tracks: 1px baseline + 3px fill; connection state as lines; inverted selection bar.
+  assert.match(section, /:is\(\.ovBdTrack,\.ovHorizonTrack,\.cpaCoverageTrack\)::before \{content:"";[^}]*height:1px;background:var\(--ui-row-divider\)/);
+  assert.match(section, /\.corporateConnectionDots i\[data-state="connected"\] \{background:var\(--ui-line-ink\)/);
+  assert.match(section, /\.blSelectionBar \{--ui-surface:var\(--ui-line-ink\);[^}]*--ui-text:var\(--ui-line-paper\);[^}]*--ui-accent:var\(--ui-line-paper\);/);
+  // Clock chip face exists in the DOM but is shown only in Line style.
+  assert.match(read('overview-home.css'), /\.ovClockChipFace\{position:relative;display:none;/);
+  assert.match(section, /\.ovClockChipFace \{display:inline-block/);
+  assert.match(read('overview-launchpad.js'), /<span class="ovClockChipFace" aria-hidden="true">.*data-clock-hand="hour".*data-clock-hand="minute"/);
 });
 
 function motionHarness(style) {

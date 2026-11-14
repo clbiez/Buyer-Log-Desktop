@@ -16020,3 +16020,21 @@ html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipHand {backgrou
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .cpaOverviewMetric {--ui-group-divider:transparent
 }
+/* Çizgi stili kabuk: üst çubuk eylemleri çerçevesiz; bağlantı durumu nokta yerine 14px
+   çizgi (bağlı = mürekkep, kuruluyor = uyarı, bağlı değil = kırmızı; metin/aria aynı).
+   Seçim çubuğu mürekkep zeminli: çubuğun içinde token'lar tersine çevrilir, düğmeler
+   ve odak halkası aynı ortak kurallardan renk alır. */
+html[data-ui-system="manifest"][data-ui-style="line"] .appTop :is(.iconbtn,.navActionBtn) {--ui-group-divider:transparent;background:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .appTop :is(.iconbtn,.navActionBtn):hover {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots {gap:5px;align-items:center
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i {width:14px;height:2px;background:var(--ui-line-mark)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i[data-state="connected"] {background:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i[data-state="connecting"] {background:var(--ui-warning)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .blSelectionBar {--ui-surface:var(--ui-line-ink);--ui-surface-soft:var(--ui-line-ink);--ui-surface-strong:var(--ui-line-ink-hover);--ui-row-hover:var(--ui-line-ink-hover);--ui-selected:var(--ui-line-ink-hover);--ui-text:var(--ui-line-paper);--ui-text-secondary:var(--ui-line-paper);--ui-text-muted:var(--ui-line-paper);--ui-selected-ink:var(--ui-line-paper);--ui-accent:var(--ui-line-paper);--ui-on-accent:var(--ui-line-ink);--ui-group-divider:transparent;--ui-row-divider:var(--ui-line-ink-hover)
+}
