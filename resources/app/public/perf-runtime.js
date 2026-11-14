@@ -252,6 +252,21 @@
     if(name==='cpAssistant'&&global.BLCpAssistant&&typeof global.BLCpAssistant.computeDecisionsForRows==='function')return true;
     return false;
   }
+  const FEATURE_LOADER_DELAY_MS=300;
+  function mountFeatureLoader(view){
+    // Görsel yardımcıdır: başarısız olursa modül yüklemesini asla bozmaz.
+    try{
+      // Yalnız ekranda olan bölüm: aynı grubun gizli modüllerine kutu/orb eklenmez.
+      if(!view||typeof view.prepend!=='function'||!view.getClientRects?.().length||view.querySelector(':scope > .blFeatureLoading'))return null;
+      const box=document.createElement('div');box.className='blFeatureLoading';
+      const title=uiEn()?'Preparing the screen…':'Ekran hazırlanıyor…';
+      // Genel kültür kartını açılış perdesiyle yüklenen BLTrivia izleyicisi ekler.
+      if(global.BLUI&&typeof global.BLUI.renderState==='function')global.BLUI.renderState(box,{kind:'loading',title});
+      else box.innerHTML='<div class="uiState uiState--loading" role="status" aria-live="polite" aria-busy="true"><div class="uiStateBody"><b>'+title+'</b></div></div>';
+      view.prepend(box);
+      return box;
+    }catch(_){return null;}
+  }
   /* Arka plan zincirinde düşmesi diğer dosyaları engellememesi gereken
      dosyalar. LCW AI istemcisi deferredUi'nin başındadır; tek başına
      yüklenemezse (ör. 30 sn zaman aşımı) zincirin tamamı kesilip ham dosya adıyla
@@ -267,6 +282,9 @@
       // indiriliyordu; 18 dosyalık grup açılış perdesini ~1 sn uzatıyordu.
       const views=featureViews[name]?[...document.querySelectorAll(featureViews[name])]:[];
       views.forEach(view=>view.setAttribute('data-bl-styles-loading',''));
+      // Gizli bölüm boş görünmesin: yükleme uzarsa ortak yükleme kutusu (sonra genel kültür kartı)
+      // gösterilir. Gecikme, hızlı açılışların kutu/orb maliyetini hiç ödememesi içindir.
+      let loaders=[];const loaderTimer=views.length?setTimeout(()=>{loaders=views.map(mountFeatureLoader);},FEATURE_LOADER_DELAY_MS):0;
       const codeReady=featureCodeReady(name);
       if(!codeReady)preloadScripts(files);
       pending.set(key,(async()=>{
@@ -286,7 +304,7 @@
           }
           loadedFeatures.add(name);
         }finally{
-          views.forEach(view=>view.removeAttribute('data-bl-styles-loading'));
+          clearTimeout(loaderTimer);views.forEach(view=>view.removeAttribute('data-bl-styles-loading'));loaders.forEach(box=>box?.remove());
         }
       })().finally(()=>pending.delete(key)));
     }

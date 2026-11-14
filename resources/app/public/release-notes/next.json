@@ -7,8 +7,8 @@
     "en": "Cell selection, editing and paste in tables"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen."
   },
   "changes": [
     {
@@ -183,6 +183,35 @@
       "body": {
         "tr": "LFL sayfasındaki tüm kartlar, karşılaştırma senaryoları ve eylem düğmeleri ortak ince çerçeveyi kullanır. Üstteki filtre çubuğunda düğmeler aynı yükseklikte ve daha sıkı aralıklıdır; tarih alanı seçimi ay seçimiyle tek kontrolde birleşti.",
         "en": "All cards, comparison scenarios and action buttons on the LFL page now use the shared thin frame. In the filter bar at the top, buttons have the same height and tighter spacing; the date field picker is merged with the month picker into one control."
+      }
+    },
+    {
+      "id": "collection-loading-trivia",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon yüklenirken yarım boş ekran yerine genel kültür kartı",
+        "en": "A trivia card instead of a half-empty screen while Collection loads"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-loading-trivia-20261114.png",
+        "alt": {
+          "tr": "Koleksiyon ekranı hazırlanırken \"Ekran hazırlanıyor\" kutusu ve altında Biliyor muydunuz genel kültür kartı görünüyor",
+          "en": "While the Collection screen is being prepared, a \"Preparing the screen\" box with a Did you know trivia card below it is shown"
+        },
+        "caption": {
+          "tr": "Modül hazırlanırken artık yalnız grup başlıkları görünmez; bekleme uzarsa genel kültür kartı açılır.",
+          "en": "While the module is being prepared, only group headings no longer show; if the wait is long a trivia card opens."
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon ilk açılırken ekran bileşenleri yüklenene kadar sayfada yalnız MARKA/MODEL DETAYLARI başlıkları kalıyor, geri kalan alan boş görünüyordu. Artık bu sürede ortak yükleme kutusu gösterilir; bekleme uzarsa genel kültür kartı eklenir. Aynı düzeltme yükleme sırasında gizlenen diğer modül ekranlarında da geçerlidir.",
+        "en": "When Collection first opened, only the BRAND/MODEL DETAILS headings stayed on the page until the screen components loaded, and the rest looked empty. A shared loading box is now shown during this time, with a trivia card added if the wait is long. The same fix applies to other module screens hidden while loading."
       }
     },
     {

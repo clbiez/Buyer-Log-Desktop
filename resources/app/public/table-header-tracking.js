@@ -32,7 +32,8 @@
       }
       const frozen=th.classList.contains('frzL');
       const result=computeTrack(th.getBoundingClientRect(),frozen?frozenView:viewport,freezeRight,frozen);
-      label.style.visibility=result.visible?'visible':'hidden';
+      // 'visible' yazılmaz: gizli bir ata (ör. modül yüklenirken bölüm) etiketi de gizlemeli.
+      label.style.visibility=result.visible?'':'hidden';
       if(result.visible){
         label.style.maxWidth=result.maxWidth+'px';
         label.style.transform='translate3d('+result.dx+'px,0,0)';
