@@ -3753,6 +3753,8 @@ button.ovNoteCount{cursor:pointer;}
 
 /* A newly activated module waits for its stylesheet before its first paint. */
 [data-bl-styles-loading]{visibility:hidden!important}
+/* While hidden, the module shows the shared loading state (trivia card after a short wait). */
+[data-bl-styles-loading]>.blFeatureLoading{visibility:visible!important;display:flex;justify-content:center;padding:var(--ui-space-6) var(--ui-space-4);}
 
 .backlogColSource{display:block;white-space:normal;overflow-wrap:anywhere;margin-top:var(--ui-space-1);}
 .backlogColRowLabel input{width:100%;min-width:0;box-sizing:border-box;padding:var(--ui-space-1);}
