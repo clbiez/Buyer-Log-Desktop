@@ -18,7 +18,7 @@ test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır',
   assert.doesNotMatch(html, /id="intakeConnectionBtn"/, 'Veritabanı bağlantısı düğmesi INTAKE başlığında görünmemeli');
   assert.match(app, /ensureOverviewIntakeModule/);
   assert.match(app, /loader\('intake\.js\?rev=[A-Za-z0-9._-]+'\)/);
-  assert.match(app, /catalog:'WSSI Intake Raporu4', role:'intake'/);
+  assert.match(app, /catalog:'WSSI_Intake_Raporu4', role:'intake'/);
   assert.match(app, /BL_GET_OVERVIEW_FILTERS/);
   assert.match(app, /BLINTAKE\?\.onOverviewFiltersChanged/);
   assert.match(ui, /metadataPromise: null/);

@@ -12630,7 +12630,7 @@ function renderMatchAudit(a,en){
 const MODEL_CONNECTION_PRESETS=[
   {name:'ASAS', server:'lcwtabular_s30', catalog:'ASAS_30', role:'asas', refreshEnabled:true},
   {name:'IAS',  server:'lcwtabular_p32', catalog:'IASv2', role:'antrepo', refreshEnabled:true},
-  {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI Intake Raporu4', role:'intake', refreshEnabled:true},
+  {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI_Intake_Raporu4', role:'intake', refreshEnabled:true},
 ];
 const MODEL_CONNECTION_DEFAULT_SEASONS=Object.freeze(['W6','W7','S6','S7']);
 const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake']};

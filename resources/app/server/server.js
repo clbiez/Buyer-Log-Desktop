@@ -5829,7 +5829,7 @@ require('./routes/oab-batch-routes')(app, {
   userAccess,
 });
 /* ===================================================================
-   INTAKE — WSSI Intake Raporu4 / Model.
+   INTAKE — WSSI_Intake_Raporu4 / Model.
 
    OAB ile aynı Overview yetki sınırını ve mevcut ModelQuery/MSOLAP yolunu
    kullanır. Raporun veri cache'i intake-store'da, kullanıcı görünümü ise

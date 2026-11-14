@@ -245,8 +245,8 @@
         "en": "Overview · INTAKE"
       },
       "title": {
-        "tr": "INTAKE canlı kaynağa ulaşamadığında gerçek neden gösterilir",
-        "en": "INTAKE shows the real reason when the live source cannot be reached"
+        "tr": "INTAKE canlı veriyi yeniden alır; bağlantı hatası nedeniyle gösterilir",
+        "en": "INTAKE loads live data again; connection errors show their reason"
       },
       "visual": {
         "kind": "screenshot",
@@ -262,8 +262,8 @@
         }
       },
       "body": {
-        "tr": "Canlı INTAKE modeli okunamadığında son snapshot gösteriliyor ama hatanın nedeni hiçbir yere yazılmıyordu; ağ/VPN sorunu, model adı değişikliği ve sorgu hatası birbirinden ayrılamıyordu. Uyarı artık ayrıntıyı içerir ve hata sunucu günlüğüne kaynak adıyla kaydedilir.",
-        "en": "When the live INTAKE model could not be read, the last snapshot was shown but the cause was not recorded anywhere, so network/VPN problems, a renamed model and query errors could not be told apart. The warning now includes the detail and the error is written to the server log with the source name."
+        "tr": "INTAKE, sunucuda bulunmayan boşluklu model adıyla (WSSI Intake Raporu4) sorgulandığı için canlı veri alamıyor ve hep son snapshot'ı gösteriyordu. Bağlantı gerçek veritabanı adına (WSSI_Intake_Raporu4) taşındı; eski adla kayıtlı ayarlar otomatik düzeltilir. Canlı kaynak yine okunamazsa uyarı artık hatanın ayrıntısını içerir ve hata sunucu günlüğüne kaynak adıyla kaydedilir.",
+        "en": "INTAKE queried a model name with spaces (WSSI Intake Raporu4) that does not exist on the server, so it could not load live data and always showed the last snapshot. The connection now uses the real database name (WSSI_Intake_Raporu4) and settings saved with the old name are corrected automatically. If the live source still cannot be read, the warning now includes the error detail and the error is written to the server log with the source name."
       }
     }
   ]

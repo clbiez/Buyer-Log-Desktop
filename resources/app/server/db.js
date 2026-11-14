@@ -1284,8 +1284,16 @@ const MODEL_CONNECTION_LIMIT = 20;
 const MODEL_CONNECTION_DEFAULT_SEASONS = Object.freeze(['W6', 'W7', 'S6', 'S7']);
 const MODEL_CONNECTION_DEFAULT_INTAKE = Object.freeze({
   id: 'mc_intake_default', name: 'INTAKE', server: 'lcwtabular_s20',
-  catalog: 'WSSI Intake Raporu4', role: 'intake', refreshEnabled: true,
+  catalog: 'WSSI_Intake_Raporu4', role: 'intake', refreshEnabled: true,
 });
+/* v2026-11-14 — Sunucudaki gerçek veritabanı adı alt çizgilidir; boşluklu eski
+   varsayılanla kayıtlı bağlantı canlı sorguda düşüp hep eski snapshot'a dönerdi.
+   Yalnız bu sunucudaki bu tam eski ad taşınır; kullanıcı seçimine dokunulmaz. */
+const INTAKE_LEGACY_CATALOG = 'WSSI Intake Raporu4'; // i18n-ignore
+function migrateIntakeCatalog(role, server, catalog) {
+  return role === 'intake' && catalog === INTAKE_LEGACY_CATALOG && /^lcwtabular_s20(\.|$)/i.test(server)
+    ? MODEL_CONNECTION_DEFAULT_INTAKE.catalog : catalog;
+}
 
 function normalizeCustomFields(raw) {
   const seen = new Set();
@@ -1388,7 +1396,7 @@ function normalizeModelConnection(raw) {
     _configVersion: Math.max(0,Math.floor(Number(item._configVersion)||0)),
     name: text(item.name, 80),
     server: text(item.server, 128),
-    catalog: text(item.catalog, 128),
+    catalog: migrateIntakeCatalog(role, text(item.server, 128), text(item.catalog, 128)),
     engine: text(item.engine, 40) || (role === 'custom' ? 'relational-sql' : ''),
     connector: item.connector && typeof item.connector === 'object' ? {
       kind: text(item.connector.kind, 40), family: text(item.connector.family, 80),
