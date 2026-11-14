@@ -92,7 +92,7 @@ test('Appearance menu offers the interface style in TR/EN; the choice persists a
   }
 });
 
-test('Line component rules are scoped to the style and add no frames, shadows or radii', () => {
+test('Line component rules are scoped to the style; frames use only shared line tokens, no shadows or radii', () => {
   const css = read('ui-components.css');
   const start = css.indexOf('/* Çizgi arayüz stili (data-ui-style="line"');
   assert.ok(start > 0);
@@ -101,15 +101,22 @@ test('Line component rules are scoped to the style and add no frames, shadows or
   assert.ok(rules.length >= 10);
   for (const rule of rules) {
     const selector = rule.slice(0, rule.indexOf('{'));
-    for (const part of selector.split(/,(?![^()]*\))/)) assert.match(part.trim(), /^html\[data-ui-system="manifest"\]\[data-ui-style="line"\]/, part);
-    assert.doesNotMatch(rule, /(?:^|[;{\s])(?:border(?:-[\w-]+)?|box-shadow|border-radius|outline)\s*:/, selector);
+    const parts = []; let depth = 0, buf = '';
+    for (const c of selector) { if (c === '(') depth++; if (c === ')') depth--; if (c === ',' && depth === 0) { parts.push(buf); buf = ''; continue; } buf += c; }
+    parts.push(buf);
+    for (const part of parts) assert.match(part.trim(), /^html\[data-ui-system="manifest"\]\[data-ui-style="line"\]/, part);
+    assert.doesNotMatch(rule.replace(/box-shadow:none(?: !important)?/g, ''), /(?:^|[;{\s])(?:box-shadow|border-radius|outline)\s*:/, selector);
+    // K1: borders only from the shared line tokens (ui-manifest-contract enforces the exact grammar).
+    for (const m of rule.matchAll(/(?:^|[;{\s])border(?:-[\w-]+)?\s*:\s*([^;}]+)/g)) assert.match(m[1].replace(/\s*!important/, '').trim(), /^(?:(?:0|none|transparent|solid|1px|2px|var\(--ui-(?:line-ink|line-mark|row-divider|field-border|group-divider)\))\s*)+$/, selector);
   }
   assert.match(section, /\.blLineFrame \{position:fixed;overflow:visible;pointer-events:none;z-index:var\(--ui-z-tooltip\)/);
   assert.match(section, /nav\.tabs button\.active > span\[data-i18n-tr\]::after \{content:"";[^}]*background:var\(--ui-line-ink\)/);
   // Work-area surfaces drop their frame only by scoping the shared token; controls inside keep ink.
   assert.match(section, /:is\(\.panel,\.cardBox,\.sourcebar,\.tablewrap,\.cpaFrame,\.cpaCard\) \*,[^{]*\{--ui-group-divider:var\(--ui-line-ink\)/);
   assert.match(section, /:is\(\.panel,\.cardBox,\.sourcebar,\.tablewrap,\.cpaFrame,\.cpaCard\),[^{]*\{--ui-group-divider:transparent/);
-  assert.doesNotMatch(section, /modalCard|blvFilterDrawer|bpaDrawer|blDetailDrawerPanel/, 'dialogs and drawers stay framed');
+  for (const rule of rules.filter(r => /--ui-group-divider:transparent/.test(r))) assert.doesNotMatch(rule.slice(0, rule.indexOf('{')), /modalCard|blvFilterDrawer|bpaDrawer|blDetailDrawerPanel/, 'dialogs and drawers stay framed');
+  // K7: every drawer shares one shell (ink left rule, ink header rule, one title scale).
+  assert.match(section, /:is\(\.blDetailDrawerPanel,\.bpaDrawer,\.blvFilterDrawer,\.lmDrawer,\.ovHomeDrawer,\.cfpDrawer,\.globalFlowDrawer,\.kolPeriodDrawer,\.colPanel,\.tableFieldsDrawer\) \{border-width:0 0 0 1px !important;border-style:solid !important;border-color:var\(--ui-line-ink\)/);
   // Ratio tracks: 1px baseline + 3px fill; connection state as lines; inverted selection bar.
   assert.match(section, /:is\(\.ovBdTrack,\.ovHorizonTrack,\.cpaCoverageTrack\)::before \{content:"";[^}]*height:1px;background:var\(--ui-row-divider\)/);
   assert.match(section, /\.corporateConnectionDots i\[data-state="connected"\] \{background:var\(--ui-line-ink\)/);

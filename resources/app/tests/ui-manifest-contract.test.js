@@ -114,6 +114,16 @@ const classicFocus = d => classicFrame(d)&&d.prop==='outline'
  && ['1px solid var(--ui-group-divider)','2px solid var(--ui-accent)'].includes(d.value);
 
 // Exact semantically identical prefiltered header selectors; no broader border exception.
+// Çizgi arayüz stili (DESIGN_SYSTEM.md §2.1, karar K1): yalnız ortak bileşen dosyasında,
+// seçicinin her parçası html[data-ui-style="line"] kapsamındaysa ve değer yalnız ortak çizgi
+// token'larından oluşuyorsa kenarlık. Klasik stilin kuralları ve modül CSS'i bu istisnanın dışındadır.
+const LINE_SCOPE='html[data-ui-system="manifest"][data-ui-style="line"]';
+const LINE_BORDER_TOKEN=/^(?:0|none|transparent|solid|1px|2px|var\(--ui-(?:line-ink|line-mark|row-divider|field-border|group-divider)\))$/;
+const topLevelParts=selector=>{const parts=[];let depth=0,buf='';for(const c of selector){if(c==='(')depth++;if(c===')')depth--;if(c===','&&depth===0){parts.push(buf);buf='';continue;}buf+=c;}parts.push(buf);return parts;};
+const lineFrame=d=>d.file==='ui-components.css'
+ &&topLevelParts(d.selector).every(part=>part.trim().startsWith(LINE_SCOPE))
+ &&/^border(?:-(?:top|right|bottom|left|inline-start|inline-end|block-start|block-end))?(?:-(?:width|style|color))?$/.test(d.prop)
+ &&d.value.split(/\s+/).every(token=>LINE_BORDER_TOKEN.test(token));
 const groupSeparator=id=>['.groupDivider','.groupBoundary'].map(key=>id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary):where('+key+')').join(',');
 test('Manifest permits only shared classic frames and existing table/print borders',()=>{
  const failures=[];
@@ -126,7 +136,7 @@ test('Manifest permits only shared classic frames and existing table/print borde
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedNotificationBorder(d))failures.push(d); // explicit shared-surface restoration
+   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedNotificationBorder(d)&&!lineFrame(d))failures.push(d); // explicit shared-surface restoration
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);

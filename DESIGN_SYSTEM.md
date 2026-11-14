@@ -96,6 +96,31 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
   kuruluyor uyarı, bağlı değil `--ui-line-mark`); seçim çubuğu mürekkep zeminli (çubuk
   içinde token'lar `--ui-line-paper` / `--ui-line-ink-hover` ile tersine çevrilir);
   saat çiplerinde mini kare kadran (`.ovClockChipFace`, Klasik'te gizli).
+- **Bileşen aileleri (Çizgi Tasarım Sistemi, kararlar K1–K7):** her aile tek görünümdür ve
+  modüllerin kendi sınıfları `ui-components.css` sonundaki "Çizgi Tasarım Sistemi — bileşen
+  aileleri" bölümünde aynı kurala bağlanır.
+  - **Eylem düğmesi:** `.tbtn`, `.navActionBtn`, `.lflButton`, `.ocButton`, `.mfpBtn`, `.lcBtn`, `.lcwaiBtn`, `.psaGhostBtn` ve `.cpaBtn` için 1px mürekkep çerçeve, zeminsiz, 500 ağırlık. Birincil mürekkep dolgu; tehlike `--ui-line-mark`; devre dışı `--ui-row-divider`.
+  - **Segment:** bitişik çerçeveli kutular, seçili mürekkep dolgu.
+  - **Sayfa sekmesi:** zeminsiz, seçili 2px alt çizgi.
+  - **Alan:** zemin saydam. Arama kutuları yalnız alt çizgili. Anlamlı uyarı zemini (atanmamış lisansör) korunur.
+  - **Filtre çipi:** mono 12px, 1px çerçeve, aktifken dolgu.
+  - **Başlık:** bölüm başlıkları 18/500, alt başlık 14/600, mono etiket.
+  - **Menü:** 1px mürekkep çerçeve + gölge; menü içindeki düğmeler çerçevesiz satırdır.
+  - **Çekmece:** tek kabuk (sol 1px mürekkep çizgi, başlık altı çizgi, ortak başlık ölçeği, çerçevesiz kapat düğmesi).
+  - **Kalıcı kart:** gölge yok.
+- **K1 · Çizgi stiline özel kenarlık istisnası:** `ui-manifest-contract` yalnız
+  `ui-components.css` içinde, seçicinin her parçası `html[data-ui-system="manifest"][data-ui-style="line"]`
+  ile başlıyorsa ve değer yalnız `0/none/transparent/solid/1px/2px` ile `--ui-line-ink`,
+  `--ui-line-mark`, `--ui-row-divider`, `--ui-field-border`, `--ui-group-divider` token'larından
+  oluşuyorsa kenarlığa izin verir. Klasik kurallar ve modül CSS'i bu istisnanın dışındadır.
+- **Özgüllük katmanı:** aile kuralları `:not(#bl-line):not(#bl-line-x)` taşır. Bu her öğeyle eşleşir;
+  kimlik ve çok sınıflı `:is()` kullanan modül kurallarına karşı aile kuralının kazanmasını sağlar.
+  Yeni bir modül sınıfı aileye eklenirken bu katmanın içine yazılır.
+- **Bütünlük kabulü:** `scripts/ui-line-consistency-acceptance.js` gerçek uygulamada demo veriyle
+  bütün modülleri ve dört paylaşılan çekmeceyi açık ve koyu temada gezer. Her ailenin her örneğinin
+  sözleşmeye uyduğunu doğrular; bir modül ayrı görünüm üretirse başarısız olur.
+- Kaynak tasarım belgesi: "Buyer Log Çizgi Tasarım Sistemi" (token'lar, bileşen önizlemeleri,
+  denetim ve kararlar).
 - Bilinçli olarak yapılmayanlar: kritik satıra sol şerit (satır düzeyinde işaret yok;
   `:has()` ve yeni gölge gerekir), araç çubuğunun metinli menülere yeniden gruplanması
   (davranış kancası olan düğümler taşınmaz).

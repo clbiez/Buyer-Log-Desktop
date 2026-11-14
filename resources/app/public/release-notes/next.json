@@ -70,6 +70,35 @@
       }
     },
     {
+      "id": "ui-line-families",
+      "type": "improvement",
+      "module": {
+        "tr": "Görünüm · bütün modüller",
+        "en": "Appearance · all modules"
+      },
+      "title": {
+        "tr": "Çizgi stili her modülde tek tasarım dilinde",
+        "en": "The Line style uses one design language in every module"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-line-families.png",
+        "alt": {
+          "tr": "LFL analizi Çizgi stilinde: çerçeveli zeminsiz düğmeler, mono yazılı filtre çipleri, çerçevesiz ve gölgesiz KPI ve tablo kartları",
+          "en": "LFL analysis in the Line style: framed buttons without fill, filter chips in mono type, KPI and table cards without frames or shadows"
+        },
+        "caption": {
+          "tr": "Düğmeler, filtre çipleri, başlıklar ve kartlar LFL, Ön Maliyet, Üreticiler ve diğer modüllerde aynı görünür.",
+          "en": "Buttons, filter chips, headings and cards look the same in LFL, Open Costing, Manufacturers and the other modules."
+        }
+      },
+      "body": {
+        "tr": "Çizgi stilinde bazı modüller kendi düğme, filtre, başlık ve çekmece görünümünü kullanıyordu. Artık bütün modüllerde düğmeler çerçeveli ve zeminsiz, seçili segment mürekkep dolgulu, filtre çipleri mono yazılı, alanlar zeminsiz, başlıklar tek ölçekte. Menüler ince bir çerçeveyle açılıyor, bütün çekmeceler aynı kabuğu ve aynı kapat düğmesini kullanıyor, kalıcı kartlarda gölge yok. Klasik görünüm değişmedi.",
+        "en": "In the Line style some modules used their own button, filter, heading and drawer looks. Now buttons are framed without fill in every module, the selected segment has an ink fill, filter chips use mono type, fields have no fill and headings follow one scale. Menus open with a thin frame, every drawer shares one shell and one close button, and permanent cards have no shadow. The classic look is unchanged."
+      }
+    },
+    {
       "id": "collection-single-cell-paste-direct",
       "type": "fix",
       "module": {

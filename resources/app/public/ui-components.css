@@ -16038,3 +16038,71 @@ html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .blSelectionBar {--ui-surface:var(--ui-line-ink);--ui-surface-soft:var(--ui-line-ink);--ui-surface-strong:var(--ui-line-ink-hover);--ui-row-hover:var(--ui-line-ink-hover);--ui-selected:var(--ui-line-ink-hover);--ui-text:var(--ui-line-paper);--ui-text-secondary:var(--ui-line-paper);--ui-text-muted:var(--ui-line-paper);--ui-selected-ink:var(--ui-line-paper);--ui-accent:var(--ui-line-paper);--ui-on-accent:var(--ui-line-ink);--ui-group-divider:transparent;--ui-row-divider:var(--ui-line-ink-hover)
 }
+/* Çizgi Tasarım Sistemi — bileşen aileleri (DESIGN_SYSTEM.md §2.1, kararlar K2–K7).
+   Kaynak: "Buyer Log Çizgi Tasarım Sistemi" belgesi ve gerçek uygulama denetimi. Her aile tek
+   görünüm: modüllerin kendi düğme, sekme, alan, çip, başlık, menü ve çekmece sınıfları burada
+   aynı kurala bağlanır. Yalnız Çizgi stilinde; Klasik kurallar değişmez. Kenarlıklar yalnız
+   ortak çizgi token'larından (K1). Modül kuralları kimlik ve çok sınıflı :is() seçicileri
+   kullandığı için aile kuralları tek bir özgüllük katmanı taşır: :not(#bl-line):not(#bl-line-x)
+   her öğeyle eşleşir, yalnız kuralı kimlik düzeyine taşır; böylece aile kuralı her modülde kazanır.
+   Bağlam istisnaları (üst çubuk, seçim çubuğu, menüler, segmentler, kapat düğmeleri) ata dolaşan
+   :not(... *) yerine sonradan gelen olumlu kurallarla yazılır: Klasik stilde stil hesaplaması
+   ata filtresiyle hemen elenir (performans kabulü, L2). */
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn) {border:1px solid var(--ui-line-ink) !important;background-color:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-weight:500 !important;box-shadow:none !important;text-transform:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):hover:not(:disabled) {background-color:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):is(.primary,.isPrimary,.is-primary,.ocButton--primary,.lflButton--primary) {background-color:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):is(.primary,.isPrimary,.is-primary,.ocButton--primary,.lflButton--primary):hover:not(:disabled) {background-color:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):is(.ocButton--danger,.actionDanger,.danger) {border-color:var(--ui-line-mark) !important;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):disabled {border-color:var(--ui-row-divider) !important;color:var(--ui-text-muted) !important;background-color:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.appTop,.blSelectionBar,[role="menu"],.toolbarMoreMenu,.blViewPickerMenu,.railAppearanceMenu,#corporateConnections,.vfMenu) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn) {border-color:transparent !important;background-color:transparent !important;font-weight:inherit !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.appTop,.blSelectionBar,[role="menu"],.toolbarMoreMenu,.blViewPickerMenu,.railAppearanceMenu,#corporateConnections,.vfMenu) :is(.tbtn,.navActionBtn,.lflButton,.ocButton,.mfpBtn,.lcBtn,.lcwaiBtn,.psaGhostBtn,.cpaBtn):hover:not(:disabled) {background-color:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .lcwaiBtn.is-link {border-color:transparent !important;background-color:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips) > button {border:1px solid var(--ui-line-ink) !important;background-color:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-weight:500 !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]),html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .backlogDateActive .tbtn {background-color:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover,html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .backlogDateActive .tbtn:hover {background-color:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(input:not([type="checkbox"],[type="radio"],[type="range"],[type="file"],[type="color"],[type="hidden"],[type="button"],[type="submit"],[type="reset"],[type="image"]),select,textarea):not(.editCell,.lcLicensorInput) {background-color:transparent !important;font-weight:400 !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.tableSearchInputExpandable,.mfpSearch,.psaMultiSearch,input[type="search"]) {border-width:0 0 1px !important;border-style:solid !important;border-color:var(--ui-line-ink) !important;background-color:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(button.kpiGroupLabel,.lcChip,.mfpChip,.lflDimBtn,.lflBreakdownBtn,.psaMultiTrigger,.oabMultiTrigger,.cpaFieldPickerBtn) {border:1px solid var(--ui-line-ink) !important;background-color:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-mono) !important;font-weight:400 !important;font-size:var(--ui-font-xs) !important;text-transform:none !important;letter-spacing:0 !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(button.kpiGroupLabel,.lcChip,.mfpChip,.lflDimBtn,.lflBreakdownBtn,.psaMultiTrigger,.oabMultiTrigger,.cpaFieldPickerBtn):is(.hasFilter,.hasSelection,.isActive,.is-active,.active,[aria-pressed="true"],[aria-expanded="true"]) {background-color:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) main > section :is(h1,h2,h3):not(.autoEyebrow) {font-family:var(--ui-font-heading) !important;font-size:var(--ui-font-lg) !important;font-weight:500 !important;line-height:1.2 !important;letter-spacing:-.01em !important;text-transform:none !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) main > section h4,html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.dmPanelTitle,.blvQualityTitle,.ovClockHolidayTitle) {font-family:var(--ui-font-heading) !important;font-size:var(--ui-font-base) !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.autoEyebrow,.autoSectionTitle b,.autoSideHead > b) {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;font-weight:400 !important;letter-spacing:.08em !important;text-transform:uppercase !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.blViewPickerMenu,.delTypeMenu,.kpiGroupMenu,.kolSpreadsheetContextMenu,.toolbarMoreMenu,.lcwaiContextMenu,.ovClockPopover,.blSelectionPopover,#corporateConnections,.userMenu,.vfMenu,.blvExportMenu,.blDetailExportMenu,.blDetailColumnPanel,[role="menu"]) {border:1px solid var(--ui-line-ink) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .thFilterBtn {font-weight:600 !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.blDetailDrawerPanel,.bpaDrawer,.blvFilterDrawer,.lmDrawer,.ovHomeDrawer,.cfpDrawer,.globalFlowDrawer,.kolPeriodDrawer,.colPanel,.tableFieldsDrawer) {border-width:0 0 0 1px !important;border-style:solid !important;border-color:var(--ui-line-ink) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.blDetailDrawerHead,.bpaDrawerHead,.blvFilterHead,.lmDrawerHead,.ovHomeDrawerHead,.cfpDrawerHead,.gfDrawerHead,.ovCollectionScopeDrawerHead,.colPanelHead) {border-width:0 0 1px !important;border-style:solid !important;border-color:var(--ui-line-ink) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.blDetailDrawerPanel,.bpaDrawer,.blvFilterDrawer,.lmDrawer,.ovHomeDrawer,.cfpDrawer,.globalFlowDrawer,.kolPeriodDrawer,.colPanel,.tableFieldsDrawer) :is(h2,h3,.blDetailDrawerTitle b,.cfpDrawerHead b,.gfDrawerHead b,.colPanelHead b) {font-family:var(--ui-font-heading) !important;font-size:var(--ui-font-lg) !important;font-weight:500 !important;letter-spacing:-.01em !important;text-transform:none !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is([data-blv-close],[data-blvf-close],[data-bpa-close],[data-table-fields-close],[data-cpd-close],[data-home-drawer-close],.kolPeriodDrawerClose,.ovHomeDrawerClose,.umDrawerClose,.blDetailClose,.tableFieldsClose) {border:0 !important;background-color:transparent !important;color:var(--ui-text) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is([data-blv-close],[data-blvf-close],[data-bpa-close],[data-table-fields-close],[data-cpd-close],[data-home-drawer-close],.kolPeriodDrawerClose,.ovHomeDrawerClose,.umDrawerClose,.blDetailClose,.tableFieldsClose):hover {background-color:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.lflCard,.lflScenarioCard,.ocCard) {--ui-group-divider:transparent
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.lflCard,.ocCard,.backlogChartPanel) {box-shadow:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.lflCard,.lflScenarioCard,.ocCard) * {--ui-group-divider:var(--ui-line-ink)
+}
