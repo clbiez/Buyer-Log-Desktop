@@ -2174,8 +2174,11 @@ async function refreshCpStartupImageRegistry(rows){
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
+  // Zorunlu yeniden yüklemede (senkron/yenileme) elde çalışan bir CP varsa
+  // tablo yükleme ekranıyla gizlenmez; yükleme başarısız olursa da korunur.
+  const keepVisible=Boolean(state.cp);
   window.BLModulePreparation?.setStatus('cp','loading');
-  if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
+  if(currentActiveTab()==='cp'&&!keepVisible)renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
   cpLoadPromise=(async()=>{
     try{
@@ -2205,6 +2208,12 @@ async function ensureCpLoaded(options={}){
       return true;
     }catch(err){
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
+      if(keepVisible&&state.cp){
+        // Arka plan yenilemesi düştü: mevcut tablo ve kaydedilmemiş düzenlemeler
+        // yerinde kalır; kullanıcı bilgilendirilir, ekran hata paneline dönmez.
+        window.BLModulePreparation?.setStatus('cp','ready');overviewCpLoadState='ready';overviewCpLoadError='';
+        console.warn('CP yeniden yüklenemedi:',err);showToast(message);return false;
+      }
       window.BLModulePreparation?.setStatus('cp','error','CP_LOAD_FAILED');
       if(options.reason==='overview'||currentActiveTab()==='overview'){
         overviewCpLoadState='error';overviewCpLoadError=message;scheduleOverviewRender('cp-load-error');
@@ -2462,7 +2471,11 @@ function switchTab(tab){
       if(tab==='cp'&&state.cp)renderCP();
       if(tab==='orders'&&state.orders)renderOrders();
       if(tab==='shipping'&&typeof renderShipTable==='function')renderShipTable();
-    }).catch(err=>showToast(err.message));
+    }).catch(err=>{
+      // Arka plan yardımcı modülleri: teknik dosya adı konsola, kullanıcıya anlaşılır mesaj.
+      console.warn('Gecikmeli arayüz modülleri yüklenemedi:',err);
+      showToast(appLang==='en'?'Some helper modules could not be loaded. If a feature is missing, reload the page.':'Bazı yardımcı modüller yüklenemedi. Eksik bir özellik görürseniz sayfayı yenileyin.');
+    });
   }
   if(tab==='koleksiyon'){
     void ensureCollectionCatalogLoaded();
@@ -3512,6 +3525,7 @@ const BLImageRuntime=(()=>{
   const cancelHover=()=>{if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=0;}hoverToken++;};
   const scheduleHover=(img,event)=>{
     cancelHover();const src=tableImageSource(img);if(!isImageSource(src))return;
+    if(typeof kolSetImgPopupAnchor==='function')kolSetImgPopupAnchor(img);
     const token=hoverToken,point={clientX:Number(event?.clientX)||0,clientY:Number(event?.clientY)||0,target:img,currentTarget:img};
     hoverTimer=setTimeout(()=>{hoverTimer=0;const ready=img?.dataset?.src&&window.BLModelImageCache?window.BLModelImageCache.preloadOriginal(window.BLModelImageCache.fromImage(img)):(img?.dataset?.src?load(src):waitForExistingImage(img,src));void ready.then(()=>{if(token!==hoverToken)return;kolShowImgPopup(src,point);}).catch(()=>{});},IMAGE_HOVER_DELAY);
   };
@@ -27480,6 +27494,34 @@ let _kolImgPopupFrame=0;
 let _kolImgPopupPoint=null;
 let _kolImgPopupTarget=null;
 let _kolImgPopupSize={width:300,height:300};
+// Önizleme yalnız mouseleave'e güvenemez: tablo kaydırılınca veya sanal liste
+// satırı yeniden çizince imleç altındaki <img> değişir/silinir ve mouseleave
+// hiç gelmez. Bu yüzden önizlemeyi açan öğe (anchor) tutulur; kaydırma, imlecin
+// anchor dışına çıkması veya anchor'ın DOM'dan düşmesi önizlemeyi kapatır.
+let _kolImgPopupAnchor=null;
+function kolSetImgPopupAnchor(el){_kolImgPopupAnchor=el instanceof Element?el:null;}
+function kolImgPopupAnchorFrom(evt){
+  if(evt&&evt.currentTarget instanceof Element)return evt.currentTarget;
+  if(evt&&evt.target instanceof Element)return evt.target.closest('img,[data-image-preview]')||evt.target;
+  return null;
+}
+function kolImgPopupShouldCloseOnScroll(anchor,scrollTarget){
+  if(!anchor)return false;
+  if(!anchor.isConnected)return true;
+  if(!scrollTarget||scrollTarget===document||scrollTarget===document.documentElement||scrollTarget===document.body)return true;
+  return typeof scrollTarget.contains==='function'&&scrollTarget.contains(anchor);
+}
+function kolImgPopupPointerOutside(anchor,pointerTarget){
+  if(!anchor)return false;
+  if(!anchor.isConnected)return true;
+  return !(pointerTarget instanceof Node&&anchor.contains(pointerTarget));
+}
+document.addEventListener('scroll',event=>{
+  if(kolImgPopupShouldCloseOnScroll(_kolImgPopupAnchor,event.target))kolHideImgPopup();
+},{capture:true,passive:true});
+document.addEventListener('pointermove',event=>{
+  if(kolImgPopupPointerOutside(_kolImgPopupAnchor,event.target))kolHideImgPopup();
+},{capture:true,passive:true});
 function kolImageHoverAccessibleLabel(evt){
   const target=evt&&evt.currentTarget instanceof Element
     ? evt.currentTarget
@@ -27525,6 +27567,7 @@ function kolShowImgPopup(src, evt){
     });
   }
   kolImageHoverAccessibleLabel(evt);
+  const anchor=kolImgPopupAnchorFrom(evt);if(anchor)_kolImgPopupAnchor=anchor;
   const image=pop.querySelector('#kolImgPopupImg');
   if(image&&image.dataset.source!==src){image.dataset.source=src;image.src=src;}
   pop.style.display = 'block';
@@ -27545,7 +27588,7 @@ function kolHideImgPopup(){
   const pop = document.getElementById('kolImgPopup');
   if(pop) pop.style.display = 'none';
   if(_kolImgPopupFrame)cancelAnimationFrame(_kolImgPopupFrame);
-  _kolImgPopupFrame=0;_kolImgPopupPoint=null;_kolImgPopupTarget=null;
+  _kolImgPopupFrame=0;_kolImgPopupPoint=null;_kolImgPopupTarget=null;_kolImgPopupAnchor=null;
 }
 // Alt detay raporlarında sonradan oluşturulan model görsellerini de CP'deki
 // aynı büyük önizleme katmanına bağla. Ayrı sınıf kullanıldığı için CP'nin
@@ -27574,6 +27617,8 @@ new MutationObserver(mutations=>{
   mutations.forEach(mutation=>mutation.addedNodes.forEach(node=>{
     if(node.nodeType===1)bindDetailModelThumbs(node);
   }));
+  // Sanal tablo yeniden çizimi önizlemeyi açan görseli silerse önizleme kapanır.
+  if(_kolImgPopupAnchor&&!_kolImgPopupAnchor.isConnected)kolHideImgPopup();
 }).observe(document.documentElement,{childList:true,subtree:true});
 // ---- Excel benzeri klavye: Enter mevcut hücreyi kaydeder ve aynı hücrede kalır.
 // Tab doğal sırayla ilerler; ok tuşları hücreler arasında gezinir. ----

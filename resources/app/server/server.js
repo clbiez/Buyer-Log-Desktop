@@ -8684,6 +8684,7 @@ app.get('/api/data', async (req, res) => {
 // tamamen kaldırır; tarayıcı standart Content-Encoding desteğiyle yalnız bir kez
 // ayrıştırır. Context hash kontrolü kullanıcı/yetki/horizon izolasyonunu korur.
 const PAGE_PROJECTION_AREAS = Object.freeze({ cp:'cp', overview:'overview', orders:'orders', 'collection-catalog':'koleksiyon' });
+const PAGE_PROJECTION_STALE_ATTEMPTS = 3;
 const PAGE_PROJECTION_TARGETS = Object.freeze({ cp:['cp'], overview:['cp'], orders:['orders'], 'collection-catalog':['cp'] });
 async function ensureComputedProjection(req,module,{legacy=false}={}){
   const area=PAGE_PROJECTION_AREAS[module];assertSourceFilters(PAGE_PROJECTION_TARGETS[module],req);
@@ -8739,9 +8740,21 @@ app.get('/api/page-projection/:module', async (req, res) => {
     if (!userAccess.hasArea(req.currentUser, area)) return res.status(403).json({ error:'Bu alana erişim yetkiniz yok.', code:'AREA_FORBIDDEN' });
     const filterStatus = sourceFilterReadiness(PAGE_PROJECTION_TARGETS[module], req);
     if (!filterStatus.ready) return res.status(409).json({ error:sourceFilterReadinessMessage(filterStatus, 'tr'), code:'SOURCE_FILTER_REQUIRED', sourceFilterStatus:filterStatus });
-    const lease=await ensureComputedProjection(req,module);
-    return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
-  } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
+    // Okuma sürerken kayıt/senkron yazımı veri sürümünü değiştirirse guard
+    // COMPUTE_STALE_GENERATION fırlatır. Bu kalıcı bir hata değildir: yanıt
+    // henüz yazılmadığı için güncel sürümle sınırlı sayıda yeniden okunur.
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        const lease=await ensureComputedProjection(req,module);
+        return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
+      } catch (err) {
+        if (err?.code !== 'COMPUTE_STALE_GENERATION' || attempt >= PAGE_PROJECTION_STALE_ATTEMPTS || res.headersSent || req.aborted) throw err;
+      }
+    }
+  } catch (err) {
+    if (err?.code === 'COMPUTE_STALE_GENERATION') return apiError(res, err, 'Veri okunurken güncellendi; ekranı yeniden deneyin.');
+    apiError(res, err, 'Hazır ekran önbelleği okunamadı.');
+  }
 });
 
 // Hazır CP önbelleğiyle gelen satırlar için paylaşılan alan düzenleme yetkisi
