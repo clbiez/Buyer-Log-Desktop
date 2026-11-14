@@ -111,6 +111,19 @@ function createLcwAiClient(options = {}) {
     throw lcwAiError('SESSION_EXPIRED');
   }
 
+  /* Yeni (fileId) LCW AI ek modeli: dosya mesaja yalnız attachments[] içinde
+     fileId ile verildiğinde sunucu eki bağlamıyordu. Yükleme oturumu ve
+     kimlik listesi üst düzeyde de gönderilir; blobName ekleri ve eksiz
+     mesajlarda gövde değişmez. */
+  function fileIdFields(attachments) {
+    const byId = attachments.filter(item => item.fileId != null);
+    if (!byId.length) return {};
+    const out = { fileIds: byId.map(item => item.fileId) };
+    const sessions = [...new Set(byId.map(item => item.sessionId).filter(Boolean))];
+    if (sessions.length === 1) out.sessionId = sessions[0];
+    return out;
+  }
+
   function messagePayload(input = {}) {
     const content = String(input.content == null ? '' : input.content);
     if (!content.trim()) throw lcwAiError('BAD_REQUEST', { detail: 'empty-content' });
@@ -128,6 +141,7 @@ function createLcwAiClient(options = {}) {
       visionEnabled: attachments.some(item => /^image\//.test(item.contentType)) && Boolean(model.vision),
       imageGenerationEnabled: false,
       attachments,
+      ...fileIdFields(attachments),
     };
   }
 
@@ -147,7 +161,7 @@ function createLcwAiClient(options = {}) {
         onActivity: () => deadline.activity(),
         onDelta: (delta, state) => { if (typeof input.onDelta === 'function') { try { input.onDelta(delta, { chars: state.text.length }); } catch (_) {} } },
       });
-      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks, types: result.types, reasoningLevel: payload.reasoningLevel, reasoningChunks: result.reasoningChunks });
+      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks, types: result.types, reasoningLevel: payload.reasoningLevel, reasoningChunks: result.reasoningChunks, attachments: payload.attachments.length || undefined, fileIds: payload.fileIds ? payload.fileIds.length : undefined, uploadSession: payload.fileIds ? Boolean(payload.sessionId) : undefined });
       return { ...result, modelKey: (result.metadata && result.metadata.modelKey) || payload.modelKey };
     } catch (error) {
       const failure = failureFor(error, deadline.reason());

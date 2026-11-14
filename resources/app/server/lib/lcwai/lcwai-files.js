@@ -90,7 +90,12 @@ function responseShape(value) {
 }
 
 /* fileId biçimi: kimlik yalnız güvenli karakterlerden oluşur (yol/boşluk
-   yok); sayı ise sayı olarak korunur. sessionId ve quota mesaja taşınmaz. */
+   yok); sayı ise sayı olarak korunur. Yüklenen dosya LCW AI'da yükleme
+   oturumuna (sessionId) bağlıdır; yalnız fileId ile gönderilen ek sunucuda
+   sessizce yok sayıldı ("No image was attached"). Bu yüzden sessionId ekte
+   taşınır (kimlik bilgisi değildir; yalnız kullanıcının kendi bearer'ıyla
+   anlamlıdır). quota mesaja taşınmaz. */
+const SAFE_ID = /^[A-Za-z0-9._:-]{1,200}$/;
 function fileIdRecord(value, depth = 0) {
   const record = Array.isArray(value) ? value[0] : value;
   if (!isRecord(record)) return null;
@@ -105,8 +110,10 @@ function fileIdRecord(value, depth = 0) {
 function fileIdAttachment(record, fallback = {}) {
   const raw = field(record, 'fileId');
   const fileId = typeof raw === 'number' ? raw : clean(raw);
-  const valid = typeof fileId === 'number' ? Number.isSafeInteger(fileId) && fileId >= 0 : /^[A-Za-z0-9._:-]{1,200}$/.test(fileId) && !fileId.includes('..');
+  const valid = typeof fileId === 'number' ? Number.isSafeInteger(fileId) && fileId >= 0 : SAFE_ID.test(fileId) && !fileId.includes('..');
   if (!valid) throw lcwAiError('UPLOAD_FAILED', { detail: 'file-id' });
+  const sessionId = clean(field(record, 'sessionId'));
+  if (sessionId && (!SAFE_ID.test(sessionId) || sessionId.includes('..'))) throw lcwAiError('UPLOAD_FAILED', { detail: 'file-id' });
   const sha256 = clean(field(record, 'sha256'));
   if (sha256 && !/^[a-f0-9]{64}$/i.test(sha256)) throw lcwAiError('UPLOAD_FAILED', { detail: 'file-id' });
   const size = Number(field(record, 'size'));
@@ -117,6 +124,7 @@ function fileIdAttachment(record, fallback = {}) {
     size: Number.isFinite(size) && size >= 0 ? size : Number(fallback.size) || 0,
   };
   if (sha256) out.sha256 = sha256;
+  if (sessionId) out.sessionId = sessionId;
   return out;
 }
 

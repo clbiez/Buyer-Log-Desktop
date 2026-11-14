@@ -97,6 +97,29 @@
         "tr": "Tek tık artık hücreyi seçer; düzenleme Koleksiyon'daki gibi çift tıkla açılır. Del. Type, önem, checklist, tarih ve not hücreleri de ilk tıkta değil çift tıkla açılır. Ok, Tab ve Enter ile varılan düzenlenebilir hücre doğrudan düzenleme modunda açılır; seçili hücrede yazmaya başlamak ya da F2 de düzenlemeyi açar, Esc değişikliği geri alır. Çoklu hücre kopyala-yapıştır aynen çalışır; Shift+ok aralığı genişletir, tek hücreye tek değer önizlemesiz yapıştırılır. Düzenleme sırasında açılan takvim, öneri listesi ve seçim menüleri artık başka bir yere tıklayınca kapanır.",
         "en": "A single click now selects the cell; editing opens with a double click, as in Collection. Del. Type, importance, checklist, date and note cells also open on a double click instead of the first click. An editable cell reached with the arrow keys, Tab or Enter opens directly in edit mode; typing in a selected cell or F2 also starts editing, and Esc reverts the change. Multi-cell copy-paste works as before; Shift+arrow extends the range and a single value pastes into a single cell without a preview. The calendar, suggestion list and choice menus opened while editing now close when you click elsewhere."
       }
+    },
+    {
+      "id": "lcwai-attachment-upload-session",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a gönderilen dosya ve görseller yeniden mesaja eklenir",
+        "en": "Files and images sent to LCW AI are attached to the message again"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik LCW AI’a giden istek gövdesindedir; ekranda yeni bir öğe yoktur.",
+          "en": "The change is in the request body sent to LCW AI; nothing new appears on screen."
+        }
+      },
+      "body": {
+        "tr": "Görselden arama, sohbet ve diğer LCW AI özelliklerinde dosya yükleniyor ama LCW AI eki mesajda görmüyordu (“No image was attached”). Ek artık LCW AI’ın yeni dosya modeline uygun olarak yükleme oturumuyla birlikte gönderilir.",
+        "en": "In Search from Image, chat and other LCW AI features the file was uploaded but LCW AI did not see it on the message (“No image was attached”). The attachment is now sent together with its upload session, matching LCW AI’s new file model."
+      }
     }
   ]
 }
