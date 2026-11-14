@@ -380,10 +380,162 @@
     paint(entry);return true;
   }
 
+  /* Çift tıkla düzenleme (config.editOnDoubleClick — CP/Orders). Koleksiyon
+     tablosuyla aynı model: tek tık yalnız hücre seçer (sürükleyerek aralık
+     seçimi ve Ctrl+C/Ctrl+V bu modda çalışır), çift tık hücre editörünü açar.
+     Klavyeyle (ok/Tab/Enter) varılan düzenlenebilir hücre ise doğrudan
+     düzenleme modunda açılır. Açılır menü/tarih tetikleyicileri
+     (config.editTriggerSelector) ilk tıklamada değil, çift tıklamanın ikinci
+     tıklamasında veya klavyeyle (detail=0) açılır. */
+  const NATIVE_EDITOR='input,textarea,select,[contenteditable="true"],[role="textbox"]';
+  const DEFAULT_EDITOR_SELECTOR='input.editCell:not(:disabled),textarea.editCell:not(:disabled),select.editCell:not(:disabled)';
+  const editOriginals=new WeakMap();
+  let suppressMouseDown=false;
+  function isChoiceInput(el){
+    const type=String(el?.type||'').toLowerCase();
+    return String(el?.tagName||'').toUpperCase()==='INPUT'&&(type==='checkbox'||type==='radio'||type==='file'||type==='hidden');
+  }
+  function doubleClickEntry(td){
+    const entry=tableEntryFromCell(td);
+    return entry&&entry.config.editOnDoubleClick&&entryIsActive(entry)?entry:null;
+  }
+  function isEditing(editor){
+    const active=root.document?.activeElement;
+    return Boolean(active&&editor&&(active===editor||editor.contains?.(active)));
+  }
+  // Seçim modundaki bir hücre editörüne yapılan tek tık, editörü odaklamadan
+  // hücreyi seçer. Zaten düzenlenen editörün içindeki tık (imleç/metin seçimi)
+  // tarayıcıya bırakılır.
+  function selectInsteadOfEdit(target){
+    const editor=target?.closest?.(NATIVE_EDITOR);if(!editor||isChoiceInput(editor))return false;
+    const td=editor.closest?.('tbody td[data-key]');
+    return Boolean(doubleClickEntry(td))&&!isEditing(editor);
+  }
+  function cellEditor(entry,td){
+    if(!td?.querySelector)return null;
+    const editor=td.querySelector(entry.config.editorSelector||DEFAULT_EDITOR_SELECTOR);
+    return editor&&!editor.readOnly&&!isChoiceInput(editor)?editor:null;
+  }
+  function cellTrigger(entry,td){
+    const selector=entry.config.editTriggerSelector;
+    return selector&&td?.querySelector?td.querySelector(selector):null;
+  }
+  function focusEditor(editor,{selectAll=true}={}){
+    if(!editor)return false;
+    try{editor.focus({preventScroll:false});}catch{editor.focus?.();}
+    if(!isEditing(editor))return false;
+    if(String(editor.tagName||'').toUpperCase()==='SELECT')return true;
+    try{
+      if(selectAll)editor.select?.();
+      else if(typeof editor.setSelectionRange==='function'){const end=String(editor.value||'').length;editor.setSelectionRange(end,end);}
+    }catch{}
+    return true;
+  }
+  function cellElement(entry,cell){
+    const table=root.document?.getElementById?.(entry.tableId);
+    if(!table||!cell)return null;
+    // afterRender her hücreye kararlı bir DOM kimliği verir: tüm hücreleri taramadan bul.
+    const byId=root.document.getElementById(cellDomId(entry.tableId,cell.rowId,cell.columnId));
+    if(byId&&table.contains?.(byId))return byId;
+    return Array.from(table.querySelectorAll('tbody td[data-key]')).find(td=>{
+      const id=cellIdentity(td);return id&&id.rowId===identity(cell.rowId)&&id.columnId===identity(cell.columnId);
+    })||null;
+  }
+  // Klavyeyle varılan hücrenin editörünü açar. Editörü olmayan (salt okunur,
+  // hesaplanan veya açılır menü tetikleyicili) hücre seçim modunda kalır.
+  function editActiveCell(entry,{selectAll=true,triggers=false}={}){
+    if(!entry?.config?.editOnDoubleClick)return false;
+    const td=cellElement(entry,entry.state.activeCell);if(!td)return false;
+    const editor=cellEditor(entry,td);
+    if(editor)return focusEditor(editor,{selectAll});
+    const trigger=triggers?cellTrigger(entry,td):null;
+    if(trigger){trigger.click?.();return true;}
+    return false;
+  }
+  function onDoubleClick(event){
+    if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    const td=event.target?.closest?.('tbody td[data-key]'),entry=doubleClickEntry(td);if(!entry)return;
+    if(event.target?.closest?.('a,img'))return;
+    const editor=cellEditor(entry,td);if(!editor||isEditing(editor))return;
+    if(!focusEditor(editor,{selectAll:false}))return;
+    if(String(editor.tagName||'').toUpperCase()==='SELECT'){try{editor.showPicker?.();}catch{}}
+  }
+  function onTriggerClick(event){
+    if(!(event.detail>=1&&event.detail<2))return;
+    const td=event.target?.closest?.('tbody td[data-key]'),entry=doubleClickEntry(td);
+    const selector=entry?.config?.editTriggerSelector;if(!selector)return;
+    const trigger=event.target.closest(selector);
+    if(!trigger||!td.contains(trigger))return;
+    // İlk tık yalnız seçimdir: tetikleyicinin kendi click işleyicisine ulaşmaz.
+    // Açık menülerin "dışarı tıklandı" kapanışı yine çalışsın diye aynı tık
+    // hücrenin kendisine (tetikleyicinin dışına) yeniden yönlendirilir.
+    event.preventDefault();event.stopImmediatePropagation();
+    try{
+      const View=root.MouseEvent||root.Event;
+      td.dispatchEvent(new View('click',{bubbles:true,cancelable:true,clientX:event.clientX,clientY:event.clientY}));
+    }catch{}
+  }
+  function onEditorFocusIn(event){
+    const target=event.target,td=target?.closest?.('tbody td[data-key]'),entry=doubleClickEntry(td);if(!entry)return;
+    if(target?.matches?.(NATIVE_EDITOR)&&!isChoiceInput(target))editOriginals.set(target,String(target.value??''));
+    const cell=cellIdentity(td);
+    if(cell&&!(identity(entry.state.activeCell?.rowId)===cell.rowId&&identity(entry.state.activeCell?.columnId)===cell.columnId))setFocus(entry,cell,{focus:false});
+  }
+  // Düzenleme modundaki klavye: Esc değeri geri alıp seçim moduna döner;
+  // Shift+Yukarı/Aşağı düzenlemeyi kapatıp kopyalama aralığını genişletir.
+  function onEditorKeyDown(event){
+    const target=event.target,td=target?.closest?.('tbody td[data-key]'),entry=doubleClickEntry(td);if(!entry)return false;
+    if(!target?.matches?.(NATIVE_EDITOR)||isChoiceInput(target)||!isEditing(target))return false;
+    const table=root.document.getElementById(entry.tableId);
+    if(event.key==='Escape'&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
+      if(target.classList?.contains('dateKeyboardInput'))return false;
+      event.preventDefault();event.stopImmediatePropagation();
+      if(editOriginals.has(target))target.value=editOriginals.get(target);
+      setFocus(entry,cellIdentity(td),{focus:false});
+      table?.focus?.({preventScroll:true});
+      return true;
+    }
+    if(event.shiftKey&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&(event.key==='ArrowDown'||event.key==='ArrowUp')&&String(target.tagName||'').toUpperCase()!=='TEXTAREA'){
+      event.preventDefault();event.stopImmediatePropagation();
+      setFocus(entry,cellIdentity(td),{focus:false});
+      table?.focus?.({preventScroll:true});
+      move(entry,event.key==='ArrowDown'?1:-1,0,true);
+      return true;
+    }
+    return false;
+  }
+  // Çift tıkla düzenlenen tabloda tek tık artık editörü açmıyor. Tek hücreye tek
+  // değer yapıştırma, eskiden editöre tıklayıp Ctrl+V yapmak gibi doğrudan
+  // hücre editörü üzerinden kaydedilir; toplu önizleme yalnız çoklu hücre içindir.
+  function pasteIntoSingleEditor(entry,event,text){
+    if(!entry.config.editOnDoubleClick||isMultiCellText(text))return false;
+    const range=currentRange(entry).range;
+    if(!range||range.startRow!==range.endRow||range.startColumn!==range.endColumn)return false;
+    const td=cellElement(entry,entry.state.activeCell),editor=cellEditor(entry,td);
+    if(!editor||String(editor.tagName||'').toUpperCase()==='SELECT'||editor.classList?.contains?.('dateKeyboardInput'))return false;
+    event.preventDefault?.();
+    editor.value=parseClipboardText(text)[0]?.[0]??'';
+    const ChangeEvent=root.Event;
+    if(typeof ChangeEvent==='function')editor.dispatchEvent?.(new ChangeEvent('change',{bubbles:true}));
+    return true;
+  }
+  function isPrintableKey(event){
+    return String(event.key||'').length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey;
+  }
+
   function bind(){
     if(bound||!root.document?.addEventListener)return;bound=true;
+    root.document.addEventListener('dblclick',onDoubleClick,true);
+    root.document.addEventListener('focusin',onEditorFocusIn,true);
+    (root.addEventListener?root:root.document).addEventListener('click',onTriggerClick,true);
+    // Tarayıcılar iptal edilmiş pointerdown sonrasında mousedown'ı genelde hiç
+    // göndermez; gönderen sürümde de editörün odak almasını engelle.
+    root.document.addEventListener('mousedown',event=>{
+      if(!suppressMouseDown)return;suppressMouseDown=false;event.preventDefault();
+    },true);
     root.document.addEventListener('pointerdown',event=>{
-      if(event.button!==0||nativeEditingTarget(event.target))return;
+      if(event.button!==0)return;
+      if(nativeEditingTarget(event.target)&&!selectInsteadOfEdit(event.target))return;
       const td=event.target?.closest?.('tbody td[data-key]'),entry=tableEntryFromCell(td);
       if(!entry||!entryIsActive(entry))return;
       const cell=cellIdentity(td);if(!cell)return;
@@ -396,6 +548,7 @@
         return;
       }
       event.preventDefault();
+      if(entry.config.editOnDoubleClick){suppressMouseDown=true;setTimeout(()=>{suppressMouseDown=false;},0);}
       root.getSelection?.()?.removeAllRanges?.();
       setFocus(entry,cell,{extend:event.shiftKey});
       dragging={entry};
@@ -431,10 +584,11 @@
       if(!entry||typeof entry.config.applyPaste!=='function')return;
       const table=root.document.getElementById(entry.tableId);
       if(target!==table&&!table?.contains?.(target)&&target!==root.document.body)return;
+      if(pasteIntoSingleEditor(entry,event,text))return;
       void pasteEntry(entry,event,text);
     },true);
     root.document.addEventListener('keydown',event=>{
-      if(nativeEditingTarget(event.target))return;
+      if(nativeEditingTarget(event.target)){onEditorKeyDown(event);return;}
       const nativeSelection=root.getSelection?.();
       if(nativeSelection&&nativeSelection.rangeCount&&!nativeSelection.isCollapsed)return;
       const entry=activeEntry();if(!entry)return;
@@ -450,10 +604,20 @@
         if(selectAll(entry.tableId))event.preventDefault();return;
       }
       if(event.key==='Escape'){event.preventDefault();clear(entry.tableId);return;}
+      const editMode=Boolean(entry.config.editOnDoubleClick);
       const arrows={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowRight:[0,1],ArrowLeft:[0,-1]};
-      if(arrows[event.key]){event.preventDefault();move(entry,...arrows[event.key],event.shiftKey);return;}
-      if(event.key==='Tab'){event.preventDefault();move(entry,0,event.shiftKey?-1:1,false);return;}
-      if(event.key==='Enter'){event.preventDefault();move(entry,event.shiftKey?-1:1,0,false);}
+      if(arrows[event.key]){
+        event.preventDefault();
+        if(move(entry,...arrows[event.key],event.shiftKey)&&editMode&&!event.shiftKey)editActiveCell(entry);
+        return;
+      }
+      if(event.key==='Tab'){event.preventDefault();if(move(entry,0,event.shiftKey?-1:1,false)&&editMode)editActiveCell(entry);return;}
+      if(event.key==='Enter'){event.preventDefault();if(move(entry,event.shiftKey?-1:1,0,false)&&editMode)editActiveCell(entry);return;}
+      if(!editMode||!entry.state.activeCell)return;
+      if(event.key==='F2'){if(editActiveCell(entry,{selectAll:false,triggers:true}))event.preventDefault();return;}
+      // Seçili hücrede yazmaya başlamak Excel'deki gibi düzenlemeyi açar; tuşun
+      // karakteri odaklanan ve tümü seçili editöre düşer.
+      if(isPrintableKey(event))editActiveCell(entry);
     },true);
   }
 
@@ -500,5 +664,5 @@
     return setFocus(entry,cell,{focus:false});
   }
 
-  return {resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,withNativeSelection,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
+  return {editActiveCell:tableId=>editActiveCell(tables.get(tableId)),resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,withNativeSelection,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
 });
