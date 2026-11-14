@@ -213,6 +213,29 @@
         "tr": "Koleksiyon ilk açılırken ekran bileşenleri yüklenene kadar sayfada yalnız MARKA/MODEL DETAYLARI başlıkları kalıyor, geri kalan alan boş görünüyordu. Artık bu sürede ortak yükleme kutusu gösterilir; bekleme uzarsa genel kültür kartı eklenir. Aynı düzeltme yükleme sırasında gizlenen diğer modül ekranlarında da geçerlidir.",
         "en": "When Collection first opened, only the BRAND/MODEL DETAILS headings stayed on the page until the screen components loaded, and the rest looked empty. A shared loading box is now shown during this time, with a trivia card added if the wait is long. The same fix applies to other module screens hidden while loading."
       }
+    },
+    {
+      "id": "cp-projection-stale-read-retry",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP, okuma sırasında gelen kayıt veya senkronla \"hazırlanamadı\" hatasına düşmez",
+        "en": "CP no longer fails with \"could not be prepared\" when a save or sync lands during loading"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu okumayı güncel veriyle yeniden dener; arayüzde yeni bir öğe yoktur, yalnız hata ekranı artık görünmez.",
+          "en": "The server retries the read with the current data; there is no new UI element, the error screen simply no longer appears."
+        }
+      },
+      "body": {
+        "tr": "CP verisi okunurken bir düzenleme kaydı veya senkron aynı anda veriyi değiştirirse okuma reddediliyor ve CP ekranı \"Hazır ekran önbelleği okunamadı\" hatasıyla boş kalıyordu. Okuma artık güncel veriyle otomatik yeniden denenir; arka plan yenilemesi yine de başarısız olursa açık CP tablosu ve kaydedilmemiş değişiklikler yerinde kalır.",
+        "en": "If an edit save or a sync changed the data while CP was being read, the read was rejected and the CP screen stayed empty with \"The prepared screen cache could not be read\". The read is now retried automatically with the current data; if a background refresh still fails, the open CP table and unsaved changes stay in place."
+      }
     }
   ]
 }
