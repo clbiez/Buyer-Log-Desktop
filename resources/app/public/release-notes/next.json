@@ -99,6 +99,35 @@
       }
     },
     {
+      "id": "deferred-modules-optional-ai-client",
+      "type": "fix",
+      "module": {
+        "tr": "Uygulama açılışı",
+        "en": "App startup"
+      },
+      "title": {
+        "tr": "Arka plan modül yüklemesi tek dosya hatasında kesilmez",
+        "en": "Background module loading no longer stops on a single file error"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "deferred-modules-friendly-warning.png",
+        "alt": {
+          "tr": "CP Tracker ekranında sağ altta 'Bazı yardımcı modüller yüklenemedi' bilgi mesajı görünüyor",
+          "en": "The CP Tracker screen shows a 'Some helper modules could not be loaded' info message at the bottom right"
+        },
+        "caption": {
+          "tr": "Teknik dosya adı yerine anlaşılır bir uyarı gösterilir; ayrıntı konsola yazılır.",
+          "en": "A clear warning is shown instead of a technical file name; details go to the console."
+        }
+      },
+      "body": {
+        "tr": "LCW AI istemcisi açılıştan sonra arka planda yüklenemediğinde (ör. sunucu geçici olarak meşgulken) diğer yardımcı modüllerin yüklenmesi de duruyor ve CP/Siparişler ekranında 'lcwai-assistant.js?rev=1 yüklenemedi' uyarısı çıkıyordu. Artık bu dosya düşse de kullanıcı erişimi, sağ tık menüsü ve kur gibi modüller yüklenir; AI paneli istemciyi açıldığında yeniden ister. Zorunlu bir modül yüklenemezse dosya adı yerine anlaşılır bir mesaj gösterilir.",
+        "en": "When the LCW AI client failed to load in the background after startup (e.g. while the server was briefly busy), loading of the other helper modules stopped too and CP/Orders showed 'lcwai-assistant.js?rev=1 could not be loaded'. Now modules such as user access, the context menu and FX still load if that file fails; the AI panel requests the client again when opened. If a required module cannot be loaded, a clear message is shown instead of a file name."
+      }
+    },
+    {
       "id": "orders-image-preview-closes-on-scroll",
       "type": "fix",
       "module": {
