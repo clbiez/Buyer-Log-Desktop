@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-13",
+  "publishedAt": "2026-11-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Tablolarda hücre seçimi, düzenleme ve yapıştırma",
-    "en": "Cell selection, editing and paste in tables"
+    "tr": "Tablolarda hücre seçimi ve düzenleme · LCW AI görsel ve dosya ekleri",
+    "en": "Cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment."
   },
   "changes": [
     {

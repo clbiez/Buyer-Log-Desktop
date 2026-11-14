@@ -1315,7 +1315,11 @@ function openLcwAiWebDiagnostics(requestingContents) {
     log('LCW AI tanılama penceresi kapandı; yakalanan istek: ' + count);
   });
   log('LCW AI tanılama penceresi açıldı.');
-  win.loadURL(LCWAI_HOME).catch(error => log('LCW AI tanılama sayfası açılamadı: ' + (error && error.code || 'load-failed')));
+  // SSO yönlendirmesi ilk yüklemeyi ERR_ABORTED ile iptal eder; bu hata değildir.
+  win.loadURL(LCWAI_HOME).then(null, error => {
+    if (error && error.code === 'ERR_ABORTED') return;
+    log('LCW AI tanılama sayfası açılamadı: ' + (error && error.code || 'load-failed'));
+  });
   return { ok: true };
 }
 
