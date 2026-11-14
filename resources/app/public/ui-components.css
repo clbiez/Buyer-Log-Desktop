@@ -15969,3 +15969,54 @@ html[data-ui-system="manifest"][data-ui-style="line"] table :is(td.num,td.money,
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .blDetailReportAccent {height:1px
 }
+/* Çizgi stili yüzey dili: çalışma alanındaki kap yüzeyler (panel, Overview widget'ı,
+   Backlog bölümü, tablo kabı) çerçevesizdir; ayrım başlığın yanından uzanan mürekkep
+   çizgisiyle yapılır. Kapların içindeki kontroller, alanlar ve iç kartlar mürekkep
+   çerçevesini korur. Pencere, çekmece ve menüler çerçeveli kalır. Yalnız ortak
+   --ui-group-divider token'ı kapsamlanır; yeni kenarlık kuralı yoktur. */
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.panel,.cardBox,.sourcebar,.tablewrap,.cpaFrame,.cpaCard) *,html[data-ui-system="manifest"][data-ui-style="line"] .ovHome > [data-overview-widget] *,html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvModuleToggle,.bpaModuleToggle,.bdaTitleToggle,.bdaFoldHead) * {--ui-group-divider:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.panel,.cardBox,.sourcebar,.tablewrap,.cpaFrame,.cpaCard),html[data-ui-system="manifest"][data-ui-style="line"] .ovHome > [data-overview-widget],html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvModuleToggle,.bpaModuleToggle,.bdaTitleToggle,.bdaFoldHead) {--ui-group-divider:transparent
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovHome,#view-backlog) :is(.ovPremiumHead > b,.ovInboxHead > b,.cpaCard > header > b,.ovBreakdownTitle,.ovPriorityTitle,.bpaSectionTitle,.bdaH) {display:flex !important;align-items:center;gap:10px;flex:1 1 0%;white-space:nowrap
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovHome,#view-backlog) :is(.ovPremiumHead > b,.ovInboxHead > b,.cpaCard > header > b,.ovBreakdownTitle,.ovPriorityTitle,.bpaSectionTitle,.bdaH)::after {content:"";flex:1 1 16px;min-width:16px;height:1px;background:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle) {display:flex !important;align-items:center;gap:10px;flex:1 1 auto;min-width:0;background:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle) > :is(.blvModuleHint,.bpaModuleHint) {order:3
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle)::after {content:"";order:2;flex:1 1 16px;min-width:16px;height:1px;background:var(--ui-line-ink)
+}
+/* Çizgi stili Backlog: karolar çerçevesiz ve zeminsiz; aralarında ince dikey ayırıcı,
+   üstte aşama renginde 2px işaret. Aşama renkleri ve sayılar aynı veriden gelir. */
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.bpaTile,.bdaKpi,.bpaRing) {--ui-group-divider:transparent;background:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile::before {content:"";position:absolute;left:-5px;top:10px;bottom:10px;width:1px;background:var(--ui-row-divider);pointer-events:none
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile::after {content:"";position:absolute;left:12px;right:12px;top:0;height:2px;background:var(--ui-metric-color,var(--ui-text));pointer-events:none
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile:hover {background:var(--ui-row-hover) !important
+}
+/* Çizgi stili izleri: oran çubukları 1px taban çizgisi + üstünde 3px dolgu olarak çizilir
+   (Overview kırılım, termin ufku, veri kapsamı). Değer ve genişlik hesapları değişmez. */
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack,.ovHorizonTrack,.cpaCoverageTrack) {position:relative !important;height:3px !important;min-height:3px !important;background:transparent !important;align-self:center
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack,.ovHorizonTrack,.cpaCoverageTrack)::before {content:"";position:absolute;left:0;right:0;top:1px;height:1px;background:var(--ui-row-divider);pointer-events:none
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack > .ovBdFill,.ovHorizonTrack > i,.cpaCoverageTrack > i) {position:relative !important;height:3px !important;min-height:3px !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .ovPulseBand {height:2px !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovClockChip,.ovPulseKpi,.cpaOverviewMetric) {background:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChip:hover {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipFace {display:inline-block
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipFace rect {fill:none;stroke:var(--ui-line-ink);stroke-width:1
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipHand {background:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .cpaOverviewMetric {--ui-group-divider:transparent
+}

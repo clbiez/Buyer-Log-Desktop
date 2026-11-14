@@ -411,3 +411,9 @@
 
 /* The compact Checklist summary scrolls details within its saved widget size. */
 .ovHome>#ovChecklistRules>#cpAssistant{overflow:auto}
+/* Saat çipi mini kadranı (yalnız Çizgi stilinde gösterilir; görünüm ui-components.css). */
+.ovClockChipFace{position:relative;display:none;flex:0 0 auto;width:16px;height:16px;}
+.ovClockChipFace svg{position:absolute;inset:0;width:16px;height:16px;}
+.ovClockChipHand{position:absolute;left:50%;bottom:50%;display:block;width:1px;transform-origin:50% 100%;}
+.ovClockChipHand--hour{height:4px;}
+.ovClockChipHand--minute{height:6px;}
