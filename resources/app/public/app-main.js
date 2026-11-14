@@ -840,12 +840,14 @@ function openDateCalendarPopup(display){
   (display.closest('dialog:modal')||document.body).appendChild(_dateCalendarPopup);
   renderDateCalendarPopup();
 }
-document.addEventListener('mousedown',e=>{
+// pointerdown (capture): CP/Orders hücre seçimi pointerdown'ı iptal ettiğinde
+// tarayıcı mousedown göndermez; dışarı tıklama kapanışı yine de çalışmalı.
+document.addEventListener('pointerdown',e=>{
   if(!_dateCalendarPopup) return;
   const wrap=_dateCalendarDisplay && _dateCalendarDisplay.closest('.dateFieldWrap');
   if(_dateCalendarPopup.contains(e.target) || (wrap && wrap.contains(e.target))) return;
   closeDateCalendarPopup(false);
-});
+},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && _dateCalendarPopup){ e.preventDefault(); closeDateCalendarPopup(true); }
 });
@@ -10765,12 +10767,25 @@ function showLicenseDrop(input){
     ev.preventDefault(); input.value=item.textContent; input.dispatchEvent(new Event('change',{bubbles:true})); closeLicenseDrop();
   }));
 }
-document.addEventListener('mousedown', e=>{
-  if(_submfrDrop && !_submfrDrop.contains(e.target) && (!e.target.dataset || e.target.dataset.kind!=='submfr')) closeSubmfrDrop();
-  if(_licensorDrop && !_licensorDrop.contains(e.target) && (!e.target.dataset || e.target.dataset.kind!=='licensor')) closeLicensorDrop();
-  if(_licenseDrop && !_licenseDrop.contains(e.target) && (!e.target.dataset || e.target.dataset.kind!=='license')) closeLicenseDrop();
-  if(_kolCatalogDrop && !_kolCatalogDrop.contains(e.target) && !e.target.classList?.contains('kolSuggestCell')) closeKolCatalogDrop();
-});
+// pointerdown (capture): hücre seçimi pointerdown'ı iptal edip mousedown'ı
+// bastırdığında da öneri listeleri dışarı tıklamayla kapanır. Koleksiyon
+// tablosunun stopImmediatePropagation'ı belge yakalama aşamasından sonra gelir.
+function closeSuggestionDropsOutside(target){
+  if(_submfrDrop && !_submfrDrop.contains(target) && (!target?.dataset || target.dataset.kind!=='submfr')) closeSubmfrDrop();
+  if(_licensorDrop && !_licensorDrop.contains(target) && (!target?.dataset || target.dataset.kind!=='licensor')) closeLicensorDrop();
+  if(_licenseDrop && !_licenseDrop.contains(target) && (!target?.dataset || target.dataset.kind!=='license')) closeLicenseDrop();
+  if(_kolCatalogDrop && !_kolCatalogDrop.contains(target) && !target?.classList?.contains('kolSuggestCell')) closeKolCatalogDrop();
+}
+document.addEventListener('pointerdown', e=>closeSuggestionDropsOutside(e.target), true);
+// Klavyeyle (ok/Tab/Esc) editörden çıkıldığında da öneri listesi açık kalmasın.
+document.addEventListener('focusout', e=>{
+  const kind=e.target?.dataset?.kind;
+  if(kind!=='submfr'&&kind!=='licensor'&&kind!=='license')return;
+  const next=e.relatedTarget;
+  if(next&&[_submfrDrop,_licensorDrop,_licenseDrop].some(drop=>drop&&drop.contains(next)))return;
+  if(next&&next.dataset&&next.dataset.kind===kind)return;
+  if(kind==='submfr')closeSubmfrDrop();else if(kind==='licensor')closeLicensorDrop();else closeLicenseDrop();
+}, true);
 function enterDateEdit(span){
   const id = span.dataset.id, key = span.dataset.key, kind = span.dataset.kind;
   const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
@@ -14431,6 +14446,10 @@ function registerManagedGridClipboard(tableId,tableKey){
       ? meta.cellText(column,row)
       : cellPlainText(column,row,meta.computeFn?meta.computeFn(row):null),
     exporter:BLTableExport,
+    // Koleksiyon ile aynı: tek tık seçer, çift tık düzenler; klavyeyle varılan
+    // düzenlenebilir hücre doğrudan düzenleme modunda açılır.
+    editOnDoubleClick:true,
+    editTriggerSelector:'.delTypeTrigger,.impTrigger,.clStatusTrigger,.exfDisplay,.noteCellTrigger',
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
     pasteTarget:tableKey==='cp'?cpPasteTarget:ordersPasteTarget,
     pasteValue:cpPasteValue,
@@ -27611,9 +27630,26 @@ function genericMoveRow(el, dir){
   // Grup/ayraç satırlarını (düzenlenebilir hücresi olmayan) atlayarak bir sonraki gerçek veri satırını bul.
   while(sib && !sib.querySelector(`[${attr}]`)) sib = dir>0 ? sib.nextElementSibling : sib.previousElementSibling;
   if(!sib) return false;
-  const target = [...sib.querySelectorAll(`[${attr}]`)].find(x=>x.getAttribute(attr)===val);
-  if(target){ target.focus(); if(target.select) target.select(); return true; }
+  // Hücrenin kendisi de (td[data-key]) aynı özniteliği taşır; önce hücre
+  // içindeki editörü/tetikleyiciyi tercih et, yoksa hücreye düş.
+  const matches = [...sib.querySelectorAll(`[${attr}]`)].filter(x=>x.getAttribute(attr)===val);
+  const target = matches.find(x=>x.tagName!=='TD') || matches[0];
+  if(target) return genericFocusNavTarget(target);
   return false;
+}
+// CP/Orders: hedef hücrede gerçek editör yoksa (tarih span'i, açılır menü
+// düğmesi) odak tetikleyiciye verilmez; hücre ortak grid seçiminde seçili kalır.
+function genericFocusNavTarget(target){
+  const native=/^(INPUT|SELECT|TEXTAREA)$/.test(String(target.tagName||'').toUpperCase());
+  const td=target.closest&&target.closest('td[data-key]'),tr=td&&td.closest('tr[data-id]'),table=td&&td.closest('table');
+  if(!native&&table&&(table.id==='cpTable'||table.id==='ordersTable')&&window.BLGridClipboard){
+    window.BLGridClipboard.restoreActive(table.id,{rowId:String(tr.dataset.id),columnId:String(td.dataset.key)});
+    table.focus({preventScroll:true});
+    td.scrollIntoView({block:'nearest',inline:'nearest'});
+    return true;
+  }
+  target.focus(); if(target.select) target.select();
+  return true;
 }
 function genericMoveCol(el, dir){
   let td = el.closest('td'); if(!td) return false;
@@ -27659,7 +27695,10 @@ function managedEditorSnapshot(el){
     if(editor.classList && editor.classList.contains('kolPriceCell')) return {route:'kolPrice', editor, display};
     if(editor.dataset && editor.dataset.k!=null) return {route:'kol', editor, display};
   }
-  if(tableId==='cpTable') return {route:'cp', editor, display};
+  // Yalnız gerçek değer taşıyan editörler kaydedilir. Odak alabilen Del. Type
+  // düğmesi veya tarih gösterim span'i (value boş) kaydedilseydi hücre boş
+  // değerle/baz tarihle ezilirdi.
+  if(tableId==='cpTable' && /^(INPUT|SELECT|TEXTAREA)$/.test(String(editor.tagName||'').toUpperCase())) return {route:'cp', editor, display};
   return null;
 }
 function commitManagedEditorSnapshot(snap, options={}){
@@ -27956,13 +27995,15 @@ document.addEventListener('keydown',e=>{
       genericMoveRow(el,-1);
       break;
     case 'ArrowRight':
-      if(el.tagName==='INPUT' && el.selectionStart===el.value.length && el.selectionEnd===el.value.length){
+      // Klavyeyle varılan hücrede değerin tamamı seçilidir: ok tuşu doğrudan
+      // yan hücreye geçer (Excel giriş modu). İmleç yerleştirildiyse yalnız uçta.
+      if(el.tagName==='INPUT' && el.selectionEnd===el.value.length && (el.selectionStart===el.value.length || (el.selectionStart===0 && snap.route==='cp'))){
         setTimeout(()=>commitManagedEditorSnapshot(snap,{refresh:false}),0);
         if(genericMoveCol(el,1)) e.preventDefault();
       }
       break;
     case 'ArrowLeft':
-      if(el.tagName==='INPUT' && el.selectionStart===0 && el.selectionEnd===0){
+      if(el.tagName==='INPUT' && el.selectionStart===0 && (el.selectionEnd===0 || (el.selectionEnd===el.value.length && snap.route==='cp'))){
         setTimeout(()=>commitManagedEditorSnapshot(snap,{refresh:false}),0);
         if(genericMoveCol(el,-1)) e.preventDefault();
       }
