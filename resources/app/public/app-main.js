@@ -2460,7 +2460,11 @@ function switchTab(tab){
       if(tab==='cp'&&state.cp)renderCP();
       if(tab==='orders'&&state.orders)renderOrders();
       if(tab==='shipping'&&typeof renderShipTable==='function')renderShipTable();
-    }).catch(err=>showToast(err.message));
+    }).catch(err=>{
+      // Arka plan yardımcı modülleri: teknik dosya adı konsola, kullanıcıya anlaşılır mesaj.
+      console.warn('Gecikmeli arayüz modülleri yüklenemedi:',err);
+      showToast(appLang==='en'?'Some helper modules could not be loaded. If a feature is missing, reload the page.':'Bazı yardımcı modüller yüklenemedi. Eksik bir özellik görürseniz sayfayı yenileyin.');
+    });
   }
   if(tab==='koleksiyon'){
     void ensureCollectionCatalogLoaded();
