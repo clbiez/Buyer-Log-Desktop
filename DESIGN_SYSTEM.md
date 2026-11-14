@@ -84,7 +84,32 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
   kenar başına `--ui-motion-overlay` × 0,25 gecikme); içerik çizgiden sonra belirir,
   çizgi söner ve yüzeyin kendi sınırı kalır. İptal, sekme değişimi ve hareketin
   kapatılması çerçeveyi hemen kaldırır; reduced-motion'da çizilmez.
+- **Yüzey dili:** çalışma alanındaki kap yüzeyler (`.panel`, Overview widget'ı, Backlog
+  bölümü, `.tablewrap`) çerçevesizdir; yalnız o kapsamda `--ui-group-divider` saydam
+  yapılır, içindeki her öğede yeniden `--ui-line-ink` olur (kontroller, alanlar, iç
+  kartlar çerçeveli kalır). Pencere, çekmece ve menüler çerçeveli kalır. Overview ve
+  Backlog başlıkları "başlık — çizgi — araçlar" düzenindedir (`::after` 1px çizgi).
+- **Veri işaretleri:** oran izleri (`.ovBdTrack`, `.ovHorizonTrack`, `.cpaCoverageTrack`)
+  1px taban çizgisi + 3px dolgu; Backlog karoları zeminsiz, ince dikey ayırıcı ve aşama
+  renginde 2px üst işaret. Aşama renkleri ve hesaplar Klasik'le aynıdır.
+- **Kabuk:** üst çubuk eylemleri çerçevesiz; bağlantı durumu 14px çizgi (bağlı mürekkep,
+  kuruluyor uyarı, bağlı değil `--ui-line-mark`); seçim çubuğu mürekkep zeminli (çubuk
+  içinde token'lar `--ui-line-paper` / `--ui-line-ink-hover` ile tersine çevrilir);
+  saat çiplerinde mini kare kadran (`.ovClockChipFace`, Klasik'te gizli).
+- Bilinçli olarak yapılmayanlar: kritik satıra sol şerit (satır düzeyinde işaret yok;
+  `:has()` ve yeni gölge gerekir), araç çubuğunun metinli menülere yeniden gruplanması
+  (davranış kancası olan düğümler taşınmaz).
 - Sözleşme testi: `tests/ui-line-style.test.js`.
+
+### 2.2 Rapor görünümü
+
+CP, Siparişler ve Koleksiyon görünüm seçicisinin sonunda (Alanlar ve Kısmi görünümden sonra)
+**Rapor görünümü** (`[data-table-report]`, TR/EN) bulunur. Tablonun o anki filtre ve
+sıralama sonucunu paylaşılan detay rapor motorunda (`BLDetailDrawer`,
+`BLDetailReportLayout.project`; rol gruplu, iki satırlı hücreler) açar. Salt okunurdur:
+ön ayar, filtre, seçim ve kayıt değişmez; arama, alan filtresi, sütun seçimi ve Excel
+çekmecede kalır. Görünür kayıt yoksa uyarı verir. İki arayüz stilinde de vardır.
+Test: `tests/table-report-view.test.js`.
 
 ## 3. Tipografi ve dört boyut
 

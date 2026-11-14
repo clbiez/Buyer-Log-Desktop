@@ -12,7 +12,7 @@ const path = require('node:path');
 const PUBLIC = path.join(__dirname, '..', 'public');
 const read = name => fs.readFileSync(path.join(PUBLIC, name), 'utf8');
 
-test('each table view picker offers Report view in TR/EN after the three presets', () => {
+test('each table view picker offers Report view in TR/EN after the presets and Fields', () => {
   const html = read('index.html');
   for (const key of ['cp', 'orders', 'koleksiyon']) {
     const start = html.indexOf(`data-bl-view-picker="${key}"`);
