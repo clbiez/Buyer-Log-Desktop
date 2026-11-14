@@ -5064,6 +5064,32 @@ document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
 });
+/* Rapor görünümü: tablonun o anki filtre/sıralama sonucundaki kayıtları paylaşılan
+   detay rapor motorunda (BLDetailDrawer) açar. Alanlar rol gruplarında iki satırlı
+   hücrelerde durur; böylece tablo daha az sütunla okunur. Salt okunurdur; tablo, filtreler, seçim ve
+   kayıtlar değişmez. Arama, alan filtresi, sütun seçimi ve Excel çekmecede kalır. */
+function openTableReportView(tableKey,trigger){
+  const en=appLang==='en';
+  const names={cp:'CP Tracker',orders:en?'Orders':'Siparişler',koleksiyon:en?'Collection':'Koleksiyon'};
+  if(!names[tableKey])return false;
+  let rows=[];
+  try{rows=tableKey==='cp'?filteredCP():tableKey==='orders'?filteredOrders():filteredKol();}catch(err){console.warn('Rapor görünümü satırları alınamadı:',err);rows=[];}
+  if(!rows.length){showToast(en?'There are no visible records to show in report view.':'Rapor görünümünde gösterilecek görünür kayıt yok.');return false;}
+  const title=names[tableKey]+' · '+(en?'Report view':'Rapor görünümü');
+  if(tableKey==='koleksiyon'){
+    if(!window.BLCollectionAnalyticsBridge?.openDrilldown)return false;
+    window.BLCollectionAnalyticsBridge.openDrilldown(rows,title);return true;
+  }
+  if(!window.BLDetailDrawer?.open)return false;
+  window.BLDetailDrawer.open({storageKey:tableKey+'.report.view',moduleId:tableKey,source:tableKey,tableSetup:tableKey,title,fileName:title,
+    subtitle:en?'Current filters and sorting':'Geçerli filtre ve sıralama',
+    rows,columns:[],images:true,trigger:trigger||null});
+  return true;
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-table-report]');if(!button)return;
+  openTableReportView(button.dataset.tableReport,button.closest('.blViewPicker')?.querySelector('[data-bl-view-trigger]')||button);
+});
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
   const tableKey=button.dataset.partialViewToggle;

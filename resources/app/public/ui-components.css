@@ -15938,9 +15938,9 @@ html[data-ui-system="manifest"][data-ui-style="line"] .blLineFrame {position:fix
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .blLineFrame path {fill:none;stroke:var(--ui-line-ink);stroke-width:1;shape-rendering:crispEdges
 }
-html[data-ui-system="manifest"][data-ui-style="line"] :is(h1,h2,h3,h4,.cardTitle,.modalTitle,[class*="Title"],.bdaH,.ovInboxHead > b,.ovPremiumHead b,.pdLaneHead,.tableFieldsGridHead) {text-transform:none !important;letter-spacing:-.01em !important
+html[data-ui-system="manifest"][data-ui-style="line"] :is(h1,h2,h3,h4,.cardTitle,.modalTitle,[class*="Title"],.bdaH,.ovInboxHead > b,.ovPremiumHead b,.pdLaneHead,.tableFieldsGridHead,.blDetailDrawerTitle b) {text-transform:none !important;letter-spacing:-.01em !important
 }
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.cardTitle,.modalTitle,.dmTitle,.autoHeader h2,.ovInboxHead > b,.ovPremiumHead b,.globalFlowTitle,.ovBreakdownTitle,.ovPriorityTitle,.bdaTitle,.bdaH,.bpaModuleTitle,.blvModuleTitle,.bpaSectionTitle,.psaTitle,.lcTitle,.ocSectionTitle,.pricingWorkspaceHeader h1,.pricingPaneTitle) {font-family:var(--ui-font-heading) !important;font-weight:500 !important;font-size:var(--ui-font-lg) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.cardTitle,.modalTitle,.dmTitle,.autoHeader h2,.ovInboxHead > b,.ovPremiumHead b,.globalFlowTitle,.ovBreakdownTitle,.ovPriorityTitle,.bdaTitle,.bdaH,.bpaModuleTitle,.blvModuleTitle,.bpaSectionTitle,.psaTitle,.lcTitle,.ocSectionTitle,.pricingWorkspaceHeader h1,.pricingPaneTitle,.blDetailDrawerTitle b) {font-family:var(--ui-font-heading) !important;font-weight:500 !important;font-size:var(--ui-font-lg) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .appTop h1 {font:500 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important;text-transform:none !important;letter-spacing:-.02em !important;color:var(--ui-text) !important
 }
@@ -15966,4 +15966,6 @@ html[data-ui-system="manifest"][data-ui-style="line"] :is(nav.tabs button:hover:
 html[data-ui-system="manifest"][data-ui-style="line"],html[data-ui-system="manifest"][data-ui-style="line"] body * {font-feature-settings:"tnum" 0 !important
 }
 html[data-ui-system="manifest"][data-ui-style="line"] table :is(td.num,td.money,td.backlogNum,th.backlogTh--num) {font-family:var(--ui-font-mono) !important;letter-spacing:0 !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .blDetailReportAccent {height:1px
 }
