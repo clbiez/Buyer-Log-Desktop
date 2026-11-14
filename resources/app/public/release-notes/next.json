@@ -41,6 +41,35 @@
       }
     },
     {
+      "id": "collection-multi-cell-paste-plm-image-rows",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM görselli koleksiyonlarda çok hücreli yapıştırma yeniden çalışır",
+        "en": "Multi-cell paste works again in collections with PLM images"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-multi-cell-paste-preview.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda iki hücreye yapıştırma için önizleme penceresi: iki Sezon değişikliği ve Uygula ve kaydet düğmesi",
+          "en": "Paste preview window for two cells in the Collection table: two Season changes and the Apply and save button"
+        },
+        "caption": {
+          "tr": "Birden çok hücre seçilip yapıştırıldığında önizleme açılır; uyarı vermeden değişiklikleri uygular.",
+          "en": "Pasting into several selected cells opens the preview and applies the changes without a warning."
+        }
+      },
+      "body": {
+        "tr": "PLM görseli olan modeller, kaydedildikten sonra bile değişmiş sayılıyordu. Bu yüzden birden çok hücreye yapıştırmada \"Önceki değişiklikler henüz kaydedilemedi\" uyarısı çıkıyor ve hiçbir şey yapıştırılmıyordu. Artık kayıttan sonra tablo temiz sayılır, yapıştırma önizlemesi açılır; bu modeller her kayıtta gereksiz yere yeniden gönderilmez.",
+        "en": "Models with a PLM image were treated as changed even after saving, so pasting into several cells showed the \"Earlier changes could not be saved yet\" warning and nothing was pasted. The table is now clean after saving and the paste preview opens; these models are no longer re-sent on every save."
+      }
+    },
+    {
       "id": "collection-range-selection-outline",
       "type": "fix",
       "module": {
