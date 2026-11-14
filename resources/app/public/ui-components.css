@@ -15402,7 +15402,7 @@ html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:c
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
-html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg),
+html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg,.lflCard,.lflScenarioCard),
 html[data-ui-system="manifest"] .ovHome > [data-overview-widget],
 /* Backlog adapters need the migrated scope to survive the shared panel reset. */
 html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-backlog,.blvFilterRoot,.bpaDrawerRoot) :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvFilterDrawer,.bpaDrawer,.blvExportMenu) {
@@ -15411,7 +15411,7 @@ html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-ba
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
   border-bottom:1px solid var(--ui-row-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.lflButton,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
 html[data-ui-system="manifest"] .vfBar select,
 /* Backlog actions and segments use the same boundary as shared buttons. */
@@ -15912,3 +15912,13 @@ html[data-ui-system="manifest"] .lcwaiMatrixOptions input[type="range"]{width:10
 
 html[data-ui-system="manifest"] .lcwaiMatrixHead{background:var(--ui-surface-soft);font-size:var(--ui-font-2xs);z-index:var(--ui-z-raised)}
 html[data-ui-system="manifest"] .lcwaiMatrixField[open]{background:var(--ui-selected)}
+
+/* 7.0.356 — LFL kompakt filtre çubuğu. LFL kartları (.lflCard/.lflScenarioCard)
+   ve eylemleri (.lflButton) yukarıdaki ortak çerçeve listelerine eklendi; filtre
+   tetikleyicileri alan sınırını (--ui-field-border) ortak listeden alır. */
+html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter,:disabled,.isTrialDisabled),
+html[data-ui-system="manifest"] #view-lfl .lflPeriodDimWrap .lflDateFieldSelect {background:var(--ui-surface) !important;}
+html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter,:disabled,.isTrialDisabled):hover {background:var(--ui-row-hover) !important;}
+html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter) {font-weight:520 !important;}
+html[data-ui-system="manifest"] #view-lfl .lflPeriodDimWrap .lflDateFieldSelect {font:650 var(--ui-font-xs)/1 var(--ui-font-body) !important;color:var(--ui-text-secondary) !important;border-right:0 !important;}
+html[data-ui-system="manifest"] #view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap)::before {background:var(--ui-group-divider);}
