@@ -8559,7 +8559,7 @@ html[data-ui-system="manifest"] .autoWebScriptStatus.isError {color:var(--ui-dan
 }
 
 /* Manifest shared appearance adapters: commercial. Module files contain layout only. */
-html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolActiveGridCell,html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolSpreadsheetActiveCell {outline:0;background-image:none !important
+html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolActiveGridCell,html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolSpreadsheetActiveCell {background-image:none !important
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead th.kolActiveGridHeader,html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead th.kolSpreadsheetActiveHeader {color:var(--ui-accent)!important;background:var(--ui-surface-soft)!important
 }
