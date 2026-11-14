@@ -47,5 +47,5 @@ test('CP/Siparişler’e tekrar girişte değişmemiş tablo baştan çizilmez (
   assert.match(body, /if\(currentActiveTab\(\)!==tab\|\|deferredUiWasLoaded\)return;/);
   const runtime = fs.readFileSync(path.join(__dirname, '..', 'public', 'perf-runtime.js'), 'utf8');
   assert.match(runtime, /function isFeatureLoaded\(name\)\{return loadedFeatures\.has\(String\(name\)\);\}/);
-  assert.match(runtime, /for\(const file of files\)await loadScriptWithRetry\(file\);[\s\S]*?loadedFeatures\.add\(name\);/);
+  assert.match(runtime, /for\(const file of files\)\{\s*try\{await loadScriptWithRetry\(file\);\}[\s\S]*?loadedFeatures\.add\(name\);/);
 });

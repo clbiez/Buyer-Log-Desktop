@@ -112,5 +112,5 @@ test('istemci: "View Conflicts" çakışmaları ayrıntılı listeler ve çözd�
 test('istemci: geçici betik yükleme hatası bir kez yeniden denenir', () => {
   const perf = fs.readFileSync(path.join(__dirname, '..', 'public', 'perf-runtime.js'), 'utf8');
   assert.match(perf, /async function loadScriptWithRetry\(rawSrc\)/);
-  assert.match(perf, /for\(const file of files\)await loadScriptWithRetry\(file\)/);
+  assert.match(perf, /for\(const file of files\)\{\s*try\{await loadScriptWithRetry\(file\);\}/);
 });
