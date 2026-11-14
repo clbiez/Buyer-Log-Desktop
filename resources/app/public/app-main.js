@@ -22746,6 +22746,41 @@ function cycleUiFontStep(){const cur=normalizeUiFontStep(document.documentElemen
 document.getElementById('railFontSizeBtn')?.addEventListener('click',cycleUiFontStep);
 applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
 
+/* Arayüz stili: Klasik (varsayılan) veya Çizgi. Yalnız kök niteliği değişir;
+   token ve bileşen görünümü ui-tokens.css / ui-components.css'tedir. İş verisi,
+   tablo durumu ve seçimler korunur; değişim tema geçişiyle aynı Motion+ yolunu kullanır. */
+const UI_STYLES={classic:{tr:'Klasik',en:'Classic'},line:{tr:'Çizgi',en:'Line'}};
+function normalizeUiStyle(value){return value==='line'?'line':'classic';}
+function syncUiStyleControl(){
+  const style=normalizeUiStyle(document.documentElement.dataset.uiStyle),preset=UI_STYLES[style];
+  const btn=document.getElementById('railUiStyleBtn'),label=document.getElementById('railUiStyleLabel');
+  if(label)label.textContent=appLang==='en'?`Style: ${preset.en}`:`Stil: ${preset.tr}`;
+  if(btn){
+    btn.setAttribute('aria-pressed',style==='line'?'true':'false');
+    btn.title=appLang==='en'?`Interface style: ${preset.en} · click to switch to ${style==='line'?UI_STYLES.classic.en:UI_STYLES.line.en}`:`Arayüz stili: ${preset.tr} · ${style==='line'?UI_STYLES.classic.tr:UI_STYLES.line.tr} stiline geçmek için tıkla`;
+  }
+}
+function applyUiStyle(value,{persist=true,animate=false,origin=null}={}){
+  const style=normalizeUiStyle(value),root=document.documentElement;
+  if(persist)try{BLStorage.setItem('lcw_ui_style',style);}catch(_){}
+  const update=()=>{
+    if(style==='line')root.dataset.uiStyle='line';else delete root.dataset.uiStyle;
+    window.BLUIAppearance?.remember();
+    syncUiStyleControl();
+    requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+  };
+  if(normalizeUiStyle(root.dataset.uiStyle)===style){update();return style;}
+  if(animate&&window.BLMotionPlus?.theme?.(update,origin))return style;
+  const release=beginFastThemeSwitch();
+  update();
+  if(release)release(false);
+  return style;
+}
+document.getElementById('railUiStyleBtn')?.addEventListener('click',e=>{
+  applyUiStyle(normalizeUiStyle(document.documentElement.dataset.uiStyle)==='line'?'classic':'line',{animate:true,origin:e.currentTarget});
+});
+syncUiStyleControl();
+
 const _themeBtnEl = document.getElementById('themeBtn');
 if(_themeBtnEl) _themeBtnEl.addEventListener('click', ()=>{
   const panel = document.getElementById('themePanel'); if(!panel) return;
@@ -41561,6 +41596,7 @@ function applyLanguage(lang){
   document.getElementById('backlogExportColumnsModal')?.refreshLanguage?.();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
   if(typeof applyUiFontStep==='function') applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
+  if(typeof syncUiStyleControl==='function') syncUiStyleControl();
   translateSubtree(document.querySelector('.sourcebar'));
   translateSubtree(document.querySelector('.vfBar'));
   translateSubtree(document.getElementById('view-koleksiyon'));

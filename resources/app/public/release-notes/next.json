@@ -7,10 +7,39 @@
     "en": "Cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. Görünüm menüsüne yeni bir arayüz stili eklendi: Çizgi; kâğıt zemin, mürekkep çizgiler ve çizilerek açılan pencereler. Klasik görünüm varsayılan olarak kalır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. A new interface style was added to the Appearance menu: Line, with a paper background, ink lines and windows that open by being drawn. The classic look stays the default."
   },
   "changes": [
+    {
+      "id": "ui-line-style",
+      "type": "feature",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Yeni arayüz stili: Çizgi",
+        "en": "New interface style: Line"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-line-style.png",
+        "alt": {
+          "tr": "Genel Bakış Çizgi stilinde: kâğıt zemin, mürekkep çizgili paneller, seçili Overview modülünün yanında yatay çizgi ve sol altta açık Görünüm menüsünde Stil: Çizgi seçeneği",
+          "en": "Overview in the Line style: paper background, panels drawn with ink lines, a horizontal line next to the selected Overview module and the open Appearance menu showing Style: Line"
+        },
+        "caption": {
+          "tr": "Görünüm › Stil düğmesi Klasik ile Çizgi arasında geçer; seçim bu cihazda hatırlanır.",
+          "en": "Appearance › Style switches between Classic and Line; the choice is remembered on this device."
+        }
+      },
+      "body": {
+        "tr": "Görünüm menüsündeki Stil düğmesi bütün ekranları Çizgi stiline geçirir: kâğıt zemin, mürekkep renkli metin ve çizgiler, yalnız kritik durumlar için kırmızı vurgu, Schibsted Grotesk ve sayılarda JetBrains Mono. Pencereler, çekmeceler ve menüler açılırken önce çerçeveleri çizilir, içerik ardından gelir. Açık ve koyu tema, dört arayüz boyutu, tablolar, filtreler, düzenleme ve Excel çıktıları aynı şekilde çalışır. Klasik görünüm varsayılan olarak kalır; aynı düğmeyle istediğiniz an geri dönebilirsiniz.",
+        "en": "The Style button in the Appearance menu switches every screen to the Line style: paper background, ink-coloured text and lines, red emphasis only for critical states, Schibsted Grotesk and JetBrains Mono for numbers. Windows, drawers and menus draw their frame first when they open, then show their content. Light and dark themes, the four interface sizes, tables, filters, editing and Excel output work the same. The classic look stays the default; the same button switches back at any time."
+      }
+    },
     {
       "id": "collection-single-cell-paste-direct",
       "type": "fix",

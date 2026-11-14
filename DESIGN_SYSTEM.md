@@ -54,6 +54,38 @@ karanlık temada aydınlık, açık temada koyudur. Her karta gölge yoktur.
 Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
 Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 
+### 2.1 Arayüz stili: Klasik ve Çizgi
+
+Kullanıcı Görünüm menüsündeki **Stil** düğmesiyle iki arayüz stili arasında geçer
+(`#railUiStyleBtn`, TR/EN). **Klasik varsayılandır**; bu bölümdeki her şey yalnız
+`html[data-ui-style="line"]` iken etkilidir. Seçim cihazda `lcw_ui_style` (BLStorage)
+ve giriş kabuğu için `buyerlog.ui.appearance.style` olarak saklanır, açılış betiği onu
+ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu kullanır.
+
+- **Çizgi** ("Cetvel"): kâğıt zemin, mürekkep metin ve çizgi, tek kırmızı vurgu
+  (kritik / kaydedilmemiş değişiklik). Birincil eylem ve seçim mürekkeple gösterilir.
+  Palet `ui-tokens.css` içinde `:root[data-ui-style="line"]` ve
+  `:root[data-ui-style="line"][data-theme="dark"]` bloklarındadır; panel, kontrol ve
+  alan sınırları aynı ortak token'lardan (`--ui-group-divider`, `--ui-field-border`)
+  mürekkep rengini alır. Yeni çerçeve, gölge veya köşe kuralı yoktur.
+- Fontlar: **Schibsted Grotesk** gövde/başlık, **JetBrains Mono** kod ve sayısal tablo
+  hücresi. OFL, yerel WOFF2, Latin + Latin-ext; yalnız bu stil seçildiğinde yüklenir.
+  Schibsted'in tablo rakamı noktayı genişlettiği için bu stilde `tnum` kapalıdır;
+  hiza gereken sayısal hücreler (`td.num`, `td.money`) mono yazıyla hizalanır.
+- Bileşen farkları `ui-components.css` sonundaki "Çizgi arayüz stili" bölümündedir:
+  başlıklar büyük harf yerine cümle düzeninde, ray seçimi zeminsiz kalın yazı +
+  metnin sağından rayın kenarına uzanan 2px `--ui-line-ink` çizgisi.
+- Ölçü, satır yüksekliği, dört arayüz boyutu, katmanlar, davranış kancaları ve
+  çıktı paletleri (§8) iki stilde aynıdır. Yeni modül iki stilde de token üzerinden
+  doğru görünür; stile özel modül CSS'i yazılmaz.
+- **Motion+ çizgi çerçevesi:** Çizgi stilinde `entrance()` üzerinden açılan her
+  pencere, çekmece ve menü (`play('overlay'|'drawer')` ve otomatik overlay algılama)
+  önce dört mürekkep çizgisiyle çizilir (`.blLineFrame`, köşelerde kısa taşma,
+  kenar başına `--ui-motion-overlay` × 0,25 gecikme); içerik çizgiden sonra belirir,
+  çizgi söner ve yüzeyin kendi sınırı kalır. İptal, sekme değişimi ve hareketin
+  kapatılması çerçeveyi hemen kaldırır; reduced-motion'da çizilmez.
+- Sözleşme testi: `tests/ui-line-style.test.js`.
+
 ## 3. Tipografi ve dört boyut
 
 Yerel/paketli OFL fontlar: **IBM Plex Sans** gövde, **Barlow Condensed** başlık,

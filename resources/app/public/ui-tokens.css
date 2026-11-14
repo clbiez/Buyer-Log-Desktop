@@ -56,6 +56,7 @@
  --ui-check-idle:#cdd4dc;--ui-row-divider:#e6e9ed;--ui-group-divider:#cbd1d9;--ui-field-border:#7a8796;
  --ui-row-hover:color-mix(in srgb,var(--ui-accent) 6%,var(--ui-surface));
  --ui-chart-grid:color-mix(in srgb,var(--ui-text) 16%,var(--ui-surface));
+ --ui-line-ink:var(--ui-text);--ui-line-mark:var(--ui-danger);
 }
 :root[data-theme="dark"]{
  color-scheme:dark;
@@ -81,6 +82,51 @@
 :root[data-ui-scale="xl"]{--ui-rail-width:240px;--ui-rail-collapsed-width:78px;--ui-rail-expanded-width:240px;--ui-rail-item-height:calc(35px * 1.25);--ui-rail-footer-height:42px;--ui-rail-control-size:38px;--ui-icon-control-size:42px;--ui-control-height-large:calc(42px + 6px);--ui-page-padding:25px;--ui-section-gap:20px;--ui-panel-padding:20px;--ui-table-edit-padding:4px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
 :root[data-ui-scale="compact"]{--ui-rail-width:196px;--ui-rail-collapsed-width:60px;--ui-rail-expanded-width:196px;--ui-rail-item-height:calc(35px * .9);--ui-rail-footer-height:32px;--ui-rail-control-size:28px;--ui-icon-control-size:32px;--ui-control-height-large:calc(30px + 6px);--ui-page-padding:18px;--ui-section-gap:14px;--ui-panel-padding:14px;--ui-table-edit-padding:1px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
 :root[data-theme="dark"]{color-scheme:dark;}
+
+/* Çizgi arayüz stili (data-ui-style="line") — kullanıcı başına seçilen ikinci görünüm.
+   Klasik stil varsayılandır ve bu bloktan etkilenmez. Yalnız token değerleri değişir:
+   kâğıt zemin, mürekkep çizgi/metin, tek kırmızı vurgu (kritik/kaydedilmemiş), Schibsted
+   Grotesk + JetBrains Mono. Ölçek, satır yüksekliği ve katmanlar klasikle aynıdır.
+   Fontlar yalnız bu stil seçildiğinde yüklenir (font-face tembel yüklenir). */
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:400;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-400-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:400;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-400-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:500;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-500-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:500;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-500-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:600;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-600-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:600;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:700;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-700-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL Schibsted Grotesk";font-style:normal;font-weight:700;font-display:swap;src:url("vendor/fonts/schibsted-grotesk-700-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"BL JetBrains Mono";font-style:normal;font-weight:400;font-display:swap;src:url("vendor/fonts/jetbrains-mono-400-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL JetBrains Mono";font-style:normal;font-weight:400;font-display:swap;src:url("vendor/fonts/jetbrains-mono-400-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"BL JetBrains Mono";font-style:normal;font-weight:600;font-display:swap;src:url("vendor/fonts/jetbrains-mono-600-latin-ext.woff2") format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"BL JetBrains Mono";font-style:normal;font-weight:600;font-display:swap;src:url("vendor/fonts/jetbrains-mono-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+:root[data-ui-style="line"]{
+ color-scheme:light;
+ --ui-font-body:"BL Schibsted Grotesk","BL Plex Sans",sans-serif;--ui-font-heading:"BL Schibsted Grotesk","BL Plex Sans",sans-serif;--ui-font-mono:"BL JetBrains Mono","BL Plex Mono",monospace;
+ --ui-canvas:#f3efe6;--ui-rail:#f3efe6;--ui-surface:#f3efe6;--ui-surface-soft:#efebe1;--ui-surface-strong:#ddd9d0;
+ --ui-text:#17150f;--ui-text-secondary:#3a362d;--ui-text-muted:#5b564b;
+ --ui-accent:#17150f;--ui-accent-hover:#3a362d;--ui-selected:#e2ded5;--ui-selected-ink:#17150f;--ui-on-accent:#f3efe6;
+ --ui-success:#2f6a46;--ui-success-bg:rgba(47,106,70,.12);--ui-danger:#c23a1b;--ui-danger-bg:rgba(194,58,27,.10);--ui-warning:#83560f;--ui-warning-bg:rgba(131,86,15,.12);
+ --ui-header-bg:#f3efe6;--ui-header-ink:#5b564b;--ui-group-header-bg:#f3efe6;--ui-group-header-ink:#5b564b;
+ --ui-check-idle:#9c978c;--ui-row-divider:#d9d5cc;--ui-group-divider:#17150f;--ui-field-border:#17150f;
+ --ui-row-hover:#e8e4db;--ui-status-default:#5b564b;--ui-backdrop-tint:rgba(23,21,15,.05);
+ --ui-shadow-color:rgba(23,21,15,.16);--ui-shadow-overlay:0 18px 40px var(--ui-shadow-color);
+ --ui-chart-3:#3e6c6f;--ui-chart-4:#8a573a;--ui-chart-5:#6a6032;--ui-chart-8:#55606d;
+ --ui-line-ink:#17150f;--ui-line-mark:#c23a1b;
+}
+:root[data-ui-style="line"][data-theme="dark"]{
+ color-scheme:dark;
+ --ui-canvas:#12110e;--ui-rail:#12110e;--ui-surface:#12110e;--ui-surface-soft:#181714;--ui-surface-strong:#2c2b27;
+ --ui-text:#efeadf;--ui-text-secondary:#cfc9ba;--ui-text-muted:#a9a394;
+ --ui-accent:#efeadf;--ui-accent-hover:#cfc9ba;--ui-selected:#282723;--ui-selected-ink:#efeadf;--ui-on-accent:#12110e;
+ --ui-success:#8fc4a2;--ui-success-bg:rgba(143,196,162,.14);--ui-danger:#ec6a45;--ui-danger-bg:rgba(236,106,69,.14);--ui-warning:#d9b46e;--ui-warning-bg:rgba(217,180,110,.14);
+ --ui-header-bg:#12110e;--ui-header-ink:#a9a394;--ui-group-header-bg:#12110e;--ui-group-header-ink:#a9a394;
+ --ui-check-idle:#5a574f;--ui-row-divider:#35342f;--ui-group-divider:#efeadf;--ui-field-border:#efeadf;
+ --ui-row-hover:#22201d;--ui-status-default:#a9a394;--ui-backdrop-tint:rgba(0,0,0,.14);
+ --ui-shadow-color:rgba(0,0,0,.5);
+ --ui-chart-3:#9fc6c4;--ui-chart-4:#d5b493;--ui-chart-5:#c9c39a;--ui-chart-8:#b2c0d2;
+ --ui-line-ink:#efeadf;--ui-line-mark:#ec6a45;
+}
 
 /* Collapsed navigation keeps the content offset at its narrow width. */
 :root[data-ui-scale][data-rail="min"]{--ui-rail-width:var(--ui-rail-collapsed-width);}

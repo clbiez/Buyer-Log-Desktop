@@ -29,7 +29,7 @@
   const activityAnimations=new Map();
   const disclosures=new WeakMap(),activeDisclosures=new Set(),nativeDisclosures=new WeakMap(),nativeInert=new WeakMap();
   let generation=0,activeTab='',overlayFrame=null,overlayBefore=null;
-  const pending=new Set(),animations=new Set(),pageAnimations=new Set();
+  const pending=new Set(),animations=new Set(),pageAnimations=new Set(),lineFrames=new Set();
   let pageFlow=null;
   const visible=el=>{
     if(!el||!el.isConnected||el.hidden||el.closest('[hidden],[aria-hidden="true"]'))return false;
@@ -59,6 +59,8 @@
     pending.clear();
     for(const a of animations){try{a.cancel();}catch(_){}}
     animations.clear();
+    for(const frame of lineFrames)frame.remove();
+    lineFrames.clear();
     pageAnimations.clear();pageFlow=null;
     activityAnimations.clear();
   }
@@ -259,13 +261,56 @@
     }
     return false;
   }
+  /* Çizgi arayüz stili (data-ui-style="line"): pencere, çekmece ve menü açılırken
+     çevresi önce dört mürekkep çizgisiyle çizilir (köşelerde kısa taşma), içerik
+     çizgiden sonra belirir; çizgi bitince söner ve yüzeyin kendi 1px sınırı kalır.
+     Klasik stilde hiçbir şey eklenmez. Sınırlı süreli; iptalde iz bırakmaz. */
+  const lineStyle=()=>html.dataset.uiStyle==='line';
+  function drawFrame(el){
+    if(!lineStyle()||typeof doc.createElementNS!=='function'||!doc.body)return;
+    const r=el.getBoundingClientRect();
+    if(r.width<24||r.height<12)return;
+    const NS='http://www.w3.org/2000/svg',o=Math.max(3,Math.min(7,Math.round(Math.min(r.width,r.height)/8)));
+    const W=Math.round(r.width)+o*2,H=Math.round(r.height)+o*2;
+    const svg=doc.createElementNS(NS,'svg');
+    svg.setAttribute('class','blLineFrame');svg.setAttribute('aria-hidden','true');
+    svg.setAttribute('width',String(W));svg.setAttribute('height',String(H));svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.style.left=Math.round(r.left-o)+'px';svg.style.top=Math.round(r.top-o)+'px';
+    const lines=['M0 '+(o+.5)+'H'+W,'M'+(W-o-.5)+' 0V'+H,'M'+W+' '+(H-o-.5)+'H0','M'+(o+.5)+' '+H+'V0'];
+    const step=duration('overlay')*.25,length=duration('overlay')*1.1;
+    let last=null;
+    lines.forEach((d,i)=>{
+      const path=doc.createElementNS(NS,'path');
+      path.setAttribute('d',d);path.setAttribute('pathLength','1');path.setAttribute('stroke-dasharray','1');
+      svg.appendChild(path);
+      last=path;path.dataset.blDelay=String(i*step);
+    });
+    doc.body.appendChild(svg);lineFrames.add(svg);
+    const done=()=>{lineFrames.delete(svg);svg.remove();};
+    let fin=null;
+    for(const path of svg.querySelectorAll('path')){
+      const a=start(path,[{strokeDashoffset:1},{strokeDashoffset:0}],{duration:length,delay:Number(path.dataset.blDelay)||0,fill:'both'});
+      if(!a){done();return;}
+      if(path===last)fin=a;
+    }
+    fin.addEventListener?.('cancel',done,{once:true});
+    fin.addEventListener?.('finish',()=>{
+      const fade=start(svg,[{opacity:1},{opacity:0}],{duration:duration('overlay'),fill:'forwards'});
+      if(!fade){done();return;}
+      fade.addEventListener?.('finish',done,{once:true});
+      fade.addEventListener?.('cancel',done,{once:true});
+    },{once:true});
+  }
   function entrance(el,frames){
     if(hasEntrance(el))return null;
     // placeMenu may shift a menu horizontally to keep it inside the viewport.
     const base=root.getComputedStyle?.(el)?.transform;
     if(base&&base!=='none')frames=frames.map(frame=>Object.assign({},frame,{transform:base+' '+frame.transform}));
-    const a=animate(el,frames,{duration:duration('overlay')});
-    if(a)a.id='bl-motion-entrance';
+    const drawn=lineStyle();
+    // Çizgi stilinde içerik, çerçeve çizilirken gizli bekler ve çizginin ardından gelir.
+    if(drawn)frames=[Object.assign({},frames[0],{opacity:0}),Object.assign({},frames[0],{opacity:0,offset:.42}),Object.assign({},frames[frames.length-1],{opacity:1})];
+    const a=animate(el,frames,{duration:duration('overlay')*(drawn?1.9:1)});
+    if(a){a.id='bl-motion-entrance';if(drawn)drawFrame(el);}
     return a;
   }
   function cancelHiddenEntrances(){

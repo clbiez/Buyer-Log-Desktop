@@ -8,6 +8,7 @@
   root.dataset.theme=theme;
   const step=Number.isInteger(saved.step)&&saved.step>=0&&saved.step<=3?saved.step:0;
   root.dataset.fontStep=String(step);root.dataset.uiScale=['standard','large','xl','compact'][step];
+  if(saved.style==='line')root.dataset.uiStyle='line';
  }catch(_){}
- window.BLUIAppearance={remember:function(){try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:root.dataset.theme,step:Number(root.dataset.fontStep)||0}));}catch(_){}}};
+ window.BLUIAppearance={remember:function(){try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify(Object.assign({theme:root.dataset.theme,step:Number(root.dataset.fontStep)||0},root.dataset.uiStyle==='line'?{style:'line'}:{})));}catch(_){}}};
 })();
