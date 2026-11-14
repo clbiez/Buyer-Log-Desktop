@@ -940,6 +940,7 @@ pairs:[
 ["Bu alana erişim yetkiniz yok.","You do not have access to this area."],
 ["Hazır ekran önbelleği bulunamadı.","The prepared screen cache was not found."],
 ["Hazır ekran önbelleği okunamadı.","The prepared screen cache could not be read."],
+["Veri okunurken güncellendi; ekranı yeniden deneyin.","Data changed while it was being read; retry the screen."],
 ["Genel Bakış verisi yüklenemedi.","Overview data could not be loaded."],
 ["CP verisi yüklenemedi.","CP data could not be loaded."],
 ["Koleksiyon filtre kataloğu yüklenemedi.","The Collection filter catalogue could not be loaded."],

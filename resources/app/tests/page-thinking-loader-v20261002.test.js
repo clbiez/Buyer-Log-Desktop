@@ -23,7 +23,9 @@ test('core page loading states use the shared status marker loader',()=>{
   assert.match(orders,/renderCorePageLoadingState\('orders',message\)/);
 
   const cp=block('async function ensureCpLoaded','async function ensureCollectionCatalogLoaded');
-  assert.match(cp,/currentActiveTab\(\)==='cp'\)renderCorePageLoadingState\('cp'\)/);
+  // İlk yükleme ortak yükleyiciyi kullanır; elde CP varken zorunlu yeniden
+  // yükleme tabloyu gizlemez (page-projection-stale-retry.test.js).
+  assert.match(cp,/currentActiveTab\(\)==='cp'&&!keepVisible\)renderCorePageLoadingState\('cp'\)/);
 });
 
 test('Orders failure stops the loading animation and renders an error state',()=>{

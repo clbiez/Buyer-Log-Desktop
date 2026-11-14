@@ -2174,8 +2174,11 @@ async function refreshCpStartupImageRegistry(rows){
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
+  // Zorunlu yeniden yüklemede (senkron/yenileme) elde çalışan bir CP varsa
+  // tablo yükleme ekranıyla gizlenmez; yükleme başarısız olursa da korunur.
+  const keepVisible=Boolean(state.cp);
   window.BLModulePreparation?.setStatus('cp','loading');
-  if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
+  if(currentActiveTab()==='cp'&&!keepVisible)renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
   cpLoadPromise=(async()=>{
     try{
@@ -2205,6 +2208,12 @@ async function ensureCpLoaded(options={}){
       return true;
     }catch(err){
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
+      if(keepVisible&&state.cp){
+        // Arka plan yenilemesi düştü: mevcut tablo ve kaydedilmemiş düzenlemeler
+        // yerinde kalır; kullanıcı bilgilendirilir, ekran hata paneline dönmez.
+        window.BLModulePreparation?.setStatus('cp','ready');overviewCpLoadState='ready';overviewCpLoadError='';
+        console.warn('CP yeniden yüklenemedi:',err);showToast(message);return false;
+      }
       window.BLModulePreparation?.setStatus('cp','error','CP_LOAD_FAILED');
       if(options.reason==='overview'||currentActiveTab()==='overview'){
         overviewCpLoadState='error';overviewCpLoadError=message;scheduleOverviewRender('cp-load-error');
