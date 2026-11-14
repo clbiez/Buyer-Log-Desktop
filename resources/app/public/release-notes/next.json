@@ -3,14 +3,72 @@
   "publishedAt": "2026-11-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Tablolarda hücre seçimi ve düzenleme · LCW AI görsel ve dosya ekleri",
-    "en": "Cell selection and editing in tables · LCW AI image and file attachments"
+    "tr": "Çizgi arayüz stili ve Rapor görünümü · Tablolarda hücre düzenleme",
+    "en": "Line interface style and Report view · Cell editing in tables"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. Görünüm menüsüne yeni bir arayüz stili eklendi: Çizgi; kâğıt zemin, mürekkep çizgiler ve çizilerek açılan pencereler. Klasik görünüm varsayılan olarak kalır. CP Tracker, Siparişler ve Koleksiyon tablolarına Rapor görünümü eklendi.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. A new interface style was added to the Appearance menu: Line, with a paper background, ink lines and windows that open by being drawn. The classic look stays the default. Report view was added to the CP Tracker, Orders and Collection tables."
   },
   "changes": [
+    {
+      "id": "ui-line-style",
+      "type": "feature",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Yeni arayüz stili: Çizgi",
+        "en": "New interface style: Line"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-line-style.png",
+        "alt": {
+          "tr": "Genel Bakış Çizgi stilinde: kâğıt zemin, mürekkep çizgili paneller, seçili Overview modülünün yanında yatay çizgi ve sol altta açık Görünüm menüsünde Stil: Çizgi seçeneği",
+          "en": "Overview in the Line style: paper background, panels drawn with ink lines, a horizontal line next to the selected Overview module and the open Appearance menu showing Style: Line"
+        },
+        "caption": {
+          "tr": "Görünüm › Stil düğmesi Klasik ile Çizgi arasında geçer; seçim bu cihazda hatırlanır.",
+          "en": "Appearance › Style switches between Classic and Line; the choice is remembered on this device."
+        }
+      },
+      "body": {
+        "tr": "Görünüm menüsündeki Stil düğmesi bütün ekranları Çizgi stiline geçirir: kâğıt zemin, mürekkep renkli metin ve çizgiler, yalnız kritik durumlar için kırmızı vurgu, Schibsted Grotesk ve sayılarda JetBrains Mono. Paneller çerçevesizdir; Genel Bakış ve Backlog başlıklarının yanından ince bir çizgi uzanır, oran çubukları ince çizgi üzerinde dolgu olarak çizilir, saat şeridinde küçük kadranlar görünür. Pencereler, çekmeceler ve menüler açılırken önce çerçeveleri çizilir, içerik ardından gelir. Seçim çubuğu mürekkep zeminlidir; bağlantı durumları çizgiyle gösterilir. Açık ve koyu tema, dört arayüz boyutu, tablolar, filtreler, düzenleme ve Excel çıktıları aynı şekilde çalışır. Klasik görünüm varsayılan olarak kalır; aynı düğmeyle istediğiniz an geri dönebilirsiniz.",
+        "en": "The Style button in the Appearance menu switches every screen to the Line style: paper background, ink-coloured text and lines, red emphasis only for critical states, Schibsted Grotesk and JetBrains Mono for numbers. Panels have no frames; a thin line runs beside Overview and Backlog headings, ratio bars are drawn as a fill on a thin line and the clock strip shows small dials. Windows, drawers and menus draw their frame first when they open, then show their content. The selection bar has an ink background and connection states are shown as lines. Light and dark themes, the four interface sizes, tables, filters, editing and Excel output work the same. The classic look stays the default; the same button switches back at any time."
+      }
+    },
+    {
+      "id": "table-report-view",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablolarda Rapor görünümü",
+        "en": "Report view for tables"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-report-view.png",
+        "alt": {
+          "tr": "CP Tracker Rapor görünümü: durum, sipariş/model, buyer/grup ve üretici/sezon alanları iki satırlı hücrelerde, üstte adet, satır, sipariş ve model özetleri",
+          "en": "CP Tracker report view: status, order/model, buyer/group and manufacturer/season fields in two-line cells, with quantity, row, order and model totals on top"
+        },
+        "caption": {
+          "tr": "Görünüm seçicisindeki Rapor görünümü, tablonun geçerli filtre ve sıralamasını rapor düzeninde açar.",
+          "en": "Report view in the view picker opens the table's current filters and sorting in report layout."
+        }
+      },
+      "body": {
+        "tr": "CP Tracker, Siparişler ve Koleksiyon'un görünüm seçicisinin sonuna Rapor görünümü eklendi. Görünen kayıtlar, alt detay raporundaki düzende açılır: ilgili alanlar tek sütunda iki satır olarak gruplanır, böylece tablo daha az sütunla okunur. Arama, alan filtresi, sütun seçimi ve Excel'e aktarma bu ekranda da çalışır. Rapor görünümü yalnız gösterimdir; tablonuz, filtreleriniz ve kayıtlar değişmez.",
+        "en": "Report view was added at the end of the view picker of CP Tracker, Orders and Collection. The visible records open in the same layout as the drill-down report: related fields are grouped as two lines in one column, so the table reads with fewer columns. Search, field filters, column choice and Excel export also work there. Report view only displays the data; your table, filters and records do not change."
+      }
+    },
     {
       "id": "collection-single-cell-paste-direct",
       "type": "fix",

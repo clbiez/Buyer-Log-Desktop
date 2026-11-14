@@ -5064,6 +5064,32 @@ document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
 });
+/* Rapor görünümü: tablonun o anki filtre/sıralama sonucundaki kayıtları paylaşılan
+   detay rapor motorunda (BLDetailDrawer) açar. Alanlar rol gruplarında iki satırlı
+   hücrelerde durur; böylece tablo daha az sütunla okunur. Salt okunurdur; tablo, filtreler, seçim ve
+   kayıtlar değişmez. Arama, alan filtresi, sütun seçimi ve Excel çekmecede kalır. */
+function openTableReportView(tableKey,trigger){
+  const en=appLang==='en';
+  const names={cp:'CP Tracker',orders:en?'Orders':'Siparişler',koleksiyon:en?'Collection':'Koleksiyon'};
+  if(!names[tableKey])return false;
+  let rows=[];
+  try{rows=tableKey==='cp'?filteredCP():tableKey==='orders'?filteredOrders():filteredKol();}catch(err){console.warn('Rapor görünümü satırları alınamadı:',err);rows=[];}
+  if(!rows.length){showToast(en?'There are no visible records to show in report view.':'Rapor görünümünde gösterilecek görünür kayıt yok.');return false;}
+  const title=names[tableKey]+' · '+(en?'Report view':'Rapor görünümü');
+  if(tableKey==='koleksiyon'){
+    if(!window.BLCollectionAnalyticsBridge?.openDrilldown)return false;
+    window.BLCollectionAnalyticsBridge.openDrilldown(rows,title);return true;
+  }
+  if(!window.BLDetailDrawer?.open)return false;
+  window.BLDetailDrawer.open({storageKey:tableKey+'.report.view',moduleId:tableKey,source:tableKey,tableSetup:tableKey,title,fileName:title,
+    subtitle:en?'Current filters and sorting':'Geçerli filtre ve sıralama',
+    rows,columns:[],images:true,trigger:trigger||null});
+  return true;
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-table-report]');if(!button)return;
+  openTableReportView(button.dataset.tableReport,button.closest('.blViewPicker')?.querySelector('[data-bl-view-trigger]')||button);
+});
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
   const tableKey=button.dataset.partialViewToggle;
@@ -22745,6 +22771,41 @@ function applyUiFontStep(value,{persist=true}={}){
 function cycleUiFontStep(){const cur=normalizeUiFontStep(document.documentElement.dataset.fontStep);applyUiFontStep((cur+1)%4);}
 document.getElementById('railFontSizeBtn')?.addEventListener('click',cycleUiFontStep);
 applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
+
+/* Arayüz stili: Klasik (varsayılan) veya Çizgi. Yalnız kök niteliği değişir;
+   token ve bileşen görünümü ui-tokens.css / ui-components.css'tedir. İş verisi,
+   tablo durumu ve seçimler korunur; değişim tema geçişiyle aynı Motion+ yolunu kullanır. */
+const UI_STYLES={classic:{tr:'Klasik',en:'Classic'},line:{tr:'Çizgi',en:'Line'}};
+function normalizeUiStyle(value){return value==='line'?'line':'classic';}
+function syncUiStyleControl(){
+  const style=normalizeUiStyle(document.documentElement.dataset.uiStyle),preset=UI_STYLES[style];
+  const btn=document.getElementById('railUiStyleBtn'),label=document.getElementById('railUiStyleLabel');
+  if(label)label.textContent=appLang==='en'?`Style: ${preset.en}`:`Stil: ${preset.tr}`;
+  if(btn){
+    btn.setAttribute('aria-pressed',style==='line'?'true':'false');
+    btn.title=appLang==='en'?`Interface style: ${preset.en} · click to switch to ${style==='line'?UI_STYLES.classic.en:UI_STYLES.line.en}`:`Arayüz stili: ${preset.tr} · ${style==='line'?UI_STYLES.classic.tr:UI_STYLES.line.tr} stiline geçmek için tıkla`;
+  }
+}
+function applyUiStyle(value,{persist=true,animate=false,origin=null}={}){
+  const style=normalizeUiStyle(value),root=document.documentElement;
+  if(persist)try{BLStorage.setItem('lcw_ui_style',style);}catch(_){}
+  const update=()=>{
+    if(style==='line')root.dataset.uiStyle='line';else delete root.dataset.uiStyle;
+    window.BLUIAppearance?.remember();
+    syncUiStyleControl();
+    requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+  };
+  if(normalizeUiStyle(root.dataset.uiStyle)===style){update();return style;}
+  if(animate&&window.BLMotionPlus?.theme?.(update,origin))return style;
+  const release=beginFastThemeSwitch();
+  update();
+  if(release)release(false);
+  return style;
+}
+document.getElementById('railUiStyleBtn')?.addEventListener('click',e=>{
+  applyUiStyle(normalizeUiStyle(document.documentElement.dataset.uiStyle)==='line'?'classic':'line',{animate:true,origin:e.currentTarget});
+});
+syncUiStyleControl();
 
 const _themeBtnEl = document.getElementById('themeBtn');
 if(_themeBtnEl) _themeBtnEl.addEventListener('click', ()=>{
@@ -41561,6 +41622,7 @@ function applyLanguage(lang){
   document.getElementById('backlogExportColumnsModal')?.refreshLanguage?.();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
   if(typeof applyUiFontStep==='function') applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
+  if(typeof syncUiStyleControl==='function') syncUiStyleControl();
   translateSubtree(document.querySelector('.sourcebar'));
   translateSubtree(document.querySelector('.vfBar'));
   translateSubtree(document.getElementById('view-koleksiyon'));
