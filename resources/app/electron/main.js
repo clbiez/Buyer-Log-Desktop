@@ -61,6 +61,7 @@ const INSTALL_REPAIR_INTEGRITY_DELAY_MS = 20000;
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { nextPortalRecoveryStep } = require('./portal-navigation-recovery');
 const { createWorkspaceManager } = require('./workspace-manager');
+const lcwAiRequestShape = require('./lcwai-request-shape');
 const { syncShortcutIcons, ensureStableIcon, refreshShellIcons } = require('./shortcut-icon');
 const { runExeIconPatch } = require('./exe-icon');
 
@@ -1274,6 +1275,48 @@ async function acquireLcwAiToken(options = {}) {
   lcwAiAuthInFlight = request;
   try { return await request; }
   finally { if (lcwAiAuthInFlight === request) lcwAiAuthInFlight = null; }
+}
+
+/*
+ * LCW AI web istemcisi tanılaması (yalnız DevTools konsolundan:
+ * buyerLogDesktop.openLcwAiWebDiagnostics()). LCW AI web sayfasını Buyer Log'un
+ * LCW AI oturumunda AÇIK KALAN bir pencerede açar; kullanıcı orada dosyalı bir
+ * mesaj gönderdiğinde LCW AI API isteklerinin yalnız YAPISI (alan adı + tür)
+ * loga yazılır. Değer, token, dosya içeriği loglanmaz (lcwai-request-shape.js).
+ * Amaç: web istemcisinin ek sözleşmesini tahmin yerine kanıtla öğrenmek.
+ */
+const LCWAI_WEB_DIAG_FILTER = { urls: ['https://mym.prod.lcwaikiki.com/lcw/gpt/api/*'] };
+let lcwAiWebDiagWindow = null;
+function openLcwAiWebDiagnostics(requestingContents) {
+  if (lcwAiWebDiagWindow && !lcwAiWebDiagWindow.isDestroyed()) { lcwAiWebDiagWindow.show(); lcwAiWebDiagWindow.focus(); return { ok: true, reused: true }; }
+  const authSession = lcwAiAuthSession();
+  const win = new BrowserWindow({
+    width: 1200, height: 860, show: true, title: 'Buyer Log · LCW AI Tanılama',
+    autoHideMenuBar: true, backgroundColor: '#ffffff',
+    webPreferences: { partition: LCWAI_AUTH_PARTITION, nodeIntegration: false, contextIsolation: true, sandbox: true, spellcheck: false },
+  });
+  lcwAiWebDiagWindow = win;
+  let count = 0;
+  authSession.webRequest.onBeforeRequest(LCWAI_WEB_DIAG_FILTER, (details, callback) => {
+    try {
+      const line = lcwAiRequestShape.describeRequest(details);
+      if (line && count < 200) { count += 1; log(line); }
+    } catch (_) {}
+    callback({});
+  });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAllowedCoreNectumAuthUrl(url)) setImmediate(() => { if (!win.isDestroyed()) win.loadURL(url).catch(() => {}); });
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (event, url) => { if (!isAllowedCoreNectumAuthUrl(url)) event.preventDefault(); });
+  win.on('closed', () => {
+    try { authSession.webRequest.onBeforeRequest(LCWAI_WEB_DIAG_FILTER, null); } catch (_) {}
+    if (lcwAiWebDiagWindow === win) lcwAiWebDiagWindow = null;
+    log('LCW AI tanılama penceresi kapandı; yakalanan istek: ' + count);
+  });
+  log('LCW AI tanılama penceresi açıldı.');
+  win.loadURL(LCWAI_HOME).catch(error => log('LCW AI tanılama sayfası açılamadı: ' + (error && error.code || 'load-failed')));
+  return { ok: true };
 }
 
 async function clearLcwAiAuthSession() {
@@ -2868,6 +2911,11 @@ function registerIpc() {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'LCWAI_IPC_FORBIDDEN' };
     try { return await acquireLcwAiToken({ interactive: options && options.interactive !== false, requestingContents:event.sender }); }
     catch (_) { return { ok:false, code:'LCWAI_AUTH_FAILED' }; }
+  });
+  ipcMain.handle('buyerlog:lcwai-web-diagnostics', event => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'LCWAI_IPC_FORBIDDEN' };
+    try { return openLcwAiWebDiagnostics(event.sender); }
+    catch (_) { return { ok:false, code:'LCWAI_DIAGNOSTICS_FAILED' }; }
   });
   ipcMain.handle('buyerlog:lcwai-auth-clear', async event => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'LCWAI_IPC_FORBIDDEN' };
