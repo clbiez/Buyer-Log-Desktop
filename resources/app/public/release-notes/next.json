@@ -68,6 +68,35 @@
         "tr": "Koleksiyon tablosunda sürükleyerek, Shift veya Ctrl ile seçilen hücreler yalnız zemin rengiyle gösteriliyordu ve işaretli satırların üzerinde neredeyse görünmüyordu. Seçim artık CP Tracker ve Siparişler ile aynı ortak stili kullanır: alanın çevresine tek bir dış çerçeve çizilir, zemin işaretli satır renginden ayrıdır ve aktif hücre kalın mavi çerçeveyle belirtilir.",
         "en": "In the Collection table, cells selected by dragging, Shift or Ctrl were shown only with a background tint and were almost invisible over checked rows. The selection now uses the same shared style as CP Tracker and Orders: one outer outline is drawn around the area, its background differs from the checked-row colour and the active cell has a bold blue frame."
       }
+    },
+    {
+      "id": "orders-image-preview-closes-on-scroll",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Model görseli önizlemesi kaydırınca kapanır",
+        "en": "Model image preview closes when you scroll"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-image-preview-closes-on-scroll.png",
+        "alt": {
+          "tr": "Siparişler tablosu fare görsel sütunundayken aşağı kaydırılmış; büyük görsel önizlemesi açık kalmamış",
+          "en": "The Orders table scrolled down with the pointer on the picture column; no large image preview is left open"
+        },
+        "caption": {
+          "tr": "Kaydırma sonrası önceki modelin büyük görseli ekranda kalmaz.",
+          "en": "After scrolling, the previous model's large image no longer stays on screen."
+        }
+      },
+      "body": {
+        "tr": "Fare model görselinin üzerindeyken tablo kaydırıldığında veya yeniden çizildiğinde son görselin büyük önizlemesi açık kalıyordu. Önizleme artık kaydırmada, imleç görselden çıktığında ya da görsel tablodan kalktığında kapanır; bekleyen önizleme de kaydırmadan sonra açılmaz. Düzeltme ortak önizlemeyi kullanan tüm tablolarda geçerlidir.",
+        "en": "When the table was scrolled or redrawn while the pointer was over a model image, the large preview of the last image stayed open. The preview now closes on scroll, when the pointer leaves the image, or when the image is removed from the table, and a pending preview no longer opens after scrolling. The fix applies to every table that uses the shared preview."
+      }
     }
   ]
 }
