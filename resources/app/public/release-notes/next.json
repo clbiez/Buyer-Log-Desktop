@@ -7,8 +7,8 @@
     "en": "Cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band."
   },
   "changes": [
     {
@@ -258,6 +258,35 @@
       "body": {
         "tr": "Görselden arama, sohbet ve diğer LCW AI özelliklerinde dosya yükleniyor ama LCW AI eki mesajda görmüyordu (“No image was attached”). Ek artık LCW AI’ın yeni dosya modeline uygun olarak yükleme oturumuyla birlikte gönderilir.",
         "en": "In Search from Image, chat and other LCW AI features the file was uploaded but LCW AI did not see it on the message (“No image was attached”). The attachment is now sent together with its upload session, matching LCW AI’s new file model."
+      }
+    },
+    {
+      "id": "lcwai-pptx-studio-preview-layout",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · PowerPoint düzenleyici",
+        "en": "LCW AI · PowerPoint editor"
+      },
+      "title": {
+        "tr": "Sunum önizlemesi görünür; panel genişliği sürüklenerek ayarlanır",
+        "en": "Presentation preview is visible; panel width can be dragged"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-pptx-studio-preview-layout.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicide solda sıkılaştırılmış sütun listesi, sağda model kartlarıyla slayt önizlemesi ve altta yeşil “Dosya oluşturuldu” bandı görünüyor",
+          "en": "In the PowerPoint editor a tighter column list is on the left, a slide preview with model cards on the right and a green “File created” band at the bottom"
+        },
+        "caption": {
+          "tr": "Önizleme kartları gösterir; alt bant dosyayı açma ve klasörde gösterme düğmelerini sunar.",
+          "en": "The preview shows the cards; the bottom band offers Open and Show in folder buttons."
+        }
+      },
+      "body": {
+        "tr": "“Sunumu şekillendir” adımında önizleme alanı boş kalıyordu; slaytlar ve kartlar artık doğru çizilir. Sol panel ile önizleme arasındaki sınır sürüklenerek (klavyede ok tuşlarıyla) genişletilir, çift tıklama varsayılana döner ve genişlik hatırlanır. “Önizle ve oluştur” düğmesi alt barda sabit durur. Dosya oluşturulduğunda alt barda dosya adı, Aç, Klasörde Göster ve Şablon olarak kaydet düğmeleriyle yeşil bir bant görünür. Sütun satırları daha sıkıdır; işaretlenmemiş kutular ve bağlı olmayan Bağlantılar noktaları daha soluk griyle gösterilir.",
+        "en": "In the “Shape the presentation” step the preview area stayed empty; slides and cards are now drawn correctly. The border between the left panel and the preview can be dragged (or moved with the arrow keys), a double click restores the default and the width is remembered. The “Preview and create” button stays fixed in the bottom bar. When a file is created, a green band with the file name and Open, Show in folder and Save as template buttons appears in the bottom bar. Column rows are tighter; unticked boxes and disconnected Connections dots use a much softer grey."
       }
     }
   ]

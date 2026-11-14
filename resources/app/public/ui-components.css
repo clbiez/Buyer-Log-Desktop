@@ -15559,7 +15559,7 @@ html[data-ui-system="manifest"] .appTop .corporateConnectionsTrigger {width:auto
 }
 html[data-ui-system="manifest"] .corporateConnectionDots {display:inline-flex;gap:3px
 }
-html[data-ui-system="manifest"] .corporateConnectionDots i {width:7px;height:7px;background:var(--ui-group-divider)
+html[data-ui-system="manifest"] .corporateConnectionDots i {width:7px;height:7px;background:var(--ui-row-divider)
 }
 html[data-ui-system="manifest"] .corporateConnectionDots i[data-state="connected"] {background:var(--ui-success)
 }
@@ -15571,7 +15571,7 @@ html[data-ui-system="manifest"] .appTop #corporateConnections[hidden] {display:n
 }
 html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection {height:var(--ui-control-height);width:100%;padding:0 10px;gap:8px;font:500 var(--ui-font-sm)/1 var(--ui-font-body) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection::before {content:"";width:7px;height:7px;flex:none;background:var(--ui-group-divider)
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection::before {content:"";width:7px;height:7px;flex:none;background:var(--ui-row-divider)
 }
 html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connected"]::before {background:var(--ui-success)
 }
@@ -15912,6 +15912,13 @@ html[data-ui-system="manifest"] .lcwaiMatrixOptions input[type="range"]{width:10
 
 html[data-ui-system="manifest"] .lcwaiMatrixHead{background:var(--ui-surface-soft);font-size:var(--ui-font-2xs);z-index:var(--ui-z-raised)}
 html[data-ui-system="manifest"] .lcwaiMatrixField[open]{background:var(--ui-selected)}
+html[data-ui-system="manifest"] .lcwaiLaySplit::after{background:var(--ui-row-divider)}
+html[data-ui-system="manifest"] .lcwaiLaySplit:is(:hover,:focus-visible)::after,html[data-ui-system="manifest"] .lcwaiLay.is-resizing .lcwaiLaySplit::after{background:var(--ui-accent)}
+html[data-ui-system="manifest"] .lcwaiLaySplit:focus-visible{outline:none}
+html[data-ui-system="manifest"] .lcwaiEdFoot.has-result{background:var(--ui-success-bg)!important;padding-block:10px}
+html[data-ui-system="manifest"] .lcwaiEdResultIcon{background:var(--ui-success);color:var(--ui-surface);font-weight:700}
+html[data-ui-system="manifest"] .lcwaiEdResultText b{font:600 var(--ui-font-md)/1.2 var(--ui-font-heading);color:var(--ui-success)}
+html[data-ui-system="manifest"] .lcwaiEdResultText>span{font-size:var(--ui-font-sm);color:var(--ui-text)}
 
 /* 7.0.356 — LFL kompakt filtre çubuğu. LFL kartları (.lflCard/.lflScenarioCard)
    ve eylemleri (.lflButton) yukarıdaki ortak çerçeve listelerine eklendi; filtre

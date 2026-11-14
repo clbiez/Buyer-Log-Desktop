@@ -18,7 +18,9 @@
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
     // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası (yalnız sunucu yazar).
-    'buyerlog.horizonFieldPairs.'
+    'buyerlog.horizonFieldPairs.',
+    // v2026-11-14 — PowerPoint düzenleyici panel/önizleme genişliği kişiseldir (cihazda kalır, eşitlenmez).
+    'bl.lcwai.studioSplit'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
