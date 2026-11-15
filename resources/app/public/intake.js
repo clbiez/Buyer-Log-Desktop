@@ -361,15 +361,26 @@
     const value = row[field.id];
     if (item.kind === 'group' && field.fieldType !== 'measure') {
       const rowIndex = (query().rows || []).findIndex(candidate => candidate.id === field.id);
+      /* Grup satırında alt kademe ve sütun boyutları boştur; etiket bu boş
+         hücreleri colspan ile kaplar, sayısal sütunlara taşmadan tam okunur. */
+      const dimensionCount = (query().rows || []).length + (query().columns || []).length;
+      if (rowIndex > item.level || rowIndex < 0) return '';
       if (rowIndex === item.level) {
         const label = value == null || value === '' ? text('(boş)', '(blank)') : value;
-        return `<td class="oabPivotGroupCell" style="padding-left:${Math.max(4, item.level * 14 + 4)}px"><button type="button" class="oabPivotGroupToggle" data-intake-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${item.subtotal ? `<span class="oabPivotSubtotalTag">${esc(text('Alt toplam', 'Subtotal'))}</span>` : ''}</td>`;
+        const span = Math.max(1, dimensionCount - item.level);
+        return `<td class="oabPivotGroupCell"${span > 1 ? ` colspan="${span}"` : ''} title="${esc(label)}"><button type="button" class="oabPivotGroupToggle" data-intake-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${item.subtotal ? `<span class="oabPivotSubtotalTag">${esc(text('Alt toplam', 'Subtotal'))}</span>` : ''}</td>`;
       }
       return '<td></td>';
     }
     if (item.kind === 'grand' && field.fieldType !== 'measure') {
       const firstRowId = (query().rows || [])[0]?.id || '';
       return `<td class="${field.id === firstRowId ? 'oabPivotGrandLabel' : ''}">${field.id === firstRowId ? `<strong>${esc(value)}</strong>` : ''}</td>`;
+    }
+    /* OAB pivotu gibi: açılan grubun detay satırında üst kademe boyutları boş
+       kalır, değer yalnız en alt kademenin kendi sütununda yazılır. */
+    if (item.kind === 'leaf' && field.fieldType !== 'measure') {
+      const rowIndex = (query().rows || []).findIndex(candidate => candidate.id === field.id);
+      if (display().grouped !== false && rowIndex >= 0 && rowIndex < item.level) return '<td class=""></td>';
     }
     return `<td class="${field.fieldType === 'measure' ? 'num' : ''}">${esc(field.fieldType === 'measure' ? numberText(value) : clean(value))}</td>`;
   }
@@ -470,6 +481,28 @@
       rows:[...groups].map(([label,sourceRows])=>({label,sourceRows})),
       labelFor:row=>row.label,valueFor:(row,descriptor)=>intakeAggregateRows(row.sourceRows,descriptor.field),
       format:value=>numberText(value),
+      /* v2026-11-15 — Grafik pivot ayarını izler: ilk satır alanı eksen; sütun
+         alanı, yoksa ikinci satır alanı seri. Değerler INTAKE ölçü motoruyla
+         (SUM/AVG/WAVG…) hesaplanır, grafik katmanı toplama yapmaz. */
+      buildChart:descriptor=>{
+        const category=dimensions[0],series=(query().columns||[])[0]||dimensions[1]||null;
+        return window.BLPivotChart?.buildModel({
+          records:rows,
+          categoryOf:row=>category?row[category.id]:text('Toplam','Total'),
+          seriesOf:series?row=>row[series.id]:null,
+          measure:sourceRows=>intakeAggregateRows(sourceRows,descriptor.field),
+          compareCategory:category?(left,right)=>intakeCompareValues(category,left,right):null,
+          compareSeries:series?(left,right)=>intakeCompareValues(series,left,right):null,
+          categoryLabel:category?fieldLabel(category):'',seriesLabel:series?fieldLabel(series):'',
+          singleLabel:descriptor.label,blankLabel:text('(boş)','(blank)'),otherLabel:text('Diğer','Other'),
+          additive:['SUM','COUNT'].includes(clean(descriptor.field.agg||'SUM').toUpperCase()),
+        });
+      },
+      drillCategory:(category,descriptor,seriesKey)=>{
+        const series=(query().columns||[])[0]||dimensions[1]||null;
+        const sourceRows=series&&seriesKey&&!seriesKey.startsWith('__')?category.records.filter(row=>clean(row[series.id])===clean(seriesKey)):category.records;
+        window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+category.label+(series&&seriesKey&&!seriesKey.startsWith('__')?' · '+seriesKey:''),rows:sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false});
+      },
       scope:(state.offline?text('Son snapshot','Last snapshot'):text('Seçili INTAKE kapsamı','Selected INTAKE scope'))+(state.fetchedAt?' · '+new Date(state.fetchedAt).toLocaleString(isEnglish()?'en-GB':'tr-TR'):''),
       drill:group=>window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+group.label,rows:group.sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false}),
     });

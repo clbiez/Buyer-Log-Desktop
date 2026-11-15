@@ -688,10 +688,14 @@ test('OAB: filtre zinciri HTML\'de doğru sırayla disabled başlıyor', () => {
   // v7.20: üç filtre <select> değil, çoklu seçim açılırı tetikleyicisi.
   // Çivilenen kural DEĞİŞMEDİ: MAG ve Buyer Group zincirin üstü seçilmeden
   // açılmamalı, Get OAB üçü de seçilmeden basılamamalı.
+  // v2026-11-15: Get OAB başlığa "Yenile" olarak taşındı; seçim eksikken
+  // veri çekmez, filtre panelini açar.
   const block = INDEX.slice(INDEX.indexOf('oabFilterBar'), INDEX.indexOf('oabFilterBar') + 2600);
   assert.match(block, /id="oabMagTrigger"[^>]*disabled/);
   assert.match(block, /id="oabBuyerGroupTrigger"[^>]*disabled/);
-  assert.match(block, /id="oabGetBtn" disabled/);
+  assert.match(INDEX, /id="oabGetBtn" disabled/);
+  const refresh = OAB_JS.slice(OAB_JS.indexOf('function oabRefreshFromButton'), OAB_JS.indexOf('function oabRefreshFromButton') + 600);
+  assert.match(refresh, /if \(!oabSelectionReady\(\)\) \{\s*oabSetFilterPanelOpen\(true\);[\s\S]*?return;/);
   // Season tetikleyicisi de metadata gelene kadar kapalı başlar.
   assert.match(block, /id="oabSeasonTrigger"[^>]*disabled/);
 });

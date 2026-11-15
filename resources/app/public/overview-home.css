@@ -411,3 +411,10 @@
 
 /* The compact Checklist summary scrolls details within its saved widget size. */
 .ovHome>#ovChecklistRules>#cpAssistant{overflow:auto}
+/* v2026-11-15 — OAB / INTAKE pivot grafiği (Backlog grafik dili). */
+.pivotChartPanel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:2px;}
+.pivotChartPanel[hidden]{display:none;}
+.pivotChartTypes{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;}
+.pivotChartSvg .pivotChartBar{cursor:pointer;}
+.pivotChartSvg .pivotChartZero{opacity:1;}
+.pivotChartLegend{padding:6px 2px 2px;}

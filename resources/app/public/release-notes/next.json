@@ -404,6 +404,93 @@
         "tr": "INTAKE, sunucuda bulunmayan boşluklu model adıyla (WSSI Intake Raporu4) sorgulandığı için canlı veri alamıyor ve hep son snapshot'ı gösteriyordu. Bağlantı gerçek veritabanı adına (WSSI_Intake_Raporu4) taşındı; eski adla kayıtlı ayarlar otomatik düzeltilir. Canlı kaynak yine okunamazsa uyarı artık hatanın ayrıntısını içerir ve hata sunucu günlüğüne kaynak adıyla kaydedilir.",
         "en": "INTAKE queried a model name with spaces (WSSI Intake Raporu4) that does not exist on the server, so it could not load live data and always showed the last snapshot. The connection now uses the real database name (WSSI_Intake_Raporu4) and settings saved with the old name are corrected automatically. If the live source still cannot be read, the warning now includes the error detail and the error is written to the server log with the source name."
       }
+    },
+    {
+      "id": "intake-pivot-oab-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE pivotu OAB gibi okunur",
+        "en": "INTAKE pivot reads like OAB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-pivot-oab-layout.png",
+        "alt": {
+          "tr": "INTAKE pivotunda açılmış grupların detay satırlarında yalnız en alt kademe değeri yazıyor",
+          "en": "In the INTAKE pivot, expanded detail rows show only the lowest level value"
+        },
+        "caption": {
+          "tr": "Açılan grupta üst kademeler boş kalır; grup adı kesilmeden okunur.",
+          "en": "Upper levels stay blank in expanded groups; group names are no longer cut off."
+        }
+      },
+      "body": {
+        "tr": "Daraltılmış satırlar açıldığında detay satırları her kademeyi tekrar yazıyordu ve grup adları dar sütunda kesiliyordu. Artık OAB'daki gibi yalnız en alt kademe kendi sütununda yazılır; grup adı boş alt kademe sütunlarını kaplayarak tam görünür.",
+        "en": "When collapsed rows were expanded, detail rows repeated every level and group names were cut off in narrow columns. Now, as in OAB, only the lowest level is written in its own column and group names span the empty lower-level columns so they show in full."
+      }
+    },
+    {
+      "id": "oab-header-filter-panel",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB başlığı sadeleşti; tüm filtreler filtre panelinde",
+        "en": "Simpler OAB header; all filters in the filter panel"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-header-filter-panel.png",
+        "alt": {
+          "tr": "OAB başlığında özet metin, Yenile ve filtre düğmesi; açık filtre panelinde Sezon, MAG, Buyer Group ve alan filtreleri",
+          "en": "OAB header with summary text, Refresh and filter button; the open filter panel shows Season, MAG, Buyer Group and field filters"
+        },
+        "caption": {
+          "tr": "Season, MAG, Buyer Group ve alan filtreleri filtre düğmesinin panelinde.",
+          "en": "Season, MAG, Buyer Group and field filters live in the filter button's panel."
+        }
+      },
+      "body": {
+        "tr": "OAB başlığı INTAKE ile aynı düzene geçti: başlığın yanında satır, alan ve zaman özeti görünür. Get OAB komutu Yenile adıyla INTAKE'teki Yenile'nin yerinde; ayrı yenile düğmesi kaldırıldı. Seçim değiştiyse Yenile önbelleği kullanır, aynı seçimin verisi ekrandaysa kaynaktan tazeler. Season, MAG, Buyer Group ve alan filtreleri filtre panelindedir; seçim eksikken Yenile paneli açar.",
+        "en": "The OAB header now follows the INTAKE layout: a rows, fields and time summary appears next to the title. Get OAB is now Refresh, in the same place as INTAKE's Refresh; the separate refresh button was removed. If the selection changed, Refresh uses the cache; if the same selection's data is already on screen, it reloads from the source. Season, MAG, Buyer Group and field filters are in the filter panel; Refresh opens the panel when the selection is incomplete."
+      }
+    },
+    {
+      "id": "oab-intake-pivot-chart",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "OAB ve INTAKE grafikleri pivot ayarına göre çizilir",
+        "en": "OAB and INTAKE charts follow the pivot settings"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-pivot-chart.png",
+        "alt": {
+          "tr": "OAB grafiğinde sezonlar eksende, plan başlangıç ayları renkli seriler olarak yığılmış sütunlarda",
+          "en": "OAB chart with seasons on the axis and plan start months as coloured stacked series"
+        },
+        "caption": {
+          "tr": "İlk satır alanı eksen, sütun ya da ikinci satır alanı seri olur.",
+          "en": "The first row field is the axis; the column or second row field becomes the series."
+        }
+      },
+      "body": {
+        "tr": "İlk 5 satırlık çubuk listesi yerine Backlog grafikleriyle aynı görünümde sütun/çizgi grafiği geldi. Eksen pivotun ilk satır alanı, seriler sütun alanı (yoksa ikinci satır alanı) olur; değerler pivotla aynı hesaplanır. Yığılmış, gruplu ve çizgi görünümü seçilebilir, lejanttan seri gizlenir, sütuna tıklayınca detay açılır.",
+        "en": "The top-5 bar list was replaced with a column/line chart that looks like the Backlog charts. The axis is the pivot's first row field and series come from the column field (or the second row field); values are calculated like the pivot. Stacked, grouped and line views are available, series can be hidden from the legend, and clicking a column opens its detail."
+      }
     }
   ]
 }

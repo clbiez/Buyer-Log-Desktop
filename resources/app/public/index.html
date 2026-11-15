@@ -820,11 +820,25 @@
          çalışabilmeli (test senaryosu: "Overview açıldığında OAB mevcut diğer
          Overview fonksiyonlarını bozmuyor" ve tersi). -->
     <div id="oabSection" data-overview-widget="oab" class="cardBox oabSection">
-      <div class="oabHeader">
-        <div class="oabHeaderMain">
+      <!-- v2026-11-15 — INTAKE ile aynı sade başlık: özet metin solda; Yenile,
+           filtre, daralt/genişlet ve ayarlar sağda. Tüm filtreler (Season/MAG/
+           Buyer Group ve yerel alan filtreleri) filtre panelindedir. -->
+      <div class="oabHeader intakeHeader">
+        <div class="oabHeaderMain intakeHeaderMain">
           <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="OAB" data-i18n-en="OAB">OAB</span></p>
+          <span id="oabStateMeta" class="intakeStateMeta oabStateMeta"></span>
         </div>
-        <div class="oabHeaderActions">
+        <div class="oabHeaderActions intakeHeaderActions">
+          <div class="oabViewTabs" role="group" aria-label="Görünüm" data-i18n-aria-label-tr="Görünüm" data-i18n-aria-label-en="View">
+            <button type="button" class="navActionBtn active" data-oab-view="pivot" data-i18n-tr="Pivot" data-i18n-en="Pivot">Pivot</button>
+            <button type="button" class="navActionBtn" data-oab-view="raw" data-i18n-tr="Ham Veri" data-i18n-en="Raw Data">Ham Veri</button>
+          </div>
+          <button type="button" class="navActionBtn" id="oabGetBtn" disabled title="OAB verisini yenile" data-i18n-title-tr="OAB verisini yenile" data-i18n-title-en="Refresh OAB"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
+          <button type="button" class="navActionBtn oabCancelBtn" id="oabCancelBtn" hidden data-i18n-tr="İptal" data-i18n-en="Cancel">İptal</button>
+          <button type="button" class="navActionBtn intakeFiltersBtn oabFiltersBtn" id="oabFiltersBtn" aria-expanded="false" aria-controls="oabFilterPanel" title="OAB filtreleri" data-i18n-title-tr="OAB filtreleri" data-i18n-title-en="OAB filters"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
+          <button type="button" class="navActionBtn oabGroupAction" id="oabCollapseAllBtn" title="Tüm grupları daralt" data-i18n-title-tr="Tüm grupları daralt" data-i18n-title-en="Collapse all groups"><svg class="ic"><use href="#i-chevrons-left"/></svg></button>
+          <button type="button" class="navActionBtn oabGroupAction" id="oabExpandAllBtn" title="Tüm grupları genişlet" data-i18n-title-tr="Tüm grupları genişlet" data-i18n-title-en="Expand all groups"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
+          <button type="button" class="navActionBtn" id="oabExcelExportBtn" title="OAB Raw Data ve Pivot tablolarını Excel'e aktar" aria-label="Excel'e Aktar" data-i18n-title-tr="OAB Raw Data ve Pivot tablolarını Excel'e aktar" data-i18n-title-en="Export OAB Raw Data and Pivot tables to Excel" data-i18n-aria-label-tr="Excel'e Aktar" data-i18n-aria-label-en="Export Excel"><svg class="ic" aria-hidden="true"><use href="#i-file-export"/></svg></button>
           <button type="button" class="navActionBtn" id="oabSettingsBtn" title="OAB Ayarları" data-i18n-title-tr="OAB Ayarları" data-i18n-title-en="OAB Settings"><svg class="ic"><use href="#i-pencil"/></svg></button>
         </div>
       </div>
@@ -832,30 +846,26 @@
       <!-- v7.20 — Season/MAG/Buyer Group ÇOKLU seçim. OAB sitesi bu üç filtreyi
            tek seçime kapatıyor; Buyer Log çoklu seçtirip seçilen kombinasyonların
            tamamını arka planda çekiyor ve tek rapor olarak birleştiriyor. -->
-      <div class="oabFilterBar">
-        <div class="oabFilterField oabMultiField">
-          <button type="button" class="oabMultiTrigger" id="oabSeasonTrigger" data-oab-multi="season" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="Season" title="Season" data-i18n-title-tr="Season" data-i18n-title-en="Season"><span class="oabMultiLabel" id="oabSeasonLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
+      <div id="oabFilterPanel" class="intakeFilterPanel oabFilterPanel" hidden>
+        <div class="oabFilterBar">
+          <div class="oabFilterField oabMultiField">
+            <span class="oabFilterCaption" data-i18n-tr="Season" data-i18n-en="Season">Season</span>
+            <button type="button" class="oabMultiTrigger" id="oabSeasonTrigger" data-oab-multi="season" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="Season" title="Season" data-i18n-title-tr="Season" data-i18n-title-en="Season"><span class="oabMultiLabel" id="oabSeasonLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
+          </div>
+          <div class="oabFilterField oabMultiField">
+            <span class="oabFilterCaption" data-i18n-tr="MAG" data-i18n-en="MAG">MAG</span>
+            <button type="button" class="oabMultiTrigger" id="oabMagTrigger" data-oab-multi="mag" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="MAG" title="MAG" data-i18n-title-tr="MAG" data-i18n-title-en="MAG"><span class="oabMultiLabel" id="oabMagLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
+          </div>
+          <div class="oabFilterField oabMultiField">
+            <span class="oabFilterCaption" data-i18n-tr="Buyer Group" data-i18n-en="Buyer Group">Buyer Group</span>
+            <button type="button" class="oabMultiTrigger" id="oabBuyerGroupTrigger" data-oab-multi="buyerGroup" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="Buyer Group" title="Buyer Group" data-i18n-title-tr="Buyer Group" data-i18n-title-en="Buyer Group"><span class="oabMultiLabel" id="oabBuyerGroupLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
+          </div>
         </div>
-        <div class="oabFilterField oabMultiField">
-          <button type="button" class="oabMultiTrigger" id="oabMagTrigger" data-oab-multi="mag" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="MAG" title="MAG" data-i18n-title-tr="MAG" data-i18n-title-en="MAG"><span class="oabMultiLabel" id="oabMagLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
-        </div>
-        <div class="oabFilterField oabMultiField">
-          <button type="button" class="oabMultiTrigger" id="oabBuyerGroupTrigger" data-oab-multi="buyerGroup" disabled aria-haspopup="listbox" aria-expanded="false" aria-label="Buyer Group" title="Buyer Group" data-i18n-title-tr="Buyer Group" data-i18n-title-en="Buyer Group"><span class="oabMultiLabel" id="oabBuyerGroupLabel">—</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>
-        </div>
-        <button type="button" class="navActionBtn" id="oabGetBtn" disabled data-i18n-tr="Get OAB" data-i18n-en="Get OAB">Get OAB</button>
-        <button type="button" class="navActionBtn" id="oabRefreshBtn" disabled title="Refresh OAB" data-i18n-title-tr="Refresh OAB" data-i18n-title-en="Refresh OAB"><svg class="ic"><use href="#i-refresh"/></svg></button>
-        <button type="button" class="navActionBtn oabCancelBtn" id="oabCancelBtn" hidden data-i18n-tr="İptal" data-i18n-en="Cancel">İptal</button>
-        <div class="oabViewTabs oabTopActions">
-          <button type="button" class="navActionBtn active" data-oab-view="pivot" data-i18n-tr="Pivot" data-i18n-en="Pivot">Pivot</button>
-          <button type="button" class="navActionBtn" data-oab-view="raw" data-i18n-tr="Ham Veri" data-i18n-en="Raw Data">Ham Veri</button>
-          <button type="button" class="navActionBtn oabGroupAction" id="oabCollapseAllBtn" title="Tüm grupları daralt" data-i18n-title-tr="Tüm grupları daralt" data-i18n-title-en="Collapse all groups"><svg class="ic"><use href="#i-chevrons-left"/></svg></button>
-          <button type="button" class="navActionBtn oabGroupAction" id="oabExpandAllBtn" title="Tüm grupları genişlet" data-i18n-title-tr="Tüm grupları genişlet" data-i18n-title-en="Expand all groups"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
-          <button type="button" class="navActionBtn" id="oabExcelExportBtn" title="OAB Raw Data ve Pivot tablolarını Excel'e aktar" data-i18n-title-tr="OAB Raw Data ve Pivot tablolarını Excel'e aktar" data-i18n-title-en="Export OAB Raw Data and Pivot tables to Excel"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel'e Aktar" data-i18n-en="Export Excel">Excel'e Aktar</span></button>
-        </div>
-      </div>
       <!-- Maliyet, seçim yapıldıkça sunucudaki PLANDAN gelir: ekranda görünen
            sayı ile gerçekte çekilecek istek sayısı ayrışamaz. -->
-      <div class="oabPlanBar" id="oabPlanBar" hidden></div>
+        <div class="oabPlanBar" id="oabPlanBar" hidden></div>
+        <div class="oabLocalFilterBar" id="oabLocalFilterBar"></div>
+      </div>
       <div class="oabProgressBar" id="oabProgressBar" hidden>
         <div class="oabProgressTrack"><div class="oabProgressFill" id="oabProgressFill"></div></div>
         <span class="oabProgressText" id="oabProgressText"></span>
@@ -888,7 +898,6 @@
       </div>
       <div id="oabStatus" class="oabStatus" hidden></div>
       <div id="oabBody" class="oabBody" hidden>
-        <div class="oabLocalFilterBar" id="oabLocalFilterBar"></div>
         <div class="cardBox oabTableWrap" id="oabTableWrap"><table class="miniTable" id="oabTable"></table></div>
       </div>
     </div>
@@ -1592,7 +1601,8 @@
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
-<script src="overview-premium.js?v=__BL_ASSET_VERSION__&rev=20261021"></script>
+<script src="pivot-chart.js?v=__BL_ASSET_VERSION__&rev=20261115"></script>
+<script src="overview-premium.js?v=__BL_ASSET_VERSION__&rev=20261115"></script>
 <script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="detail-report-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-report-inline.js?v=__BL_ASSET_VERSION__&rev=1"></script>

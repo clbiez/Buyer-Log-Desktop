@@ -2506,18 +2506,18 @@
         "en": "The OAB card in Overview loads data using Season, MAG and Buyer Group. Pivot and Raw Data offer different views."
       },
       "path": {
-        "tr": "Overview → OAB → Get OAB",
-        "en": "Overview → OAB → Get OAB"
+        "tr": "Overview → OAB → Filtre → Yenile",
+        "en": "Overview → OAB → Filter → Refresh"
       },
       "steps": {
         "tr": [
-          "Season, MAG ve Buyer Group kapsamını seçin.",
-          "Get OAB ile veriyi alın.",
+          "Filtre düğmesiyle Season, MAG ve Buyer Group kapsamını seçin.",
+          "Yenile ile veriyi alın.",
           "Pivot veya Ham Veri görünümünde inceleyin."
         ],
         "en": [
-          "Select Season, MAG and Buyer Group.",
-          "Load data with Get OAB.",
+          "Select Season, MAG and Buyer Group with the filter button.",
+          "Load data with Refresh.",
           "Review Pivot or Raw Data."
         ]
       },
@@ -2525,7 +2525,7 @@
         "tr": "",
         "en": ""
       },
-      "example": "Season · MAG · Buyer Group → Get OAB",
+      "example": "Season · MAG · Buyer Group → Yenile / Refresh",
       "evidence": "public/oab.js",
       "area": "overview",
       "areas": [

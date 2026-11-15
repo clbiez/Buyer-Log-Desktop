@@ -78,26 +78,31 @@ test('OAB local filter bar exposes add/remove controls and uses the shared multi
   assert.match(addPopover, /oabLocalFilterAddEmpty/);
 });
 
-test('OAB view/export actions sit beside Cancel and collapse precedes expand', () => {
-  const top = INDEX.slice(INDEX.indexOf('<div class="oabFilterBar">'), INDEX.indexOf('<!-- Maliyet', INDEX.indexOf('<div class="oabFilterBar">')));
-  assert.ok(top.indexOf('id="oabCancelBtn"') < top.indexOf('data-oab-view="pivot"'));
-  assert.ok(top.indexOf('data-oab-view="pivot"') < top.indexOf('id="oabExcelExportBtn"'));
-  assert.ok(top.indexOf('id="oabCollapseAllBtn"') < top.indexOf('id="oabExpandAllBtn"'));
-  assert.doesNotMatch(top, /data-i18n-tr="Season"/);
-  assert.doesNotMatch(top, /data-i18n-tr="MAG"/);
-  assert.doesNotMatch(top, /data-i18n-tr="Buyer Group"/);
-  assert.match(top, /id="oabSeasonTrigger"[^>]*aria-label="Season"/);
-  assert.match(top, /id="oabMagTrigger"[^>]*aria-label="MAG"/);
-  assert.match(top, /id="oabBuyerGroupTrigger"[^>]*aria-label="Buyer Group"/);
+test('OAB başlığı INTAKE gibi sade: Yenile, filtre, daralt/genişlet ve ayarlar başlıkta; filtreler panelde', () => {
+  const header = INDEX.slice(INDEX.indexOf('<div class="oabHeader intakeHeader">'), INDEX.indexOf('<div class="oabAuthBar"'));
+  for (const id of ['oabGetBtn', 'oabFiltersBtn', 'oabCollapseAllBtn', 'oabExpandAllBtn', 'oabExcelExportBtn', 'oabSettingsBtn']) assert.match(header, new RegExp(`id="${id}"`));
+  assert.match(header, /id="oabGetBtn"[^>]*>[\s\S]*?data-i18n-tr="Yenile" data-i18n-en="Refresh"/);
+  assert.doesNotMatch(INDEX, /id="oabRefreshBtn"/, 'ayrı Yenile/Refresh OAB düğmesi kaldırıldı');
+  assert.ok(header.indexOf('id="oabGetBtn"') < header.indexOf('id="oabFiltersBtn"'));
+  assert.ok(header.indexOf('id="oabCollapseAllBtn"') < header.indexOf('id="oabExpandAllBtn"'));
+  assert.doesNotMatch(header, /id="oabSeasonTrigger"/);
+  const panel = INDEX.slice(INDEX.indexOf('<div id="oabFilterPanel"'), INDEX.indexOf('<div class="oabProgressBar"'));
+  assert.match(panel, /id="oabSeasonTrigger"[^>]*aria-label="Season"/);
+  assert.match(panel, /id="oabMagTrigger"[^>]*aria-label="MAG"/);
+  assert.match(panel, /id="oabBuyerGroupTrigger"[^>]*aria-label="Buyer Group"/);
+  assert.match(panel, /id="oabPlanBar"/);
+  assert.match(panel, /id="oabLocalFilterBar"/);
 });
 
-test('OAB başlığı korunur, KPI satırı ve satır metası gösterilmez', () => {
-  const header = INDEX.slice(INDEX.indexOf('<div class="oabHeader">'), INDEX.indexOf('<div class="oabAuthBar"'));
+test('OAB başlığı korunur, KPI satırı yok; INTAKE gibi özet metin gösterilir', () => {
+  const header = INDEX.slice(INDEX.indexOf('<div class="oabHeader intakeHeader">'), INDEX.indexOf('<div class="oabAuthBar"'));
   assert.match(header, /data-i18n-tr="OAB"/);
+  assert.match(header, /id="oabStateMeta"/);
   assert.doesNotMatch(header, /id="oabKpiRow"/);
   assert.doesNotMatch(INDEX, /class="oabViewMeta"/);
   assert.doesNotMatch(INDEX, /id="oabRowCount"/);
   assert.doesNotMatch(OAB_JS, /oabRenderRowCount\(\);/);
+  assert.match(OAB_JS, /function oabRenderStateMeta\(\)/);
 });
 
 test('OAB table follows its content without a manual resize or nested scroll area', () => {
@@ -116,6 +121,6 @@ test('OAB table follows its content without a manual resize or nested scroll are
   assert.doesNotMatch(APP_CSS, /row-resize/);
 });
 
-test('OAB top actions stay vertically aligned with the filter controls', () => {
-  assert.match(APP_CSS, /\.oabViewTabs\.oabTopActions\{[^}]*margin:0/);
+test('OAB view tabs sit inline in the header actions', () => {
+  assert.match(INDEX, /<div class="oabViewTabs" role="group"/);
 });
