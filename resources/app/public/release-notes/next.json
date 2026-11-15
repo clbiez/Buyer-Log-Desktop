@@ -574,6 +574,35 @@
       }
     },
     {
+      "id": "active-filter-chip-column-name",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablo filtreleri sütunu başlıktaki adıyla gösterir",
+        "en": "Table filters show the column by its header name"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "active-filter-chip-column-name.png",
+        "alt": {
+          "tr": "CP Tracker'da Tablo Filtreleri alanında checklist sütunu filtresi tablo başlığıyla aynı adla, “PPS onayı: Bekliyor” olarak görünüyor",
+          "en": "In CP Tracker the Table Filters area shows the checklist column filter with the same name as the table header, “PPS onayı: Bekliyor”"
+        },
+        "caption": {
+          "tr": "Filtre çipi artık iç anahtar yerine sütunun tablodaki adını gösterir.",
+          "en": "The filter chip now shows the column's name from the table instead of an internal key."
+        }
+      },
+      "body": {
+        "tr": "Tablo Filtreleri alanındaki çipler, checklist sütunlarında “__checklist__…” gibi iç anahtarları gösteriyordu. Çip adı artık tablo başlığıyla aynı kaynaktan gelir: checklist, formül ve sonradan eklenen sütunlar ile sütunlara verdiğiniz kişisel adlar başlıkta nasıl görünüyorsa çipte de öyle görünür ve dil değişimine uyar. Koleksiyon'da da kişisel sütun adları çipte kullanılır.",
+        "en": "Chips in the Table Filters area showed internal keys such as “__checklist__…” for checklist columns. The chip name now comes from the same source as the table header: checklist, formula and added columns, and the personal names you gave columns, appear in the chip exactly as in the header and follow the language switch. Collection chips use personal column names too."
+      }
+    },
+    {
       "id": "cp-orders-search-more-fields",
       "type": "improvement",
       "module": {

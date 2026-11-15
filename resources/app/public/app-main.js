@@ -2686,10 +2686,17 @@ function fitActiveTableColumns(){
 document.getElementById('navFitColumnsBtn')?.addEventListener('click',fitActiveTableColumns);
 document.getElementById('navFreezeBtn')?.addEventListener('click', freezeStart);
 loadFreezeState();
+/* Filtre çipi etiketi, tablo başlığıyla AYNI çözümleyiciyi kullanır (kişisel
+   ad, checklist/formül/özel sütun adı, EN/TR). Ham anahtar (__checklist__…)
+   yalnız sütun tanımı hiç bulunamazsa son çaredir. */
 function activeFilterColumnLabel(tableKey,key){
-  if(tableKey==='koleksiyon')return L(kolFilterMeta(key)?.label||key);
+  if(tableKey==='koleksiyon'){
+    const base=kolColDefs().find(c=>c.k===key);
+    if(base)return kolColumnLabel(base);
+    return L(kolFilterMeta(key)?.label||key);
+  }
   const column=(COLS_BY_TABLE[tableKey]||[]).find(item=>item.k===key);
-  return L(column?.l||column?.k||key);
+  return column?tableColumnLabel(tableKey,column):L(key);
 }
 function activeFilterEntrySummary(entry){
   const values=[...(entry?.values||[])].map(value=>norm(value)||'—');
