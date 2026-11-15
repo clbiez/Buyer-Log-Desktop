@@ -12418,6 +12418,23 @@ html[data-ui-system="manifest"] .blvTile {--ui-metric-color:var(--ui-series-colo
 }
 html[data-ui-system="manifest"] .blvTile[data-stage=""] .bpaTileValue {color:var(--ui-text) !important
 }
+/* Backlog Genel Bakış öncelik etiketi kutucukları: CP Öncelik Kuralları kataloğunun tonu. */
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="red"] {--ui-series-color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="copper"] {--ui-series-color:var(--ui-chart-4)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile:is([data-priority-tone="orange"],[data-priority-tone="yellow"]) {--ui-series-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="blue"] {--ui-series-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="teal"] {--ui-series-color:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="green"] {--ui-series-color:var(--ui-success)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile[data-priority-tone="gray"] {--ui-series-color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] #backlogOverview .blvPriorityTile.is-muted {cursor:default !important
+}
 /* Overview KPI states override the generic, neutral Plan & Actual card adapter. */
 html[data-ui-system="manifest"] #backlogOverview .blvTile {
   background:color-mix(in srgb,var(--ui-metric-color,var(--ui-accent)) 8%,var(--ui-surface)) !important;

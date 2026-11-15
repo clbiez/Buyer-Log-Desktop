@@ -1135,8 +1135,114 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
     }
   }
   _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision,day:new Date().toDateString()};
+  if(tableKey==='cp'){_cpPriorityIndex=null;_cpPriorityIndexRevision+=1;try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}}
   return true;
 }
+/* Ortak öncelik dizini. Öncelik Kuralları ve etiketleri yalnız CP satırlarında
+   (kişisel karar katmanıyla) hesaplanır; Backlog ve Global Flow aynı sonucu
+   sipariş + model + renk kimliğiyle buradan okur, kuralları ikinci kez
+   değerlendirmez. Dizin CP öncelik önbelleğine bağlıdır: önbellek düşünce
+   (veri/kural değişimi) dizin de geçersizdir ve yeniden kurulur. */
+let _cpPriorityIndex=null,_cpPriorityEnsurePromise=null,_cpPriorityIndexRevision=0;
+// Kimlik normalizasyonu sıcak yoldadır (her CP ve Backlog satırı); yerel-ayar
+// duyarlı büyük harf yerine önbellekli sade dönüşüm kullanılır. İki taraf da
+// aynı fonksiyondan geçtiği için eşleşme tutarlıdır.
+const _cpPriorityIdentityCache=new Map();
+function cpPriorityIdentityPart(value){
+  const raw=value==null?'':String(value);
+  let out=_cpPriorityIdentityCache.get(raw);
+  if(out===undefined){
+    out=raw.trim().replace(/\s+/g,' ').toUpperCase();
+    if(_cpPriorityIdentityCache.size>50000)_cpPriorityIdentityCache.clear();
+    _cpPriorityIdentityCache.set(raw,out);
+  }
+  return out;
+}
+function cpPriorityIdentity(...parts){
+  return parts.map(cpPriorityIdentityPart).join('\u001f');
+}
+/* Canonical alanın CP başlığı dizin kurulurken BİR KEZ çözülür; satır başına
+   canonical arama (token/rowLookup) yapılmaz. */
+function cpPriorityHeaderKey(rows,id,fallback){
+  const canonical=window.BLCanonicalFields;
+  let keys=[];
+  try{const binding=canonical&&typeof canonical.bindingFor==='function'?canonical.bindingFor('cp',id):null;keys=binding&&Array.isArray(binding.keys)?binding.keys:[];}catch(_){keys=[];}
+  const sample=(rows||[]).slice(0,25).filter(Boolean);
+  for(const key of keys)if(sample.some(row=>Object.prototype.hasOwnProperty.call(row,key)))return key;
+  return fallback;
+}
+function cpPriorityIndexReady(){
+  const cached=_unifiedPriorityCache.cp;
+  return Boolean(cached&&state.cp&&cached.rows===state.cp.rows&&cached.day===new Date().toDateString());
+}
+function buildCpPriorityIndex(){
+  if(!cpPriorityIndexReady())return null;
+  const stamp=_unifiedPriorityCache.cp;
+  if(_cpPriorityIndex&&_cpPriorityIndex.stamp===stamp)return _cpPriorityIndex;
+  const OD=window.BLOrderDecisionEngine,line=new Map(),orderColour=new Map(),order=new Map();
+  const merge=(map,key,entry)=>{
+    if(!key)return;
+    const prev=map.get(key);
+    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1,model:entry.model,colour:entry.colour});return;}
+    prev.count+=1;
+    prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
+    entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
+  };
+  const rows=state.cp.rows;
+  const orderKey=cpPriorityHeaderKey(rows,'orderCode','Order Code'),modelKey=cpPriorityHeaderKey(rows,'modelName','Model Name'),colourKey=cpPriorityHeaderKey(rows,'colourCode','C.Code');
+  for(const row of rows){
+    if(!row)continue;
+    const priority=actionPriorityCode(row['Priority']);
+    if(!priority)continue;
+    const orderCode=row[orderKey];
+    if(!String(orderCode==null?'':orderCode).trim())continue;
+    const model=row[modelKey],colour=row[colourKey];
+    const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
+    merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
+    merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
+    merge(order,cpPriorityIdentity(orderCode),{...entry,model:cpPriorityIdentityPart(model),colour:cpPriorityIdentityPart(colour)});
+  }
+  _cpPriorityIndex={stamp,line,orderColour,order};
+  return _cpPriorityIndex;
+}
+function lookupCpPriority(orderCode,model,colourCode){
+  const index=buildCpPriorityIndex();
+  if(!index||!String(orderCode||'').trim())return null;
+  // Sipariş yalnız kodla eşleşiyorsa ve CP'de birden fazla satırı varsa başka
+  // bir rengin etiketi ödünç alınmaz.
+  const hit=index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
+    ||(String(colourCode||'').trim()?index.orderColour.get(cpPriorityIdentity(orderCode,colourCode)):null)
+    ||(()=>{
+      // Yalnız-sipariş yedeği: CP'de tek satır olmalı ve istenen renk/model o
+      // satırla çelişmemeli (boş alan çelişki sayılmaz).
+      const only=index.order.get(cpPriorityIdentity(orderCode));
+      if(!only||only.count!==1)return null;
+      const wantColour=cpPriorityIdentityPart(colourCode),wantModel=cpPriorityIdentityPart(model);
+      if(wantColour&&only.colour&&wantColour!==only.colour)return null;
+      if(wantModel&&only.model&&wantModel!==only.model)return null;
+      return only;
+    })();
+  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags]}:null;
+}
+function ensureCpPriorityIndex(){
+  if(cpPriorityIndexReady())return Promise.resolve(true);
+  if(_cpPriorityEnsurePromise)return _cpPriorityEnsurePromise;
+  _cpPriorityEnsurePromise=(async()=>{
+    if(!state.cp&&!(await ensureOverviewCpDependency()))return false;
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)await window.BLPerf?.ensureFeature?.('cpAssistant');
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)return false;
+    await scheduleUnifiedPrioritiesForTable('cp');
+    return cpPriorityIndexReady();
+  })().catch(()=>false).finally(()=>{_cpPriorityEnsurePromise=null;});
+  return _cpPriorityEnsurePromise;
+}
+window.BLCpPriorityIndex={
+  ready:cpPriorityIndexReady,
+  revision:()=>_cpPriorityIndexRevision+(cpPriorityIndexReady()?':ready':':pending'),
+  ensure:ensureCpPriorityIndex,
+  lookup:lookupCpPriority,
+  catalog:()=>{const OD=window.BLOrderDecisionEngine;return OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():[];},
+};
 let cpPriorityJob=null;
 function scheduleUnifiedPrioritiesForTable(tableKey){
   if(tableKey==='orders')return Promise.resolve(true);
@@ -2339,7 +2445,7 @@ async function globalFlowEnsure(tableKey,options){
 window.BLGlobalFlowDataProviders={
   cp:async options=>(await globalFlowEnsure('cp',options))?globalFlowSourceRows('cp'):[],
   orders:async options=>(await globalFlowEnsure('orders',options))?globalFlowSourceRows('orders'):[],
-  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0),
+  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0)+(tableKey==='orders'?':'+window.BLCpPriorityIndex.revision():''),
 };
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 
