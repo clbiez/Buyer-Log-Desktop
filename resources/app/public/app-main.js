@@ -1144,15 +1144,32 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
    değerlendirmez. Dizin CP öncelik önbelleğine bağlıdır: önbellek düşünce
    (veri/kural değişimi) dizin de geçersizdir ve yeniden kurulur. */
 let _cpPriorityIndex=null,_cpPriorityEnsurePromise=null,_cpPriorityIndexRevision=0;
-function cpPriorityIdentity(...parts){
-  return parts.map(value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR').replace(/\s+/g,' ')).join('\u001f');
-}
-function cpPriorityRowField(row,id,fallback){
-  const canonical=window.BLCanonicalFields;
-  if(canonical&&typeof canonical.value==='function'){
-    try{const value=canonical.value(row,'cp',id);if(value!=null&&String(value).trim()!=='')return value;}catch(_){}
+// Kimlik normalizasyonu sıcak yoldadır (her CP ve Backlog satırı); yerel-ayar
+// duyarlı büyük harf yerine önbellekli sade dönüşüm kullanılır. İki taraf da
+// aynı fonksiyondan geçtiği için eşleşme tutarlıdır.
+const _cpPriorityIdentityCache=new Map();
+function cpPriorityIdentityPart(value){
+  const raw=value==null?'':String(value);
+  let out=_cpPriorityIdentityCache.get(raw);
+  if(out===undefined){
+    out=raw.trim().replace(/\s+/g,' ').toUpperCase();
+    if(_cpPriorityIdentityCache.size>50000)_cpPriorityIdentityCache.clear();
+    _cpPriorityIdentityCache.set(raw,out);
   }
-  return row?row[fallback]:'';
+  return out;
+}
+function cpPriorityIdentity(...parts){
+  return parts.map(cpPriorityIdentityPart).join('\u001f');
+}
+/* Canonical alanın CP başlığı dizin kurulurken BİR KEZ çözülür; satır başına
+   canonical arama (token/rowLookup) yapılmaz. */
+function cpPriorityHeaderKey(rows,id,fallback){
+  const canonical=window.BLCanonicalFields;
+  let keys=[];
+  try{const binding=canonical&&typeof canonical.bindingFor==='function'?canonical.bindingFor('cp',id):null;keys=binding&&Array.isArray(binding.keys)?binding.keys:[];}catch(_){keys=[];}
+  const sample=(rows||[]).slice(0,25).filter(Boolean);
+  for(const key of keys)if(sample.some(row=>Object.prototype.hasOwnProperty.call(row,key)))return key;
+  return fallback;
 }
 function cpPriorityIndexReady(){
   const cached=_unifiedPriorityCache.cp;
@@ -1171,13 +1188,15 @@ function buildCpPriorityIndex(){
     prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
     entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
   };
-  for(const row of state.cp.rows){
+  const rows=state.cp.rows;
+  const orderKey=cpPriorityHeaderKey(rows,'orderCode','Order Code'),modelKey=cpPriorityHeaderKey(rows,'modelName','Model Name'),colourKey=cpPriorityHeaderKey(rows,'colourCode','C.Code');
+  for(const row of rows){
     if(!row)continue;
     const priority=actionPriorityCode(row['Priority']);
     if(!priority)continue;
-    const orderCode=cpPriorityRowField(row,'orderCode','Order Code');
-    if(!String(orderCode||'').trim())continue;
-    const model=cpPriorityRowField(row,'modelName','Model Name'),colour=cpPriorityRowField(row,'colourCode','C.Code');
+    const orderCode=row[orderKey];
+    if(!String(orderCode==null?'':orderCode).trim())continue;
+    const model=row[modelKey],colour=row[colourKey];
     const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
     merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
     merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);

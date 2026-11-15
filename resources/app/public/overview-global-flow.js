@@ -1056,10 +1056,9 @@ async function backlogPartials(force){
   if(force)window.BLBacklogRows?.invalidate?.();
   const load=window.BLBacklogRows?.loadData?window.BLBacklogRows.loadData(query):fetch('/api/backlog-export?'+new URLSearchParams(query).toString(),{credentials:'same-origin',cache:'no-store'}).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'HTTP '+response.status);return data;});
   const [data]=await Promise.all([load,ensureDecisionEngine()]);
-  // Ortak öncelik dizini hazır değilse arka planda hazırlanır; hazır olunca
-  // bl:cp-priority-index-changed haritayı yeniler. Harita bunu beklemez.
-  const priorityIndex=cpPriorityIndexApi();
-  if(priorityIndex&&typeof priorityIndex.ensure==='function'&&!priorityIndex.ready())void priorityIndex.ensure();
+  // Harita ortak öncelik dizinini yalnız OKUR; CP öncelik hesabını kendisi
+  // başlatmaz (açılış maliyeti). Dizin CP/Backlog tarafından hazırlanınca
+  // bl:cp-priority-index-changed haritayı görünürse yeniden etiketler.
   const records=shipmentPartialsFromRows((Array.isArray(data.rows)?data.rows:[]).map(row=>({...row,_flowSourceRevision:data.sourceRevision})),'backlog');
   state.lastBacklogRows=records;state.lastBacklogSignature=signature;return records;
 }

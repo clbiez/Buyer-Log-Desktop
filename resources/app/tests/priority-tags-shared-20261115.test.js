@@ -64,8 +64,8 @@ test('Ortak öncelik dizini sipariş+model+renk eşler, başka rengin etiketini 
     {'Order Code':'3003','Model Name':'X','C.Code':'09',Priority:'CRITICAL',_trackingTags:[]},
   ];
   const day=new Date().toDateString();
-  const api=loadAppMainFunctions(['cpPriorityIdentity','cpPriorityRowField','cpPriorityIndexReady','buildCpPriorityIndex','lookupCpPriority','actionPriorityCode','norm'],{
-    window:{BLOrderDecisionEngine:OD,BLCanonicalFields:canonical},state:{cp:{rows}},_unifiedPriorityCache:{cp:{rows,day}},_cpPriorityIndex:null,
+  const api=loadAppMainFunctions(['cpPriorityIdentityPart','cpPriorityIdentity','cpPriorityHeaderKey','cpPriorityIndexReady','buildCpPriorityIndex','lookupCpPriority','actionPriorityCode','norm'],{
+    window:{BLOrderDecisionEngine:OD,BLCanonicalFields:canonical},state:{cp:{rows}},_unifiedPriorityCache:{cp:{rows,day}},_cpPriorityIndex:null,_cpPriorityIdentityCache:new Map(),
   });
   assert.equal(JSON.stringify(api.lookupCpPriority('1001','m','01')),JSON.stringify({priority:'prio:gecikme-yukleme',trackingTags:['prio:indirim']}),'büyük/küçük harf duyarsız tam eşleşme');
   assert.equal(api.lookupCpPriority('1001','Başka model','02').priority,'WATCH','sipariş+renk yedeği');
