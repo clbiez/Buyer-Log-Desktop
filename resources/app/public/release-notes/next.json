@@ -572,6 +572,35 @@
         "tr": "Zaman Akışı'nın alt grafik seçicisine Buyer Grup ve Buyer'ın yanına Öncelik eklendi. Her dönem çubuğu satırların ana önceliğine göre yığılır, bu yüzden toplam o dönemin Backlog adedine eşittir. Renkler ve sıra Öncelik Kuralları'ndaki etiket kataloğunuzdan gelir. Takip etiketleri çubukta ayrıca sayılmaz; çubuğun üzerine gelince ipucunda adetleriyle listelenir. Parçaya tıklayınca o dönem ve etiketin siparişleri sağda açılır.",
         "en": "Priority was added next to Buying Group and Buyer in the Timeline's lower chart picker. Each period bar is stacked by the lines' main priority, so the total equals that period's Backlog quantity. Colours and order come from your tag catalogue in Priority Rules. Tracking tags are not counted again in the bar; hover the bar to see them with quantities in the tooltip. Click a segment to open the orders of that period and tag on the right."
       }
+    },
+    {
+      "id": "active-filter-chip-column-name",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablo filtreleri sütunu başlıktaki adıyla gösterir",
+        "en": "Table filters show the column by its header name"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "active-filter-chip-column-name.png",
+        "alt": {
+          "tr": "CP Tracker'da Tablo Filtreleri alanında checklist sütunu filtresi tablo başlığıyla aynı adla, “PPS onayı: Bekliyor” olarak görünüyor",
+          "en": "In CP Tracker the Table Filters area shows the checklist column filter with the same name as the table header, “PPS onayı: Bekliyor”"
+        },
+        "caption": {
+          "tr": "Filtre çipi artık iç anahtar yerine sütunun tablodaki adını gösterir.",
+          "en": "The filter chip now shows the column's name from the table instead of an internal key."
+        }
+      },
+      "body": {
+        "tr": "Tablo Filtreleri alanındaki çipler, checklist sütunlarında “__checklist__…” gibi iç anahtarları gösteriyordu. Çip adı artık tablo başlığıyla aynı kaynaktan gelir: checklist, formül ve sonradan eklenen sütunlar ile sütunlara verdiğiniz kişisel adlar başlıkta nasıl görünüyorsa çipte de öyle görünür ve dil değişimine uyar. Koleksiyon'da da kişisel sütun adları çipte kullanılır.",
+        "en": "Chips in the Table Filters area showed internal keys such as “__checklist__…” for checklist columns. The chip name now comes from the same source as the table header: checklist, formula and added columns, and the personal names you gave columns, appear in the chip exactly as in the header and follow the language switch. Collection chips use personal column names too."
+      }
     }
   ]
 }
