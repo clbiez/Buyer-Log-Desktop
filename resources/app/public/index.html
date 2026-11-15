@@ -188,16 +188,38 @@
     message(english()?'Buyer Log could not finish preparing. Press Retry.':'Buyer Log hazırlığı tamamlanamadı. Yeniden denemek için düğmeye basın.',true);
     try{console.error('Buyer Log boot recovery failed:',lastFailure);}catch(_){}
   }
+  // Yakalanmamış JS/Promise hataları ekranda kalıcı kırmızı kutu olarak birikmez:
+  // ortak bildirim sistemine (showToast → Bildirim Geçmişi) kısa ömürlü hata olarak
+  // gider. Aynı mesaj 15 sn içinde tekrar gösterilmez. #blErrBox yalnız gizli
+  // tanılama günlüğü olarak (kabul betikleri okur) tutulur.
+  var errSeen=Object.create(null),errPending=[],errFlushTimer=0,errFlushTries=0;
+  function errLog(line){try{
+    var box=document.getElementById('blErrBox');
+    if(!box){box=document.createElement('div');box.id='blErrBox';box.hidden=true;box.setAttribute('aria-hidden','true');document.documentElement.appendChild(box);}
+    box.textContent=(box.textContent+line+'\n').slice(-8000);
+  }catch(_){}}
+  function errDeliver(text){
+    if(typeof showToast==='function'){showToast(text,{kind:'error'});return true;}
+    return false;
+  }
+  function errFlush(){
+    errFlushTimer=0;
+    while(errPending.length&&errDeliver(errPending[0]))errPending.shift();
+    // Bildirim katmanı hiç yüklenemezse (açılış hatası) bekleme sınırlıdır; açılış
+    // muhafızı kendi kurtarma mesajını gösterir, mesaj gizli günlükte kalır.
+    if(errPending.length&&++errFlushTries<240)errFlushTimer=setTimeout(errFlush,500);else errPending.length=0;
+  }
+  function reportRuntimeError(text){try{
+    text=String(text||'').slice(0,1000);if(!text)return;errLog(text);
+    var now=Date.now();if(errSeen[text]&&now-errSeen[text]<15000)return;errSeen[text]=now;
+    if(errPending.length||!errDeliver(text)){if(errPending.length<20)errPending.push(text);if(!errFlushTimer)errFlushTimer=setTimeout(errFlush,500);}
+  }catch(_){}}
   window.addEventListener('error',function(ev){try{
     if(!ev||!ev.message)return;
-    var box=document.getElementById('blErrBox');
-    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}
-    box.textContent+=(english()?'JS ERROR: ':'JS HATA: ')+ev.message+' @ '+(ev.filename||'').split('/').pop()+':'+ev.lineno+'\n';
+    reportRuntimeError((english()?'JS error: ':'JS hatası: ')+ev.message+' @ '+(ev.filename||'').split('/').pop()+':'+ev.lineno);
   }catch(_){}});
   window.addEventListener('unhandledrejection',function(ev){try{
-    var box=document.getElementById('blErrBox');
-    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}
-    box.textContent+=(english()?'PROMISE ERROR: ':'PROMISE HATA: ')+String(ev.reason&&ev.reason.message||ev.reason)+'\n';
+    reportRuntimeError((english()?'Unexpected error: ':'Beklenmeyen hata: ')+String(ev.reason&&ev.reason.message||ev.reason));
   }catch(_){}});
   // Background module preparation (scheduleBackgroundModuleWarmup) reports each module it prepares.
   window.addEventListener('bl:startup-progress',function(ev){
