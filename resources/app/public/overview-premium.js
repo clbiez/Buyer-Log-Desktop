@@ -207,12 +207,41 @@
     const prefs=metricPrefs.get(id)||{field:input.fields[0].key,table:true};
     if(!input.fields.some(f=>f.key===prefs.field))prefs.field=input.fields[0].key;
     metricPrefs.set(id,prefs);section.classList.toggle('ovMetricTableOpen',prefs.table);
+    if(typeof input.buildChart==='function'&&root.BLPivotChart){renderPivotChart(id,input,host,prefs);return;}
     const field=input.fields.find(f=>f.key===prefs.field),series=metricSeries(input.rows.map((row,index)=>({label:input.labelFor(row,index),value:input.valueFor(row,field),row})));
     const format=input.format||fmt;
     const markup=`<div class="ovMetricTools"><select data-ov-metric="${id}" data-ov-focus="metric-${id}" aria-label="${esc(L('Grafik ölçüsü','Chart measure'))}">${input.fields.map(f=>`<option value="${esc(f.key)}"${f.key===prefs.field?' selected':''}>${esc(f.label)}</option>`).join('')}</select><button type="button" class="cpaBtn sm" data-ov-metric-table="${id}" data-ov-focus="metric-table-${id}" aria-pressed="${prefs.table}">${prefs.table?L('Grafik','Chart'):L('Pivot / Tablo','Pivot / Table')}</button></div>`+
       `<div class="ovMetricBars"${prefs.table?' hidden':''}>${series.rows.slice(0,5).map((row,index)=>`<button type="button" data-ov-metric-row="${id}:${index}" title="${esc(row.label+' · '+format(row.value,field))}" class="ovMetricRow${row.value<0?' isNegative':''}"><span>${esc(row.label)}</span><b>${esc(format(row.value,field))}</b><i><em style="--ov-share:${series.max?Math.abs(row.value)/series.max*100:0}%"></em></i></button>`).join('')||empty(L('Sayısal veri yok.','No numeric data.'))}</div>`+
       `<small class="ovMetricCaption">${esc(input.scope||'')}${series.rows.length>5?` · ${L('İlk 5 /','Top 5 /')} ${fmt(series.rows.length)}`:''}</small>`;
     draw(host,markup);input.series=series;
+  }
+  /* v2026-11-15 — Pivot ayarına göre Backlog stilinde grafik. Model kaynak
+     modülde (INTAKE/OAB motoru) toplanır; burada yalnız çizilir. */
+  const PIVOT_CHART_TYPES=[['stacked','Yığılmış','Stacked'],['grouped','Gruplu','Grouped'],['line','Çizgi','Line']];
+  function renderPivotChart(id,input,host,prefs){
+    if(!prefs.type)prefs.type='stacked';
+    if(!(prefs.hidden instanceof Set))prefs.hidden=new Set();
+    const field=input.fields.find(f=>f.key===prefs.field),format=value=>(input.format||fmt)(value,field);
+    // Tablo açıkken grafik görünmez; model yalnız grafik görünümünde hesaplanır.
+    const chart=(!prefs.table&&input.buildChart(field))||{categories:[],series:[],totals:[]};
+    if(prefs.hiddenFor!==field.key+'|'+chart.series.map(s=>s.key).join('|')){prefs.hidden=new Set();prefs.hiddenFor=field.key+'|'+chart.series.map(s=>s.key).join('|');}
+    input.chartModel=chart;
+    const axis=[chart.categoryLabel&&L('Eksen: ','Axis: ')+chart.categoryLabel,chart.seriesLabel&&L('Seri: ','Series: ')+chart.seriesLabel].filter(Boolean).join(' · ');
+    const limited=chart.totalSeries>chart.series.filter(s=>!s.other).length&&!chart.series.some(s=>s.other)?` · ${L('İlk','Top')} ${chart.series.length} / ${fmt(chart.totalSeries)} ${L('seri','series')}`:'';
+    const typeButtons=PIVOT_CHART_TYPES.map(([key,tr,en])=>`<button type="button" class="cpaBtn sm pivotChartTypeBtn" data-ov-chart-type="${id}:${key}" data-ov-focus="chart-type-${id}-${key}" aria-pressed="${prefs.type===key}">${esc(L(tr,en))}</button>`).join('');
+    const body=prefs.table?'':chart.categories.length
+      ?root.BLPivotChart.svg(chart,{type:prefs.type,hidden:prefs.hidden,format,axisFormat:value=>compactNumber(value),title:field.label})+root.BLPivotChart.legendHtml(chart,prefs.hidden,{legendHint:L('Tıkla: gizle / göster','Click: hide / show')})
+      :empty(L('Sayısal veri yok.','No numeric data.'));
+    const markup=`<div class="ovMetricTools"><select data-ov-metric="${id}" data-ov-focus="metric-${id}" aria-label="${esc(L('Grafik ölçüsü','Chart measure'))}">${input.fields.map(f=>`<option value="${esc(f.key)}"${f.key===prefs.field?' selected':''}>${esc(f.label)}</option>`).join('')}</select>${prefs.table?'':`<div class="pivotChartTypes" role="group" aria-label="${esc(L('Grafik türü','Chart type'))}">${typeButtons}</div>`}<button type="button" class="cpaBtn sm" data-ov-metric-table="${id}" data-ov-focus="metric-table-${id}" aria-pressed="${prefs.table}">${prefs.table?L('Grafik','Chart'):L('Pivot / Tablo','Pivot / Table')}</button></div>`+
+      `<div class="pivotChartPanel" data-pivot-chart-host="${id}"${prefs.table?' hidden':''}>${body}</div>`+
+      `<small class="ovMetricCaption">${esc([input.scope||'',prefs.table?'':axis].filter(Boolean).join(' · '))}${prefs.table?'':esc(limited)}</small>`;
+    draw(host,markup);
+  }
+  function compactNumber(value){
+    const n=Number(value)||0,abs=Math.abs(n);
+    if(abs>=1e6)return (n/1e6).toLocaleString(locale(),{maximumFractionDigits:1})+L(' Mn',' M');
+    if(abs>=1e3)return (n/1e3).toLocaleString(locale(),{maximumFractionDigits:1})+L(' B',' K');
+    return n.toLocaleString(locale(),{maximumFractionDigits:1});
   }
   function bind(){
     doc.getElementById('ovMotionBtn')?.addEventListener('click',event=>{
@@ -222,6 +251,17 @@
     });
     doc.addEventListener('click' ,event=>{
       if(event.target.closest('[data-ov-rules]')){root.BLCpAssistant?.openRules?.();return;}
+      const chartTarget=event.target.closest('[data-ov-chart-type],[data-pivot-chart-legend],[data-pivot-chart-cat]');
+      if(chartTarget){
+        if(chartTarget.dataset.ovChartType){const [id,type]=chartTarget.dataset.ovChartType.split(':');const prefs=metricPrefs.get(id);if(prefs){prefs.type=type;renderMetricChart(id,metricViews.get(id));}return;}
+        const host=chartTarget.closest('[data-pivot-chart-host]'),id=host?.dataset.pivotChartHost,prefs=id&&metricPrefs.get(id),input=id&&metricViews.get(id);
+        if(!prefs||!input)return;
+        if(chartTarget.dataset.pivotChartLegend!=null){const key=chartTarget.dataset.pivotChartLegend;prefs.hidden.has(key)?prefs.hidden.delete(key):prefs.hidden.add(key);renderMetricChart(id,input);return;}
+        const category=input.chartModel?.categories[Number(chartTarget.dataset.pivotChartCat)];
+        const serie=input.chartModel?.series.find(s=>s.key===chartTarget.dataset.pivotChartSeries);
+        if(category)input.drillCategory?.(category,input.fields.find(f=>f.key===prefs.field),serie);
+        return;
+      }
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;
       if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon')))return;
       if(button.dataset.ovPulse){const entry=pulseScopes(model).find(item=>item.key===button.dataset.ovPulse);if(entry)openRows(entry.orders,button.querySelector('span').textContent);}

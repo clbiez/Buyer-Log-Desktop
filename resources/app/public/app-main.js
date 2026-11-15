@@ -12808,7 +12808,7 @@ function renderMatchAudit(a,en){
 const MODEL_CONNECTION_PRESETS=[
   {name:'ASAS', server:'lcwtabular_s30', catalog:'ASAS_30', role:'asas', refreshEnabled:true},
   {name:'IAS',  server:'lcwtabular_p32', catalog:'IASv2', role:'antrepo', refreshEnabled:true},
-  {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI Intake Raporu4', role:'intake', refreshEnabled:true},
+  {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI_Intake_Raporu4', role:'intake', refreshEnabled:true},
 ];
 const MODEL_CONNECTION_DEFAULT_SEASONS=Object.freeze(['W6','W7','S6','S7']);
 const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake']};
@@ -17272,7 +17272,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=20261018')
+  overviewOabLoadPromise=loader('oab.js?rev=20261115')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
@@ -17284,7 +17284,7 @@ function ensureOverviewIntakeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'intake',mode:'after-ui'});
-  overviewIntakeLoadPromise=loader('intake.js?rev=20261018')
+  overviewIntakeLoadPromise=loader('intake.js?rev=20261115')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui'});return window.BLINTAKE||null;})
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;

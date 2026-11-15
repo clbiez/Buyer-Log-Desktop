@@ -11,7 +11,7 @@ const { createIntakeStore } = require('../server/lib/intake-store');
 test('INTAKE cache anahtarı display label ve kolon genişliğini içermez', () => {
   const store = createIntakeStore({ root: fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-intake-test-')) });
   const query = {
-    connection: { server: 'lcwtabular_s20', catalog: 'WSSI Intake Raporu4', model: 'Model' },
+    connection: { server: 'lcwtabular_s20', catalog: 'WSSI_Intake_Raporu4', model: 'Model' },
     rows: [{ id: 'r1', sourceUniqueName: '[SupplyBasket].[Tedarik Cluster]' }],
     measures: [{ id: 'm1', sourceUniqueName: '[Measures].[Kümülatif Sipariş Miktar]' }],
     filters: [],

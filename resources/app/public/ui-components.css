@@ -15950,3 +15950,10 @@ html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter
 html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter) {font-weight:520 !important;}
 html[data-ui-system="manifest"] #view-lfl .lflPeriodDimWrap .lflDateFieldSelect {font:650 var(--ui-font-xs)/1 var(--ui-font-body) !important;color:var(--ui-text-secondary) !important;border-right:0 !important;}
 html[data-ui-system="manifest"] #view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap)::before {background:var(--ui-group-divider);}
+/* v2026-11-15 — OAB filtre paneli başlıkları ve OAB/INTAKE pivot grafiği. */
+html[data-ui-system="manifest"] .oabFilterCaption {color:var(--ui-text-muted) !important;font:600 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .pivotChartTypeBtn[aria-pressed="true"] {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .pivotChartSvg .pivotChartZero {stroke:var(--ui-text-muted)
+}

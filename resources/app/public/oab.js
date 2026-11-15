@@ -1150,14 +1150,64 @@
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
   }
   // Filtre bağımlılık zinciri: Season -> MAG -> Buyer Group -> Get/Refresh OAB.
+  /* v2026-11-15 — Tek "Yenile" düğmesi (eski Get OAB komutu). Seçim eksikse
+     düğme kapanmaz; filtre panelini açıp eksik seçimi gösterir. */
+  function oabSelectionReady() {
+    return Boolean(S.seasonRefs.length && S.magRefs.length && (S.buyerGroupRefs.length || S.allBuyerGroups));
+  }
   function oabUpdateActionButtons() {
-    const getBtn = oabEl('oabGetBtn'), refreshBtn = oabEl('oabRefreshBtn'), exportBtn = oabEl('oabExcelExportBtn');
-    const ready = Boolean(S.seasonRefs.length && S.magRefs.length && (S.buyerGroupRefs.length || S.allBuyerGroups));
-    if (getBtn) getBtn.disabled = !ready || S.busy;
-    if (refreshBtn) refreshBtn.disabled = !ready || S.busy;
+    const getBtn = oabEl('oabGetBtn'), exportBtn = oabEl('oabExcelExportBtn');
+    if (getBtn) getBtn.disabled = S.busy || !S.seasons.length;
     if (exportBtn) exportBtn.disabled = !S.rows.length || S.busy;
     const cancelBtn = oabEl('oabCancelBtn');
     if (cancelBtn) cancelBtn.hidden = !(S.batchJob && S.batchJob.running);
+    oabRenderStateMeta();
+  }
+  /* INTAKE başlığındaki özet metnin OAB karşılığı: satır · alan · zaman. */
+  function oabRenderStateMeta() {
+    const meta = oabEl('oabStateMeta');
+    if (!meta) return;
+    const locale = oabT('tr-TR', 'en-GB');
+    const parts = [];
+    if (S.rows.length) {
+      parts.push(`${S.rows.length.toLocaleString(locale)} ${oabT('satır', 'rows')}`);
+      parts.push(`${(S.fields || []).length.toLocaleString(locale)} ${oabT('alan', 'fields')}`);
+      if (S.fetchedAt) parts.push(new Date(S.fetchedAt).toLocaleString(locale));
+    }
+    if (S.busy && S.rows.length) parts.unshift(oabT('Güncelleniyor…', 'Updating…'));
+    meta.textContent = parts.join(' · ');
+    const filtersBtn = oabEl('oabFiltersBtn');
+    if (filtersBtn) {
+      const active = Object.values(S.localFilters || {}).some(value => value && (value.size || value.length));
+      filtersBtn.classList.toggle('hasActiveFilters', active);
+    }
+  }
+  function oabSetFilterPanelOpen(open) {
+    const panel = oabEl('oabFilterPanel'), button = oabEl('oabFiltersBtn');
+    if (!panel || !button) return;
+    const next = Boolean(open);
+    panel.hidden = !next;
+    button.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (next) {
+      const rect = button.getBoundingClientRect();
+      panel.style.top = `${Math.max(16, Math.min(rect.bottom + 6, innerHeight - panel.offsetHeight - 16))}px`;
+      panel.style.right = `${Math.max(16, Math.min(innerWidth - rect.right, innerWidth - panel.offsetWidth - 16))}px`;
+    }
+  }
+  function oabSelectionSignature() {
+    return JSON.stringify([S.seasonRefs, S.magRefs, S.buyerGroupRefs, Boolean(S.allBuyerGroups)]);
+  }
+  /* Seçim değiştiyse OAB önbelleği kullanılır (eski Get OAB); aynı seçimin
+     verisi zaten ekrandaysa Yenile gerçekten tazeler (eski Yenile). */
+  function oabRefreshFromButton() {
+    if (!oabSelectionReady()) {
+      oabSetFilterPanelOpen(true);
+      oabSetStatus(oabT('Yenilemek için filtre panelinde Season, MAG ve Buyer Group seçin.', 'Select Season, MAG and Buyer Group in the filter panel to refresh.'), 'warning');
+      return;
+    }
+    oabSetFilterPanelOpen(false);
+    const force = Boolean(S.rows.length) && S.lastRequestedSelection === oabSelectionSignature();
+    return oabFetchReport(force);
   }
 
   function sanitizeOabPivotConfig(config) {
@@ -1253,6 +1303,8 @@
       fetchedAt: snapshot.fetchedAt,
       fromCache: Boolean(snapshot.fromCache),
     }, { fromSnapshot: true });
+    // Ekrandaki veri bu seçime ait: ilk Yenile önbelleği değil kaynağı tazeler.
+    S.lastRequestedSelection = oabSelectionSignature();
     oabUpdateActionButtons();
     return true;
   }
@@ -1260,6 +1312,7 @@
   async function oabFetchReport(forceRefresh, authRetried = false) {
     if (S.busy) return;
     S.busy = true;
+    S.lastRequestedSelection = oabSelectionSignature();
     S.busyStartedAt = performance.now();
     S.busyStatusMessage = '';
     S.busyStatusKind = '';
@@ -1863,6 +1916,7 @@
   }
 
   function oabRenderTable() {
+    oabRenderStateMeta();
     const table = oabEl('oabTable');
     if (!table) return;
     const filtered = oabFilteredRows();
@@ -2836,19 +2890,61 @@
     setTimeout(() => search?.focus(), 0);
   }
 
+  /* v2026-11-15 — Grafik pivot ayarını izler: ilk satır alanı eksen; sütun
+     alanı varsa onun değerleri, yoksa ikinci satır alanı seri olur. Değerler
+     OAB pivot motoruyla hesaplanır (CALC/oran ölçüleri toplanmaz). Eskiden
+     yalnız en alt kademe etiketi kullanıldığı için aynı etiket tekrar ediyordu. */
+  function oabChartSourceRows(records, colKey, model) {
+    let rows = records.flatMap(record => record.__oabSourceRows || []);
+    const colFields = model.pivot.colFields || [];
+    if (colKey != null && colFields.length) rows = rows.filter(source => oabPivotGroupKey(colFields.map(field => source ? source[field] : '')) === colKey);
+    return rows;
+  }
+  function oabChartMeasure(records, valueKey, colKey, model) {
+    const rows = oabChartSourceRows(records, colKey, model);
+    if (!rows.length) return null;
+    const config = S.pivotConfig || defaultPivotConfigClient();
+    const results = oabPivotAggregateMap(rows, { ...config, rows: [], columns: [] }).values().next().value || {};
+    return results[valueKey];
+  }
   function oabRenderOverviewChart(rows){
     if(!global.BLOverviewPremium)return;
     const section=oabEl('oabSection');
     if(!section)return;
     const chart=oabBuildPivotViewModel(rows,{respectCollapse:false});
-    const fields=chart.valueDescriptors.filter(d=>d.numeric);
+    const numeric=chart.valueDescriptors.filter(d=>d.numeric);
+    const seen=new Set(),fields=numeric.filter(d=>!seen.has(d.valueKey)&&seen.add(d.valueKey)).map(d=>({...d,key:'chart:'+d.valueKey,label:d.valueKey}));
+    const records=chart.displayRows.filter(row=>row.__oabKind==='leaf');
+    const rowFields=chart.pivot.rowFields||[],colFields=chart.pivot.colFields||[];
+    const seriesRowField=!colFields.length&&rowFields.length>1;
+    const format=(value,field)=>Number(value).toLocaleString(oabT('tr-TR','en-GB'),{maximumFractionDigits:2})+(String(field&&field.label).includes('%')?'%':'');
     global.BLOverviewPremium.renderMetricChart('oab',{
-      fields,rows:chart.displayRows.filter(row=>row.__oabKind==='leaf'),
-      labelFor:row=>chart.rowDescriptors.map(d=>row[d.key]).filter(value=>value!==null&&value!==undefined&&value!=='').join(' / ')||oabT('Toplam','Total'),
-      valueFor:(row,field)=>row[field.key],
-      format:(value,field)=>Number(value).toLocaleString(oabT('tr-TR','en-GB'),{maximumFractionDigits:2})+(String(field.label).includes('%')?'%':''),
+      fields,rows:records,
+      labelFor:row=>(row.__oabPath||[]).filter(value=>value!==null&&value!==undefined&&value!=='').join(' / ')||oabT('Toplam','Total'),
+      valueFor:(row,field)=>oabChartMeasure([row],field.valueKey,null,chart),
+      format,
+      buildChart:field=>global.BLPivotChart?.buildModel({
+        records,
+        categoryOf:record=>rowFields.length?(record.__oabPath||[])[0]:oabT('Toplam','Total'),
+        seriesOf:seriesRowField?record=>(record.__oabPath||[])[1]:null,
+        columnSeries:colFields.length?chart.colKeys.map(key=>({key,label:String(key).split('␟').join(' / ')})):null,
+        measure:(subset,seriesKey)=>oabChartMeasure(subset,field.valueKey,colFields.length&&seriesKey!=null?seriesKey:null,chart),
+        compareCategory:oabSmartCompare,compareSeries:oabSmartCompare,
+        categoryLabel:rowFields[0]||'',seriesLabel:colFields.length?colFields.join(' / '):(seriesRowField?rowFields[1]:''),
+        singleLabel:field.label,blankLabel:oabT('(boş)','(blank)'),otherLabel:oabT('Diğer','Other'),
+        additive:!['CALC','AVG','MIN','MAX'].includes(String(field.agg||'SUM').toUpperCase()),
+      }),
+      drillCategory:(category,field,serie)=>{
+        // Satır serisi ve "Diğer" kayıtları model üyeliğinden; boş ('') sütun da gerçek bir kovadır.
+        const subset=seriesRowField&&serie?global.BLPivotChart.recordsFor(category,serie,record=>(record.__oabPath||[])[1]):category.records;
+        const colKey=colFields.length&&serie&&serie.column?serie.key:null;
+        const descriptor=numeric.find(d=>d.valueKey===field.valueKey&&(colKey==null||d.colKey===colKey))||field;
+        const sourceRows=oabChartSourceRows(subset,colKey,chart);
+        const path=[category.records[0]?.__oabPath?.[0]];if(seriesRowField&&serie&&!serie.other)path.push(serie.key);
+        oabOpenPivotDetail({[descriptor.key]:oabChartMeasure(subset,field.valueKey,colKey,chart),__oabSourceRows:sourceRows,__oabPath:path,__oabKind:'group'},{...descriptor,colKey:colKey==null?descriptor.colKey:colKey},{...chart,pivot:{...chart.pivot,colFields:colKey==null?[]:colFields}});
+      },
       scope:oabT('Seçili OAB kapsamı','Selected OAB scope')+(S.fetchedAt?' · '+new Date(S.fetchedAt).toLocaleString(oabT('tr-TR','en-GB')):''),
-      drill:(row,field)=>oabOpenPivotDetail(row,field,chart),
+      drill:(row,field)=>oabOpenPivotDetail({...row,[field.key]:oabChartMeasure([row],field.valueKey,null,chart)},field,{...chart,pivot:{...chart.pivot,colFields:[]}}),
     });
   }
   function oabRenderPivotTable(table, rows) {
@@ -3357,8 +3453,19 @@
     if (!oabEl('oabSection')) return; // Overview HTML'i henüz yoksa sessizce çık.
     // v7.20: üç filtre de çoklu seçim açılırı; tıklama gövde düzeyinde
     // yakalanıyor (oabOpenMultiPopover), burada ayrı dinleyici gerekmiyor.
-    oabEl('oabGetBtn')?.addEventListener('click', () => oabFetchReport(false));
-    oabEl('oabRefreshBtn')?.addEventListener('click', () => oabFetchReport(true));
+    oabEl('oabGetBtn')?.addEventListener('click', () => void oabRefreshFromButton());
+    oabEl('oabFiltersBtn')?.addEventListener('click', event => {
+      event.stopPropagation();
+      oabSetFilterPanelOpen(Boolean(oabEl('oabFilterPanel')?.hidden));
+    });
+    document.addEventListener('click', event => {
+      const panel = oabEl('oabFilterPanel');
+      if (panel && !panel.hidden && !panel.contains(event.target)
+        && !event.target.closest('#oabFiltersBtn,#oabGetBtn,.oabMultiPopover,.oabLocalFilterAddPopover')) oabSetFilterPanelOpen(false);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !document.getElementById('_oabMultiPopover')) oabSetFilterPanelOpen(false);
+    });
     oabEl('oabCancelBtn')?.addEventListener('click', () => void oabCancelBatch());
     document.querySelectorAll('[data-oab-view]').forEach(btn => btn.addEventListener('click', () => oabSwitchView(btn.dataset.oabView)));
     oabEl('oabSettingsBtn')?.addEventListener('click', oabOpenSettings);

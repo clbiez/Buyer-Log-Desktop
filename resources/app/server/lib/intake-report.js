@@ -17,7 +17,7 @@ const filterValueTypes = require('./filter-value-types');
 // bu sabit yalnız preset ve geriye dönük test/varsayılan sözleşme içindir.
 const INTAKE_CONNECTION = Object.freeze({
   server: 'lcwtabular_s20',
-  catalog: 'WSSI Intake Raporu4',
+  catalog: 'WSSI_Intake_Raporu4',
   model: 'Model',
 });
 
