@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. CP Tracker ve Siparişler araması ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line alanlarında da arar.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. CP Tracker and Orders search also looks in product description, category, MAG, buyer group, buyer and line."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. CP Tracker ve Siparişler araması ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line alanlarında da arar. Beklenmeyen JS/Promise hataları ekranda kalan kırmızı kutu yerine kendiliğinden kapanan hata bildirimi olarak görünür ve Bildirim Geçmişi'ne yazılır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. CP Tracker and Orders search also looks in product description, category, MAG, buyer group, buyer and line. Unexpected JS/Promise errors now appear as a self-closing error notification recorded in Notification History instead of a red box that stayed on screen."
   },
   "changes": [
     {
@@ -629,6 +629,35 @@
       "body": {
         "tr": "CP Tracker ve Siparişler'deki arama kutusu artık ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line sütunlarında da arar. Örneğin bir Buyer adı, MAG kodu veya Line yazarak ilgili kayıtları doğrudan bulabilirsiniz. Önceki arama alanları ve virgül/noktalı virgül/! yazımları aynen çalışır; ! ile hariç tutma bu yeni alanları da kapsar. Arama büyük tablolarda da daha hızlı süzer.",
         "en": "The search box in CP Tracker and Orders now also looks in the product description, category, MAG, buyer group, buyer and line columns. For example, type a buyer name, MAG code or line to find the related records directly. The earlier search fields and the comma/semicolon/! syntax work as before; exclusion with ! also covers these new fields. Search also filters faster on large tables."
+      }
+    },
+    {
+      "id": "runtime-error-notifications",
+      "type": "fix",
+      "module": {
+        "tr": "Genel",
+        "en": "General"
+      },
+      "title": {
+        "tr": "Hata mesajları ekranda takılı kalmıyor",
+        "en": "Error messages no longer stick on screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "runtime-error-notification.png",
+        "alt": {
+          "tr": "Genel Bakış ekranında sağ altta kapatılabilir HATA bildirimi; zil simgesinde okunmamış bildirim rozeti",
+          "en": "A dismissible ERROR notification at the bottom right of Overview; an unread badge on the bell icon"
+        },
+        "caption": {
+          "tr": "Hata, diğer bildirimlerle aynı yerde görünür, kendiliğinden kapanır ve Bildirim Geçmişi'nde kalır.",
+          "en": "The error appears with the other notifications, closes by itself and stays in Notification History."
+        }
+      },
+      "body": {
+        "tr": "Beklenmeyen bir JS veya Promise hatası (ör. “Cannot read properties of null”) sol altta silinmeyen kırmızı bir kutuda birikiyordu. Artık diğer bildirimlerle aynı yerde hata bildirimi olarak görünür, birkaç saniye sonra kendiliğinden kapanır ve zil simgesindeki Bildirim Geçmişi'ne kaydedilir. Aynı hata art arda tekrarlanırsa bir kez gösterilir.",
+        "en": "An unexpected JS or Promise error (e.g. “Cannot read properties of null”) used to pile up in a red box at the bottom left that never went away. It now appears as an error notification alongside the other notifications, closes by itself after a few seconds and is saved to Notification History under the bell icon. The same error repeated in a row is shown once."
       }
     }
   ]
