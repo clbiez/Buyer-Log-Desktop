@@ -11,6 +11,9 @@
   const BUILTIN_PULSE_KEYS={CRITICAL:'critical',ACTION_TODAY:'today',ACTION_THIS_WEEK:'week'};
   const CATEGORIES=['var(--ui-chart-1)','var(--ui-chart-2)','var(--ui-chart-3)','var(--ui-chart-4)','var(--ui-chart-5)','var(--ui-chart-6)','var(--ui-chart-7)','var(--ui-chart-8)'];
   const RISK=new Set(PRIORITIES.slice(0,3));
+  /* Üretimi bitmiş (yükleme/yol/gümrük/depo) siparişin Ex-F tarihinin geçmiş
+     olması gecikme değildir; "tarihi geçmiş" yalnız üretimi süren satırları sayar. */
+  const PRODUCTION_DONE_STAGES=new Set(['LOADING','IN_TRANSIT','CUSTOMS','IN_WAREHOUSE','AWAITING_RETAIL_TRANSFER']);
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const number=value=>finite(value)?Number(value):0;
   const decisionEngine=()=>{
@@ -41,11 +44,11 @@
     const start=finite(options.start)?Math.floor(Number(options.start)):today(),count=options.days===14?14:7;
     const catalog=options.priorityCatalog;
     const days=Array.from({length:count},(_,i)=>({date:start+i,qty:0,riskQty:0,unknownRows:0,rows:[]}));
-    const result={start,days,qty:0,missing:[],overdue:[],outside:[]};
+    const result={start,days,qty:0,missing:[],overdue:[],completed:[],outside:[]};
     for(const item of Array.isArray(orders)?orders:[]){
       if(!finite(item.plannedLoadDate)){result.missing.push(item);continue;}
       const index=Math.floor(Number(item.plannedLoadDate))-start;
-      if(index<0){result.overdue.push(item);continue;}
+      if(index<0){(PRODUCTION_DONE_STAGES.has(item.stage)?result.completed:result.overdue).push(item);continue;}
       if(index>=count){result.outside.push(item);continue;}
       const slot=days[index],qty=Math.max(0,number(item.qty));
       slot.rows.push(item);slot.qty+=qty;result.qty+=qty;
