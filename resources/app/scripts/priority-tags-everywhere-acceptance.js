@@ -37,7 +37,7 @@ async function api(url,body){
   await api('/api/refresh',{});
   for(let i=0;i<120;i++){if(!(await (await api('/api/refresh-status')).json()).running)break;await new Promise(r=>setTimeout(r,250));}
   browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH||'/opt/pw-browsers/chromium',args:['--no-sandbox']}).catch(()=>chromium.launch({headless:true}));
-  const context=await browser.newContext({viewport:{width:1600,height:1300},reducedMotion:'reduce'});
+  const context=await browser.newContext({viewport:{width:1600,height:1300},deviceScaleFactor:Number(process.env.BUYER_LOG_SHOT_SCALE||2),reducedMotion:'reduce'});
   const split=cookie.indexOf('=');await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),domain:'127.0.0.1',path:'/',httpOnly:true}]);
   await context.addInitScript(()=>localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0'));
   const page=await context.newPage(),errors=[];
@@ -75,6 +75,16 @@ async function api(url,body){
   await page.waitForTimeout(400);
   const box=await page.locator('#backlogOverview').boundingBox();
   await page.screenshot({path:path.join(shotDir,'backlog-priority-tags.png'),clip:{x:box.x,y:box.y,width:Math.min(box.width,1560),height:Math.min(box.height,960)}});
+  // Zaman Akışı: alt kırılım Öncelik; lejant katalog etiketlerini, dönem toplamı Backlog adedini gösterir.
+  await page.locator('[data-blv-timeline-dim="priority"]').click();
+  await page.waitForFunction(()=>[...document.querySelectorAll('#backlogOverview .blvTimelineLegend--dimension span')].some(el=>el.textContent.includes('Gecikme')),null,{timeout:20000});
+  const timeline=await page.evaluate(()=>({legend:[...document.querySelectorAll('#backlogOverview .blvTimelineLegend--dimension .blvBuyerLegend span')].map(el=>el.textContent.trim()),segs:document.querySelectorAll('#backlogOverview .blvBuyerStackSeg').length}));
+  assert.ok(timeline.segs>0,'timeline priority segments');
+  const card=await page.locator('#backlogOverview .blvUnifiedTimelineCard').boundingBox();
+  await page.locator('#backlogOverview .blvUnifiedTimelineCard').scrollIntoViewIfNeeded();await page.waitForTimeout(300);
+  const card2=await page.locator('#backlogOverview .blvUnifiedTimelineCard').boundingBox();
+  await page.screenshot({path:path.join(shotDir,'backlog-timeline-priority.png'),clip:{x:card2.x,y:card2.y,width:Math.min(card2.width,1560),height:Math.min(card2.height,760)}});
+  console.log({timeline});
   await page.evaluate(()=>applyLanguage('en'));await page.waitForTimeout(200);
   const enTiles=await page.evaluate(()=>[...document.querySelectorAll('#backlogOverview .blvPriorityTile .bpaTileLabel')].map(el=>el.textContent.trim()));
   assert.ok(enTiles.includes('Delay - Loading Date'),'EN label: '+enTiles.join(' | '));
@@ -85,7 +95,29 @@ async function api(url,body){
     const recs=window.BLOverviewGlobalFlow?.shipmentPartialsFromRows?window.BLOverviewGlobalFlow.shipmentPartialsFromRows(rows,'cp'):null;
     return recs?recs.filter(r=>r.actionPriority===id).length:-1;
   },tag);
-  console.log({cpTagged,tiles,enTiles,flowCheck,errors});
+  // Excel Backlog V3: Öncelik kırılımı ve detay sütunları gerçek indirmede.
+  await page.locator('[data-blv-group="priority"]').click().catch(()=>{});
+  const [download]=await Promise.all([page.waitForEvent('download',{timeout:90000}),page.evaluate(()=>{switchTab('backlog');document.getElementById('backlogExportV3Btn').click();})]);
+  const xlsxPath=path.join(root,'backlog-v3.xlsx');await download.saveAs(xlsxPath);
+  const ExcelJS=require('../public/vendor/exceljs.min.js'),book=new ExcelJS.Workbook();await book.xlsx.load(fs.readFileSync(xlsxPath));
+  const sheetTexts=ws=>{const all=[];ws.eachRow(r=>r.eachCell(c=>{if(typeof c.value==='string')all.push(c.value);}));return all;};
+  const excel={dashboard:sheetTexts(book.worksheets[0]).includes('Öncelik kırılımı'),breakdowns:sheetTexts(book.getWorksheet('Kırılımlar')).includes('Öncelik'),
+    detailHead:[book.getWorksheet('Backlog V3').getCell('C1').value,book.getWorksheet('Backlog V3').getCell('D1').value],
+    tagged:sheetTexts(book.getWorksheet('Backlog V3')).filter(v=>v==='Gecikme - Yükleme Tarihi').length};
+  assert.ok(excel.dashboard&&excel.breakdowns&&excel.tagged>0,'Excel priority breakdown: '+JSON.stringify(excel));
+  assert.deepEqual(excel.detailHead,['Öncelik','Takip etiketleri']);
+  // Global Flow haritası: etiketli araç/düğüm sol-alt köşede etiket tonunda işaret taşır.
+  await page.evaluate(()=>switchTab('overview'));
+  await page.locator('#globalFlowMapWidget').scrollIntoViewIfNeeded({timeout:30000}).catch(()=>{});
+  await page.waitForFunction(()=>{const s=window.BLOverviewGlobalFlow?.engineState?.();return s&&s.filtered>0;},null,{timeout:90000}).catch(()=>{});
+  await page.waitForTimeout(2500);
+  const marked=await page.evaluate(id=>{const recs=window.BLOverviewGlobalFlow&&window.BLOverviewGlobalFlow.engineState?window.BLOverviewGlobalFlow.engineState():null;return recs;},tag);
+  const widget=await page.locator('#globalFlowMapWidget').boundingBox();
+  if(widget){
+    // Harita kartı ~880 px genişliktedir; sürüm notu (≥900 px) için bağlam 2x ölçeklidir.
+    await page.screenshot({path:path.join(shotDir,'global-flow-priority-marker.png'),scale:'device',clip:{x:widget.x,y:widget.y,width:Math.min(widget.width,1560),height:Math.min(widget.height,900)}});
+  }
+  console.log({cpTagged,tiles,enTiles,flowCheck,excel,marked,errors});
   assert.notEqual(flowCheck,0,'Global Flow records lost the custom tag');
   assert.deepEqual(errors,[]);
   console.log('PASS');

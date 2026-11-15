@@ -49,7 +49,8 @@ test('timeline combines logistics and Buyer breakdown on one shared period axis'
   assert.match(OVERVIEW,/blvBuyerTrack/);
   assert.match(OVERVIEW,/blvBuyerBar/);
   assert.match(OVERVIEW,/timelineDimensionLegend/);
-  assert.match(OVERVIEW,/state\.timelineDimension=t\.dataset\.blvTimelineDim/);
+  // Seçim dataset'ten yazılır; geçerli kırılımlar (Buyer Grup/Buyer/Öncelik) dışındaki değer normalleştirilir.
+  assert.match(OVERVIEW,/state\.timelineDimension=timelineDimensionKey\(t\.dataset\.blvTimelineDim\)/);
   assert.match(CSS,/\.blvBuyerTrack/);
   assert.match(CSS,/\.blvBuyerBar/);
   const colsHeight=Number((CSS.match(/\.blvCols\{height:(\d+)px/)||[])[1]);
