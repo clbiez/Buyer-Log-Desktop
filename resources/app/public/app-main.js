@@ -1183,7 +1183,7 @@ function buildCpPriorityIndex(){
   const merge=(map,key,entry)=>{
     if(!key)return;
     const prev=map.get(key);
-    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1});return;}
+    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1,model:entry.model,colour:entry.colour});return;}
     prev.count+=1;
     prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
     entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
@@ -1200,7 +1200,7 @@ function buildCpPriorityIndex(){
     const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
     merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
     merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
-    merge(order,cpPriorityIdentity(orderCode),entry);
+    merge(order,cpPriorityIdentity(orderCode),{...entry,model:cpPriorityIdentityPart(model),colour:cpPriorityIdentityPart(colour)});
   }
   _cpPriorityIndex={stamp,line,orderColour,order};
   return _cpPriorityIndex;
@@ -1212,7 +1212,16 @@ function lookupCpPriority(orderCode,model,colourCode){
   // bir rengin etiketi ödünç alınmaz.
   const hit=index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
     ||(String(colourCode||'').trim()?index.orderColour.get(cpPriorityIdentity(orderCode,colourCode)):null)
-    ||(()=>{const only=index.order.get(cpPriorityIdentity(orderCode));return only&&only.count===1?only:null;})();
+    ||(()=>{
+      // Yalnız-sipariş yedeği: CP'de tek satır olmalı ve istenen renk/model o
+      // satırla çelişmemeli (boş alan çelişki sayılmaz).
+      const only=index.order.get(cpPriorityIdentity(orderCode));
+      if(!only||only.count!==1)return null;
+      const wantColour=cpPriorityIdentityPart(colourCode),wantModel=cpPriorityIdentityPart(model);
+      if(wantColour&&only.colour&&wantColour!==only.colour)return null;
+      if(wantModel&&only.model&&wantModel!==only.model)return null;
+      return only;
+    })();
   return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags]}:null;
 }
 function ensureCpPriorityIndex(){

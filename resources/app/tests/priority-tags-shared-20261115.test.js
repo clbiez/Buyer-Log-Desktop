@@ -71,6 +71,8 @@ test('Ortak öncelik dizini sipariş+model+renk eşler, başka rengin etiketini 
   assert.equal(api.lookupCpPriority('1001','Başka model','02').priority,'WATCH','sipariş+renk yedeği');
   assert.equal(api.lookupCpPriority('1001','',''),null,'iki renkli siparişte yalnız kodla eşleşme yapılmaz');
   assert.equal(api.lookupCpPriority('3003','','')?.priority,'CRITICAL','tek satırlı siparişte kod yedeği');
+  assert.equal(api.lookupCpPriority('3003','X','10'),null,'tek satırlı siparişte farklı renk etiketi ödünç almaz');
+  assert.equal(api.lookupCpPriority('3003','Y',''),null,'renk yokken farklı model etiketi ödünç almaz');
   api.context._unifiedPriorityCache.cp=null;
   assert.equal(api.lookupCpPriority('1001','M','01'),null,'önbellek düşünce dizin geçersizdir');
 }));
