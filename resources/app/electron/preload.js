@@ -112,6 +112,9 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
      Yanıt yalnız { ok, code }; token renderer'a dönmez. */
   ensureLcwAiAuth: (options) => ipcRenderer.invoke('buyerlog:lcwai-auth', { interactive: !(options && options.interactive === false) }),
   clearLcwAiAuth: () => ipcRenderer.invoke('buyerlog:lcwai-auth-clear'),
+  /* Tanılama (yalnız konsoldan): LCW AI web sayfasını açık kalan pencerede açar;
+     API isteklerinin yalnız yapısı (alan adı + tür) loga yazılır. */
+  openLcwAiWebDiagnostics: () => ipcRenderer.invoke('buyerlog:lcwai-web-diagnostics'),
   /* LCW AI Export Engine: sunucunun temizlediği rapor HTML'i → PDF baytları.
      Ana süreç JS'i kapalı, ağı engelli gizli pencerede basar; yol/dosya
      yetkisi yoktur (kaydı sunucu yapar). */

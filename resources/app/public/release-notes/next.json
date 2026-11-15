@@ -1,16 +1,45 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-13",
+  "publishedAt": "2026-11-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Tablolarda hücre seçimi, düzenleme ve yapıştırma",
-    "en": "Cell selection, editing and paste in tables"
+    "tr": "Tablolarda Rapor görünümü, hücre seçimi ve düzenleme · LCW AI görsel ve dosya ekleri",
+    "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow."
   },
   "changes": [
+    {
+      "id": "table-report-view",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablolarda Rapor görünümü",
+        "en": "Report view for tables"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-report-view.png",
+        "alt": {
+          "tr": "CP Tracker tablosu Rapor görünümünde: Öncelik, Marka Detayları, Model Detayları, Sipariş Detayları ve Lisans Detayları ana başlıkları sütun; alanlar alt alta",
+          "en": "The CP Tracker table in Report view: the Priority, Brand Details, Model Details, Order Details and License Details main headers as columns with their fields stacked"
+        },
+        "caption": {
+          "tr": "Aynı ana başlıktaki alanlar tek sütunda alt alta durur; tekrar tıklayınca ya da “Tablo görünümüne dön” ile tablo geri gelir.",
+          "en": "Fields under the same main header stack in one column; click again or use “Back to table view” to return."
+        }
+      },
+      "body": {
+        "tr": "CP Tracker, Siparişler ve Koleksiyon'un görünüm seçicisinin sonuna Rapor görünümü eklendi. Tablo sağdan açılan bir pencereye gitmeden kendi yerinde rapor düzenine döner: aynı sütun ana başlığı altındaki alanlar (ör. Marka Detayları, Model Detayları) tek sütunda alt alta görünür, böylece tablo daha az sütunla okunur. Hangi alanların birlikte duracağını Alanlar çekmecesindeki başlık düzeni belirler. Geçerli filtre, sıralama ve sayfa aynen geçerlidir; sayfa değiştirme ve başlıktaki alan filtreleri bu görünümde de çalışır. Seçiminiz tablo başına hatırlanır. Rapor görünümü yalnız gösterimdir; tablonuz, filtreleriniz ve kayıtlar değişmez.",
+        "en": "Report view was added at the end of the view picker of CP Tracker, Orders and Collection. The table switches to report layout in place instead of opening a window on the right: fields under the same column main header (e.g. Brand Details, Model Details) appear stacked in one column, so the table reads with fewer columns. The header layout in the Fields drawer decides which fields stay together. The current filters, sorting and page still apply; paging and the field filters in the headers work in this view too. Your choice is remembered per table. Report view only displays the data; your table, filters and records do not change."
+      }
+    },
     {
       "id": "collection-single-cell-paste-direct",
       "type": "fix",
@@ -38,6 +67,35 @@
       "body": {
         "tr": "Tek tık artık yalnız hücreyi seçtiği için Ctrl+V her seferinde toplu yapıştırma önizlemesi açıyordu. Tek hücre yapıştırma ve temizleme artık yazarak düzenleme gibi doğrudan uygulanır; birden çok hücreye yapıştırmada önizleme korunur. Bekleyen kayıt nedeniyle yapıştırma uygulanamazsa artık uyarı gösterilir.",
         "en": "Because a single click now only selects the cell, Ctrl+V opened the bulk paste preview every time. Pasting into or clearing a single cell is now applied directly, like typing; pasting into several cells still shows the preview. If a paste cannot be applied because of a pending save, a warning is now shown."
+      }
+    },
+    {
+      "id": "collection-multi-cell-paste-plm-image-rows",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM görselli koleksiyonlarda çok hücreli yapıştırma yeniden çalışır",
+        "en": "Multi-cell paste works again in collections with PLM images"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-multi-cell-paste-preview.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda iki hücreye yapıştırma için önizleme penceresi: iki Sezon değişikliği ve Uygula ve kaydet düğmesi",
+          "en": "Paste preview window for two cells in the Collection table: two Season changes and the Apply and save button"
+        },
+        "caption": {
+          "tr": "Birden çok hücre seçilip yapıştırıldığında önizleme açılır; uyarı vermeden değişiklikleri uygular.",
+          "en": "Pasting into several selected cells opens the preview and applies the changes without a warning."
+        }
+      },
+      "body": {
+        "tr": "PLM görseli olan modeller, kaydedildikten sonra bile değişmiş sayılıyordu. Bu yüzden birden çok hücreye yapıştırmada \"Önceki değişiklikler henüz kaydedilemedi\" uyarısı çıkıyor ve hiçbir şey yapıştırılmıyordu. Artık kayıttan sonra tablo temiz sayılır, yapıştırma önizlemesi açılır; bu modeller her kayıtta gereksiz yere yeniden gönderilmez.",
+        "en": "Models with a PLM image were treated as changed even after saving, so pasting into several cells showed the \"Earlier changes could not be saved yet\" warning and nothing was pasted. The table is now clean after saving and the paste preview opens; these models are no longer re-sent on every save."
       }
     },
     {
@@ -235,6 +293,87 @@
       "body": {
         "tr": "CP verisi okunurken bir düzenleme kaydı veya senkron aynı anda veriyi değiştirirse okuma reddediliyor ve CP ekranı \"Hazır ekran önbelleği okunamadı\" hatasıyla boş kalıyordu. Okuma artık güncel veriyle otomatik yeniden denenir; arka plan yenilemesi yine de başarısız olursa açık CP tablosu ve kaydedilmemiş değişiklikler yerinde kalır.",
         "en": "If an edit save or a sync changed the data while CP was being read, the read was rejected and the CP screen stayed empty with \"The prepared screen cache could not be read\". The read is now retried automatically with the current data; if a background refresh still fails, the open CP table and unsaved changes stay in place."
+      }
+    },
+    {
+      "id": "lcwai-attachment-upload-session",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a gönderilen dosya ve görseller yeniden mesaja eklenir",
+        "en": "Files and images sent to LCW AI are attached to the message again"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik LCW AI’a giden istek gövdesindedir; ekranda yeni bir öğe yoktur.",
+          "en": "The change is in the request body sent to LCW AI; nothing new appears on screen."
+        }
+      },
+      "body": {
+        "tr": "Görselden arama, sohbet ve diğer LCW AI özelliklerinde dosya yükleniyor ama LCW AI eki mesajda görmüyordu (“No image was attached”). Ek artık LCW AI’ın yeni dosya modeline uygun olarak yükleme oturumuyla birlikte gönderilir.",
+        "en": "In Search from Image, chat and other LCW AI features the file was uploaded but LCW AI did not see it on the message (“No image was attached”). The attachment is now sent together with its upload session, matching LCW AI’s new file model."
+      }
+    },
+    {
+      "id": "lcwai-pptx-studio-preview-layout",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · PowerPoint düzenleyici",
+        "en": "LCW AI · PowerPoint editor"
+      },
+      "title": {
+        "tr": "Sunum önizlemesi görünür; panel genişliği sürüklenerek ayarlanır",
+        "en": "Presentation preview is visible; panel width can be dragged"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-pptx-studio-preview-layout.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicide solda sıkılaştırılmış sütun listesi, sağda model kartlarıyla slayt önizlemesi ve altta yeşil “Dosya oluşturuldu” bandı görünüyor",
+          "en": "In the PowerPoint editor a tighter column list is on the left, a slide preview with model cards on the right and a green “File created” band at the bottom"
+        },
+        "caption": {
+          "tr": "Önizleme kartları gösterir; alt bant dosyayı açma ve klasörde gösterme düğmelerini sunar.",
+          "en": "The preview shows the cards; the bottom band offers Open and Show in folder buttons."
+        }
+      },
+      "body": {
+        "tr": "“Sunumu şekillendir” adımında önizleme alanı boş kalıyordu; slaytlar ve kartlar artık doğru çizilir. Sol panel ile önizleme arasındaki sınır sürüklenerek (klavyede ok tuşlarıyla) genişletilir, çift tıklama varsayılana döner ve genişlik hatırlanır. “Önizle ve oluştur” düğmesi alt barda sabit durur. Dosya oluşturulduğunda alt barda dosya adı, Aç, Klasörde Göster ve Şablon olarak kaydet düğmeleriyle yeşil bir bant görünür. Sütun satırları daha sıkıdır; işaretlenmemiş kutular ve bağlı olmayan Bağlantılar noktaları daha soluk griyle gösterilir.",
+        "en": "In the “Shape the presentation” step the preview area stayed empty; slides and cards are now drawn correctly. The border between the left panel and the preview can be dragged (or moved with the arrow keys), a double click restores the default and the width is remembered. The “Preview and create” button stays fixed in the bottom bar. When a file is created, a green band with the file name and Open, Show in folder and Save as template buttons appears in the bottom bar. Column rows are tighter; unticked boxes and disconnected Connections dots use a much softer grey."
+      }
+    },
+    {
+      "id": "priority-tags-everywhere",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Global Flow · CP Öncelik Kuralları",
+        "en": "Backlog · Global Flow · CP Priority Rules"
+      },
+      "title": {
+        "tr": "Öncelik etiketleriniz Backlog ve Global Flow'da da görünür",
+        "en": "Your priority tags also appear in Backlog and Global Flow"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-priority-tags.png",
+        "alt": {
+          "tr": "Backlog Genel Bakış: öncelik etiketi kutucukları (Bu Hafta Aksiyon, Gecikme - Yükleme Tarihi) ve Operasyon Dağılımı'nda seçili Öncelik kırılımı",
+          "en": "Backlog Overview: priority tag tiles (Action This Week, Delay - Loading Date) and the Priority breakdown selected in Operational Distribution"
+        },
+        "caption": {
+          "tr": "Etiket kutucuğuna tıklayınca o etiketin siparişleri sağda açılır; Öncelik kırılımı her satırı ana önceliğiyle sayar.",
+          "en": "Click a tag tile to open its orders on the right; the Priority breakdown counts each line by its main priority."
+        }
+      },
+      "body": {
+        "tr": "Öncelik Kuralları'nda oluşturduğunuz etiketler artık yalnız CP'de değil, Backlog ve Global Flow'da da görünür. Backlog Genel Bakış'ta Eksik Yükleme ve Riskli adet kutucuklarının yerine, kapsamdaki her öncelik ve takip etiketinin adedi, sipariş sayısı ve payı gösterilir; kutucuğa tıklayınca siparişler açılır. Operasyon Dağılımı'na Öncelik kırılımı eklendi. Global Flow detayında özel etiketler artık “—” ya da “Yolunda” görünmez; takip etiketleri ayrı sütunda listelenir ve filtrelerde Öncelik etiketi seçilebilir. Backlog satırları CP'deki aynı sipariş/model/renk satırının önceliğini kullanır; kurallar ikinci kez hesaplanmaz.",
+        "en": "The tags you create in Priority Rules now appear not only in CP but also in Backlog and Global Flow. In Backlog Overview, the Shortage and At-risk qty tiles are replaced by the quantity, order count and share of every priority and tracking tag in scope; click a tile to open its orders. A Priority breakdown was added to Operational Distribution. In the Global Flow detail, custom tags no longer show as “—” or “On Track”; tracking tags are listed in their own column and Priority tag can be selected in the filters. Backlog lines use the priority of the matching order/model/colour line in CP; rules are not evaluated twice."
       }
     },
     {

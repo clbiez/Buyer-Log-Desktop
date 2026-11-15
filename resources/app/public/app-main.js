@@ -1135,8 +1135,114 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
     }
   }
   _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision,day:new Date().toDateString()};
+  if(tableKey==='cp'){_cpPriorityIndex=null;_cpPriorityIndexRevision+=1;try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}}
   return true;
 }
+/* Ortak öncelik dizini. Öncelik Kuralları ve etiketleri yalnız CP satırlarında
+   (kişisel karar katmanıyla) hesaplanır; Backlog ve Global Flow aynı sonucu
+   sipariş + model + renk kimliğiyle buradan okur, kuralları ikinci kez
+   değerlendirmez. Dizin CP öncelik önbelleğine bağlıdır: önbellek düşünce
+   (veri/kural değişimi) dizin de geçersizdir ve yeniden kurulur. */
+let _cpPriorityIndex=null,_cpPriorityEnsurePromise=null,_cpPriorityIndexRevision=0;
+// Kimlik normalizasyonu sıcak yoldadır (her CP ve Backlog satırı); yerel-ayar
+// duyarlı büyük harf yerine önbellekli sade dönüşüm kullanılır. İki taraf da
+// aynı fonksiyondan geçtiği için eşleşme tutarlıdır.
+const _cpPriorityIdentityCache=new Map();
+function cpPriorityIdentityPart(value){
+  const raw=value==null?'':String(value);
+  let out=_cpPriorityIdentityCache.get(raw);
+  if(out===undefined){
+    out=raw.trim().replace(/\s+/g,' ').toUpperCase();
+    if(_cpPriorityIdentityCache.size>50000)_cpPriorityIdentityCache.clear();
+    _cpPriorityIdentityCache.set(raw,out);
+  }
+  return out;
+}
+function cpPriorityIdentity(...parts){
+  return parts.map(cpPriorityIdentityPart).join('\u001f');
+}
+/* Canonical alanın CP başlığı dizin kurulurken BİR KEZ çözülür; satır başına
+   canonical arama (token/rowLookup) yapılmaz. */
+function cpPriorityHeaderKey(rows,id,fallback){
+  const canonical=window.BLCanonicalFields;
+  let keys=[];
+  try{const binding=canonical&&typeof canonical.bindingFor==='function'?canonical.bindingFor('cp',id):null;keys=binding&&Array.isArray(binding.keys)?binding.keys:[];}catch(_){keys=[];}
+  const sample=(rows||[]).slice(0,25).filter(Boolean);
+  for(const key of keys)if(sample.some(row=>Object.prototype.hasOwnProperty.call(row,key)))return key;
+  return fallback;
+}
+function cpPriorityIndexReady(){
+  const cached=_unifiedPriorityCache.cp;
+  return Boolean(cached&&state.cp&&cached.rows===state.cp.rows&&cached.day===new Date().toDateString());
+}
+function buildCpPriorityIndex(){
+  if(!cpPriorityIndexReady())return null;
+  const stamp=_unifiedPriorityCache.cp;
+  if(_cpPriorityIndex&&_cpPriorityIndex.stamp===stamp)return _cpPriorityIndex;
+  const OD=window.BLOrderDecisionEngine,line=new Map(),orderColour=new Map(),order=new Map();
+  const merge=(map,key,entry)=>{
+    if(!key)return;
+    const prev=map.get(key);
+    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1,model:entry.model,colour:entry.colour});return;}
+    prev.count+=1;
+    prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
+    entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
+  };
+  const rows=state.cp.rows;
+  const orderKey=cpPriorityHeaderKey(rows,'orderCode','Order Code'),modelKey=cpPriorityHeaderKey(rows,'modelName','Model Name'),colourKey=cpPriorityHeaderKey(rows,'colourCode','C.Code');
+  for(const row of rows){
+    if(!row)continue;
+    const priority=actionPriorityCode(row['Priority']);
+    if(!priority)continue;
+    const orderCode=row[orderKey];
+    if(!String(orderCode==null?'':orderCode).trim())continue;
+    const model=row[modelKey],colour=row[colourKey];
+    const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
+    merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
+    merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
+    merge(order,cpPriorityIdentity(orderCode),{...entry,model:cpPriorityIdentityPart(model),colour:cpPriorityIdentityPart(colour)});
+  }
+  _cpPriorityIndex={stamp,line,orderColour,order};
+  return _cpPriorityIndex;
+}
+function lookupCpPriority(orderCode,model,colourCode){
+  const index=buildCpPriorityIndex();
+  if(!index||!String(orderCode||'').trim())return null;
+  // Sipariş yalnız kodla eşleşiyorsa ve CP'de birden fazla satırı varsa başka
+  // bir rengin etiketi ödünç alınmaz.
+  const hit=index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
+    ||(String(colourCode||'').trim()?index.orderColour.get(cpPriorityIdentity(orderCode,colourCode)):null)
+    ||(()=>{
+      // Yalnız-sipariş yedeği: CP'de tek satır olmalı ve istenen renk/model o
+      // satırla çelişmemeli (boş alan çelişki sayılmaz).
+      const only=index.order.get(cpPriorityIdentity(orderCode));
+      if(!only||only.count!==1)return null;
+      const wantColour=cpPriorityIdentityPart(colourCode),wantModel=cpPriorityIdentityPart(model);
+      if(wantColour&&only.colour&&wantColour!==only.colour)return null;
+      if(wantModel&&only.model&&wantModel!==only.model)return null;
+      return only;
+    })();
+  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags]}:null;
+}
+function ensureCpPriorityIndex(){
+  if(cpPriorityIndexReady())return Promise.resolve(true);
+  if(_cpPriorityEnsurePromise)return _cpPriorityEnsurePromise;
+  _cpPriorityEnsurePromise=(async()=>{
+    if(!state.cp&&!(await ensureOverviewCpDependency()))return false;
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)await window.BLPerf?.ensureFeature?.('cpAssistant');
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)return false;
+    await scheduleUnifiedPrioritiesForTable('cp');
+    return cpPriorityIndexReady();
+  })().catch(()=>false).finally(()=>{_cpPriorityEnsurePromise=null;});
+  return _cpPriorityEnsurePromise;
+}
+window.BLCpPriorityIndex={
+  ready:cpPriorityIndexReady,
+  revision:()=>_cpPriorityIndexRevision+(cpPriorityIndexReady()?':ready':':pending'),
+  ensure:ensureCpPriorityIndex,
+  lookup:lookupCpPriority,
+  catalog:()=>{const OD=window.BLOrderDecisionEngine;return OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():[];},
+};
 let cpPriorityJob=null;
 function scheduleUnifiedPrioritiesForTable(tableKey){
   if(tableKey==='orders')return Promise.resolve(true);
@@ -2339,7 +2445,7 @@ async function globalFlowEnsure(tableKey,options){
 window.BLGlobalFlowDataProviders={
   cp:async options=>(await globalFlowEnsure('cp',options))?globalFlowSourceRows('cp'):[],
   orders:async options=>(await globalFlowEnsure('orders',options))?globalFlowSourceRows('orders'):[],
-  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0),
+  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0)+(tableKey==='orders'?':'+window.BLCpPriorityIndex.revision():''),
 };
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 
@@ -5063,6 +5169,75 @@ window.BLTableViewSetup=Object.freeze({snapshot:detailTableViewSnapshot});
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
+});
+/* Rapor görünümü: tablo kendi yerinde rapor düzenine döner (sağ çekmece açılmaz).
+   Görünen alanlar paylaşılan detay rapor motorunun rol gruplarında (BLDetailReportLayout)
+   iki satırlı hücrelerde durur. Satırlar tablonun o anki filtre, sıralama ve sayfa
+   aralığıdır; aynı sayfalama çubuğu çalışır. Salt okunurdur: kayıtlar, seçim, düzenleme,
+   filtre durumu ve dışa aktarma değişmez. Tercih tablo başına saklanır. */
+const TABLE_REPORT_TABLE_IDS={cp:'cpTable',orders:'ordersTable',koleksiyon:'kolTable'};
+function tableRangeVisibleRows(tableKey){
+  const table=document.getElementById(TABLE_REPORT_TABLE_IDS[tableKey]);
+  const view=table&&_tableRangeViews.get(table);
+  return view&&Array.isArray(view.visibleRows)?view.visibleRows:[];
+}
+function tableRangeTotalRows(tableKey){
+  const table=document.getElementById(TABLE_REPORT_TABLE_IDS[tableKey]);
+  const view=table&&_tableRangeViews.get(table);
+  return view&&Array.isArray(view.rows)?view.rows.length:0;
+}
+function tableReportCoreColumns(tableKey){
+  const snapshot=detailTableViewSnapshot(tableKey);if(!snapshot)return [];
+  const visible=new Set(snapshot.visible);
+  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
+}
+function tableReportKolColumns(){
+  const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
+  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+}
+function syncTableReportButtons(tableKey){
+  const on=Boolean(window.BLTableReportInline?.isActive(tableKey));
+  document.querySelectorAll(`[data-table-report="${tableKey}"]`).forEach(button=>button.setAttribute('aria-pressed',String(on)));
+}
+let tableReportAdaptersReady=false;
+function ensureTableReportAdapters(){
+  const api=window.BLTableReportInline;if(!api)return false;
+  if(tableReportAdaptersReady)return true;
+  tableReportAdaptersReady=true;
+  const changed=key=>on=>{
+    syncTableReportButtons(key);
+    if(!on){if(key==='koleksiyon')renderKol();else if(key==='cp')renderCP();else renderOrders();}
+  };
+  const core=key=>({
+    tab:key,moduleId:key,
+    table:()=>document.getElementById(TABLE_REPORT_TABLE_IDS[key]),
+    rows:()=>tableRangeVisibleRows(key),total:()=>tableRangeTotalRows(key),
+    columns:()=>tableReportCoreColumns(key),
+    images:()=>!colmgr[key]?.hidden?.has('__picture'),
+    filter:(field,anchor)=>openHeaderFilter(key,field,anchor,key==='cp'?renderCP:renderOrders),
+    changed:changed(key)
+  });
+  api.register('cp',core('cp'));
+  api.register('orders',core('orders'));
+  api.register('koleksiyon',{
+    tab:'koleksiyon',moduleId:'collection',
+    table:()=>document.getElementById('kolTable'),
+    rows:()=>tableRangeVisibleRows('koleksiyon'),total:()=>tableRangeTotalRows('koleksiyon'),
+    columns:tableReportKolColumns,
+    images:()=>!kolPictureHidden,
+    filter:(field,anchor)=>{if(tableReportKolColumns().some(col=>col.key===field&&col.filterable))openKolHeaderFilter(field,anchor);else showToast(appLang==='en'?'This field has no column filter.':'Bu alanın sütun filtresi yok.');},
+    changed:changed('koleksiyon')
+  });
+  ['cp','orders','koleksiyon'].forEach(syncTableReportButtons);
+  return true;
+}
+function openTableReportView(tableKey){
+  if(!TABLE_REPORT_TABLE_IDS[tableKey]||!ensureTableReportAdapters())return false;
+  return window.BLTableReportInline.toggle(tableKey);
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-table-report]');if(!button)return;
+  openTableReportView(button.dataset.tableReport);
 });
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
@@ -7822,6 +7997,9 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   const prev=bar.querySelector('[data-range-prev]'),next=bar.querySelector('[data-range-next]');
   prev.disabled=range.page===0;next.disabled=range.page+1>=range.pages;
   prev.setAttribute('aria-label',T('Önceki sayfa','Previous page'));next.setAttribute('aria-label',T('Sonraki sayfa','Next page'));
+  view.visibleRows=range.rows;
+  // Tablo içi Rapor görünümü aynı sayfa aralığını izler (sayfa/boyut/filtre/sıralama).
+  if(ensureTableReportAdapters())window.BLTableReportInline.schedule(tableKey);
   return range.rows;
 }
 
@@ -23393,7 +23571,10 @@ function kolCaptureBaseline(){
 function kolRowEqual(a,b){
   if(a===b)return true;
   if(!a||!b)return false;
-  const keysA=Object.keys(a).filter(k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl'),keysB=Object.keys(b).filter(k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl');
+  // kolPersistableRow'un temelden sildiği sunucu görsel projeksiyonları da yok sayılır;
+  // aksi halde PLM görselli her satır kalıcı olarak "değişmiş" görünür.
+  const ignored=k=>k!=='_rev'&&k!=='_sharedCollectionImageUrl'&&k!=='_serverPlmImageUrl';
+  const keysA=Object.keys(a).filter(ignored),keysB=Object.keys(b).filter(ignored);
   if(keysA.length!==keysB.length)return false;
   for(const key of keysA){
     const left=a[key],right=b[key];

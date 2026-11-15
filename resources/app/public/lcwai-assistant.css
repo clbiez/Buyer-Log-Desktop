@@ -341,3 +341,23 @@
 .lcwaiMatrixPage .lcwaiLayText.is-detail{white-space:normal;text-overflow:clip;overflow-wrap:anywhere}
 .lcwaiMatrixPage>.lcwaiStudioActions{max-height:48px;overflow:auto;flex-wrap:nowrap}
 .lcwaiMatrixPage>.lcwaiStudioActions button{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+/* design.css .cardBox{position:relative} slayt kutularını akışa düşürmesin; kartlar mutlak konumlu kalır. */
+.lcwaiLayBox.cardBox{position:absolute}
+/* Sıkı sütun matrisi: satırlar arası grup boşluğu sıfırlanır. */
+.lcwaiMatrixHead{padding-block:8px}
+.lcwaiMatrixField>summary{padding-block:5px}
+.lcwaiMatrixHead+.lcwaiMatrixField,.lcwaiMatrixField+.lcwaiMatrixField{margin-top:-8px}
+/* Panel ↔ önizleme sınırı sürüklenerek genişletilir; dar ekranda tek sütun kalır. */
+.lcwaiLaySplit{display:none}
+@media(min-width:1101px){
+.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLay:has(>.lcwaiLaySplit){grid-template-columns:minmax(320px,var(--lcwai-lay-split,44%)) 14px minmax(320px,1fr);column-gap:4px}
+.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLaySplit{display:block;position:relative;cursor:col-resize;touch-action:none;align-self:stretch}
+.lcwaiLaySplit::after{content:"";position:absolute;inset:0 6px}
+.lcwaiLay.is-resizing{cursor:col-resize;user-select:none}
+}
+/* Alt bar: kalıcı birincil eylem sağda, oluşturulan dosya belirgin bir bantta. */
+.lcwaiEdFootActions{display:flex;align-items:center;gap:var(--ui-space-3);flex:none}
+.lcwaiEdResult{display:flex;align-items:center;flex-wrap:wrap;gap:var(--ui-space-2) var(--ui-space-3);min-width:0}
+.lcwaiEdResultIcon{display:inline-grid;place-items:center;width:28px;height:28px;flex:none}
+.lcwaiEdResultText{display:flex;flex-direction:column;min-width:0}
+.lcwaiEdResultText>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -265,6 +265,52 @@
     const rect = (x, y, w, h) => `<i style="left:${x / size.width * 100}%;top:${y / size.height * 100}%;width:${w / size.width * 100}%;height:${h / size.height * 100}%"></i>`;
     return `<span class="lcwaiStudioThumb" style="aspect-ratio:${size.width}/${size.height};--studio-image:${imageShare}%">${rect(0, 0, size.width, headerHeight)}${page ? page.cells.map(cell => rect(cell.x, cell.y, cell.w, cell.h)).join('') : ''}</span>`;
   }
+  // Ayar paneli ↔ önizleme sınırı: genişlik yüzde olarak kullanıcıya ayrılmış yerel tercihte hatırlanır.
+  const SPLIT_KEY = 'bl.lcwai.studioSplit', SPLIT_DEFAULT = 44, SPLIT_MIN = 25, SPLIT_MAX = 70;
+  const clampSplit = value => Math.max(SPLIT_MIN, Math.min(SPLIT_MAX, Number(value) || SPLIT_DEFAULT));
+  function studioSplit() {
+    if (ed && ed.studioSplit) return ed.studioSplit;
+    let stored = 0;
+    try { stored = Number((window.BLStorage || window.localStorage).getItem(SPLIT_KEY)) || 0; } catch (_) {}
+    return clampSplit(stored || SPLIT_DEFAULT);
+  }
+  function applyStudioSplit(lay, value) {
+    if (!lay) return;
+    lay.style.setProperty('--lcwai-lay-split', value + '%');
+    lay.querySelector('[data-lay-split]')?.setAttribute('aria-valuenow', String(Math.round(value)));
+  }
+  function commitStudioSplit(value, session) {
+    if (!ed || ed !== session) return;
+    ed.studioSplit = clampSplit(value);
+    try { (window.BLStorage || window.localStorage).setItem(SPLIT_KEY, String(Math.round(ed.studioSplit * 10) / 10)); } catch (_) {}
+    updateLayoutPreview();
+  }
+  function studioSplitStart(event) {
+    const bar = event.target.closest('[data-lay-split]');
+    if (!bar || event.button !== 0) return false;
+    event.preventDefault();
+    const lay = bar.parentElement, box = lay.getBoundingClientRect(), session = ed;
+    let value = studioSplit();
+    bar.setPointerCapture?.(event.pointerId);
+    lay.classList.add('is-resizing');
+    const onMove = move => { value = clampSplit((move.clientX - box.left) / box.width * 100); applyStudioSplit(lay, value); };
+    const onUp = () => { bar.removeEventListener('pointermove', onMove); lay.classList.remove('is-resizing'); commitStudioSplit(value, session); };
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp, { once: true });
+    bar.addEventListener('pointercancel', onUp, { once: true });
+    return true;
+  }
+  function studioSplitKey(event) {
+    const bar = event.target.closest('[data-lay-split]');
+    if (!bar) return false;
+    const step = { ArrowLeft: -2, ArrowRight: 2 }[event.key];
+    if (step == null && !['Home', 'End'].includes(event.key)) return false;
+    event.preventDefault();
+    const value = event.key === 'Home' ? SPLIT_MIN : event.key === 'End' ? SPLIT_MAX : clampSplit(studioSplit() + step);
+    applyStudioSplit(bar.parentElement, value);
+    commitStudioSplit(value, ed);
+    return true;
+  }
   function renderStudioLayout(main) {
     const st = studioState();
     const chosen = ed.studioCard;
@@ -274,8 +320,8 @@
     main.innerHTML = `<div class="lcwaiLay"><aside class="lcwaiLayControls">
       ${matrixPanel()}<details class="lcwaiLayMore"><summary>${esc(L('Kaynak ve şablonlar', 'Source and templates'))}</summary>${sourceSummary()}${ed.sourceTab ? `<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-scope="selected">${esc(L('Seçili kayıtlardan yeniden başlat', 'Restart from selected records'))}</button><button class="lcwaiBtn" data-studio-scope="filtered">${esc(L('Filtrelenmiş kayıtlardan yeniden başlat', 'Restart from filtered records'))}</button></div>` : ''}${(ed.templates || []).length ? studioSelect('template', L('Kayıtlı şablon', 'Saved template'), [['', L('Şablon seç', 'Choose a template')], ...ed.templates.map((t, i) => [String(i), t.name])], '') : ''}</details>${st.manualPages.length ? `<button class="lcwaiBtn" data-matrix-reset>${esc(L('Otomatik gruplamaya dön', 'Restore automatic grouping'))}</button><p class="lcwaiNote">${esc(L('Manuel yerleşim etkin. Grup ayarlarını uygulamak için otomatik gruplamaya dönün.', 'Manual placement is active. Restore automatic grouping to apply group rules.'))}</p>` : ''}<details class="lcwaiLayMore"><summary>${esc(L('Sayfa ve kart düzeni', 'Page and card layout'))}</summary><section class="lcwaiLayGroup">${studioSettings()}</section></details>
       ${chosen ? `<section class="lcwaiLayGroup"><h4>${esc(chosen)}</h4>${studioSelect('span', L('Bu kartın yüksekliği', 'This card height'), [['auto', L('Kaynağa göre', 'From source')], ['1', L('Tek satır', 'One row')], ['2', L('Çift satır', 'Two rows')]], String(st.spans[chosen] || 'auto'))}<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-card-move="-1">${esc(L('Öne taşı', 'Move earlier'))}</button><button class="lcwaiBtn" data-studio-card-move="1">${esc(L('Sona taşı', 'Move later'))}</button></div></section>` : ''}
-      <button class="lcwaiBtn is-primary" data-ed-mode="review">${esc(L('Önizle ve oluştur →', 'Preview and create →'))}</button>
-      </aside><div class="lcwaiLayStage" data-lay-stage></div></div>`;
+      </aside><div class="lcwaiLaySplit" role="separator" tabindex="0" aria-orientation="vertical" aria-valuemin="${SPLIT_MIN}" aria-valuemax="${SPLIT_MAX}" aria-valuenow="${Math.round(studioSplit())}" data-lay-split title="${esc(L('Sürükleyerek panel genişliğini değiştirin · Çift tıklama: varsayılan', 'Drag to resize the panel · Double-click: default'))}" aria-label="${esc(L('Panel ile önizleme arasındaki sınır', 'Divider between panel and preview'))}"></div><div class="lcwaiLayStage" data-lay-stage></div></div>`;
+    applyStudioSplit(main.querySelector('.lcwaiLay'), studioSplit());
     main.querySelectorAll('.lcwaiMatrixField').forEach(field => { field.open = openFields.has(field.querySelector('[data-matrix-id]')?.dataset.matrixId); });
     updateLayoutPreview();
     ['.lcwaiLayControls', '.lcwaiLay > .lcwaiLayStage'].forEach((sel, i) => { const el = main.querySelector(sel); if (el) el.scrollTop = scroll[i]; });
@@ -408,6 +454,7 @@
   }
   let studioDrag = null;
   function studioPointerStart(event) {
+    if (studioSplitStart(event)) return;
     const handle = event.target.closest('[data-studio-resize]');
     const card = event.target.closest('[data-studio-card]');
     if (card && !handle && isStudio()) { ed.studioCard = card.dataset.studioCard; return; }
@@ -431,6 +478,7 @@
     window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp, { once: true });
   }
   function studioHandleKey(event) {
+    if (studioSplitKey(event)) return;
     const handle = event.target.closest('[data-studio-resize]');
     const card = event.target.closest('[data-studio-card]');
     if (card && ['Enter', ' '].includes(event.key) && isStudio()) { event.preventDefault(); ed.studioCard = card.dataset.studioCard; renderMain(); return; }
@@ -539,6 +587,7 @@
     overlay.addEventListener('dragend', () => { if (ed) { ed.studioDrop = null; ed.dragElement = null; } });
     overlay.addEventListener('pointerdown', studioPointerStart);
     overlay.addEventListener('keydown', studioHandleKey);
+    overlay.addEventListener('dblclick', event => { const bar = event.target.closest('[data-lay-split]'); if (!bar) return; applyStudioSplit(bar.parentElement, SPLIT_DEFAULT); commitStudioSplit(SPLIT_DEFAULT, ed); });
     // Izgara seçici: fareyle üzerine gelince seçilecek ızgara önizlenir.
     overlay.addEventListener('mouseover', event => {
       const cell = event.target.closest && event.target.closest('[data-gp]');
@@ -1332,8 +1381,9 @@
       ? L(`Dosyada ${pages.length} slayt · ${models} model ${galleryPages.length} galeri slaytına yerleşiyor${packed ? ` (${packed} slaytta gruplar yan yana)` : ''}.`, `${pages.length} slides in the file · ${models} models fill ${galleryPages.length} gallery slide(s)${packed ? ` (groups side by side on ${packed})` : ''}.`)
       : L('Sunumda model galerisi yok; ızgara ayarı galeri slaytı eklendiğinde uygulanır.', 'The deck has no model gallery; the grid applies once a gallery slide is added.');
     const optionText = (item, i) => `${i + 1}. ${item.slide ? item.slide.title : item.page.title}${item.page && item.page.groups.length > 1 ? ` · ${item.page.subtitle}` : ''}`;
-    return `<section class="lcwaiMatrixPage" data-matrix-page="${current}"><div class="lcwaiLayStageHead"><b>${esc(L('Slayt', 'Slide'))} ${current + 1} / ${pages.length}</b><small>${esc(summary)}</small></div>
-      ${entry?.page ? `<div class="lcwaiStudioActions">${entry.page.groups.map((group, index) => `<button draggable="true" data-matrix-group="${index}" data-matrix-source="${current}" title="${esc(L('Başlık ve kartları birlikte taşı', 'Move title together with its cards'))}">⠿ ${esc(group.label || group.title)}</button>`).join('')}</div>` : ''}<div class="lcwaiLaySlide" style="width:${px(g.size.width)};height:${px(g.size.height)}" data-matrix-output="${Boolean(l.studio?.matrix)}">${body}</div></section>`;
+    // app.css section{display:none} kuralı nedeniyle sayfa kabı <div> olmalı.
+    return `<div class="lcwaiMatrixPage" data-matrix-page="${current}"><div class="lcwaiLayStageHead"><b>${esc(L('Slayt', 'Slide'))} ${current + 1} / ${pages.length}</b><small>${esc(summary)}</small></div>
+      ${entry?.page ? `<div class="lcwaiStudioActions">${entry.page.groups.map((group, index) => `<button draggable="true" data-matrix-group="${index}" data-matrix-source="${current}" title="${esc(L('Başlık ve kartları birlikte taşı', 'Move title together with its cards'))}">⠿ ${esc(group.label || group.title)}</button>`).join('')}</div>` : ''}<div class="lcwaiLaySlide" style="width:${px(g.size.width)};height:${px(g.size.height)}" data-matrix-output="${Boolean(l.studio?.matrix)}">${body}</div></div>`;
   }
 
   /* Önizleme hücre metni: Excel sayı biçimleriyle aynı görünüm (binlik ayırıcı, %, tarih). */
@@ -1427,13 +1477,19 @@
     let status;
     if (ed.busy) status = `<span class="lcwaiStatus is-busy">${esc(ed.busyText || L('Dosya oluşturuluyor…', 'Creating the file…'))}</span>`;
     else if (ed.error) status = `<span class="lcwaiStatus is-error">${esc(ed.error)}</span>`;
-    else if (ed.result) status = `<span class="lcwaiStatus is-ok">✓ ${esc(L(`${ed.result.fileName} oluşturuldu`, `${ed.result.fileName} created`))}</span> <button type="button" class="lcwaiBtn is-link" data-ed-open>${esc(L('Aç', 'Open'))}</button> <button type="button" class="lcwaiBtn is-link" data-ed-reveal>${esc(L('Klasörde Göster', 'Show in folder'))}</button>${ed.savedTemplate ? '' : ` <span class="lcwaiNote">· ${esc(L('Bu düzeni yine kullanacak mısınız?', 'Will you use this arrangement again?'))}</span> <button type="button" class="lcwaiBtn is-link" data-ed-save-template>${esc(L('Şablon olarak kaydet', 'Save as template'))}</button>`}${ed.result.fallback === 'html' ? ` <small class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; HTML olarak kaydedildi.', 'PDF printing is not available here; saved as HTML.'))}</small>` : ''}`;
+    else if (ed.result) status = `<div class="lcwaiEdResult" role="status"><span class="lcwaiEdResultIcon" aria-hidden="true">✓</span><span class="lcwaiEdResultText"><b>${esc(L('Dosya oluşturuldu', 'File created'))}</b><span>${esc(ed.result.fileName)}</span></span><span class="lcwaiStudioActions"><button type="button" class="lcwaiBtn is-primary" data-ed-open>${esc(L('Aç', 'Open'))}</button><button type="button" class="lcwaiBtn" data-ed-reveal>${esc(L('Klasörde Göster', 'Show in folder'))}</button>${ed.savedTemplate ? '' : `<button type="button" class="lcwaiBtn" data-ed-save-template title="${esc(L('Bu düzeni yine kullanacak mısınız?', 'Will you use this arrangement again?'))}">${esc(L('Şablon olarak kaydet', 'Save as template'))}</button>`}</span>${ed.result.fallback === 'html' ? `<small class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; HTML olarak kaydedildi.', 'PDF printing is not available here; saved as HTML.'))}</small>` : ''}</div>`;
     else if (ed.dirty) status = `<span class="lcwaiStatus is-warn">● ${esc(L('Değişiklikleriniz hazır. Dosyaya yansıtmak için “Dosyayı Oluştur”a basın.', 'Your changes are ready. Press “Create File” to put them in a file.'))}</span>`;
     else status = `<span class="lcwaiStatus">${esc(ed.mode === 'layout'
       ? L('Hazır bir yerleşim seçin; gerekirse ince ayar yapın. Sonra “Dosyayı Oluştur”a basın.', 'Pick a ready-made layout and fine-tune if needed. Then press “Create File”.')
       : L('Metne tıklayıp düzeltin. Sayfa düzeni için 2. adıma geçin ya da doğrudan “Dosyayı Oluştur”a basın.', 'Click any text to fix it. Go to step 2 for the page layout, or press “Create File” straight away.'))}</span>`;
     const warnings = ed.warnings && ed.warnings.length ? `<small class="lcwaiNote">${esc(L(`${ed.warnings.length} küçük düzeltme uygulandı (sınır aşımı/boş öğe).`, `${ed.warnings.length} small adjustment(s) applied (limits/empty items).`))}</small>` : '';
-    foot.innerHTML = `<div class="lcwaiEdFootStatus">${status}${warnings}${issues}</div><small class="lcwaiNote" title="${esc(L('Ctrl+Enter: Dosyayı oluştur · Esc: Kapat', 'Ctrl+Enter: Create file · Esc: Close'))}">${esc(L('Eski dosya korunur', 'The old file is kept'))}</small>`;
+    const next = isStudio() && ed.mode === 'layout' && !ed.busy ? `<button type="button" class="lcwaiBtn is-primary" data-ed-mode="review">${esc(L('Önizle ve oluştur →', 'Preview and create →'))}</button>` : '';
+    const shown = Boolean(ed.result && !ed.busy), resultKey = shown ? String(ed.result.id || ed.result.fileName || '') : '', fresh = shown && foot.dataset.result !== resultKey;
+    foot.classList.toggle('has-result', shown);
+    foot.dataset.result = resultKey;
+    foot.innerHTML = `<div class="lcwaiEdFootStatus">${status}${warnings}${issues}</div><span class="lcwaiEdFootActions">${next}<small class="lcwaiNote" title="${esc(L('Ctrl+Enter: Dosyayı oluştur · Esc: Kapat', 'Ctrl+Enter: Create file · Esc: Close'))}">${esc(L('Eski dosya korunur', 'The old file is kept'))}</small></span>`;
+    // Yeni oluşturulan dosya bildirimi ortak Motion+ kart girişiyle bir kez belirir.
+    if (fresh) window.BLMotionPlus?.play('card', foot.querySelector('.lcwaiEdResult'));
     const render = $('[data-ed-render]');
     if (render) render.disabled = Boolean(ed.busy);
   }

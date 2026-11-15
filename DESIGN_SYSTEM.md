@@ -130,6 +130,20 @@ Grafikler `--ui-chart-1…8` kategorilerini, kare işaretleri, doğrusal ilerlem
 SVG/canvas metin ölçüsü ekrandaki ortak fonttan okunur. Grafikler ve görünmeyen
 modüller `perf-runtime` lazy sözleşmesine uyar.
 
+### 4.x Rapor görünümü
+
+CP, Siparişler ve Koleksiyon görünüm seçicisinin sonunda (Alanlar ve Kısmi görünümden sonra)
+**Rapor görünümü** (`[data-table-report]`, `aria-pressed`, TR/EN) bulunur. Tablo kendi kaydırma
+alanında rapor düzenine döner; sağ çekmece açılmaz (`public/table-report-inline.js`). Rapor
+sütunları tablonun sütun ana başlıklarıdır: başlık satırındaki her ardışık grup tek sütun olur ve
+alanları tablodaki sırayla alt alta durur (ilk alan birincil satır); ana başlığı olmayan tablo
+paylaşılan rol projeksiyonuna (`BLDetailReportLayout.project`) düşer. Hücre en çok iki satırdır,
+tam metin ipucundadır. Satırlar tablonun o anki filtre, sıralama
+ve sayfa aralığıdır (`renderTableRangeControls` aynı sayfayı paylaşır); başlıktaki alan filtreleri
+tablonun kendi sütun filtrelerini açar. Salt okunurdur: tablo DOM'da gizli kalır, ön ayar, filtre,
+seçim, düzenleme ve kayıt değişmez. Tercih tablo ve kullanıcı başına saklanır
+(`buyerlog.tableReportMode.`); görünmeyen sekmede çizim yapılmaz. Test: `tests/table-report-view.test.js`.
+
 ## 5. Bileşen sözleşmeleri
 
 - Eylem: ortak yükseklik, font ve odak. Açık varyantlar `primary` ve `quiet`.

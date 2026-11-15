@@ -259,7 +259,8 @@ test('yükleme yanıtı: blobName/url olmayan fileId biçimi ek olur ve mesaja f
   const sha = 'a'.repeat(64);
   const upload = { sessionId: 'SESSION-SECRET', fileId: 'f-123e4567-e89b', sha256: sha, fileName: 'BuyerLog-search-image.png', contentType: 'image/png', size: 2048, quota: { fileCount: 3, totalSizeBytes: 9, warningThresholdRatio: 0.8, isNearLimit: false, warningMessage: null } };
   const attachment = files.toAttachment(upload);
-  assert.deepEqual(attachment, { fileId: 'f-123e4567-e89b', contentType: 'image/png', fileName: 'BuyerLog-search-image.png', size: 2048, sha256: sha });
+  assert.deepEqual(attachment, { fileId: 'f-123e4567-e89b', contentType: 'image/png', fileName: 'BuyerLog-search-image.png', size: 2048, sha256: sha, sessionId: 'SESSION-SECRET' });
+  assert.throws(() => files.toAttachment({ fileId: 'ok', sessionId: '../x y' }), error => error.code === 'LCWAI_UPLOAD_FAILED');
   assert.equal(files.toAttachment({ fileId: 42, fileName: 'a.txt' }, { contentType: 'text/plain', size: 1 }).fileId, 42);
   // Renderer ekin kendisini geri gönderir: yeniden doğrulama aynı eki üretir.
   assert.deepEqual(files.normalizeAttachments([attachment]), [attachment]);
@@ -277,8 +278,17 @@ test('yükleme yanıtı: blobName/url olmayan fileId biçimi ek olur ve mesaja f
   const sent = await client.uploadFile('u1', { buffer: Buffer.from('png'), fileName: 'a.png', contentType: 'image/png' });
   await client.sendMessage('u1', { content: 'ara', attachments: [sent] }).catch(() => {});
   assert.ok(body, 'mesaj isteği gönderilmeli');
-  assert.deepEqual(body.attachments, [{ fileId: 'f-123e4567-e89b', contentType: 'image/png', fileName: 'BuyerLog-search-image.png', size: 2048, sha256: sha }]);
-  assert.ok(!JSON.stringify(body).includes('SESSION-SECRET'));
+  // Sunucu yalnız fileId taşıyan eki yok sayıyordu ("No image was attached"):
+  // yükleme oturumu ekte ve üst düzeyde, kimlik listesi fileIds'te gider.
+  assert.deepEqual(body.attachments, [{ fileId: 'f-123e4567-e89b', contentType: 'image/png', fileName: 'BuyerLog-search-image.png', size: 2048, sha256: sha, sessionId: 'SESSION-SECRET' }]);
+  assert.deepEqual(body.fileIds, ['f-123e4567-e89b']);
+  assert.equal(body.sessionId, 'SESSION-SECRET');
+  assert.equal(body.visionEnabled, true);
+  assert.ok(!JSON.stringify(body).includes('quota'));
+  // Farklı yükleme oturumları: belirsiz sessionId gönderilmez, fileIds gider.
+  const mixed = client.messagePayload({ content: 'x', attachments: [{ fileId: 'a', sessionId: 's1', fileName: 'a.png', contentType: 'image/png' }, { fileId: 'b', sessionId: 's2', fileName: 'b.png', contentType: 'image/png' }] });
+  assert.deepEqual(mixed.fileIds, ['a', 'b']);
+  assert.ok(!('sessionId' in mixed));
 });
 
 test('dosya yükleme hatası: neden etiketi + HTTP durumu loglanır, gövde/ad loglanmaz', async () => {
