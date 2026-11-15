@@ -498,10 +498,11 @@
           additive:['SUM','COUNT'].includes(clean(descriptor.field.agg||'SUM').toUpperCase()),
         });
       },
-      drillCategory:(category,descriptor,seriesKey)=>{
+      drillCategory:(category,descriptor,serie)=>{
         const series=(query().columns||[])[0]||dimensions[1]||null;
-        const sourceRows=series&&seriesKey&&!seriesKey.startsWith('__')?category.records.filter(row=>clean(row[series.id])===clean(seriesKey)):category.records;
-        window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+category.label+(series&&seriesKey&&!seriesKey.startsWith('__')?' · '+seriesKey:''),rows:sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false});
+        // "Diğer" dahil yalnız tıklanan dilimin kayıtları (grafik modelindeki üyelik).
+        const sourceRows=series&&serie?window.BLPivotChart.recordsFor(category,serie,row=>row[series.id]):category.records;
+        window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+category.label+(series&&serie&&serie.name?' · '+serie.name:''),rows:sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false});
       },
       scope:(state.offline?text('Son snapshot','Last snapshot'):text('Seçili INTAKE kapsamı','Selected INTAKE scope'))+(state.fetchedAt?' · '+new Date(state.fetchedAt).toLocaleString(isEnglish()?'en-GB':'tr-TR'):''),
       drill:group=>window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+group.label,rows:group.sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false}),

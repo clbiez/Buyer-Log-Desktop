@@ -2927,20 +2927,20 @@
         records,
         categoryOf:record=>rowFields.length?(record.__oabPath||[])[0]:oabT('Toplam','Total'),
         seriesOf:seriesRowField?record=>(record.__oabPath||[])[1]:null,
-        columnSeries:colFields.length?chart.colKeys.filter(key=>key!=='').map(key=>({key,label:String(key).split('␟').join(' / ')})):null,
+        columnSeries:colFields.length?chart.colKeys.map(key=>({key,label:String(key).split('␟').join(' / ')})):null,
         measure:(subset,seriesKey)=>oabChartMeasure(subset,field.valueKey,colFields.length&&seriesKey!=null?seriesKey:null,chart),
         compareCategory:oabSmartCompare,compareSeries:oabSmartCompare,
         categoryLabel:rowFields[0]||'',seriesLabel:colFields.length?colFields.join(' / '):(seriesRowField?rowFields[1]:''),
         singleLabel:field.label,blankLabel:oabT('(boş)','(blank)'),otherLabel:oabT('Diğer','Other'),
         additive:!['CALC','AVG','MIN','MAX'].includes(String(field.agg||'SUM').toUpperCase()),
       }),
-      drillCategory:(category,field,seriesKey)=>{
-        const realSeries=seriesKey&&!String(seriesKey).startsWith('__');
-        const subset=seriesRowField&&realSeries?category.records.filter(record=>String((record.__oabPath||[])[1]??'')===seriesKey):category.records;
-        const colKey=colFields.length&&realSeries?seriesKey:null;
+      drillCategory:(category,field,serie)=>{
+        // Satır serisi ve "Diğer" kayıtları model üyeliğinden; boş ('') sütun da gerçek bir kovadır.
+        const subset=seriesRowField&&serie?global.BLPivotChart.recordsFor(category,serie,record=>(record.__oabPath||[])[1]):category.records;
+        const colKey=colFields.length&&serie&&serie.column?serie.key:null;
         const descriptor=numeric.find(d=>d.valueKey===field.valueKey&&(colKey==null||d.colKey===colKey))||field;
         const sourceRows=oabChartSourceRows(subset,colKey,chart);
-        const path=[category.records[0]?.__oabPath?.[0]];if(seriesRowField&&realSeries)path.push(seriesKey);
+        const path=[category.records[0]?.__oabPath?.[0]];if(seriesRowField&&serie&&!serie.other)path.push(serie.key);
         oabOpenPivotDetail({[descriptor.key]:oabChartMeasure(subset,field.valueKey,colKey,chart),__oabSourceRows:sourceRows,__oabPath:path,__oabKind:'group'},{...descriptor,colKey:colKey==null?descriptor.colKey:colKey},{...chart,pivot:{...chart.pivot,colFields:colKey==null?[]:colFields}});
       },
       scope:oabT('Seçili OAB kapsamı','Selected OAB scope')+(S.fetchedAt?' · '+new Date(S.fetchedAt).toLocaleString(oabT('tr-TR','en-GB')):''),

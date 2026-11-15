@@ -73,3 +73,23 @@ test('Overview: tablo açıkken grafik modeli hesaplanmaz; kaynaklar pivot model
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
   assert.ok(html.indexOf('pivot-chart.js') < html.indexOf('overview-premium.js'));
 });
+
+test('"Diğer" serisinin üyeliği korunur; detay yalnız o dilimin kayıtlarını verir', () => {
+  const many = Array.from({ length: 12 }, (_, i) => ({ c: 'A', s: `s${i}`, v: i + 1 }));
+  const model = C.buildModel({ records: many, categoryOf: r => r.c, seriesOf: r => r.s, measure: sum });
+  const other = model.series.find(s => s.other);
+  const rows = C.recordsFor(model.categories[0], other, r => r.s);
+  assert.equal(sum(rows), 1 + 2 + 3 + 4 + 5);
+  const top = model.series[0];
+  assert.deepEqual(C.recordsFor(model.categories[0], top, r => r.s).map(r => r.s), [top.key]);
+});
+
+test('boş değerli seri/sütun gerçek bir kova olarak korunur', () => {
+  const rows = [{ c: 'A', s: '', v: 100 }, { c: 'A', s: 'x', v: 5 }];
+  const model = C.buildModel({ records: rows, categoryOf: r => r.c, seriesOf: r => r.s, measure: sum, blankLabel: '(boş)' });
+  const blank = model.series.find(s => s.key === '');
+  assert.equal(blank.name, '(boş)');
+  assert.deepEqual(C.recordsFor(model.categories[0], blank, r => r.s).map(r => r.v), [100]);
+  const byCol = C.buildModel({ records: rows, categoryOf: r => r.c, columnSeries: [{ key: '' }, { key: 'x' }], measure: (subset, key) => sum(subset.filter(r => r.s === key)), blankLabel: '(boş)' });
+  assert.deepEqual(byCol.series.map(s => s.key).sort(), ['', 'x']);
+});

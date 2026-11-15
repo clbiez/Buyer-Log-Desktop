@@ -258,7 +258,8 @@
         if(!prefs||!input)return;
         if(chartTarget.dataset.pivotChartLegend!=null){const key=chartTarget.dataset.pivotChartLegend;prefs.hidden.has(key)?prefs.hidden.delete(key):prefs.hidden.add(key);renderMetricChart(id,input);return;}
         const category=input.chartModel?.categories[Number(chartTarget.dataset.pivotChartCat)];
-        if(category)input.drillCategory?.(category,input.fields.find(f=>f.key===prefs.field),chartTarget.dataset.pivotChartSeries);
+        const serie=input.chartModel?.series.find(s=>s.key===chartTarget.dataset.pivotChartSeries);
+        if(category)input.drillCategory?.(category,input.fields.find(f=>f.key===prefs.field),serie);
         return;
       }
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;

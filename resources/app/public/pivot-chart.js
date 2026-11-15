@@ -46,7 +46,7 @@
       const shown = ranked.slice(0, COLUMN_SERIES_LIMIT);
       if (typeof options.compareSeries === 'function') shown.sort((a, b) => options.compareSeries(a.key, b.key));
       series = shown.map(item => ({
-        key: item.key, name: item.name,
+        key: item.key, name: item.name, keys: [item.key], column: true,
         values: orderedCategories.map(category => { const v = measure(category.records, item.key); return finite(v) ? Number(v) : null; }),
       }));
     } else if (typeof options.seriesOf === 'function') {
@@ -65,7 +65,7 @@
       if (typeof options.compareSeries === 'function') top.sort((a, b) => options.compareSeries(a.records[0] && options.seriesOf(a.records[0]), b.records[0] && options.seriesOf(b.records[0])));
       const topKeys = new Set(top.map(group => group.key));
       series = top.map(group => ({
-        key: group.key, name: group.name,
+        key: group.key, name: group.name, keys: [group.key],
         values: orderedCategories.map(category => {
           const subset = category.records.filter(record => keyOf(options.seriesOf(record)) === group.key);
           if (!subset.length) return null;
@@ -75,6 +75,8 @@
       if (ranked.length > top.length) {
         series.push({
           key: '__other', name: options.otherLabel || 'Diğer', other: true, // i18n-ignore — çağıran dil etiketini verir
+          // Detay bu dilimin kayıtlarını açabilsin diye üyelik saklanır.
+          keys: ranked.filter(group => !topKeys.has(group.key)).map(group => group.key),
           values: orderedCategories.map(category => {
             const subset = category.records.filter(record => !topKeys.has(keyOf(options.seriesOf(record))));
             if (!subset.length) return null;
@@ -230,5 +232,14 @@
     return `<div class="backlogChartLegend pivotChartLegend">${model.series.map((serie, index) => `<button type="button" class="backlogChartLegendItem${off.has(serie.key) ? ' is-muted' : ''}" data-pivot-chart-legend="${esc(serie.key)}" style="--ui-series-color:${seriesColor(serie, index)}" title="${esc(hint)}"><span></span><b>${esc(serie.name)}</b></button>`).join('')}</div>`;
   }
 
-  return { buildModel, scaleFor, svg, legendHtml, niceStep, SERIES_LIMIT, COLUMN_SERIES_LIMIT };
+  /* Bir kategori dilimini oluşturan kayıtlar: satır alanı serisinde (ve
+     "Diğer"de) yalnız o serinin üyeleri; sütun serisi kaynakta süzülür. */
+  function recordsFor(category, serie, seriesOf) {
+    const rows = category && Array.isArray(category.records) ? category.records : [];
+    if (!serie || !Array.isArray(serie.keys) || serie.column || typeof seriesOf !== 'function') return rows;
+    const keys = new Set(serie.keys);
+    return rows.filter(record => keys.has(keyOf(seriesOf(record))));
+  }
+
+  return { buildModel, recordsFor, scaleFor, svg, legendHtml, niceStep, SERIES_LIMIT, COLUMN_SERIES_LIMIT };
 });
