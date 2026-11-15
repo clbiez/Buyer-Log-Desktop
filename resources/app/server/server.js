@@ -10170,6 +10170,15 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   return Boolean(manifest);
 }
 
+// The override write is already durable; rewriting every cached module
+// (gunzip → patch → gzip) took seconds on large data and delayed the save
+// acknowledgement. It starts now, serialized per user, and cache reads wait
+// for it (page-projection-cache pendingRewrites).
+function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label){
+  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items).catch(cacheError=>logRuntimeFailure(label,cacheError));
+  return true;
+}
+
 function assertAutomaticDatesReadOnly(currentUser,items){
   const sourceFields=['shipConfirmationDate','shippingApproval','loadingApprovalDate','Buying Son Onay Tarihi','_exFactoryRevision'];
   if(items.some(item=>sourceFields.some(key=>Object.prototype.hasOwnProperty.call(item?.patch||{},key)||Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},key)))){
@@ -10201,13 +10210,11 @@ app.post('/api/overrides/batch', async (req, res) => {
     const beforeContext=pageProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    let pageCachePatched=false;
-    try { pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,items); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'ORDER_BATCH_UPDATE', 'orders', { orderCodes: items.map(item=>Number(item&&item.orderCode)).filter(Number.isFinite), count: items.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(items) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, skipped: saved.skipped || [], pageCachePatched });
+    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, skipped: saved.skipped || [], pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Toplu sipariş düzenlemeleri kaydedilemedi.'); }
 });
 
@@ -10228,15 +10235,13 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     const { origin: _ignoredOrigin, ...patchBody } = req.body && typeof req.body === 'object' ? req.body : {};
     const saved = patchOrderOverride(orderCode, patchBody, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    let pageCachePatched=false;
-    try { pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}]); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}],'rowProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'ORDER_UPDATE', String(orderCode), {
       fields: Object.keys(patchBody).filter(key => !/^expected/.test(key)),
     });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor([{ orderCode, patch: patchBody }]) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, pageCachePatched });
+    res.json({ ok: true, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Sipariş düzenlemesi kaydedilemedi.'); }
 });
 
@@ -10465,14 +10470,12 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
       .map(item => ({ orderCode: item.orderCode, reason: 'invalid-order-code-or-value' }));
     const validItems = clean.filter(item => Number.isFinite(item.orderCode) && Number.isFinite(item.suppFob));
     const saved = patchSuppFobOverrides(validItems, requestRevision(req), { actor: noteActorOf(req.currentUser) });
-    let pageCachePatched=false;
     const rowPatches=validItems.map(item=>({orderCode:item.orderCode,patch:{model:item.model,ccode:item.ccode,suppFob:item.suppFob,suppFobMeta:item.suppFobMeta}}));
-    try{pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,rowPatches);}
-    catch(cacheError){logRuntimeFailure('suppFobProjectionCachePatch',cacheError);}
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,rowPatches,'suppFobProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'SUPP_FOB_BATCH_UPDATE', 'orders', { orderCodes: validItems.map(item=>item.orderCode), count: validItems.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(rowPatches) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, skipped: [...preFilterSkipped, ...(saved.skipped || [])], pageCachePatched });
+    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, skipped: [...preFilterSkipped, ...(saved.skipped || [])], pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Supp. FOB düzenlemeleri kaydedilemedi.'); }
 });
 

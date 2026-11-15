@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. Not kaydı artık sunucu önbelleğinin yeniden yazılmasını beklemeden tamamlanır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. Saving a note now completes without waiting for the server cache rewrite."
   },
   "changes": [
     {
@@ -571,6 +571,29 @@
       "body": {
         "tr": "Zaman Akışı'nın alt grafik seçicisine Buyer Grup ve Buyer'ın yanına Öncelik eklendi. Her dönem çubuğu satırların ana önceliğine göre yığılır, bu yüzden toplam o dönemin Backlog adedine eşittir. Renkler ve sıra Öncelik Kuralları'ndaki etiket kataloğunuzdan gelir. Takip etiketleri çubukta ayrıca sayılmaz; çubuğun üzerine gelince ipucunda adetleriyle listelenir. Parçaya tıklayınca o dönem ve etiketin siparişleri sağda açılır.",
         "en": "Priority was added next to Buying Group and Buyer in the Timeline's lower chart picker. Each period bar is stacked by the lines' main priority, so the total equals that period's Backlog quantity. Colours and order come from your tag catalogue in Priority Rules. Tracking tags are not counted again in the bar; hover the bar to see them with quantities in the tooltip. Click a segment to open the orders of that period and tag on the right."
+      }
+    },
+    {
+      "id": "note-save-fast-ack",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Not",
+        "en": "CP Tracker · Orders · Notes"
+      },
+      "title": {
+        "tr": "Not kaydı beklemeden tamamlanır",
+        "en": "Saving a note no longer makes you wait"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran aynı kalır; yalnız Notu Kaydet'e bastıktan sonraki bekleme kısalır.",
+          "en": "The screen stays the same; only the wait after pressing Save Note is shorter."
+        }
+      },
+      "body": {
+        "tr": "Notu Kaydet, sunucunun ekran önbelleğindeki bütün modülleri yeniden yazmasını bekliyordu; büyük veride bu birkaç saniye sürebiliyordu. Not artık kalıcı olarak yazıldığı anda onaylanır ve pencere kapanır; önbellek arka planda güncellenir. Bu sırada açılan ekranlar güncel notu görür. Hücre ve Supp. FOB düzenlemeleri de aynı yolla daha hızlı onaylanır.",
+        "en": "Save Note used to wait for the server to rewrite every module in the screen cache, which could take several seconds on large data. The note is now confirmed and the dialog closes as soon as it is stored; the cache updates in the background. Screens opened meanwhile still show the current note. Cell and Supp. FOB edits are confirmed faster the same way."
       }
     }
   ]
