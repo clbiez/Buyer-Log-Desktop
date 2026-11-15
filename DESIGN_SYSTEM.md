@@ -119,6 +119,19 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
 - **Bütünlük kabulü:** `scripts/ui-line-consistency-acceptance.js` gerçek uygulamada demo veriyle
   bütün modülleri ve dört paylaşılan çekmeceyi açık ve koyu temada gezer. Her ailenin her örneğinin
   sözleşmeye uyduğunu doğrular; bir modül ayrı görünüm üretirse başarısız olur.
+- **Çizgi hareketi (Motion+, yalnız Çizgi stili):** açılan her menü, seçim penceresi, sütun
+  filtresi, açılır panel, pencere ve çekmece (`LINE_SURFACES`) çevresi dört çizgiyle çizilerek
+  açılır; kapanınca aynı çerçeve ters sırayla silinir. Tarama yalnız etkileşimden sonra ve
+  sınırlı gecikmelerle (`0/140/420/900 ms`) yapılır; gövde gözlemcisi yoktur. Tam ekran perdeler
+  çerçevelenmez, iç içe yüzeyde dıştaki çizilir, aynı yerde yeniden kurulan yüzey kapanış sayılmaz.
+  Yeni ekranda ana bloklar soldan sağa bir çizgiyle belirir. Hareket azaltma veya kapalı hareket
+  tercihi her çizimi kapatır; Klasik stilde hiçbir şey eklenmez. Modüller kendi çizim motorunu
+  eklemez: yeni bir yüzey `LINE_SURFACES` listesine eklenir, özel bir alan `BLMotionPlus.play('frame', el)` çağırır.
+- **Çizgi kimliği:** logo tek çizgi BL monogramı, cetvel çentikleri ve `--ui-line-mark` işaretinden
+  oluşan satır içi SVG'dir (`.blLineLogo`, `hidden`). Kenar çubuğu, açılış (boot) kartı ve giriş
+  ekranında bulunur; yalnız Çizgi stili gösterir ve Motion+ açılışta ve stile geçişte bir kez çizer.
+  Klasik stil görsel logoyu korur. Açılış kartı ve giriş ekranı mürekkep çerçeve, alt çizgili alan ve
+  aşamalarla görünür; boot küresi Çizgi stilinde gizlenir.
 - Kaynak tasarım belgesi: "Buyer Log Çizgi Tasarım Sistemi" (token'lar, bileşen önizlemeleri,
   denetim ve kararlar).
 - Bilinçli olarak yapılmayanlar: kritik satıra sol şerit (satır düzeyinde işaret yok;
@@ -129,11 +142,15 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
 ### 2.2 Rapor görünümü
 
 CP, Siparişler ve Koleksiyon görünüm seçicisinin sonunda (Alanlar ve Kısmi görünümden sonra)
-**Rapor görünümü** (`[data-table-report]`, TR/EN) bulunur. Tablonun o anki filtre ve
-sıralama sonucunu paylaşılan detay rapor motorunda (`BLDetailDrawer`,
-`BLDetailReportLayout.project`; rol gruplu, iki satırlı hücreler) açar. Salt okunurdur:
-ön ayar, filtre, seçim ve kayıt değişmez; arama, alan filtresi, sütun seçimi ve Excel
-çekmecede kalır. Görünür kayıt yoksa uyarı verir. İki arayüz stilinde de vardır.
+**Rapor görünümü** (`[data-table-report]`, `aria-pressed`, TR/EN) bulunur. Tablo kendi kaydırma
+alanında rapor düzenine döner; sağ çekmece açılmaz (`public/table-report-inline.js`). Görünen
+alanlar paylaşılan rol projeksiyonunda (`BLDetailReportLayout.project`) iki satırlı hücrelerde
+durur; hücre en çok iki satırdır, tam metin ipucundadır. Satırlar tablonun o anki filtre, sıralama
+ve sayfa aralığıdır (`renderTableRangeControls` aynı sayfayı paylaşır); başlıktaki alan filtreleri
+tablonun kendi sütun filtrelerini açar. Salt okunurdur: tablo DOM'da gizli kalır, ön ayar, filtre,
+seçim, düzenleme ve kayıt değişmez. Tercih tablo başına saklanır; görünmeyen sekmede çizim
+yapılmaz. İki arayüz stilinde de vardır; gerçek tarayıcı kabulü
+`scripts/ui-line-consistency-acceptance.js` içindedir.
 Test: `tests/table-report-view.test.js`.
 
 ## 3. Tipografi ve dört boyut

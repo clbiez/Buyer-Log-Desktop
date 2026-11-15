@@ -248,6 +248,8 @@
     restoreActivityControls(); // Tab changes must not silence a running refresh.
     enterPage(view);
     enterTableRows(view,token);
+    if(lineStyle())pageBlocks(view).forEach(drawRule);
+    lineOpen=null;queueLineScan();
     // Lazy modules may paint after navigation. Bounded retries only add unseen blocks.
     for(const delay of [120,400,840])later(()=>{if(token===generation&&visible(view)){enterPage(view);enterTableRows(view,token);}},delay);
   }
@@ -266,40 +268,137 @@
      çizgiden sonra belirir; çizgi bitince söner ve yüzeyin kendi 1px sınırı kalır.
      Klasik stilde hiçbir şey eklenmez. Sınırlı süreli; iptalde iz bırakmaz. */
   const lineStyle=()=>html.dataset.uiStyle==='line';
-  function drawFrame(el){
-    if(!lineStyle()||typeof doc.createElementNS!=='function'||!doc.body)return;
-    const r=el.getBoundingClientRect();
-    if(r.width<24||r.height<12)return;
-    const NS='http://www.w3.org/2000/svg',o=Math.max(3,Math.min(7,Math.round(Math.min(r.width,r.height)/8)));
+  const framedAt=new WeakMap();
+  function frameSvg(r,o){
+    const NS='http://www.w3.org/2000/svg';
     const W=Math.round(r.width)+o*2,H=Math.round(r.height)+o*2;
     const svg=doc.createElementNS(NS,'svg');
     svg.setAttribute('class','blLineFrame');svg.setAttribute('aria-hidden','true');
     svg.setAttribute('width',String(W));svg.setAttribute('height',String(H));svg.setAttribute('viewBox','0 0 '+W+' '+H);
     svg.style.left=Math.round(r.left-o)+'px';svg.style.top=Math.round(r.top-o)+'px';
+    return {svg,W,H,NS};
+  }
+  // Çizgiler sırayla çizilir (open) ya da ters sırayla silinir (close); bitince söner ve kalkar.
+  function strokeFrame(r,closing){
+    if(!lineStyle()||!enabled()||typeof doc.createElementNS!=='function'||!doc.body||!r)return null;
+    if(r.width<24||r.height<12)return null;
+    const o=Math.max(3,Math.min(7,Math.round(Math.min(r.width,r.height)/8)));
+    const {svg,W,H,NS}=frameSvg(r,o);
     const lines=['M0 '+(o+.5)+'H'+W,'M'+(W-o-.5)+' 0V'+H,'M'+W+' '+(H-o-.5)+'H0','M'+(o+.5)+' '+H+'V0'];
-    const step=duration('overlay')*.25,length=duration('overlay')*1.1;
-    let last=null;
-    lines.forEach((d,i)=>{
+    const base=duration('overlay'),step=base*(closing?.12:.25),length=base*(closing?.7:1.1);
+    const paths=lines.map((d,i)=>{
       const path=doc.createElementNS(NS,'path');
       path.setAttribute('d',d);path.setAttribute('pathLength','1');path.setAttribute('stroke-dasharray','1');
-      svg.appendChild(path);
-      last=path;path.dataset.blDelay=String(i*step);
+      if(closing)path.setAttribute('stroke-dashoffset','0');
+      svg.appendChild(path);return path;
     });
     doc.body.appendChild(svg);lineFrames.add(svg);
     const done=()=>{lineFrames.delete(svg);svg.remove();};
     let fin=null;
-    for(const path of svg.querySelectorAll('path')){
-      const a=start(path,[{strokeDashoffset:1},{strokeDashoffset:0}],{duration:length,delay:Number(path.dataset.blDelay)||0,fill:'both'});
-      if(!a){done();return;}
-      if(path===last)fin=a;
-    }
-    fin.addEventListener?.('cancel',done,{once:true});
-    fin.addEventListener?.('finish',()=>{
-      const fade=start(svg,[{opacity:1},{opacity:0}],{duration:duration('overlay'),fill:'forwards'});
+    paths.forEach((path,i)=>{
+      const delay=(closing?paths.length-1-i:i)*step;
+      const a=start(path,closing?[{strokeDashoffset:0},{strokeDashoffset:-1}]:[{strokeDashoffset:1},{strokeDashoffset:0}],{duration:length,delay,fill:'both'});
+      if(a&&(!fin||delay>=fin.delay))fin={a,delay};
+    });
+    if(!fin){done();return null;}
+    fin.a.addEventListener?.('cancel',done,{once:true});
+    fin.a.addEventListener?.('finish',()=>{
+      if(closing){done();return;}
+      const fade=start(svg,[{opacity:1},{opacity:0}],{duration:base,fill:'forwards'});
       if(!fade){done();return;}
       fade.addEventListener?.('finish',done,{once:true});
       fade.addEventListener?.('cancel',done,{once:true});
     },{once:true});
+    return svg;
+  }
+  function drawFrame(el){
+    if(!el||!lineStyle())return;
+    // Aynı yüzey bir açılışta tek çerçeve alır (Motion+ girişi ve çizgi izleyici aynı anda görebilir).
+    const now=root.performance?.now?.()||Date.now(),last=framedAt.get(el);
+    if(last&&now-last<duration('overlay')*3)return;
+    framedAt.set(el,now);
+    strokeFrame(el.getBoundingClientRect(),false);
+  }
+  /* Yeni ekran: sayfanın ana blokları üst kenarlarından soldan sağa tek çizgiyle çizilir. */
+  function drawRule(el,index){
+    if(!lineStyle()||!enabled()||!doc.body||typeof doc.createElementNS!=='function')return;
+    const r=el.getBoundingClientRect();if(r.width<40)return;
+    const {svg,W,NS}=frameSvg({left:r.left,top:r.top,width:r.width,height:2},0);
+    svg.setAttribute('height','2');svg.setAttribute('viewBox','0 0 '+W+' 2');
+    const path=doc.createElementNS(NS,'path');
+    path.setAttribute('d','M0 .5H'+W);path.setAttribute('pathLength','1');path.setAttribute('stroke-dasharray','1');
+    svg.appendChild(path);doc.body.appendChild(svg);lineFrames.add(svg);
+    const done=()=>{lineFrames.delete(svg);svg.remove();};
+    const a=start(path,[{strokeDashoffset:1},{strokeDashoffset:0}],{duration:duration('flow'),delay:index*duration('stagger'),fill:'both'});
+    if(!a){done();return;}
+    a.addEventListener?.('cancel',done,{once:true});
+    a.addEventListener?.('finish',()=>{
+      const fade=start(svg,[{opacity:1},{opacity:0}],{duration:duration('overlay'),fill:'forwards'});
+      if(!fade){done();return;}
+      fade.addEventListener?.('finish',done,{once:true});fade.addEventListener?.('cancel',done,{once:true});
+    },{once:true});
+  }
+  /* Çizgi logosu: kare, BL monogramı, cetvel çentikleri ve işaret sırayla çizilir.
+     Açılışta (giriş, boot ekranı, uygulama) ve Çizgi stiline geçişte bir kez; sonlu. */
+  function drawLogo(svg){
+    if(!svg||!lineStyle()||!enabled()||!visible(svg))return;
+    const paths=Array.from(svg.querySelectorAll('path')),step=duration('stagger')*2.5,length=duration('flow')*1.4;
+    paths.forEach((path,i)=>start(path,[{strokeDasharray:'1',strokeDashoffset:1},{strokeDasharray:'1',strokeDashoffset:0}],{duration:length,delay:i*step,fill:'backwards'}));
+  }
+  function drawIdentity(){
+    if(!lineStyle()||!enabled())return;
+    doc.querySelectorAll('.blLineLogo').forEach(drawLogo);
+    // Giriş ve açılış kartı yeni bir ekran gibi çerçeveyle çizilir.
+    const shell=doc.querySelector('#blBootGuard .blBootCard')||(doc.body?.dataset?.uiMigrated==='login'?doc.querySelector('.loginShell'):null);
+    if(shell)drawFrame(shell);
+  }
+  /* Çizgi stili yüzey izleyicisi: menü, seçim penceresi, açılır panel, çekmece ve
+     pencerelerin açılışı çizgiyle çizilir, kapanışı çizgiler geri silinerek görünür.
+     Yalnız kullanıcı etkileşiminden sonra ve sınırlı gecikmelerle tarar (gözlemci yok);
+     tam ekran perde/kapsayıcılar çerçevelenmez, iç içe yüzeyde dıştaki çizilir. */
+  const LINE_SURFACES=OVERLAYS+',[role="menu"],[role="listbox"],.colFilterPanel,.blViewPickerMenu:not([hidden]),.delTypeMenu,.kpiGroupMenu,.kolSpreadsheetContextMenu,.lcwaiContextMenu,.ovClockPopover,.blSelectionPopover,#corporateConnections,.railAppearanceMenu:not([hidden]),.blvExportMenu:not([hidden]),.blDetailExportMenu:not([hidden]),.blDetailColumnPanel:not([hidden]),.blDetailDrawerPanel,.bpaDrawer,.blvFilterDrawer,.lmDrawer,.ovHomeDrawer,.cfpDrawer,.globalFlowDrawer,.kolPeriodDrawer,.tableFieldsDrawer,.modalCard,.blDetailReportFilter[open]>div';
+  let lineOpen=null,lineTimers=[];
+  function surfaceOpen(el){
+    if(!visible(el))return false;
+    const cs=root.getComputedStyle?.(el);
+    if(cs&&(cs.visibility==='hidden'||Number.parseFloat(cs.opacity||'1')<.05||cs.pointerEvents==='none'&&!el.matches('[role="menu"],[role="listbox"]')))return false;
+    const r=el.getBoundingClientRect();
+    return !(r.width>=root.innerWidth*.95&&r.height>=root.innerHeight*.95);
+  }
+  function lineSurfaces(){
+    const found=Array.from(doc.querySelectorAll(LINE_SURFACES)).filter(surfaceOpen);
+    const top=found.filter(el=>!found.some(parent=>parent!==el&&parent.contains(el)));
+    const map=new Map();for(const el of top.slice(0,8)){const r=el.getBoundingClientRect();map.set(el,{left:r.left,top:r.top,width:r.width,height:r.height});}
+    return map;
+  }
+  function lineScan(){
+    if(!lineStyle()||!enabled()){lineOpen=null;return;}
+    const now=lineSurfaces();
+    if(lineOpen){
+      // Sahibi yüzeyi yeniden kurduysa (aynı yerde yeni düğüm) bu bir kapanış/açılış değildir.
+      const near=(a,b)=>Math.abs(a.left-b.left)<6&&Math.abs(a.top-b.top)<6;
+      const added=Array.from(now.keys()).filter(el=>!lineOpen.has(el));
+      const removed=Array.from(lineOpen).filter(([el])=>!now.has(el));
+      const rebuilt=new Set();
+      for(const [,rect] of removed){const twin=added.find(el=>!rebuilt.has(el)&&near(now.get(el),rect));if(twin){rebuilt.add(twin);rect.rebuilt=true;}}
+      for(const [,rect] of removed)if(!rect.rebuilt)strokeFrame(rect,true);
+      for(const el of added)if(!rebuilt.has(el)){
+        // İçerik çizginin ardından belirir; yüzeyin kendi CSS girişi varsa yalnız çerçeve çizilir.
+        if(!entrance(el,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}]))drawFrame(el);
+      }
+    }
+    lineOpen=now;
+  }
+  // Etkileşimden hemen önce taban durum: dışarı tıklayınca pointerdown'da kapanan menü de silinerek kapanır.
+  function lineBaseline(){
+    if(!lineStyle()||!enabled())return;
+    if(lineOpen)lineScan();else lineOpen=lineSurfaces();
+  }
+  function queueLineScan(){
+    if(!lineStyle()||!enabled())return;
+    for(const id of lineTimers)root.clearTimeout(id);
+    // Eşzamanlı ve gecikmeli açılışlar (lazy çekmece, sunucu yanıtı) için sınırlı tekrar.
+    lineTimers=[0,140,420,900].map(ms=>root.setTimeout(lineScan,ms));
   }
   function entrance(el,frames){
     if(hasEntrance(el))return null;
@@ -344,6 +443,8 @@
       [{opacity:.5,transform:'translate3d('+(kind==='page-next'?48:-48)+'px,0,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
       {duration:duration('page')});
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
+    if(kind==='frame'){drawFrame(element);return null;}
+    if(kind==='logo'){drawLogo(element);return null;}
     if(kind==='overlay')return entrance(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}]);
     // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
     if(kind==='drawer')return entrance(element,[{clipPath:'inset(100% 0 0 0)',transform:'translate3d(0,12px,0)'},{clipPath:'inset(0 0 0 0)',transform:'translate3d(0,0,0)'}]);
@@ -543,6 +644,7 @@
     doc.addEventListener('click',ev=>{
       if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(false),45);
       else if(ev.target.closest?.('button,[role="button"]'))queueOverlay();
+      queueLineScan();
       const refresh=ev.target.closest?.(REFRESH_CONTROLS);
       const sync=ev.target.closest?.(SYNC_CONTROLS);
       const button=refresh||sync;
@@ -551,6 +653,11 @@
         play(refresh?'refresh':'sync',icon);
       }
     },true);
+    doc.addEventListener('pointerdown',lineBaseline,true);
+    // Çizgi kimliği: ilk boya sonrası ve kullanıcı Çizgi stiline geçtiğinde logo çizilir.
+    root.requestAnimationFrame?.(()=>drawIdentity());
+    if(typeof root.MutationObserver==='function')new root.MutationObserver(()=>{if(lineStyle())root.requestAnimationFrame?.(()=>doc.querySelectorAll('.blLineLogo').forEach(drawLogo));}).observe(html,{attributes:true,attributeFilter:['data-ui-style']});
+    doc.addEventListener('keydown',ev=>{if(ev.key==='Escape'||ev.key==='Enter'||ev.key===' '){lineBaseline();queueLineScan();}},true);
     // Layout/scroll restoration during lazy rendering is not user interaction.
     for(const event of ['pointerdown','focusin','wheel','touchstart','keydown'])doc.addEventListener(event,ev=>{
       if(event==='focusin'&&!['INPUT','TEXTAREA','SELECT'].includes(ev.target?.tagName)&&!ev.target?.isContentEditable)return;

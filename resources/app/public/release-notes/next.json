@@ -56,17 +56,17 @@
         "capture": "post-change",
         "src": "table-report-view.png",
         "alt": {
-          "tr": "CP Tracker Rapor görünümü: durum, sipariş/model, buyer/grup ve üretici/sezon alanları iki satırlı hücrelerde, üstte adet, satır, sipariş ve model özetleri",
-          "en": "CP Tracker report view: status, order/model, buyer/group and manufacturer/season fields in two-line cells, with quantity, row, order and model totals on top"
+          "tr": "CP Tracker tablosu Rapor görünümünde: durum, sipariş/model, buyer/grup ve üretici/sezon alanları aynı tablo alanında iki satırlı hücrelerde; üstte tabloya dönüş düğmesi",
+          "en": "The CP Tracker table in Report view: status, order/model, buyer/group and manufacturer/season fields in two-line cells in the same table area, with a button to return to the table on top"
         },
         "caption": {
-          "tr": "Görünüm seçicisindeki Rapor görünümü, tablonun geçerli filtre ve sıralamasını rapor düzeninde açar.",
-          "en": "Report view in the view picker opens the table's current filters and sorting in report layout."
+          "tr": "Rapor görünümü tabloyu yerinde değiştirir; tekrar tıklayınca ya da “Tablo görünümüne dön” ile tablo geri gelir.",
+          "en": "Report view changes the table in place; click it again or use “Back to table view” to return."
         }
       },
       "body": {
-        "tr": "CP Tracker, Siparişler ve Koleksiyon'un görünüm seçicisinin sonuna Rapor görünümü eklendi. Görünen kayıtlar, alt detay raporundaki düzende açılır: ilgili alanlar tek sütunda iki satır olarak gruplanır, böylece tablo daha az sütunla okunur. Arama, alan filtresi, sütun seçimi ve Excel'e aktarma bu ekranda da çalışır. Rapor görünümü yalnız gösterimdir; tablonuz, filtreleriniz ve kayıtlar değişmez.",
-        "en": "Report view was added at the end of the view picker of CP Tracker, Orders and Collection. The visible records open in the same layout as the drill-down report: related fields are grouped as two lines in one column, so the table reads with fewer columns. Search, field filters, column choice and Excel export also work there. Report view only displays the data; your table, filters and records do not change."
+        "tr": "CP Tracker, Siparişler ve Koleksiyon'un görünüm seçicisinin sonuna Rapor görünümü eklendi. Tablo sağdan açılan bir pencereye gitmeden kendi yerinde rapor düzenine döner: ilgili alanlar alt detay raporundaki gibi tek sütunda iki satır olarak gruplanır, böylece tablo daha az sütunla okunur. Geçerli filtre, sıralama ve sayfa aynen geçerlidir; sayfa değiştirme ve sütun başlığındaki alan filtreleri bu görünümde de çalışır. Seçiminiz tablo başına hatırlanır. Rapor görünümü yalnız gösterimdir; tablonuz, filtreleriniz ve kayıtlar değişmez.",
+        "en": "Report view was added at the end of the view picker of CP Tracker, Orders and Collection. The table switches to report layout in place instead of opening a window on the right: related fields are grouped as two lines in one column, as in the drill-down report, so the table reads with fewer columns. The current filters, sorting and page still apply; paging and the field filters in the column headers work in this view too. Your choice is remembered per table. Report view only displays the data; your table, filters and records do not change."
       }
     },
     {
@@ -96,6 +96,35 @@
       "body": {
         "tr": "Çizgi stilinde bazı modüller kendi düğme, filtre, başlık ve çekmece görünümünü kullanıyordu. Artık bütün modüllerde düğmeler çerçeveli ve zeminsiz, seçili segment mürekkep dolgulu, filtre çipleri mono yazılı, alanlar zeminsiz, başlıklar tek ölçekte. Menüler ince bir çerçeveyle açılıyor, bütün çekmeceler aynı kabuğu ve aynı kapat düğmesini kullanıyor, kalıcı kartlarda gölge yok. Klasik görünüm değişmedi.",
         "en": "In the Line style some modules used their own button, filter, heading and drawer looks. Now buttons are framed without fill in every module, the selected segment has an ink fill, filter chips use mono type, fields have no fill and headings follow one scale. Menus open with a thin frame, every drawer shares one shell and one close button, and permanent cards have no shadow. The classic look is unchanged."
+      }
+    },
+    {
+      "id": "ui-line-motion-identity",
+      "type": "improvement",
+      "module": {
+        "tr": "Görünüm · giriş, açılış ve bütün modüller",
+        "en": "Appearance · sign-in, startup and all modules"
+      },
+      "title": {
+        "tr": "Çizgi stilinde her pencere çizilerek açılır, logo ve açılış ekranı stile uyar",
+        "en": "In the Line style every window opens by being drawn; the logo and startup screen follow the style"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-line-motion-identity.png",
+        "alt": {
+          "tr": "Çizgi stilinde giriş ekranı: çevresi çizgilerle çiziliyor, solda çizgi BL logosu, alanlar alt çizgili",
+          "en": "The sign-in screen in the Line style: its frame is being drawn with lines, the line BL logo on the left and underlined fields"
+        },
+        "caption": {
+          "tr": "Giriş ekranı, açılış ekranı, menüler, seçim pencereleri ve çekmeceler çizgilerle oluşur; kapanırken çizgiler geri silinir.",
+          "en": "The sign-in and startup screens, menus, pickers and drawers are drawn with lines; on closing the lines are erased."
+        }
+      },
+      "body": {
+        "tr": "Çizgi stilinde artık her menü, seçim penceresi, sütun filtresi, açılır panel, çekmece ve pencere açılırken çevresi çizgilerle çizilir; kapanırken çizgiler geri silinir. Yeni bir ekrana geçince ana bloklar soldan sağa bir çizgiyle belirir. Buyer Log logosu Çizgi stilinde tek çizgiyle çizilen bir BL monogramına döner; giriş ve açılış ekranı da aynı dille, ince mürekkep çerçeve ve alt çizgili alanlarla görünür. Hareket azaltma tercihi açıksa çizim yapılmaz. Klasik görünüm değişmedi.",
+        "en": "In the Line style every menu, picker, column filter, popup panel, drawer and window is now drawn with lines as it opens, and the lines are erased as it closes. When you move to a new screen, its main blocks appear with a line drawn from left to right. In the Line style the Buyer Log logo becomes a BL monogram drawn in a single line, and the sign-in and startup screens use the same language with a thin ink frame and underlined fields. Nothing is drawn when reduced motion is on. The classic look is unchanged."
       }
     },
     {

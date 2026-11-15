@@ -195,3 +195,39 @@ test('Motion+ draws an ink frame around opening surfaces only in Line style and 
   cancelled.root.BLMotionPlus.setEnabled(false);
   assert.equal(frame.removed, true);
 });
+
+test('Line motion: every opened surface is drawn with lines and erased on close; Classic adds nothing', () => {
+  const src = read('motion-plus.js');
+  // One surface list covers menus, pickers, popovers, dialogs and every drawer family.
+  const list = src.slice(src.indexOf('const LINE_SURFACES='), src.indexOf(';', src.indexOf('const LINE_SURFACES=')));
+  for (const surface of ['OVERLAYS', '[role="menu"]', '[role="listbox"]', '.colFilterPanel', '.blViewPickerMenu', '.modalCard', '.blDetailDrawerPanel', '.bpaDrawer', '.blvFilterDrawer', '.lmDrawer', '.ovHomeDrawer', '.cfpDrawer', '.globalFlowDrawer', '.kolPeriodDrawer', '.tableFieldsDrawer'])
+    assert.ok(list.includes(surface), surface);
+  // Scans only in Line style, only after interaction, with bounded retries (no observers).
+  assert.match(src, /function lineScan\(\)\{\n    if\(!lineStyle\(\)\|\|!enabled\(\)\)\{lineOpen=null;return;\}/);
+  assert.match(src, /lineTimers=\[0,140,420,900\]\.map\(ms=>root\.setTimeout\(lineScan,ms\)\);/);
+  assert.match(src, /for\(const \[,rect\] of removed\)if\(!rect\.rebuilt\)strokeFrame\(rect,true\);/);
+  assert.match(src, /function strokeFrame\(r,closing\)\{\n    if\(!lineStyle\(\)\|\|!enabled\(\)/);
+  // Full-screen scrims are never framed; nested surfaces frame only the outer one.
+  assert.match(src, /return !\(r\.width>=root\.innerWidth\*\.95&&r\.height>=root\.innerHeight\*\.95\);/);
+  // New screens: page blocks draw a rule; the logo draws on start and on switching to Line.
+  assert.match(src, /if\(lineStyle\(\)\)pageBlocks\(view\)\.forEach\(drawRule\);/);
+  assert.match(src, /function drawLogo\(svg\)\{\n    if\(!svg\|\|!lineStyle\(\)\|\|!enabled\(\)/);
+  assert.match(src, /attributeFilter:\['data-ui-style'\]/);
+  // Report view switch draws its area like a new screen.
+  assert.match(read('table-report-inline.js'), /root\.BLMotionPlus\?\.play\?\.\('frame',sourceWrap\(adapter\)\)/);
+});
+
+test('Line identity: the logo, boot card and sign-in change only in Line style', () => {
+  const logo = /<svg class="blLineLogo[^"]*" viewBox="0 0 64 64" hidden aria-hidden="true" focusable="false">/;
+  const html = read('index.html');
+  assert.equal((html.match(/class="blLineLogo[ "]/g) || []).length, 2, 'rail + boot card');
+  assert.match(html, logo);
+  assert.match(read('select-user.html'), logo);
+  const css = read('ui-components.css');
+  // Classic keeps the image logo: the SVG is [hidden] and only Line reveals it.
+  assert.match(css, /html\[data-ui-system="manifest"\]\[data-ui-style="line"\] \.blLineLogo\[hidden\] \{display:block !important;/);
+  assert.match(css, /html\[data-ui-system="manifest"\]\[data-ui-style="line"\] :is\(\.brandMarkImage,\.logoMark--image>img\) \{display:none !important/);
+  assert.match(css, /html\[data-ui-system="manifest"\]\[data-ui-style="line"\] #blBootGuard \.blBootOrb \{display:none !important/);
+  assert.match(css, /html\[data-ui-system="manifest"\]\[data-ui-style="line"\] #blBootGuard \.blBootCard \{border:1px solid var\(--ui-line-ink\) !important;/);
+  assert.match(css, /\.blLineLogo \.blLineLogoMark \{stroke:var\(--ui-line-mark\)/);
+});

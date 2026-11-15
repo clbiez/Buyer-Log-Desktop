@@ -124,11 +124,55 @@ function audit(F){
     }
   }
   await page.evaluate(()=>{applyUiStyle('classic',{persist:false});applyTheme('light');});
-  fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({totals,failures},null,2));
+  // Rapor görünümü: tablo yerinde rapora döner (çekmece açılmaz), aynı sayfa satırlarını gösterir, geri döner.
+  const report={};
+  for(const style of ['line','classic'])for(const key of ['cp','orders']){
+    await page.evaluate(([s,k])=>{applyUiStyle(s,{persist:false});BLTableReportInline.setMode(k,false);switchTab(k);},[style,key]);await page.waitForTimeout(1500);
+    await page.click(`[data-bl-view-picker="${key}"] [data-bl-view-trigger]`);await page.waitForTimeout(300);
+    await page.click(`[data-table-report="${key}"]`);await page.waitForTimeout(900);
+    const on=await page.evaluate(k=>{const el=document.querySelector(`[data-table-report-inline="${k}"]`),table=document.getElementById(k+'Table');
+      return {inline:Boolean(el&&!el.hidden),rows:el?el.querySelectorAll('tbody tr').length:0,page:Number(document.querySelector(`#${k}TableToolbar [data-range-size]`)?.value)||0,
+        tableHidden:getComputedStyle(table).display==='none',drawer:Boolean(document.querySelector('#blSharedDetailDrawer.is-open')),pressed:document.querySelector(`[data-table-report="${k}"]`).getAttribute('aria-pressed'),
+        groups:[...el.querySelectorAll('thead th')].some(th=>/Sipariş \/ Model|Order \/ Model/.test(th.textContent))};},key);
+    await page.click(`[data-table-report-inline="${key}"] [data-table-report-exit]`);await page.waitForTimeout(700);
+    const off=await page.evaluate(k=>({tableShown:getComputedStyle(document.getElementById(k+'Table')).display!=='none',rows:document.querySelectorAll(`#${k}Table tbody tr`).length}),key);
+    report[style+'/'+key]=`${on.rows} rows`;
+    if(!on.inline||!on.tableHidden||on.drawer||on.pressed!=='true'||!on.groups||on.rows!==Math.min(on.page,on.rows)||on.rows<1)failures.push(`report ${style}/${key} · on ${JSON.stringify(on)}`);
+    if(!off.tableShown||off.rows<1)failures.push(`report ${style}/${key} · off ${JSON.stringify(off)}`);
+  }
+  // Çizgi hareketi ve kimlik: hareket açık ayrı bağlamda; açılış çizilir, kapanış silinir, Klasik'e hiçbir şey eklenmez.
+  const motionContext=await browser.newContext({viewport:{width:1600,height:1000},reducedMotion:'no-preference'});
+  await motionContext.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),domain:'127.0.0.1',path:'/',httpOnly:true}]);
+  await motionContext.addInitScript(()=>{localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0');window.__lineFrames=[];
+    new MutationObserver(list=>{for(const m of list)for(const n of m.addedNodes)if(n.classList?.contains('blLineFrame'))window.__lineFrames.push(n.getAttribute('height')==='2'?'rule':n.querySelector('path')?.getAttribute('stroke-dashoffset')==='0'?'erase':'draw');}).observe(document,{childList:true,subtree:true});});
+  const motion=await motionContext.newPage();motion.on('pageerror',e=>errors.push(e.message));
+  await motion.goto(base,{waitUntil:'domcontentloaded'});
+  await motion.waitForFunction(()=>typeof switchTab==='function',null,{timeout:60000});
+  await motion.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:4000}).catch(()=>{});
+  await motion.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:60000});
+  const frames=async()=>{await motion.waitForTimeout(1200);return motion.evaluate(()=>{const f=window.__lineFrames;window.__lineFrames=[];return {draw:f.filter(x=>x==='draw').length,erase:f.filter(x=>x==='erase').length,rule:f.filter(x=>x==='rule').length};});};
+  const motionResult={};
+  for(const style of ['line','classic']){
+    await motion.evaluate(s=>{applyUiStyle(s,{persist:false});switchTab('orders');},style);await frames();
+    const steps={tab:await motion.evaluate(()=>switchTab('cp')).then(frames)};
+    await motion.click('[data-bl-view-picker="cp"] [data-bl-view-trigger]');steps.menuOpen=await frames();
+    await motion.keyboard.press('Escape');steps.menuClose=await frames();
+    await motion.click('[data-bl-view-picker="cp"] [data-bl-view-trigger]');await motion.waitForTimeout(300);await motion.click('[data-table-fields="cp"]');steps.drawerOpen=await frames();
+    await motion.click('[data-table-fields-close]').catch(()=>motion.keyboard.press('Escape'));steps.drawerClose=await frames();
+    steps.logo=await motion.evaluate(()=>getComputedStyle(document.querySelector('.rail .blLineLogo')).display);
+    motionResult[style]=steps;
+    const ok=style==='line'
+      ?steps.tab.rule>0&&steps.menuOpen.draw>0&&steps.menuClose.erase>0&&steps.drawerOpen.draw>0&&steps.drawerClose.erase>0&&steps.logo==='block'
+      :Object.values(steps).every(v=>typeof v==='string'?v==='none':v.draw+v.erase+v.rule===0);
+    if(!ok)failures.push(`motion ${style} · ${JSON.stringify(steps)}`);
+  }
+  await motionContext.close();
+  fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({totals,failures,report,motion:motionResult},null,2));
   assert.deepEqual(failures.slice(0,40),[],`${failures.length} Line style family deviations`);
   for(const family of Object.keys(FAMILIES))assert.ok(totals[family]>0,`${family}: no instance was rendered; the audit lost coverage`);
   assert.deepEqual(errors,[],'browser errors');
   console.log(`PASS Line style: ${tabs.length} modules × light/dark + 4 drawers · ${Object.entries(totals).map(([k,v])=>k+' '+v).join(' · ')}`);
+  console.log(`PASS Report view in place (${Object.entries(report).map(([k,v])=>k+' '+v).join(', ')}) · Line motion draws/erases every surface, Classic adds none · Line logo only in Line`);
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{
   if(browser)await browser.close();
   if(server.exitCode===null){const stopped=new Promise(r=>server.once('exit',r));server.kill('SIGTERM');const timer=setTimeout(()=>server.kill('SIGKILL'),5000);await stopped;clearTimeout(timer);}

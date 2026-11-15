@@ -13217,7 +13217,7 @@ html[data-ui-system="manifest"] .blDetailReportStats span {font-size:var(--ui-fo
 }
 html[data-ui-system="manifest"] .blDetailReportAccent {background:var(--ui-accent) !important
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeCell {background-color:var(--ui-selected) !important;box-shadow:none !important
 }
@@ -13225,11 +13225,15 @@ html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeEdg
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridActiveCell {outline:2px solid var(--ui-accent);outline-offset:-2px
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1.35
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1.35
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td {border-bottom:0 !important;line-height:1.4
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable td {border-bottom:0 !important;line-height:1.4
 }
 html[data-ui-system="manifest"] .blDetailReportPrimary {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .blTableReportBar {z-index:var(--ui-z-sticky);background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blTableReportBar b {color:var(--ui-text) !important;font-weight:600 !important
 }
 html[data-ui-system="manifest"] .blDetailReportSub {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
@@ -16105,4 +16109,39 @@ html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line
 html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.lflCard,.ocCard,.backlogChartPanel) {box-shadow:none !important
 }
 html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) :is(.lflCard,.lflScenarioCard,.ocCard) * {--ui-group-divider:var(--ui-line-ink)
+}
+/* Çizgi stili kimliği: logo, açılış (boot) ekranı ve giriş ekranı. Logo tek çizgi BL
+   monogramı + cetvel çentikleri + kırmızı işaret; Motion+ açılışta çizer. Klasik stilde
+   SVG [hidden] kalır, görsel logo değişmez. */
+html[data-ui-system="manifest"][data-ui-style="line"] .blLineLogo[hidden] {display:block !important;width:100%;height:100%;overflow:visible
+}
+html[data-ui-system="manifest"][data-ui-style="line"] :is(.brandMarkImage,.logoMark--image>img) {display:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .blLineLogo path {fill:none;stroke:var(--ui-line-ink);stroke-width:3.4;stroke-linecap:square;stroke-linejoin:miter
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .blLineLogo :is(.blLineLogoFrame,.blLineLogoTicks) {stroke-width:2.2
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .blLineLogo .blLineLogoMark {stroke:var(--ui-line-mark)
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line) .rail .brandMark--image {background:transparent !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootOrb {display:none !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootLogo {width:56px;height:56px;margin:0 0 20px
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootCard {border:1px solid var(--ui-line-ink) !important;background:var(--ui-canvas) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard :is([data-boot-message],.blTriviaCopy h2) {font-weight:500 !important;letter-spacing:-.01em
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootStages span {background:transparent !important;border-bottom:1px solid var(--ui-row-divider) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootStages span[data-active="true"] {border-bottom:2px solid var(--ui-line-ink) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] #blBootGuard .blBootStages span[data-done="true"] {color:var(--ui-text) !important;border-bottom:1px solid var(--ui-line-ink) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .brandPane {background:transparent;border-width:0 1px 0 0;border-style:solid;border-color:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .inputWrap {background-color:transparent;border-width:0 0 1px;border-style:solid;border-color:var(--ui-line-ink)
+}
+html[data-ui-system="manifest"][data-ui-style="line"] .inputWrap input {border:0 !important;background-color:transparent !important
 }
