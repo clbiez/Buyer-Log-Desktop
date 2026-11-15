@@ -412,8 +412,16 @@ function tableSearchMatches(haystack,terms,options){
   const parsed=Array.isArray(terms)?terms:parseTableSearchTerms(terms);
   if(!parsed.length)return true;
   const plainMode=options?.plainMode||'exact';
-  const normalize=value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR')
-    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  // tr-TR büyük harf + Türkçe harf sadeleştirme + küçük harf. Metin yalnız ASCII
+  // ve Türkçe harflerden oluşuyorsa aynı sonuç yerel ayar dönüşümü olmadan
+  // üretilir (her satırın tüm arama metnine uygulanan sıcak yol); diğer
+  // karakterlerde birebir eski dönüşüm çalışır.
+  const normalize=value=>{
+    const text=String(value==null?'':value).trim();
+    if(/^[\x00-\x7FçğıöşüÇĞİÖŞÜ]*$/.test(text))return text.replace(/İ/g,'I').toLowerCase().replace(/[çğıöşü]/g,ch=>'cgiosu'['çğıöşü'.indexOf(ch)]); // i18n-ignore
+    return text.toLocaleUpperCase('tr-TR')
+      .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  };
   const text=normalize(haystack);
   const exactMatch=(source,needle)=>{
     if(!needle)return false;
@@ -9452,7 +9460,29 @@ function matchesQuickExFactory(row, period){
 // AYNI iki yuklemi kullanir: cpPassesBase (aynali olmayan tum filtreler) + cpPassesGroup
 // (Priority / STATUS / Del. Type / Season / Ex-factory gruplarindan biri). Boylece capraz
 // kapsamlarin tamami tek gecisten turetilebiliyor ve mantik kaymasi mumkun degil.
-const CP_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
+const CP_BASE_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
+// Ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line aramaya kanonik alan
+// bağlamalarıyla (cp + orders) girer; ham başlık listesi burada çoğaltılmaz.
+const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line'];
+function cpCanonicalSearchKeys(fields,ids){
+  const keys=[];
+  ids.forEach(id=>['cp','orders'].forEach(mod=>{ (fields?.bindingFor?.(mod,id)?.keys||[]).forEach(k=>keys.push(k)); }));
+  return keys;
+}
+const CP_SEARCH_KEYS=Array.from(new Set([...CP_BASE_SEARCH_KEYS,...cpCanonicalSearchKeys(window.BLCanonicalFields,CP_CANONICAL_SEARCH_FIELDS)]));
+// CP/Siparişler arama metni: yalnız dolu alanlar eklenir. Kanonik bağlamaların
+// çoğu başlık varyantı satırda bulunmaz; boşları atlamak 30k satırda süzgeç
+// geçişini eski alan sayısına yakın tutar.
+function cpSearchHaystack(r){
+  let hay='';
+  for(let i=0;i<CP_SEARCH_KEYS.length;i++){
+    const v=r[CP_SEARCH_KEYS[i]];
+    if(v==null||v==='')continue;
+    const s=norm(v).toLowerCase();
+    if(s)hay=hay?hay+' '+s:s;
+  }
+  return hay;
+}
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
   {id:'status',col:'STATUS'},
@@ -9500,9 +9530,7 @@ function cpPassesBase(r,ctx){
   if(ctx.fC && norm(r['Country'])!==ctx.fC) return false;
   if(ctx.fL && norm(r['License'])!==ctx.fL) return false;
   if(ctx.q.length){
-    let hay='';
-    for(let i=0;i<CP_SEARCH_KEYS.length;i++){ if(i)hay+=' '; hay+=norm(r[CP_SEARCH_KEYS[i]]).toLowerCase(); }
-    if(!tableSearchMatches(hay,ctx.q,{plainMode:'contains'})) return false;
+    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,{plainMode:'contains'})) return false;
   }
   return true;
 }
@@ -9883,9 +9911,7 @@ function ordersPassesBase(row,ctx,ignoreActive=false){
   if(ctx.fC&&norm(row.Country)!==ctx.fC)return false;
   if(ctx.fL&&norm(row.License)!==ctx.fL)return false;
   if(ctx.q.length){
-    let hay='';
-    for(let i=0;i<CP_SEARCH_KEYS.length;i++){if(i)hay+=' ';hay+=norm(row[CP_SEARCH_KEYS[i]]).toLowerCase();}
-    if(!tableSearchMatches(hay,ctx.q,{plainMode:'contains'}))return false;
+    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,{plainMode:'contains'}))return false;
   }
   if(!ignoreActive){
     if(ctx.activeFilter&&!preparedColFilterPasses(ctx.activeFilter,'Active/Inactive',row))return false;
@@ -26988,8 +27014,10 @@ function kolSearchHaystack(row){
 function tableSearchSpace(tab){
   if(tab==='cp'||tab==='orders'){
     const rows=(tab==='cp'?state.cp?.rows:state.orders?.rows)||[];
-    const haystacks=rows.map(r=>CP_SEARCH_KEYS.map(k=>norm(r[k]).toLowerCase()).join(' '));
-    return {tab,rows,haystacks,fields:CP_SEARCH_KEYS.map(k=>({key:k,label:k})),valueOf:(row,key)=>row?.[key]};
+    const haystacks=rows.map(cpSearchHaystack);
+    // Kanonik başlık varyantlarından yalnız veride dolu olanlar LCW AI bağlamına gider.
+    const present=CP_SEARCH_KEYS.filter(k=>rows.some(r=>r&&r[k]!=null&&r[k]!==''));
+    return {tab,rows,haystacks,fields:present.map(k=>({key:k,label:k})),valueOf:(row,key)=>row?.[key]};
   }
   if(tab==='koleksiyon'){
     const rows=Array.isArray(kolRows)?kolRows:[];

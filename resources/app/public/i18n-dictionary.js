@@ -1697,7 +1697,7 @@ pairs:[
 ["MMYG: hepsi","MMYG: all"],
 ["ortak/yerel horizon — tüm veri kaynağı","shared/local horizon — full data source"],
 ["CP verisini yüklemek için Kaynak Veri panelini kullan.","Use the Source Data panel to load CP data."],
-["PLM ID, model, lisans, üretici, alt üretici, özel kod, renk kodu, sipariş kodu ara…","Search PLM ID, model, license, manufacturer, sub-manufacturer, special code, colour code, order code…"],
+["PLM ID, model, ürün tanımı, kategori, MAG, Buyer Grup, Buyer, Line, lisans, üretici, alt üretici, özel kod, renk kodu, sipariş kodu ara…","Search PLM ID, model, product description, category, MAG, buyer group, buyer, line, license, manufacturer, sub-manufacturer, special code, colour code, order code…"],
 ["License Royalty hesaplarını düzenle","Edit License Royalty calculations"],
 ["Ülke: hepsi","Country: all"],
 ["Lisans: hepsi","License: all"],

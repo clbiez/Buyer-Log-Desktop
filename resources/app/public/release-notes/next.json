@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. Beklenmeyen JS/Promise hataları ekranda kalan kırmızı kutu yerine kendiliğinden kapanan hata bildirimi olarak görünür ve Bildirim Geçmişi'ne yazılır.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. Unexpected JS/Promise errors now appear as a self-closing error notification recorded in Notification History instead of a red box that stayed on screen."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. CP Tracker ve Siparişler araması ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line alanlarında da arar. Beklenmeyen JS/Promise hataları ekranda kalan kırmızı kutu yerine kendiliğinden kapanan hata bildirimi olarak görünür ve Bildirim Geçmişi'ne yazılır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. CP Tracker and Orders search also looks in product description, category, MAG, buyer group, buyer and line. Unexpected JS/Promise errors now appear as a self-closing error notification recorded in Notification History instead of a red box that stayed on screen."
   },
   "changes": [
     {
@@ -600,6 +600,35 @@
       "body": {
         "tr": "Tablo Filtreleri alanındaki çipler, checklist sütunlarında “__checklist__…” gibi iç anahtarları gösteriyordu. Çip adı artık tablo başlığıyla aynı kaynaktan gelir: checklist, formül ve sonradan eklenen sütunlar ile sütunlara verdiğiniz kişisel adlar başlıkta nasıl görünüyorsa çipte de öyle görünür ve dil değişimine uyar. Koleksiyon'da da kişisel sütun adları çipte kullanılır.",
         "en": "Chips in the Table Filters area showed internal keys such as “__checklist__…” for checklist columns. The chip name now comes from the same source as the table header: checklist, formula and added columns, and the personal names you gave columns, appear in the chip exactly as in the header and follow the language switch. Collection chips use personal column names too."
+      }
+    },
+    {
+      "id": "cp-orders-search-more-fields",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Arama kutusu daha fazla alanda arar",
+        "en": "Search box looks in more fields"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-search-more-fields.png",
+        "alt": {
+          "tr": "CP Tracker'da arama kutusuna bir Buyer adı yazılmış; tablo yalnız o Buyer'ın satırlarını gösteriyor",
+          "en": "In CP Tracker a buyer name is typed into the search box; the table shows only that buyer's rows"
+        },
+        "caption": {
+          "tr": "Buyer adıyla arama yalnız o Buyer'ın kayıtlarını getirir; MAG, Line, kategori ve Buyer Grup da aynı şekilde aranır.",
+          "en": "Searching for a buyer name returns only that buyer's records; MAG, line, category and buyer group are searched the same way."
+        }
+      },
+      "body": {
+        "tr": "CP Tracker ve Siparişler'deki arama kutusu artık ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line sütunlarında da arar. Örneğin bir Buyer adı, MAG kodu veya Line yazarak ilgili kayıtları doğrudan bulabilirsiniz. Önceki arama alanları ve virgül/noktalı virgül/! yazımları aynen çalışır; ! ile hariç tutma bu yeni alanları da kapsar. Arama büyük tablolarda da daha hızlı süzer.",
+        "en": "The search box in CP Tracker and Orders now also looks in the product description, category, MAG, buyer group, buyer and line columns. For example, type a buyer name, MAG code or line to find the related records directly. The earlier search fields and the comma/semicolon/! syntax work as before; exclusion with ! also covers these new fields. Search also filters faster on large tables."
       }
     },
     {

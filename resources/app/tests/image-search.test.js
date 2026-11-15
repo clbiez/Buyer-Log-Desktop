@@ -86,10 +86,12 @@ test('app-main: arama uzayı ekrandaki aramayla aynı alanları ve haystack’i 
   const body = source.match(/\nfunction tableSearchSpace\(tab\)\{[^]*?\n\}/);
   assert.ok(body, 'tableSearchSpace bulunmalı');
   assert.match(source, /window\.BLTableSearch\.searchSpace=tableSearchSpace;/);
-  const cpKeys = source.match(/const CP_SEARCH_KEYS=(\[[^\]]*\]);/)[1];
+  const cpKeys = source.match(/const CP_BASE_SEARCH_KEYS=(\[[^\]]*\]);/)[1];
+  const cpHaystack = source.match(/\nfunction cpSearchHaystack\(r\)\{[^]*?\n\}/);
   const space = Function('state', 'kolRows', `
     const norm = value => String(value == null ? '' : value).trim();
     const CP_SEARCH_KEYS = ${cpKeys};
+    ${cpHaystack[0]}
     const KOL_SEARCH_KEYS = ['plmId', 'modelKod'];
     const kolSearchHaystack = row => row.plmId + ' ' + row.modelKod.toLowerCase();
     const kolColDefs = () => [{ k: 'plmId', label: 'PLM ID' }];
@@ -103,13 +105,15 @@ test('app-main: arama uzayı ekrandaki aramayla aynı alanları ve haystack’i 
   assert.match(cp.haystacks[0], /bost/);
   assert.doesNotMatch(cp.haystacks[0], /6217/, 'arama alanı olmayan sütun (adet) eşleşmeye girmez');
   assert.ok(cp.fields.some(field => field.label === 'Order Code'));
+  assert.ok(!cp.fields.some(field => field.label === 'Colour'), 'veride boş arama alanı LCW AI bağlamına girmez');
   assert.deepEqual(space('orders').haystacks, []);
   const kol = space('koleksiyon');
   assert.deepEqual(kol.haystacks, ['2135851 bost']);
   assert.deepEqual(kol.fields, [{ key: 'plmId', label: 'PLM ID' }, { key: 'modelKod', label: 'modelKod' }]);
   assert.equal(space('shipping'), null);
-  // CP ve Siparişler süzgeci aynı CP_SEARCH_KEYS haystack'ini kurar.
-  assert.equal((source.match(/for\(let i=0;i<CP_SEARCH_KEYS\.length;i\+\+\)/g) || []).length, 2);
+  // CP ve Siparişler süzgeci ile arama uzayı aynı cpSearchHaystack'i kullanır.
+  assert.equal((source.match(/tableSearchMatches\(cpSearchHaystack\((?:r|row)\),ctx\.q/g) || []).length, 2);
+  assert.match(body[0], /rows\.map\(cpSearchHaystack\)/);
 });
 
 test('LCW AI sözleşmesi: image-search tek AI yolundan geçer, cevap şekli denetlenir', () => {
