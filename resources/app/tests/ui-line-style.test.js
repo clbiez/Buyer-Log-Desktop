@@ -268,3 +268,15 @@ test('Line labels and charts follow presentation A: ink, gray steps, hatch and o
   // The map palette refreshes when the style changes.
   assert.match(read('overview-global-flow.js'), /attributeFilter:\['data-theme','lang','data-ui-scale','data-ui-style'\]/);
 });
+
+test('Line paper is neutral off-white and selected quick filters are ecru on ink', () => {
+  const tokens = read('ui-tokens.css');
+  const light = tokens.slice(tokens.indexOf(':root[data-ui-style="line"]{'), tokens.indexOf(':root[data-ui-style="line"][data-theme="dark"]{'));
+  assert.match(light, /--ui-canvas:#f8f7f4;--ui-rail:#f8f7f4;--ui-surface:#f8f7f4;/);
+  assert.match(light, /--ui-line-paper:#f8f7f4;/);
+  assert.doesNotMatch(light, /#f3efe6/, 'the yellowish paper is retired');
+  const css = read('ui-components.css');
+  assert.match(css, /\[data-ui-style="line"\]:not\(#bl-line\):not\(#bl-line-x\) \.kpi\.active \{background:var\(--ui-line-ink\) !important;color:var\(--ui-line-paper\) !important/);
+  // The TEST publisher runs on an image Playwright can provision.
+  assert.match(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows', 'buyerlog-test-release.yml'), 'utf8'), /publish:\n    needs: full-regression\n[\s\S]*?runs-on: ubuntu-24\.04/);
+});

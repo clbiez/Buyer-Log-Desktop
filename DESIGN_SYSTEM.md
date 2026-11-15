@@ -136,7 +136,8 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
   Çubuklar 1px taban + 3px dolgu, aylık sütunlar 2px gövdedir. Kategori paletleri `var(--ui-chart-N)`
   kullanır (Klasik'te chart-1/2/6/7 vurgu/uyarı/başarı/tehlikenin aynısıdır); JS'te çizim anında
   çözümlenmiş renk yerine canlı token tercih edilir. Kabul betiği etiket ve grafik işaretlerinin
-  nötr ya da tek kırmızı olduğunu açık/koyu temada denetler.
+  nötr ya da tek kırmızı olduğunu açık/koyu temada denetler. Açık temada kâğıt nötr kırık beyazdır
+  (`#f8f7f4`); hızlı filtrelerde seçili değer (`.kpi.active`) mürekkep zemin üzerinde kâğıt rengi yazıdır.
 - **Çizgi kimliği:** logo tek çizgi BL monogramı, cetvel çentikleri ve `--ui-line-mark` işaretinden
   oluşan satır içi SVG'dir (`.blLineLogo`, `hidden`). Kenar çubuğu, açılış (boot) kartı ve giriş
   ekranında bulunur; yalnız Çizgi stili gösterir ve Motion+ açılışta ve stile geçişte bir kez çizer.

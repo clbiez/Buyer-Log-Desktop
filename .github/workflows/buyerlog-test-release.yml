@@ -98,7 +98,9 @@ jobs:
           }
   publish:
     needs: full-regression
-    runs-on: ubuntu-latest
+    # ubuntu-latest moved to 26.04, which Playwright 1.56.1 cannot provision
+    # (run 43714658335). Pin the LTS image the browser acceptance supports.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout release request
         uses: actions/checkout@v4

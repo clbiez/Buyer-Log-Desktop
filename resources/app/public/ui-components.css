@@ -16200,3 +16200,10 @@ html[data-ui-system="manifest"][data-ui-style="line"] .mfpMonthBars {gap:4px
 }
 html[data-ui-system="manifest"][data-ui-style="line"] .mfpMonthBars i {width:2px;max-width:2px
 }
+/* Çizgi stili hızlı filtreler: seçili değer mürekkep zemin üzerinde kâğıt (ekru) yazı; sayı ve etiket aynı. */
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .kpi.active {background:var(--ui-line-ink) !important;color:var(--ui-line-paper) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .kpi.active :is(.n,.l,.v,b,span),html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .kpi.active::after {color:var(--ui-line-paper) !important
+}
+html[data-ui-system="manifest"][data-ui-style="line"]:not(#bl-line):not(#bl-line-x) .kpi.active:hover {background:var(--ui-line-ink-hover) !important
+}

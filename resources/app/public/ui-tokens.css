@@ -102,22 +102,23 @@
 @font-face{font-family:"BL JetBrains Mono";font-style:normal;font-weight:600;font-display:swap;src:url("vendor/fonts/jetbrains-mono-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
 :root[data-ui-style="line"]{
  color-scheme:light;
+ /* Nötr kâğıt (kullanıcı seçimi B): sarılık alındı, hafif sıcaklık kaldı; gri basamaklar bu zemine göre. */
  --ui-font-body:"BL Schibsted Grotesk","BL Plex Sans",sans-serif;--ui-font-heading:"BL Schibsted Grotesk","BL Plex Sans",sans-serif;--ui-font-mono:"BL JetBrains Mono","BL Plex Mono",monospace;
- --ui-canvas:#f3efe6;--ui-rail:#f3efe6;--ui-surface:#f3efe6;--ui-surface-soft:#efebe1;--ui-surface-strong:#ddd9d0;
+ --ui-canvas:#f8f7f4;--ui-rail:#f8f7f4;--ui-surface:#f8f7f4;--ui-surface-soft:#f3f2ee;--ui-surface-strong:#e2e1dd;
  --ui-text:#17150f;--ui-text-secondary:#3a362d;--ui-text-muted:#5b564b;
- --ui-accent:#17150f;--ui-accent-hover:#3a362d;--ui-selected:#e2ded5;--ui-selected-ink:#17150f;--ui-on-accent:#f3efe6;
+ --ui-accent:#17150f;--ui-accent-hover:#3a362d;--ui-selected:#e7e6e2;--ui-selected-ink:#17150f;--ui-on-accent:#f8f7f4;
  /* Sunum A (Cetvel): kırmızı yalnız kritik/tehlike; olumlu ve uyarı durumları mürekkep, zemin tonları nötr ama bilgi taşımaya devam eder. */
  --ui-success:#17150f;--ui-success-bg:rgba(23,21,15,.06);--ui-danger:#c23a1b;--ui-danger-bg:rgba(194,58,27,.10);--ui-warning:#17150f;--ui-warning-bg:rgba(23,21,15,.08);
- --ui-header-bg:#f3efe6;--ui-header-ink:#5b564b;--ui-group-header-bg:#f3efe6;--ui-group-header-ink:#5b564b;
- --ui-check-idle:#9c978c;--ui-row-divider:#d9d5cc;--ui-group-divider:#17150f;--ui-field-border:#17150f;
- --ui-row-hover:#e8e4db;--ui-status-default:#5b564b;--ui-backdrop-tint:rgba(23,21,15,.05);
+ --ui-header-bg:#f8f7f4;--ui-header-ink:#5b564b;--ui-group-header-bg:#f8f7f4;--ui-group-header-ink:#5b564b;
+ --ui-check-idle:#9c978c;--ui-row-divider:#dedcd8;--ui-group-divider:#17150f;--ui-field-border:#17150f;
+ --ui-row-hover:#edece8;--ui-status-default:#5b564b;--ui-backdrop-tint:rgba(23,21,15,.05);
  --ui-shadow-color:rgba(23,21,15,.16);--ui-shadow-overlay:0 18px 40px var(--ui-shadow-color);
  /* Seriler mürekkep ve gri basamaklarla, taralı desenle ayrılır; kırmızı yalnız kritik/tehlikedir (chart-7). */
- --ui-chart-2:#6b6861;--ui-chart-3:#928f87;--ui-chart-4:#bab6ae;--ui-chart-5:#43413a;--ui-chart-6:#d4d0c8;--ui-chart-8:#a4a099;
+ --ui-chart-2:#6c6b66;--ui-chart-3:#95948f;--ui-chart-4:#bebcb8;--ui-chart-5:#44423d;--ui-chart-6:#d8d7d4;--ui-chart-8:#a7a6a2;
  /* Taralı seri dolgusu yalnız taralı aşamada tanımlanır; diğerleri initial ile düz renge düşer. */
  --ui-line-series-fill:initial;
- --ui-line-hatch:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%2317150f%27 stroke-width=%271.4%27/%3E%3C/svg%3E");--ui-line-hatch-soft:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%236b6861%27 stroke-width=%271.4%27/%3E%3C/svg%3E");
- --ui-line-ink:#17150f;--ui-line-mark:#c23a1b;--ui-line-paper:#f3efe6;--ui-line-ink-hover:#3a362d;
+ --ui-line-hatch:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%2317150f%27 stroke-width=%271.4%27/%3E%3C/svg%3E");--ui-line-hatch-soft:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%236c6b66%27 stroke-width=%271.4%27/%3E%3C/svg%3E");
+ --ui-line-ink:#17150f;--ui-line-mark:#c23a1b;--ui-line-paper:#f8f7f4;--ui-line-ink-hover:#3a362d;
 }
 :root[data-ui-style="line"][data-theme="dark"]{
  color-scheme:dark;
