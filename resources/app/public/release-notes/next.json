@@ -659,6 +659,35 @@
         "tr": "Beklenmeyen bir JS veya Promise hatası (ör. “Cannot read properties of null”) sol altta silinmeyen kırmızı bir kutuda birikiyordu. Artık diğer bildirimlerle aynı yerde hata bildirimi olarak görünür, birkaç saniye sonra kendiliğinden kapanır ve zil simgesindeki Bildirim Geçmişi'ne kaydedilir. Aynı hata art arda tekrarlanırsa bir kez gösterilir.",
         "en": "An unexpected JS or Promise error (e.g. “Cannot read properties of null”) used to pile up in a red box at the bottom left that never went away. It now appears as an error notification alongside the other notifications, closes by itself after a few seconds and is saved to Notification History under the bell icon. The same error repeated in a row is shown once."
       }
+    },
+    {
+      "id": "overview-horizon-overdue-production-only",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Termin Ufku: tarihi geçmiş sayısı yalnız üretimdeki siparişleri sayar",
+        "en": "Delivery Horizon: the past-date count only includes orders still in production"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-horizon-overdue-production-only.png",
+        "alt": {
+          "tr": "Planlı yükleme tarihi geçmiş listesinde yalnız Üretimde durumundaki demo siparişler",
+          "en": "The planned-loading-date-passed list showing only demo orders with In Production status"
+        },
+        "caption": {
+          "tr": "Yükleme, Yol, Gümrük-Liman ve Depo aşamasındaki siparişler artık listede yer almaz.",
+          "en": "Orders in Loading, Transit, Customs & Port and Warehouse stages are no longer listed."
+        }
+      },
+      "body": {
+        "tr": "Termin Ufku'ndaki “tarihi geçmiş” sayısı ve açılan Planlı Yükleme Tarihi Geçmiş listesi, Ex-F tarihi geçmiş olsa da üretimi bitmiş (Yükleme Operasyonları, Yol Operasyonları, Gümrük-Liman Operasyonları, Depoda, Retaile Aktarım Bekliyor) siparişleri de sayıyordu. Artık yalnız üretimi süren siparişler sayılır; eksik yüklemeler ve durumu tanınmayan satırlar görünür kalır.",
+        "en": "The “past date” count in the Delivery Horizon and the Planned Loading Date Passed list also counted orders whose production had already finished (Loading, Transit, Customs & Port, In Warehouse, Awaiting Retail Transfer) when their Ex-F date had passed. Now only orders still in production are counted; shortages and rows with an unrecognised status stay visible."
+      }
     }
   ]
 }
