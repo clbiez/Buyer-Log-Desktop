@@ -50,6 +50,9 @@
   const DIMENSIONS = Object.freeze(['buyer', 'buyingGroup', 'manufacturer', 'subManufacturer', 'season', 'category', 'country', 'deliveryType', 'line', 'importance']);
   /* Önem etiketi olmayan sipariş Regular'dır (public/order-importance.js). */
   const REGULAR_IMPORTANCE = 'Regular';
+  /* Öncelik kırılımı DIMENSIONS'ta değildir: canonical alan değil, CP ortak
+     öncelik dizininden gelen türetilmiş değerdir (app-main.js → BLCpPriorityIndex). */
+  const PRIORITY_DIMENSION = 'priority';
   const TIMELINE_FIELDS = Object.freeze([
     { key:'exFactory', tr:'Ex-Factory (güncel)', en:'Ex-Factory (current)' },
     { key:'antrepo', tr:'Antrepo Giriş', en:'Warehouse Arrival' },
@@ -310,6 +313,25 @@
     const PA = kit(), K = PA.excelKit, C = K.COLORS, FONT = K.FONT;
     const today = opts.today || todayIso();
     const items = normalizeRows(input.rows, { today });
+    /* Öncelik kırılımı: çağıran CP ortak öncelik dizinini (lookup/label/rank)
+       verirse satırlar ana öncelik + takip etiketleriyle işaretlenir. Kurallar
+       burada değerlendirilmez; dizin yoksa rapor eskisi gibi kalır. */
+    const priorityApi = input.priority && typeof input.priority.lookup === 'function' ? input.priority : null;
+    const priorityLabelOf = code => (priorityApi && typeof priorityApi.label === 'function' && priorityApi.label(code)) || code;
+    const priorityRankOf = code => { const rank = priorityApi && typeof priorityApi.rank === 'function' ? Number(priorityApi.rank(code)) : NaN; return Number.isFinite(rank) ? rank : 999; };
+    if (priorityApi) items.forEach(item => {
+      let hit = null;
+      try { hit = priorityApi.lookup(item.orderCode, item.modelName, item.colourCode); } catch (_) { hit = null; }
+      item.priorityCode = hit && hit.priority ? String(hit.priority) : '';
+      item[PRIORITY_DIMENSION] = item.priorityCode ? priorityLabelOf(item.priorityCode) : L('(CP eşleşmesi yok)', '(no CP match)');
+      item.trackingTagsText = (hit && Array.isArray(hit.trackingTags) ? hit.trackingTags : []).filter(code => code && code !== item.priorityCode).map(priorityLabelOf).join(', ');
+    });
+    const dimName = id => (id === PRIORITY_DIMENSION ? L('Öncelik', 'Priority') : dimLabel(id, lang));
+    const groupsFor = id => {
+      const list = groupBy(items, id, { blank:L('(boş)', '(blank)') });
+      if (id === PRIORITY_DIMENSION) list.sort((a, b) => priorityRankOf(a.items[0] && a.items[0].priorityCode || '') - priorityRankOf(b.items[0] && b.items[0].priorityCode || '') || b.qty - a.qty);
+      return list;
+    };
     const total = summarize(items);
     const wb = opts.workbook || new ExcelJS.Workbook();
     if (!opts.workbook) { wb.creator = 'Buyer Log'; wb.created = new Date(); }
@@ -431,15 +453,15 @@
     charts.push(...flowCharts);
 
     /* ---- Özet altı: seçili kırılım + %100 yığılmış yatay bar ---- */
-    const dimKey = DIMENSIONS.includes(input.groupBy) ? input.groupBy : 'buyer';
-    const groups = groupBy(items, dimKey, { blank:L('(boş)', '(blank)') });
-    K.sectionTitle(dash, 27, 2, 17, dimLabel(dimKey, lang) + L(' kırılımı', ' breakdown'));
-    const gt = writeStageTable(dash, 28, groups, dimLabel(dimKey, lang));
+    const dimKey = DIMENSIONS.includes(input.groupBy) || (input.groupBy === PRIORITY_DIMENSION && priorityApi) ? input.groupBy : 'buyer';
+    const groups = groupsFor(dimKey);
+    K.sectionTitle(dash, 27, 2, 17, dimName(dimKey) + L(' kırılımı', ' breakdown'));
+    const gt = writeStageTable(dash, 28, groups, dimName(dimKey));
     if (groups.length) {
       const top = Math.min(groups.length, 25), from = gt.firstRow, to = gt.firstRow + top - 1;
       charts.push({ worksheet:dash, anchor:{ fromCol:1, fromRow:gt.lastRow + 1, toCol:17, toRow:gt.lastRow + 1 + Math.max(14, Math.round(top * 1.6) + 6) }, xml:PA.barChartXml({
         lang, dir:'bar', grouping:'percentStacked', reverse:true, gapWidth:35,
-        title:dimLabel(dimKey, lang) + L(' bazında operasyon dağılımı (%)', ' operational mix (%)'),
+        title:dimName(dimKey) + L(' bazında operasyon dağılımı (%)', ' operational mix (%)'),
         categoriesRef:dn + '!$B$' + from + ':$B$' + to,
         series:STAGES.map((s, si) => ({ name:stageLabel(s.key, lang), color:s.color, ref:dn + '!$' + K.colName(gt.stageFirstCol + si) + '$' + from + ':$' + K.colName(gt.stageFirstCol + si) + '$' + to })),
       }) });
@@ -451,9 +473,9 @@
     for (let c = 4; c <= 4 + STAGES.length + 4; c += 1) br.getColumn(c).width = 13;
     K.sheetTitle(br, L('Kırılım bazında operasyon durumu', 'Operational status by dimension'), subtitle, 3 + 5 + STAGES.length);
     let bc = 4;
-    ['importance', 'buyer', 'buyingGroup', 'manufacturer', 'season', 'category', 'deliveryType', 'country'].forEach(id => {
-      K.sectionTitle(br, bc, 2, 3 + 5 + STAGES.length, dimLabel(id, lang));
-      const res = writeStageTable(br, bc + 1, groupBy(items, id, { blank:L('(boş)', '(blank)') }), dimLabel(id, lang));
+    [...(priorityApi ? [PRIORITY_DIMENSION] : []), 'importance', 'buyer', 'buyingGroup', 'manufacturer', 'season', 'category', 'deliveryType', 'country'].forEach(id => {
+      K.sectionTitle(br, bc, 2, 3 + 5 + STAGES.length, dimName(id));
+      const res = writeStageTable(br, bc + 1, groupsFor(id), dimName(id));
       bc = res.lastRow + 3;
     });
 
@@ -498,6 +520,10 @@
     const cols = [
       [L('Aşama', 'Stage'), 22, it => stageLabel(it.stage, lang)],
       [L('Ex-F geçti (gün)', 'Ex-F passed (days)'), 11, it => it.overdueDays || null, 'qty'],
+      ...(priorityApi ? [
+        [L('Öncelik', 'Priority'), 22, it => it[PRIORITY_DIMENSION] || null],
+        [L('Takip etiketleri', 'Tracking tags'), 24, it => it.trackingTagsText || null],
+      ] : []),
       ...headers.map(h => [String(h).replace(/\n/g, ' '), Math.min(34, Math.max(10, String(h).length + 2)), it => it.row[h], dateHeaders.has(h) ? 'date' : 'auto']),
     ];
     detail.columns = cols.map(c => ({ header:c[0], width:c[1] }));
@@ -581,7 +607,7 @@
   return Object.freeze({
     STAGES, DIMENSIONS, TIMELINE_FIELDS, PRE_LOAD,
     stageOf, stageLabel, dimLabel, dayIso, normalizeRow, normalizeRows, summarize, groupBy, timeline, isoWeekNo,
-    QUALITY_CHECKS, dataQuality, importanceSummary, REGULAR_IMPORTANCE,
+    QUALITY_CHECKS, dataQuality, importanceSummary, REGULAR_IMPORTANCE, PRIORITY_DIMENSION,
     buildWorkbook, buildXlsx, fileName,
   });
 });

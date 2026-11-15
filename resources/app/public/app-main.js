@@ -20340,7 +20340,17 @@ async function exportBacklogV3(){
     const guards=opts.includeLegacy&&window.BLExcelWorkbookGuards&&typeof JSZip!=='undefined'
       ?buffer=>BLExcelWorkbookGuards.applyWorkbookGuards(buffer,{validations:rules.validations,conditionalFormats:rules.conditionalFormats,protections:rules.protections,freezePanes:rules.freezePanes},JSZip,'uint8array')
       :null;
-    const out=await window.BLBacklogV3Report.buildXlsx({rows:data.rows||[],headers,groupBy:opts.groupBy,filterText:backlogV3FilterText(),planActual},{
+    // Öncelik kırılımı CP ortak öncelik dizininden gelir; hazır değilse dışa aktarma
+    // (kullanıcı eylemi) için bir kez hazırlanır. Hazırlanamazsa rapor öncelik sütunsuz çıkar.
+    const priorityIndex=window.BLCpPriorityIndex;
+    const priorityReady=priorityIndex&&(priorityIndex.ready()||await priorityIndex.ensure().catch(()=>false));
+    const OD=window.BLOrderDecisionEngine;
+    const priority=priorityReady?{
+      lookup:priorityIndex.lookup,
+      label:code=>OD&&typeof OD.priorityLabel==='function'?OD.priorityLabel(code,en?'en':'tr'):code,
+      rank:code=>OD&&typeof OD.priorityRank==='function'?OD.priorityRank(code):999,
+    }:null;
+    const out=await window.BLBacklogV3Report.buildXlsx({rows:data.rows||[],headers,groupBy:opts.groupBy,filterText:backlogV3FilterText(),planActual,priority},{
       ExcelJS,JSZip:typeof JSZip!=='undefined'?JSZip:null,lang:appLang,workbook:book,outputType:'uint8array',afterWrite:guards,
       onChartError:err=>console.warn('[Backlog V3] Excel grafikleri eklenemedi',err),
     });

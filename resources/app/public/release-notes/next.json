@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown."
   },
   "changes": [
     {
@@ -490,6 +490,58 @@
       "body": {
         "tr": "İlk 5 satırlık çubuk listesi yerine Backlog grafikleriyle aynı görünümde sütun/çizgi grafiği geldi. Eksen pivotun ilk satır alanı, seriler sütun alanı (yoksa ikinci satır alanı) olur; değerler pivotla aynı hesaplanır. Yığılmış, gruplu ve çizgi görünümü seçilebilir, lejanttan seri gizlenir, sütuna tıklayınca detay açılır.",
         "en": "The top-5 bar list was replaced with a column/line chart that looks like the Backlog charts. The axis is the pivot's first row field and series come from the column field (or the second row field); values are calculated like the pivot. Stacked, grouped and line views are available, series can be hidden from the legend, and clicking a column opens its detail."
+      }
+    },
+    {
+      "id": "global-flow-priority-marker",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Küresel Akış Haritası",
+        "en": "Overview · Global Flow Map"
+      },
+      "title": {
+        "tr": "Haritada öncelik etiketi işareti",
+        "en": "Priority tag marker on the map"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-priority-marker.png",
+        "alt": {
+          "tr": "Küresel Akış Haritası: araç ve konum karelerinin sol alt köşesinde etiket tonunda eşkenar dörtgen işaretler; lejantta Öncelik etiketi",
+          "en": "Global Flow Map: diamond markers in the tag tone at the bottom-left corner of vehicle and location squares; Priority tag in the legend"
+        },
+        "caption": {
+          "tr": "İşaret, sembolün taşıdığı en öncelikli etiketin rengindedir; üzerine gelince etiketler ve sipariş sayıları görünür.",
+          "en": "The marker takes the colour of the most urgent tag the symbol carries; hover to see the tags and order counts."
+        }
+      },
+      "body": {
+        "tr": "Küresel Akış Haritası'nda Öncelik Kuralları etiketi taşıyan araç, filo ve konumların sol alt köşesinde, en öncelikli etiketin tonunda küçük bir eşkenar dörtgen görünür. Kritik zaten kırmızı alarm noktasıyla gösterildiği için işaret onu tekrarlamaz. Sembolün üzerine gelince ipucunda ilk üç etiket sipariş sayısıyla listelenir; lejanta Öncelik etiketi eklendi. İşaret 2D ve 3D Buyer Log görünümünde çizilir.",
+        "en": "On the Global Flow Map, vehicles, fleets and locations carrying a Priority Rules tag show a small diamond at their bottom-left corner in the tone of the most urgent tag. Critical is already shown by the red alarm dot, so the marker does not repeat it. Hovering a symbol lists the top three tags with order counts in the tooltip; Priority tag was added to the legend. The marker is drawn in the 2D and 3D Buyer Log views."
+      }
+    },
+    {
+      "id": "backlog-v3-excel-priority",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Excel Backlog V3",
+        "en": "Backlog · Excel Backlog V3"
+      },
+      "title": {
+        "tr": "Excel Backlog V3'te Öncelik kırılımı",
+        "en": "Priority breakdown in Excel Backlog V3"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik indirilen Excel dosyasının içeriğindedir; Buyer Log ekranında değişen bir şey yoktur.",
+          "en": "The change is inside the downloaded Excel file; nothing changes on the Buyer Log screen."
+        }
+      },
+      "body": {
+        "tr": "Backlog Genel Bakış'ta Öncelik kırılımı seçiliyken Excel Backlog V3 raporunun Özet sayfası artık Öncelik kırılımını ve grafiğini kullanır (eskiden Buyer'a dönüyordu). Kırılımlar sayfasının başına Öncelik tablosu, Backlog V3 detay sayfasına Öncelik ve Takip etiketleri sütunları eklendi. Değerler CP'deki aynı sipariş/model/renk satırının önceliğinden gelir; CP önceliği hazır değilse rapor önce onu hazırlar, hazırlanamazsa öncelik sütunları olmadan eskisi gibi çıkar.",
+        "en": "With the Priority breakdown selected in Backlog Overview, the Summary sheet of the Excel Backlog V3 report now uses the Priority breakdown and its chart (it used to fall back to Buyer). A Priority table was added at the top of the Breakdowns sheet, and Priority and Tracking tags columns were added to the Backlog V3 detail sheet. Values come from the priority of the matching order/model/colour line in CP; if CP priorities are not ready the report prepares them first, and if that fails it is produced as before without priority columns."
       }
     }
   ]

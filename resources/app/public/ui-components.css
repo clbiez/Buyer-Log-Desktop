@@ -558,6 +558,9 @@ html[data-ui-system="manifest"] .globalFlowLegend .road i {background:var(--ui-w
 }
 html[data-ui-system="manifest"] .globalFlowLegend .critical i {background:transparent !important
 }
+/* Öncelik etiketi işareti haritada etiketin tonundadır; lejant şekli nötr gösterir. */
+html[data-ui-system="manifest"] .globalFlowLegend .priorityTag i {background:var(--ui-text-secondary) !important;transform:rotate(45deg);width:6px !important;height:6px !important
+}
 html[data-ui-system="manifest"] .globalFlowTooltip {z-index:var(--ui-z-data);background:var(--ui-surface) !important;font-size:var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .globalFlowTooltip b {font-size:var(--ui-font-2xs) !important
