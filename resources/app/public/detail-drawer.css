@@ -78,3 +78,16 @@
    Header/export popovers outrank the subbar/Columns popover. */
 .blDetailDrawerHead{position:relative}
 .blDetailTableWrap{position:relative}
+/* Tablo içi Rapor görünümü: tablo kendi kaydırma alanında rapor düzenine döner. */
+.tablewrap.blTableReportMode>table:not(.blTableReportTable),.tablewrap.blTableReportMode>.kolEmptyState{display:none!important}
+.blTableReportInline[hidden]{display:none}
+.blTableReportBar{position:sticky;top:0;left:0;display:flex;align-items:center;gap:10px;height:36px;padding:0 10px}
+.blTableReportBar [data-tr-count]{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blTableReportInline .blDetailTable thead th{top:36px;padding:9px 8px;vertical-align:middle;word-break:normal;overflow-wrap:normal}
+.blTableReportInline .blDetailTable tbody tr{height:auto}
+.blTableReportInline .blDetailTable td{padding:8px;white-space:normal;overflow:visible;vertical-align:top}
+.blTableReportInline .blDetailImageCell{vertical-align:middle}
+.blTableReportInline .blDetailImageCell img{max-height:48px}
+/* Kompakt rapor: her hücre en çok iki satır (birincil + ikincil); tam metin başlık ipucunda. */
+.blTableReportInline .blDetailReportPrimary,.blTableReportInline .blDetailReportSub{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.blTableReportInline .blDetailReportPrimary{-webkit-line-clamp:1}

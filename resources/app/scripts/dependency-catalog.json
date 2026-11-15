@@ -193,23 +193,6 @@
       "patterns": [
         "public/vendor/fonts/IBMPlex"
       ]
-    },
-    {
-      "id": "line-style-fonts",
-      "name": "Schibsted Grotesk and JetBrains Mono WOFF2 subsets",
-      "version": "Fontsource @fontsource/schibsted-grotesk 5.1.0 and @fontsource/jetbrains-mono 5.1.1",
-      "type": "library",
-      "license": "OFL-1.1",
-      "owner": "Buyer Log UI maintainers",
-      "updateMethod": "Replace the Latin and Latin-ext subsets of both families together with their OFL notices; verify Turkish coverage, offline loading, the Line interface style and all four UI scales.",
-      "source": "https://github.com/fontsource/font-files",
-      "versionEvidence": "Copied unchanged from the pinned Fontsource npm packages (files/<family>-<subset>-<weight>-normal.woff2), renamed to <family>-<weight>-<subset>.woff2. Per-file SHA-256 identifies the exact bytes.",
-      "patterns": [
-        "public/vendor/fonts/schibsted-grotesk-",
-        "public/vendor/fonts/SchibstedGrotesk-OFL.txt",
-        "public/vendor/fonts/jetbrains-mono-",
-        "public/vendor/fonts/JetBrainsMono-OFL.txt"
-      ]
     }
   ]
 }
