@@ -54,63 +54,6 @@ karanlık temada aydınlık, açık temada koyudur. Her karta gölge yoktur.
 Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
 Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 
-### 2.1 Arayüz stili: Klasik ve Çizgi
-
-Kullanıcı Görünüm menüsündeki **Stil** düğmesiyle iki arayüz stili arasında geçer
-(`#railUiStyleBtn`, TR/EN). **Klasik varsayılandır**; bu bölümdeki her şey yalnız
-`html[data-ui-style="line"]` iken etkilidir. Seçim cihazda `lcw_ui_style` (BLStorage)
-ve giriş kabuğu için `buyerlog.ui.appearance.style` olarak saklanır, açılış betiği onu
-ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu kullanır.
-
-- **Çizgi** ("Cetvel"): kâğıt zemin, mürekkep metin ve çizgi, tek kırmızı vurgu
-  (kritik / kaydedilmemiş değişiklik). Birincil eylem ve seçim mürekkeple gösterilir.
-  Palet `ui-tokens.css` içinde `:root[data-ui-style="line"]` ve
-  `:root[data-ui-style="line"][data-theme="dark"]` bloklarındadır; panel, kontrol ve
-  alan sınırları aynı ortak token'lardan (`--ui-group-divider`, `--ui-field-border`)
-  mürekkep rengini alır. Yeni çerçeve, gölge veya köşe kuralı yoktur.
-- Fontlar: **Schibsted Grotesk** gövde/başlık, **JetBrains Mono** kod ve sayısal tablo
-  hücresi. OFL, yerel WOFF2, Latin + Latin-ext; yalnız bu stil seçildiğinde yüklenir.
-  Schibsted'in tablo rakamı noktayı genişlettiği için bu stilde `tnum` kapalıdır;
-  hiza gereken sayısal hücreler (`td.num`, `td.money`) mono yazıyla hizalanır.
-- Bileşen farkları `ui-components.css` sonundaki "Çizgi arayüz stili" bölümündedir:
-  başlıklar büyük harf yerine cümle düzeninde, ray seçimi zeminsiz kalın yazı +
-  metnin sağından rayın kenarına uzanan 2px `--ui-line-ink` çizgisi.
-- Ölçü, satır yüksekliği, dört arayüz boyutu, katmanlar, davranış kancaları ve
-  çıktı paletleri (§8) iki stilde aynıdır. Yeni modül iki stilde de token üzerinden
-  doğru görünür; stile özel modül CSS'i yazılmaz.
-- **Motion+ çizgi çerçevesi:** Çizgi stilinde `entrance()` üzerinden açılan her
-  pencere, çekmece ve menü (`play('overlay'|'drawer')` ve otomatik overlay algılama)
-  önce dört mürekkep çizgisiyle çizilir (`.blLineFrame`, köşelerde kısa taşma,
-  kenar başına `--ui-motion-overlay` × 0,25 gecikme); içerik çizgiden sonra belirir,
-  çizgi söner ve yüzeyin kendi sınırı kalır. İptal, sekme değişimi ve hareketin
-  kapatılması çerçeveyi hemen kaldırır; reduced-motion'da çizilmez.
-- **Yüzey dili:** çalışma alanındaki kap yüzeyler (`.panel`, Overview widget'ı, Backlog
-  bölümü, `.tablewrap`) çerçevesizdir; yalnız o kapsamda `--ui-group-divider` saydam
-  yapılır, içindeki her öğede yeniden `--ui-line-ink` olur (kontroller, alanlar, iç
-  kartlar çerçeveli kalır). Pencere, çekmece ve menüler çerçeveli kalır. Overview ve
-  Backlog başlıkları "başlık — çizgi — araçlar" düzenindedir (`::after` 1px çizgi).
-- **Veri işaretleri:** oran izleri (`.ovBdTrack`, `.ovHorizonTrack`, `.cpaCoverageTrack`)
-  1px taban çizgisi + 3px dolgu; Backlog karoları zeminsiz, ince dikey ayırıcı ve aşama
-  renginde 2px üst işaret. Aşama renkleri ve hesaplar Klasik'le aynıdır.
-- **Kabuk:** üst çubuk eylemleri çerçevesiz; bağlantı durumu 14px çizgi (bağlı mürekkep,
-  kuruluyor uyarı, bağlı değil `--ui-line-mark`); seçim çubuğu mürekkep zeminli (çubuk
-  içinde token'lar `--ui-line-paper` / `--ui-line-ink-hover` ile tersine çevrilir);
-  saat çiplerinde mini kare kadran (`.ovClockChipFace`, Klasik'te gizli).
-- Bilinçli olarak yapılmayanlar: kritik satıra sol şerit (satır düzeyinde işaret yok;
-  `:has()` ve yeni gölge gerekir), araç çubuğunun metinli menülere yeniden gruplanması
-  (davranış kancası olan düğümler taşınmaz).
-- Sözleşme testi: `tests/ui-line-style.test.js`.
-
-### 2.2 Rapor görünümü
-
-CP, Siparişler ve Koleksiyon görünüm seçicisinin sonunda (Alanlar ve Kısmi görünümden sonra)
-**Rapor görünümü** (`[data-table-report]`, TR/EN) bulunur. Tablonun o anki filtre ve
-sıralama sonucunu paylaşılan detay rapor motorunda (`BLDetailDrawer`,
-`BLDetailReportLayout.project`; rol gruplu, iki satırlı hücreler) açar. Salt okunurdur:
-ön ayar, filtre, seçim ve kayıt değişmez; arama, alan filtresi, sütun seçimi ve Excel
-çekmecede kalır. Görünür kayıt yoksa uyarı verir. İki arayüz stilinde de vardır.
-Test: `tests/table-report-view.test.js`.
-
 ## 3. Tipografi ve dört boyut
 
 Yerel/paketli OFL fontlar: **IBM Plex Sans** gövde, **Barlow Condensed** başlık,
@@ -186,6 +129,20 @@ Grafikler `--ui-chart-1…8` kategorilerini, kare işaretleri, doğrusal ilerlem
 şeritlerini ve okunaklı eksenleri kullanır. Seriler etiket/legend taşır. Grafik
 SVG/canvas metin ölçüsü ekrandaki ortak fonttan okunur. Grafikler ve görünmeyen
 modüller `perf-runtime` lazy sözleşmesine uyar.
+
+### 4.x Rapor görünümü
+
+CP, Siparişler ve Koleksiyon görünüm seçicisinin sonunda (Alanlar ve Kısmi görünümden sonra)
+**Rapor görünümü** (`[data-table-report]`, `aria-pressed`, TR/EN) bulunur. Tablo kendi kaydırma
+alanında rapor düzenine döner; sağ çekmece açılmaz (`public/table-report-inline.js`). Rapor
+sütunları tablonun sütun ana başlıklarıdır: başlık satırındaki her ardışık grup tek sütun olur ve
+alanları tablodaki sırayla alt alta durur (ilk alan birincil satır); ana başlığı olmayan tablo
+paylaşılan rol projeksiyonuna (`BLDetailReportLayout.project`) düşer. Hücre en çok iki satırdır,
+tam metin ipucundadır. Satırlar tablonun o anki filtre, sıralama
+ve sayfa aralığıdır (`renderTableRangeControls` aynı sayfayı paylaşır); başlıktaki alan filtreleri
+tablonun kendi sütun filtrelerini açar. Salt okunurdur: tablo DOM'da gizli kalır, ön ayar, filtre,
+seçim, düzenleme ve kayıt değişmez. Tercih tablo ve kullanıcı başına saklanır
+(`buyerlog.tableReportMode.`); görünmeyen sekmede çizim yapılmaz. Test: `tests/table-report-view.test.js`.
 
 ## 5. Bileşen sözleşmeleri
 

@@ -427,12 +427,8 @@
       const item=clockFromId(id);if(!item)return '';
       let parts={time:'--:--',hour:0};try{parts=clockParts(now,item.timeZone,l);}catch(_){}
       const phase=clockPhase(parts.hour),offset=offsetText(now,item.timeZone,l),code=item.dynamic?'TZ':item.id.replace(/^US-/,'US');
-      // Mini kare kadran: yalnız Çizgi stilinde görünür (ui-components.css); ibreleri tick() döndürür.
-      let hands={hour:0,minute:0};try{hands=clockAngles(parts);}catch(_){}
       return '<button type="button" class="ovClockChip" data-clock-open="'+esc(id)+'" data-clock-zone="'+esc(item.timeZone)+'" title="'+esc(countryName(item,l)+(offset?' · '+offset:''))+'" aria-label="'+esc(countryName(item,l))+'">'+
-        '<i class="ovClockChipDot" data-clock-phase="'+phase+'" title="'+esc(phaseLabel(phase,l,true))+'"></i>'+
-        '<span class="ovClockChipFace" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><rect x=".5" y=".5" width="15" height="15"/></svg><i class="ovClockChipHand ovClockChipHand--hour" data-clock-hand="hour" style="transform:translateX(-50%) rotate('+hands.hour+'deg)"></i><i class="ovClockChipHand ovClockChipHand--minute" data-clock-hand="minute" style="transform:translateX(-50%) rotate('+hands.minute+'deg)"></i></span>'+
-        '<b data-no-i18n>'+esc(code)+'</b><span class="ovClockChipTime" data-clock-time>'+esc(String(parts.time).slice(0,5))+'</span>'+
+        '<i class="ovClockChipDot" data-clock-phase="'+phase+'" title="'+esc(phaseLabel(phase,l,true))+'"></i><b data-no-i18n>'+esc(code)+'</b><span class="ovClockChipTime" data-clock-time>'+esc(String(parts.time).slice(0,5))+'</span>'+
         (offset?'<small class="ovClockChipOffset">'+esc(offset)+'</small>':'')+'</button>';
     }).join('');
     bar.innerHTML='<span class="ovClockBarDate"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span>'+esc(now.toLocaleDateString(locale,{weekday:'short',day:'numeric',month:'short'}))+'</span></span>'+

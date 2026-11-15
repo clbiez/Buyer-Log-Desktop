@@ -13217,7 +13217,7 @@ html[data-ui-system="manifest"] .blDetailReportStats span {font-size:var(--ui-fo
 }
 html[data-ui-system="manifest"] .blDetailReportAccent {background:var(--ui-accent) !important
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeCell {background-color:var(--ui-selected) !important;box-shadow:none !important
 }
@@ -13225,11 +13225,15 @@ html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeEdg
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridActiveCell {outline:2px solid var(--ui-accent);outline-offset:-2px
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1.35
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1.35
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td {border-bottom:0 !important;line-height:1.4
+html[data-ui-system="manifest"] :is(.blDetailDrawer,.blTableReportInline) .blDetailTable td {border-bottom:0 !important;line-height:1.4
 }
 html[data-ui-system="manifest"] .blDetailReportPrimary {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .blTableReportBar {z-index:var(--ui-z-sticky);background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blTableReportBar b {color:var(--ui-text) !important;font-weight:600 !important
 }
 html[data-ui-system="manifest"] .blDetailReportSub {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
@@ -15929,112 +15933,3 @@ html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter
 html[data-ui-system="manifest"] #view-lfl .lflFacetBar .lflDimBtn:not(.hasFilter) {font-weight:520 !important;}
 html[data-ui-system="manifest"] #view-lfl .lflPeriodDimWrap .lflDateFieldSelect {font:650 var(--ui-font-xs)/1 var(--ui-font-body) !important;color:var(--ui-text-secondary) !important;border-right:0 !important;}
 html[data-ui-system="manifest"] #view-lfl .lflFacetBar>.lflPeriodDimWrap+.lflDimWrap:not(.lflPeriodDimWrap)::before {background:var(--ui-group-divider);}
-
-/* Çizgi arayüz stili (data-ui-style="line", Görünüm › Stil). Klasik stil varsayılandır.
-   Renk, font ve çizgi değerleri ui-tokens.css'teki stil token'larından gelir; burada yalnız
-   tipografi düzeni, ray seçim çizgisi ve Motion+ çizgi çerçevesi tanımlanır. Yeni çerçeve,
-   gölge veya köşe yoktur; panel/kontrol sınırları ortak --ui-group-divider (mürekkep) ile çizilir. */
-html[data-ui-system="manifest"][data-ui-style="line"] .blLineFrame {position:fixed;overflow:visible;pointer-events:none;z-index:var(--ui-z-tooltip)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .blLineFrame path {fill:none;stroke:var(--ui-line-ink);stroke-width:1;shape-rendering:crispEdges
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(h1,h2,h3,h4,.cardTitle,.modalTitle,[class*="Title"],.bdaH,.ovInboxHead > b,.ovPremiumHead b,.pdLaneHead,.tableFieldsGridHead,.blDetailDrawerTitle b) {text-transform:none !important;letter-spacing:-.01em !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.cardTitle,.modalTitle,.dmTitle,.autoHeader h2,.ovInboxHead > b,.ovPremiumHead b,.globalFlowTitle,.ovBreakdownTitle,.ovPriorityTitle,.bdaTitle,.bdaH,.bpaModuleTitle,.blvModuleTitle,.bpaSectionTitle,.psaTitle,.lcTitle,.ocSectionTitle,.pricingWorkspaceHeader h1,.pricingPaneTitle,.blDetailDrawerTitle b) {font-family:var(--ui-font-heading) !important;font-weight:500 !important;font-size:var(--ui-font-lg) !important;color:var(--ui-text) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .appTop h1 {font:500 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important;text-transform:none !important;letter-spacing:-.02em !important;color:var(--ui-text) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .railGroupLabel {font-family:var(--ui-font-mono) !important;font-weight:400 !important;letter-spacing:.1em !important;color:var(--ui-text-muted) !important
-}
-/* Ray: seçili modül kalın yazı + metnin sağından rayın kenarına uzanan 2px mürekkep çizgisi; zemin dolgusu yok. */
-html[data-ui-system="manifest"][data-ui-style="line"] nav.tabs button.active {background:transparent !important;color:var(--ui-text) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] nav.tabs button.active::before {background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"]:not([data-rail="min"]) nav.tabs button.active > span[data-i18n-tr] {display:flex;align-items:center;gap:8px
-}
-html[data-ui-system="manifest"][data-ui-style="line"]:not([data-rail="min"]) nav.tabs button.active > span[data-i18n-tr]::after {content:"";flex:1 1 12px;min-width:12px;height:2px;background:var(--ui-line-ink)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] nav.tabs button.active .ic {--ic-tint:var(--ui-text) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(nav.tabs button:hover:not(.active),.railFoot button:hover) {background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(nav.tabs button:hover:not(.active) span,.railFoot button:hover span) {text-decoration:underline;text-underline-offset:3px
-}
-/* Schibsted'in tablo rakamı (tnum) noktayı da genişletir ("5 . 600"); çizgi stilinde kapalıdır.
-   Sütun hizası gereken sayısal hücreler eşit genişlikli mono yazı kullanır. */
-html[data-ui-system="manifest"][data-ui-style="line"],html[data-ui-system="manifest"][data-ui-style="line"] body * {font-feature-settings:"tnum" 0 !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] table :is(td.num,td.money,td.backlogNum,th.backlogTh--num) {font-family:var(--ui-font-mono) !important;letter-spacing:0 !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .blDetailReportAccent {height:1px
-}
-/* Çizgi stili yüzey dili: çalışma alanındaki kap yüzeyler (panel, Overview widget'ı,
-   Backlog bölümü, tablo kabı) çerçevesizdir; ayrım başlığın yanından uzanan mürekkep
-   çizgisiyle yapılır. Kapların içindeki kontroller, alanlar ve iç kartlar mürekkep
-   çerçevesini korur. Pencere, çekmece ve menüler çerçeveli kalır. Yalnız ortak
-   --ui-group-divider token'ı kapsamlanır; yeni kenarlık kuralı yoktur. */
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.panel,.cardBox,.sourcebar,.tablewrap,.cpaFrame,.cpaCard) *,html[data-ui-system="manifest"][data-ui-style="line"] .ovHome > [data-overview-widget] *,html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvModuleToggle,.bpaModuleToggle,.bdaTitleToggle,.bdaFoldHead) * {--ui-group-divider:var(--ui-line-ink)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.panel,.cardBox,.sourcebar,.tablewrap,.cpaFrame,.cpaCard),html[data-ui-system="manifest"][data-ui-style="line"] .ovHome > [data-overview-widget],html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvModuleToggle,.bpaModuleToggle,.bdaTitleToggle,.bdaFoldHead) {--ui-group-divider:transparent
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovHome,#view-backlog) :is(.ovPremiumHead > b,.ovInboxHead > b,.cpaCard > header > b,.ovBreakdownTitle,.ovPriorityTitle,.bpaSectionTitle,.bdaH) {display:flex !important;align-items:center;gap:10px;flex:1 1 0%;white-space:nowrap
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovHome,#view-backlog) :is(.ovPremiumHead > b,.ovInboxHead > b,.cpaCard > header > b,.ovBreakdownTitle,.ovPriorityTitle,.bpaSectionTitle,.bdaH)::after {content:"";flex:1 1 16px;min-width:16px;height:1px;background:var(--ui-line-ink)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle) {display:flex !important;align-items:center;gap:10px;flex:1 1 auto;min-width:0;background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle) > :is(.blvModuleHint,.bpaModuleHint) {order:3
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.blvModuleToggle,.bpaModuleToggle)::after {content:"";order:2;flex:1 1 16px;min-width:16px;height:1px;background:var(--ui-line-ink)
-}
-/* Çizgi stili Backlog: karolar çerçevesiz ve zeminsiz; aralarında ince dikey ayırıcı,
-   üstte aşama renginde 2px işaret. Aşama renkleri ve sayılar aynı veriden gelir. */
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog :is(.bpaTile,.bdaKpi,.bpaRing) {--ui-group-divider:transparent;background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile::before {content:"";position:absolute;left:-5px;top:10px;bottom:10px;width:1px;background:var(--ui-row-divider);pointer-events:none
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile::after {content:"";position:absolute;left:12px;right:12px;top:0;height:2px;background:var(--ui-metric-color,var(--ui-text));pointer-events:none
-}
-html[data-ui-system="manifest"][data-ui-style="line"] #view-backlog .bpaTile:hover {background:var(--ui-row-hover) !important
-}
-/* Çizgi stili izleri: oran çubukları 1px taban çizgisi + üstünde 3px dolgu olarak çizilir
-   (Overview kırılım, termin ufku, veri kapsamı). Değer ve genişlik hesapları değişmez. */
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack,.ovHorizonTrack,.cpaCoverageTrack) {position:relative !important;height:3px !important;min-height:3px !important;background:transparent !important;align-self:center
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack,.ovHorizonTrack,.cpaCoverageTrack)::before {content:"";position:absolute;left:0;right:0;top:1px;height:1px;background:var(--ui-row-divider);pointer-events:none
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovBdTrack > .ovBdFill,.ovHorizonTrack > i,.cpaCoverageTrack > i) {position:relative !important;height:3px !important;min-height:3px !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .ovPulseBand {height:2px !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] :is(.ovClockChip,.ovPulseKpi,.cpaOverviewMetric) {background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChip:hover {background:var(--ui-row-hover) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipFace {display:inline-block
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipFace rect {fill:none;stroke:var(--ui-line-ink);stroke-width:1
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .ovClockChipHand {background:var(--ui-line-ink)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .cpaOverviewMetric {--ui-group-divider:transparent
-}
-/* Çizgi stili kabuk: üst çubuk eylemleri çerçevesiz; bağlantı durumu nokta yerine 14px
-   çizgi (bağlı = mürekkep, kuruluyor = uyarı, bağlı değil = kırmızı; metin/aria aynı).
-   Seçim çubuğu mürekkep zeminli: çubuğun içinde token'lar tersine çevrilir, düğmeler
-   ve odak halkası aynı ortak kurallardan renk alır. */
-html[data-ui-system="manifest"][data-ui-style="line"] .appTop :is(.iconbtn,.navActionBtn) {--ui-group-divider:transparent;background:transparent !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .appTop :is(.iconbtn,.navActionBtn):hover {background:var(--ui-row-hover) !important
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots {gap:5px;align-items:center
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i {width:14px;height:2px;background:var(--ui-line-mark)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i[data-state="connected"] {background:var(--ui-line-ink)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .corporateConnectionDots i[data-state="connecting"] {background:var(--ui-warning)
-}
-html[data-ui-system="manifest"][data-ui-style="line"] .blSelectionBar {--ui-surface:var(--ui-line-ink);--ui-surface-soft:var(--ui-line-ink);--ui-surface-strong:var(--ui-line-ink-hover);--ui-row-hover:var(--ui-line-ink-hover);--ui-selected:var(--ui-line-ink-hover);--ui-text:var(--ui-line-paper);--ui-text-secondary:var(--ui-line-paper);--ui-text-muted:var(--ui-line-paper);--ui-selected-ink:var(--ui-line-paper);--ui-accent:var(--ui-line-paper);--ui-on-accent:var(--ui-line-ink);--ui-group-divider:transparent;--ui-row-divider:var(--ui-line-ink-hover)
-}

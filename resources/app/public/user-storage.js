@@ -20,7 +20,9 @@
     // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası (yalnız sunucu yazar).
     'buyerlog.horizonFieldPairs.',
     // v2026-11-14 — PowerPoint düzenleyici panel/önizleme genişliği kişiseldir (cihazda kalır, eşitlenmez).
-    'bl.lcwai.studioSplit'
+    'bl.lcwai.studioSplit',
+    // v2026-11-15 — tablo içi Rapor görünümü tercihi tablo ve kullanıcı başınadır.
+    'buyerlog.tableReportMode.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine

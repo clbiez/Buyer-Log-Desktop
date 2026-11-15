@@ -5064,31 +5064,74 @@ document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
 });
-/* Rapor görünümü: tablonun o anki filtre/sıralama sonucundaki kayıtları paylaşılan
-   detay rapor motorunda (BLDetailDrawer) açar. Alanlar rol gruplarında iki satırlı
-   hücrelerde durur; böylece tablo daha az sütunla okunur. Salt okunurdur; tablo, filtreler, seçim ve
-   kayıtlar değişmez. Arama, alan filtresi, sütun seçimi ve Excel çekmecede kalır. */
-function openTableReportView(tableKey,trigger){
-  const en=appLang==='en';
-  const names={cp:'CP Tracker',orders:en?'Orders':'Siparişler',koleksiyon:en?'Collection':'Koleksiyon'};
-  if(!names[tableKey])return false;
-  let rows=[];
-  try{rows=tableKey==='cp'?filteredCP():tableKey==='orders'?filteredOrders():filteredKol();}catch(err){console.warn('Rapor görünümü satırları alınamadı:',err);rows=[];}
-  if(!rows.length){showToast(en?'There are no visible records to show in report view.':'Rapor görünümünde gösterilecek görünür kayıt yok.');return false;}
-  const title=names[tableKey]+' · '+(en?'Report view':'Rapor görünümü');
-  if(tableKey==='koleksiyon'){
-    if(!window.BLCollectionAnalyticsBridge?.openDrilldown)return false;
-    window.BLCollectionAnalyticsBridge.openDrilldown(rows,title);return true;
-  }
-  if(!window.BLDetailDrawer?.open)return false;
-  window.BLDetailDrawer.open({storageKey:tableKey+'.report.view',moduleId:tableKey,source:tableKey,tableSetup:tableKey,title,fileName:title,
-    subtitle:en?'Current filters and sorting':'Geçerli filtre ve sıralama',
-    rows,columns:[],images:true,trigger:trigger||null});
+/* Rapor görünümü: tablo kendi yerinde rapor düzenine döner (sağ çekmece açılmaz).
+   Görünen alanlar paylaşılan detay rapor motorunun rol gruplarında (BLDetailReportLayout)
+   iki satırlı hücrelerde durur. Satırlar tablonun o anki filtre, sıralama ve sayfa
+   aralığıdır; aynı sayfalama çubuğu çalışır. Salt okunurdur: kayıtlar, seçim, düzenleme,
+   filtre durumu ve dışa aktarma değişmez. Tercih tablo başına saklanır. */
+const TABLE_REPORT_TABLE_IDS={cp:'cpTable',orders:'ordersTable',koleksiyon:'kolTable'};
+function tableRangeVisibleRows(tableKey){
+  const table=document.getElementById(TABLE_REPORT_TABLE_IDS[tableKey]);
+  const view=table&&_tableRangeViews.get(table);
+  return view&&Array.isArray(view.visibleRows)?view.visibleRows:[];
+}
+function tableRangeTotalRows(tableKey){
+  const table=document.getElementById(TABLE_REPORT_TABLE_IDS[tableKey]);
+  const view=table&&_tableRangeViews.get(table);
+  return view&&Array.isArray(view.rows)?view.rows.length:0;
+}
+function tableReportCoreColumns(tableKey){
+  const snapshot=detailTableViewSnapshot(tableKey);if(!snapshot)return [];
+  const visible=new Set(snapshot.visible);
+  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
+}
+function tableReportKolColumns(){
+  const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
+  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+}
+function syncTableReportButtons(tableKey){
+  const on=Boolean(window.BLTableReportInline?.isActive(tableKey));
+  document.querySelectorAll(`[data-table-report="${tableKey}"]`).forEach(button=>button.setAttribute('aria-pressed',String(on)));
+}
+let tableReportAdaptersReady=false;
+function ensureTableReportAdapters(){
+  const api=window.BLTableReportInline;if(!api)return false;
+  if(tableReportAdaptersReady)return true;
+  tableReportAdaptersReady=true;
+  const changed=key=>on=>{
+    syncTableReportButtons(key);
+    if(!on){if(key==='koleksiyon')renderKol();else if(key==='cp')renderCP();else renderOrders();}
+  };
+  const core=key=>({
+    tab:key,moduleId:key,
+    table:()=>document.getElementById(TABLE_REPORT_TABLE_IDS[key]),
+    rows:()=>tableRangeVisibleRows(key),total:()=>tableRangeTotalRows(key),
+    columns:()=>tableReportCoreColumns(key),
+    images:()=>!colmgr[key]?.hidden?.has('__picture'),
+    filter:(field,anchor)=>openHeaderFilter(key,field,anchor,key==='cp'?renderCP:renderOrders),
+    changed:changed(key)
+  });
+  api.register('cp',core('cp'));
+  api.register('orders',core('orders'));
+  api.register('koleksiyon',{
+    tab:'koleksiyon',moduleId:'collection',
+    table:()=>document.getElementById('kolTable'),
+    rows:()=>tableRangeVisibleRows('koleksiyon'),total:()=>tableRangeTotalRows('koleksiyon'),
+    columns:tableReportKolColumns,
+    images:()=>!kolPictureHidden,
+    filter:(field,anchor)=>{if(tableReportKolColumns().some(col=>col.key===field&&col.filterable))openKolHeaderFilter(field,anchor);else showToast(appLang==='en'?'This field has no column filter.':'Bu alanın sütun filtresi yok.');},
+    changed:changed('koleksiyon')
+  });
+  ['cp','orders','koleksiyon'].forEach(syncTableReportButtons);
   return true;
+}
+function openTableReportView(tableKey){
+  if(!TABLE_REPORT_TABLE_IDS[tableKey]||!ensureTableReportAdapters())return false;
+  return window.BLTableReportInline.toggle(tableKey);
 }
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-report]');if(!button)return;
-  openTableReportView(button.dataset.tableReport,button.closest('.blViewPicker')?.querySelector('[data-bl-view-trigger]')||button);
+  openTableReportView(button.dataset.tableReport);
 });
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
@@ -7848,6 +7891,9 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   const prev=bar.querySelector('[data-range-prev]'),next=bar.querySelector('[data-range-next]');
   prev.disabled=range.page===0;next.disabled=range.page+1>=range.pages;
   prev.setAttribute('aria-label',T('Önceki sayfa','Previous page'));next.setAttribute('aria-label',T('Sonraki sayfa','Next page'));
+  view.visibleRows=range.rows;
+  // Tablo içi Rapor görünümü aynı sayfa aralığını izler (sayfa/boyut/filtre/sıralama).
+  if(ensureTableReportAdapters())window.BLTableReportInline.schedule(tableKey);
   return range.rows;
 }
 
@@ -22771,41 +22817,6 @@ function applyUiFontStep(value,{persist=true}={}){
 function cycleUiFontStep(){const cur=normalizeUiFontStep(document.documentElement.dataset.fontStep);applyUiFontStep((cur+1)%4);}
 document.getElementById('railFontSizeBtn')?.addEventListener('click',cycleUiFontStep);
 applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
-
-/* Arayüz stili: Klasik (varsayılan) veya Çizgi. Yalnız kök niteliği değişir;
-   token ve bileşen görünümü ui-tokens.css / ui-components.css'tedir. İş verisi,
-   tablo durumu ve seçimler korunur; değişim tema geçişiyle aynı Motion+ yolunu kullanır. */
-const UI_STYLES={classic:{tr:'Klasik',en:'Classic'},line:{tr:'Çizgi',en:'Line'}};
-function normalizeUiStyle(value){return value==='line'?'line':'classic';}
-function syncUiStyleControl(){
-  const style=normalizeUiStyle(document.documentElement.dataset.uiStyle),preset=UI_STYLES[style];
-  const btn=document.getElementById('railUiStyleBtn'),label=document.getElementById('railUiStyleLabel');
-  if(label)label.textContent=appLang==='en'?`Style: ${preset.en}`:`Stil: ${preset.tr}`;
-  if(btn){
-    btn.setAttribute('aria-pressed',style==='line'?'true':'false');
-    btn.title=appLang==='en'?`Interface style: ${preset.en} · click to switch to ${style==='line'?UI_STYLES.classic.en:UI_STYLES.line.en}`:`Arayüz stili: ${preset.tr} · ${style==='line'?UI_STYLES.classic.tr:UI_STYLES.line.tr} stiline geçmek için tıkla`;
-  }
-}
-function applyUiStyle(value,{persist=true,animate=false,origin=null}={}){
-  const style=normalizeUiStyle(value),root=document.documentElement;
-  if(persist)try{BLStorage.setItem('lcw_ui_style',style);}catch(_){}
-  const update=()=>{
-    if(style==='line')root.dataset.uiStyle='line';else delete root.dataset.uiStyle;
-    window.BLUIAppearance?.remember();
-    syncUiStyleControl();
-    requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
-  };
-  if(normalizeUiStyle(root.dataset.uiStyle)===style){update();return style;}
-  if(animate&&window.BLMotionPlus?.theme?.(update,origin))return style;
-  const release=beginFastThemeSwitch();
-  update();
-  if(release)release(false);
-  return style;
-}
-document.getElementById('railUiStyleBtn')?.addEventListener('click',e=>{
-  applyUiStyle(normalizeUiStyle(document.documentElement.dataset.uiStyle)==='line'?'classic':'line',{animate:true,origin:e.currentTarget});
-});
-syncUiStyleControl();
 
 const _themeBtnEl = document.getElementById('themeBtn');
 if(_themeBtnEl) _themeBtnEl.addEventListener('click', ()=>{
@@ -41622,7 +41633,6 @@ function applyLanguage(lang){
   document.getElementById('backlogExportColumnsModal')?.refreshLanguage?.();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
   if(typeof applyUiFontStep==='function') applyUiFontStep(document.documentElement.dataset.fontStep||0,{persist:false});
-  if(typeof syncUiStyleControl==='function') syncUiStyleControl();
   translateSubtree(document.querySelector('.sourcebar'));
   translateSubtree(document.querySelector('.vfBar'));
   translateSubtree(document.getElementById('view-koleksiyon'));
