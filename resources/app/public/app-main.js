@@ -8021,9 +8021,12 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   const renderToken=(tbody._renderToken||0)+1; tbody._renderToken=renderToken;
   // Bu tbody için yarım kalmış bir çizim varsa artık geçersiz: token değişti.
   _pendingTableRenders.delete(tbody);
+  // Kritik öncelikli satır işareti: Klasik'te stilsiz sınıftır; Çizgi stili satırın soluna kırmızı çizgi çizer.
+  const criticalPriorityKey=(tableKey==='cp'||tableKey==='orders')?((COLS_BY_TABLE[tableKey]||[]).find(c=>c.type==='priority')||{}).k:'';
   const buildRow=(r,rowIdx)=>{
     const cf = opts.computeFn ? opts.computeFn(r) : null;
     const tr = document.createElement('tr');
+    if(criticalPriorityKey&&r[criticalPriorityKey]&&priorityTone(r[criticalPriorityKey])==='red')tr.classList.add('rowCritical');
     const customRowClass=typeof opts.rowClassFn==='function'?opts.rowClassFn(r,rowIdx):'';
     if(customRowClass)String(customRowClass).split(/\s+/).filter(Boolean).forEach(cls=>tr.classList.add(cls));
     if(r._id!=null && opts.dirtySet && (typeof opts.isDirty==='function'?opts.isDirty(r):opts.dirtySet.has(r._id))) tr.classList.add('rowDirty');

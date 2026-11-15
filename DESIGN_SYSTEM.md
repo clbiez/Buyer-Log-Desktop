@@ -127,6 +127,16 @@ ilk karede uygular. Değişim tema geçişiyle aynı `BLMotionPlus.theme` yolunu
   Yeni ekranda ana bloklar soldan sağa bir çizgiyle belirir. Hareket azaltma veya kapalı hareket
   tercihi her çizimi kapatır; Klasik stilde hiçbir şey eklenmez. Modüller kendi çizim motorunu
   eklemez: yeni bir yüzey `LINE_SURFACES` listesine eklenir, özel bir alan `BLMotionPlus.play('frame', el)` çağırır.
+- **Etiket ve grafik dili (sunum A, yalnız Çizgi):** öncelik/durum rozetleri zeminsiz düz metindir;
+  Kritik `--ui-line-mark` ve kalın, acil aksiyonlar kalın mürekkep, İzlemede ikincil, Yolunda soluk.
+  Kritik satır (`tr.rowCritical`, Klasik'te stilsiz) solda 2px kırmızı çizgi alır. `--ui-success` ve
+  `--ui-warning` mürekkebe döner; kırmızı yalnız tehlike/kritik (`--ui-danger`, `--ui-chart-7`).
+  Seriler nötr basamaklardır (`--ui-chart-2…6,8`) ve `--ui-line-hatch(-soft)` tarama deseni;
+  Backlog: Üretimde mürekkep, Yüklemede gri, Yolda/Gümrük taralı, Depoda açık gri, Eksik kırmızı.
+  Çubuklar 1px taban + 3px dolgu, aylık sütunlar 2px gövdedir. Kategori paletleri `var(--ui-chart-N)`
+  kullanır (Klasik'te chart-1/2/6/7 vurgu/uyarı/başarı/tehlikenin aynısıdır); JS'te çizim anında
+  çözümlenmiş renk yerine canlı token tercih edilir. Kabul betiği etiket ve grafik işaretlerinin
+  nötr ya da tek kırmızı olduğunu açık/koyu temada denetler.
 - **Çizgi kimliği:** logo tek çizgi BL monogramı, cetvel çentikleri ve `--ui-line-mark` işaretinden
   oluşan satır içi SVG'dir (`.blLineLogo`, `hidden`). Kenar çubuğu, açılış (boot) kartı ve giriş
   ekranında bulunur; yalnız Çizgi stili gösterir ve Motion+ açılışta ve stile geçişte bir kez çizer.

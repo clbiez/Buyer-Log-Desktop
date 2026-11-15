@@ -170,7 +170,7 @@
   }
 
   function stackedBar(row, scale) {
-    const parts = [['loading', 'var(--ui-accent)'], ['transit', 'var(--ui-chart-3)'], ['customs', 'var(--ui-warning)']]
+    const parts = [['loading', 'var(--ui-accent)'], ['transit', 'var(--ui-chart-3)'], ['customs', 'var(--ui-chart-2)']]
       .map(([m, color]) => ({ m, color, v: Math.max(0, Number(row[m]) || 0) }));
     if (!scale || !parts.some(p => p.v)) return '';
     return `<div style="display:flex;height:6px;width:100%;max-width:140px;border-radius:var(--ui-radius);overflow:hidden;background:var(--ui-surface-soft);margin-top:4px;" aria-hidden="true">${parts.map(p => `<span title="${esc(TA().labels(lang()).metric[p.m])}: ${fmt(p.v)} ${L('gün', 'days')}" style="width:${(p.v / scale * 100).toFixed(1)}%;background:${p.color};"></span>`).join('')}</div>`;

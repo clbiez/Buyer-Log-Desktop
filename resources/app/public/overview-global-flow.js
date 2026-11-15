@@ -2063,7 +2063,7 @@ function bindObservers(){
     const tables=event&&event.detail&&Array.isArray(event.detail.tables)?event.detail.tables:['cp','orders'];
     if(state.source==='combined'||tables.includes(state.source))scheduleRefresh(250);
   });
-  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang','data-ui-scale']});state.observers.push(themeObserver);
+  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang','data-ui-scale','data-ui-style']});state.observers.push(themeObserver);
   const widget=$('globalFlowMapWidget');
   if(widget&&typeof IntersectionObserver==='function'){
     const io=new IntersectionObserver(entries=>{

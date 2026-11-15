@@ -106,12 +106,17 @@
  --ui-canvas:#f3efe6;--ui-rail:#f3efe6;--ui-surface:#f3efe6;--ui-surface-soft:#efebe1;--ui-surface-strong:#ddd9d0;
  --ui-text:#17150f;--ui-text-secondary:#3a362d;--ui-text-muted:#5b564b;
  --ui-accent:#17150f;--ui-accent-hover:#3a362d;--ui-selected:#e2ded5;--ui-selected-ink:#17150f;--ui-on-accent:#f3efe6;
- --ui-success:#2f6a46;--ui-success-bg:rgba(47,106,70,.12);--ui-danger:#c23a1b;--ui-danger-bg:rgba(194,58,27,.10);--ui-warning:#83560f;--ui-warning-bg:rgba(131,86,15,.12);
+ /* Sunum A (Cetvel): kırmızı yalnız kritik/tehlike; olumlu ve uyarı durumları mürekkep, zemin tonları nötr ama bilgi taşımaya devam eder. */
+ --ui-success:#17150f;--ui-success-bg:rgba(23,21,15,.06);--ui-danger:#c23a1b;--ui-danger-bg:rgba(194,58,27,.10);--ui-warning:#17150f;--ui-warning-bg:rgba(23,21,15,.08);
  --ui-header-bg:#f3efe6;--ui-header-ink:#5b564b;--ui-group-header-bg:#f3efe6;--ui-group-header-ink:#5b564b;
  --ui-check-idle:#9c978c;--ui-row-divider:#d9d5cc;--ui-group-divider:#17150f;--ui-field-border:#17150f;
  --ui-row-hover:#e8e4db;--ui-status-default:#5b564b;--ui-backdrop-tint:rgba(23,21,15,.05);
  --ui-shadow-color:rgba(23,21,15,.16);--ui-shadow-overlay:0 18px 40px var(--ui-shadow-color);
- --ui-chart-3:#3e6c6f;--ui-chart-4:#8a573a;--ui-chart-5:#6a6032;--ui-chart-8:#55606d;
+ /* Seriler mürekkep ve gri basamaklarla, taralı desenle ayrılır; kırmızı yalnız kritik/tehlikedir (chart-7). */
+ --ui-chart-2:#6b6861;--ui-chart-3:#928f87;--ui-chart-4:#bab6ae;--ui-chart-5:#43413a;--ui-chart-6:#d4d0c8;--ui-chart-8:#a4a099;
+ /* Taralı seri dolgusu yalnız taralı aşamada tanımlanır; diğerleri initial ile düz renge düşer. */
+ --ui-line-series-fill:initial;
+ --ui-line-hatch:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%2317150f%27 stroke-width=%271.4%27/%3E%3C/svg%3E");--ui-line-hatch-soft:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%236b6861%27 stroke-width=%271.4%27/%3E%3C/svg%3E");
  --ui-line-ink:#17150f;--ui-line-mark:#c23a1b;--ui-line-paper:#f3efe6;--ui-line-ink-hover:#3a362d;
 }
 :root[data-ui-style="line"][data-theme="dark"]{
@@ -119,12 +124,13 @@
  --ui-canvas:#12110e;--ui-rail:#12110e;--ui-surface:#12110e;--ui-surface-soft:#181714;--ui-surface-strong:#2c2b27;
  --ui-text:#efeadf;--ui-text-secondary:#cfc9ba;--ui-text-muted:#a9a394;
  --ui-accent:#efeadf;--ui-accent-hover:#cfc9ba;--ui-selected:#282723;--ui-selected-ink:#efeadf;--ui-on-accent:#12110e;
- --ui-success:#8fc4a2;--ui-success-bg:rgba(143,196,162,.14);--ui-danger:#ec6a45;--ui-danger-bg:rgba(236,106,69,.14);--ui-warning:#d9b46e;--ui-warning-bg:rgba(217,180,110,.14);
+ --ui-success:#efeadf;--ui-success-bg:rgba(239,234,223,.08);--ui-danger:#ec6a45;--ui-danger-bg:rgba(236,106,69,.14);--ui-warning:#efeadf;--ui-warning-bg:rgba(239,234,223,.1);
  --ui-header-bg:#12110e;--ui-header-ink:#a9a394;--ui-group-header-bg:#12110e;--ui-group-header-ink:#a9a394;
  --ui-check-idle:#5a574f;--ui-row-divider:#35342f;--ui-group-divider:#efeadf;--ui-field-border:#efeadf;
  --ui-row-hover:#22201d;--ui-status-default:#a9a394;--ui-backdrop-tint:rgba(0,0,0,.14);
  --ui-shadow-color:rgba(0,0,0,.5);
- --ui-chart-3:#9fc6c4;--ui-chart-4:#d5b493;--ui-chart-5:#c9c39a;--ui-chart-8:#b2c0d2;
+ --ui-chart-2:#9b9890;--ui-chart-3:#73706a;--ui-chart-4:#4b4944;--ui-chart-5:#c3bfb5;--ui-chart-6:#312f2b;--ui-chart-8:#625f59;
+ --ui-line-hatch:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%23efeadf%27 stroke-width=%271.4%27/%3E%3C/svg%3E");--ui-line-hatch-soft:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%274%27 height=%274%27%3E%3Cpath d=%27M-1 1L1-1M0 4L4 0M3 5L5 3%27 stroke=%27%239b9890%27 stroke-width=%271.4%27/%3E%3C/svg%3E");
  --ui-line-ink:#efeadf;--ui-line-mark:#ec6a45;--ui-line-paper:#12110e;--ui-line-ink-hover:#cfc9ba;
 }
 

@@ -414,7 +414,9 @@ function timelineTipHtml(title,bucket){
   const total=Number(bucket&&bucket.qty)||0,overdue=Number(bucket&&bucket.overdueQty)||0;
   return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(total))}</em></span>${overdue?`<span class="blvTimelineTooltipOverdue"><i></i><b>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</b><em>${esc(n(overdue))}</em></span>`:''}`;
 }
-function timelineGroupColor(index){const colors=chartColors();return colors[Math.max(0,Number(index)||0)%colors.length]}
+// Canlı token: stil ve tema değişiminde yeniden çizim gerekmeden güncel renk (Klasik'te aynı değer).
+const TIMELINE_GROUP_COLORS=['var(--ui-chart-1)','var(--ui-chart-2)','var(--ui-chart-3)','var(--ui-chart-4)','var(--ui-chart-5)','var(--ui-chart-6)','var(--ui-chart-7)','var(--ui-chart-8)'];
+function timelineGroupColor(index){return TIMELINE_GROUP_COLORS[Math.max(0,Number(index)||0)%TIMELINE_GROUP_COLORS.length]}
 function timelineDimensionTipHtml(title,bucket,dimension,names){
   const grouped=R().groupBy(bucket&&bucket.items||[],dimension,{blank:L('(boş)','(blank)')}),byName=new Map(grouped.map(g=>[g.name,g]));
   const rows=(names||[]).map((name,index)=>{

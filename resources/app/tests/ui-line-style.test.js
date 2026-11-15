@@ -231,3 +231,40 @@ test('Line identity: the logo, boot card and sign-in change only in Line style',
   assert.match(css, /html\[data-ui-system="manifest"\]\[data-ui-style="line"\] #blBootGuard \.blBootCard \{border:1px solid var\(--ui-line-ink\) !important;/);
   assert.match(css, /\.blLineLogo \.blLineLogoMark \{stroke:var\(--ui-line-mark\)/);
 });
+
+test('Line labels and charts follow presentation A: ink, gray steps, hatch and one red', () => {
+  const tokens = read('ui-tokens.css');
+  const line = tokens.slice(tokens.indexOf(':root[data-ui-style="line"]{'), tokens.indexOf('/* Collapsed navigation'));
+  // Positive and warning states turn to ink; red is reserved for danger/critical (chart-7 stays var(--ui-danger)).
+  assert.match(line, /--ui-success:#17150f;[^\n]*--ui-warning:#17150f;/);
+  assert.match(line, /--ui-success:#efeadf;[^\n]*--ui-warning:#efeadf;/);
+  // Series: gray steps (no hue) in both themes, plus ink hatch patterns.
+  for (const block of [line.slice(0, line.indexOf('[data-theme="dark"]')), line.slice(line.indexOf('[data-theme="dark"]'))]) {
+    for (const n of [2, 3, 4, 5, 6, 8]) {
+      const hex = block.match(new RegExp(`--ui-chart-${n}:#([0-9a-f]{6});`))[1];
+      const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
+      assert.ok(Math.max(r, g, b) - Math.min(r, g, b) <= 16, `chart-${n} is a neutral step`);
+    }
+    assert.match(block, /--ui-line-hatch:url\("data:image\/svg\+xml,[^"]*stroke=%27%23[0-9a-f]{6}%27[^"]*"\);/);
+  }
+  assert.doesNotMatch(line, /--ui-chart-7:/, 'chart-7 keeps the danger red');
+  const css = read('ui-components.css');
+  // Priority/status badges: plain text, Critical in the one red, critical rows marked with a 2px red rule.
+  assert.match(css, /\[data-ui-style="line"\]:not\(#bl-line\):not\(#bl-line-x\) \.badge \{background:transparent !important;/);
+  assert.match(css, /\.badge\.b-red \{color:var\(--ui-line-mark\) !important;font-weight:600 !important/);
+  assert.match(css, /:is\(#cpTable,#ordersTable\) tbody tr\.rowCritical > td:first-child \{border-left:2px solid var\(--ui-line-mark\) !important/);
+  assert.match(read('app-main.js'), /if\(criticalPriorityKey&&r\[criticalPriorityKey\]&&priorityTone\(r\[criticalPriorityKey\]\)==='red'\)tr\.classList\.add\('rowCritical'\);/);
+  // Backlog stages as in the presentation: production ink, loading gray, transit hatched, warehouse light, shortage red.
+  assert.match(css, /\[data-stage="IN_TRANSIT"\] \{--ui-series-color:var\(--ui-text\);--ui-line-series-fill:var\(--ui-line-hatch\)/);
+  assert.match(css, /\[data-stage="LOADING"\] \{--ui-series-color:var\(--ui-chart-2\)/);
+  // Thin geometry: 1px base + 3px fill bars, 2px column stems.
+  assert.match(css, /\.psaBarTrack i\.isCur \{top:auto;bottom:-1px;height:3px/);
+  assert.match(css, /\.mfpMonthBars i \{width:2px;max-width:2px/);
+  // Categorical palettes use chart tokens (Classic values are identical aliases), so Line separates them.
+  assert.match(read('overview-collection-dashboard.js'), /const VIS_PALETTE=\['var\(--ui-chart-1\)','var\(--ui-chart-6\)','var\(--ui-chart-2\)'/);
+  assert.match(read('transit-analysis-ui.js'), /\['customs', 'var\(--ui-chart-2\)'\]/);
+  assert.match(tokens, /--ui-chart-1:var\(--ui-accent\);--ui-chart-2:var\(--ui-warning\);/);
+  assert.match(tokens, /--ui-chart-6:var\(--ui-success\);--ui-chart-7:var\(--ui-danger\);/);
+  // The map palette refreshes when the style changes.
+  assert.match(read('overview-global-flow.js'), /attributeFilter:\['data-theme','lang','data-ui-scale','data-ui-style'\]/);
+});

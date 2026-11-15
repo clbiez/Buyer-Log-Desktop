@@ -193,7 +193,8 @@
     /* Renk verilmemiş (varsayılan gri) statüler dağılımda birbirinden ayrılsın:
        yalnız görselleştirmede tema tokenlarından sıralı renk atanır; katalog
        verisi ve Excel renkleri değişmez. */
-    const VIS_PALETTE=['var(--ui-accent)','var(--ui-success)','var(--ui-warning)','var(--ui-chart-4,#5e4f8c)','var(--ui-chart-3,#33685c)','var(--ui-danger)','var(--ui-accent,var(--ui-accent))'];
+    // Kategori paleti grafik token'larından: Klasik'te chart-1/6/2/7 vurgu/başarı/uyarı/tehlikenin aynısı; Çizgi stilinde gri basamaklar.
+    const VIS_PALETTE=['var(--ui-chart-1)','var(--ui-chart-6)','var(--ui-chart-2)','var(--ui-chart-4,#5e4f8c)','var(--ui-chart-3,#33685c)','var(--ui-chart-7)','var(--ui-chart-1)'];
     const visColor=function(status,index){const c=ctx.statusColor(status);return (!c||/^#667085$/i.test(String(c)))?VIS_PALETTE[index%VIS_PALETTE.length]:c;};
     const colorByStatus=new Map(rows.map(function(row,index){return [row.status,visColor(row.status,index)];}));
     const rank=function(status){return order.has(status)?order.get(status):9999;};

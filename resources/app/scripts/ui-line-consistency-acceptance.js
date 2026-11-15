@@ -25,6 +25,20 @@ for(const [name,rows] of [['ASAS',demo.asas],['Antrepo',demo.antrepo]]){
 const log=fs.openSync(path.join(root,'server.log'),'a');
 const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ignore',log,log]});
 let browser,cookie;
+function paletteAudit(){
+  const MARKS='.badge,.bpaSeg,.bpaDot,.blvBuyerStackSeg,.bpaRingValue,.psaBarTrack i,.psaDonut :is(rect,circle),.mfpMonthBars i,.mfpLegend i,#backlogOverview .bpaTileValue';
+  const rgb=v=>{const m=String(v||'').match(/rgba?\(([^)]+)\)/);if(!m)return null;const [r,g,b,a=1]=m[1].split(/[ ,\/]+/).filter(Boolean).map(Number);return a<.05?null:[r,g,b];};
+  const mark=rgb(getComputedStyle(document.documentElement).getPropertyValue('--ui-line-mark').trim().replace(/^#(..)(..)(..)$/,(_,a,b,c)=>`rgb(${parseInt(a,16)},${parseInt(b,16)},${parseInt(c,16)})`));
+  const ok=c=>!c||Math.max(...c)-Math.min(...c)<=24||(mark&&c.every((v,i)=>Math.abs(v-mark[i])<=6));
+  const out=new Set();
+  for(const el of document.querySelectorAll('main > section.active :is('+MARKS+')')){
+    const r=el.getBoundingClientRect();if(!r.width&&!r.height)continue;
+    const cs=getComputedStyle(el),svg=el instanceof SVGElement;
+    for(const [prop,value] of svg?[['fill',cs.fill],['stroke',cs.stroke]]:[['background',cs.backgroundColor],['color',cs.color]])
+      if(!ok(rgb(value)))out.add(`${(el.getAttribute('class')||el.tagName).split(' ').slice(0,2).join('.')} ${prop} ${value}`);
+  }
+  return [...out].slice(0,8);
+}
 async function api(url,body){
   const res=await fetch(base+url,{method:body?'POST':'GET',headers:{cookie:cookie||'','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   assert.ok(res.ok,await res.clone().text());return res;
@@ -113,6 +127,8 @@ function audit(F){
     for(const tab of tabs){
       await page.evaluate(t=>switchTab(t),tab);await page.waitForTimeout(1800);
       await check(`${theme}/${tab}`);
+      // Sunum A paleti: etiket ve grafik işaretleri nötr basamak ya da tek kırmızı vurgu.
+      for(const f of await page.evaluate(paletteAudit))failures.push(`${theme}/${tab} · palette · ${f}`);
       if(theme==='light')await page.screenshot({path:path.join(root,`line-${tab}.png`)});
     }
     for(const [tab,seq] of SEQUENCES){
