@@ -476,14 +476,18 @@ function bar(name,g,scaleMax,subtitle){
 function dimensionLabel(key){return key===PRIORITY_DIMENSION?L('Öncelik','Priority'):R().dimLabel(key,lang());}
 /* Operasyon dağılımında her satır yalnız ANA önceliğiyle sayılır (toplam =
    Backlog adedi). Takip etiketleri üst kutucuklarda ayrıca görünür. */
-function priorityGroups(){
+function priorityGroupsOf(list){
   const pending=priorityStatus()!=='ready';
   const blank=pending?L('(öncelik hazırlanıyor)','(priority pending)'):L('(CP eşleşmesi yok)','(no CP match)');
   const byCode=new Map();
-  for(const it of items){const code=it.priorityCode||'';if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push(it);}
-  return [...byCode.entries()].map(([code,list])=>({code,name:code?priorityLabel(code):blank,items:list,...R().summarize(list)}))
+  for(const it of list||[]){const code=it.priorityCode||'';if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push(it);}
+  return [...byCode.entries()].map(([code,group])=>({code,name:code?priorityLabel(code):blank,items:group,...R().summarize(group)}))
     .sort((a,b)=>(a.code?priorityRank(a.code):999)-(b.code?priorityRank(b.code):999)||b.qty-a.qty);
 }
+function priorityGroups(){return priorityGroupsOf(items);}
+/* Katalog tonu → tasarım token'ı (ui-components.css .blvPriorityTile eşlemesiyle aynı). */
+const PRIORITY_TONE_TOKEN={red:'--ui-danger',copper:'--ui-chart-4',orange:'--ui-warning',yellow:'--ui-warning',blue:'--ui-accent',teal:'--ui-chart-3',green:'--ui-success',gray:'--ui-text-secondary'};
+function priorityToneVar(code){return `var(${code?(PRIORITY_TONE_TOKEN[priorityTone(code)]||'--ui-text-secondary'):'--ui-text-muted'})`;}
 function groupCard(total){
   const dims=[...R().DIMENSIONS,PRIORITY_DIMENSION],key=dims.includes(state.groupBy)?state.groupBy:'buyer',label=dimensionLabel(key);
   const groups=key===PRIORITY_DIMENSION?priorityGroups():R().groupBy(items,key,{blank:L('(boş)','(blank)')}),list=state.showAll?groups:groups.slice(0,15),max=groups.reduce((m,g)=>Math.max(m,g.qty),0);
@@ -508,25 +512,44 @@ function timelineTipHtml(title,bucket){
   return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(total))}</em></span>${overdue?`<span class="blvTimelineTooltipOverdue"><i></i><b>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</b><em>${esc(n(overdue))}</em></span>`:''}`;
 }
 function timelineGroupColor(index){const colors=chartColors();return colors[Math.max(0,Number(index)||0)%colors.length]}
+/* Zaman Akışı alt kırılımı: Buyer Grup, Buyer veya Öncelik. Öncelikte her satır
+   yalnız ANA önceliğiyle sayılır (dönem toplamı = Backlog adedi); sıra ve renk
+   kullanıcının etiket kataloğundandır, takip etiketleri ipucunda listelenir. */
+const TIMELINE_DIMENSIONS=['buyingGroup','buyer',PRIORITY_DIMENSION];
+function timelineDimensionKey(value){return TIMELINE_DIMENSIONS.includes(value)?value:'buyingGroup';}
+function timelineDimensionLabel(dimension){return dimension===PRIORITY_DIMENSION?L('Öncelik','Priority'):R().dimLabel(dimension,lang());}
+function timelineDimensionGroups(list,dimension){
+  return dimension===PRIORITY_DIMENSION?priorityGroupsOf(list):R().groupBy(list,dimension,{blank:L('(boş)','(blank)')});
+}
+/* names: [{name,color}] — renk Buyer kırılımlarında grafik paletinden, Öncelikte etiket tonundan. */
+function timelineDimensionNames(dimension){
+  return timelineDimensionGroups(items,dimension).map((g,index)=>({name:g.name,color:dimension===PRIORITY_DIMENSION?priorityToneVar(g.code):timelineGroupColor(index)}));
+}
+function timelineTrackingTipRows(list){
+  const map=new Map();
+  for(const it of list||[])for(const code of it.trackingTags||[]){const e=map.get(code)||{code,qty:0};e.qty+=Number(it.qty)||0;map.set(code,e);}
+  return [...map.values()].sort((a,b)=>priorityRank(a.code)-priorityRank(b.code)).map(e=>`<span><i style="--ui-series-color:${priorityToneVar(e.code)}"></i><b>${esc(L('Takip: ','Tracking: ')+priorityLabel(e.code))}</b><em>${esc(n(e.qty))}</em></span>`).join('');
+}
 function timelineDimensionTipHtml(title,bucket,dimension,names){
-  const grouped=R().groupBy(bucket&&bucket.items||[],dimension,{blank:L('(boş)','(blank)')}),byName=new Map(grouped.map(g=>[g.name,g]));
-  const rows=(names||[]).map((name,index)=>{
-    const g=byName.get(name);if(!g||!g.qty)return '';
-    return `<span><i style="--ui-series-color:${timelineGroupColor(index)}"></i><b>${esc(name)}</b><em>${esc(n(g.qty))}</em></span>`;
+  const grouped=timelineDimensionGroups(bucket&&bucket.items||[],dimension),byName=new Map(grouped.map(g=>[g.name,g]));
+  const rows=(names||[]).map(entry=>{
+    const g=byName.get(entry.name);if(!g||!g.qty)return '';
+    return `<span><i style="--ui-series-color:${entry.color}"></i><b>${esc(entry.name)}</b><em>${esc(n(g.qty))}</em></span>`;
   }).join('');
-  return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(bucket&&bucket.qty||0))}</em></span>`;
+  const tracking=dimension===PRIORITY_DIMENSION?timelineTrackingTipRows(bucket&&bucket.items):'';
+  return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(bucket&&bucket.qty||0))}</em></span>${tracking}`;
 }
 function timelineDimensionLegend(names,label){
-  return `<div class="blvTimelineLegend blvTimelineLegend--dimension"><span class="blvTimelineLegendLabel">${esc(label)}</span><div class="bpaLegend blvBuyerLegend">${(names||[]).map((name,index)=>`<span title="${esc(name)}"><i class="bpaDot" style="--ui-series-color:${timelineGroupColor(index)}"></i>${esc(name)}</span>`).join('')}</div></div>`;
+  return `<div class="blvTimelineLegend blvTimelineLegend--dimension"><span class="blvTimelineLegendLabel">${esc(label)}</span><div class="bpaLegend blvBuyerLegend">${(names||[]).map(entry=>`<span title="${esc(entry.name)}"><i class="bpaDot" style="--ui-series-color:${entry.color}"></i>${esc(entry.name)}</span>`).join('')}</div></div>`;
 }
 function flowCard(){
   const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
   const series=R().timeline(items,field.key,{granularity:state.granularity,lang:lang()}),max=series.reduce((m,b)=>Math.max(m,b.qty),0);
   const stageMax=series.reduce((m,b)=>Math.max(m,...R().STAGES.map(s=>Number(b.stages[s.key])||0)),0);
   const chartMode=state.timelineChart==='grouped'?'grouped':'stacked';
-  const dimension=state.timelineDimension==='buyer'?'buyer':'buyingGroup',dimensionLabel=R().dimLabel(dimension,lang());
-  const dimensionNames=R().groupBy(items,dimension,{blank:L('(boş)','(blank)')}).map(g=>g.name);
-  const dimensionByBucket=new Map(series.map(b=>[b.key,R().groupBy(b.items,dimension,{blank:L('(boş)','(blank)')})]));
+  const dimension=timelineDimensionKey(state.timelineDimension),dimensionLabel=timelineDimensionLabel(dimension);
+  const dimensionNames=timelineDimensionNames(dimension);
+  const dimensionByBucket=new Map(series.map(b=>[b.key,timelineDimensionGroups(b.items,dimension)]));
   const dimensionMax=series.reduce((m,b)=>Math.max(m,...((dimensionByBucket.get(b.key)||[]).map(g=>Number(g.qty)||0)),0),0);
   const fLabel=lang()==='en'?field.en:field.tr;
   const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
@@ -564,28 +587,28 @@ function flowCard(){
     }
     const bucketGroups=dimensionByBucket.get(b.key)||[],byName=new Map(bucketGroups.map(g=>[g.name,g]));
     const groupTip=tip(timelineDimensionTipHtml(`${dimensionLabel} · ${b.label}`,b,dimension,dimensionNames));
-    const dimensionEntries=dimensionNames.map((name,index)=>{
+    const dimensionEntries=dimensionNames.map(({name,color})=>{
       const g=byName.get(name);if(!g||!g.qty)return null;
-      return {name,index,g,o:opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,items:g.items})};
+      return {name,color,g,o:opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,items:g.items})};
     }).filter(Boolean);
     let dimensionChart='';
     if(chartMode==='grouped'){
-      const bars=dimensionEntries.map(({name,index,g,o})=>{
+      const bars=dimensionEntries.map(({name,color,g,o})=>{
         const height=dimensionMax?Math.max(2,g.qty/dimensionMax*100):0;
-        return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--ui-series-color:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
+        return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--ui-series-color:${color}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
       }).join('');
       dimensionChart=`<div class="blvBuyerBars is-grouped">${bars}</div>`;
     }else{
       const stackHeight=max?Math.max(3,b.qty/max*100):0;
-      const segs=dimensionEntries.map(({name,index,g,o})=>`<span class="blvBuyerStackSeg" style="flex-grow:${g.qty};--ui-series-color:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`).join('');
+      const segs=dimensionEntries.map(({name,color,g,o})=>`<span class="blvBuyerStackSeg" style="flex-grow:${g.qty};--ui-series-color:${color}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`).join('');
       dimensionChart=`<div class="blvBuyerBars is-stacked"><div class="blvBuyerStack" style="height:${stackHeight.toFixed(1)}%">${segs}</div></div>`;
     }
     return `<div class="${columnClass} ${chartMode==='grouped'?'blvGroupedCol':''}" ${commonAttrs}>${todayMarker}<div class="bpaColValue">${value}</div><div class="bpaColTrack blvLogisticsTrack ${chartMode==='grouped'?'blvGroupTrack':''}">${logistics}</div><div class="blvBandDivider"></div><div class="blvBuyerTrack" data-blv-tip="${groupTip}" data-blv-tip-style="chart">${dimensionChart}</div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
   }).join('');
-  return `<div class="bpaCardBox blvUnifiedTimelineCard"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Tek zaman ekseninde üstte lojistik durum, altta Buyer kırılımı gösterilir. Kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','One shared time axis: logistics status above, Buyer breakdown below. Red figure: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
+  return `<div class="bpaCardBox blvUnifiedTimelineCard"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L(`Tek zaman ekseninde üstte lojistik durum, altta ${dimensionLabel} kırılımı gösterilir. Kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.`,`One shared time axis: logistics status above, ${dimensionLabel} breakdown below. Red figure: Ex-F passed but not loaded.`))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${fields.map(f=>`<button type="button" class="${f.key===field.key?'is-active':''}" data-blv-time="${f.key}">${esc(lang()==='en'?f.en:f.tr)}</button>`).join('')}</div>
     <div class="bpaSeg2 blvChartMode" role="group" aria-label="${esc(L('Lojistik grafik tipi','Logistics chart type'))}"><button type="button" class="${chartMode==='stacked'?'is-active':''}" data-blv-chart="stacked" title="${esc(L('Durumları aynı sütunda yığılmış göster','Show statuses stacked in one column'))}">${esc(L('Yığılmış','Stacked'))}</button><button type="button" class="${chartMode==='grouped'?'is-active':''}" data-blv-chart="grouped" title="${esc(L('Durumları yan yana ayrı sütunlarda göster','Show statuses as separate side-by-side columns'))}">${esc(L('Yan yana','Side by side'))}</button></div>
-    <div class="bpaSeg2 blvTimelineDimension" role="group" aria-label="${esc(L('Alt grafik kırılımı','Lower chart breakdown'))}"><button type="button" class="${dimension==='buyingGroup'?'is-active':''}" data-blv-timeline-dim="buyingGroup">${esc(L('Buyer Grup','Buying Group'))}</button><button type="button" class="${dimension==='buyer'?'is-active':''}" data-blv-timeline-dim="buyer">Buyer</button></div>
+    <div class="bpaSeg2 blvTimelineDimension" role="group" aria-label="${esc(L('Alt grafik kırılımı','Lower chart breakdown'))}"><button type="button" class="${dimension==='buyingGroup'?'is-active':''}" data-blv-timeline-dim="buyingGroup">${esc(L('Buyer Grup','Buying Group'))}</button><button type="button" class="${dimension==='buyer'?'is-active':''}" data-blv-timeline-dim="buyer">Buyer</button><button type="button" class="${dimension===PRIORITY_DIMENSION?'is-active':''}" data-blv-timeline-dim="${PRIORITY_DIMENSION}" title="${esc(L('Her satır ana önceliğiyle sayılır; takip etiketleri ipucunda','Each line counts under its main priority; tracking tags in the tooltip'))}">${esc(L('Öncelik','Priority'))}</button></div>
     <div class="bpaSeg2" role="group"><button type="button" class="${state.granularity!=='month'?'is-active':''}" data-blv-gran="week">${esc(L('Hafta','Week'))}</button><button type="button" class="${state.granularity==='month'?'is-active':''}" data-blv-gran="month">${esc(L('Ay','Month'))}</button></div></div>
     <div class="blvTimelineLegend blvTimelineLegend--status"><span class="blvTimelineLegendLabel">${esc(L('Lojistik Durum','Logistic Status'))}</span>${legend()}</div>
     ${timelineDimensionLegend(dimensionNames,dimensionLabel)}
@@ -922,7 +945,7 @@ function bind(){
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
     if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return render();}
     if(t.dataset.blvChart){state.timelineChart=t.dataset.blvChart==='grouped'?'grouped':'stacked';saveState();return render();}
-    if(t.dataset.blvTimelineDim){state.timelineDimension=t.dataset.blvTimelineDim==='buyer'?'buyer':'buyingGroup';saveState();return render();}
+    if(t.dataset.blvTimelineDim){state.timelineDimension=timelineDimensionKey(t.dataset.blvTimelineDim);saveState();return render();}
     if(t.dataset.blvGran){state.granularity=t.dataset.blvGran;saveState();return render();}
     if(t.dataset.blvAction==='today'){scrollTimelineToToday();return;}
     if(t.dataset.blvAction==='toggleAll'){state.showAll=!state.showAll;saveState();return render();}

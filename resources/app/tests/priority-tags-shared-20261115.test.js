@@ -130,3 +130,15 @@ test('Excel Backlog V3: Öncelik kırılımı, Kırılımlar sayfası ve detay s
   assert.notEqual(plainBook.getWorksheet('Backlog V3').getCell('C1').value,'Öncelik','dizin yoksa rapor değişmez');
   assert.ok(texts(plainBook.worksheets[0]).some(v=>/kırılımı$/.test(v)&&v!=='Öncelik kırılımı'),'dizin yoksa Buyer kırılımına düşer');
 });
+
+test('Backlog Zaman Akışı: Öncelik alt kırılımı ana öncelikle yığılır, renk katalog tonundan',()=>{
+  const src=read('backlog-overview.js');
+  assert.match(src,/const TIMELINE_DIMENSIONS=\['buyingGroup','buyer',PRIORITY_DIMENSION\]/);
+  assert.match(src,/data-blv-timeline-dim="\$\{PRIORITY_DIMENSION\}"/,'seçicide Öncelik düğmesi');
+  assert.match(src,/state\.timelineDimension=timelineDimensionKey\(t\.dataset\.blvTimelineDim\)/,'bilinmeyen değer Buyer Grup’a düşer');
+  assert.match(src,/dimension===PRIORITY_DIMENSION\?priorityGroupsOf\(list\)/,'ana öncelik gruplaması (toplam = dönem adedi)');
+  assert.match(src,/dimension===PRIORITY_DIMENSION\?priorityToneVar\(g\.code\):timelineGroupColor\(index\)/,'renk katalog tonundan');
+  assert.match(src,/dimension===PRIORITY_DIMENSION\?timelineTrackingTipRows\(bucket&&bucket\.items\):''/,'takip etiketleri yalnız ipucunda');
+  const tokens=src.match(/const PRIORITY_TONE_TOKEN=\{([^}]*)\}/)[1];
+  for(const tone of OD.PRIORITY_TONES)assert.match(tokens,new RegExp(tone+":'--ui-"),`ton eşlemesi eksik: ${tone}`);
+});

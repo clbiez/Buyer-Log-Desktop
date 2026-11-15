@@ -75,6 +75,16 @@ async function api(url,body){
   await page.waitForTimeout(400);
   const box=await page.locator('#backlogOverview').boundingBox();
   await page.screenshot({path:path.join(shotDir,'backlog-priority-tags.png'),clip:{x:box.x,y:box.y,width:Math.min(box.width,1560),height:Math.min(box.height,960)}});
+  // Zaman Akışı: alt kırılım Öncelik; lejant katalog etiketlerini, dönem toplamı Backlog adedini gösterir.
+  await page.locator('[data-blv-timeline-dim="priority"]').click();
+  await page.waitForFunction(()=>[...document.querySelectorAll('#backlogOverview .blvTimelineLegend--dimension span')].some(el=>el.textContent.includes('Gecikme')),null,{timeout:20000});
+  const timeline=await page.evaluate(()=>({legend:[...document.querySelectorAll('#backlogOverview .blvTimelineLegend--dimension .blvBuyerLegend span')].map(el=>el.textContent.trim()),segs:document.querySelectorAll('#backlogOverview .blvBuyerStackSeg').length}));
+  assert.ok(timeline.segs>0,'timeline priority segments');
+  const card=await page.locator('#backlogOverview .blvUnifiedTimelineCard').boundingBox();
+  await page.locator('#backlogOverview .blvUnifiedTimelineCard').scrollIntoViewIfNeeded();await page.waitForTimeout(300);
+  const card2=await page.locator('#backlogOverview .blvUnifiedTimelineCard').boundingBox();
+  await page.screenshot({path:path.join(shotDir,'backlog-timeline-priority.png'),clip:{x:card2.x,y:card2.y,width:Math.min(card2.width,1560),height:Math.min(card2.height,760)}});
+  console.log({timeline});
   await page.evaluate(()=>applyLanguage('en'));await page.waitForTimeout(200);
   const enTiles=await page.evaluate(()=>[...document.querySelectorAll('#backlogOverview .blvPriorityTile .bpaTileLabel')].map(el=>el.textContent.trim()));
   assert.ok(enTiles.includes('Delay - Loading Date'),'EN label: '+enTiles.join(' | '));
