@@ -72,7 +72,7 @@ function auditOverview(expectedLoaded){
   const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');canvas.width=canvas.height=1;
   const rgb=color=>{ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3);};
   const luminance=col=>{const [r,g,b]=col.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});return .2126*r+.7152*g+.0722*b;};
-  for(const tile of root.querySelectorAll('.blvTile')){
+  for(const tile of root.querySelectorAll('.blvTile:not(.blvPriorityTile)')){
     const token=palette[tile.dataset.stage]||'--ui-accent';
     probe.style.color=`var(${token})`;const expected=getComputedStyle(probe).color;
     for(const selector of ['.bpaTileValue','.bpaTileLabel']){

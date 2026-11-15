@@ -326,9 +326,92 @@ function ring(value){
   const raw=Number(value),v=Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):0;
   return `<svg class="blvLoadChart" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><circle class="bpaRingTrack" cx="80" cy="80" r="66"/><circle class="bpaRingValue" cx="80" cy="80" r="66" pathLength="100" stroke-dasharray="${v*100} 100" transform="rotate(-90 80 80)"/></svg>`;
 }
+/* ------------------------------------------------ Öncelik etiketleri */
+/* Öncelik Kuralları CP'de kişisel karar katmanıyla hesaplanır. Backlog satırı
+   aynı sipariş/model/renk kimliğiyle ortak dizinden (app-main.js →
+   BLCpPriorityIndex) okunur; kurallar burada ikinci kez değerlendirilmez. */
+const PRIORITY_DIMENSION='priority';
+const PRIORITY_TILE_LIMIT=8;
+const OD=()=>window.BLOrderDecisionEngine||null;
+const priorityIndex=()=>window.BLCpPriorityIndex||null;
+let priorityStamp='',priorityEnsureFailed=false;
+function priorityLabel(code){const od=OD();return (od&&typeof od.priorityLabel==='function'&&od.priorityLabel(code,lang()))||code||'';}
+function priorityMeta(code){const od=OD();return od&&typeof od.priorityMeta==='function'?od.priorityMeta(code):null;}
+function priorityRank(code){const od=OD(),rank=od&&typeof od.priorityRank==='function'?Number(od.priorityRank(code)):NaN;return Number.isFinite(rank)?rank:99;}
+function priorityStatus(){
+  const api=priorityIndex();
+  if(!api||typeof api.lookup!=='function')return 'unavailable';
+  return api.ready()?'ready':(priorityEnsureFailed?'unavailable':'pending');
+}
+/* Normalleştirilmiş Backlog kayıtlarına ana öncelik + takip etiketlerini işler.
+   Dizin revizyonu aynı kaldıkça tekrar eşleştirilmez. */
+function annotatePriorities(list){
+  const api=priorityIndex();
+  if(!Array.isArray(list)||!list.length)return;
+  const stamp=api&&typeof api.revision==='function'?String(api.revision()):'';
+  if(list[0]&&list[0]._priorityStamp===stamp&&stamp===priorityStamp)return;
+  const ready=!!(api&&api.ready&&api.ready());
+  for(const item of list){
+    const hit=ready?api.lookup(item.orderCode,item.modelName,item.colourCode):null;
+    const code=hit&&hit.priority||'';
+    item.priorityCode=code;
+    item.trackingTags=hit&&Array.isArray(hit.trackingTags)?hit.trackingTags.filter(tag=>tag&&tag!==code):[];
+    item.priorityTags=[code,...item.trackingTags].filter(Boolean);
+    item._priorityStamp=stamp;
+  }
+  priorityStamp=stamp;
+}
+function ensurePriorityIndex(){
+  const api=priorityIndex();
+  if(!api||typeof api.ensure!=='function'||api.ready()||priorityEnsureFailed)return;
+  void Promise.resolve(api.ensure()).then(ok=>{
+    if(!ok){priorityEnsureFailed=true;if(visible())render();}
+  }).catch(()=>{priorityEnsureFailed=true;if(visible())render();});
+}
+/* Görünen etiketler: Yolunda dışındaki bütün öncelik ve takip etiketleri,
+   kullanıcının katalogdaki sırasıyla. Bir satır birden çok takip etiketi
+   taşıyabildiği için etiket toplamları toplam adede eşit olmak zorunda değildir. */
+function priorityTagGroups(list){
+  const map=new Map();
+  for(const item of list||[]){
+    for(const code of item.priorityTags||[]){
+      if(code==='ON_TRACK')continue;
+      if(!map.has(code))map.set(code,[]);
+      map.get(code).push(item);
+    }
+  }
+  return [...map.entries()].map(([code,group])=>({code,items:group,qty:group.reduce((t,it)=>t+(Number(it.qty)||0),0),orders:new Set(group.map(it=>it.orderCode||it.lineId)).size}))
+    .filter(g=>g.qty>0)
+    .sort((a,b)=>priorityRank(a.code)-priorityRank(b.code)||a.code.localeCompare(b.code));
+}
+function priorityTone(code){const meta=priorityMeta(code);return meta&&meta.tone?String(meta.tone):'gray';}
+function priorityTiles(s,tile,by){
+  const status=priorityStatus();
+  if(status!=='ready'){
+    const sub=status==='pending'?L('CP öncelikleri hazırlanıyor…','Preparing CP priorities…'):L('Öncelik etiketleri için CP verisi gerekli','CP data is required for priority tags');
+    return `<div class="bpaTile blvTile blvPriorityTile is-muted" data-priority-tone="gray" role="status"><span class="bpaTileValue">—</span><span class="bpaTileLabel">${esc(L('Öncelik etiketleri','Priority tags'))}</span><span class="bpaTileSub">${esc(sub)}</span></div>`;
+  }
+  const groups=priorityTagGroups(items);
+  if(!groups.length)return `<div class="bpaTile blvTile blvPriorityTile is-muted" data-priority-tone="green" role="status"><span class="bpaTileValue">0</span><span class="bpaTileLabel">${esc(L('Öncelik etiketli adet','Priority-tagged qty'))}</span><span class="bpaTileSub">${esc(L('Bu kapsamda etiketli sipariş yok','No tagged orders in this scope'))}</span></div>`;
+  const shown=groups.length>PRIORITY_TILE_LIMIT?groups.slice(0,PRIORITY_TILE_LIMIT-1):groups;
+  const rest=groups.slice(shown.length);
+  const share=v=>pct(s.qty?v/s.qty:null);
+  const html=shown.map(g=>{
+    const label=priorityLabel(g.code),tracking=priorityMeta(g.code)?.usage==='tracking';
+    const sub=L(`${n(g.orders)} sipariş · ${share(g.qty)}${tracking?' · takip':''}`,`${n(g.orders)} orders · ${share(g.qty)}${tracking?' · tracking':''}`);
+    return tile(n(g.qty),label,sub,'',by(label,it=>(it.priorityTags||[]).includes(g.code)),g.code);
+  });
+  if(rest.length){
+    const codes=new Set(rest.map(g=>g.code)),qty=new Set(rest.flatMap(g=>g.items));
+    const restQty=[...qty].reduce((t,it)=>t+(Number(it.qty)||0),0);
+    const label=L(`Diğer ${rest.length} etiket`,`${rest.length} more tags`);
+    html.push(tile(n(restQty),label,rest.map(g=>priorityLabel(g.code)).join(' · '),'',by(label,it=>(it.priorityTags||[]).some(code=>codes.has(code))),'__rest'));
+  }
+  return html.join('');
+}
 function hero(s){
   const st=s.stages;
-  const tile=(value,label,sub,stage,open)=>`<button type="button" class="bpaTile blvTile"${stage?` data-stage="${stage}"`:''}${open?` data-blv-open="${open}"`:''}><span class="bpaTileValue">${esc(value)}</span><span class="bpaTileLabel">${esc(label)}</span>${sub?`<span class="bpaTileSub">${esc(sub)}</span>`:''}</button>`;
+  const tile=(value,label,sub,stage,open,priority)=>`<button type="button" class="bpaTile blvTile${priority?' blvPriorityTile':''}"${stage?` data-stage="${stage}"`:''}${priority?` data-priority-tone="${esc(priority==='__rest'?'gray':priorityTone(priority))}" data-priority-code="${esc(priority)}"`:''}${open?` data-blv-open="${open}"`:''}><span class="bpaTileValue">${esc(value)}</span><span class="bpaTileLabel">${esc(label)}</span>${sub?`<span class="bpaTileSub">${esc(sub)}</span>`:''}</button>`;
   const by=(title,filter)=>opener({title,subtitle:L('Backlog genel bakış','Backlog overview'),items:items.filter(filter)});
   const share=v=>pct(s.qty?v/s.qty:null);
   return `<div class="bpaHero">
@@ -340,9 +423,8 @@ function hero(s){
       ${tile(n(st.IN_TRANSIT+st.CUSTOMS),L('Yolda + Gümrük','In transit + customs'),share(st.IN_TRANSIT+st.CUSTOMS),'IN_TRANSIT',by(L('Yolda + Gümrük','In transit + customs'),it=>it.stage==='IN_TRANSIT'||it.stage==='CUSTOMS'))}
       ${tile(n(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),share(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),'IN_WAREHOUSE',by(L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),it=>it.stage==='IN_WAREHOUSE'||it.stage==='AWAITING_RETAIL_TRANSFER'))}
       ${tile(n(s.overdueQty),L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),L(`${n(s.overdueLines)} satır`,`${n(s.overdueLines)} lines`),'SHORTAGE',by(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),it=>it.overdueNotLoaded))}
-      ${tile(n(st.SHORTAGE),stageLabel('SHORTAGE'),share(st.SHORTAGE),st.SHORTAGE?'SHORTAGE':'',by(stageLabel('SHORTAGE'),it=>it.stage==='SHORTAGE'))}
-      ${tile(n(s.riskQty),L('Riskli adet','At-risk qty'),L(`${n(s.riskOrders)} sipariş · transit gecikmiş ${n(s.transitOverdueQty)}`,`${n(s.riskOrders)} orders · transit overdue ${n(s.transitOverdueQty)}`),s.riskQty?'SHORTAGE':'',by(L('Riskli adet','At-risk qty'),it=>it.risk||it.transitOverdue))}
       ${tile(n(s.specialQty),L('Özel siparişler','Special orders'),L(`${n(s.specialOrders)} sipariş · ${n(s.specialRiskOrders)} riskli`,`${n(s.specialOrders)} orders · ${n(s.specialRiskOrders)} at risk`),s.specialRiskOrders?'SHORTAGE':'',by(L('Özel siparişler','Special orders'),it=>it.special))}
+      ${priorityTiles(s,tile,by)}
     </div>
   </div>`;
 }
@@ -391,15 +473,26 @@ function bar(name,g,scaleMax,subtitle){
   }).join('');
   return `<div class="bpaBarTrack"><div class="bpaBar" style="width:${width.toFixed(2)}%">${segs||'<span class="bpaSeg is-empty"></span>'}</div></div>`;
 }
+function dimensionLabel(key){return key===PRIORITY_DIMENSION?L('Öncelik','Priority'):R().dimLabel(key,lang());}
+/* Operasyon dağılımında her satır yalnız ANA önceliğiyle sayılır (toplam =
+   Backlog adedi). Takip etiketleri üst kutucuklarda ayrıca görünür. */
+function priorityGroups(){
+  const pending=priorityStatus()!=='ready';
+  const blank=pending?L('(öncelik hazırlanıyor)','(priority pending)'):L('(CP eşleşmesi yok)','(no CP match)');
+  const byCode=new Map();
+  for(const it of items){const code=it.priorityCode||'';if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push(it);}
+  return [...byCode.entries()].map(([code,list])=>({code,name:code?priorityLabel(code):blank,items:list,...R().summarize(list)}))
+    .sort((a,b)=>(a.code?priorityRank(a.code):999)-(b.code?priorityRank(b.code):999)||b.qty-a.qty);
+}
 function groupCard(total){
-  const dims=R().DIMENSIONS,key=dims.includes(state.groupBy)?state.groupBy:'buyer',label=R().dimLabel(key,lang());
-  const groups=R().groupBy(items,key,{blank:L('(boş)','(blank)')}),list=state.showAll?groups:groups.slice(0,15),max=groups.reduce((m,g)=>Math.max(m,g.qty),0);
+  const dims=[...R().DIMENSIONS,PRIORITY_DIMENSION],key=dims.includes(state.groupBy)?state.groupBy:'buyer',label=dimensionLabel(key);
+  const groups=key===PRIORITY_DIMENSION?priorityGroups():R().groupBy(items,key,{blank:L('(boş)','(blank)')}),list=state.showAll?groups:groups.slice(0,15),max=groups.reduce((m,g)=>Math.max(m,g.qty),0);
   const row=(name,g,isTotal)=>{
     const o=opener({title:name,subtitle:label,items:g.items});
     return `<div class="bpaGRow${isTotal?' is-total':''}"><button type="button" class="bpaGName" data-blv-open="${o}" title="${esc(name)}">${esc(name)}</button>${bar(name,g,isTotal?0:max,label)}<div class="bpaGStats"><b>${esc(pct(g.loadedPct))}</b><span>${n(g.qty)} ${esc(L('adet','pcs'))}${g.overdueQty?` · <i class="blvOver">${n(g.overdueQty)} ${esc(L('gecikmiş','overdue'))}</i>`:''}</span></div></div>`;
   };
   return `<div class="bpaCardBox"><div class="bpaSectionHead"><span class="bpaSectionTitle">${esc(L('Operasyon dağılımı','Operational distribution'))}</span><span class="bpaSectionSub">${esc(L('Segmentin üzerine gelin; tıklayınca siparişler sağda açılır. Sağdaki yüzde yüklenen oranıdır.','Hover a segment; click to open its orders. The percentage is the loaded share.'))}</span><span class="bpaSectionSpacer"></span>
-    <div class="bpaSeg2" role="group">${dims.map(d=>`<button type="button" class="${d===key?'is-active':''}" data-blv-group="${d}">${esc(R().dimLabel(d,lang()))}</button>`).join('')}</div>
+    <div class="bpaSeg2" role="group">${dims.map(d=>`<button type="button" class="${d===key?'is-active':''}" data-blv-group="${d}">${esc(dimensionLabel(d))}</button>`).join('')}</div>
     <div class="bpaSeg2" role="group"><button type="button" class="${state.barScale!=='qty'?'is-active':''}" data-blv-scale="pct">%</button><button type="button" class="${state.barScale==='qty'?'is-active':''}" data-blv-scale="qty">${esc(L('Adet','Qty'))}</button></div></div>
     ${legend()}
     <div class="bpaGroups">${row(L('Tümü','All'),{...total,items},true)}${list.map(g=>row(g.name,g,false)).join('')}</div>
@@ -692,6 +785,7 @@ function render(){
   if(error){host.innerHTML=recoveryControls()+`<div class="bpaError">${esc(error)}</div>`;return;}
   if(!items||!R()){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
   if(!items.length){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
+  annotatePriorities(baseItems||items);ensurePriorityIndex();
   const total=R().summarize(items);
   host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
@@ -838,6 +932,15 @@ function bind(){
   host.addEventListener('mouseleave',hideTip);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeFilterPanel();}});
   document.addEventListener('bl:language-changed',()=>{render();if(filterOpen)renderFilterPanel();});
+  // CP öncelikleri/kuralları değişince etiket kutucukları yeniden hesaplanır.
+  window.addEventListener('bl:cp-priority-index-changed',()=>{priorityEnsureFailed=false;if(visible()&&items)render();});
+  window.addEventListener('bl:cp-decision-context-changed',()=>{priorityEnsureFailed=false;if(visible()&&items)render();});
+  // applyLanguage bl:language-changed göndermez; kullanıcı etiket adları sözlükte
+  // olmadığından dil değişimi <html lang> üzerinden izlenip yeniden çizilir.
+  if('MutationObserver' in window){
+    let lastLang=lang();
+    new MutationObserver(()=>{const next=lang();if(next===lastLang)return;lastLang=next;if(visible()&&items)render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  }
 }
 function init(){
   bind();

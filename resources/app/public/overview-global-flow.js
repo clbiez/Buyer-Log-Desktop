@@ -31,7 +31,7 @@ const SEA_AIR_AIR_LEG_DAYS=3;
 const PROGRESS_BUCKET=0.05;
 const SYMBOL_MIN_DISTANCE=22;
 const VEHICLE_CLUSTER_DISTANCE=34;
-const FILTER_KEYS=Object.freeze(['season','mag','mmyg','buyer','buyingGroup','manufacturer','country','line','category','license','mode','status']);
+const FILTER_KEYS=Object.freeze(['season','mag','mmyg','buyer','buyingGroup','manufacturer','country','line','category','license','mode','status','priority']);
 const FIELD_CANDIDATES=Object.freeze({
   orderCode:['Sipariş Kod','Sipariş Kodu','Order Code','Order No','Order','OCode'],
   shipmentFile:['İhracat Dosya No','İhracat Dosya Numarası','Export File No','Export File Number','Export File','İthalat Dosya No','İthalat Dosya Numarası','Import File No','Import File Number','Import File'],
@@ -256,14 +256,43 @@ function classifyState(status,mode,raw,receivedQty){
    gelirse aynı sözlükten koda çevrilir. "Risk VAR" gibi metinler öncelik
    değildir ve Critical sayılmaz. */
 const ACTION_PRIORITY_FALLBACK=Object.freeze(['CRITICAL','ACTION_TODAY','ACTION_THIS_WEEK','WATCH','ON_TRACK']);
+/* Kullanıcının Öncelik Kuralları'nda oluşturduğu özel etiketler "prio:<slug>"
+   kodudur (order-decision-engine.js). Kod küçük harfli olduğundan büyük harfe
+   çevrilmeden önce tanınır; aksi halde CP'de görünen etiket haritada kaybolur. */
+const CUSTOM_PRIORITY_CODE=/^prio:[a-z0-9_-]{1,35}$/;
+function decisionEngine(){return (typeof globalThis!=='undefined'&&globalThis.BLOrderDecisionEngine)||null;}
+function priorityCatalogEntries(){
+  const od=decisionEngine();
+  try{return od&&typeof od.getPriorityCatalog==='function'?od.getPriorityCatalog():[];}catch(_){return [];}
+}
 function actionPriorityCode(value){
-  const text=clean(value).toLocaleUpperCase('en-US').replace(/\s+/g,'_');if(!text)return '';
-  const od=(typeof globalThis!=='undefined'&&globalThis.BLOrderDecisionEngine)||null,table=od&&od.ACTION_PRIORITY||null;
+  const raw=clean(value);if(!raw)return '';
+  if(CUSTOM_PRIORITY_CODE.test(raw))return raw;
+  const text=raw.toLocaleUpperCase('en-US').replace(/\s+/g,'_');
+  const od=decisionEngine(),table=od&&od.ACTION_PRIORITY||null;
   if(table?table[text]:ACTION_PRIORITY_FALLBACK.includes(text))return text;
   if(text==='ACT_TODAY')return 'ACTION_TODAY';if(text==='ACT_THIS_WEEK')return 'ACTION_THIS_WEEK';
-  if(table){const wanted=norm(value);for(const [code,meta] of Object.entries(table)){if(norm(meta&&meta.tr)===wanted||norm(meta&&meta.en)===wanted)return code;}}
-  else if(/^(kritik|critical)$/.test(norm(value)))return 'CRITICAL';
+  const wanted=norm(value);
+  if(table){for(const [code,meta] of Object.entries(table)){if(norm(meta&&meta.tr)===wanted||norm(meta&&meta.en)===wanted)return code;}}
+  else if(/^(kritik|critical)$/.test(wanted))return 'CRITICAL';
+  for(const meta of priorityCatalogEntries()){if(meta&&meta.id&&(norm(meta.tr)===wanted||norm(meta.en)===wanted))return meta.id;}
   return '';
+}
+function priorityTagLabel(code){
+  const od=decisionEngine();
+  if(od&&typeof od.priorityLabel==='function'){const label=od.priorityLabel(code,isEn()?'en':'tr');if(label)return label;}
+  return code||'';
+}
+function priorityTagRank(code){
+  const od=decisionEngine(),rank=od&&typeof od.priorityRank==='function'?Number(od.priorityRank(code)):NaN;
+  return Number.isFinite(rank)?rank:99;
+}
+/* Backlog/Orders kayıtları kendi satırlarında kişisel öncelik kuralı taşımaz;
+   CP'de hesaplanmış ortak öncelik aynı sipariş/model/renk kimliğinden okunur. */
+function cpPriorityFor(rec){
+  const index=(typeof globalThis!=='undefined'&&globalThis.BLCpPriorityIndex)||null;
+  if(!index||typeof index.lookup!=='function')return null;
+  try{return index.lookup(rec.orderCode,rec.model,rec.colourCode);}catch(_){return null;}
 }
 function backlogActionPriority(row){
   const engine=(typeof globalThis!=='undefined'&&globalThis.BLBacklogDeliveryEngine)||null;
@@ -324,10 +353,17 @@ function normalizeRecord(row,source,index,resolver){
     exFactory:dateText(get(src,'exFactory')),
     transitDays:Math.max(0,meta&&Number(meta.transitDays)>0?Number(meta.transitDays):toNumber(get(src,'transitDays'))),
     priority,
-    actionPriority:actionPriorityCode(priority)||backlogActionPriority(src),
+    actionPriority:actionPriorityCode(priority),
+    trackingTags:[],
     origin:countryCoordinate(country),
     raw:src
   };
+  const shared=source==='cp'?null:cpPriorityFor(rec);
+  if(!rec.actionPriority&&shared&&shared.priority)rec.actionPriority=shared.priority;
+  if(!rec.actionPriority)rec.actionPriority=backlogActionPriority(src);
+  const ownTags=Array.isArray(src._trackingTags)?src._trackingTags:(shared&&Array.isArray(shared.trackingTags)?shared.trackingTags:[]);
+  rec.trackingTags=[...new Set(ownTags.map(clean).filter(Boolean))].filter(code=>code!==rec.actionPriority);
+  rec.priorityTags=[rec.actionPriority,...rec.trackingTags].filter(Boolean);
   rec.vesselKey=vesselKey(rec.vesselName);
   rec.orderKey=orderKeyOf(rec);
   rec.critical=rec.actionPriority==='CRITICAL';
@@ -423,7 +459,12 @@ function aggregateRecords(records){
   return [...groups.values()];
 }
 function uniqueValues(records,key){
-  const set=new Set();(records||[]).forEach(r=>{const value=clean(r&&r[key]);if(value)set.add(value);});
+  const set=new Set();
+  if(key==='priority'){
+    (records||[]).forEach(r=>(r&&Array.isArray(r.priorityTags)?r.priorityTags:[]).forEach(code=>{if(code)set.add(code);}));
+    return [...set].sort((a,b)=>priorityTagRank(a)-priorityTagRank(b)||String(a).localeCompare(String(b)));
+  }
+  (records||[]).forEach(r=>{const value=clean(r&&r[key]);if(value)set.add(value);});
   return [...set].sort(businessRules.compareChronologicalValues);
 }
 
@@ -806,7 +847,10 @@ function createPanelFilter(filters){
   const f=normalizeFilters(filters),search=norm(f.search),sets=FILTER_KEYS.filter(key=>f[key].length).map(key=>[key,new Set(f[key])]);
   return rec=>{
     if(search){const hay=norm([rec.orderCode,rec.model,rec.colourCode,rec.buyer,rec.manufacturer,rec.status,rec.country,rec.shipmentFile,rec.containerNo,rec.vesselName].join(' '));if(!hay.includes(search))return false;}
-    for(const [key,set] of sets)if(!set.has(clean(rec[key])))return false;
+    for(const [key,set] of sets){
+      if(key==='priority'){if(!(Array.isArray(rec.priorityTags)?rec.priorityTags:[]).some(code=>set.has(code)))return false;continue;}
+      if(!set.has(clean(rec[key])))return false;
+    }
     return true;
   };
 }
@@ -917,7 +961,7 @@ if(typeof document==='undefined'){
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
     transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,routeTransportModes,globeDragDelta,pickHit,routeHighlightEdges,
-    normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter,
+    normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter,FILTER_KEYS,
     MAP_ENGINES,EARTH_LAYER_KEYS,normalizeEarthPrefs,viewportFrom2d,view2dFromViewport,viewportFrom3d,view3dFromViewport,heightForSpan,spanForHeight,hitIdentity,edgeSamples,geoInterpolate};
 }
 
@@ -992,8 +1036,11 @@ async function providedPartials(source,force){
   state.sourceCache.set(source,{rows,revision,records});
   return records;
 }
+function cpPriorityIndexApi(){return window.BLCpPriorityIndex||null;}
 function backlogSignature(){
-  try{return typeof backlogExportQueryParams==='function'?JSON.stringify(backlogExportQueryParams()):'';}catch(_){return '';}
+  // CP öncelik dizini değişince (kural/etiket/veri) Backlog kayıtları yeniden etiketlenir.
+  const priority=cpPriorityIndexApi()&&typeof cpPriorityIndexApi().revision==='function'?cpPriorityIndexApi().revision():'';
+  try{return (typeof backlogExportQueryParams==='function'?JSON.stringify(backlogExportQueryParams()):'')+'|p:'+priority;}catch(_){return '';}
 }
 async function ensureDecisionEngine(){
   if(window.BLBacklogDeliveryEngine)return true;
@@ -1009,6 +1056,10 @@ async function backlogPartials(force){
   if(force)window.BLBacklogRows?.invalidate?.();
   const load=window.BLBacklogRows?.loadData?window.BLBacklogRows.loadData(query):fetch('/api/backlog-export?'+new URLSearchParams(query).toString(),{credentials:'same-origin',cache:'no-store'}).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'HTTP '+response.status);return data;});
   const [data]=await Promise.all([load,ensureDecisionEngine()]);
+  // Ortak öncelik dizini hazır değilse arka planda hazırlanır; hazır olunca
+  // bl:cp-priority-index-changed haritayı yeniler. Harita bunu beklemez.
+  const priorityIndex=cpPriorityIndexApi();
+  if(priorityIndex&&typeof priorityIndex.ensure==='function'&&!priorityIndex.ready())void priorityIndex.ensure();
   const records=shipmentPartialsFromRows((Array.isArray(data.rows)?data.rows:[]).map(row=>({...row,_flowSourceRevision:data.sourceRevision})),'backlog');
   state.lastBacklogRows=records;state.lastBacklogSignature=signature;return records;
 }
@@ -1134,16 +1185,16 @@ function activeFilterCount(){
 }
 function filterSummary(key){
   const values=state.filters[key]||[];if(!values.length)return L('Tümü','All');
-  const label=v=>key==='mode'?modeLabel(v):v;
-  return values.length===1?label(values[0]):values.length+' '+L('seçili','selected');
+  return values.length===1?filterValueLabel(key,values[0]):values.length+' '+L('seçili','selected');
 }
+function filterValueLabel(key,value){return key==='mode'?modeLabel(value):key==='priority'?priorityTagLabel(value):value;}
 function filterOptions(key,label){
   const values=uniqueValues(state.records,key),selected=new Set(state.filters[key]);
   state.filters[key].forEach(value=>{if(!values.includes(value))values.push(value);});
   const search=values.length>8?'<input type="search" class="gfMultiSearch" data-gf-multi-search placeholder="'+esc(L('Ara…','Search…'))+'">':'';
   const ordered=values.slice().sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
   return '<div class="gfFilterField"><span>'+esc(label)+'</span><details class="gfMulti'+(selected.size?' hasValue':'')+'" data-gf-multi="'+esc(key)+'"><summary><b data-gf-multi-summary>'+esc(filterSummary(key))+'</b></summary>'+
-    '<div class="gfMultiPanel">'+search+'<div class="gfMultiList">'+(ordered.length?ordered.map((value,index)=>'<label data-gf-order="'+values.indexOf(value)+'"><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(key==='mode'?modeLabel(value):value)+'</span></label>').join(''):'<small>'+esc(L('Değer yok','No values'))+'</small>')+'</div>'+
+    '<div class="gfMultiPanel">'+search+'<div class="gfMultiList">'+(ordered.length?ordered.map((value,index)=>'<label data-gf-order="'+values.indexOf(value)+'"><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(filterValueLabel(key,value))+'</span></label>').join(''):'<small>'+esc(L('Değer yok','No values'))+'</small>')+'</div>'+
     '<button type="button" class="gfMultiClear" data-gf-multi-clear>'+esc(L('Temizle','Clear'))+'</button></div></details></div>';
 }
 function renderFilters(){
@@ -1155,7 +1206,7 @@ function renderFilters(){
     filterOptions('season',L('Sezon','Season'))+filterOptions('mag','MAG')+filterOptions('mmyg','MMYG')+filterOptions('buyer','Buyer')+
     filterOptions('buyingGroup','Buyer Group')+filterOptions('manufacturer',L('Üretici','Supplier'))+
     filterOptions('country',L('Ülke','Country'))+filterOptions('line','Line')+filterOptions('category',L('Kategori','Category'))+filterOptions('license',L('Lisans','License'))+
-    filterOptions('mode',L('Taşıma','Transport'))+filterOptions('status',L('Statü','Status'))+
+    filterOptions('mode',L('Taşıma','Transport'))+filterOptions('status',L('Statü','Status'))+filterOptions('priority',L('Öncelik etiketi','Priority tag'))+
     '<button type="button" class="tbtn" data-gf-clear>'+esc(L('Filtreleri temizle','Clear filters'))+'</button>';
 }
 function updateFilterSummaries(){
@@ -1764,7 +1815,6 @@ function partialLabel(rec){
   return rec.partialNo!=null?'P'+rec.partialNo:(rec.partialKind?L('Parsiyel','Partial'):'—');
 }
 function detailColumns(records){
-  const priorityLabel=code=>{const meta=window.BLOrderDecisionEngine&&window.BLOrderDecisionEngine.ACTION_PRIORITY&&window.BLOrderDecisionEngine.ACTION_PRIORITY[code];return meta?(isEn()?meta.en:meta.tr):code||'';};
   const standard=[
     {key:'source',label:L('Kaynak','Source'),value:r=>sourceLabel(r.source)},{key:'partial',label:L('Parsiyel','Partial'),value:partialLabel},
     {key:'shipmentFile',label:L('İhracat / İthalat Dosya No','Export / Import File No')},{key:'containerNo',label:L('Konteyner No','Container No')},{key:'vesselName',label:L('Gemi Ad','Vessel Name')},
@@ -1773,7 +1823,8 @@ function detailColumns(records){
     {key:'mode',label:L('Taşıma','Transport'),value:r=>modeLabel(r.mode)},{key:'qty',label:L('Adet','Qty')},{key:'handover',label:'Handover'},{key:'exFactory',label:'Ex-Factory'},{key:'eta',label:'ETA'},
     {key:'routeProgress',label:L('Rota ilerlemesi','Route progress'),value:r=>{const p=placementOf(r);return p?Math.round(p.meta.progress*100)+'%'+(p.meta.known?'':' ~'):'';}},
     {key:'transitDays',label:L('Geçen / yol süresi (gün)','Elapsed / lead days'),value:r=>{const p=placementOf(r);return p&&p.meta.elapsedDays!=null?Math.floor(p.meta.elapsedDays)+' / '+Math.round(p.meta.leadDays):'';}},
-    {key:'priority',label:'Priority',value:r=>priorityLabel(r.actionPriority)}
+    {key:'priority',label:'Priority',value:r=>priorityTagLabel(r.actionPriority)},
+    {key:'trackingTags',label:L('Takip etiketleri','Tracking tags'),value:r=>(r.trackingTags||[]).map(priorityTagLabel).join(', ')}
   ];
   const labels=new Set(standard.map(col=>norm(col.label)).concat(standard.map(col=>norm(col.key)))),extras=[],seen=new Set();
   (records||[]).slice(0,40).forEach(rec=>Object.keys(rec&&rec.raw||{}).forEach(rawKey=>{const label=clean(rawKey),keyNorm=norm(label);if(!label||label.startsWith('_')||labels.has(keyNorm)||seen.has(keyNorm))return;seen.add(keyNorm);extras.push({key:'raw:'+rawKey,label,value:r=>r&&r.raw?r.raw[rawKey]:''});}));
@@ -1789,6 +1840,7 @@ function cpDetailRows(records){
     // STATUS / Handover / Shipment Quantity göstermez.
     Object.assign(row,{
       'Priority':rec.actionPriority||actionPriorityCode(rec.priority)||'',
+      _trackingTags:Array.isArray(rec.trackingTags)?rec.trackingTags.slice():[],
       'Season':rec.season||'',
       'Country':rec.country||'',
       'Buyer Grup (TR)':rec.buyingGroup||'',
@@ -2063,6 +2115,7 @@ function bindObservers(){
     const tables=event&&event.detail&&Array.isArray(event.detail.tables)?event.detail.tables:['cp','orders'];
     if(state.source==='combined'||tables.includes(state.source))scheduleRefresh(250);
   });
+  window.addEventListener('bl:cp-priority-index-changed',()=>{if(state.source!=='cp')scheduleRefresh(250);});
   const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang','data-ui-scale']});state.observers.push(themeObserver);
   const widget=$('globalFlowMapWidget');
   if(widget&&typeof IntersectionObserver==='function'){

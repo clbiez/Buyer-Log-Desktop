@@ -1135,8 +1135,86 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
     }
   }
   _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision,day:new Date().toDateString()};
+  if(tableKey==='cp'){_cpPriorityIndex=null;_cpPriorityIndexRevision+=1;try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}}
   return true;
 }
+/* Ortak öncelik dizini. Öncelik Kuralları ve etiketleri yalnız CP satırlarında
+   (kişisel karar katmanıyla) hesaplanır; Backlog ve Global Flow aynı sonucu
+   sipariş + model + renk kimliğiyle buradan okur, kuralları ikinci kez
+   değerlendirmez. Dizin CP öncelik önbelleğine bağlıdır: önbellek düşünce
+   (veri/kural değişimi) dizin de geçersizdir ve yeniden kurulur. */
+let _cpPriorityIndex=null,_cpPriorityEnsurePromise=null,_cpPriorityIndexRevision=0;
+function cpPriorityIdentity(...parts){
+  return parts.map(value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR').replace(/\s+/g,' ')).join('\u001f');
+}
+function cpPriorityRowField(row,id,fallback){
+  const canonical=window.BLCanonicalFields;
+  if(canonical&&typeof canonical.value==='function'){
+    try{const value=canonical.value(row,'cp',id);if(value!=null&&String(value).trim()!=='')return value;}catch(_){}
+  }
+  return row?row[fallback]:'';
+}
+function cpPriorityIndexReady(){
+  const cached=_unifiedPriorityCache.cp;
+  return Boolean(cached&&state.cp&&cached.rows===state.cp.rows&&cached.day===new Date().toDateString());
+}
+function buildCpPriorityIndex(){
+  if(!cpPriorityIndexReady())return null;
+  const stamp=_unifiedPriorityCache.cp;
+  if(_cpPriorityIndex&&_cpPriorityIndex.stamp===stamp)return _cpPriorityIndex;
+  const OD=window.BLOrderDecisionEngine,line=new Map(),orderColour=new Map(),order=new Map();
+  const merge=(map,key,entry)=>{
+    if(!key)return;
+    const prev=map.get(key);
+    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1});return;}
+    prev.count+=1;
+    prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
+    entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
+  };
+  for(const row of state.cp.rows){
+    if(!row)continue;
+    const priority=actionPriorityCode(row['Priority']);
+    if(!priority)continue;
+    const orderCode=cpPriorityRowField(row,'orderCode','Order Code');
+    if(!String(orderCode||'').trim())continue;
+    const model=cpPriorityRowField(row,'modelName','Model Name'),colour=cpPriorityRowField(row,'colourCode','C.Code');
+    const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
+    merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
+    merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
+    merge(order,cpPriorityIdentity(orderCode),entry);
+  }
+  _cpPriorityIndex={stamp,line,orderColour,order};
+  return _cpPriorityIndex;
+}
+function lookupCpPriority(orderCode,model,colourCode){
+  const index=buildCpPriorityIndex();
+  if(!index||!String(orderCode||'').trim())return null;
+  // Sipariş yalnız kodla eşleşiyorsa ve CP'de birden fazla satırı varsa başka
+  // bir rengin etiketi ödünç alınmaz.
+  const hit=index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
+    ||(String(colourCode||'').trim()?index.orderColour.get(cpPriorityIdentity(orderCode,colourCode)):null)
+    ||(()=>{const only=index.order.get(cpPriorityIdentity(orderCode));return only&&only.count===1?only:null;})();
+  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags]}:null;
+}
+function ensureCpPriorityIndex(){
+  if(cpPriorityIndexReady())return Promise.resolve(true);
+  if(_cpPriorityEnsurePromise)return _cpPriorityEnsurePromise;
+  _cpPriorityEnsurePromise=(async()=>{
+    if(!state.cp&&!(await ensureOverviewCpDependency()))return false;
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)await window.BLPerf?.ensureFeature?.('cpAssistant');
+    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)return false;
+    await scheduleUnifiedPrioritiesForTable('cp');
+    return cpPriorityIndexReady();
+  })().catch(()=>false).finally(()=>{_cpPriorityEnsurePromise=null;});
+  return _cpPriorityEnsurePromise;
+}
+window.BLCpPriorityIndex={
+  ready:cpPriorityIndexReady,
+  revision:()=>_cpPriorityIndexRevision+(cpPriorityIndexReady()?':ready':':pending'),
+  ensure:ensureCpPriorityIndex,
+  lookup:lookupCpPriority,
+  catalog:()=>{const OD=window.BLOrderDecisionEngine;return OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():[];},
+};
 let cpPriorityJob=null;
 function scheduleUnifiedPrioritiesForTable(tableKey){
   if(tableKey==='orders')return Promise.resolve(true);
@@ -2339,7 +2417,7 @@ async function globalFlowEnsure(tableKey,options){
 window.BLGlobalFlowDataProviders={
   cp:async options=>(await globalFlowEnsure('cp',options))?globalFlowSourceRows('cp'):[],
   orders:async options=>(await globalFlowEnsure('orders',options))?globalFlowSourceRows('orders'):[],
-  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0),
+  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0)+(tableKey==='orders'?':'+window.BLCpPriorityIndex.revision():''),
 };
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 

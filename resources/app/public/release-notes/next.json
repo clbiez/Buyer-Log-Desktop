@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow."
   },
   "changes": [
     {
@@ -345,6 +345,35 @@
       "body": {
         "tr": "“Sunumu şekillendir” adımında önizleme alanı boş kalıyordu; slaytlar ve kartlar artık doğru çizilir. Sol panel ile önizleme arasındaki sınır sürüklenerek (klavyede ok tuşlarıyla) genişletilir, çift tıklama varsayılana döner ve genişlik hatırlanır. “Önizle ve oluştur” düğmesi alt barda sabit durur. Dosya oluşturulduğunda alt barda dosya adı, Aç, Klasörde Göster ve Şablon olarak kaydet düğmeleriyle yeşil bir bant görünür. Sütun satırları daha sıkıdır; işaretlenmemiş kutular ve bağlı olmayan Bağlantılar noktaları daha soluk griyle gösterilir.",
         "en": "In the “Shape the presentation” step the preview area stayed empty; slides and cards are now drawn correctly. The border between the left panel and the preview can be dragged (or moved with the arrow keys), a double click restores the default and the width is remembered. The “Preview and create” button stays fixed in the bottom bar. When a file is created, a green band with the file name and Open, Show in folder and Save as template buttons appears in the bottom bar. Column rows are tighter; unticked boxes and disconnected Connections dots use a much softer grey."
+      }
+    },
+    {
+      "id": "priority-tags-everywhere",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Global Flow · CP Öncelik Kuralları",
+        "en": "Backlog · Global Flow · CP Priority Rules"
+      },
+      "title": {
+        "tr": "Öncelik etiketleriniz Backlog ve Global Flow'da da görünür",
+        "en": "Your priority tags also appear in Backlog and Global Flow"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-priority-tags.png",
+        "alt": {
+          "tr": "Backlog Genel Bakış: öncelik etiketi kutucukları (Bu Hafta Aksiyon, Gecikme - Yükleme Tarihi) ve Operasyon Dağılımı'nda seçili Öncelik kırılımı",
+          "en": "Backlog Overview: priority tag tiles (Action This Week, Delay - Loading Date) and the Priority breakdown selected in Operational Distribution"
+        },
+        "caption": {
+          "tr": "Etiket kutucuğuna tıklayınca o etiketin siparişleri sağda açılır; Öncelik kırılımı her satırı ana önceliğiyle sayar.",
+          "en": "Click a tag tile to open its orders on the right; the Priority breakdown counts each line by its main priority."
+        }
+      },
+      "body": {
+        "tr": "Öncelik Kuralları'nda oluşturduğunuz etiketler artık yalnız CP'de değil, Backlog ve Global Flow'da da görünür. Backlog Genel Bakış'ta Eksik Yükleme ve Riskli adet kutucuklarının yerine, kapsamdaki her öncelik ve takip etiketinin adedi, sipariş sayısı ve payı gösterilir; kutucuğa tıklayınca siparişler açılır. Operasyon Dağılımı'na Öncelik kırılımı eklendi. Global Flow detayında özel etiketler artık “—” ya da “Yolunda” görünmez; takip etiketleri ayrı sütunda listelenir ve filtrelerde Öncelik etiketi seçilebilir. Backlog satırları CP'deki aynı sipariş/model/renk satırının önceliğini kullanır; kurallar ikinci kez hesaplanmaz.",
+        "en": "The tags you create in Priority Rules now appear not only in CP but also in Backlog and Global Flow. In Backlog Overview, the Shortage and At-risk qty tiles are replaced by the quantity, order count and share of every priority and tracking tag in scope; click a tile to open its orders. A Priority breakdown was added to Operational Distribution. In the Global Flow detail, custom tags no longer show as “—” or “On Track”; tracking tags are listed in their own column and Priority tag can be selected in the filters. Backlog lines use the priority of the matching order/model/colour line in CP; rules are not evaluated twice."
       }
     }
   ]
