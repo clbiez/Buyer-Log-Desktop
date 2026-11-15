@@ -19,7 +19,8 @@ test('v6.66 Product Description is projected to CP and Orders and available as a
   assert.match(parse,/productDescriptionHeader/);
   assert.match(parse,/'Ürün Tanım':\s*o\.productDescription/);
   assert.match(app,/\{k:['"]Ürün Tanım['"],\s*label:['"]Ürün Tanım['"]/);
-  assert.match(app,/CP_SEARCH_KEYS=.*['"]Ürün Tanım['"]/);
+  assert.match(app,/CP_BASE_SEARCH_KEYS=.*['"]Ürün Tanım['"]/);
+  assert.match(app,/CP_SEARCH_KEYS=Array\.from\(new Set\(\[\.\.\.CP_BASE_SEARCH_KEYS,/);
   assert.match(app,/'Ürün Tanım':\s*o\.productDescription/);
   assert.match(html,/data-lfldim=['"]productDescription['"]/);
   assert.match(lfl,/productDescription:\{label:['"]Ürün Tanım['"],labelEn:['"]Product Description['"]/);

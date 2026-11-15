@@ -130,7 +130,8 @@ test('ana tablo aramaları terimleri satır başına yeniden parse etmez', () =>
   assert.match(APP, /q:parseTableSearchTerms\(document\.getElementById\('cpSearch'\)\.value\)/);
   assert.match(APP, /q:parseTableSearchTerms\(document\.getElementById\('ordersSearch'\)\?\.value\)/);
   assert.match(APP, /const q = parseTableSearchTerms\(document\.getElementById\('kolSearch'\)\.value\)/);
-  assert.match(APP, /tableSearchMatches\(hay,ctx\.q,\{plainMode:'contains'\}\)/);
+  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(r\),ctx\.q,\{plainMode:'contains'\}\)/);
+  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(row\),ctx\.q,\{plainMode:'contains'\}\)/);
   assert.match(APP, /tableSearchMatches\(kolSearchHaystack\(r\),q,\{plainMode:'contains'\}\)/);
 });
 
@@ -176,4 +177,28 @@ test('pano matrisinden üretilen terimler OR olarak eşleşir', () => {
   ]);
   assert.equal(matches('SIPARIS 10002', parse(terms)), true);
   assert.equal(matches('SIPARIS 99999', parse(terms)), false);
+});
+
+test('arama katlamasının hızlı yolu eski tr-TR dönüşümüyle birebir aynı sonucu verir', () => {
+  const matches = helper('tableSearchMatches', 'haystack,terms,options');
+  const legacy = value => String(value == null ? '' : value).trim().toLocaleUpperCase('tr-TR')
+    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ç/g, 'C').replace(/Ö/g, 'O').replace(/Ü/g, 'U').replace(/Ğ/g, 'G').toLowerCase();
+  // contains modunda haystack ⊇ needle; katlanmış metni tek karakterlik iğnelerle
+  // sınayarak her karakterin katlamasını eski dönüşümle karşılaştırır.
+  const chars = [];
+  for (let code = 0; code < 128; code++) chars.push(String.fromCharCode(code));
+  chars.push(...'çğıöşüÇĞİÖŞÜéÉßÂâÎîÛûΣσ'.split(''), 'i\u0307');
+  for (const ch of chars) {
+    const folded = legacy(`a${ch}b`);
+    if (!folded) continue;
+    assert.equal(matches(`a${ch}b`, [{ mode: 'contains', value: folded }], { plainMode: 'contains' }), true, `${JSON.stringify(ch)} katlaması eşleşmeli`);
+    for (const other of ['x', 'ı', 'İ']) {
+      const otherFolded = legacy(`a${other}b`);
+      if (otherFolded === folded) continue;
+      assert.equal(matches(`a${ch}b`, [{ mode: 'contains', value: otherFolded }], { plainMode: 'contains' }), false, `${JSON.stringify(ch)} ≠ ${other}`);
+    }
+  }
+  for (const [hay, needle] of [['ERKEK GENÇ İŞLEME', 'genc isleme'], ['  Ürün Tanımı: KAZAK  ', 'urun tanimi'], ['CAFÉ ŞAL', 'cafe'], ['Straße', 'strasse']]) {
+    assert.equal(matches(hay, [{ mode: 'contains', value: needle }], { plainMode: 'contains' }), legacy(hay).includes(legacy(needle)), `${hay} / ${needle}`);
+  }
 });
