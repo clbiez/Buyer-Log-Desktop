@@ -242,6 +242,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
         }
       }
+    },
+    {
+      "id": "table-search-input-order",
+      "type": "improvement",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Tablolar aramaya girilen sırayı izler",
+        "en": "Tables follow search input order"
+      },
+      "body": {
+        "tr": "Yazılan veya yapıştırılan çoklu aramalarda sonuçlar ilk eşleşen değerin giriş sırasıyla gösterilir. Excel listelerinin ve çok sütunlu satır gruplarının sırası korunur. Aynı değere uyan satırlarda mevcut sütun sırası, Koleksiyonda model grupları korunur. Kopyalama ve Excel aktarımı aynı sırayı izler; arama temizlendiğinde mevcut tablo sırası geri gelir.",
+        "en": "Multi-value searches display results in the order of the first matching input value, whether typed or pasted. Excel lists and multi-column row groups keep their input order. Existing column order remains within each match, and Collection model families stay together. Copy and Excel export follow the same order; clearing search restores the existing table order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "search-input-order.png",
+        "alt": {
+          "tr": "Excel arama sırasıyla DEMO-003, DEMO-002, DEMO-001 modellerini gösteren gerçek Buyer Log tablosu",
+          "en": "Actual Buyer Log table showing DEMO-003, DEMO-002, DEMO-001 in Excel search order"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verileriyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
     }
   ]
 }

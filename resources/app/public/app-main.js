@@ -2851,7 +2851,9 @@ function managedSelectionSourceRows(tableKey){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
   // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
-  return sort?.key?sortRows(rows,sort.key,sort.dir):rows;
+  const ordered=sort?.key?sortRows(rows,sort.key,sort.dir):rows;
+  const terms=parseTableSearchTerms(document.getElementById(tableKey==='orders'?'ordersSearch':'cpSearch')?.value);
+  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,{plainMode:'contains'});
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
@@ -9634,7 +9636,7 @@ function filteredCP(){
   const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
-  return rows;
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
 // Capraz kapsam kurali: bir satir, yalnizca kendi grubu disinda hicbir grupta elenmiyorsa
@@ -9753,7 +9755,7 @@ function renderCPNow(){
   document.getElementById('cpContent').style.display='block';
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
-  const rows = partialViewEnabled('cp') ? filteredCP() : (state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all);
+  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,{plainMode:'contains'});
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
@@ -9994,7 +9996,7 @@ function filteredOrders(){
   const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
-  return rows;
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 function ordersImageCellHtml(row){
   const dims=ordersImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
@@ -10060,7 +10062,7 @@ function renderOrdersNow(){
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
-  const rows=partialViewEnabled('orders')?filteredOrders():(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all);
+  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
   const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
@@ -27122,7 +27124,7 @@ function kolGroupMembersIndex(rows){
   });
   return index;
 }
-function kolGroupAwareOrder(rows){
+function kolGroupAwareOrder(rows,searchTerms=[]){
   const source=Array.isArray(rows)?rows:[];
   if(source.length<2)return source.slice();
   const allGroups=kolGroupMembersIndex(kolRows);
@@ -27159,8 +27161,9 @@ function kolGroupAwareOrder(rows){
       block.rows=parent?[parent,...variants]:variants;
     });
   }
-  let ordered=blocks.flatMap(block=>block.rows);
-  if(kolTransientTopRowId!=null){
+  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(kolSearchHaystack),{plainMode:'contains'});
+  let ordered=searchOrdered.flatMap(block=>block.rows);
+  if(kolTransientTopRowId!=null&&!searchTerms.length){
     const pinned=kolRows.find(row=>Number(row.id)===Number(kolTransientTopRowId));
     if(pinned){
       const pinGroup=allGroups.get(String(pinned.modelGroupId||''))||[];
@@ -27186,7 +27189,7 @@ function filteredKol(){
   });
   // Collapse is presentation-only. Logical filtering retains every physical
   // colour record; UI/copy/visual Excel derive their visible projection later.
-  return kolGroupAwareOrder(rows);
+  return kolGroupAwareOrder(rows,q);
 }
 function kolPresentationRows(logicalRows){
   const rows=Array.isArray(logicalRows)?logicalRows:filteredKol();
