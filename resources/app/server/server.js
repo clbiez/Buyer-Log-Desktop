@@ -764,6 +764,7 @@ const oabAuthState = require('./lib/oab-auth-state');
 const oabApiClient = require('./lib/oab-api-client');
 const oabDesktopRelay = require('./lib/oab-desktop-relay');
 const intakeReport = require('./lib/intake-report');
+const intakeExcel = require('./lib/intake-excel');
 const intakeStore = require('./lib/intake-store');
 const intakeConnectionSelector = require('./lib/intake-connection');
 const technicalSheetOwnership = require('./lib/plm-technical-sheet-ownership');
@@ -6077,6 +6078,23 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
+app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
+  try {
+    const found = await intakeLiveFields();
+    const plan = intakeExcel.prepare({ fields: found.fields, viewConfig: req.body?.viewConfig || intakeStoredView(req.currentUser.id), horizon: intakeHorizon() });
+    const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog,
+      query: plan.built.query, headerMap: plan.built.headerMap, generated: true, maxRows: plan.built.maxRows, timeoutMs: 180000 });
+    const rows = intakeReport.normalizeRows(result.rows, plan.config);
+    const buffer = intakeExcel.createWorkbook({ connection: found.connection, plan, rows, language: req.body?.language });
+    userAccess.appendAudit(req.currentUser, 'INTAKE_EXCEL_EXPORT', '', { rows: rows.length });
+    res.set('Cache-Control', 'no-store').set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .attachment('INTAKE-Live-Pivot.xlsx').send(buffer);
+  } catch (err) {
+    const failure = intakeErrorResponse(err);
+    res.status(failure.status).json({ error: failure.message, code: failure.code });
+  }
+});
+
 app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
   const userId = req.currentUser.id;
   const previous = intakeStore.loadSnapshot(userId);

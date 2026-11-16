@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-16",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "İçeriğe uyumlu pivotlar ve canlı INTAKE Excel",
+    "en": "Content-sized pivots and live INTAKE Excel"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır.",
+    "en": "OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "oab-intake-content-height",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "OAB ve INTAKE pivot yüksekliğine uyum sağlar",
+        "en": "OAB and INTAKE follow pivot height"
+      },
+      "body": {
+        "tr": "Tablo başlıkları, veriler ve toplamlar modül içine sığar; iç dikey kaydırma ve gereksiz boş alan kalkar. Grup daraltma/genişletme ve komşu modüllerin konum değişimi ortak Motion+ hareketini ve azaltılmış hareket tercihini kullanır.",
+        "en": "Headers, data and totals fit inside each module without internal vertical scrolling or excess empty space. Group expansion, collapse and neighboring modules use shared Motion+ and respect reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-fit-live-excel.png",
+        "alt": {
+          "tr": "İçeriğe göre boyutlanan OAB ve INTAKE tabloları ve INTAKE Excel düğmesi",
+          "en": "Content-sized OAB and INTAKE tables with the INTAKE Excel button"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi, iç dikey kaydırma olmadan görünen toplamlar ve Excel aktarım düğmesi.",
+          "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
+        }
+      }
+    },
+    {
+      "id": "intake-live-pivot-excel",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE için veritabanına bağlı Excel pivotu",
+        "en": "Database-connected Excel pivot for INTAKE"
+      },
+      "body": {
+        "tr": "Yeni Excel düğmesi gerçek Excel pivotunu seçili alanlar, filtreler ve veri ufkuyla aktarır. Windows masaüstü Excel’de Veri → Tümünü Yenile ile şirket ağı üzerinden güncellenir; parola saklanmaz. Ağırlıklı oranlar korunur. FIRST özeti için desteklenen başka bir özet seçilmesi gerekir.",
+        "en": "The new Excel button exports a native Excel pivot with selected fields, filters and data horizon. In Windows desktop Excel, Data → Refresh All retrieves current data over the corporate network without saving passwords. Weighted ratios are preserved. FIRST summaries require choosing a supported summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-fit-live-excel.png",
+        "alt": {
+          "tr": "İçeriğe göre boyutlanan OAB ve INTAKE tabloları ve INTAKE Excel düğmesi",
+          "en": "Content-sized OAB and INTAKE tables with the INTAKE Excel button"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi, iç dikey kaydırma olmadan görünen toplamlar ve Excel aktarım düğmesi.",
+          "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
+        }
+      }
+    }
+  ]
 }

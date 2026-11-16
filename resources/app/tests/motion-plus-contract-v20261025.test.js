@@ -145,3 +145,34 @@ test('KPI counter drops out if its cell is rerendered during animation',()=>{
  frames.shift()(0);el.textContent='4.000';frames.shift()(300);
  assert.equal(el.textContent,'4.000','canonical source wins over the abandoned animation');
 });
+
+test('content reflow interpolates height, cancels interrupted motion and respects selection and preferences',()=>{
+ const h=harness();h.flush();h.calls.length=0;
+ const node=h.view;
+ const first=h.root.BLMotionPlus.reflow(node,{top:0,height:60});
+ assert.ok(first);
+ assert.equal(h.calls[0].frames[0].height,'60px');
+ assert.equal(h.calls[0].frames[1].height,'30px');
+ assert.equal(h.calls[0].options.duration,390);
+ h.root.BLMotionPlus.reflow(node,{top:10,height:90});
+ assert.equal(h.calls[0].cancelled,true,'a rapid toggle replaces the running effect');
+ node.querySelector=()=>({});const count=h.calls.length;
+ h.root.BLMotionPlus.reflow(node,{top:0,height:60});assert.equal(h.calls.length,count,'selected data stays still');
+ for(const options of [{reduced:true},{hidden:true},{off:true}]){
+  const s=harness(options);s.flush();s.root.BLMotionPlus.reflow(s.view,{top:0,height:60});assert.equal(s.calls.length,0);
+ }
+});
+
+test('pivot disclosure animates a bounded set of real rows and commits the update under reduced motion',()=>{
+ const h=harness();h.flush();h.calls.length=0;
+ const make=(text,top)=>({textContent:text,isConnected:true,hidden:false,closest:()=>null,querySelector:()=>null,
+  getBoundingClientRect:()=>({left:10,right:400,top,bottom:top+30,width:390,height:30}),
+  animate(frames,options){h.calls.push({frames,options});return {addEventListener(){}};}});
+ const table={querySelector:()=>null,tBodies:[{rows:[make('group',20),make('total',50)]}]};
+ let updated=0;
+ h.root.BLMotionPlus.pivotChange(table,()=>{updated++;table.tBodies[0].rows=[make('group',20),...Array.from({length:100},(_,i)=>make('new'+i,50+i*30)),make('total',3080)];});
+ assert.equal(updated,1);assert.ok(h.calls.length>0&&h.calls.length<=8);
+ assert.ok(h.calls.every(call=>call.options.duration===390));
+ const reduced=harness({reduced:true});reduced.flush();
+ reduced.root.BLMotionPlus.pivotChange(table,()=>updated++);assert.equal(updated,2);assert.equal(reduced.calls.length,0);
+});

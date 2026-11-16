@@ -1,5 +1,5 @@
 'use strict';
-// Actual Buyer Log UI on an isolated server; only INTAKE HTTP responses use demo fixtures.
+// Actual Buyer Log UI on an isolated server; OAB/INTAKE HTTP responses use demo fixtures.
 // Requires Playwright + Chromium. No production source or user data is read.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -54,8 +54,32 @@ let browser;
   let stateCalls = 0, reportCalls = 0, failState = false, failReport = false, includeSnapshot = true;
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.dismiss());
+  const excel = require('../server/lib/intake-excel');
+  const exportPlan = excel.prepare({ fields, viewConfig });
+  const exportBuffer = excel.createWorkbook({ connection: { server: 'demo-server', catalog: 'demo-catalog' }, plan: exportPlan, rows });
+  let exportCalls = 0;
+  const oabPivot = { rows: ['Season', 'Month', 'Class'], columns: [], values: [{ field: 'Amount', agg: 'SUM' }], grouped: true, showSubtotals: true };
+  const oabRows = ['January', 'February', 'March'].flatMap((month, i) => ['Demo A', 'Demo B'].map(name => ({ Season: 'S7', Month: month, Class: name, Amount: (i + 1) * 100, 'Wssi Sipariş Miktarı YD': 100 })));
+  await page.route('**/api/oab/**', async route => {
+    const endpoint = new URL(route.request().url()).pathname.split('/').pop();
+    const payload = {
+      seasons: { seasons: [{ SeasonRef: 1, Name: 'S7' }] },
+      mag: { mag: [{ MerchSubGroupRef: 1, Name: 'DEMO' }] },
+      'buyer-groups': { buyerGroups: [{ BuyerGroupRef: 1, Name: 'DEMO' }] },
+      settings: { settings: { pivotConfig: oabPivot } },
+      state: { state: { selection: { seasonRef: 1, merchSubGroupRef: 1, buyerGroupRef: 1 }, snapshot: { rows: oabRows, fields: ['Season', 'Month', 'Class', 'Amount'] } } },
+    }[endpoint] || {};
+    await route.fulfill({ json: { ok: true, ...payload } });
+  });
   await page.route('**/api/intake/**', async route => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/export')) {
+      exportCalls++;
+      const body = route.request().postDataJSON();
+      assert.ok(body.viewConfig.query.measures.length);
+      assert.ok(['tr', 'en'].includes(body.language));
+      return route.fulfill({ status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: exportBuffer });
+    }
     let payload = fixture, status = 200;
     if (url.pathname.endsWith('/state')) {
       stateCalls++;
@@ -110,6 +134,92 @@ let browser;
     await page.keyboard.press('Escape');
     results.push(`${lang}: refresh, pivot settings and filters work`);
   }
+  // Stacked full-width widgets must shrink independently and move the next
+  // widget with them, without persisting measured pixel sizes into preferences.
+  const savedLayout = await page.evaluate(() => {
+    const layout = BLOverviewHome.state(), old = JSON.stringify(layout);
+    layout.pages[layout.page].items = [{ key: 'oab', x: 0, y: 0, w: 12, h: 10 }, { key: 'intake', x: 0, y: 10, w: 12, h: 10 }];
+    BLStorage.setItem(BLOverviewHome.STORAGE_KEY, JSON.stringify(layout));BLOverviewHome.reload();return old;
+  });
+  await page.waitForFunction(() => document.querySelectorAll('#oabTable tbody tr').length > 1);
+  if (await page.locator('#oabExpandAllBtn').isEnabled()) await page.locator('#oabExpandAllBtn').click();
+  await page.waitForTimeout(500);
+  const measure = id => page.locator('#' + id + 'Section').evaluate(el => {
+    const wrap = el.querySelector('.' + (el.id === 'oabSection' ? 'oab' : 'intake') + 'TableWrap'), table = wrap.querySelector('table');
+    const r = el.getBoundingClientRect(), t = table.getBoundingClientRect();
+    return { height: r.height, top: r.top, bottom: r.bottom, tableBottom: t.bottom, verticalOverflow: wrap.scrollHeight - wrap.clientHeight, rows: table.tBodies[0].rows.length };
+  });
+  const check = async () => {
+    for (const id of ['oab', 'intake']) {
+      const m = await measure(id);
+      assert.ok(m.verticalOverflow <= 1, id + ': no internal vertical scroll');
+      assert.ok(m.bottom >= m.tableBottom, id + ': total row is inside the widget');
+      assert.ok(m.bottom - m.tableBottom < 35, id + ': no unused fixed-height area');
+    }
+    const a = await measure('oab'), b = await measure('intake');
+    assert.ok(b.top >= a.bottom, 'stacked widgets never overlap');
+    assert.ok(b.top - a.bottom < 25, 'layout closes the gap after the pivot');
+  };
+  await check();
+  for (const id of ['oab', 'intake']) {
+    const expanded = await measure(id);
+    await page.locator('#' + id + 'CollapseAllBtn').click();await page.waitForTimeout(500);
+    const collapsed = await measure(id);
+    assert.ok(collapsed.height < expanded.height - 20, id + ': collapse shrinks the widget ' + JSON.stringify({ expanded, collapsed }));
+    await check();
+    await page.locator('#' + id + 'ExpandAllBtn').click();await page.waitForTimeout(500);
+    assert.ok((await measure(id)).height > collapsed.height + 20, id + ': expand grows the widget');
+    await check();
+  }
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.evaluate(() => {
+    window.pivotAnimations = [];
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function(frames, options) { if (this.id === 'intakeSection' || this.tagName === 'TR') pivotAnimations.push({ id: this.id, tag: this.tagName, duration: options.duration });return original.call(this, frames, options); };
+  });
+  await page.locator('#intakeCollapseAllBtn').click();await page.waitForTimeout(500);
+  const motionCollapsed = (await measure('intake')).height;
+  await page.locator('#intakeExpandAllBtn').click();await page.waitForTimeout(90);
+  const motionMiddle = (await measure('intake')).height;
+  await page.waitForTimeout(400);
+  const motionExpanded = (await measure('intake')).height;
+  assert.ok(motionMiddle > motionCollapsed + 1 && motionMiddle < motionExpanded - 1, 'module height actually interpolates between collapsed and expanded sizes');
+  const animations = await page.evaluate(() => pivotAnimations);
+  assert.ok(animations.some(a => a.id === 'intakeSection'), 'module height uses shared Motion+');
+  assert.ok(animations.some(a => a.tag === 'TR'), 'pivot rows animate through shared Motion+');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => { pivotAnimations.length = 0; });
+  await page.locator('#intakeCollapseAllBtn').click();await page.waitForTimeout(100);
+  assert.equal(await page.evaluate(() => pivotAnimations.length), 0, 'reduced motion skips all pivot animation');
+  await page.locator('#intakeExpandAllBtn').click();await page.waitForTimeout(100);
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#intakeExcelExportBtn').click();
+  const download = await downloadPromise;await download.saveAs(path.join(root, download.suggestedFilename()));
+  assert.equal(exportCalls, 1);assert.equal(download.suggestedFilename(), 'INTAKE-Live-Pivot.xlsx');
+  if (process.env.BUYER_LOG_PIVOT_SCREENSHOT) {
+    await page.locator('#oabCollapseAllBtn').click();await page.waitForTimeout(100);
+    await page.evaluate(() => { applyLanguage('tr');document.getElementById('oabSection').scrollIntoView({ block: 'start' }); });
+    await page.screenshot({ path: process.env.BUYER_LOG_PIVOT_SCREENSHOT });
+  }
+  for (const width of [800, 1600]) {
+    await page.setViewportSize({ width, height: 1000 });await page.waitForTimeout(150);await check();
+  }
+  // Over the old virtualization threshold: page scrolling still reaches real
+  // leaf rows and the grand total, with no internal scrolling or blank spacers.
+  const initialRows = fixture.rows;
+  fixture.rows = Array.from({ length: 410 }, (_, n) => Object.fromEntries([
+    ...viewConfig.query.rows.map((f, i) => [f.id, i === 0 ? 'DEMO' : i === 1 ? 'January' : 'Demo ' + n]),
+    ...viewConfig.query.measures.map(f => [f.id, n + 1]),
+  ]));
+  await page.evaluate(() => BLINTAKE.refresh());
+  await page.locator('#intakeTable tbody tr').last().scrollIntoViewIfNeeded();
+  assert.ok(await page.locator('#intakeTable tbody tr').count() > 400);
+  assert.equal(await page.locator('#intakeTable .virtualSpacerRow').count(), 0);
+  assert.ok(await page.locator('#intakeTable .oabPivotGrandTotalRow').isVisible());
+  await check();
+  fixture.rows = initialRows;await page.evaluate(() => BLINTAKE.refresh());
+  await page.evaluate(old => { BLStorage.setItem(BLOverviewHome.STORAGE_KEY, old);BLOverviewHome.reload(); }, savedLayout);
+  results.push('Both pivots: natural height, group collapse/expand, reflow, shared motion, reduced motion, mobile layout, 410 real rows and native Excel download');
   const beforeState = stateCalls;
   await page.evaluate(() => { switchTab('orders'); switchTab('overview'); switchTab('overview'); });
   assert.equal(stateCalls, beforeState, 'Returning must reuse the initialized module');
