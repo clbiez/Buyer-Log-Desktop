@@ -317,12 +317,11 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .kolPsMedian{width:1px;height:10px}
 
 /* Collection context and per-user column selection. */
-.pdMatrix .pdSummary{position:sticky;left:200px;z-index:var(--ui-z-data);background:var(--ui-surface)}
+.pdMatrix .pdSummary{position:sticky;left:200px}
 .pdSummary>span{display:flex;flex-direction:column;gap:2px}
 .pdSummary>span>span{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.pdSummary small{color:var(--ui-text-muted);font-size:var(--ui-font-2xs)}
-.pdSummary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pdSummary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdCollectionValue{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pdColumnsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px;padding:12px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)}
+.pdColumnsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px;padding:12px}
 .pdColumnsPanel[hidden]{display:none}
 .pdColumnsList{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));max-height:240px;overflow:auto;gap:2px 12px}
