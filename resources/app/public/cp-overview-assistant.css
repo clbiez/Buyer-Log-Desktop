@@ -96,6 +96,8 @@
 
 @media(max-width:1100px){.cpaGrid{grid-template-columns:1fr}.cpaDims{grid-template-columns:1fr}}
 .cpaWarn{margin:0;padding:9px 11px}
+/* PLM BOM detayı: tüm BOM kalemleri bölümü (plm-bom.js) */
+.plmBomFull{display:grid;gap:6px}
 
 /* ---- Kontrol & Kurallar Merkezi (3 Sekmeli Studio) ---- */
 .cpaRulesModal{width:min(1500px,96vw);min-width:min(1000px,96vw);height:auto;max-height:calc(100vh - 2 * var(--ui-space-5));box-sizing:border-box}

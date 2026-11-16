@@ -1622,6 +1622,29 @@ document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async e
   catch(error){showToast((appLang==='en'?'Document center could not be opened: ':'Belge merkezi açılamadı: ')+(error.message||error));}
   finally{button.disabled=false;}
 });
+/* CP BOM Kontrol: seçili satır varsa onlar, yoksa görünen (filtrelenmiş) CP
+   satırları kapsamdır. Kırılım alanları tablonun sütunlarıdır; değer tablo
+   hücresinin düz metniyle aynıdır (filtre ile aynı görünüm). */
+document.getElementById('cpBomControlBtn')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;button.disabled=true;
+  const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById('cpToolsBtn')?.setAttribute('aria-expanded','false');
+  try{
+    const visible=filteredCP();
+    const selected=state.cpSelected.size?visible.filter(row=>state.cpSelected.has(row._id)):[];
+    const rows=selected.length?selected:visible;
+    const skip=new Set(['priority','plmSample','cpImage']);
+    const cols=(COLS_BY_TABLE.cp||CP_COLS).filter(col=>col&&col.k&&!skip.has(col.type)&&!String(col.k).startsWith('__'));
+    const colByKey=new Map(cols.map(col=>[col.k,col]));
+    await window.BLPerf.ensureFeature('bomControl');
+    window.BLBomControl.open({
+      rows,scope:selected.length?'selected':'filtered',trigger:document.getElementById('cpToolsBtn'),
+      columns:cols.map(col=>({key:col.k,label:tableColumnLabel('cp',col)})),
+      getValue:(row,key)=>{const col=colByKey.get(key);return col?cellPlainText(col,row):row&&row[key];}
+    });
+  }catch(error){showToast((appLang==='en'?'BOM Check could not be opened: ':'BOM Kontrol açılamadı: ')+(error&&error.message||error));}
+  finally{button.disabled=false;}
+});
 const _sharedTableActionIds=['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
 function sharedTableActionNode(id){
   const el=document.getElementById(id);

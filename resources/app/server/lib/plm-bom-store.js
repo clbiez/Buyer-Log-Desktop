@@ -215,6 +215,36 @@ function summaryEntry(entry) {
   };
 }
 
+/* BOM Kontrol (CP) için model başına sıkıştırılmış tam bileşen listesi.
+   Tam kapsamı olmayan eski kayıtta (alan eklenmeden önce yazılmış) yalnız
+   baskı/süsleme bileşenleri vardır; coverage 'decorations-only' döner ve
+   arayüz modelin PLM SYNC ile yenilenmesini önerir. */
+function controlEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  /* Tamlık kayıtlı kapsam bilgisinden okunur: PLM SYNC'in başarıyla okuduğu
+     boş BOM (all-normalized, 0 kalem) eski kayıt değildir ve karşılaştırmaya
+     girer; tüm ortak kalemleri eksik görünür. */
+  const fullList = Array.isArray(entry.fullComponents) ? entry.fullComponents : [];
+  const full = entry.fullCoverage === 'all-normalized' || fullList.length > 0;
+  const source = full ? fullList : (Array.isArray(entry.components) ? entry.components : []);
+  return {
+    plmId: entry.plmId,
+    isSetStyle: Boolean(entry.isSetStyle),
+    fetchedAt: entry.fetchedAt || null,
+    coverage: full ? 'full' : 'decorations-only',
+    components: source.map(item => ({
+      componentCode: item.componentCode || '',
+      componentName: item.componentName || '',
+      description: item.description || '',
+      mainCategoryName: item.mainCategoryName || '',
+      categoryGroupName: item.categoryGroupName || '',
+      categoryName: item.categoryName || '',
+      quantity: Number.isFinite(Number(item.quantity)) && item.quantity != null ? Number(item.quantity) : null,
+      setPart: item.setPart || '',
+    })),
+  };
+}
+
 /* Depo tek JSON dosyasıdır ve binlerce modelde onlarca MB olabilir. Eskiden
    her okuma (görünen satır başına /bom/batch) dosyayı senkron okuyup bütün
    modelleri yeniden normalize ediyordu: 2.000 modelde ~0,8 sn olay döngüsü
@@ -299,6 +329,7 @@ module.exports = {
   normalizeEntry,
   normalizeStore,
   summaryEntry,
+  controlEntry,
   createStore,
   load: defaultStore.load,
   entry: defaultStore.entry,
