@@ -82,8 +82,16 @@
       body.appendChild(section);
       return;
     }
-    const engine = await bomControlEngine();
-    if (!body.isConnected) return;
+    /* Liste motoru beklemeden hemen çizilir (kategori gruplu, işaretsiz); motor
+       ilk kez yükleniyorsa geldiğinde aynı bölüm işaret sütunuyla yenilenir. */
+    body.appendChild(section);
+    drawFullBom(section, full, window.BLBomControlEngine || null);
+    if (!window.BLBomControlEngine) {
+      const engine = await bomControlEngine();
+      if (engine && section.isConnected) drawFullBom(section, full, engine);
+    }
+  }
+  function drawFullBom(section, full, engine) {
     const prefs = bomControlPrefs();
     const level = engine && engine.SLOT_LEVELS.includes(prefs.slotLevel) ? prefs.slotLevel : 'category';
     const marks = engine ? engine.normalizeMarks(prefs.marks) : {};
@@ -113,13 +121,14 @@
         <th>${esc(L('Kalem', 'Item'))}</th><th>${esc(L('Kod', 'Code'))}</th><th>${esc(L('Ad / Açıklama', 'Name / Description'))}</th><th class="num">${esc(L('Miktar', 'Qty'))}</th>${engine ? `<th>${esc(L('BOM Kontrol işareti', 'BOM Check mark'))}</th>` : ''}
       </tr></thead><tbody>${rows}</tbody></table></div>
       <p class="cpaEmpty">${esc(L('İşaretler CP → Araçlar → BOM Kontrol\'de verilir; sapmalar orada, seçilen grupla karşılaştırılarak gösterilir.', 'Marks are set in CP → Tools → BOM Check, where deviations are shown against the selected group.'))}</p>`;
-    body.appendChild(section);
   }
 
   function openForPlm(plmId, title, context = {}) {
     const id = numericId(plmId);
     // Yerel BOM okuması, dialogun odak/layout hazırlığını beklemez.
     const entryPromise = id ? entryForPlm(id) : Promise.resolve(null);
+    // İşaret motoru BOM okumasıyla paralel yüklenir; ilk açılış iki bekleme sırası yaşamaz.
+    if (id) void bomControlEngine();
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
     let releaseKeyboard = () => {};
