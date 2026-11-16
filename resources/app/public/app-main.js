@@ -9949,6 +9949,7 @@ function renderCPNow(){
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
   const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,{plainMode:'contains'});
+  window.BLTableSearchFeedback?.render('cpSearch',rows,cpSearchHaystack,appLang==='en');
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
@@ -10256,6 +10257,7 @@ function renderOrdersNow(){
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
   const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
+  window.BLTableSearchFeedback?.render('ordersSearch',rows,cpSearchHaystack,appLang==='en');
   const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
@@ -29931,6 +29933,7 @@ function renderKol(){
   renderKolScopeFilters();
   updateKolSendBtnState();
   const logicalRows=filteredKol(),rows=kolPresentationRows(logicalRows);
+  window.BLTableSearchFeedback?.render('kolSearch',logicalRows,kolSearchHaystack,appLang==='en');
   renderKolEmptyState(logicalRows);
   const kolStats=pageModelOptionStats(logicalRows),kolScopeText=`${pageModelOptionText(logicalRows)} · ${logicalRows.length} / ${kolRows.length} ${appLang==='en'?'rows':'satır'}`;
   document.getElementById('kolCount').textContent=kolScopeText;

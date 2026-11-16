@@ -68,3 +68,17 @@
   .tableSearchHelpExample{grid-template-columns:1fr;}
   .tableSearchHelpExample code{width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
 }
+
+.tableSearchFeedback{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  margin:6px 0;
+}
+.tableSearchFeedback[hidden]{display:none;}
+.tableSearchMissingTerm{
+  max-width:100%;
+  overflow-wrap:anywhere;
+  padding:3px 7px;
+}
