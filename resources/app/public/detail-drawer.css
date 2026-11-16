@@ -93,12 +93,9 @@
 .blTableReportInline .blDetailReportPrimary{-webkit-line-clamp:1}
 /* In-cell report templates. Only the template row has draggable controls. */
 .blTableReportBar [data-tr-actions]{display:flex;gap:var(--ui-space-1);flex:none}
-.blReportLayoutHint{padding:var(--ui-space-2);font-size:var(--ui-font-xs);color:var(--ui-text-secondary);background:var(--ui-surface-soft)}
+.blReportLayoutHint{padding:var(--ui-space-2)}
 .blReportCellEditor{display:grid;gap:var(--ui-space-2)}
-.blReportDropLine{display:flex;flex-direction:column;gap:var(--ui-space-1);min-height:48px;padding:var(--ui-space-1);border:1px dashed var(--ui-field-border);border-radius:var(--ui-radius);background:var(--ui-surface-soft)}
-.blReportDropLine>small{color:var(--ui-text-secondary);font-size:var(--ui-font-2xs)}
-.blReportDropLine.isDropTarget{border-color:var(--ui-accent);background:var(--ui-selected)}
+.blReportDropLine{display:flex;flex-direction:column;gap:var(--ui-space-1);min-height:48px;padding:var(--ui-space-1)}
 .blReportField{max-width:100%;height:auto!important;min-height:26px;white-space:normal!important;text-align:left;cursor:grab}
 .blReportField:active{cursor:grabbing}
-.blReportField:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
 .blReportLayoutRow td{vertical-align:top}

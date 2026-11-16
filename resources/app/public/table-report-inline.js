@@ -145,7 +145,7 @@ function bindLayoutEvents(el,key,adapter){
         }).catch(error=>{
           draft.saving=false;event.target.disabled=false;
           draft.error=error.message==='REPORT_LAYOUT_CONFLICT'?L('Ortak düzen değişti. Vazgeç ile güncel düzeni açın.','The shared layout changed. Cancel to open the current layout.'):L('Herkes için kaydedilemedi. Yeniden deneyin.','Could not save for everyone. Try again.');
-          render(key);void refreshShared();
+          if(drafts.get(key)===draft&&isActive(key)&&tabVisible(adapter))render(key);void refreshShared();
         });return;
       }
       try{store().setItem(draft.id,JSON.stringify({version:2,sharedId:latest,layout:draft.value}));drafts.delete(key);}
@@ -204,13 +204,13 @@ function registerSelection(key,adapter){
   const id='blTableReport-'+key;
   grid.register(id,{
     priority:10,isActive:()=>isActive(key)&&tabVisible(adapter)&&!drafts.has(key)&&adapter.selectable?.()!==false,
-    label:()=>L('Rapor görünümü','Report view'),rows:()=>contexts.get(key)?.shown||[],columns:()=>contexts.get(key)?.selectionColumns||[],
+    label:()=>L('Rapor görünümü','Report view'),rows:()=>contexts.get(key)?.rows||[],columns:()=>contexts.get(key)?.selectionColumns||[],
     rowId:row=>adapter.rowId?.(row),columnId:column=>column.key,header:column=>column.label,value:()=>'',exporter:root.BLTableExport,
     selectionChanged:adapter.selectionChanged,
     copy:(_matrix,range,_state,options)=>{
       const context=contexts.get(key);
       const fields=context.selectionColumns.slice(range.startColumn,range.endColumn+1).flatMap(col=>col.fields.map(field=>field.key));
-      return adapter.copy?.(context.shown.slice(range.startRow,range.endRow+1),fields,options);
+      return adapter.copy?.(context.rows.slice(range.startRow,range.endRow+1),fields,options);
     }
   });
 }

@@ -136,6 +136,17 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  // A stale moderator cannot overwrite a newer publication.
  const stale=await fetch(base+'/api/table-report-layouts',{method:'PUT',headers:{cookie,'Content-Type':'application/json'},body:JSON.stringify({table:'cp',view:'custom',layout:{},expectedId:''})});assert.equal(stale.status,409);
  await buyerPage.close();await buyerContext.close();console.log('PASS 8px rails, Moderator publication, buyer inheritance and server authority/conflict guards');
+ // A delayed failed publish must not reopen a report the user has already left.
+ let releaseFailure;const held=new Promise(resolve=>{releaseFailure=resolve;});
+ const holdPublish=async route=>{if(route.request().method()==='PUT'){await held;await route.fulfill({status:503,json:{code:'DEMO_OFFLINE'}});}else await route.continue();};
+ await page.route('**/api/table-report-layouts',holdPublish);
+ await page.locator('[data-table-report-inline="cp"] [data-tr-action="edit"]').click();
+ const failure=page.waitForResponse(response=>response.url().endsWith('/api/table-report-layouts')&&response.request().method()==='PUT');
+ await page.locator('[data-tr-action="save-all"]').click();await page.evaluate(()=>BLTableReportInline.setMode('cp',false));releaseFailure();await failure;await page.waitForTimeout(100);
+ assert.equal(await page.locator('[data-table-report-inline="cp"]').isVisible(),false);
+ await page.unroute('**/api/table-report-layouts',holdPublish);await page.evaluate(()=>BLTableReportInline.setMode('cp',true));
+ console.log('PASS delayed save failure preserves the user exit from report mode');
+
  // Row checkbox shares the ordinary table's selection.
  await page.locator('#blTableReport-cp [data-tr-check="1"]').check();assert.deepEqual(await page.evaluate(()=>[...state.cpSelected]),[2]);
  assert.equal(await page.evaluate(()=>BLGridClipboard.state('blTableReport-cp')?.selectionRange),null,'checking a row supersedes the old cell selection, as in the normal table');
@@ -166,5 +177,12 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  await page.waitForFunction(()=>document.querySelector('[data-table-report-inline="koleksiyon"] [data-tr-action="edit"]')?.textContent==='Düzeni özelleştir').catch(async error=>{console.log('LANG',await page.evaluate(()=>({lang:document.documentElement.lang,text:document.querySelector('[data-table-report-inline="koleksiyon"]')?.textContent})));throw error;});
  await page.locator('[data-table-report-inline="koleksiyon"] [data-tr-action="edit"]').click();assert.ok(await page.getByRole('button',{name:'Kaydet',exact:true}).isVisible());
  console.log('PASS CP, Orders, Collection and live TR/EN');
+ await page.locator('[data-table-report-inline="koleksiyon"] [data-tr-action="cancel"]').click();
+ await page.evaluate(()=>{switchTab('cp');state.cpSelected.clear();const seed=state.cp.rows[0];state.cp.rows=Array.from({length:305},(_,i)=>({...seed,_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1)}));invalidateCoreFacetCaches();_tableRangeViews.get(document.getElementById('cpTable')).controller.setSize('all');renderCPNow();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+ assert.equal(await page.locator('#blTableReport-cp tbody tr[data-id]').count(),300,'report DOM remains chunk bounded');
+ await page.locator('#blTableReport-cp tbody tr[data-id]').first().locator('td[data-key]').first().click();await page.keyboard.press('Control+a');
+ assert.equal(await page.evaluate(()=>BLGridClipboard.state('blTableReport-cp').selectionRange.endRow),304);
+ await page.keyboard.press('Control+c');await page.waitForFunction(async()=>(await navigator.clipboard.readText()).split(/\r?\n/).length===305);
+ console.log('PASS Ctrl+A copies all 305 page rows across the 300-row report render chunk');
  assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'results.json'),JSON.stringify({ok:true,errors},null,2));
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();server.kill();fs.closeSync(log);});

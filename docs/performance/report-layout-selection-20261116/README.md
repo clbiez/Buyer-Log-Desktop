@@ -10,7 +10,7 @@ The shared record uses the existing revisioned overrides store and Moderator Mas
 
 Tier L2, report rendering and shared table CSS. The recorded A/B scenario is **unchanged report refresh**, with 300 synthetic rows and 12 fields, using the baseline/candidate report script and canonical CSS on the same final app shell. Three alternating pairs each contain ten synchronous render/layout measurements. The baseline is `e6794e78fc4ec8c841f664dde7b65ba60c3cf454`; raw samples are in `performance.json`. This is a scoped rendering measurement, not a general application/startup/Windows/SMB speed claim.
 
-Baseline per-pair means: 121.83 / 113.75 / 113.42 ms; candidate: 12.15 / 14.94 / 11.26 ms. Medians: 113.75 → 12.15 ms. Unchanged markup now preserves DOM instead of rebuilding it; changed data still replaces the relevant markup. Row-selection registration is lazy and templates only add one control row. The existing 300-row report chunk remains bounded. Network activity for shared layouts begins on report activation and then uses existing live/revision events, with no background interval.
+Baseline per-pair means: 155.38 / 119.26 / 121.08 ms; candidate: 12.71 / 11.83 / 12.08 ms. Medians: 121.08 → 12.08 ms. Unchanged markup now preserves DOM instead of rebuilding it; changed data still replaces the relevant markup. Row-selection registration is lazy and templates only add one control row. The existing 300-row report chunk remains bounded. Network activity for shared layouts begins on report activation and then uses existing live/revision events, with no background interval.
 
 Reproduce browser behavior:
 
@@ -29,3 +29,5 @@ The browser script produces only synthetic screenshots and local scratch evidenc
 ## Integrated baseline test correction
 
 The first full-suite batch exposed two test-harness regressions already present in `f8779d6b`: the Concept 2 projection VM omitted the real search-order helper, and the Add New Model source contract expected the pinning branch before its new empty-search guard. Both failures were reproduced against `origin/main`'s production source. The harness now installs the actual search helper, checks both unsearched pinning and search-order precedence, and retains collapse/export assertions. No production search behavior was changed to satisfy the tests.
+
+The final browser acceptance also verifies Ctrl+A across the report render chunk (305 selected/copied records with only 300 DOM rows) and that a delayed failed publish cannot reopen an exited report. Report editor appearance is owned by the shared Manifest stylesheet; row selection uses immediate feedback.
