@@ -131,7 +131,7 @@
       colour:v('colour')||clean(item.colour),colourCode:clean(row&&row.colourCode)||clean(item.colourCode),
       classification:clean(api.itemCategory(req,item))||'—',mag:v('mag'),mmyg:v('mmyg'),buyingGroup:v('buyingGroup'),
       buyer:clean(api.ownerLabel(req)),season:v('season')||clean(item.season),license:v('lisans')||clean(item.license),
-      productMainDefinition:v('productMainDefinition'),fabric:clean(api.itemFabric(req,item)),
+      productMainDefinition:api.fieldValue?api.fieldValue(req,item,'productMainDefinition'):v('productMainDefinition'),fabric:clean(api.itemFabricSummary?api.itemFabricSummary(req,item):api.itemFabric(req,item)),
       target:E.price(api.itemTarget(req,item)),image:req.source==='collection'?clean(api.imageSrc(row,item)):clean(item.picture),
     };
     infoCache.set(item,info);
@@ -227,6 +227,22 @@
       <div class="pdCellNote">${outlier?esc(L('Olağan dışı · emin misin?','Unusual · are you sure?')):(dropped?esc(L('Drop','Dropped')):(neg&&neg.rounds>1?esc(L(`${neg.rounds} tur · ${pctText(neg.gainPct)}`,`${neg.rounds} rounds · ${pctText(neg.gainPct)}`)):''))}</div>
     </td>`;
   }
+  function matrixContext(){
+    const api=Q(),selected=api.selectedColumns?.()||[];
+    const summary=selected.filter(key=>key==='quantity'||key==='inStoreMonth');
+    const extra=selected.filter(key=>!['quantity','inStoreMonth','productMainDefinition','fabric'].includes(key));
+    return {selected,summary,extra,count:(summary.length?1:0)+extra.length};
+  }
+  function matrixSummaryText(req,item,context=matrixContext()){
+    return context.summary.map(key=>`${Q().columnLabel(key)}: ${Q().fieldValue(req,item,key)||'—'}`).join(' · ');
+  }
+  function matrixExtraCells(req,item,context=matrixContext()){
+    return context.extra.map(key=>{const value=Q().fieldValue(req,item,key)||'—';return `<td><span class="pdCollectionValue" title="${esc(value)}">${esc(value)}</span></td>`;}).join('');
+  }
+  function modelMeta(info){
+    const selected=matrixContext().selected;
+    return [selected.includes('productMainDefinition')?info.productMainDefinition:'',info.colour].filter(Boolean).join(' · ');
+  }
   const matrixViews=new WeakMap(),matrixScrollViews=new WeakMap();
   function matrixRowsHtml(req,matrix,ctx){
     const api=Q(),prevBest=state.lastBest.get(req.id)||new Map(),nextBest=new Map(prevBest),start=ctx.start||0;
@@ -239,13 +255,14 @@
       const delta=shown&&info.target?E.pct(shown.price,info.target):null;
       const cells=matrix.manufacturers.map((name,ci)=>cellHtml(req,model,name,stats,{mi,ci,canEdit:ctx.canEdit,moved:moved&&bestId===model.cell(name)?.id}));
       if(ctx.other.length){const offers=ctx.other.map(s=>model.cell(s.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));const best=offers[0];cells.push(`<td class="pdCell pdOther"><button type="button" data-pd-expand aria-label="${esc(L('Diğer üreticileri aç','Expand other manufacturers'))}">${best?`<b>${esc(money(E.price(best.price)))}</b><small>${esc(best.manufacturer)}</small>`:'—'}</button></td>`);}
-      const meta=[info.classification!=='—'?info.classification:'',info.colour].filter(Boolean).join(' · ');
+      const meta=modelMeta(info),context=matrixContext();
       return `<tr data-pd-model="${esc(model.modelKey)}" data-pd-row="${mi}" aria-rowindex="${mi+2}">
-        <th scope="row" class="pdModelCell"><div class="pdModel">${thumbHtml(req,model.first)}<div class="pdModelText"><b title="${esc(info.model)}">${esc(info.model)}</b><span title="${esc(meta)}">${esc(meta||'—')}</span>${info.fabric?`<small title="${esc(info.fabric)}">${esc(info.fabric)}</small>`:''}</div></div></th>
+        <th scope="row" class="pdModelCell"><div class="pdModel">${thumbHtml(req,model.first)}<div class="pdModelText"><b title="${esc(info.model)}">${esc(info.model)}</b><span title="${esc(meta)}">${esc(meta||'—')}</span>${context.selected.includes('fabric')?`<small title="${esc(info.fabric)}">${esc(info.fabric||'—')}</small>`:''}</div></div></th>
+        ${context.summary.length?`<td class="pdSummary"><span title="${esc(matrixSummaryText(req,model.first,context))}">${context.summary.map(key=>`<span><small>${esc(api.columnLabel(key))}</small><b>${esc(api.fieldValue(req,model.first,key)||'—')}</b></span>`).join('')}</span></td>`:''}
         <td class="pdNum pdTarget">${info.target!=null?esc(money(info.target)):'—'}</td>
         <td class="pdNum pdBestCol pdStickyBest" data-pd-best>${shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>'}</td>
         <td class="pdNum pdStickyDelta" data-pd-delta><span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span></td>
-        ${cells.join('')}${ctx.canEdit?'<td class="pdAddMfrCell" aria-hidden="true"></td>':''}
+        ${matrixExtraCells(req,model.first,context)}${cells.join('')}${ctx.canEdit?'<td class="pdAddMfrCell" aria-hidden="true"></td>':''}
       </tr>`;
     }).join('');
     state.lastBest.set(req.id,nextBest);
@@ -266,16 +283,18 @@
     return text;
   }
   function matrixClipboardHeaderParts(req,ctx){
-    const cards=E.supplierScorecards(req),other=ctx.other||ctx.layout?.other||[],parts=[L('Model','Model')+'\t',L('Hedef','Target')+'\t',L('En iyi / Onaylı','Best / Approved')+'\t','Δ '+L('Hedef','Target')+'\t\n'];
+    const cards=E.supplierScorecards(req),other=ctx.other||ctx.layout?.other||[],parts=[L('Model','Model')+'\t',...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')+'\t']:[]),L('Hedef','Target')+'\t',L('En iyi / Onaylı','Best / Approved')+'\t','Δ '+L('Hedef','Target')+'\t\n'];
+    parts.push(...matrixContext().extra.map(key=>Q().columnLabel(key)+'\t'));
     for(const name of ctx.matrix.manufacturers){const card=cards.find(card=>card.name===name);parts.push(`${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}\n`);}
     if(other.length)parts.push(L(`Diğer (${other.length})`,`Other (${other.length})`)+(ctx.canEdit?'\t':'\n'));if(ctx.canEdit)parts.push(L('Üretici','Manufacturer')+'\n');return parts;
   }
   function matrixClipboardRowParts(req,model,ctx){
     const {matrix,canEdit}=ctx,other=ctx.other||ctx.layout?.other||[],info=lineInfo(req,model.first),stats=E.rowStats(model.lines),shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
-    const meta=clipboardLabel([info.classification!=='—'?info.classification:'',info.colour].filter(Boolean).join(' · ')||'—');
+    const context=matrixContext(),meta=clipboardLabel(modelMeta(info)||'—');
     const imagePrefix=/<img\b/i.test(thumbHtml(req,model.first))?'\n':'';
-    const parts=[`${imagePrefix}${clipboardLabel(info.model)}\n${meta}\n`,(info.target!=null?money(info.target):'—')+'\t\n',
+    const parts=[`${imagePrefix}${clipboardLabel(info.model)}\n${meta}\n${context.selected.includes('fabric')?clipboardLabel(info.fabric||'—')+'\n':''}`, ...(context.summary.length?[clipboardLabel(matrixSummaryText(req,model.first,context))+'\t']:[]),(info.target!=null?money(info.target):'—')+'\t\n',
       (shown?`${money(shown.price)}\n${clipboardLabel(shown.manufacturer)}${stats.approved?' · '+L('onaylı','approved'):''}`:'—')+'\n',pctText(shown&&info.target?E.pct(shown.price,info.target):null)+'\t\n'];
+    parts.push(...context.extra.map(key=>clipboardLabel(Q().fieldValue(req,model.first,key)||'—')+'\t'));
     for(const name of matrix.manufacturers){
       const line=model.cell(name);if(!line){parts.push(canEdit?'\n—\n':'—\n');continue;}
       const value=E.price(line.price),options=E.lineOptions(line),badge=options.length?L(`OPS ${options.length}`,`OPT ${options.length}`):(canEdit?L('+ OPS','+ OPT'):'');
@@ -349,7 +368,7 @@
     return true;
   }
   function matrixClipboardHtml(view,start=0,end=view.matrix.models.length,includeHeaders=true){
-    const cards=E.supplierScorecards(view.req),headers=[L('Model','Model'),L('Hedef','Target'),L('En iyi / Onaylı','Best / Approved'),'Δ '+L('Hedef','Target'),...view.matrix.manufacturers.map(name=>{const card=cards.find(card=>card.name===name);return `${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}`;})];
+    const cards=E.supplierScorecards(view.req),headers=[L('Model','Model'),...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')]:[]),L('Hedef','Target'),L('En iyi / Onaylı','Best / Approved'),'Δ '+L('Hedef','Target'),...matrixContext().extra.map(key=>Q().columnLabel(key)),...view.matrix.manufacturers.map(name=>{const card=cards.find(card=>card.name===name);return `${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}`;})];
     if(view.other.length)headers.push(L(`Diğer (${view.other.length})`,`Other (${view.other.length})`));if(view.canEdit)headers.push(L('Üretici','Manufacturer'));
     const cell=value=>esc(value.trim()).replace(/\n/g,'<br>');
     const image=model=>{const html=thumbHtml(view.req,model.first),src=html.match(/\sdata-src="([^"]*)"/)?.[1];return src?html.replace(/\ssrc="[^"]*"/,' src="'+src+'"'):html;};
@@ -430,7 +449,9 @@
     // Tablodan üretici ekleme sütunu (Send to Pricing kullanmadan fiyat veren üretici için).
     const addHead=canEdit?`<th scope="col" class="pdMfrHead pdAddMfrHead"><button type="button" class="pdAddMfr" data-pd-add-mfr title="${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>${esc(L('Üretici','Manufacturer'))}</button></th>`:'';
     const columnCount=matrix.manufacturers.length+(layout.other.length?1:0)+(canEdit?1:0);
-    const virtual=matrix.models.length>100,initialEnd=virtual?40:matrix.models.length;
+    const virtual=matrix.models.length>100,initialEnd=virtual?40:matrix.models.length,context=matrixContext();
+    const summaryWidth=context.summary.length?144:0,contextWidth=summaryWidth+context.extra.length*150;
+    const contextHeads=context.extra.map(key=>`<th scope="col">${esc(api.columnLabel(key))}</th>`).join('');
     host.innerHTML=`<div class="pdMatrixBar">
         <span class="pdLegend"><i class="pdLegendBest"></i>${esc(L('En iyi','Best'))}<i class="pdLegendAppr"></i>${esc(L('Onaylı','Approved'))}<i class="pdLegendOut"></i>${esc(L('Olağan dışı','Unusual'))}</span>
         <span class="pdRoundBadge" title="${esc(L('Bu talepteki pazarlık turu','Negotiation round of this request'))}">${esc(L(`Tur ${round}`,`Round ${round}`))}</span>
@@ -448,10 +469,10 @@
       <div class="pdImportPanel" data-pd-import-panel hidden></div>
       <div class="pdMfrPanel" data-pd-mfr-panel hidden></div>
       <div class="pdOptionsPanel" data-pd-options-panel hidden></div>
-      <div class="pdMatrixScroll" tabindex="0"><table class="pdMatrix" style="--pd-columns:${columnCount}" aria-rowcount="${matrix.models.length+1}" aria-colcount="${columnCount+4}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
-        <colgroup><col class="pdModelWidth"><col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${Array.from({length:columnCount},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
-        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th><th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${heads}${otherHead}${addHead}</tr></thead>
-        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other,end:initialEnd}):`<tr><td colspan="${columnCount+4}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
+      <div class="pdMatrixScroll" tabindex="0"><table class="pdMatrix" style="--pd-columns:${columnCount};--pd-summary-width:${summaryWidth}px;--pd-context-width:${contextWidth}px" aria-rowcount="${matrix.models.length+1}" aria-colcount="${columnCount+4+context.count}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
+        <colgroup><col class="pdModelWidth">${context.summary.length?'<col class="pdSummaryWidth">':''}<col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${context.extra.map(()=>'<col class="pdContextWidth">').join('')}${Array.from({length:columnCount},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
+        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th>${context.summary.length?`<th scope="col" class="pdSummary">${esc(context.summary.map(key=>api.columnLabel(key)).join(' / '))}</th>`:''}<th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${contextHeads}${heads}${otherHead}${addHead}</tr></thead>
+        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other,end:initialEnd}):`<tr><td colspan="${columnCount+4+context.count}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
       </table></div>
       <div class="pdHints" aria-hidden="true"><span><kbd>Enter</kbd> ${esc(L('alt satır','next row'))}</span><span><kbd>Tab</kbd> ${esc(L('sonraki üretici','next manufacturer'))}</span><span><kbd>A</kbd> ${esc(L('onayla','approve'))}</span><span><kbd>D</kbd> Drop</span><span><kbd>O</kbd> ${esc(L('alternatif fiyat','alternative price'))}</span><span><kbd>Ctrl+V</kbd> ${esc(L('Excel’den blok yapıştır','paste a block from Excel'))}</span><span><kbd>Ctrl+Z</kbd> ${esc(L('geri al','undo'))}</span><span><kbd>Esc</kbd> ${esc(L('vazgeç','cancel'))}</span></div>`;
     host.querySelectorAll('thead [data-pd-expand],[data-pd-collapse]').forEach(button=>button.addEventListener('click',()=>{
@@ -468,7 +489,7 @@
       const left=host.querySelector('.pdMatrixScroll')?.scrollLeft||0;
       renderMatrix(host,req);const scroll=host.querySelector('.pdMatrixScroll');if(scroll)scroll.scrollLeft=left;
     },0);
-    const scroll=host.querySelector('.pdMatrixScroll'),view={host,scroll,req,matrix,items:req.items,layout,canEdit,other:layout.other,virtual,columns:columnCount+4,rowHeight:scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||42};
+    const scroll=host.querySelector('.pdMatrixScroll'),view={host,scroll,req,matrix,items:req.items,layout,canEdit,other:layout.other,virtual,columns:columnCount+4+context.count,rowHeight:scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||42};
     matrixViews.set(host,view);matrixScrollViews.set(scroll,view);matrixRenderWindow(view);
     if(virtual){
       let frame=0;scroll.addEventListener('scroll',()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;matrixRenderWindow(view);});},{passive:true});

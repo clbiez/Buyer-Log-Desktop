@@ -8937,7 +8937,7 @@ html[data-ui-system="manifest"] .pdLegendOut {background:var(--ui-warning-bg) !i
 }
 html[data-ui-system="manifest"] .pdRoundBadge {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
 }
-html[data-ui-system="manifest"] .pdBulkPanel,html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel,html[data-ui-system="manifest"] .pdMfrPanel,html[data-ui-system="manifest"] .pdOptionsPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
+html[data-ui-system="manifest"] .pdBulkPanel,html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel,html[data-ui-system="manifest"] .pdMfrPanel,html[data-ui-system="manifest"] .pdOptionsPanel,html[data-ui-system="manifest"] .pdColumnsPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
 }
 html[data-ui-system="manifest"] .pdOptHeadRow {font:600 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text-muted) !important;text-transform:uppercase;letter-spacing:.04em;min-height:20px !important
 }
@@ -8983,9 +8983,9 @@ html[data-ui-system="manifest"] .pdMatrix tbody td,html[data-ui-system="manifest
 }
 html[data-ui-system="manifest"] .pdMatrix tbody tr:hover>td,html[data-ui-system="manifest"] .pdMatrix tbody tr:hover>th {background:var(--ui-row-hover) !important
 }
-html[data-ui-system="manifest"] .pdMatrix .pdTarget,html[data-ui-system="manifest"] .pdMatrix .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix .pdStickyDelta {z-index:var(--ui-z-data);background:var(--ui-surface) !important
+html[data-ui-system="manifest"] .pdMatrix .pdTarget,html[data-ui-system="manifest"] .pdMatrix .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix .pdStickyDelta,html[data-ui-system="manifest"] .pdMatrix .pdSummary {z-index:var(--ui-z-data);background:var(--ui-surface) !important
 }
-html[data-ui-system="manifest"] .pdMatrix thead .pdTarget,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyDelta {z-index:var(--ui-z-data);background:var(--ui-header-bg) !important
+html[data-ui-system="manifest"] .pdMatrix thead .pdTarget,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyDelta,html[data-ui-system="manifest"] .pdMatrix thead .pdSummary {z-index:var(--ui-z-data);background:var(--ui-header-bg) !important
 }
 html[data-ui-system="manifest"] .pdMfrHead b {color:var(--ui-header-ink) !important
 }
@@ -8993,9 +8993,11 @@ html[data-ui-system="manifest"] .pdMfrHead small {font-size:var(--ui-font-2xs) !
 }
 html[data-ui-system="manifest"] .pdModelText b {font-weight:700 !important
 }
-html[data-ui-system="manifest"] .pdModelText span,html[data-ui-system="manifest"] .pdModelText small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+html[data-ui-system="manifest"] .pdSummary b {font-weight:600 !important
 }
-html[data-ui-system="manifest"] .pdModelText small {color:var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .pdModelText span,html[data-ui-system="manifest"] .pdModelText small,html[data-ui-system="manifest"] .pdSummary small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .pdModelText small,html[data-ui-system="manifest"] .pdSummary small {color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .pdTarget {color:var(--ui-text-secondary) !important
 }

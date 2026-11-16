@@ -13,7 +13,7 @@ function loadQuotationTestApi() {
   let source = fs.readFileSync(path.join(root, 'public', 'quotations.js'), 'utf8');
   source = source.replace(
     /window\.BL_QUOTATIONS=.*?;\n/,
-    'window.BL_QUOTATIONS={recordRequest,open:openModal,save:qSave,renameManufacturer,setPrice,toggleApproval,moveRequest:qMoveRequest,deleteRequest:qDeleteRequest,_test:{qTableState,qVisibleTableItems,qItemFabric,qItemCategory,qItemDropped,qItemTargetPrice,qTargetDelta,qBestForModel,qBestMarkup,qUpdateModelPricingCells,qBuildExportRows,qToggleDrop,qLoadColumnWidths,qSetColumnWidth,qColumnTotalWidth,qTableCols,qCommitPriceInput}};\n'
+    'window.BL_QUOTATIONS={recordRequest,open:openModal,save:qSave,renameManufacturer,setPrice,toggleApproval,moveRequest:qMoveRequest,deleteRequest:qDeleteRequest,_test:{qTableState,qVisibleTableItems,qItemFabric,qItemCategory,qItemDropped,qItemTargetPrice,qTargetDelta,qBestForModel,qBestMarkup,qUpdateModelPricingCells,qBuildExportRows,qToggleDrop,qLoadColumnWidths,qSetColumnWidth,qColumnTotalWidth,qTableCols,qListColumns,qCommitPriceInput}};\n'
   );
   const storage = new Map();
   // v6.52: quotations.js paylaşımlı/sunucu-destekli depoya taşındı (qApi -> fetch).
@@ -85,10 +85,10 @@ test('Quotation tables preserve per-request sorting/filtering and show fabric fo
   assert.equal(api._test.qItemFabric({ source: 'cp' }, { orderCode: 'CP-1', fabric: '' }), 'Jersey · 95% Pamuk · 180');
 });
 
-test('Quotation tables include Category after Model and persist clamped column widths', async () => {
+test('Quotation tables show product definition and Collection context after Model and persist clamped column widths', async () => {
   const api = loadQuotationTestApi();
-  const cols = api._test.qTableCols.map(col => col.key);
-  assert.deepEqual(Array.from(cols.slice(0, 3)), ['model', 'category', 'manufacturer']);
+  const cols = api._test.qListColumns().map(col => col.key);
+  assert.deepEqual(Array.from(cols.slice(0, 3)), ['model', 'collection:productMainDefinition', 'collection:quantity']);
 
   const request = await api.recordRequest('collection', [
     { id: 7, modelKod: 'KMODEL', urunTipi: 'Sweatshirt', fabric: 'Interlock' },
@@ -100,7 +100,7 @@ test('Quotation tables include Category after Model and persist clamped column w
   assert.equal(api._test.qSetColumnWidth('model', 30, true), 110);
   assert.equal(api._test.qLoadColumnWidths().model, 110);
   assert.ok(api._test.qColumnTotalWidth() < initialTotal);
-  assert.equal(api._test.qSetColumnWidth('category', 1000, true), 640);
+  assert.equal(api._test.qSetColumnWidth('collection:productMainDefinition', 1000, true), 640);
 });
 
 test('Quotation detail markup renders resize handles, colgroup and clipped model metadata', () => {
@@ -108,8 +108,8 @@ test('Quotation detail markup renders resize handles, colgroup and clipped model
   const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
   assert.ok(source.includes('data-qresize="${qEsc(col.key)}"'));
   assert.ok(source.includes('<colgroup>${columnGroup}</colgroup>'));
-  assert.ok(source.indexOf("{key:'category'") > source.indexOf("{key:'model'"));
-  assert.ok(source.indexOf("{key:'category'") < source.indexOf("{key:'manufacturer'"));
+  assert.match(source, /const columns=\[qTableCols\[0\],\.\.\.fields,\.\.\.qTableCols\.slice\(1\)\]/);
+  assert.match(source, /DESK_DEFAULT_COLUMNS=\['productMainDefinition','quantity','inStoreMonth','fabric'\]/);
   assert.match(css, /\.quotationModelName,\.quotationModelMeta,\.quotationCategory,\.quotationManufacturer\{[^}]*text-overflow:ellipsis/);
   assert.match(css, /\.quotationColResize\{[^}]*cursor:col-resize/);
 });

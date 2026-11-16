@@ -97,6 +97,93 @@
           "en": "Actual post-change Buyer Log with demo data; the added AIR+AIR Transfer method with its own price, saving and arrival date."
         }
       }
+    },
+    {
+      "id": "pricing-desk-model-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası matrisinde adet, MB ayı ve kumaş özeti",
+        "en": "Quantity, MB month and fabric summary in the Pricing Desk matrix"
+      },
+      "body": {
+        "tr": "Modelin hemen sağındaki tek hücre Adet ve MB Ay bilgisini gösterir. Model altında kategori yerine Ürün Tanımı ve aktif dilde Kumaş Kartı özeti görünür. Büyük matrislerin kaydırma ve kopyalama akışları yeni alanları içerir.",
+        "en": "A single cell immediately after Model shows Quantity and MB Month. The model summary shows Product Description instead of category, followed by the localized Fabric Card summary. Large-matrix scrolling and copying include the new fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-summary-matrix.png",
+        "alt": {
+          "tr": "Fiyat Masası matrisinde adet, MB ayı ve kumaş özeti",
+          "en": "Quantity, MB month and fabric summary in the Pricing Desk matrix"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-list-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası listesinde ayrı adet ve MB ayı sütunları",
+        "en": "Separate quantity and MB month columns in Pricing Desk lists"
+      },
+      "body": {
+        "tr": "Liste görünümünde Ürün Tanımı, Adet ve MB Ay ayrı sütunlarda yer alır; Kumaş Kartı özeti modelin altında görünür. Yeni alanlar filtrelenebilir, sıralanabilir ve yeniden boyutlandırılabilir.",
+        "en": "List view shows Product Description, Quantity and MB Month in separate columns, with the Fabric Card summary below the model. The added fields support filtering, sorting and resizing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-summary-list.png",
+        "alt": {
+          "tr": "Fiyat Masası listesinde ayrı adet ve MB ayı sütunları",
+          "en": "Separate quantity and MB month columns in Pricing Desk lists"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-column-selection",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Koleksiyondan kişisel Fiyat Masası sütunları",
+        "en": "Personal Pricing Desk columns from Collection"
+      },
+      "body": {
+        "tr": "Sütunlar düğmesinden Koleksiyonun standart ve özel sütunlarını her iki görünüme ekleyip çıkarabilirsiniz. Seçiminiz kullanıcıya özel kaydedilir; Varsayılanlar düğmesi ilk düzeni geri getirir. Kaldırılan sütunların gizli filtreleri temizlenir.",
+        "en": "Use Columns to add or remove standard and custom Collection fields in both views. Your selection is saved per user; Defaults restores the initial layout. Filters on removed columns are cleared."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-columns.png",
+        "alt": {
+          "tr": "Koleksiyondan kişisel Fiyat Masası sütunları",
+          "en": "Personal Pricing Desk columns from Collection"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
     }
   ]
 }
