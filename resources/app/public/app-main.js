@@ -32640,6 +32640,7 @@ function fabricCardsRepaintTables(){
   if(currentActiveTab()==='koleksiyon')renderKol();else kolFabricRepaintPending=true;
   if(state.cp)renderCP();
   if(state.orders)renderOrders();
+  if(['quotations','pricinghistory'].includes(currentActiveTab()))window.BL_QUOTATIONS?.desk?.refreshFabricSummary?.();
 }
 function kolFabricCardsEnsureLoaded(){
   if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
