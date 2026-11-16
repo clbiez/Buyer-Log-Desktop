@@ -56,5 +56,37 @@
     return { evaluateRow, evaluateBatch, ruleCount: rules.length };
   }
 
-  return Object.freeze({ createSession });
+  /* Worker'a gönderilecek alanlar: CP motorunun okuduğu kanonik CP alanları
+     (cp-readiness-engine FIELDS; analiz, tarih senkronu, teslimat ve operasyon
+     bayrakları yalnız bunları okur) + kuralların başvurduğu satır alanları.
+     30–50k satırın tamamını kopyalamak ana iş parçacığında ~1,3 sn CPU ve
+     büyük bellek baskısı yaratıyordu. Eşdeğerlik testlerle doğrulanır. */
+  function collectRuleFields(value, out) {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) { value.forEach(item => collectRuleFields(item, out)); return; }
+    for (const [key, item] of Object.entries(value)) {
+      if ((key === 'field' || key === 'offsetField') && typeof item === 'string' && item && item[0] !== '@') out.add(item);
+      else if (item && typeof item === 'object') collectRuleFields(item, out);
+    }
+  }
+  function requiredFields(input) {
+    const spec = input || {};
+    const out = new Set(Object.values((CP && CP.FIELDS) || {}).filter(Boolean));
+    for (const rule of Array.isArray(spec.rules) ? spec.rules : []) {
+      if (!rule || rule.kind !== 'priority') continue;
+      collectRuleFields(rule.conditions, out);
+      for (const source of [rule.formula, rule.autoFormula]) {
+        String(source || '').replace(/\[([^\]]+)\]/g, (_, name) => { const field = String(name).trim(); if (field && field[0] !== '@') out.add(field); return ''; });
+      }
+    }
+    return [...out];
+  }
+  function projectRow(row, fields) {
+    if (!row || typeof row !== 'object') return row;
+    const out = {};
+    for (const key of fields) if (Object.prototype.hasOwnProperty.call(row, key)) out[key] = row[key];
+    return out;
+  }
+
+  return Object.freeze({ createSession, requiredFields, projectRow });
 });

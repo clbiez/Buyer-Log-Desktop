@@ -68,12 +68,29 @@ async function api(url,body){
     checklistAction:state.orders.rows.filter(r=>r.Priority==='ACTION_THIS_WEEK').length,
     cells:[...document.querySelectorAll('#ordersTable tbody tr')].slice(0,30).map(tr=>tr.querySelector('td[data-k="Priority"]')?.textContent.trim()||'').filter(Boolean).length,
   }),tag);
+  // Worker'a giden izdüşümlü satırlar, tam satırla aynı sonucu vermeli (tüm demo satırları).
+  const parity=await page.evaluate(async()=>{
+    const ctx=window.BLCpAssistant.ordersPriorityContext(),rows=state.orders.rows.filter(r=>String(r['Active/Inactive']||'')!=='Inactive');
+    const projected=await window.BLOrdersPriority.run(rows,ctx.spec),full=await window.BLOrdersPriority.run(rows,ctx.spec,{project:false});
+    let diff=0;for(let i=0;i<rows.length;i++)if(projected.codes[i]!==full.codes[i]||JSON.stringify(projected.tags[i])!==JSON.stringify(full.tags[i]))diff++;
+    return {rows:rows.length,diff,fields:window.BLOrdersPriorityEngine.requiredFields(ctx.spec).length,rowKeys:Object.keys(rows[0]||{}).length};
+  });
+  assert.equal(parity.diff,0,'projected and full rows must give identical priorities');
+  console.log({parity});
   assert.ok(orders.header,'Orders Priority header');
   assert.equal(orders.stats.lastMode,'worker','priority runs in the worker');
   assert.ok(orders.tagged>0,'Orders rows carry the custom tag');
   const table=await page.locator('#ordersTable').boundingBox();
   if(table)await page.screenshot({path:path.join(shotDir,'orders-priority-column.png'),clip:{x:table.x,y:Math.max(0,table.y-120),width:Math.min(table.width,1560),height:620}});
   // Backlog: CP'de olmayan siparişler Siparişler kaynağından etiketlenir.
+  // CP yüklemesi bittikten SONRA 200 satıra indirilir (gerçek kullanım: CP ~200).
+  const cpRows=await page.evaluate(async()=>{
+    if(typeof window.BLEnsureCpLoaded==='function')await window.BLEnsureCpLoaded({deferRender:true}).catch(()=>null);
+    if(state.cp&&state.cp.rows.length>200){state.cp.rows=state.cp.rows.slice(0,200);invalidateUnifiedPriorityDecisions('acceptance-cp-200',['cp']);}
+    await window.BLCpPriorityIndex.ensure();
+    return state.cp.rows.length;
+  });
+  assert.equal(cpRows,200);
   await page.evaluate(async()=>{switchTab('backlog');await BLPerf.ensureFeature('backlogAnalysis');});
   await page.waitForFunction(id=>document.querySelector(`#backlogOverview .blvPriorityTile[data-priority-code="${id}"]`),tag,{timeout:120000});
   const backlog=await page.evaluate(id=>{const tile=document.querySelector(`#backlogOverview .blvPriorityTile[data-priority-code="${id}"]`);return {title:tile.getAttribute('title')||'',value:tile.querySelector('.bpaTileValue').textContent.trim()};},tag);

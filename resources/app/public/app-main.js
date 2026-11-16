@@ -1276,6 +1276,8 @@ function scheduleOrdersPriorities(){
     const ctx=ordersPriorityContext();
     if(!ctx||!window.BLOrdersPriority)return false;
     _ordersPriorityContextKey=ctx.key;job.key=ctx.key;
+    // Siparişler'in ilk çizimiyle yarışmaz: tarayıcı boşalınca başlar.
+    await afterIdle();
     const active=rows.filter(row=>unifiedPriorityRowActive('orders',row));
     const isCurrent=()=>_ordersPriority.job===job&&state.orders?.rows===rows&&revision===_unifiedPriorityTableRevision.orders&&ordersPriorityContextKey()===ctx.key;
     const result=await window.BLOrdersPriority.run(active,ctx.spec,{isCurrent});
@@ -6504,7 +6506,9 @@ function cellHtml(c,r,cf,tableKey='cp'){
   }
   if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_FABRIC_PLM_KEY) return cpFabricCellHtml(r);
   // Elle revize edilmiş bir alansa hücre "eski → yeni" olarak çizilir.
-  const rev = revisionInfo(r, c.k, cf);
+  // Siparişler'de Priority'nin revizyon öncesi karşılığı hesaplanmaz (iş yükünü
+  // ikiye katlar); bu yüzden orada Priority yalnız güncel değeriyle çizilir.
+  const rev = tableKey==='orders'&&c.k==='Priority' ? null : revisionInfo(r, c.k, cf);
   // Kesilen (truncate) hücrelerde hover ile tam değeri görebilmek için tooltip
   // öncelikle gerçek hücre değerini gösterir; değer yoksa yetki açıklamasına döner.
   // Salt-okunur ekip satırlarında da revizyon geçmişi görünür kalmalı.

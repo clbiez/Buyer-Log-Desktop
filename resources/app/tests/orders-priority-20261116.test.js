@@ -100,3 +100,23 @@ test('öncelik hazır olunca tüm tablo değil görünen Priority hücreleri gü
   assert.match(body,/td\[data-key="Priority"\]/);
   assert.doesNotMatch(body,/renderOrders\(/);
 });
+
+test('worker’a yalnız motorun ve kuralların okuduğu alanlar gider; sonuç tam satırla aynıdır',()=>{
+  const extra=Rules.normalizeRule({id:'klasman',kind:'priority',enabled:true,target:'prio:yakin-yukleme',name:'Klasman',conditions:[{field:'Ürün Klasman',operator:'eq',value:'SWEAT'},{field:'@daysToLoad',operator:'gte',value:20}]},{kind:'priority',priorityCatalog:CATALOG});
+  const lic=Rules.normalizeRule({id:'lisans',kind:'priority',enabled:true,target:'prio:s7-takip',name:'Lisans',mode:'formula',formula:'=[Lisans]="DISNEY"'},{kind:'priority',priorityCatalog:CATALOG});
+  const spec={rules:[...Rules.DEFAULT_RULES,...custom,extra,lic],priorityCatalog:CATALOG};
+  const fields=Engine.requiredFields(spec);
+  for(const key of Object.values(CP.FIELDS))assert.ok(fields.includes(key),'CP alanı: '+key);
+  for(const key of ['Ürün Klasman','Lisans','Season'])assert.ok(fields.includes(key),'kural alanı: '+key);
+  assert.ok(!fields.some(key=>key.startsWith('@')),'türetilmiş alan satırdan istenmez');
+  const rows=[];for(let i=0;i<120;i++)rows.push(row({'Order Code':String(i),'Ex-factory':day(i%45-5),'Retail Date':day(i%60),Season:['S7','W7','W6'][i%3],'Ürün Klasman':i%4?'SWEAT':'TSHIRT',Lisans:i%5?'DISNEY':'',Unused:'x'.repeat(200),_logisticSegments:[{kind:'production',quantity:5}]}));
+  const full=Engine.createSession(spec).evaluateBatch(rows);
+  const projected=Engine.createSession(spec).evaluateBatch(rows.map(r=>Engine.projectRow(r,fields)));
+  assert.deepEqual(projected,full);
+  assert.ok(new Set(full.codes).size>1,'karışık sonuç (anlamlı karşılaştırma)');
+  assert.equal(Engine.projectRow(rows[0],fields).Unused,undefined,'okunmayan alan kopyalanmaz');
+});
+
+test('Siparişler Priority hücresi revizyon öncesi karşılaştırması (– → …) göstermez',()=>{
+  assert.match(read('app-main.js'),/const rev = tableKey==='orders'&&c\.k==='Priority' \? null : revisionInfo\(r, c\.k, cf\);/);
+});

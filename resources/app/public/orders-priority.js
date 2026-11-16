@@ -20,7 +20,7 @@
   const yieldTask = () => new Promise(resolve => setTimeout(resolve, 0));
   const cancelled = () => Object.assign(new Error('ORDERS_PRIORITY_CANCELLED'), { code: 'ORDERS_PRIORITY_CANCELLED' });
 
-  async function inWorker(rows, spec, isCurrent) {
+  async function inWorker(rows, spec, isCurrent, fields) {
     const worker = new root.Worker('orders-priority-worker.js');
     let pending = null, id = 0, failure = null;
     worker.onmessage = event => {
@@ -41,7 +41,8 @@
       const codes = new Array(rows.length), tags = new Array(rows.length);
       for (let start = 0; start < rows.length; start += BATCH) {
         if (!isCurrent()) throw cancelled();
-        const result = await send('batch', rows.slice(start, start + BATCH));
+        const batch = rows.slice(start, start + BATCH);
+        const result = await send('batch', fields ? batch.map(row => root.BLOrdersPriorityEngine.projectRow(row, fields)) : batch);
         for (let i = 0; i < result.codes.length; i += 1) { codes[start + i] = result.codes[i]; tags[start + i] = result.tags[i]; }
         // Bir sonraki partinin kopyalanmasından önce ekrana nefes aldırılır.
         await yieldTask();
@@ -73,7 +74,10 @@
     const started = now();
     let result = null, mode = 'worker';
     if (typeof root.Worker === 'function' && !(options && options.forceFallback)) {
-      try { result = await inWorker(list, spec, isCurrent); }
+      // Yalnız motorun ve kuralların okuduğu alanlar kopyalanır (options.project:false yalnız doğrulama içindir).
+      const engine = root.BLOrdersPriorityEngine;
+      const fields = options && options.project === false || !engine || typeof engine.requiredFields !== 'function' ? null : engine.requiredFields(spec);
+      try { result = await inWorker(list, spec, isCurrent, fields); }
       catch (error) { if (error && error.code === 'ORDERS_PRIORITY_CANCELLED') throw error; result = null; }
     }
     if (!result) { mode = 'fallback'; result = await cooperative(list, spec, isCurrent); }
