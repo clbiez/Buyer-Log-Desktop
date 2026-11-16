@@ -1,0 +1,543 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.359",
+  "channel": "stable",
+  "publishedAt": "2026-11-16",
+  "title": {
+    "tr": "Birlikte gösterilen Priority etiketleri",
+    "en": "Priority tags shown together"
+  },
+  "summary": {
+    "tr": "Priority, eşleşen etiketleri birlikte gösterir; kapsanan etiketler ayardan gizlenebilir. OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır. Siparişler'de Priority sütunu geri geldi (checklist hariç); Backlog CP dışındaki grupların önceliğini Siparişler'den alır.",
+    "en": "Priority shows matching tags together; covered tags can be hidden in tag settings. OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection. The Priority column is back in Orders (excluding checklist); Backlog takes the priority of groups outside CP from Orders."
+  },
+  "stats": {
+    "features": 10,
+    "improvements": 8,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "priority-multiple-tags",
+      "type": "feature",
+      "module": {
+        "tr": "Öncelik Kuralları",
+        "en": "Priority Rules"
+      },
+      "title": {
+        "tr": "Eşleşen etiketleri birlikte görün, kapsananları gizleyin",
+        "en": "See matching tags together and hide covered tags"
+      },
+      "body": {
+        "tr": "CP ve Siparişler artık eşleşen tüm öncelik etiketlerini birlikte gösterir; her kombinasyon için ayrı etiket gerekmez. Etiket ayarlarında bir etiketin birlikte eşleştiğinde hangilerini gizleyeceğini seçebilirsiniz. Gizlenen eşleşmeler hücrenin ipucunda korunur. Sıralamadaki ana öncelik değişmez; takip etiketleri aciliyetten bağımsız kalır. Etiketler ortak Backlog/Global Flow dizinine ve CP/Siparişler kopyalama ile Excel çıktısına taşınır. Varsayılan Priority sütunu çoklu etiketler için genişletildi; elle seçilen genişlikler korunur.",
+        "en": "CP and Orders now show all matching priority tags together, without a separate tag for every combination. In tag settings, choose which other matching tags each tag hides. Hidden matches remain in the cell tooltip. The main sorting priority stays unchanged, and tracking tags remain independent of urgency. Tags flow through the shared Backlog/Global Flow index and CP/Orders clipboard and Excel output. The default Priority column is wider for multiple tags; manually selected widths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "priority-multiple-tags.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda aynı siparişin A ve B etiketleri birlikte görünür.",
+          "en": "An actual Buyer Log CP table showing tags A and B together on the same order."
+        },
+        "caption": {
+          "tr": "B, C etiketini kapsayacak şekilde ayarlandı: A ve B görünür, C ipucunda kalır. İzole demo verisiyle gerçek uygulama.",
+          "en": "B is configured to cover C: A and B stay visible while C remains in the tooltip. Actual application with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "table-search-missing-values",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo araması",
+        "en": "Table search"
+      },
+      "title": {
+        "tr": "Bulunamayan arama değerleri kırmızı gösterilir",
+        "en": "Missing search values are highlighted in red"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon tablolarında çoklu aramadan sonra filtrelenmiş sonuçlarda bulunamayan değerler arama kutusunun altında kırmızı etiketlerle gösterilir. Örneğin sekiz modelden üçü sonuçlarda yoksa bu üç model ayrı ayrı listelenir. Excel satır grupları birlikte değerlendirilir; arama temizlendiğinde uyarı kalkar.",
+        "en": "After a multi-value search in CP, Orders and Collection, values absent from the filtered results appear as red labels below the search box. For example, if three of eight models are missing, those three models are listed individually. Excel row groups are evaluated together; clearing the search removes the warning."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "search-missing-values.png",
+        "alt": {
+          "tr": "Sekiz model aramasında sonuçlarda bulunamayan üç kırmızı model etiketi",
+          "en": "Three red labels for models absent from an eight-model search"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log; beş bulunan, üç bulunamayan model içeren izole demo verisi.",
+          "en": "Actual Buyer Log with isolated demo data: five models found and three missing."
+        }
+      }
+    },
+    {
+      "id": "report-save-everyone",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor ve tablo görünümü",
+        "en": "Report and table views"
+      },
+      "title": {
+        "tr": "Moderatör rapor düzenini herkes için kaydeder",
+        "en": "Moderators can save report layouts for everyone"
+      },
+      "body": {
+        "tr": "Moderatörün Herkes için kaydet düğmesi, ilgili tablonun Focus, Extended, All ve özel rapor görünümlerini tüm kullanıcılar için günceller. Yeni yayım önceki kişisel düzenlerin yerine geçer; kullanıcılar sonrasında kendi düzenlerini tekrar kaydedebilir. Sunucu Moderatör yetkisini denetler ve eski sürümle yazmayı reddeder. Ortak düzen mevcut Master paylaşımıyla diğer cihazlara taşınır; normal tablo verisi ve dışa aktarım şeması değişmez.",
+        "en": "The Moderator’s Save for everyone action updates Focus, Extended, All and custom report layouts for the selected table across users. A new publication replaces earlier personal layouts; users can save personal adjustments afterward. The server enforces Moderator authority and rejects stale writes. Existing Master sharing carries the layout to other devices; normal table records and export schemas stay intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-save-everyone.png",
+        "alt": {
+          "tr": "Moderatör rapor düzenini herkes için kaydeder",
+          "en": "Moderators can save report layouts for everyone"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo hesapları ve verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo accounts and data."
+        }
+      }
+    },
+    {
+      "id": "row-selection-rails",
+      "type": "improvement",
+      "module": {
+        "tr": "Rapor ve tablo görünümü",
+        "en": "Report and table views"
+      },
+      "title": {
+        "tr": "Satır seçimi dolu şeritle belirginleşir",
+        "en": "A solid rail marks selected rows"
+      },
+      "body": {
+        "tr": "Tablolardaki satır seçim kutularının yerini satır yüksekliğini kaplayan 8 px dolu şerit alır. Seçim ve toplu seçim, klavyeyle Space kullanımı, kısmi seçim ve erişilemeyen satırlar mevcut davranışlarını korur. Koleksiyonun satır numarası ve grup düğmeleri şeridin yanında kalır. Ayar ve veri alanlarının onay kutuları satır seçimi olarak değiştirilmez.",
+        "en": "An 8 px solid rail spanning the row height replaces table row-selection boxes. Row and bulk selection, Space keyboard activation, mixed selection and disabled rows retain their existing behavior. Collection row numbers and group controls remain beside the rail. Settings and boolean data fields keep their own controls."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "row-selection-rails.png",
+        "alt": {
+          "tr": "Satır seçimi dolu şeritle belirginleşir",
+          "en": "A solid rail marks selected rows"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo hesapları ve verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo accounts and data."
+        }
+      }
+    },
+    {
+      "id": "view-fields-pencils",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo görünümleri",
+        "en": "Table views"
+      },
+      "title": {
+        "tr": "Görünüm yanındaki kalem Alanlar ekranını açar",
+        "en": "The pencil beside each view opens Fields"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon görünüm menülerinde Focus, Extended ve All adlarının sağındaki kalem mevcut Alanlar ekranını doğrudan açar. Ayrı Alanlar seçeneği kaldırıldı; kaleme tıklamak seçili görünümü değiştirmez.",
+        "en": "In CP, Orders and Collection view menus, the pencil beside Focus, Extended and All opens the existing Fields screen directly. The separate Fields option is removed; clicking a pencil does not change the selected view."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "view-fields-pencils.png",
+        "alt": {
+          "tr": "Görünümlerin sağındaki Alanlar düzenleme kalemleri",
+          "en": "Fields editing pencils beside the views"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-row-actions",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor satırından PLM, TROY ve BOM erişimi",
+        "en": "PLM, TROY and BOM access from report rows"
+      },
+      "body": {
+        "tr": "Rapor satırına sağ tıklayın: mevcut kopyalama, PLM numune ve BOM / Baskı Detayı araçları ile siparişe bağlı TROY Order ve TROY Shipment Request bağlantılarına ulaşın. PLM bağlantısı kayıtlı kanonik kimlikle çözülür. Menüyü açmak seçimleri değiştirmez; satır aracı çalıştırıldığında ilgili satır kullanılır.",
+        "en": "Right-click a report row to access existing copy, PLM sample and BOM / Print Details tools, plus order-specific TROY Order and TROY Shipment Request links. PLM links use the registered canonical identity. Opening the menu preserves selections; running a row tool uses the relevant row."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-row-actions.png",
+        "alt": {
+          "tr": "Rapor satırından PLM, TROY ve BOM erişimi",
+          "en": "PLM, TROY and BOM access from report rows"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-table-selection",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor seçimi aynı tablo biçiminde aktarılır",
+        "en": "Report selections export in the same table format"
+      },
+      "body": {
+        "tr": "Rapor hücrelerini sürükleyerek veya Shift ve ok tuşlarıyla seçin. Kopyala, başlıklı kopyalama ve Ctrl+C, seçili rapor hücrelerinin alanlarını normal tablonun sütun sırasıyla aktarır. Satır seçimi mevcut tablo seçim kümesini kullanır; mevcut Excel ve zengin satır kopyalama yolları korunur. Rapor düzeni veri veya aktarım şemasını değiştirmez.",
+        "en": "Select report cells by dragging or using Shift and arrow keys. Copy, Copy with headers and Ctrl+C expand selected report cells into the original table column order. Row selection uses the existing table selection set; existing Excel and rich row-copy paths are preserved. Report layouts do not change records or export schemas."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-table-selection.png",
+        "alt": {
+          "tr": "Rapor seçimi aynı tablo biçiminde aktarılır",
+          "en": "Report selections export in the same table format"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-cell-layout",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor hücrelerini sürükleyerek düzenleyin",
+        "en": "Arrange report cells by dragging"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında alanları ana bilgi, ikinci ve üçüncü satır arasında sürükleyin. Klavyeyle Alt + ok tuşlarını kullanın. Önizleme tüm kayıtlara uygulanır; Kaydet, Vazgeç ve Varsayılana dön seçenekleri vardır. Düzen kullanıcı, tablo ve görünüm başına saklanır. Focus, Extended ve All yanındaki kalem doğrudan mevcut Alanlar ekranını açar; ayrı Alanlar seçeneği kaldırıldı.",
+        "en": "In CP, Orders and Collection reports, drag fields between primary, second and third lines, or use Alt + arrow keys. Preview applies to every record, with Save, Cancel and Reset layout. Layouts are stored per user, table and view. A pencil beside Focus, Extended and All opens the existing Fields screen directly; the separate Fields option is removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-cell-layout.png",
+        "alt": {
+          "tr": "Rapor hücrelerini sürükleyerek düzenleyin",
+          "en": "Arrange report cells by dragging"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "oab-intake-content-height",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "OAB ve INTAKE pivot yüksekliğine uyum sağlar",
+        "en": "OAB and INTAKE follow pivot height"
+      },
+      "body": {
+        "tr": "Tablo başlıkları, veriler ve toplamlar modül içine sığar; iç dikey kaydırma ve gereksiz boş alan kalkar. Grup daraltma/genişletme ve komşu modüllerin konum değişimi ortak Motion+ hareketini ve azaltılmış hareket tercihini kullanır.",
+        "en": "Headers, data and totals fit inside each module without internal vertical scrolling or excess empty space. Group expansion, collapse and neighboring modules use shared Motion+ and respect reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-fit-live-excel.png",
+        "alt": {
+          "tr": "İçeriğe göre boyutlanan OAB ve INTAKE tabloları ve INTAKE Excel düğmesi",
+          "en": "Content-sized OAB and INTAKE tables with the INTAKE Excel button"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi, iç dikey kaydırma olmadan görünen toplamlar ve Excel aktarım düğmesi.",
+          "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
+        }
+      }
+    },
+    {
+      "id": "intake-live-pivot-excel",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE için veritabanına bağlı Excel pivotu",
+        "en": "Database-connected Excel pivot for INTAKE"
+      },
+      "body": {
+        "tr": "Yeni Excel düğmesi gerçek Excel pivotunu seçili alanlar, filtreler ve veri ufkuyla aktarır. Windows masaüstü Excel’de Veri → Tümünü Yenile ile şirket ağı üzerinden güncellenir; parola saklanmaz. Ağırlıklı oranlar korunur. FIRST özeti için desteklenen başka bir özet seçilmesi gerekir.",
+        "en": "The new Excel button exports a native Excel pivot with selected fields, filters and data horizon. In Windows desktop Excel, Data → Refresh All retrieves current data over the corporate network without saving passwords. Weighted ratios are preserved. FIRST summaries require choosing a supported summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-fit-live-excel.png",
+        "alt": {
+          "tr": "İçeriğe göre boyutlanan OAB ve INTAKE tabloları ve INTAKE Excel düğmesi",
+          "en": "Content-sized OAB and INTAKE tables with the INTAKE Excel button"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi, iç dikey kaydırma olmadan görünen toplamlar ve Excel aktarım düğmesi.",
+          "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
+        }
+      }
+    },
+    {
+      "id": "shipping-custom-method-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Nakliye Kıyaslama · Navlun Hesaplama",
+        "en": "Shipping Comparison · Freight Calculation"
+      },
+      "title": {
+        "tr": "Yeni nakliye şekli sütunu eklenebilir",
+        "en": "Add your own shipping method columns"
+      },
+      "body": {
+        "tr": "Navlun Hesaplama’daki “Ek nakliye şekilleri” bölümünden Uçak+Uçak Aktarmalı gibi yeni bir yöntem ad ve transit gün ile eklenir. Yöntem ücret tipi olarak seçilebilir ve Nakliye Kıyaslama’da kendi Landed, avantaj % ve tahmini teslim sütununu açar; Uygula sonucu bu sütuna yazar. Ayar herkes için ortaktır ve kopyalama çıktısına da eklenir.",
+        "en": "Add a new method such as AIR+AIR transfer with a name and transit days under “Extra shipping methods” in Freight Calculation. It can be chosen as a rate type and opens its own Landed, saving % and estimated arrival column in Shipping Comparison; Apply writes the result there. The setting is shared with everyone and included in copied output."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shipping-custom-method-column.png",
+        "alt": {
+          "tr": "Nakliye Kıyaslama’da AIR+AIR Transfer Landed sütunu",
+          "en": "AIR+AIR Transfer Landed column in Shipping Comparison"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; demo verisiyle eklenen AIR+AIR Transfer yöntemi, kendi fiyat, avantaj ve teslim tarihiyle.",
+          "en": "Actual post-change Buyer Log with demo data; the added AIR+AIR Transfer method with its own price, saving and arrival date."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-model-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası matrisinde adet, MB ayı ve kumaş özeti",
+        "en": "Quantity, MB month and fabric summary in the Pricing Desk matrix"
+      },
+      "body": {
+        "tr": "Modelin hemen sağındaki tek hücre Adet ve MB Ay bilgisini gösterir. Model altında kategori yerine Ürün Tanımı ve aktif dilde Kumaş Kartı özeti görünür. Büyük matrislerin kaydırma ve kopyalama akışları yeni alanları içerir.",
+        "en": "A single cell immediately after Model shows Quantity and MB Month. The model summary shows Product Description instead of category, followed by the localized Fabric Card summary. Large-matrix scrolling and copying include the new fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-summary-matrix.png",
+        "alt": {
+          "tr": "Fiyat Masası matrisinde adet, MB ayı ve kumaş özeti",
+          "en": "Quantity, MB month and fabric summary in the Pricing Desk matrix"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-list-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası listesinde ayrı adet ve MB ayı sütunları",
+        "en": "Separate quantity and MB month columns in Pricing Desk lists"
+      },
+      "body": {
+        "tr": "Liste görünümünde Ürün Tanımı, Adet ve MB Ay ayrı sütunlarda yer alır; Kumaş Kartı özeti modelin altında görünür. Yeni alanlar filtrelenebilir, sıralanabilir ve yeniden boyutlandırılabilir.",
+        "en": "List view shows Product Description, Quantity and MB Month in separate columns, with the Fabric Card summary below the model. The added fields support filtering, sorting and resizing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-summary-list.png",
+        "alt": {
+          "tr": "Fiyat Masası listesinde ayrı adet ve MB ayı sütunları",
+          "en": "Separate quantity and MB month columns in Pricing Desk lists"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-column-selection",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Koleksiyondan kişisel Fiyat Masası sütunları",
+        "en": "Personal Pricing Desk columns from Collection"
+      },
+      "body": {
+        "tr": "Sütunlar düğmesinden Koleksiyonun standart ve özel sütunlarını her iki görünüme ekleyip çıkarabilirsiniz. Seçiminiz kullanıcıya özel kaydedilir; Varsayılanlar düğmesi ilk düzeni geri getirir. Kaldırılan sütunların gizli filtreleri temizlenir.",
+        "en": "Use Columns to add or remove standard and custom Collection fields in both views. Your selection is saved per user; Defaults restores the initial layout. Filters on removed columns are cleared."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-columns.png",
+        "alt": {
+          "tr": "Koleksiyondan kişisel Fiyat Masası sütunları",
+          "en": "Personal Pricing Desk columns from Collection"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; yalnız izole demo verileri kullanıldı.",
+          "en": "Actual post-change Buyer Log interface using isolated demo data only."
+        }
+      }
+    },
+    {
+      "id": "cp-bom-control",
+      "type": "feature",
+      "module": {
+        "tr": "CP · BOM Kontrol",
+        "en": "CP · BOM Check"
+      },
+      "title": {
+        "tr": "CP'de kırılıma göre BOM kontrolü",
+        "en": "BOM check by breakdown in CP"
+      },
+      "body": {
+        "tr": "CP → Araçlar → BOM Kontrol, görünen veya seçili modellerin PLM SYNC ile okunan tüm BOM kalemlerini seçtiğiniz kırılıma göre (ör. Kategori → Lisans → Kumaş) karşılaştırır. Her kalemde grubun çoğunluğunun kullandığı kod gösterilir; eski koddan kalmış etiket veya farklı kodla açılmış kumaş gibi sapmalar model bazında listelenir. Kalemleri Ortak / Model bazlı olarak işaretleyebilirsiniz; kırılım ve işaretler hesabınızla hatırlanır.",
+        "en": "CP → Tools → BOM Check compares all BOM items read by PLM SYNC for the visible or selected styles by the breakdown you choose (e.g. Category → License → Fabric). Each item shows the code used by most of the group; deviations such as a label left on an old code or a fabric opened with a different code are listed per style. Mark items as Common or Model-specific; the breakdown and marks are remembered with your account."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-bom-control.png",
+        "alt": {
+          "tr": "Kategori kırılımında BOM Kontrol penceresi; kumaş ve etiket sapmaları",
+          "en": "BOM Check window with a category breakdown showing fabric and label deviations"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi ve anonim demo BOM kodları.",
+          "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
+        }
+      }
+    },
+    {
+      "id": "plm-bom-full-items",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM BOM / Baskı Detayı",
+        "en": "PLM BOM / Print Details"
+      },
+      "title": {
+        "tr": "BOM detayında tüm BOM kalemleri",
+        "en": "All BOM items in BOM details"
+      },
+      "body": {
+        "tr": "Sağ tık → PLM BOM / Baskı Detayı penceresi artık PLM SYNC ile okunan tüm BOM kalemlerini kategori yoluna göre gruplu gösterir. Her kalemde BOM Kontrol'de verdiğiniz Ortak / Model bazlı işareti görünür; sapmalar BOM Kontrol ekranında kalır.",
+        "en": "Right-click → PLM BOM / Print Details now lists all BOM items read by PLM SYNC, grouped by category path. Each item shows the Common / Model-specific mark set in BOM Check; deviations stay in the BOM Check window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-bom-full-items.png",
+        "alt": {
+          "tr": "PLM BOM detay penceresinde kategoriye göre gruplu tüm BOM kalemleri ve işaretleri",
+          "en": "All BOM items grouped by category with marks in the PLM BOM details window"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi ve anonim demo BOM kodları.",
+          "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
+        }
+      }
+    },
+    {
+      "id": "table-search-input-order",
+      "type": "improvement",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Tablolar aramaya girilen sırayı izler",
+        "en": "Tables follow search input order"
+      },
+      "body": {
+        "tr": "Yazılan veya yapıştırılan çoklu aramalarda sonuçlar ilk eşleşen değerin giriş sırasıyla gösterilir. Excel listelerinin ve çok sütunlu satır gruplarının sırası korunur. Aynı değere uyan satırlarda mevcut sütun sırası, Koleksiyonda model grupları korunur. Kopyalama ve Excel aktarımı aynı sırayı izler; arama temizlendiğinde mevcut tablo sırası geri gelir.",
+        "en": "Multi-value searches display results in the order of the first matching input value, whether typed or pasted. Excel lists and multi-column row groups keep their input order. Existing column order remains within each match, and Collection model families stay together. Copy and Excel export follow the same order; clearing search restores the existing table order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "search-input-order.png",
+        "alt": {
+          "tr": "Excel arama sırasıyla DEMO-003, DEMO-002, DEMO-001 modellerini gösteren gerçek Buyer Log tablosu",
+          "en": "Actual Buyer Log table showing DEMO-003, DEMO-002, DEMO-001 in Excel search order"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verileriyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "orders-priority-column",
+      "type": "feature",
+      "module": {
+        "tr": "Siparişler · Backlog · Öncelik Kuralları",
+        "en": "Orders · Backlog · Priority Rules"
+      },
+      "title": {
+        "tr": "Siparişler'de Priority yeniden var; Backlog'da CP dışındaki gruplar da öncelik alır",
+        "en": "Priority is back in Orders; groups outside CP also get a priority in Backlog"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-priority-column.png",
+        "alt": {
+          "tr": "Siparişler tablosunda Priority sütunu; satırlarda Öncelik Kuralları etiketleri görünüyor",
+          "en": "The Priority column in the Orders table; Priority Rules tags appear on the rows"
+        },
+        "caption": {
+          "tr": "Öncelik arka planda hesaplanır; hesap sürerken tablo kullanılabilir, bitince sütun dolar.",
+          "en": "Priorities are calculated in the background; the table stays usable meanwhile and the column fills when done."
+        }
+      },
+      "body": {
+        "tr": "Siparişler tablosuna Priority sütunu geri eklendi; sütunda filtreleme ve sıralama yapılabilir. Öncelik CP ile aynı Öncelik Kuralları ve etiketlerle hesaplanır, ancak Siparişler'de kontrol listesi olmadığı için kontrol listesine bağlı kurallar burada uygulanmaz. Hesap ekranı dondurmadan arka planda yapılır; 30–50 bin satırlık listelerde sütun birkaç saniye içinde dolar. Backlog Genel Bakış, Zaman Akışı, Excel Backlog V3 ve Küresel Akış Haritası önce CP'deki önceliği, sipariş CP'de yoksa Siparişler'deki önceliği kullanır; böylece CP dışındaki gruplar da öncelik etiketiyle görünür. Etiket kutucuğunun ipucu adedin ne kadarının Siparişler'den (checklist hariç) geldiğini gösterir.",
+        "en": "The Priority column is back in the Orders table, with filtering and sorting. Priorities use the same Priority Rules and tags as CP, but Orders has no checklist, so checklist-based rules do not apply there. The calculation runs in the background without freezing the screen; for 30–50 thousand lines the column fills within a few seconds. Backlog Overview, the Timeline, Excel Backlog V3 and the Global Flow Map use the CP priority first and, when an order is not in CP, the Orders priority, so groups outside CP also show priority tags. The tag tile tooltip shows how much of the quantity comes from Orders (excluding checklist)."
+      }
+    }
+  ]
+}

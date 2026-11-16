@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.359",
+      "publishedAt": "2026-11-16",
+      "title": {
+        "tr": "Birlikte gösterilen Priority etiketleri",
+        "en": "Priority tags shown together"
+      },
+      "stats": {
+        "features": 10,
+        "improvements": 8,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.359/release.json"
+    },
+    {
       "version": "7.0.358",
       "publishedAt": "2026-11-14",
       "title": {
