@@ -25,3 +25,7 @@ flock /tmp/buyerlog-performance-measurement.lock env REPORT_PERF_ONLY=1 node res
 ```
 
 The browser script produces only synthetic screenshots and local scratch evidence. Release-note PNGs were visually inspected. Final full-suite and PR-check results are recorded on the PR.
+
+## Integrated baseline test correction
+
+The first full-suite batch exposed two test-harness regressions already present in `f8779d6b`: the Concept 2 projection VM omitted the real search-order helper, and the Add New Model source contract expected the pinning branch before its new empty-search guard. Both failures were reproduced against `origin/main`'s production source. The harness now installs the actual search helper, checks both unsearched pinning and search-order precedence, and retains collapse/export assertions. No production search behavior was changed to satisfy the tests.
