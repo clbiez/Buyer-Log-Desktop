@@ -1282,10 +1282,18 @@ function scheduleOrdersPriorities(){
     const isCurrent=()=>_ordersPriority.job===job&&state.orders?.rows===rows&&revision===_unifiedPriorityTableRevision.orders&&ordersPriorityContextKey()===ctx.key;
     const result=await window.BLOrdersPriority.run(active,ctx.spec,{isCurrent});
     if(!isCurrent()||day!==new Date().toDateString())return false;
-    for(let i=0;i<active.length;i+=1){
-      const row=active[i];
-      row['Priority']=actionPriorityCode(result.codes[i])||'ON_TRACK';
-      row._trackingTags=Array.isArray(result.tags[i])?result.tags[i].slice():[];
+    // Sonuçlar 50k satıra parça parça yazılır (ölçüm: tek seferde 130–180 ms
+    // uzun görev). Parçalar arasında veri/kural değişirse yarım sonuç uygulanmaz:
+    // satırlar ancak tüm parçalar bittiğinde damgalanır ve hazır sayılır.
+    const APPLY_CHUNK=8000;
+    for(let start=0;start<active.length;start+=APPLY_CHUNK){
+      const end=Math.min(active.length,start+APPLY_CHUNK);
+      for(let i=start;i<end;i+=1){
+        const row=active[i];
+        row['Priority']=actionPriorityCode(result.codes[i])||'ON_TRACK';
+        row._trackingTags=Array.isArray(result.tags[i])?result.tags[i].slice():[];
+      }
+      if(end<active.length){await new Promise(resolve=>setTimeout(resolve,0));if(!isCurrent())return false;}
     }
     for(const row of rows)if(!unifiedPriorityRowActive('orders',row)){row['Priority']='';row._trackingTags=[];}
     _ordersPriority.stamp={rows,dataRevision:revision,day,key:ctx.key};
