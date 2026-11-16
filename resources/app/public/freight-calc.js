@@ -50,6 +50,14 @@
   // En yaygın koli ölçüsü; her hesapta elle yazılmasın diye ön dolu gelir.
   const DEFAULT_CARTON = Object.freeze({ cartonL: 58, cartonH: 38, cartonW: 30 });
   const MODES = Object.freeze(['air', 'seaAir']);
+  // Ek nakliye şekilleri (ör. "Uçak+Uçak AKTARMALI"): kullanıcı tanımlar,
+  // Nakliye Kıyaslama'da her biri kendi Landed / avantaj / ETA sütununu açar.
+  // Kimlik "m-" ile başlar ve ad değişse de sabit kalır; satırdaki Landed
+  // değeri bu kimliğe bağlı alanda (ydLanded__<id>) durur.
+  const MAX_METHODS = 6;
+  const DEFAULT_METHOD_TRANSIT_DAYS = 15;
+  const METHOD_ID_RE = /^m-[a-z0-9-]{1,38}$/;
+  const CUSTOM_LANDED_PREFIX = 'ydLanded__';
 
   function num(value) {
     if (value == null || value === '') return null;
@@ -72,11 +80,47 @@
     return text || fallback;
   }
 
-  function normalizeRate(entry, index) {
+  function isMethodId(value) { return METHOD_ID_RE.test(String(value == null ? '' : value)); }
+
+  function normalizeMethods(list) {
+    const seen = new Set();
+    const out = [];
+    (Array.isArray(list) ? list : []).forEach((entry, index) => {
+      const item = entry && typeof entry === 'object' ? entry : {};
+      const label = String(item.label == null ? '' : item.label).trim().slice(0, 40);
+      if (!label && !isMethodId(item.id)) return;
+      const id = isMethodId(item.id) ? String(item.id) : ('m-' + slugId(label, `yontem-${index + 1}`)).slice(0, 40); // i18n-ignore
+      if (seen.has(id)) return;
+      seen.add(id);
+      const days = num(item.transitDays);
+      out.push({
+        id,
+        label: label || id,
+        transitDays: days != null && days >= 1 && days <= 365 ? Math.round(days) : DEFAULT_METHOD_TRANSIT_DAYS,
+      });
+    });
+    return out.slice(0, MAX_METHODS);
+  }
+
+  // Ayarda geçerli olan tüm navlun tipleri: iki yerleşik + kullanıcı yöntemleri.
+  function modesFor(settings) {
+    const methods = settings && Array.isArray(settings.methods) ? normalizeMethods(settings.methods) : [];
+    return MODES.concat(methods.map(method => method.id));
+  }
+
+  // Bir navlun tipinin Landed değerini satırda hangi alanın taşıdığı.
+  function landedFieldKey(mode) {
+    if (mode === 'air') return 'ydFiyatUsdLandedUcak';
+    if (mode === 'seaAir') return 'ydFiyatUsdLandedGemiUcak';
+    return isMethodId(mode) ? CUSTOM_LANDED_PREFIX + mode : null;
+  }
+
+  function normalizeRate(entry, index, allowedModes) {
     const item = entry && typeof entry === 'object' ? entry : {};
     const rate = num(item.rate);
     const label = String(item.label == null ? '' : item.label).trim().slice(0, 80);
-    const mode = MODES.includes(item.mode) ? item.mode : 'seaAir';
+    const allowed = Array.isArray(allowedModes) ? allowedModes : MODES;
+    const mode = allowed.includes(item.mode) ? item.mode : 'seaAir';
     return {
       id: slugId(item.id || label, `rate-${index + 1}`).slice(0, 40),
       mode,
@@ -91,7 +135,9 @@
     const raw = value && typeof value === 'object' ? value : {};
     const list = Array.isArray(raw.rates) ? raw.rates : null;
     const seen = new Set();
-    const rates = (list || DEFAULT_RATES).map(normalizeRate).filter(item => {
+    const methods = normalizeMethods(raw.methods);
+    const allowed = MODES.concat(methods.map(method => method.id));
+    const rates = (list || DEFAULT_RATES).map((item, index) => normalizeRate(item, index, allowed)).filter(item => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
@@ -99,7 +145,8 @@
     const factor = num(raw.volumetricFactor);
     const multiplier = num(raw.landedMultiplier);
     return {
-      rates: rates.length ? rates : DEFAULT_RATES.map(normalizeRate),
+      rates: rates.length ? rates : DEFAULT_RATES.map((item, index) => normalizeRate(item, index)),
+      methods,
       volumetricFactor: factor != null && factor > 0 ? factor : DEFAULT_VOLUMETRIC_FACTOR,
       landedMultiplier: multiplier != null && multiplier > 0 ? multiplier : DEFAULT_LANDED_MULTIPLIER,
       carton: {
@@ -268,14 +315,18 @@
     return out;
   }
 
-  function landedPatch(item, at = new Date().toISOString()) {
-    if (!item || !Number.isFinite(item.landed) || !MODES.includes(item.mode)) return null;
-    const key = item.mode === 'air' ? 'ydFiyatUsdLandedUcak' : 'ydFiyatUsdLandedGemiUcak';
+  // settings verilirse özel yöntemin hâlâ tanımlı olduğu da doğrulanır.
+  function landedPatch(item, at = new Date().toISOString(), settings = null) {
+    if (!item || !Number.isFinite(item.landed)) return null;
+    if (settings && !modesFor(normalizeSettings(settings)).includes(item.mode)) return null;
+    const key = landedFieldKey(item.mode);
+    if (!key) return null;
     return { [key]: Number(item.landed.toFixed(2)), _freightAppliedRate: { id: item.id, label: item.label, mode: item.mode, rate: item.rate, at } };
   }
 
   return Object.freeze({
     DEFAULT_RATES, DEFAULT_VOLUMETRIC_FACTOR, DEFAULT_LANDED_MULTIPLIER, DEFAULT_CARTON, MODES, INPUT_FIELDS,
-    num, normalizeRate, normalizeSettings, defaultSettings, calculate, calculateMany, missingFields, inputsForRow, storedInputs, landedPatch,
+    MAX_METHODS, DEFAULT_METHOD_TRANSIT_DAYS, CUSTOM_LANDED_PREFIX,
+    num, isMethodId, normalizeMethods, modesFor, landedFieldKey, normalizeRate, normalizeSettings, defaultSettings, calculate, calculateMany, missingFields, inputsForRow, storedInputs, landedPatch,
   });
 });

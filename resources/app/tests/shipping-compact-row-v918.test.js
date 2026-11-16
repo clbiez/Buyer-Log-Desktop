@@ -291,7 +291,9 @@ test('v9.19 sütun genişlikleri kullanıcı tarafından ayarlanabiliyor', () =>
      Gemi+Uçak, Uçak) dar kalıyor, başlık iki satıra kırılıyordu. Artık
      ölçüler colgroup'tan gelir ve başlıktaki tutamakla sürüklenir. */
   const columns = fn('shipCompareWidths');
-  assert.ok(columns.includes('SHIP_COMPARE_COLUMNS'));
+  // Sabit sütunlar + kullanıcı tanımlı nakliye şekilleri tek listeden okunur.
+  assert.ok(columns.includes('shipCompareColumns()'));
+  assert.match(fn('shipCompareColumns'), /SHIP_COMPARE_COLUMNS\.concat\(shipCustomMethods\(\)/);
   assert.match(APP, /const SHIP_COMPARE_COLUMNS=\[/);
   // Her sütunun kendi varsayılanı ve asgarisi olmalı.
   for (const key of ['image', 'product', 'dates', 'fob', 'tr', 'gemi', 'gemiUcak', 'ucak']) {

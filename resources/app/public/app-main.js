@@ -20998,8 +20998,27 @@ function shipTransitDays(row){
 function shipLandedMultipliers(){
   return BLShippingEngine.landedMultipliers(state.overrides.landedMultipliers);
 }
+/* Kullanıcı tanımlı ek nakliye şekilleri (ör. Uçak+Uçak AKTARMALI). Ortak
+   navlun ayarında durur; her biri karşılaştırmada kendi sütununu açar. */
+// Satır başına çağrılır; ayar nesnesi değişmedikçe normalizasyon tekrarlanmaz.
+let _shipMethodsCache={raw:undefined,value:[]};
+function shipCustomMethods(){
+  const raw=state.overrides&&state.overrides.freightRates;
+  if(_shipMethodsCache.raw===raw&&raw!==undefined) return _shipMethodsCache.value;
+  let value=[];
+  try{ value=BLShippingEngine.cleanMethods(BLFreight.normalizeSettings(raw).methods); }catch(_){ value=[]; }
+  _shipMethodsCache={raw,value};
+  return value;
+}
+// Kart/tablo düzenleyicisinin sütun tanımı: sabit SHIP_COLS + özel yöntem Landed alanı.
+function shipColForKey(key){
+  const fixed=SHIP_COLS.find(item=>item.k===key);
+  if(fixed) return fixed;
+  const method=shipCustomMethods().find(item=>BLShippingEngine.methodKeys(item.id).landed===key);
+  return method?{k:key,label:method.label,type:'manual-num'}:null;
+}
 function computeShipFormulas(row){
-  return BLShippingEngine.compute(row,{coerceDateLoose,toNum,toISODate,days:shipTransitDays(row),multipliers:shipLandedMultipliers()});
+  return BLShippingEngine.compute(row,{coerceDateLoose,toNum,toISODate,days:shipTransitDays(row),multipliers:shipLandedMultipliers(),methods:shipCustomMethods()});
 }
 
 function shipCellDisplay(c, row){
@@ -21116,6 +21135,13 @@ function shipDecisionOptions(row){
     {key:'ucak', name:'AIR Landed',
      unit:num(row.ydFiyatUsdLandedUcak), pct:num(row.ucakAvantaj), date:row.ucakAntrepoTeslim, transit:days['Uçak'],
      inputs:[{key:'ydFiyatUsdLandedUcak', label:'USD'}]},
+    // Ek nakliye şekilleri AIR'in sağına, tanım sırasıyla eklenir.
+    ...shipCustomMethods().map(method=>{
+      const keys=BLShippingEngine.methodKeys(method.id);
+      return {key:method.id, name:method.label, custom:true, editable:true,
+        unit:num(row[keys.landed]), pct:num(row[keys.advantage]), date:row[keys.eta]||'', transit:method.transitDays,
+        inputs:[{key:keys.landed, label:'USD'}]};
+    }),
   ];
 }
 
@@ -21181,7 +21207,7 @@ function previewShipCardInput(inp){
   const row=shipRowByEditor(inp);
   if(!row) return false;
   const key=inp.dataset.key;
-  const col=SHIP_COLS.find(item=>item.k===key);
+  const col=shipColForKey(key);
   if(!col) return false;
   const parsed=shipParseEditorValue(inp,col);
   inp.classList.toggle('isInvalid',!parsed.ok);
@@ -21211,7 +21237,7 @@ function previewShipCardInput(inp){
   if(transit){
     const days=shipTransitDays(preview);
     const ruleBased=Object.values(days._source||{}).some(value=>value==='rule');
-    transit.innerHTML=`<b>${tr?'Transit':'Transit'}</b><span>SEA ${days['Gemi']} · SEA+AIR ${days['Gemi+Uçak']} · AIR ${days['Uçak']} ${tr?'gün':'days'}</span>${ruleBased?'':`<i>${tr?'varsayılan':'default'}</i>`}`;
+    transit.innerHTML=`<b>${tr?'Transit':'Transit'}</b><span>SEA ${days['Gemi']} · SEA+AIR ${days['Gemi+Uçak']} · AIR ${days['Uçak']}${shipCustomMethods().map(method=>' · '+escapeHtml(method.label)+' '+method.transitDays).join('')} ${tr?'gün':'days'}</span>${ruleBased?'':`<i>${tr?'varsayılan':'default'}</i>`}`;
   }
   return true;
 }
@@ -21270,7 +21296,7 @@ function shipCompareCards(row){
 
   return state.options.map(option=>{
     const missing=option.unit==null;
-    const priceEditable=SHIP_PRICE_EDITABLE_KEYS.has(option.key);
+    const priceEditable=SHIP_PRICE_EDITABLE_KEYS.has(option.key)||option.editable===true;
     const inputs=(option.inputs||[]).map(field=>shipCardInput(row,field.key,field.label,'num')).join('');
     const priceText=shipMoney(option.unit);
     const pctText=shipPct(option.pct);
@@ -21346,13 +21372,20 @@ const SHIP_COMPARE_COLUMNS=[
   {key:'gemiUcak', def:132, min:104},
   {key:'ucak',     def:132, min:104},
 ];
+// Sabit sütunlar + kullanıcı tanımlı nakliye şekilleri (AIR'in sağında).
+function shipCompareColumns(){
+  return SHIP_COMPARE_COLUMNS.concat(shipCustomMethods().map(method=>({key:method.id,def:132,min:104})));
+}
 let _shipCompareWidths=null;
 function shipCompareWidths(){
-  if(_shipCompareWidths) return _shipCompareWidths;
+  const columns=shipCompareColumns();
+  // Yeni eklenen nakliye şekli sütunu ilk görüldüğünde kayıttan/varsayılandan doldurulur.
+  if(_shipCompareWidths&&columns.every(column=>Number.isFinite(_shipCompareWidths[column.key]))) return _shipCompareWidths;
   let saved={};
   try{ saved=JSON.parse(BLStorage.getItem(SHIP_COMPARE_WIDTH_KEY)||'{}')||{}; }catch(_){ saved={}; }
-  _shipCompareWidths={};
-  for(const column of SHIP_COMPARE_COLUMNS){
+  _shipCompareWidths=_shipCompareWidths||{};
+  for(const column of columns){
+    if(Number.isFinite(_shipCompareWidths[column.key])) continue;
     const value=Number(saved[column.key]);
     _shipCompareWidths[column.key]=Number.isFinite(value)&&value>0?Math.max(column.min,value):column.def;
   }
@@ -21363,7 +21396,7 @@ function saveShipCompareWidths(){
 }
 function shipCompareColgroup(){
   const widths=shipCompareWidths();
-  return `<colgroup>${SHIP_COMPARE_COLUMNS.map(column=>`<col data-ship-col="${column.key}" style="width:${widths[column.key]}px">`).join('')}</colgroup>`;
+  return `<colgroup>${shipCompareColumns().map(column=>`<col data-ship-col="${column.key}" style="width:${widths[column.key]}px">`).join('')}</colgroup>`;
 }
 /* Genişliği colgroup üzerinden uygular. Sürükleme sırasında tablo yeniden
    ÇİZİLMEZ: binlerce hücreyi her fare hareketinde yeniden kurmak sürüklemeyi
@@ -21373,7 +21406,7 @@ function applyShipCompareWidths(){
   if(!table) return;
   const widths=shipCompareWidths();
   let total=0;
-  for(const column of SHIP_COMPARE_COLUMNS){
+  for(const column of shipCompareColumns()){
     total+=widths[column.key];
     const col=table.querySelector(`col[data-ship-col="${column.key}"]`);
     if(col) col.style.width=widths[column.key]+'px';
@@ -21383,7 +21416,7 @@ function applyShipCompareWidths(){
 function attachShipCompareResize(){
   const table=document.querySelector('.shipCompare');
   if(!table) return;
-  SHIP_COMPARE_COLUMNS.forEach((column,index)=>{
+  shipCompareColumns().forEach((column,index)=>{
     const th=table.querySelectorAll('thead th')[index];
     if(!th||th.querySelector('.colResizer')) return;
     const grip=document.createElement('div');
@@ -21453,7 +21486,7 @@ function bindShipCompareSelection(host){
 }
 function resetShipCompareWidths(){
   const widths=shipCompareWidths();
-  SHIP_COMPARE_COLUMNS.forEach(column=>{ widths[column.key]=column.def; });
+  shipCompareColumns().forEach(column=>{ widths[column.key]=column.def; });
   applyShipCompareWidths(); saveShipCompareWidths();
   showToast(appLang==='en'?'Column widths reset.':'Sütun genişlikleri sıfırlandı.');
 }
@@ -21467,6 +21500,7 @@ function shipCompareHeadCells(){
     {key:'gemi', name:'SEA Landed'},
     {key:'gemiUcak', name:'SEA+AIR Landed'},
     {key:'ucak', name:'AIR Landed'},
+    ...shipCustomMethods().map(method=>({key:method.id, name:method.label+' Landed'})),
   ];
   return columns.map(column=>`<th class="shipColPrice" data-ship-col="${escapeHtml(column.key)}">
     <span>${escapeHtml(column.name)}</span>${column.role?`<i class="shipBadge ${column.key==='fob'?'isSource':'isBase'}">${escapeHtml(column.role)}</i>`:''}
@@ -21515,6 +21549,12 @@ function shipComparisonClipboardColumns(){
     {key:'airSavingPct',label:'AIR Saving %'},
     {key:'airEta',label:'AIR ETA'},
     {key:'airTransit',label:tr?'AIR Transit Gün':'AIR Transit Days'},
+    ...shipCustomMethods().flatMap(method=>[
+      {key:'m:'+method.id+':landed',label:method.label+' Landed'},
+      {key:'m:'+method.id+':pct',label:method.label+' Saving %'},
+      {key:'m:'+method.id+':eta',label:method.label+' ETA'},
+      {key:'m:'+method.id+':transit',label:method.label+(tr?' Transit Gün':' Transit Days')},
+    ]),
     {key:'cheapest',label:tr?'En Ucuz':'Cheapest'},
     {key:'earliest',label:tr?'En Erken':'Earliest'},
   ];
@@ -21543,6 +21583,10 @@ function shipComparisonClipboardRows(){
       seaLanded:sea.unit, seaSavingPct:pct(sea.pct), seaEta:sea.date||'', seaTransit:sea.transit,
       seaAirLanded:seaAir.unit, seaAirSavingPct:pct(seaAir.pct), seaAirEta:seaAir.date||'', seaAirTransit:seaAir.transit,
       airLanded:air.unit, airSavingPct:pct(air.pct), airEta:air.date||'', airTransit:air.transit,
+      ...Object.fromEntries(state.options.filter(option=>option.custom).flatMap(option=>[
+        ['m:'+option.key+':landed',option.unit], ['m:'+option.key+':pct',pct(option.pct)],
+        ['m:'+option.key+':eta',option.date||''], ['m:'+option.key+':transit',option.transit],
+      ])),
       cheapest, earliest,
     };
   });
@@ -21573,7 +21617,7 @@ async function copyShipComparisonFlat(button){
 function shipCopyTableHtml(){
   const tr=appLang!=='en';
   const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates',
-    'Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed'];
+    'Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed',...shipCustomMethods().map(method=>method.label)];
   const border='border:1px solid #d0d5dd;padding:4px 6px;font-family:Arial,sans-serif;font-size:11px;';
   const rows=shipCopyRows().map(row=>{
     const options=shipDecisionOptions(row);
@@ -21600,7 +21644,7 @@ function shipCopyTableHtml(){
 }
 function shipCopyTablePlain(){
   const tr=appLang!=='en';
-  const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates','Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed'];
+  const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates','Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed',...shipCustomMethods().map(method=>method.label)];
   const lines=[heads.join('\t')];
   for(const row of shipCopyRows()){
     const options=shipDecisionOptions(row);
@@ -21836,7 +21880,7 @@ function commitShipEditor(inp, options={}){
   const row=shipRowByEditor(inp); if(!row) return false;
   if(row._canEdit===false){showToast(appLang==='en'?'You have view-only access for this order.':'Bu sipariş için yalnız görüntüleme yetkiniz var.');return false;}
   const key=inp.dataset.key;
-  const col=SHIP_COLS.find(item=>item.k===key); if(!col) return false;
+  const col=shipColForKey(key); if(!col) return false;
   const parsed=shipParseEditorValue(inp,col);
   if(!parsed.ok){
     inp.classList.add('isInvalid');
@@ -22042,6 +22086,17 @@ function openFreightModal(rows){
           <button type="button" class="tbtn" id="_freightRateSave" ${canEditRates?'':'disabled'}><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(en?'Save settings':'Ayarları kaydet')}</button>
         </div>
         ${canEditRates?'':`<div class="freightNotice">${escapeHtml(en?'You can calculate with the current rates, but changing them needs the business-rules permission.':'Mevcut ücretlerle hesap yapabilirsin; ücretleri değiştirmek için iş kuralları yetkisi gerekir.')}</div>`}
+        <div class="freightMethods">
+          <div class="freightSectionHead">
+            <b>${escapeHtml(en?'Extra shipping methods':'Ek nakliye şekilleri')}</b>
+            <span>${escapeHtml(en?'Sea, Sea+Air and Air are built in. Each method added here opens its own Landed column in Shipping Comparison and can be picked as a rate type; transit days set its ETA. Save settings to apply.':'Gemi, Gemi+Uçak ve Uçak hazır gelir. Buraya eklenen her yöntem Nakliye Kıyaslama’da kendi Landed sütununu açar ve ücret tipi olarak seçilebilir; transit gün tahmini teslim tarihini belirler. Uygulamak için ayarları kaydet.')}</span>
+          </div>
+          <div id="_freightMethodList" class="freightRateList"></div>
+          <div class="freightRateFoot">
+            <span style="flex:1"></span>
+            <button type="button" class="tbtn" id="_freightMethodAdd" ${canEditRates?'':'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg>${escapeHtml(en?'Add shipping method':'Nakliye şekli ekle')}</button>
+          </div>
+        </div>
       </section>
 
       <section class="freightSection">
@@ -22078,6 +22133,7 @@ function openFreightModal(rows){
 
   const status = modal.querySelector('#_freightStatus');
   const rateList = modal.querySelector('#_freightRateList');
+  const methodList = modal.querySelector('#_freightMethodList');
   const factorInput = modal.querySelector('#_freightFactor');
   const landedMultInput = modal.querySelector('#_freightLandedMult');
   const grid = modal.querySelector('#_freightInputGrid');
@@ -22091,7 +22147,21 @@ function openFreightModal(rows){
     grid.querySelectorAll('[data-freight-input]').forEach(el=>{ entry.inputs[el.dataset.freightInput]=el.value; });
     return entry;
   }
+  function readMethods(){
+    return [...methodList.querySelectorAll('[data-method-index]')].map(rowEl=>({
+      id: settings.methods[Number(rowEl.dataset.methodIndex)]?.id,
+      label: rowEl.querySelector('[data-method-label]').value,
+      transitDays: BLFreight.num(rowEl.querySelector('[data-method-days]').value),
+    }));
+  }
+  function modeLabel(mode){
+    if(mode==='air') return en?'Air':'Uçak';
+    if(mode==='seaAir') return en?'Sea+Air':'Gemi+Uçak';
+    const method=(settings.methods||[]).find(item=>item.id===mode);
+    return method?method.label:mode;
+  }
   function readSettings(){
+    const methods=readMethods();
     const rates=[...rateList.querySelectorAll('[data-rate-index]')].map((rowEl,index)=>({
       id: settings.rates[Number(rowEl.dataset.rateIndex)]?.id || `rate-${index+1}`,
       label: rowEl.querySelector('[data-rate-label]').value,
@@ -22100,6 +22170,7 @@ function openFreightModal(rows){
     }));
     settings = BLFreight.normalizeSettings({
       rates,
+      methods,
       volumetricFactor: BLFreight.num(factorInput.value),
       landedMultiplier: BLFreight.num(landedMultInput.value),
       carton: settings.carton,
@@ -22115,6 +22186,7 @@ function openFreightModal(rows){
         <select data-rate-mode ${canEditRates?'':'disabled'}>
           <option value="seaAir" ${rate.mode==='seaAir'?'selected':''}>${escapeHtml(en?'Sea+Air':'Gemi+Uçak')}</option>
           <option value="air" ${rate.mode==='air'?'selected':''}>${escapeHtml(en?'Air':'Uçak')}</option>
+          ${(settings.methods||[]).map(method=>`<option value="${escapeHtml(method.id)}" ${rate.mode===method.id?'selected':''}>${escapeHtml(method.label)}</option>`).join('')}
         </select>
         <div class="freightRateValue"><i>$</i><input type="text" inputmode="decimal" data-rate-value value="${escapeHtml(String(rate.rate))}" ${canEditRates?'':'disabled'}></div>
         <button type="button" class="pricingRuleIconBtn" data-rate-remove="${index}" title="${escapeHtml(en?'Remove':'Kaldır')}" ${canEditRates&&settings.rates.length>1?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button>
@@ -22124,6 +22196,29 @@ function openFreightModal(rows){
       settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
     }));
     rateList.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',recalc));
+    // Tip değişince yöntem silme düğmelerinin durumu da güncellensin.
+    rateList.querySelectorAll('select').forEach(el=>el.addEventListener('change',()=>{ readSettings(); renderRates(); recalc(); }));
+    renderMethods();
+  }
+  function renderMethods(){
+    const methods=settings.methods||[];
+    methodList.innerHTML = methods.length ? methods.map((method,index)=>{
+      const used=settings.rates.some(rate=>rate.mode===method.id);
+      const removeTitle=used
+        ? (en?'Remove the rates that use this method first':'Önce bu yöntemi kullanan ücretleri kaldır')
+        : (en?'Remove':'Kaldır');
+      return `<div class="freightRateRow freightMethodRow" data-method-index="${index}">
+        <input type="text" data-method-label maxlength="40" value="${escapeHtml(method.label)}" ${canEditRates?'':'disabled'} placeholder="${escapeHtml(en?'Method name (e.g. AIR+AIR transfer)':'Yöntem adı (ör. Uçak+Uçak Aktarmalı)')}">
+        <div class="freightRateValue"><input type="text" inputmode="numeric" data-method-days value="${escapeHtml(String(method.transitDays))}" ${canEditRates?'':'disabled'} aria-label="${escapeHtml(en?'Transit days':'Transit gün')}"><i>${escapeHtml(en?'days':'gün')}</i></div>
+        <button type="button" class="pricingRuleIconBtn" data-method-remove="${index}" title="${escapeHtml(removeTitle)}" ${canEditRates&&!used?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button>
+      </div>`;
+    }).join('') : `<div class="freightEmpty">${escapeHtml(en?'No extra shipping method yet.':'Henüz ek nakliye şekli yok.')}</div>`;
+    methodList.querySelectorAll('[data-method-remove]').forEach(btn=>btn.addEventListener('click',()=>{
+      readSettings(); settings.methods.splice(Number(btn.dataset.methodRemove),1);
+      settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
+    }));
+    // Ad yazılırken odak kaybolmasın; ücret tipi listesi blur'da tazelenir.
+    methodList.querySelectorAll('input').forEach(el=>el.addEventListener('change',()=>{ readSettings(); renderRates(); recalc(); }));
   }
 
   // Koli ölçüleri tek satırda üç dar kutu: üç ayrı geniş alan yer kaplıyordu ve
@@ -22189,7 +22284,7 @@ function openFreightModal(rows){
         <th></th>
       </tr></thead><tbody>${result.results.map((item,index)=>`
         <tr>
-          <td><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.mode==='air'?(en?'Air':'Uçak'):(en?'Sea+Air':'Gemi+Uçak'))}</small></td>
+          <td><b>${escapeHtml(item.label)}</b><small>${escapeHtml(modeLabel(item.mode))}</small></td>
           <td>${freightMoneyText(item.rate,2)}</td>
           <td>${freightMoneyText(item.total,2)}</td>
           <td>${freightMoneyText(item.perPiece,2)}</td>
@@ -22251,8 +22346,8 @@ function openFreightModal(rows){
   }
   function applyNotice(){
     return `<div class="freightNotice">${escapeHtml(en
-      ? 'Apply writes the Landed value into the row: Air rates go to “YD Fiyat (USD) Landed Uçak”, Sea+Air rates to “YD Fiyat (USD) Landed Gemi+Uçak”.'
-      : 'Uygula, Landed değerini satıra yazar: Uçak ücretleri “YD Fiyat (USD) Landed Uçak”, Gemi+Uçak ücretleri “YD Fiyat (USD) Landed Gemi+Uçak” sütununa gider.')}</div>`;
+      ? 'Apply writes the Landed value into the row: Air rates go to “YD Fiyat (USD) Landed Uçak”, Sea+Air rates to “YD Fiyat (USD) Landed Gemi+Uçak”, extra-method rates to that method’s own Landed column.'
+      : 'Uygula, Landed değerini satıra yazar: Uçak ücretleri “YD Fiyat (USD) Landed Uçak”, Gemi+Uçak ücretleri “YD Fiyat (USD) Landed Gemi+Uçak”, ek yöntem ücretleri o yöntemin kendi Landed sütununa gider.')}</div>`;
   }
 
   function storedInputs(entry){
@@ -22266,11 +22361,17 @@ function openFreightModal(rows){
   }
   function applyResult(entry, item, options){
     if(!canWrite(entry) || !item || item.landed==null) return;
-    const key = item.mode==='air' ? 'ydFiyatUsdLandedUcak' : 'ydFiyatUsdLandedGemiUcak';
+    const key = BLFreight.landedFieldKey(item.mode);
+    // Ek yöntem kaydedilmeden uygulanırsa değer satırda görünmeyen bir alana
+    // düşerdi; yalnız kayıtlı (ortak) ayardaki yöntemlere yazılır.
+    const nativePatch = key ? BLFreight.landedPatch(item, undefined, freightSettings()) : null;
+    if(!nativePatch){
+      status.textContent = en?'Save settings first: this shipping method is not saved yet.':'Önce ayarları kaydet: bu nakliye şekli henüz kaydedilmedi.';
+      return;
+    }
     const prev = entry.row[key];
     // Modalda 2 basamak gösteriliyor; satıra da 2 basamak yazılır ki
     // kullanıcının gördüğü sayı ile hücreye düşen sayı ayrışmasın.
-    const nativePatch = BLFreight.landedPatch(item); if(!nativePatch)return;
     const next = nativePatch[key];
     saveInputs(entry, nativePatch);
     computeShipFormulas(entry.row);
@@ -22295,8 +22396,22 @@ function openFreightModal(rows){
     settings.rates.push({id:`rate-${Date.now()}`, mode:'seaAir', label:en?'New route':'Yeni rota', rate:1});
     settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
   });
+  modal.querySelector('#_freightMethodAdd')?.addEventListener('click',()=>{
+    readSettings();
+    if((settings.methods||[]).length>=BLFreight.MAX_METHODS){
+      status.textContent = en?`At most ${BLFreight.MAX_METHODS} extra shipping methods can be added.`:`En fazla ${BLFreight.MAX_METHODS} ek nakliye şekli eklenebilir.`;
+      return;
+    }
+    settings.methods.push({id:`m-${Date.now().toString(36)}`, label:en?'New method':'Yeni yöntem', transitDays:BLFreight.DEFAULT_METHOD_TRANSIT_DAYS});
+    settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
+    methodList.querySelector('[data-method-index]:last-child [data-method-label]')?.select();
+  });
   modal.querySelector('#_freightRateSave')?.addEventListener('click',async e=>{
-    const btn=e.currentTarget; const config=readSettings();
+    const btn=e.currentTarget;
+    const rawMethods=readMethods();
+    if(rawMethods.some(method=>!String(method.label||'').trim())){ status.textContent = en?'Every shipping method needs a name.':'Her nakliye şeklinin bir adı olmalı.'; return; }
+    if(rawMethods.some(method=>!(method.transitDays>=1&&method.transitDays<=365))){ status.textContent = en?'Transit days must be between 1 and 365.':'Transit gün 1 ile 365 arasında olmalı.'; return; }
+    const config=readSettings();
     if(config.rates.some(rate=>!(rate.rate>0))){ status.textContent = en?'Every rate must be greater than zero.':'Her navlun ücreti sıfırdan büyük olmalı.'; return; }
     // Kaydetme anındaki koli ölçüsü bir sonraki hesabın varsayılanı olur.
     const active = readInputs();
@@ -22309,6 +22424,9 @@ function openFreightModal(rows){
     try{
       settings = await persistFreightSettings(config);
       renderRates(); recalc();
+      // Eklenen/silinen nakliye şekli karşılaştırma sütunlarını değiştirir.
+      shipRows.forEach(row=>computeShipFormulas(row));
+      renderShipTable();
       status.textContent=''; showToast(en?'Freight settings saved.':'Navlun ayarları kaydedildi.');
     }catch(err){ status.textContent=err.message; }
     finally{ btn.disabled=false; }
@@ -32545,6 +32663,7 @@ function fabricCardsRepaintTables(){
   if(currentActiveTab()==='koleksiyon')renderKol();else kolFabricRepaintPending=true;
   if(state.cp)renderCP();
   if(state.orders)renderOrders();
+  if(['quotations','pricinghistory'].includes(currentActiveTab()))window.BL_QUOTATIONS?.desk?.refreshFabricSummary?.();
 }
 function kolFabricCardsEnsureLoaded(){
   if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
