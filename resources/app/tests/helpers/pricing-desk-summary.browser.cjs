@@ -23,13 +23,14 @@ try{
  await page.evaluate(()=>{window.BL_QUOTATIONS.desk.selectRequest('demo-quote');window.BL_QUOTATIONS.desk.renderAll();});
  await page.locator('.pdMatrix').waitFor();
  await page.waitForFunction(()=>document.querySelector('.pdModelText small')?.textContent.includes('150 gsm'));
+ await page.waitForTimeout(500);
  console.log('matrix ready');
  assert.match(await page.locator('.pdModelText').first().innerText(),/Printed cotton tee 1/);
  assert.doesNotMatch(await page.locator('.pdModelText').first().innerText(),/CATEGORY/);
  assert.match(await page.locator('.pdSummary').nth(1).innerText(),/0/);
  assert.deepEqual(await page.locator('.pdMatrix thead th').allTextContents(),['Model','Adet / MB Ay','Hedef','En iyi / Onaylı','Δ Hedef','Demo Textile A130/130 · 130 en iyi−2,6%','Demo Textile B130/130 · 0 en iyi+2,6%','Üretici']);
  assert.ok(await page.locator('tr[data-pd-row]').count()<60);
- if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-summary-matrix.png')});
+ if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({animations:'disabled',path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-summary-matrix.png')});
  await page.locator('[data-pd-columns]').click();await page.locator('[data-pd-column="season"]').check();await page.locator('[data-pd-columns-apply]').click();
  assert.equal(await page.locator('.pdMatrix thead th').nth(5).innerText(),'SEZON');
  // Copies include logical rows outside the DOM window and the selected Collection context.
@@ -37,7 +38,7 @@ try{
  assert.match(copied,/DEMO-MODEL-130/);assert.match(copied,/Adet: 0/);assert.match(copied,/JUNE 2027/);assert.match(copied,/S7/);assert.doesNotMatch(copied,/CATEGORY-MUST-NOT-APPEAR/);
  await page.evaluate(()=>{kolRows[1].fabric='';window.BL_QUOTATIONS.desk.activeRequest().items.filter(item=>item.rowId===2).forEach(item=>item.fabric='');window.BL_QUOTATIONS.desk.renderDetail();});
  const rowHeights=await page.locator('tr[data-pd-row]').evaluateAll(rows=>rows.map(row=>row.getBoundingClientRect().height));
- assert.ok(rowHeights.every(height=>height===rowHeights[0]),'missing Fabric Cards preserve uniform virtual row heights');
+ assert.ok(rowHeights.length>0);assert.ok(rowHeights.every(height=>height===rowHeights[0]),'missing Fabric Cards preserve uniform virtual row heights');
  await page.locator('.pdMatrixScroll').evaluate(el=>el.scrollTop=el.scrollHeight);
  await page.locator('tr[data-pd-row="129"]').waitFor();
  assert.equal(await page.locator('tr[data-pd-row="129"] td').count(),8);
@@ -57,9 +58,9 @@ try{
  assert.equal(await page.locator('[data-qcol="collection:quantity"]').count(),1);
  await page.evaluate(()=>{applyLanguage('en');});
  await page.waitForFunction(()=>document.querySelector('[data-qcol="collection:productMainDefinition"] .quotationSortLabel')?.textContent==='Product Description');
- if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-summary-list.png')});
+ if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({animations:'disabled',path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-summary-list.png')});
  await page.locator('[data-pd-columns]').click();await page.locator('[data-pd-column="season"]').check();
- if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-columns.png')});
+ if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({animations:'disabled',path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-columns.png')});
  await page.keyboard.press('Escape');assert.equal(await page.locator('[data-pd-columns]').getAttribute('aria-expanded'),'false');
  await page.locator('[data-pd-columns]').click();await page.locator('[data-pd-column="quantity"]').uncheck();await page.locator('[data-pd-columns-apply]').click();
  await page.reload();await page.getByRole('button',{name:/Continue to Buyer Log|Buyer Log.a devam et/}).click({timeout:60000});await page.waitForFunction(()=>!blOverlayOpen());
