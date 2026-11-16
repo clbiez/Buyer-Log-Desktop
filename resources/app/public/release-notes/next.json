@@ -7,8 +7,8 @@
     "en": "Report view, cell selection and editing in tables · LCW AI image and file attachments"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi.",
-    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline."
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. Siparişler'de Priority sütunu geri geldi (checklist hariç); Backlog CP dışındaki grupların önceliğini Siparişler'den alır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. The Priority column is back in Orders (excluding checklist); Backlog takes the priority of groups outside CP from Orders."
   },
   "changes": [
     {
@@ -571,6 +571,35 @@
       "body": {
         "tr": "Zaman Akışı'nın alt grafik seçicisine Buyer Grup ve Buyer'ın yanına Öncelik eklendi. Her dönem çubuğu satırların ana önceliğine göre yığılır, bu yüzden toplam o dönemin Backlog adedine eşittir. Renkler ve sıra Öncelik Kuralları'ndaki etiket kataloğunuzdan gelir. Takip etiketleri çubukta ayrıca sayılmaz; çubuğun üzerine gelince ipucunda adetleriyle listelenir. Parçaya tıklayınca o dönem ve etiketin siparişleri sağda açılır.",
         "en": "Priority was added next to Buying Group and Buyer in the Timeline's lower chart picker. Each period bar is stacked by the lines' main priority, so the total equals that period's Backlog quantity. Colours and order come from your tag catalogue in Priority Rules. Tracking tags are not counted again in the bar; hover the bar to see them with quantities in the tooltip. Click a segment to open the orders of that period and tag on the right."
+      }
+    },
+    {
+      "id": "orders-priority-column",
+      "type": "feature",
+      "module": {
+        "tr": "Siparişler · Backlog · Öncelik Kuralları",
+        "en": "Orders · Backlog · Priority Rules"
+      },
+      "title": {
+        "tr": "Siparişler'de Priority yeniden var; Backlog'da CP dışındaki gruplar da öncelik alır",
+        "en": "Priority is back in Orders; groups outside CP also get a priority in Backlog"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-priority-column.png",
+        "alt": {
+          "tr": "Siparişler tablosunda Priority sütunu; satırlarda Öncelik Kuralları etiketleri görünüyor",
+          "en": "The Priority column in the Orders table; Priority Rules tags appear on the rows"
+        },
+        "caption": {
+          "tr": "Öncelik arka planda hesaplanır; hesap sürerken tablo kullanılabilir, bitince sütun dolar.",
+          "en": "Priorities are calculated in the background; the table stays usable meanwhile and the column fills when done."
+        }
+      },
+      "body": {
+        "tr": "Siparişler tablosuna Priority sütunu geri eklendi; sütunda filtreleme ve sıralama yapılabilir. Öncelik CP ile aynı Öncelik Kuralları ve etiketlerle hesaplanır, ancak Siparişler'de kontrol listesi olmadığı için kontrol listesine bağlı kurallar burada uygulanmaz. Hesap ekranı dondurmadan arka planda yapılır; 30–50 bin satırlık listelerde sütun birkaç saniye içinde dolar. Backlog Genel Bakış, Zaman Akışı, Excel Backlog V3 ve Küresel Akış Haritası önce CP'deki önceliği, sipariş CP'de yoksa Siparişler'deki önceliği kullanır; böylece CP dışındaki gruplar da öncelik etiketiyle görünür. Etiket kutucuğunun ipucu adedin ne kadarının Siparişler'den (checklist hariç) geldiğini gösterir.",
+        "en": "The Priority column is back in the Orders table, with filtering and sorting. Priorities use the same Priority Rules and tags as CP, but Orders has no checklist, so checklist-based rules do not apply there. The calculation runs in the background without freezing the screen; for 30–50 thousand lines the column fills within a few seconds. Backlog Overview, the Timeline, Excel Backlog V3 and the Global Flow Map use the CP priority first and, when an order is not in CP, the Orders priority, so groups outside CP also show priority tags. The tag tile tooltip shows how much of the quantity comes from Orders (excluding checklist)."
       }
     }
   ]

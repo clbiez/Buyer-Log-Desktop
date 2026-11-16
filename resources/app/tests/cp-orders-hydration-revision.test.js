@@ -43,6 +43,11 @@ function load() {
     ensureCollectionCatalogLoaded: async () => assert.fail('fixture already supplies catalogs'),
     fetchOrdersProjection: async () => ({payload: fixture.projection}),
     ordersLoadPromise: null,
+    // Siparişler önceliği (v20261116): dinleyici kural anahtarını sıfırlar; Orders
+    // sekmesi açık değilse ve önceki sonuç yoksa hesap başlatmaz.
+    _ordersPriority: {stamp: null, job: null},
+    _ordersPriorityContextKey: 'k',
+    scheduleOrdersPriorities: () => assert.fail('Orders priorities must not start from the CP tab without a prior result'),
   };
   vm.createContext(context);
   vm.runInContext(between('const _unifiedPriorityTableRevision=', 'function unifiedPriorityRowActive(')
@@ -84,6 +89,7 @@ test('real personal-context listener preserves CP input revision and invalidates
   assert.equal(s.events[0].detail.reason, 'personal-decision-context');
   assert.deepEqual(Array.from(s.events[0].detail.tables), ['cp']);
   assert.deepEqual(s.renders, ['cp', 'personal-decision-context']);
+  assert.equal(s.context._ordersPriorityContextKey, null, 'Orders rule key is rebuilt on next read');
 });
 
 test('actual on-demand Orders loader preserves CP revision, cache and local state', async () => {

@@ -323,7 +323,7 @@
       let hit = null;
       try { hit = priorityApi.lookup(item.orderCode, item.modelName, item.colourCode); } catch (_) { hit = null; }
       item.priorityCode = hit && hit.priority ? String(hit.priority) : '';
-      item[PRIORITY_DIMENSION] = item.priorityCode ? priorityLabelOf(item.priorityCode) : L('(CP eşleşmesi yok)', '(no CP match)');
+      item[PRIORITY_DIMENSION] = item.priorityCode ? priorityLabelOf(item.priorityCode) : L('(öncelik eşleşmesi yok)', '(no priority match)');
       item.trackingTagsText = (hit && Array.isArray(hit.trackingTags) ? hit.trackingTags : []).filter(code => code && code !== item.priorityCode).map(priorityLabelOf).join(', ');
     });
     const dimName = id => (id === PRIORITY_DIMENSION ? L('Öncelik', 'Priority') : dimLabel(id, lang));

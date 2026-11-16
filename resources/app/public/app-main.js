@@ -1175,10 +1175,8 @@ function cpPriorityIndexReady(){
   const cached=_unifiedPriorityCache.cp;
   return Boolean(cached&&state.cp&&cached.rows===state.cp.rows&&cached.day===new Date().toDateString());
 }
-function buildCpPriorityIndex(){
-  if(!cpPriorityIndexReady())return null;
-  const stamp=_unifiedPriorityCache.cp;
-  if(_cpPriorityIndex&&_cpPriorityIndex.stamp===stamp)return _cpPriorityIndex;
+/* Bir satır kümesinden (CP veya Siparişler) sipariş+model+renk → öncelik dizini. */
+function priorityIndexFromRows(rows){
   const OD=window.BLOrderDecisionEngine,line=new Map(),orderColour=new Map(),order=new Map();
   const merge=(map,key,entry)=>{
     if(!key)return;
@@ -1188,9 +1186,8 @@ function buildCpPriorityIndex(){
     prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
     entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
   };
-  const rows=state.cp.rows;
   const orderKey=cpPriorityHeaderKey(rows,'orderCode','Order Code'),modelKey=cpPriorityHeaderKey(rows,'modelName','Model Name'),colourKey=cpPriorityHeaderKey(rows,'colourCode','C.Code');
-  for(const row of rows){
+  for(const row of rows||[]){
     if(!row)continue;
     const priority=actionPriorityCode(row['Priority']);
     if(!priority)continue;
@@ -1202,18 +1199,30 @@ function buildCpPriorityIndex(){
     merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
     merge(order,cpPriorityIdentity(orderCode),{...entry,model:cpPriorityIdentityPart(model),colour:cpPriorityIdentityPart(colour)});
   }
-  _cpPriorityIndex={stamp,line,orderColour,order};
+  return {line,orderColour,order};
+}
+function buildCpPriorityIndex(){
+  if(!cpPriorityIndexReady())return null;
+  const stamp=_unifiedPriorityCache.cp;
+  if(_cpPriorityIndex&&_cpPriorityIndex.stamp===stamp)return _cpPriorityIndex;
+  _cpPriorityIndex={stamp,...priorityIndexFromRows(state.cp.rows)};
   return _cpPriorityIndex;
 }
-function lookupCpPriority(orderCode,model,colourCode){
-  const index=buildCpPriorityIndex();
-  if(!index||!String(orderCode||'').trim())return null;
-  // Sipariş yalnız kodla eşleşiyorsa ve CP'de birden fazla satırı varsa başka
+function buildOrdersPriorityIndex(){
+  if(!ordersPriorityReady())return null;
+  const stamp=_ordersPriority.stamp;
+  if(_ordersPriorityIndex&&_ordersPriorityIndex.stamp===stamp)return _ordersPriorityIndex;
+  _ordersPriorityIndex={stamp,...priorityIndexFromRows(state.orders.rows)};
+  return _ordersPriorityIndex;
+}
+function lookupPriorityIn(index,orderCode,model,colourCode){
+  if(!index)return null;
+  // Sipariş yalnız kodla eşleşiyorsa ve kaynakta birden fazla satırı varsa başka
   // bir rengin etiketi ödünç alınmaz.
-  const hit=index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
+  return index.line.get(cpPriorityIdentity(orderCode,model,colourCode))
     ||(String(colourCode||'').trim()?index.orderColour.get(cpPriorityIdentity(orderCode,colourCode)):null)
     ||(()=>{
-      // Yalnız-sipariş yedeği: CP'de tek satır olmalı ve istenen renk/model o
+      // Yalnız-sipariş yedeği: kaynakta tek satır olmalı ve istenen renk/model o
       // satırla çelişmemeli (boş alan çelişki sayılmaz).
       const only=index.order.get(cpPriorityIdentity(orderCode));
       if(!only||only.count!==1)return null;
@@ -1222,23 +1231,103 @@ function lookupCpPriority(orderCode,model,colourCode){
       if(wantModel&&only.model&&wantModel!==only.model)return null;
       return only;
     })();
-  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags]}:null;
 }
+/* Önce CP (checklist dahil kişisel karar); CP'de olmayan sipariş Siparişler'den
+   (aynı kurallar, checklist hariç). Sonuç kaynağını taşır: 'cp' | 'orders'. */
+function lookupCpPriority(orderCode,model,colourCode){
+  if(!String(orderCode||'').trim())return null;
+  let hit=lookupPriorityIn(buildCpPriorityIndex(),orderCode,model,colourCode),source='cp';
+  if(!hit){hit=lookupPriorityIn(buildOrdersPriorityIndex(),orderCode,model,colourCode);source='orders';}
+  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags],source}:null;
+}
+
+/* ---- Siparişler (Orders) önceliği ----
+   CP ile aynı kurallar ve katalog; kontrol listesi YOK. 30–50 bin satırda ana
+   iş parçacığını dondurmamak için hesap orders-priority.js üzerinden worker'da
+   yapılır. Sonuç Siparişler satırının Priority alanına yazılır (CP ile aynı
+   sütun ve gösterim). Önbellek: satır dizisi + Siparişler veri revizyonu +
+   gün + kural/katalog anahtarı (checklist cevapları anahtara girmez). */
+const _ordersPriority={stamp:null,job:null};
+let _ordersPriorityIndex=null,_ordersPriorityContextKey=null;
+const _priorityIndexUnavailable={cp:false,orders:false};
+function ordersPriorityContext(){
+  const assistant=window.BLCpAssistant;
+  return assistant&&typeof assistant.ordersPriorityContext==='function'?assistant.ordersPriorityContext():null;
+}
+function ordersPriorityContextKey(){
+  if(_ordersPriorityContextKey==null){const ctx=ordersPriorityContext();if(!ctx)return '';_ordersPriorityContextKey=ctx.key;}
+  return _ordersPriorityContextKey;
+}
+function ordersPriorityReady(){
+  const stamp=_ordersPriority.stamp;
+  return Boolean(stamp&&state.orders&&stamp.rows===state.orders.rows&&stamp.dataRevision===_unifiedPriorityTableRevision.orders
+    &&stamp.day===new Date().toDateString()&&stamp.key===ordersPriorityContextKey());
+}
+function scheduleOrdersPriorities(){
+  if(ordersPriorityReady())return Promise.resolve(true);
+  const rows=state.orders&&Array.isArray(state.orders.rows)?state.orders.rows:null;
+  if(!rows)return Promise.resolve(false);
+  const revision=_unifiedPriorityTableRevision.orders,day=new Date().toDateString();
+  const running=_ordersPriority.job;
+  if(running&&running.rows===rows&&running.revision===revision&&running.day===day&&(!_ordersPriorityContextKey||running.key===_ordersPriorityContextKey))return running.promise;
+  const job={rows,revision,day,key:''};_ordersPriority.job=job;
+  job.promise=(async()=>{
+    if(!window.BLCpAssistant?.ordersPriorityContext||!window.BLOrdersPriority)await window.BLPerf?.ensureFeature?.('cpAssistant');
+    const ctx=ordersPriorityContext();
+    if(!ctx||!window.BLOrdersPriority)return false;
+    _ordersPriorityContextKey=ctx.key;job.key=ctx.key;
+    const active=rows.filter(row=>unifiedPriorityRowActive('orders',row));
+    const isCurrent=()=>_ordersPriority.job===job&&state.orders?.rows===rows&&revision===_unifiedPriorityTableRevision.orders&&ordersPriorityContextKey()===ctx.key;
+    const result=await window.BLOrdersPriority.run(active,ctx.spec,{isCurrent});
+    if(!isCurrent()||day!==new Date().toDateString())return false;
+    for(let i=0;i<active.length;i+=1){
+      const row=active[i];
+      row['Priority']=actionPriorityCode(result.codes[i])||'ON_TRACK';
+      row._trackingTags=Array.isArray(result.tags[i])?result.tags[i].slice():[];
+    }
+    for(const row of rows)if(!unifiedPriorityRowActive('orders',row)){row['Priority']='';row._trackingTags=[];}
+    _ordersPriority.stamp={rows,dataRevision:revision,day,key:ctx.key};
+    _ordersPriorityIndex=null;_cpPriorityIndexRevision+=1;
+    window.BLPerf?.mark?.('ORDERS_PRIORITY_READY',{rows:active.length,mode:result.mode,ms:result.ms});
+    try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed',{detail:{source:'orders'}}));}catch(_){}
+    if(currentActiveTab()==='orders')renderOrders();
+    return true;
+  })().catch(()=>false).finally(()=>{if(_ordersPriority.job===job)_ordersPriority.job=null;});
+  return job.promise;
+}
+function priorityIndexReady(){
+  const cp=cpPriorityIndexReady(),orders=ordersPriorityReady();
+  return (cp||_priorityIndexUnavailable.cp)&&(orders||_priorityIndexUnavailable.orders)&&(cp||orders);
+}
+function afterIdle(){return new Promise(resolve=>{if(typeof requestIdleCallback==='function')requestIdleCallback(()=>resolve(),{timeout:1500});else setTimeout(resolve,200);});}
 function ensureCpPriorityIndex(){
-  if(cpPriorityIndexReady())return Promise.resolve(true);
+  if(priorityIndexReady())return Promise.resolve(true);
   if(_cpPriorityEnsurePromise)return _cpPriorityEnsurePromise;
   _cpPriorityEnsurePromise=(async()=>{
-    if(!state.cp&&!(await ensureOverviewCpDependency()))return false;
-    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)await window.BLPerf?.ensureFeature?.('cpAssistant');
-    if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)return false;
-    await scheduleUnifiedPrioritiesForTable('cp');
-    return cpPriorityIndexReady();
+    let cpOk=cpPriorityIndexReady();
+    if(!cpOk){
+      if(state.cp||await ensureOverviewCpDependency()){
+        if(!window.BLCpAssistant?.computeDecisionsForRowsAsync)await window.BLPerf?.ensureFeature?.('cpAssistant');
+        if(window.BLCpAssistant?.computeDecisionsForRowsAsync){await scheduleUnifiedPrioritiesForTable('cp');cpOk=cpPriorityIndexReady();}
+      }
+    }
+    _priorityIndexUnavailable.cp=!cpOk;
+    // Siparişler, CP'de olmayan grupların önceliğini sağlar. Yükleme ekran
+    // çizildikten sonra boşta yapılır; kaynak filtresi gerekiyorsa denenmez.
+    let ordersOk=ordersPriorityReady();
+    if(!ordersOk&&!window.BL_CP_SOURCE_FILTER_REQUIRED&&window.BL_HAS_CACHED_MODEL_DATA!==false){
+      await afterIdle();
+      const loaded=state.orders?true:await ensureOrdersLoaded({deferRender:true}).catch(()=>false);
+      if(loaded&&state.orders)ordersOk=await scheduleOrdersPriorities();
+    }
+    _priorityIndexUnavailable.orders=!ordersOk;
+    return priorityIndexReady();
   })().catch(()=>false).finally(()=>{_cpPriorityEnsurePromise=null;});
   return _cpPriorityEnsurePromise;
 }
 window.BLCpPriorityIndex={
-  ready:cpPriorityIndexReady,
-  revision:()=>_cpPriorityIndexRevision+(cpPriorityIndexReady()?':ready':':pending'),
+  ready:priorityIndexReady,
+  revision:()=>_cpPriorityIndexRevision+(priorityIndexReady()?':ready':':pending'),
   ensure:ensureCpPriorityIndex,
   lookup:lookupCpPriority,
   catalog:()=>{const OD=window.BLOrderDecisionEngine;return OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():[];},
@@ -1318,6 +1407,10 @@ window.addEventListener('bl:cp-decision-context-changed',()=>{
   invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
   if(currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
+  // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
+  // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
+  _ordersPriorityContextKey=null;
+  if(state.orders&&(currentActiveTab()==='orders'||_ordersPriority.stamp)&&!ordersPriorityReady())void scheduleOrdersPriorities();
 });
 
 // ---------- FILE HANDLING ----------
@@ -4027,9 +4120,10 @@ const CP_COLS = [
 const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
 // Orders, CP sütunlarının kopyasıdır; Sipariş Durumu Sipariş Detayları'nın başında durur.
 function ordersColumnsFromCp(cpCols){
-  /* Siparişler'de checklist çalışmaz: öncelik ve PLM numune (checklist kanıtı)
-     sütunları yalnız CP'dedir. */
-  const copied=(Array.isArray(cpCols)?cpCols:[]).filter(c=>c.k!=='Priority'&&c.type!=='plmSample').map(c=>({...c}));
+  /* Siparişler'de checklist çalışmaz: PLM numune (checklist kanıtı) sütunu yalnız
+     CP'dedir. Priority Siparişler'de de vardır; aynı kurallarla, checklist
+     HARİÇ ve worker'da hesaplanır (scheduleOrdersPriorities). */
+  const copied=(Array.isArray(cpCols)?cpCols:[]).filter(c=>c.type!=='plmSample').map(c=>({...c}));
   const at=copied.findIndex(c=>c.k==='Season');
   copied.splice(at>=0?at:copied.length,0,ORDERS_STATUS_COL);
   return copied;
@@ -9812,8 +9906,6 @@ function scheduleCpImageWarmup(rows){
 
 // ================= ORDERS / SİPARİŞLER =================
 function migrateLegacyOrdersQuickFilters(){
-  if(state.colFilters.orders)delete state.colFilters.orders.Priority;
-  if(state.ordersSort?.key==='Priority')state.ordersSort.key=null;
   [['ordersFStatus','STATUS'],['ordersFDelType','Del. Type'],['ordersFSeason','Season']].forEach(([id,key])=>{
     const el=document.getElementById(id),value=norm(el&&el.value);if(!value)return;
     if(!state.colFilters.orders)state.colFilters.orders={};
@@ -10001,6 +10093,8 @@ function renderOrdersNow(){
   cpPlmDetailsSync();
   applyFormulaColumns('orders');
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
+  // Priority arka planda (worker) hesaplanır; hazır olunca tablo yeniden çizilir.
+  void scheduleOrdersPriorities();
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
