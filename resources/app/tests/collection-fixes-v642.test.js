@@ -84,7 +84,7 @@ test('v6.42 Endeksmatik Excel export verisi korunur ve hücre tek satıra normal
   // Güncel Collection export kuralı: bir model Excel'de her zaman tek fiziksel
   // satırdır. Endeksmatik fiyat/index özeti kaybolmaz; hücre içindeki newline
   // tek satırlı metne dönüştürülür.
-  const exportBlock = APP.slice(APP.indexOf('function buildKolStyledSheet'), APP.indexOf('function buildKolStyledSheet') + 4000);
+  const exportBlock = APP.slice(APP.indexOf('async function kolExportWithImages'), APP.indexOf('async function kolExportStyleManagement'));
   assert.match(exportBlock, /endeksmatikExcelText\(r\)/);
   assert.match(exportBlock, /kolExportSingleLineText/);
   assert.doesNotMatch(exportBlock, /const textValue=endeksmatikCompactText\(r\);/);

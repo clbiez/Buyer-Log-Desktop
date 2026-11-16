@@ -824,36 +824,6 @@ test('OAB: capturePassAuthorization artık pass.lcwaikiki.com sekmesi arıyor/a�
   assert.match(body, /passViewerUrl\(\{seasonRef,merchSubGroupRef,buyerGroupRef\}\)/);
 });
 
-/* -------------------------------------------------- 12) METADATA CACHE DEPOSU */
-
-const oabMetadataStore = require(path.join(ROOT, 'server', 'lib', 'oab-metadata-store.js'));
-
-test('OAB metadata: boşken null döner, uydurma veri YOK', () => {
-  assert.equal(oabMetadataStore.getSeasons(), null);
-  assert.equal(oabMetadataStore.getMag(20271), null);
-  assert.equal(oabMetadataStore.getBuyerGroups(17), null);
-});
-
-test('OAB metadata: Season/MAG/BuyerGroup kaydedilip geri okunabiliyor, ayrı anahtar uzaylarında', () => {
-  const savedSeasons = oabMetadataStore.setSeasons([{ Name: 'S7-2027 YAZ', SeasonRef: 20271 }]);
-  assert.deepEqual(savedSeasons.options, [{ Name: 'S7-2027 YAZ', SeasonRef: 20271 }]);
-  assert.deepEqual(oabMetadataStore.getSeasons().options, [{ Name: 'S7-2027 YAZ', SeasonRef: 20271 }]);
-
-  oabMetadataStore.setMag(20271, [{ Name: 'CU4E', MerchSubGroupRef: 17 }]);
-  assert.deepEqual(oabMetadataStore.getMag(20271).options, [{ Name: 'CU4E', MerchSubGroupRef: 17 }]);
-  assert.equal(oabMetadataStore.getMag(99999), null, 'farklı sezon için MAG cache\'i olmamalı');
-
-  oabMetadataStore.setBuyerGroups(17, [{ Name: 'LİSANS', BuyerGroupRef: 97 }]);
-  assert.deepEqual(oabMetadataStore.getBuyerGroups(17).options, [{ Name: 'LİSANS', BuyerGroupRef: 97 }]);
-});
-
-test('OAB metadata: rapor cache\'inden (oab-store.js) TAMAMEN ayrı bir dosyada tutuluyor', () => {
-  // Kullanıcı talimatı: "OAB rapor datası cache'i ile filtre metadata cache'ini
-  // birbirinden ayrı tut."
-  assert.notEqual(oabMetadataStore.METADATA_FILE, oabStore.CACHE_DIR);
-  assert.doesNotMatch(oabMetadataStore.METADATA_FILE, /oab-cache/);
-});
-
 /* -------------------------------------------- 12B) BUNDLED FILTER METADATA */
 
 const oabStaticMetadata = require(path.join(ROOT, 'server', 'lib', 'oab-static-metadata.js'));
