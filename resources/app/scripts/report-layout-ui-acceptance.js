@@ -108,6 +108,9 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  });
  for(const item of railMatrix.slice(0,-2)){assert.equal(item.appearance,'none');assert.equal(item.width,8);assert.ok(item.height>=44);}
  for(const item of railMatrix.slice(-2))assert.notEqual(item.appearance,'none','boolean property inputs retain their own control');
+ const importRail=await page.evaluate(()=>{const table=document.createElement('table');table.style.cssText='position:absolute;left:-3000px;top:0';table.innerHTML='<tbody><tr style="height:48px"><td><label class="ximToggle"><input type="checkbox" data-xim="include" checked><span>Excel 1</span></label></td></tr></tbody>';document.body.append(table);const input=table.querySelector('input'),result={appearance:getComputedStyle(input).appearance,width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height};table.remove();return result;});
+ assert.equal(importRail.appearance,'none');assert.equal(importRail.width,8);assert.ok(importRail.height>=44);
+
  // Native checkbox semantics, full-height rail and mixed header state.
  await page.locator('#blTableReport-cp [data-tr-check="1"]').check();
  const rail=await page.locator('#blTableReport-cp [data-tr-check="1"]').evaluate(input=>({appearance:getComputedStyle(input).appearance,width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height,cellHeight:input.closest('td').getBoundingClientRect().height,color:getComputedStyle(input).backgroundColor,cellWidth:input.closest('td').getBoundingClientRect().width}));
