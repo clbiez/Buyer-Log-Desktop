@@ -1,0 +1,35 @@
+/* Buyer Log — CP BOM Kontrol (yalnız yerleşim ve geometri; renk/tipografi ui-components.css'tedir) */
+
+.bomcModal{width:min(1320px,96vw);height:min(860px,92vh);max-height:92vh}
+.bomcToolbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-3);padding:var(--ui-space-2) var(--ui-space-4)}
+.bomcGroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.bomcHint{margin:0}
+.bomcLevel{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 4px 0 8px}
+.bomcLevel .cpaIconBtn{width:24px;height:24px;padding:0;cursor:pointer}
+.bomcLevel .cpaIconBtn:disabled{opacity:.35;cursor:default}
+.bomcToolbar select{height:30px;max-width:240px}
+
+.bomcBody{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:var(--ui-space-2);flex:1 1 auto;min-height:0;padding:0 var(--ui-space-4)}
+.bomcTree{display:flex;flex-direction:column;min-height:0;overflow:auto;padding:var(--ui-space-2)}
+.bomcNode{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:32px;padding:4px 8px 4px calc(8px + var(--bomc-depth,0) * 14px);text-align:left;cursor:pointer}
+.bomcNodeLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bomcNodeMeta{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto}
+
+.bomcDetail{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto;padding:var(--ui-space-2) var(--ui-space-1)}
+.bomcTable td{vertical-align:top}
+.bomcTable{table-layout:fixed}
+.bomcTable th:nth-child(1){width:26%}.bomcTable th:nth-child(2){width:244px}.bomcTable th:nth-child(3){width:25%}
+.bomcTable td>small{margin-top:2px}
+.bomcState{margin-top:6px}
+.bomcMarkSeg button{height:26px;padding:0 7px;white-space:nowrap}
+.bomcCodes{list-style:none;margin:0;padding:0;display:grid;gap:3px;min-width:180px;max-width:320px}
+.bomcCodes li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;gap:6px}
+.bomcCodes li>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bomcCodes li>small{grid-column:1/-1}
+.bomcFindings{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.bomcFinding{display:grid;gap:1px;max-width:100%;padding:3px 8px;text-align:left;cursor:pointer}
+.bomcFinding>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bomcFinding{white-space:normal}
+.bomcFinding>small{white-space:normal;overflow-wrap:anywhere}
+
+@media(max-width:900px){.bomcBody{grid-template-columns:1fr}.bomcTree{max-height:220px}}

@@ -15960,3 +15960,35 @@ html[data-ui-system="manifest"] .pivotChartTypeBtn[aria-pressed="true"] {backgro
 }
 html[data-ui-system="manifest"] .pivotChartSvg .pivotChartZero {stroke:var(--ui-text-muted)
 }
+/* CP BOM Kontrol (bom-control.css yalnız geometri taşır). Seçili işaret ve düğüm
+   seçim yüzeyini kullanır; sapma tonları cpaPlm ile aynı ortak tokenlardır. */
+html[data-ui-system="manifest"] .bomcToolbar,html[data-ui-system="manifest"] .bomcTree {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bomcCap {font-size:var(--ui-font-xs) !important;font-weight:700 !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bomcHint,html[data-ui-system="manifest"] .bomcArrow,html[data-ui-system="manifest"] .bomcLevel>small,html[data-ui-system="manifest"] .bomcNodeMeta>small,html[data-ui-system="manifest"] .bomcFinding>small,html[data-ui-system="manifest"] .bomcCodes li>small,html[data-ui-system="manifest"] .bomcCodes li>span:nth-child(2) {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bomcLevel {background:var(--ui-surface) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bomcLevel>small,html[data-ui-system="manifest"] .bomcNodeMeta>small,html[data-ui-system="manifest"] .bomcCount {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .bomcLevel .cpaIconBtn {background:transparent !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bomcNode,html[data-ui-system="manifest"] .bomcFinding {background:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bomcNode:hover,html[data-ui-system="manifest"] .bomcFinding:hover {background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .bomcNode.is-on,html[data-ui-system="manifest"] .bomcMarkSeg button.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .bomcCrumbs,html[data-ui-system="manifest"] .bomcNotice,html[data-ui-system="manifest"] .bomcCodes li {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bomcCodes li {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bomcCodes li.is-minor>b {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bomcFinding {font-size:var(--ui-font-xs) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bomcFinding.tone-bad {background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .bomcFinding.tone-wait {background:var(--ui-warning-bg) !important
+}

@@ -68,6 +68,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
         }
       }
+    },
+    {
+      "id": "cp-bom-control",
+      "type": "feature",
+      "module": {
+        "tr": "CP · BOM Kontrol",
+        "en": "CP · BOM Check"
+      },
+      "title": {
+        "tr": "CP'de kırılıma göre BOM kontrolü",
+        "en": "BOM check by breakdown in CP"
+      },
+      "body": {
+        "tr": "CP → Araçlar → BOM Kontrol, görünen veya seçili modellerin PLM SYNC ile okunan tüm BOM kalemlerini seçtiğiniz kırılıma göre (ör. Kategori → Lisans → Kumaş) karşılaştırır. Her kalemde grubun çoğunluğunun kullandığı kod gösterilir; eski koddan kalmış etiket veya farklı kodla açılmış kumaş gibi sapmalar model bazında listelenir. Kalemleri Ortak / Model bazlı olarak işaretleyebilirsiniz; kırılım ve işaretler hesabınızla hatırlanır.",
+        "en": "CP → Tools → BOM Check compares all BOM items read by PLM SYNC for the visible or selected styles by the breakdown you choose (e.g. Category → License → Fabric). Each item shows the code used by most of the group; deviations such as a label left on an old code or a fabric opened with a different code are listed per style. Mark items as Common or Model-specific; the breakdown and marks are remembered with your account."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-bom-control.png",
+        "alt": {
+          "tr": "Kategori kırılımında BOM Kontrol penceresi; kumaş ve etiket sapmaları",
+          "en": "BOM Check window with a category breakdown showing fabric and label deviations"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi ve anonim demo BOM kodları.",
+          "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
+        }
+      }
     }
   ]
 }
