@@ -48,6 +48,8 @@ function host(key,adapter,create){
   el.addEventListener('click',event=>{
     if(event.target.closest('[data-table-report-exit]')){setMode(key,false);return;}
     if(event.target.closest('[data-tr-more]')){limits.set(key,(limits.get(key)||CHUNK)+CHUNK);render(key);return;}
+    const imageSize=event.target.closest('[data-tr-image-size]');
+    if(imageSize){event.preventDefault();adapter.resizeImages?.(imageSize);return;}
     const filter=event.target.closest('[data-tr-filter]');
     if(filter){
       event.preventDefault();event.stopPropagation();
@@ -251,13 +253,16 @@ function render(key){
   contexts.get(key).selectionColumns=images?[{key:'__report_picture',label:L('Görsel','Image'),fields:[{key:adapter.pictureKey||'__picture'}]},...projected]:projected;
   const span=projected.length+(images?1:0)+(checkable?1:0)||1;
   const table=el.querySelector('table');
+  const imageDims=adapter.imageDimensions?.()||{col:74,w:66,h:40,row:46};
+  for(const [name,value] of Object.entries({col:imageDims.col,width:imageDims.w,height:imageDims.h,row:imageDims.row}))table.style.setProperty('--bl-report-image-'+name,value+'px');
+  const imageWidth=images?imageDims.col:0;
   let widths=projected.map(col=>Number(col.widthPx)||140);
-  const totalWidth=widths.reduce((sum,width)=>sum+width,0),available=(wrap?.clientWidth||0)-(images?74:0)-(checkable?8:0);
+  const totalWidth=widths.reduce((sum,width)=>sum+width,0),available=(wrap?.clientWidth||0)-imageWidth-(checkable?8:0);
   if(totalWidth>0&&available>totalWidth)widths=widths.map(width=>width*available/totalWidth);
-  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(images?'<col style="width:74px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
+  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(images?'<col style="width:'+imageWidth+'px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
   // table-layout:fixed: genişlik sütunların toplamıdır; rol grupları sıkışmaz.
-  table.style.width=(widths.reduce((sum,w)=>sum+w,0)+(images?74:0)+(checkable?8:0))+'px';
-  assignHtml(table.querySelector('thead'),'<tr class="blDetailColumnRow">'+(checkable?'<th><input type="checkbox" data-tr-check="all" aria-label="'+esc(L('Sayfadaki satırları seç','Select rows on this page'))+'"></th>':'')+(images?'<th class="blDetailImageHead">'+esc(L('Görsel','Image'))+'</th>':'')+projected.map(col=>{
+  table.style.width=(widths.reduce((sum,w)=>sum+w,0)+imageWidth+(checkable?8:0))+'px';
+  assignHtml(table.querySelector('thead'),'<tr class="blDetailColumnRow">'+(checkable?'<th><input type="checkbox" data-tr-check="all" aria-label="'+esc(L('Sayfadaki satırları seç','Select rows on this page'))+'"></th>':'')+(images?'<th class="blDetailImageHead"><button type="button" class="tbtn" data-tr-image-size aria-haspopup="dialog" title="'+esc(L('Görsel boyutunu değiştir','Change image size'))+'">'+esc(L('Görsel','Image'))+'</button></th>':'')+projected.map(col=>{
     const filterable=typeof adapter.filter==='function';
     return '<th data-key="'+esc(col.key)+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'><div class="blDetailReportHeading"><span>'+esc(col.label)+'</span>'+
       (filterable?'<details class="blDetailReportFilter"><summary aria-label="'+esc(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+

@@ -32,8 +32,45 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
  await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
+ if(process.env.REPORT_IMAGES_ONLY==='1'){
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
+   const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
+   await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
+   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/cp-images/report-size-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   const evidence=[];
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();BLTableReportInline.setMode('koleksiyon',true);});
+     }
+     const header=page.locator('#blTableReport-'+key+' [data-tr-image-size]');
+     await page.waitForFunction(key=>{const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');return img?.dataset.blImageLoaded==='1'&&img.complete&&img.naturalWidth>0;},key).catch(async error=>{console.log(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({html:img.outerHTML,src:img.currentSrc})));throw error;});
+     await header.click();
+     const range=page.locator('#tableImageSizeRange');await range.waitFor();
+     const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
+     const sizes=[];
+     for(const value of [minimum,maximum]){
+       await range.fill(String(value));await range.dispatchEvent('input');await range.dispatchEvent('change');
+       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===value,{key,value});
+       sizes.push(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,col:img.closest('td').getBoundingClientRect().width,row:img.closest('tr').getBoundingClientRect().height,loaded:img.complete&&img.naturalWidth>0})));
+     }
+     assert.equal(sizes[0].width,minimum);assert.equal(sizes[1].width,maximum);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);assert.ok(sizes[1].col>sizes[0].col);
+     const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
+     // Same underlying preference and renderer, including resize while the report is hidden.
+     await page.keyboard.press('Escape');
+     if(key==='cp'){
+       await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
+       await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
+     }
+     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
+     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===minimum,{key,minimum});
+     evidence.push({key,minimum,maximum,sizes});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
+   }
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
+ }
  if(process.env.REPORT_PERF_ONLY==='1'){
-   const baseline='e6794e78fc4ec8c841f664dde7b65ba60c3cf454';
+   const baseline=process.env.REPORT_PERF_BASE||'e6794e78fc4ec8c841f664dde7b65ba60c3cf454';
    const original=name=>execFileSync('git',['show',baseline+':resources/app/public/'+name],{cwd:app,encoding:'utf8',maxBuffer:8*1024*1024});
    const sources={main:original('table-report-inline.js'),candidate:fs.readFileSync(path.join(app,'public/table-report-inline.js'),'utf8')};
    const styles={main:original('ui-tokens.css')+'\n'+original('ui-components.css'),candidate:fs.readFileSync(path.join(app,'public/ui-tokens.css'),'utf8')+'\n'+fs.readFileSync(path.join(app,'public/ui-components.css'),'utf8')};
@@ -55,7 +92,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        return {raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length,rows:document.querySelectorAll('#blTableReport-cp tbody tr[data-id]').length||300};
      });samples.push({pair,variant,...measurement});
    }
-   const evidence={base:'e6794e78fc4ec8c841f664dde7b65ba60c3cf454',scenario:'Actual Buyer Log unchanged report refresh and layout; baseline/candidate report JS and canonical CSS, same final app shell; 300 synthetic rows, 12 fields; 3 alternating pairs, 10 renders per sample',budget:'Existing report rendering: no reproducible regression; new edit and selection interactions <=200ms',samples};
+   const evidence={base:baseline,scenario:'Actual Buyer Log unchanged report refresh and layout; baseline/candidate report JS and canonical CSS, same final app shell; 300 synthetic rows, 12 fields; 3 alternating pairs, 10 renders per sample',budget:'Existing report rendering: no reproducible regression; new edit and selection interactions <=200ms',samples};
    fs.writeFileSync(path.join(root,'performance.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));return;
  }
  console.log('Report rows',await page.locator('#blTableReport-cp tbody tr[data-id]').count());

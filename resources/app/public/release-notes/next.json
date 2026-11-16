@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-16",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Raporda görsel boyutu",
+    "en": "Image size in report view"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Rapor görünümündeki görselleri normal tablonun kaydırıcısıyla boyutlandırın.",
+    "en": "Resize report images with the normal table slider."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "report-image-size",
+      "type": "improvement",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Raporda görsel boyutunu ayarlayın",
+        "en": "Adjust image size in report view"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında Görsel başlığına tıklayarak normal tablonun boyut kaydırıcısını açabilirsiniz. Görseller, sütun genişliği ve satır yüksekliği birlikte ayarlanır. Boyut tercihi aynı tablonun iki görünümü arasında paylaşılır ve kaydedilir.",
+        "en": "Click the Image heading in CP, Orders and Collection reports to open the normal table image-size slider. Images, column width and row height adjust together. The size preference is shared and saved between both views of the same table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-image-size.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda büyütülmüş model görselleri ve 198 px değerindeki görsel boyutu kaydırıcısı.",
+          "en": "Actual Buyer Log report showing enlarged model images and the image-size slider at 198 px."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama; tabloyla aynı görsel boyutu ayarı.",
+          "en": "Actual application with isolated demo data; the same image-size setting as the table."
+        }
+      }
+    }
+  ]
 }

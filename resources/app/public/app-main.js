@@ -3497,6 +3497,7 @@ function applyTableDensityDom(tableKey){
   const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
   syncVirtualizedTableRowHeight(tableKey,dims.row,{preserveAnchor:true});
   renderTableViewContext(tableKey);
+  window.BLTableReportInline?.schedule(tableKey);
 }
 window.addEventListener('buyerlog:table-density-change',event=>applyTableDensityDom(event.detail?.tableKey));
 function setTableImageSize(tableKey,value,{persist=false}={}){
@@ -3518,6 +3519,7 @@ function setTableImageSize(tableKey,value,{persist=false}={}){
     syncVirtualizedTableRowHeight(tableKey,dims.row);
   }
   scheduleTableImageSizeDom(tableKey);
+  window.BLTableReportInline?.schedule(tableKey);
   if(persist)persistTableImageSize(tableKey,next);
   return dims;
 }
@@ -5383,6 +5385,8 @@ function tableReportInteraction(key){
   const collection=key==='koleksiyon';
   const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
   return {
+    imageDimensions:()=>tableImageSizeDimensions(key,tableImageSizeCurrentValue(key)),
+    resizeImages:anchor=>openTableImageSizePopover(anchor,key),
     pictureKey:collection?'__picture__':'__picture',
     view:()=>tableViewPresetState(key),
     selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
