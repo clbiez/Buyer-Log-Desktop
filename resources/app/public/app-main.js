@@ -1288,7 +1288,15 @@ function scheduleOrdersPriorities(){
     await afterIdle();
     const active=rows.filter(row=>unifiedPriorityRowActive('orders',row));
     const isCurrent=()=>_ordersPriority.job===job&&state.orders?.rows===rows&&revision===_unifiedPriorityTableRevision.orders&&ordersPriorityContextKey()===ctx.key;
-    const result=await window.BLOrdersPriority.run(active,ctx.spec,{isCurrent});
+    // Kurallar CP'nin hesaplanan (formül) sütunlarına başvurabilir; bu alanlar
+    // yalnız CP satırlarında hesaplanır. Böyle bir kural varsa CP formülleri her
+    // partinin GEÇİCİ kopyalarında hesaplanır; Siparişler satırları ve kendi
+    // formül sütunları değişmez. Formül alanı yoksa ek maliyet yoktur.
+    const formulaFields=window.BLOrdersPriorityEngine?.requiredFields?window.BLOrdersPriorityEngine.requiredFields(ctx.spec).filter(key=>String(key).startsWith('__f_')):[];
+    const formulas=window.BLFormulaColumns;
+    const prepareBatch=formulaFields.length&&formulas&&typeof formulas.applyToRows==='function'
+      ?batch=>{const copies=batch.map(row=>({...row}));try{formulas.applyToRows('cp',copies);}catch(_){}return copies;}:null;
+    const result=await window.BLOrdersPriority.run(active,ctx.spec,{isCurrent,prepareBatch});
     if(!isCurrent()||day!==new Date().toDateString())return false;
     // Sonuçlar 50k satıra parça parça yazılır (ölçüm: tek seferde 130–180 ms
     // uzun görev). Parçalar arasında veri/kural değişirse yarım sonuç uygulanmaz:

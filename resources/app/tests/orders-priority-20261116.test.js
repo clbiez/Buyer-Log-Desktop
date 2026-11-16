@@ -88,7 +88,7 @@ test('Siparişler Priority sütununu taşır, checklist/PLM numune taşımaz; ç
   const src=read('app-main.js');
   assert.match(src,/filter\(c=>c\.type!=='plmSample'\)/);
   assert.match(src,/void scheduleOrdersPriorities\(\);/);
-  assert.match(src,/const result=await window\.BLOrdersPriority\.run\(active,ctx\.spec,\{isCurrent\}\);/);
+  assert.match(src,/const result=await window\.BLOrdersPriority\.run\(active,ctx\.spec,\{isCurrent,prepareBatch\}\);/);
   assert.match(src,/stamp\.key===ordersPriorityContextKey\(\)/,'checklist cevabı değil kural/katalog anahtarı');
 });
 
@@ -119,4 +119,27 @@ test('worker’a yalnız motorun ve kuralların okuduğu alanlar gider; sonuç t
 
 test('Siparişler Priority hücresi revizyon öncesi karşılaştırması (– → …) göstermez',()=>{
   assert.match(read('app-main.js'),/const rev = tableKey==='orders'&&c\.k==='Priority' \? null : revisionInfo\(r, c\.k, cf\);/);
+});
+
+test('kural CP formül sütununa başvurursa değer geçici kopyada hesaplanır; Siparişler satırı değişmez',async()=>{
+  const formulaRule=Rules.normalizeRule({id:'calc',kind:'priority',enabled:true,target:'prio:yakin-yukleme',name:'Formül sütunu',conditions:[{field:'__f_fc_risk',operator:'eq',value:'EVET'}]},{kind:'priority',priorityCatalog:CATALOG});
+  const spec={rules:[formulaRule],priorityCatalog:CATALOG};
+  assert.ok(Engine.requiredFields(spec).includes('__f_fc_risk'));
+  globalThis.BLOrdersPriorityEngine=Engine;
+  delete require.cache[require.resolve('../public/orders-priority.js')];
+  const Runner=require('../public/orders-priority.js');
+  const rows=[row({'Order Code':'a',Season:'S7','Ex-factory':day(40)}),row({'Order Code':'b',Season:'W7','Ex-factory':day(40)}),row({'Order Code':'c',Season:'S7','Ex-factory':day(40),'__f_fc_risk':'ORDERS-OWN'})];
+  const before=JSON.stringify(rows);
+  const prepareBatch=batch=>batch.map(r=>({...r,'__f_fc_risk':r.Season==='S7'?'EVET':'HAYIR'}));
+  for(const forceFallback of [true]){
+    const out=await Runner.run(rows,spec,{forceFallback,prepareBatch});
+    assert.deepEqual(out.codes,['prio:yakin-yukleme','ON_TRACK','prio:yakin-yukleme'],'CP formülü kopyada hesaplanır');
+  }
+  assert.equal(JSON.stringify(rows),before,'Siparişler satırları (kendi formül değeri dahil) değişmez');
+  const noPrep=await Runner.run(rows,spec,{forceFallback:true});
+  assert.deepEqual(noPrep.codes,['ON_TRACK','ON_TRACK','ON_TRACK'],'hazırlık olmadan CP formül alanı yoktur (bulgunun kendisi)');
+  delete globalThis.BLOrdersPriorityEngine;
+  const src=read('app-main.js');
+  assert.match(src,/formulas\.applyToRows\('cp',copies\)/);
+  assert.match(src,/const copies=batch\.map\(row=>\(\{\.\.\.row\}\)\)/);
 });
