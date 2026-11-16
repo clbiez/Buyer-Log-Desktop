@@ -11,7 +11,7 @@ function harness(rows,beforeSync=()=>{}){
     cellHtml:(col,row,flags)=>`<td>${col.k}:${row[col.k]||''}:${flags.priority}</td>`,applyGroupedBoundariesToRow(){},cpLogisticDetailRowElement:()=>null,
     document:{querySelector:selector=>{const id=selector.match(/data-id="([^"]*)"/)[1];if(!['1','2'].includes(id))return null;if(!classes.has(id))classes.set(id,new Set());return {set innerHTML(value){rendered.set(id,value);},querySelector:()=>({addEventListener(){}}),children:[],classList:classList(id)};}},
     refreshOverviewNotesLive:()=>events.push('notes'),scheduleOverviewRender:()=>events.push('schedule')};
-  vm.createContext(context);vm.runInContext(['refreshCpRowOnly','refreshRowsEverywhere'].map(name=>extractFunction(source,name)).join('\n'),context);
+  vm.createContext(context);vm.runInContext(['escapeHtml','refreshCpRowOnly','refreshRowsEverywhere'].map(name=>extractFunction(source,name)).join('\n'),context);
   return {context,events,rendered,classes,run:ids=>context.refreshRowsEverywhere(ids)};
 }
 test('bulk refresh keeps first strict match, requested order, dirty/selection cells and hidden flag calls',()=>{
@@ -20,7 +20,7 @@ test('bulk refresh keeps first strict match, requested order, dirty/selection ce
   assert.deepEqual(h.events,['invalidate','sync',['flags','first'],['flags','one'],['flags','hidden'],['flags','string'],'notes','schedule']);
   assert.match(h.rendered.get('1'),/Priority:OK:OK/);assert.match(h.rendered.get('2'),/Priority:STRING:STRING/);
   assert.ok(h.classes.get('1').has('rowDirty')===false);
-  h.run([2]);assert.match(h.rendered.get('2'),/checked/);assert.match(h.rendered.get('2'),/Notes:first:ACTION/);assert.ok(h.classes.get('2').has('rowDirty'));
+  h.run([2]);assert.match(h.rendered.get('2'),/checked/);assert.match(h.rendered.get('2'),/aria-label="Select row"/);assert.match(h.rendered.get('2'),/Notes:first:ACTION/);assert.ok(h.classes.get('2').has('rowDirty'));
 });
 test('index is made after priority synchronization and renewed for array reset, reordering and reused ids',()=>{
   let syncs=0;const old={_id:1,tag:'old',Priority:'OLD'},next={_id:1,tag:'new',Priority:'NEW'};
