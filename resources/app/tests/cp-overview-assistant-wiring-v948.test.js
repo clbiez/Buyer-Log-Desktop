@@ -67,7 +67,7 @@ test('v9.48 lazy yükleme listesi kanonik teslimat motorunu da içerir ve sıra 
   // order-decision-engine.js artık index.html'de eager. Aynı script'i lazy
   // listede yeniden beklemek geçmiş load event'inde deadlock oluşturuyordu.
   // PLM numune talepleri (kontrol listesi kanıtı) görünümden önce yüklenir.
-  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','cp-managed-rules\.js(?:\?[^']*)?','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
+  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','orders-priority-engine\.js','orders-priority\.js','cp-managed-rules\.js(?:\?[^']*)?','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
   assert.doesNotMatch(PERF, /cpAssistant:\[[^\]]*'order-decision-engine\.js'/);
   assert.match(PERF, /if\(name==='cpAssistant'&&global\.BLCpAssistant&&typeof global\.BLCpAssistant\.computeDecisionsForRows==='function'\)return true;/);
   // Görünüm üç motoru da window'dan okur; biri eksikse hiç kurulmamalı
