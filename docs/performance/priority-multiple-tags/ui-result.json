@@ -1,0 +1,11 @@
+{
+  "before": "DEMO A - DİSCOUNT DEMO B - RETAİL DELAY DEMO C - GENERAL DELAY",
+  "after": "DEMO A - DİSCOUNT DEMO B - RETAİL DELAY",
+  "ordersText": "DEMO A - DİSCOUNT DEMO B - RETAİL DELAY",
+  "worker": {
+    "mode": "worker",
+    "all": true
+  },
+  "persistence": true,
+  "browserErrors": []
+}

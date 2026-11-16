@@ -1,0 +1,108 @@
+{
+  "runtime": "151.0.7922.173",
+  "fixtureHash": "d973ab53c53162c9910e6c45a65fb18807decd8b0cc55381adc3fbaa3489f3e4",
+  "base": "08fefc06e6ac025c013fc2f89d69446b0dc395f5",
+  "raw": [
+    {
+      "pair": 1,
+      "variant": "baseline",
+      "ms": 3285.199999999255,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": null,
+      "matched": null
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "ms": 3632.0999999996275,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": 0.2999999998137355,
+      "matched": [
+        "prio:a"
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "baseline",
+      "ms": 2221.800000000745,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": null,
+      "matched": null
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "ms": 1937.0999999996275,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": 0.20000000018626451,
+      "matched": [
+        "prio:a"
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "baseline",
+      "ms": 1667.3999999994412,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": null,
+      "matched": null
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "ms": 1981,
+      "mode": "worker",
+      "digest": 700089986,
+      "rows": 30000,
+      "longTasks": [],
+      "maxLongTask": 0,
+      "renderMs": 0.20000000018626451,
+      "matched": [
+        "prio:a"
+      ]
+    }
+  ],
+  "aa": [
+    1838.7999999998137,
+    1774.1000000005588,
+    1710.5
+  ],
+  "median": {
+    "baseline": 2221.800000000745,
+    "candidate": 1981
+  },
+  "multi": {
+    "ms": 1694.7999999998137,
+    "mode": "worker",
+    "digest": 700089986,
+    "rows": 30000,
+    "longTasks": [],
+    "maxLongTask": 0,
+    "renderMs": 0.7999999998137355,
+    "matched": [
+      "prio:a",
+      "prio:b",
+      "prio:c"
+    ]
+  }
+}

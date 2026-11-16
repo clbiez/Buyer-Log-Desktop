@@ -148,6 +148,7 @@
 .cpaTagMiniBtn{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;padding:0;cursor:pointer}
 .cpaTagMiniBtn:disabled{opacity:.35;cursor:default}
 .cpaCatalogInlineForm{display:grid;gap:8px;padding:9px 10px}
+.cpaPriorityHideOptions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--ui-space-2);margin-top:var(--ui-space-2)}
 .cpaCatalogFormGrid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1.1fr) auto auto;gap:8px;align-items:end}
 .cpaCatalogFormGrid label{display:grid;gap:3px;min-width:0}
 .cpaCatalogFormGrid input,.cpaCatalogFormGrid select{width:100%;height:32px;padding:0 9px;box-sizing:border-box}

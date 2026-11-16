@@ -1007,13 +1007,15 @@
     if (stateOrOpts.evaluated && Array.isArray(stateOrOpts.evaluated.matched)) {
       let priority = analysis.priority;
       const trackingTags = [];
+      const priorityTags = [];
       for (const rule of stateOrOpts.evaluated.matched) {
         if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
+        if (!priorityTags.includes(rule.target)) priorityTags.push(rule.target);
         if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
         else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
       }
       return {
-        priority, trackingTags,
+        priority, trackingTags, priorityTags,
         matched: stateOrOpts.evaluated.matched,
         signals: stateOrOpts.evaluated.signals || [],
       };
@@ -1021,17 +1023,19 @@
     const list = preparedFacts?._rulePreparation?.rules===rules
       ?preparedFacts._rulePreparation.priorityRules
       :(Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
-    if (!list.length) return { priority: analysis.priority, matched: [], signals: [], trackingTags: [] };
+    if (!list.length) return { priority: analysis.priority, matched: [], signals: [], trackingTags: [], priorityTags: [] };
     const cleanChecklistState = stateOrOpts.priorityCatalog || stateOrOpts.evaluated ? {} : checklistState;
     const facts = preparedFacts || factsFor(analysis, cleanChecklistState);
     let priority = analysis.priority;
     const matched = [];
     const signals = [];
     const trackingTags = [];
+    const priorityTags = [];
     for (const rule of list) {
       if (!matchesRule(rule, facts)) continue;
       matched.push(rule);
       if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
+      if (!priorityTags.includes(rule.target)) priorityTags.push(rule.target);
       const signal = {
         code: `CUSTOM_RULE:${rule.id}`,
         source: 'custom_rule',
@@ -1044,7 +1048,7 @@
       if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
       else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
     }
-    return { priority, matched, signals, trackingTags };
+    return { priority, matched, signals, trackingTags, priorityTags };
   }
 
   /* Özel kontrol kuralları: koşulu sağlayan siparişe kendi sorusunu ekler.
@@ -1284,7 +1288,9 @@
       checklistEnabled: options.checklistEnabled, priorityCatalog: options.priorityCatalog };
     let count = 0, changed = 0, qty = 0, automaticAnswers = 0;
     const sample = [];
-    const resultKey = result => JSON.stringify([result.priority, [...(result.trackingTags || [])].sort(), Object.entries(result.checklistState || {}).sort(([a], [b]) => a.localeCompare(b))]);
+    const resultKey = result => JSON.stringify([result.priority,
+      OD.resolvePriorityTags(result.priority, result.priorityTags, result.trackingTags, options.priorityCatalog).visible.slice().sort(),
+      Object.entries(result.checklistState || {}).sort(([a], [b]) => a.localeCompare(b))]);
     for (const original of rows) {
       const analysis = { ...original, sourceRow: original.sourceRow, priority: original.basePriority || 'ON_TRACK' };
       const before = evaluateOrder(analysis, { ...shared, rules: baselineRules });
