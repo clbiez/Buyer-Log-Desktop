@@ -16,12 +16,12 @@ test('v7.83 OAB KPI özet satırı kaldırılmıştır', () => {
   assert.doesNotMatch(OAB, /OAB_KPI_FIELDS|function oabRenderKpis|oabRenderKpis\(\)/);
 });
 
-test('OAB ve INTAKE ana ekran widget\'ıdır: daraltma yerine ızgara boyutu, tablo kalan yüksekliği kaydırır', () => {
+test('OAB ve INTAKE ana ekran widget\'ıdır: pivot doğal yüksekliğini korur, yalnız yatay kaydırır', () => {
   const oabHeader = INDEX.slice(INDEX.indexOf('<div class="oabHeader">'), INDEX.indexOf('<div class="oabAuthBar"'));
   const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeStatus"'));
   assert.doesNotMatch(oabHeader + intakeHeader, /data-overview-collapse|id="oabCollapseBtn"|id="intakeCollapseBtn"/);
   assert.doesNotMatch(APP, /overviewLayoutApplyPageState|next\.collapsed\[key\]/);
-  assert.match(HOME_CSS, /\.ovHome>#oabSection \.oabTableWrap,\.ovHome>#intakeSection \.intakeTableWrap\{[^}]*overflow:auto/);
+  assert.match(HOME_CSS, /\.ovHome>#oabSection \.oabTableWrap,\.ovHome>#intakeSection \.intakeTableWrap\{[^}]*height:auto;max-height:none;[^}]*overflow-x:auto;overflow-y:hidden/);
 });
 
 test('INTAKE pivot grupları OAB ile aynı daralt/tümünü genişlet aksiyonlarını taşır', () => {
