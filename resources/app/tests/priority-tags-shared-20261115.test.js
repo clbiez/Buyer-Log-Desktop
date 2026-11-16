@@ -64,10 +64,10 @@ test('Ortak öncelik dizini sipariş+model+renk eşler, başka rengin etiketini 
     {'Order Code':'3003','Model Name':'X','C.Code':'09',Priority:'CRITICAL',_trackingTags:[]},
   ];
   const day=new Date().toDateString();
-  const api=loadAppMainFunctions(['cpPriorityIdentityPart','cpPriorityIdentity','cpPriorityHeaderKey','cpPriorityIndexReady','buildCpPriorityIndex','lookupCpPriority','actionPriorityCode','norm'],{
-    window:{BLOrderDecisionEngine:OD,BLCanonicalFields:canonical},state:{cp:{rows}},_unifiedPriorityCache:{cp:{rows,day}},_cpPriorityIndex:null,_cpPriorityIdentityCache:new Map(),
+  const api=loadAppMainFunctions(['cpPriorityIdentityPart','cpPriorityIdentity','cpPriorityHeaderKey','cpPriorityIndexReady','priorityIndexFromRows','buildCpPriorityIndex','buildOrdersPriorityIndex','lookupPriorityIn','lookupCpPriority','ordersPriorityReady','ordersPriorityContextKey','ordersPriorityContext','actionPriorityCode','norm'],{
+    window:{BLOrderDecisionEngine:OD,BLCanonicalFields:canonical},state:{cp:{rows}},_unifiedPriorityCache:{cp:{rows,day}},_cpPriorityIndex:null,_cpPriorityIdentityCache:new Map(),_unifiedPriorityTableRevision:{cp:1,orders:1},_ordersPriority:{stamp:null},_ordersPriorityIndex:null,_ordersPriorityContextKey:null,
   });
-  assert.equal(JSON.stringify(api.lookupCpPriority('1001','m','01')),JSON.stringify({priority:'prio:gecikme-yukleme',trackingTags:['prio:indirim']}),'büyük/küçük harf duyarsız tam eşleşme');
+  assert.equal(JSON.stringify(api.lookupCpPriority('1001','m','01')),JSON.stringify({priority:'prio:gecikme-yukleme',trackingTags:['prio:indirim'],source:'cp'}),'büyük/küçük harf duyarsız tam eşleşme');
   assert.equal(api.lookupCpPriority('1001','Başka model','02').priority,'WATCH','sipariş+renk yedeği');
   assert.equal(api.lookupCpPriority('1001','',''),null,'iki renkli siparişte yalnız kodla eşleşme yapılmaz');
   assert.equal(api.lookupCpPriority('3003','','')?.priority,'CRITICAL','tek satırlı siparişte kod yedeği');
@@ -118,8 +118,8 @@ test('Excel Backlog V3: Öncelik kırılımı, Kırılımlar sayfası ve detay s
   const texts=ws=>{const all=[];ws.eachRow(r=>r.eachCell(c=>{if(typeof c.value==='string')all.push(c.value);}));return all;};
   const dash=texts(book.worksheets[0]);
   assert.ok(dash.includes('Öncelik kırılımı'),'Özet kırılımı Öncelik: '+dash.slice(0,40).join('|'));
-  const order=[...new Set(dash.slice(dash.indexOf('Öncelik kırılımı')))].filter(v=>['Kritik','Gecikme - Yükleme Tarihi','(CP eşleşmesi yok)'].includes(v));
-  assert.deepEqual(order.slice(0,3),['Kritik','Gecikme - Yükleme Tarihi','(CP eşleşmesi yok)'],'katalog sırası');
+  const order=[...new Set(dash.slice(dash.indexOf('Öncelik kırılımı')))].filter(v=>['Kritik','Gecikme - Yükleme Tarihi','(öncelik eşleşmesi yok)'].includes(v));
+  assert.deepEqual(order.slice(0,3),['Kritik','Gecikme - Yükleme Tarihi','(öncelik eşleşmesi yok)'],'katalog sırası');
   const br=texts(book.getWorksheet('Kırılımlar'));
   assert.equal(br.filter(v=>v==='Öncelik')[0],'Öncelik');
   const detail=book.getWorksheet('Backlog V3');

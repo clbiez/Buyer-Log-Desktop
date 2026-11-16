@@ -170,7 +170,7 @@
     /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
        penceresi); loadScript aynı dosyayı tek kez yükler. */
-    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','cp-managed-rules.js?rev=20261101','cp-overview-assistant.js?rev=20261105-workspace'],
+    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','orders-priority-engine.js','orders-priority.js','cp-managed-rules.js?rev=20261101','cp-overview-assistant.js?rev=20261105-workspace'],
     exceptionInbox:['backlog-delivery-engine.js','cp-readiness-engine.js','exception-inbox.js','exception-inbox-view.js'],
     /* CP BOM Kontrol: yalnız Araçlar menüsünden açılınca yüklenir. Saf motor
        görünümden ÖNCE gelir. */

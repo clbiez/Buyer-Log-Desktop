@@ -355,6 +355,8 @@ function annotatePriorities(list){
     const hit=ready?api.lookup(item.orderCode,item.modelName,item.colourCode):null;
     const code=hit&&hit.priority||'';
     item.priorityCode=code;
+    // 'cp' = CP (checklist dahil) · 'orders' = Siparişler (aynı kurallar, checklist hariç)
+    item.prioritySource=hit&&hit.source||'';
     item.trackingTags=hit&&Array.isArray(hit.trackingTags)?hit.trackingTags.filter(tag=>tag&&tag!==code):[];
     item.priorityTags=[code,...item.trackingTags].filter(Boolean);
     item._priorityStamp=stamp;
@@ -384,6 +386,15 @@ function priorityTagGroups(list){
     .filter(g=>g.qty>0)
     .sort((a,b)=>priorityRank(a.code)-priorityRank(b.code)||a.code.localeCompare(b.code));
 }
+/* Kutucuk ipucu: adedin hangi kaynaktan geldiği. Siparişler kaynağı checklist'e
+   bağlı kuralları içermez; bu fark kullanıcıya açıkça söylenir. */
+function prioritySourceTitle(list){
+  let cp=0,orders=0;
+  for(const it of list||[]){if(it.prioritySource==='orders')orders+=Number(it.qty)||0;else cp+=Number(it.qty)||0;}
+  const lines=[L(`CP: ${n(cp)} adet`,`CP: ${n(cp)} pcs`)];
+  if(orders)lines.push(L(`Siparişler (checklist hariç): ${n(orders)} adet`,`Orders (excluding checklist): ${n(orders)} pcs`));
+  return lines.join('\n');
+}
 function priorityTone(code){const meta=priorityMeta(code);return meta&&meta.tone?String(meta.tone):'gray';}
 function priorityTiles(s,tile,by){
   const status=priorityStatus();
@@ -399,7 +410,7 @@ function priorityTiles(s,tile,by){
   const html=shown.map(g=>{
     const label=priorityLabel(g.code),tracking=priorityMeta(g.code)?.usage==='tracking';
     const sub=L(`${n(g.orders)} sipariş · ${share(g.qty)}${tracking?' · takip':''}`,`${n(g.orders)} orders · ${share(g.qty)}${tracking?' · tracking':''}`);
-    return tile(n(g.qty),label,sub,'',by(label,it=>(it.priorityTags||[]).includes(g.code)),g.code);
+    return tile(n(g.qty),label,sub,'',by(label,it=>(it.priorityTags||[]).includes(g.code)),g.code,prioritySourceTitle(g.items));
   });
   if(rest.length){
     const codes=new Set(rest.map(g=>g.code)),qty=new Set(rest.flatMap(g=>g.items));
@@ -411,7 +422,7 @@ function priorityTiles(s,tile,by){
 }
 function hero(s){
   const st=s.stages;
-  const tile=(value,label,sub,stage,open,priority)=>`<button type="button" class="bpaTile blvTile${priority?' blvPriorityTile':''}"${stage?` data-stage="${stage}"`:''}${priority?` data-priority-tone="${esc(priority==='__rest'?'gray':priorityTone(priority))}" data-priority-code="${esc(priority)}"`:''}${open?` data-blv-open="${open}"`:''}><span class="bpaTileValue">${esc(value)}</span><span class="bpaTileLabel">${esc(label)}</span>${sub?`<span class="bpaTileSub">${esc(sub)}</span>`:''}</button>`;
+  const tile=(value,label,sub,stage,open,priority,title)=>`<button type="button" class="bpaTile blvTile${priority?' blvPriorityTile':''}"${title?` title="${esc(title)}"`:''}${stage?` data-stage="${stage}"`:''}${priority?` data-priority-tone="${esc(priority==='__rest'?'gray':priorityTone(priority))}" data-priority-code="${esc(priority)}"`:''}${open?` data-blv-open="${open}"`:''}><span class="bpaTileValue">${esc(value)}</span><span class="bpaTileLabel">${esc(label)}</span>${sub?`<span class="bpaTileSub">${esc(sub)}</span>`:''}</button>`;
   const by=(title,filter)=>opener({title,subtitle:L('Backlog genel bakış','Backlog overview'),items:items.filter(filter)});
   const share=v=>pct(s.qty?v/s.qty:null);
   return `<div class="bpaHero">
@@ -478,7 +489,7 @@ function dimensionLabel(key){return key===PRIORITY_DIMENSION?L('Öncelik','Prior
    Backlog adedi). Takip etiketleri üst kutucuklarda ayrıca görünür. */
 function priorityGroupsOf(list){
   const pending=priorityStatus()!=='ready';
-  const blank=pending?L('(öncelik hazırlanıyor)','(priority pending)'):L('(CP eşleşmesi yok)','(no CP match)');
+  const blank=pending?L('(öncelik hazırlanıyor)','(priority pending)'):L('(öncelik eşleşmesi yok)','(no priority match)');
   const byCode=new Map();
   for(const it of list||[]){const code=it.priorityCode||'';if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push(it);}
   return [...byCode.entries()].map(([code,group])=>({code,name:code?priorityLabel(code):blank,items:group,...R().summarize(group)}))

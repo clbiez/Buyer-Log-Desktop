@@ -7,8 +7,8 @@
     "en": "Content-sized pivots and live INTAKE Excel"
   },
   "summary": {
-    "tr": "OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır.",
-    "en": "OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection."
+    "tr": "OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır. Siparişler'de Priority sütunu geri geldi (checklist hariç); Backlog CP dışındaki grupların önceliğini Siparişler'den alır.",
+    "en": "OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection. The Priority column is back in Orders (excluding checklist); Backlog takes the priority of groups outside CP from Orders."
   },
   "changes": [
     {
@@ -444,6 +444,35 @@
           "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verileriyle.",
           "en": "Actual post-change Buyer Log with isolated demo data."
         }
+      }
+    },
+    {
+      "id": "orders-priority-column",
+      "type": "feature",
+      "module": {
+        "tr": "Siparişler · Backlog · Öncelik Kuralları",
+        "en": "Orders · Backlog · Priority Rules"
+      },
+      "title": {
+        "tr": "Siparişler'de Priority yeniden var; Backlog'da CP dışındaki gruplar da öncelik alır",
+        "en": "Priority is back in Orders; groups outside CP also get a priority in Backlog"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-priority-column.png",
+        "alt": {
+          "tr": "Siparişler tablosunda Priority sütunu; satırlarda Öncelik Kuralları etiketleri görünüyor",
+          "en": "The Priority column in the Orders table; Priority Rules tags appear on the rows"
+        },
+        "caption": {
+          "tr": "Öncelik arka planda hesaplanır; hesap sürerken tablo kullanılabilir, bitince sütun dolar.",
+          "en": "Priorities are calculated in the background; the table stays usable meanwhile and the column fills when done."
+        }
+      },
+      "body": {
+        "tr": "Siparişler tablosuna Priority sütunu geri eklendi; sütunda filtreleme ve sıralama yapılabilir. Öncelik CP ile aynı Öncelik Kuralları ve etiketlerle hesaplanır, ancak Siparişler'de kontrol listesi olmadığı için kontrol listesine bağlı kurallar burada uygulanmaz. Hesap ekranı dondurmadan arka planda yapılır; 30–50 bin satırlık listelerde sütun birkaç saniye içinde dolar. Backlog Genel Bakış, Zaman Akışı, Excel Backlog V3 ve Küresel Akış Haritası önce CP'deki önceliği, sipariş CP'de yoksa Siparişler'deki önceliği kullanır; böylece CP dışındaki gruplar da öncelik etiketiyle görünür. Etiket kutucuğunun ipucu adedin ne kadarının Siparişler'den (checklist hariç) geldiğini gösterir.",
+        "en": "The Priority column is back in the Orders table, with filtering and sorting. Priorities use the same Priority Rules and tags as CP, but Orders has no checklist, so checklist-based rules do not apply there. The calculation runs in the background without freezing the screen; for 30–50 thousand lines the column fills within a few seconds. Backlog Overview, the Timeline, Excel Backlog V3 and the Global Flow Map use the CP priority first and, when an order is not in CP, the Orders priority, so groups outside CP also show priority tags. The tag tile tooltip shows how much of the quantity comes from Orders (excluding checklist)."
       }
     }
   ]

@@ -304,7 +304,8 @@ test('v7.0.192 CP PLM Numune sütunu: tanımlı, salt okunur ve kayda girmeyen e
   assert.match(app, /ensurePlmSampleAccessors\(state\.cp\.rows\);\n  const source=partialViewRows\('cp',state\.cp\.rows\);ensurePlmSampleAccessors\(source\);/);
   // Siparişler'de checklist/PLM numune çalışmaz (kullanıcı kararı).
   assert.doesNotMatch(app, /ensurePlmSampleAccessors\(state\.orders\.rows\)/);
-  assert.match(app, /filter\(c=>c\.k!=='Priority'&&c\.type!=='plmSample'\)/);
+  // v20261116: Priority Siparişler'e döndü; PLM numune (checklist kanıtı) yine yalnız CP'de.
+  assert.match(app, /filter\(c=>c\.type!=='plmSample'\)/);
   assert.match(app, /window\.addEventListener\('bl:plm-requests-changed'/);
 
   // Erişimci davranışı: kaynak koddaki fonksiyon izole çalıştırılır.

@@ -42,7 +42,8 @@ test('v6.04 revision comparison can use the live derived value instead of stale 
 
 test('v6.04 CP cell renderer feeds computeFlags results into revision comparison', () => {
   const app=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
-  assert.match(app,/const rev = revisionInfo\(r, c\.k, cf\);/);
+  // v20261116: Siparişler'de yalnız Priority revizyon karşılaştırmasından muaftır; diğer hücreler cf ile karşılaştırılır.
+  assert.match(app,/const rev = (?:tableKey==='orders'&&c\.k==='Priority' \? null : )?revisionInfo\(r, c\.k, cf\);/);
   assert.match(app,/if\(key==='Ex→Retail'\).*BLRevision\.infoValue\(row,key,base,computed\.exr==null\?'':computed\.exr\)/s);
   assert.match(app,/if\(key==='LT'\).*BLRevision\.infoValue\(row,key,base,computed\.lt==null\?'':computed\.lt\)/s);
 });

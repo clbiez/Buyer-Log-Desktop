@@ -4491,6 +4491,24 @@
     };
   }
 
+  /* Siparişler önceliği (orders-priority.js) için bağlam: CP ile aynı kurallar,
+     katalog, hedef tipi ve yol süresi kuralları; kontrol listesi YOK. Anahtar
+     CP satır verisine bağlı değildir (Siparişler kendi veri revizyonunu ekler). */
+  function ordersPriorityContext() {
+    const rules = state.rules.filter(rule => rule && rule.kind === 'priority');
+    const rulesSig = rules.map(r => `${r.id}:${r.enabled ? 1 : 0}:${r.mode}:${r.target || ''}:${r.formula || ''}:${JSON.stringify(r.conditions || [])}:${r.match || ''}`).join('|');
+    const catSig = (state.priorityCatalog || []).map(item => `${item.id}:${item.isRisk ? 1 : 0}:${item.usage || 'priority'}:${item.rank}`).join(',');
+    const userId = String((window.BL_USER_CONTEXT && window.BL_USER_CONTEXT.id) || '');
+    return {
+      key: `d:${new Date().toLocaleDateString('en-CA')}|u:${userId}|t:${state.settings.targetType}|c:${catSig}|tr:${JSON.stringify(transitRulesList())}|ru:${rulesSig}`,
+      spec: {
+        context: baseDecisionContext(),
+        rules: JSON.parse(JSON.stringify(rules)),
+        priorityCatalog: (state.priorityCatalog || defaultCatalog()).map(item => ({ ...item })),
+      },
+    };
+  }
+
   const decisionRuntime = window.BLCpDecisionRuntime && typeof window.BLCpDecisionRuntime.create === 'function'
     ? window.BLCpDecisionRuntime.create({
       contextKey: baseDecisionKey,
@@ -4833,6 +4851,7 @@
     markHologramOrdered,
     computeDecisionsForRows,
     computeDecisionsForRowsAsync,
+    ordersPriorityContext,
     peekDecisionsForRows,
     decisionRuntimeStats,
     decisionContextRevision: () => decisionContextRevision,
