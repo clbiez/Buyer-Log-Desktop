@@ -97,6 +97,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
         }
       }
+    },
+    {
+      "id": "plm-bom-full-items",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM BOM / Baskı Detayı",
+        "en": "PLM BOM / Print Details"
+      },
+      "title": {
+        "tr": "BOM detayında tüm BOM kalemleri",
+        "en": "All BOM items in BOM details"
+      },
+      "body": {
+        "tr": "Sağ tık → PLM BOM / Baskı Detayı penceresi artık PLM SYNC ile okunan tüm BOM kalemlerini kategori yoluna göre gruplu gösterir. Her kalemde BOM Kontrol'de verdiğiniz Ortak / Model bazlı işareti görünür; sapmalar BOM Kontrol ekranında kalır.",
+        "en": "Right-click → PLM BOM / Print Details now lists all BOM items read by PLM SYNC, grouped by category path. Each item shows the Common / Model-specific mark set in BOM Check; deviations stay in the BOM Check window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-bom-full-items.png",
+        "alt": {
+          "tr": "PLM BOM detay penceresinde kategoriye göre gruplu tüm BOM kalemleri ve işaretleri",
+          "en": "All BOM items grouped by category with marks in the PLM BOM details window"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi ve anonim demo BOM kodları.",
+          "en": "Actual post-change Buyer Log with isolated demo data and anonymous demo BOM codes."
+        }
+      }
     }
   ]
 }

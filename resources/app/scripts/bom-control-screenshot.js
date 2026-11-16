@@ -14,7 +14,10 @@ function demoBom(plmId, index) {
     part('CARE-DEMO-1', 'Care Label', 'Trims', 'Label', 'Care Label'),
     part('PR-DEMO-' + String(100 + index), 'Front Print', 'Embellishment', 'Artwork', 'Print'),
   ];
-  return { plmId, styleId: String(900000 + index), fetchedAt: new Date().toISOString(), components: [], placements: [], fullComponents: components, fullComponentCount: components.length, fullCoverage: 'all-normalized' };
+  // Gerçek kayıttaki gibi: süsleme bileşenleri + baskı yerleşimi özeti ayrıca tutulur.
+  const decorations = components.filter(item => item.mainCategoryName === 'Embellishment').map(item => ({ ...item, mainCategoryId: 1, categoryId: 21 }));
+  const placements = decorations.map(item => ({ componentCode: item.componentCode, placement: 'front_body', count: 1, printType: 'Print', categoryName: 'Print', description: 'FRONT BODY', quantity: 1 }));
+  return { plmId, styleId: String(900000 + index), fetchedAt: new Date().toISOString(), components: decorations, placements, hasPrint: true, totalPrintCount: 1, summary: 'Ön 1', placementSummary: 'Ön 1', fullComponents: components, fullComponentCount: components.length, fullCoverage: 'all-normalized' };
 }
 
 (async () => {
@@ -53,6 +56,16 @@ function demoBom(plmId, index) {
     const screenshot = path.join(__dirname, '../public/release-notes/next-assets/cp-bom-control.png');
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.locator('.bomcModal').screenshot({ path: screenshot });
+    // Sağ tık BOM detayı (sapma çipinden açılır): tüm kalemler ve salt okunur işaret.
+    await page.locator('.bomcFinding').first().click();
+    const full = page.locator('[data-bom-full]');
+    await full.waitFor({ timeout: 15000 });
+    const fullText = await full.innerText();
+    assert.match(fullText, /Main Fabric/);
+    assert.match(fullText, /Care Label/);
+    assert.match(fullText, /Ortak/);
+    const detailShot = path.join(__dirname, '../public/release-notes/next-assets/plm-bom-full-items.png');
+    await page.locator('.cpaModal:not(.bomcModal)').screenshot({ path: detailShot });
     assert.deepEqual(app.errors, []);
     console.log(JSON.stringify({ screenshot, models: ids.length, level: levelValue }));
   } finally { await app.close(); }

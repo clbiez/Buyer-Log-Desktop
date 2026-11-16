@@ -143,3 +143,16 @@ test('BOM Check is wired lazily into CP tools with CP-only access and synced per
   assert.deepEqual([...ui.matchAll(/fetch\('([^']+)'/g)].map(m => m[1]), ['/api/plm-sync/bom/control']);
   assert.doesNotMatch(ui, /BuyerLogAI|\/api\/lcwai/);
 });
+
+test('right-click BOM detail lists all stored BOM items with read-only BOM Check marks', () => {
+  const ui = read('public/plm-bom.js');
+  assert.match(ui, /void renderFullBom\(body, entry\)/);
+  assert.match(ui, /BOM_CONTROL_PREF_KEY = 'lcw\.cp\.bomControl\.v1'/);
+  // Motor perf-runtime 'bomControl' özelliğiyle aynı dizeyle yüklenir (tek kez).
+  assert.match(ui, /_loadScript\?\.\('bom-control-engine\.js\?rev=1'\)/);
+  assert.match(read('public/perf-runtime.js'), /'bom-control-engine\.js\?rev=1'/);
+  // Pencere işaret yazmaz ve sapma hesaplamaz.
+  assert.doesNotMatch(ui, /setItem\(BOM_CONTROL_PREF_KEY/);
+  assert.doesNotMatch(ui, /\.evaluate\(|\.analyze\(/);
+  assert.match(read('public/index.html'), /plm-bom\.js\?v=__BL_ASSET_VERSION__&rev=2/);
+});
