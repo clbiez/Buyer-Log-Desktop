@@ -18,7 +18,7 @@ function block(id,next){
   assert.ok(from>=0&&to>from,'Missing view region: '+id);
   return html.slice(from,to);
 }
-test('CP, Orders and Collection offer one selected view menu with Fields as final option',()=>{
+test('CP, Orders and Collection offer one selected view menu with a Fields pencil next to every preset',()=>{
   const keys={cp:'cp',orders:'orders',koleksiyon:'kol'};
   for(const [key,prefix] of Object.entries(keys)){
     const region=block(prefix+'TableViewActions',key==='cp'?'cpActiveFilters':key==='orders'?'ordersActiveFilters':'kolPriceViewActions');
@@ -31,8 +31,11 @@ test('CP, Orders and Collection offer one selected view menu with Fields as fina
     const all=region.indexOf('data-table-view-preset="all"');
     const fields=region.indexOf('data-table-fields="'+key+'"');
     const closing=region.indexOf('</div>',fields);
-    assert.ok(focus>0&&extended>focus&&all>extended&&fields>all&&closing>fields);
-    assert.ok(fields<closing,'Fields must be inside picker menu');
+    assert.ok(focus>0&&extended>focus&&all>extended);
+    for(const preset of ['focus','extended','all'])assert.match(region,new RegExp('data-table-fields="'+key+'" data-fields-view="'+preset+'"'));
+    assert.equal((region.match(/class="blViewPresetRow"/g)||[]).length,3);
+    assert.doesNotMatch(region,/data-i18n-en="Fields"/);
+    assert.match(region,/<use href="#i-pencil"/);
   }
 });
 test('Collection price views remain independent, marked by coins and preserve options',()=>{

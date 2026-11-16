@@ -2842,6 +2842,7 @@ function updateGridSelectionStatus(tableKey,size){
   node.hidden=false;node.textContent=`${size.label} · ${size.cells} ${appLang==='en'?'cells':'hücre'}`;
 }
 function managedGridHasRange(tab=document.body.dataset.activeTab){
+  if(window.BLTableReportInline?.isActive(tab))return false;
   const tableId=tab==='cp'?'cpTable':tab==='orders'?'ordersTable':'';
   return Boolean(tableId&&window.BLGridClipboard?.state?.(tableId)?.selectionRange);
 }
@@ -2886,6 +2887,7 @@ function managedTableHasCheckedRows(tab){
 }
 function copyGridSelection(includeHeaders=true,event=null){
   const tab=document.body.dataset.activeTab||'';
+  if(window.BLTableReportInline?.copySelection(tab,event,{includeHeaders}))return true;
   if(tab==='koleksiyon'){
     if(window.BLCollectionSpreadsheet?.handleCopyShortcut?.(event||new Event('copy'),{includeHeaders}))return true;
     // İşaretli model varsa handleCopyShortcut kasıtlı olarak devretti (satır
@@ -2950,6 +2952,7 @@ document.addEventListener('keydown', event=>{
 });
 document.getElementById('navCopy').addEventListener('click', event=>{
   const info = activeTableInfo(); if(!info){ showToast(appLang==='en'?'Select a tab first':'Önce bir sekme seç'); return; }
+  if(window.BLTableReportInline?.copySelection(info.tableKey,event,{includeHeaders:true}))return;
   if(info.tableKey==='cp'||info.tableKey==='orders')window.BLTableToolbarActionCleanup?.begin?.(event.currentTarget);
   if((info.tableKey==='cp'||info.tableKey==='orders')&&!managedTableHasCheckedRows(info.tableKey)&&managedGridHasRange(info.tableKey)){void window.BLGridClipboard.copyActive(event,{includeHeaders:true});return;}
   // Shipping Comparison'da üstteki karar tablosu asıl kullanıcı görünümüdür.
@@ -4860,13 +4863,12 @@ function renderTableViewContext(tableKey){
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
   root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
-  const fieldsButton=root.querySelector('[data-table-fields]');
-  if(fieldsButton){
+  root.querySelectorAll('[data-table-fields]').forEach(fieldsButton=>{
     const count=Object.keys(tableGroupOverrides(tableKey)).length;
     fieldsButton.classList.toggle('hasOverrides',count>0);
     const badge=fieldsButton.querySelector('.tableFieldsBadge');
     if(badge){badge.textContent=count?String(count):'';badge.hidden=!count;}
-  }
+  });
   const menu=document.getElementById('_tableFieldsMenu');
   if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);
 }
@@ -5175,7 +5177,7 @@ function detailTableViewSnapshot(tableKey='cp'){
     return {
       key,
       label:tableColumnLabel(tableKey,column),
-      group:tableColumnGroupLabel(column.group||''),
+      group:tableColumnGroupLabel(column.group||''),groupId:column.group||'',
       type:column.type||'ro',
       weight:Number(column.weight)||10,
       widthPx:colWidthPx(tableKey,column),
@@ -5229,11 +5231,61 @@ function tableRangeTotalRows(tableKey){
 function tableReportCoreColumns(tableKey){
   const snapshot=detailTableViewSnapshot(tableKey);if(!snapshot)return [];
   const visible=new Set(snapshot.visible);
-  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
+  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,groupId:col.groupId,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
 }
 function tableReportKolColumns(){
   const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
-  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),groupId:kolColumnGroupFor(d.k,order),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+}
+/* Rapor yalnız bir seçim yüzeyidir; aktarım normal tablonun alan sırasını ve
+   serializer'ını kullanır. Rapor düzeni kaynak sütunları veya veriyi değiştirmez. */
+function tableReportInteraction(key){
+  const collection=key==='koleksiyon';
+  const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
+  return {
+    pictureKey:collection?'__picture__':'__picture',
+    view:()=>tableViewPresetState(key),
+    selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
+    rowId:row=>collection?row.id:row._id,
+    selected:row=>selectionHasId(selected(),collection?row.id:row._id),
+    checked:()=>selected().size>0,
+    selectRows:(rows,on)=>{
+      const set=selected();
+      rows.forEach(row=>{const id=collection?row.id:row._id;for(const value of set)if(String(value)===String(id))set.delete(value);if(on)set.add(id);});
+      if(set.size>0)window.BLGridClipboard?.clear('blTableReport-'+key);
+      if(collection)renderKol();else if(key==='orders')renderOrders();else renderCP();
+      window.BLSelectionBar?.refresh();
+    },
+    selectionChanged:size=>updateGridSelectionStatus(key,size),
+    contextMenu:(event,row,cell)=>{
+      const module=collection?'collection':key,canonical=window.BLCanonicalFields;
+      const source=collection?kolCollectionProjectionSource(row):row;
+      const plm=canonical?.value(source,module,'plmId'),model=canonical?.value(source,module,'modelName');
+      const url=window.BLPlmModelLinks?.url(model,plm,{allowNameMatch:false}),links=[];
+      if(url)links.push({label:appLang==='en'?'Open in PLM':'PLM’de aç',url});
+      const order=String(canonical?.value(source,module,'orderCode')||'').trim();
+      if(/^\d+$/.test(order)){
+        links.push({label:appLang==='en'?'Open TROY Order':'TROY Order sayfasını aç',url:ORDER_URL(order)});
+        links.push({label:appLang==='en'?'Open TROY Shipment Request':'TROY Shipment Request sayfasını aç',url:SHIP_URL(order)});
+      }
+      window.BLRowMenu?.openReport({module,table:cell.closest('table'),cell,row:source,links,event,refresh:()=>collection?renderKol():key==='orders'?renderOrders():renderCP()});
+    },
+    copy:async (rows,fieldKeys,options)=>{
+      const keys=new Set(fieldKeys);
+      // Re-read the normal table descriptors: display reorder never affects output.
+      const columns=collection?[...(keys.has('__picture__')?[{k:'__picture__',label:L('Picture'),kind:'picture'}]:[]),...kolDisplayDescriptors().filter(d=>keys.has(d.k))]:visibleCols(key).filter(c=>keys.has(c.k));
+      const records=collection?(()=>{const index=new Map(kolCollectionExportProjection(filteredKol()).map(record=>[String(record.id),record]));return rows.map(row=>index.get(String(row.id))||row);})():rows;
+      const flags=collection?null:records.map(row=>computeFlags(row));
+      const matrix=BLTableExport.buildMatrix({records,columns,
+        columnLabel:c=>collection?c.label:tableColumnLabel(key,c),
+        cellText:(c,row,index)=>collection?(c.kind==='picture'?'':kolCollectionExportCellText(c,row)):cellPlainText(c,row,flags[index])});
+      const payload=window.BLGridClipboard.serialize(matrix,BLTableExport,options);
+      const ok=await copyRichToClipboard(payload.html,payload.plain);
+      window.BLGridClipboard.diagnostics.record({module:key,operation:'copy',selection:{rows:rows.length,columns:columns.length},includeHeaders:payload.includeHeaders,transport:'rich',ok});
+      showToast(ok?(appLang==='en'?'Table cells copied.':'Tablo hücreleri kopyalandı.'):(appLang==='en'?'Copy failed.':'Kopyalama başarısız.'));
+      return ok;
+    }
+  };
 }
 function syncTableReportButtons(tableKey){
   const on=Boolean(window.BLTableReportInline?.isActive(tableKey));
@@ -5254,6 +5306,7 @@ function ensureTableReportAdapters(){
     rows:()=>tableRangeVisibleRows(key),total:()=>tableRangeTotalRows(key),
     columns:()=>tableReportCoreColumns(key),
     images:()=>!colmgr[key]?.hidden?.has('__picture'),
+    ...tableReportInteraction(key),
     filter:(field,anchor)=>openHeaderFilter(key,field,anchor,key==='cp'?renderCP:renderOrders),
     changed:changed(key)
   });
@@ -5265,6 +5318,7 @@ function ensureTableReportAdapters(){
     rows:()=>tableRangeVisibleRows('koleksiyon'),total:()=>tableRangeTotalRows('koleksiyon'),
     columns:tableReportKolColumns,
     images:()=>!kolPictureHidden,
+    ...tableReportInteraction('koleksiyon'),
     filter:(field,anchor)=>{if(tableReportKolColumns().some(col=>col.key===field&&col.filterable))openKolHeaderFilter(field,anchor);else showToast(appLang==='en'?'This field has no column filter.':'Bu alanın sütun filtresi yok.');},
     changed:changed('koleksiyon')
   });
@@ -5384,7 +5438,7 @@ function computeWidths(tableKey){
   const cols = visibleCols(tableKey);
   return cols.map(c=>({col:c, px: colWidthPx(tableKey,c)}));
 }
-const MANAGED_CHECK_COLUMN_WIDTH=64;
+const MANAGED_CHECK_COLUMN_WIDTH=8;
 function tableTotalPx(tableKey, withChk){
   return (withChk?MANAGED_CHECK_COLUMN_WIDTH:0) + computeWidths(tableKey).reduce((s,w)=>s+w.px,0);
 }
@@ -8087,7 +8141,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   }
   const checkFilterActive = !!normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const checkFilterLabel=appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele';
-  theadHtml += '<tr class="colRow">' + (withChk?`<th class="chkTh${checkFilterActive?' columnFilterActive':''}"><input type="checkbox" id="${tableId}_selAll"><button type="button" class="thFilterBtn chkFilterBtn${checkFilterActive?' filterActive':''}" data-table="${tableId}" data-tablekey="${tableKey}" aria-label="${escapeHtml(checkFilterLabel)}" title="${escapeHtml(checkFilterLabel)}">▾</button></th>`:'') +
+  theadHtml += '<tr class="colRow">' + (withChk?`<th class="chkTh${checkFilterActive?' columnFilterActive':''}"><input type="checkbox" id="${tableId}_selAll" aria-label="${escapeHtml(appLang==='en'?'Select all rows':'Tüm satırları seç')}"><button type="button" class="thFilterBtn chkFilterBtn${checkFilterActive?' filterActive':''}" data-table="${tableId}" data-tablekey="${tableKey}" aria-label="${escapeHtml(checkFilterLabel)}" title="${escapeHtml(checkFilterLabel)}">▾</button></th>`:'') +
     cols.map(c=>{
       const arrow = sortState.key===c.k ? (sortState.dir===1?'▲':'▼') : '';
       const isFiltered = c.type==='cpImage' ? false : colFilterActive(tableKey, c.k);
@@ -8176,7 +8230,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     if(r._id!=null && opts.dirtySet && (typeof opts.isDirty==='function'?opts.isDirty(r):opts.dirtySet.has(r._id))) tr.classList.add('rowDirty');
     if(r._canEdit===false) tr.classList.add('rowViewOnly');
     if(r._id!=null) tr.dataset.id = r._id;
-    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
+    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
     rowHtml += cols.map(c=>typeof opts.cellHtmlFn==='function'?opts.cellHtmlFn(c,r,cf,tableKey):cellHtml(c,r,cf,tableKey)).join('');
     tr.innerHTML = rowHtml;
     const tds=tr.children,offset=withChk?1:0;
@@ -10172,7 +10226,7 @@ function refreshCpRowOnly(id,rowIndex=null){
   const trCP = document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(trCP){
     const withChk = 1;
-    trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
+    trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
       visibleCols('cp').map(c=>cellHtml(c,row,cf)).join('');
     const chk = trCP.querySelector('input.rowChk');
     chk.addEventListener('change', ()=>{ if(chk.checked) state.cpSelected.add(id); else state.cpSelected.delete(id); if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility(); });
@@ -14670,7 +14724,7 @@ function registerManagedGridClipboard(tableId,tableKey){
       :(tableKey==='orders'?'Siparişler veri tablosu':'CP Tracker veri tablosu'),
     // Alt detay raporu çekmecesi açıkken Ctrl+C arkadaki CP/Orders seçimini değil
     // çekmecedeki seçimi kopyalar.
-    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
+    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!window.BLTableReportInline?.isActive(tableKey)&&!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
     rows:table=>table?._blRenderedRows||meta.rowsFn(),
     columns:table=>table?._blRenderedColumns||visibleCols(meta.tableKey),
     rowId:row=>row?._id,
@@ -21275,7 +21329,7 @@ function shipModelCard(row){
   ];
   // Ex-Factory artık her zaman görünen ayrı bir giriş taşımaz: tarih satırının
   // kendisi çift tıklamayla açılan bir düzenleyicidir (bkz. renderShipDecision).
-  return `<td class="shipCellChk"><input type="checkbox" class="shipCompareChk" data-shipid="${escapeHtml(String(row._shipId))}" ${shipSelected.has(row._shipId)?'checked':''} ${row._canEdit===false?'disabled':''}></td>
+  return `<td class="shipCellChk"><input type="checkbox" class="shipCompareChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" data-shipid="${escapeHtml(String(row._shipId))}" ${shipSelected.has(row._shipId)?'checked':''} ${row._canEdit===false?'disabled':''}></td>
     <td class="shipCellImage">${detailImageThumbHtml(imageUrl,{modelId:row.plm||row.styleName,plmId:row.plm||'',modelName:row.styleName||'',colourCode:row.colorCode||'',colour:row.colour||''},{classes:'shipThumb',allowEmpty:true,title:tr?'Büyük önizleme için üzerine gelin':'Hover for large preview'})}</td>
     <td class="shipCellProduct">
       <div class="shipProductName" title="${escapeHtml(row.styleName||row.orderCode||'')}">${escapeHtml(row.styleName||row.orderCode||'—')}</div>
@@ -21364,7 +21418,7 @@ const SHIP_COMPARE_WIDTH_KEY='buyerlog.shipCompare.colWidths.v1';
 /* Varsayılanlar içeriğe göre ölçüldü: girişi olan sütun daha geniş, ham fiyat
    sütunu dar. Başlık metni de sığmalı, yoksa iki satıra kırılıp satırı uzatır. */
 const SHIP_COMPARE_COLUMNS=[
-  {key:'chk',      def:34,  min:30},
+  {key:'chk',      def:8,  min:8},
   {key:'image',    def:62,  min:44},
   {key:'product',  def:214, min:150},
   {key:'dates',    def:120, min:96},
@@ -21381,6 +21435,7 @@ function shipCompareColumns(){
 let _shipCompareWidths=null;
 function shipCompareWidths(){
   const columns=shipCompareColumns();
+  if(_shipCompareWidths)_shipCompareWidths.chk=8;
   // Yeni eklenen nakliye şekli sütunu ilk görüldüğünde kayıttan/varsayılandan doldurulur.
   if(_shipCompareWidths&&columns.every(column=>Number.isFinite(_shipCompareWidths[column.key]))) return _shipCompareWidths;
   let saved={};
@@ -21389,7 +21444,7 @@ function shipCompareWidths(){
   for(const column of columns){
     if(Number.isFinite(_shipCompareWidths[column.key])) continue;
     const value=Number(saved[column.key]);
-    _shipCompareWidths[column.key]=Number.isFinite(value)&&value>0?Math.max(column.min,value):column.def;
+    _shipCompareWidths[column.key]=column.key==='chk'?8:(Number.isFinite(value)&&value>0?Math.max(column.min,value):column.def);
   }
   return _shipCompareWidths;
 }
@@ -29890,7 +29945,7 @@ function renderKol(){
     const groupToggle=isParent
       ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><svg class="ic" aria-hidden="true"><use href="${collapsed?'#i-chevron-right':'#i-chevron-down'}"/></svg></button>`
       :`<span class="kolModelGroupGutterSpacer${showAsVariant?' isVariant':''}" aria-hidden="true"></span>`;
-    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
+    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
       const sharedCollectionImageSource=String(r&&r._sharedCollectionImageUrl||'');
@@ -31309,6 +31364,7 @@ function kolTableClipboardColumns(){
   return meta&&meta.colsFn?meta.colsFn():kolOrderedCols().map(c=>({k:c.k,label:kolColumnLabel(c),kol:c}));
 }
 async function copyKolSelectedRows(){
+  if(window.BLTableReportInline?.copySelection('koleksiyon',null,{includeHeaders:true}))return;
   commitActiveTableEditor({refresh:false});
   const rows=kolCollectionExportProjection(filteredKol()).filter(record=>kolCollectionProjectionSelected(record,kolSelected));
   if(!rows.length){ showToast(L('Kopyalamak için önce satır seç.')); return; }
@@ -39962,6 +40018,8 @@ function initLiveSync(){
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
     if(['fx','endeksmatik','merchCalendar','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
+    }else if(payload.area==='tableReportLayouts'){
+      void window.BLTableReportInline?.refreshShared(true);
     }else if(payload.area==='cpManagedRules'||payload.area==='master-rules'){
       // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kuralları.
       window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
@@ -40108,6 +40166,7 @@ window.addEventListener('bl-shared-revision',event=>{
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden
   // yükleme demekti. Yalnız canlı akış kopmuşsa yedek olarak çalışır.
   if(changed.has('collection')&&kolWorkspaceOwnerId&&!liveSyncConnected)void kolHandleRemoteChange(kolWorkspaceOwnerId);
+  if(changed.has('tableReportLayouts')&&!liveSyncConnected)void window.BLTableReportInline?.refreshShared(true);
   if(changed.has('cpManagedRules')&&!liveSyncConnected)window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
   if(changed.has('quotation'))void window.BL_QUOTATIONS?.refresh?.();
   if(changed.has('licenseCards')&&!liveSyncConnected)window.BLLicenseCardsPage?.invalidate?.();
@@ -41666,6 +41725,7 @@ function applyLanguage(lang){
     else if(tab==='lcwai') window.BLLcwAiChat?.refreshLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
+  window.BLTableReportInline?.schedule(tab);
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil
   // değişince yeniden çizilmesi gerekir.
   try{ if(typeof renderHorizonBadges==='function') renderHorizonBadges(); }catch(e){}

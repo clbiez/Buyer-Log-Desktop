@@ -951,7 +951,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -11309,6 +11309,19 @@ app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.re
    yayını. Okuma herkese açıktır (her kullanıcı kendi ekranında uygular);
    yazma yalnız Moderatör. Değişiklik Master kural yayınıyla diğer cihazlara
    gider; kullanıcıların kendi kurallarına dokunulmaz. */
+// Shared report defaults use the existing revisioned master transport.
+app.get('/api/table-report-layouts', (_req,res)=>{
+  try{res.set('Cache-Control','no-store').json(require('./lib/table-report-layouts').normalize(loadOverrides().tableReportLayouts));}
+  catch(error){apiError(res,error,'Rapor düzenleri okunamadı. / Report layouts could not be read.');}
+});
+app.put('/api/table-report-layouts', userAccess.requireModerator, express.json({limit:'256kb'}), (req,res)=>{
+  try{
+    const body=req.body||{},saved=require('./db').replaceTableReportLayout(body,req.currentUser);
+    userAccess.appendAudit(req.currentUser,'TABLE_REPORT_LAYOUT_UPDATE',body.table+'.'+body.view,{publicationId:saved.slots[body.table+'.'+body.view]?.id});
+    publishSharedMasterChange('tableReportLayouts',req);
+    res.set('Cache-Control','no-store').json(saved);
+  }catch(error){apiError(res,error,'Rapor düzeni kaydedilemedi. / Report layout could not be saved.');}
+});
 app.get('/api/cp-managed-rules', (_req, res) => {
   try {
     const ov = loadOverrides();

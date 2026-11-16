@@ -21,7 +21,7 @@ test('v4.90 Non-DTR landed calculation divides by one minus royalty and adds hol
 test('v4.88 Add New Model row is temporarily pinned to the first table position', () => {
   assert.match(INDEX, /let kolTransientTopRowId = null/);
   assert.match(INDEX, /kolRows\.unshift\(row\);\s*kolTransientTopRowId=row\.id/);
-  assert.match(INDEX, /if\(kolTransientTopRowId!=null\)\{[\s\S]*?const present=ordered\.filter[\s\S]*?ordered=\[\.\.\.present,\.\.\.ordered\.filter/);
+  assert.match(INDEX, /if\(kolTransientTopRowId!=null&&!searchTerms\.length\)\{[\s\S]*?const present=ordered\.filter[\s\S]*?ordered=\[\.\.\.present,\.\.\.ordered\.filter/);
 });
 
 test('v4.88 new row returns to normal sort/filter flow after editing or filter changes', () => {

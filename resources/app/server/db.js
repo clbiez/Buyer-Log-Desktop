@@ -300,6 +300,7 @@ function defaultOverrides() {
     // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP öncelik
     // kuralları / checklist soruları ve "tüm kullanıcılardan sil" kimlikleri.
     // Master kural yayınıyla dağılır; kullanıcıların kendi kurallarına dokunmaz.
+    tableReportLayouts: {version:1,slots:{}},
     cpManagedRules: { version: 1, rules: [], deletedRuleIds: [] },
     _revision: 0, _revisions: { cpManagedRules: 0, orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0, importanceSettings: 0 },
   };
@@ -393,6 +394,7 @@ function loadOverrides({ projectManufacturers = true } = {}) {
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
   merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
+  merged.tableReportLayouts = require('./lib/table-report-layouts').normalize(parsed && parsed.tableReportLayouts);
   merged.cpManagedRules = normalizeCpManagedRules(parsed && parsed.cpManagedRules);
   // License Royalty v2: eski TR / Non-TR kayıtları okunurken tek
   // sözleşme kaydına dönüştürülür. Efektif ülke oranları ve varsa eski farklı
@@ -418,6 +420,7 @@ function protectCriticalOverrideSections(current, incoming) {
   // UI edit increments the section revision; a structural data-loss write
   // does not. Therefore only preserve a non-empty section when it becomes
   // empty WITHOUT its own revision advancing.
+  if(!Object.hasOwn(source,'tableReportLayouts'))next.tableReportLayouts=base.tableReportLayouts;
   for (const field of ['pricingRules','transitRules','nonDtrManufacturers']) {
     const before = Array.isArray(base[field]) ? base[field] : [];
     const after = Array.isArray(next[field]) ? next[field] : [];
@@ -572,6 +575,16 @@ function replaceFreightRates(value, expectedRevision = null, options = {}) {
   ov._revisions.freightRates = current + 1;
   const saved = saveOverrides(ov, ov._revision, options);
   return { freight: BLFreight.normalizeSettings(saved.freightRates), revision: saved._revisions.freightRates };
+}
+function replaceTableReportLayout(body,actor){
+  const schema=require('./lib/table-report-layouts'),key=schema.slot(body.table,body.view),layout=schema.layout(body.layout);
+  if(typeof body.expectedId!=='string')throw Object.assign(new Error('Rapor sürümü gerekli. / Report version required.'),{statusCode:400,code:'REPORT_LAYOUT_VERSION_REQUIRED'});
+  const ov=loadOverrides(),current=schema.normalize(ov.tableReportLayouts),existing=current.slots[key];
+  if((existing?.id||'')!==body.expectedId)throw Object.assign(new Error('Rapor düzeni değişti; güncel düzeni yeniden açın. / The report layout changed; reopen the current layout.'),{statusCode:409,code:'REPORT_LAYOUT_CONFLICT'});
+  const publication={id:require('crypto').randomUUID(),layout,updatedAt:new Date().toISOString(),updatedBy:String(actor?.id||'').slice(0,160)};
+  for(const view of ['focus','extended','all','custom'])current.slots[schema.slot(body.table,view)]=publication;
+  ov.tableReportLayouts=current;ov._revisions.tableReportLayouts=(Number(ov._revisions.tableReportLayouts)||0)+1;
+  return schema.normalize(saveOverrides(ov,ov._revision).tableReportLayouts);
 }
 function normalizeCpManagedRules(value) {
   const Rules = require('../public/cp-rules-engine');
@@ -2061,7 +2074,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadHorizonFieldPairs, upsertHorizonFieldPairs,

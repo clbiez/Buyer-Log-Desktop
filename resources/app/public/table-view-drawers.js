@@ -69,7 +69,7 @@
       }
     });
     menu.addEventListener('click',event=>{
-      if(event.target.closest('button')&&!event.target.closest('.workspacePriceSubview'))close(picker,false);
+      if(event.target.closest('button')&&!event.target.closest('.workspacePriceSubview')&&!event.target.closest('[data-table-fields]'))close(picker,false);
     });
     menu.addEventListener('keydown',event=>{
       if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(picker,true);return;}

@@ -51,7 +51,9 @@ test('Focus / Extended / All üçlüsü CP, Orders ve Collection için aynı sı
     // Menü açılır yapıya taşınınca seçenekler üst satırda 1400 karaktere sığmak zorunda değil.
     const fields = INDEX.indexOf(`data-table-fields="${tableKey}"`, start);
     assert.ok(fields > start, `${tableKey}: Alanlar aynı görünüm menüsünde bulunmalı`);
-    const block = INDEX.slice(start, fields);
+    const report=INDEX.indexOf(`data-table-report="${tableKey}"`,fields);
+    assert.ok(report>fields, `${tableKey}: pencil and presets stay in the same view menu`);
+    const block = INDEX.slice(start, report);
     const focus = block.indexOf('data-table-view-preset="focus"');
     const extended = block.indexOf('data-table-view-preset="extended"');
     const all = block.indexOf('data-table-view-preset="all"');

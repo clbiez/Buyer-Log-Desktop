@@ -13,7 +13,7 @@ const MASTER_OVERRIDE_FIELDS = new Set([
   'importanceSettings',
   'storeRevisionMeta',
   // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kural/checklist seti.
-  'cpManagedRules',
+  'cpManagedRules', 'tableReportLayouts',
 ]);
 const CP_OVERRIDE_FIELDS = new Set([
   'notesmap', 'submap', 'suppfobmap', 'suppfobmetamap', 'delmap', 'licensormap',

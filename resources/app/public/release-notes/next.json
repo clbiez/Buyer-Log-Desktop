@@ -12,6 +12,180 @@
   },
   "changes": [
     {
+      "id": "report-save-everyone",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor ve tablo görünümü",
+        "en": "Report and table views"
+      },
+      "title": {
+        "tr": "Moderatör rapor düzenini herkes için kaydeder",
+        "en": "Moderators can save report layouts for everyone"
+      },
+      "body": {
+        "tr": "Moderatörün Herkes için kaydet düğmesi, ilgili tablonun Focus, Extended, All ve özel rapor görünümlerini tüm kullanıcılar için günceller. Yeni yayım önceki kişisel düzenlerin yerine geçer; kullanıcılar sonrasında kendi düzenlerini tekrar kaydedebilir. Sunucu Moderatör yetkisini denetler ve eski sürümle yazmayı reddeder. Ortak düzen mevcut Master paylaşımıyla diğer cihazlara taşınır; normal tablo verisi ve dışa aktarım şeması değişmez.",
+        "en": "The Moderator’s Save for everyone action updates Focus, Extended, All and custom report layouts for the selected table across users. A new publication replaces earlier personal layouts; users can save personal adjustments afterward. The server enforces Moderator authority and rejects stale writes. Existing Master sharing carries the layout to other devices; normal table records and export schemas stay intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-save-everyone.png",
+        "alt": {
+          "tr": "Moderatör rapor düzenini herkes için kaydeder",
+          "en": "Moderators can save report layouts for everyone"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo hesapları ve verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo accounts and data."
+        }
+      }
+    },
+    {
+      "id": "row-selection-rails",
+      "type": "improvement",
+      "module": {
+        "tr": "Rapor ve tablo görünümü",
+        "en": "Report and table views"
+      },
+      "title": {
+        "tr": "Satır seçimi dolu şeritle belirginleşir",
+        "en": "A solid rail marks selected rows"
+      },
+      "body": {
+        "tr": "Tablolardaki satır seçim kutularının yerini satır yüksekliğini kaplayan 8 px dolu şerit alır. Seçim ve toplu seçim, klavyeyle Space kullanımı, kısmi seçim ve erişilemeyen satırlar mevcut davranışlarını korur. Koleksiyonun satır numarası ve grup düğmeleri şeridin yanında kalır. Ayar ve veri alanlarının onay kutuları satır seçimi olarak değiştirilmez.",
+        "en": "An 8 px solid rail spanning the row height replaces table row-selection boxes. Row and bulk selection, Space keyboard activation, mixed selection and disabled rows retain their existing behavior. Collection row numbers and group controls remain beside the rail. Settings and boolean data fields keep their own controls."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "row-selection-rails.png",
+        "alt": {
+          "tr": "Satır seçimi dolu şeritle belirginleşir",
+          "en": "A solid rail marks selected rows"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo hesapları ve verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo accounts and data."
+        }
+      }
+    },
+    {
+      "id": "view-fields-pencils",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo görünümleri",
+        "en": "Table views"
+      },
+      "title": {
+        "tr": "Görünüm yanındaki kalem Alanlar ekranını açar",
+        "en": "The pencil beside each view opens Fields"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon görünüm menülerinde Focus, Extended ve All adlarının sağındaki kalem mevcut Alanlar ekranını doğrudan açar. Ayrı Alanlar seçeneği kaldırıldı; kaleme tıklamak seçili görünümü değiştirmez.",
+        "en": "In CP, Orders and Collection view menus, the pencil beside Focus, Extended and All opens the existing Fields screen directly. The separate Fields option is removed; clicking a pencil does not change the selected view."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "view-fields-pencils.png",
+        "alt": {
+          "tr": "Görünümlerin sağındaki Alanlar düzenleme kalemleri",
+          "en": "Fields editing pencils beside the views"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-row-actions",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor satırından PLM, TROY ve BOM erişimi",
+        "en": "PLM, TROY and BOM access from report rows"
+      },
+      "body": {
+        "tr": "Rapor satırına sağ tıklayın: mevcut kopyalama, PLM numune ve BOM / Baskı Detayı araçları ile siparişe bağlı TROY Order ve TROY Shipment Request bağlantılarına ulaşın. PLM bağlantısı kayıtlı kanonik kimlikle çözülür. Menüyü açmak seçimleri değiştirmez; satır aracı çalıştırıldığında ilgili satır kullanılır.",
+        "en": "Right-click a report row to access existing copy, PLM sample and BOM / Print Details tools, plus order-specific TROY Order and TROY Shipment Request links. PLM links use the registered canonical identity. Opening the menu preserves selections; running a row tool uses the relevant row."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-row-actions.png",
+        "alt": {
+          "tr": "Rapor satırından PLM, TROY ve BOM erişimi",
+          "en": "PLM, TROY and BOM access from report rows"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-table-selection",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor seçimi aynı tablo biçiminde aktarılır",
+        "en": "Report selections export in the same table format"
+      },
+      "body": {
+        "tr": "Rapor hücrelerini sürükleyerek veya Shift ve ok tuşlarıyla seçin. Kopyala, başlıklı kopyalama ve Ctrl+C, seçili rapor hücrelerinin alanlarını normal tablonun sütun sırasıyla aktarır. Satır seçimi mevcut tablo seçim kümesini kullanır; mevcut Excel ve zengin satır kopyalama yolları korunur. Rapor düzeni veri veya aktarım şemasını değiştirmez.",
+        "en": "Select report cells by dragging or using Shift and arrow keys. Copy, Copy with headers and Ctrl+C expand selected report cells into the original table column order. Row selection uses the existing table selection set; existing Excel and rich row-copy paths are preserved. Report layouts do not change records or export schemas."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-table-selection.png",
+        "alt": {
+          "tr": "Rapor seçimi aynı tablo biçiminde aktarılır",
+          "en": "Report selections export in the same table format"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-cell-layout",
+      "type": "feature",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Rapor hücrelerini sürükleyerek düzenleyin",
+        "en": "Arrange report cells by dragging"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında alanları ana bilgi, ikinci ve üçüncü satır arasında sürükleyin. Klavyeyle Alt + ok tuşlarını kullanın. Önizleme tüm kayıtlara uygulanır; Kaydet, Vazgeç ve Varsayılana dön seçenekleri vardır. Düzen kullanıcı, tablo ve görünüm başına saklanır. Focus, Extended ve All yanındaki kalem doğrudan mevcut Alanlar ekranını açar; ayrı Alanlar seçeneği kaldırıldı.",
+        "en": "In CP, Orders and Collection reports, drag fields between primary, second and third lines, or use Alt + arrow keys. Preview applies to every record, with Save, Cancel and Reset layout. Layouts are stored per user, table and view. A pencil beside Focus, Extended and All opens the existing Fields screen directly; the separate Fields option is removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-cell-layout.png",
+        "alt": {
+          "tr": "Rapor hücrelerini sürükleyerek düzenleyin",
+          "en": "Arrange report cells by dragging"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisi.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "oab-intake-content-height",
       "type": "improvement",
       "module": {

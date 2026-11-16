@@ -237,10 +237,19 @@ test('Alanlar son görünür başlığı gizlemez', () => {
   assert.deepEqual(plain(api.visible()), ['PLM ID', 'Model Name']);
 });
 
-test('Alanlar butonu üç tabloda Tümü düğmesinin hemen sağında ve TR/EN', () => {
+test('Üç tabloda her görünümün sağındaki kalem Alanlar ekranını açar ve TR/EN erişilebilirdir', () => {
   for (const key of ['cp', 'orders', 'koleksiyon']) {
-    assert.match(INDEX, new RegExp(`data-table-view-preset="all" data-table-key="${key}"[^\\n]*</button>\\n\\s*<button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="${key}"[^\\n]*data-i18n-tr="Alanlar" data-i18n-en="Fields"`));
+    for (const view of ['focus', 'extended', 'all']) {
+      const row = INDEX.split('\n').find(line => line.includes(`data-table-view-preset="${view}" data-table-key="${key}"`));
+      assert.ok(row, `${key}/${view} görünümü bulunur`);
+      assert.match(row, /class="blViewPresetRow"/);
+      assert.match(row, new RegExp(`</button><button type="button" class="tableFieldsBtn blViewEdit" data-table-fields="${key}" data-fields-view="${view}"`));
+      assert.match(row, /aria-haspopup="dialog"/);
+      assert.match(row, /data-i18n-aria-label-tr="Alanları düzenle" data-i18n-aria-label-en="Edit fields"/);
+      assert.match(row, /<use href="#i-pencil"\/>/);
+    }
   }
+  assert.doesNotMatch(INDEX, /class="tableViewPreset tableFieldsBtn"/);
   assert.match(APP, /document\.addEventListener\('click',event=>\{\s*const button=event\.target\.closest\?\.\('\[data-table-fields\]'\)/);
   assert.match(read('public/user-storage.js'), /'lcw\.tableGroupOverrides\.'/);
   assert.match(read('server/lib/user-preferences.js'), /'lcw\.tableGroupOverrides\.'/);

@@ -10,6 +10,8 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const Groups = require('../public/collection-model-groups.js');
 const Export = require('../public/table-export.js');
+const Search=require('./helpers/bl-table-search').createTableSearch();
+require('../public/table-search-row-groups').install({BLTableSearch:Search});
 
 function extractFunction(name) {
   let start = APP.indexOf(`function ${name}(`);
@@ -36,7 +38,7 @@ function row(id, group, role, colour, buyer) { return { id, modelGroupId:group, 
 
 test('Concept 2 collapse yalnız presentation projection; logical colour records değişmez ve filtered child kaybolmaz', () => {
   const ctx = {
-    console, window:{}, kolRows:[], kolSort:{key:null,dir:1}, kolTransientTopRowId:null,
+    console, window:{BLTableSearch:Search},kolSearchHaystack:r=>[r.colour,r.buyer].join(' '), kolRows:[], kolSort:{key:null,dir:1}, kolTransientTopRowId:null,
     kolColDefs:()=>[{k:'colour'},{k:'buyer'}], columnSchemaFor:()=>null,
     kolEffectiveValue:(r,k)=>r[k], compareSeasonValues:(a,b)=>String(a).localeCompare(String(b)),
     norm:v=>String(v ?? ''), kolIsColorSpecific:key=>['colour','colourCode','quantity','status','durum','img','imgRef'].includes(key),
@@ -52,6 +54,11 @@ test('Concept 2 collapse yalnız presentation projection; logical colour records
   ctx.collapsed = new Set(['A']);
   assert.deepEqual(Array.from(ctx.kolPresentationRows(logical), item=>item.id), [1,4,5]);
   assert.equal(logical.length, 5, 'collapse logical data sayısını azaltmamalı');
+  ctx.kolTransientTopRowId=4;
+  assert.deepEqual(Array.from(ctx.kolGroupAwareOrder(rows),item=>item.id),[4,5,1,2,3],'without search, the new group remains pinned');
+  ctx.kolTransientTopRowId=1;
+  assert.deepEqual(Array.from(ctx.kolGroupAwareOrder(rows,Search.parseTerms('WHITE, BLACK')),item=>item.id),[4,5,1,2,3],'search order precedes temporary pinning');
+  ctx.kolTransientTopRowId=null;
   ctx.logical = [rows.find(item=>item.id===2)];
   assert.deepEqual(Array.from(ctx.kolPresentationRows(ctx.logical), item=>item.id), [2], 'filter sonucu yalnız child ise collapse onu yok etmemeli');
 });

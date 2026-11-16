@@ -133,7 +133,7 @@
      bilerek seçilir. İşaretli satır varken menü iki hedefi de açıkça sunar:
      seçili hücre/aralık ya da işaretli satırlar — kullanıcı tahmin etmez. */
   function managedClipboardEntries(config, table, cell) {
-    if (config.module !== 'cp' && config.module !== 'orders' && config.module !== 'detail') return [];
+    if (!config.report && config.module !== 'cp' && config.module !== 'orders' && config.module !== 'detail') return [];
     if (!window.BLGridClipboard?.prepareContextMenu?.(table.id, cell)) return [];
     const copyEvent = { preventDefault() {}, stopImmediatePropagation() {} };
     const items = [
@@ -141,7 +141,7 @@
       { label: T('Başlıklarla kopyala', 'Copy with headers'), run: () => void window.BLGridClipboard?.copyActive?.(copyEvent, { includeHeaders: true }) },
     ];
     const checked = selectionSetFor(config.module);
-    const navCopy = document.getElementById('navCopy');
+    const navCopy = document.getElementById(config.module==='collection'?'kolCopySelectedBtn':'navCopy');
     if (checked && checked.size > 0 && navCopy && !navCopy.disabled) {
       items.push({ label: T(`İşaretli ${checked.size} satırı kopyala`, `Copy ${checked.size} checked row(s)`), run: () => navCopy.click() });
     }
@@ -170,7 +170,7 @@
   function openForCell(config, table, cell, event) {
     const id = rowIdOfCell(cell);
     if (!id) return false;
-    const row = typeof window.BLGetContextRow === 'function' ? window.BLGetContextRow(config.module, id) : null;
+    const row = config.row || (typeof window.BLGetContextRow === 'function' ? window.BLGetContextRow(config.module, id) : null);
     const modelName = String((row && (row['Model Name'] || row.modelName || row.model)) || cell.textContent || '').trim();
     const clipboardItems = managedClipboardEntries(config, table, cell);
 
@@ -178,7 +178,7 @@
        yalnız o satır seçilir, böylece işlem görünmeyen bir kümeye uygulanmaz. */
     const selection = selectionSetFor(config.module);
     let scopeText = '';
-    if (selection) {
+    if (selection && !config.report) {
       if (!selection.has(id) && !selection.has(Number(id))) {
         selection.clear();
         selection.add(row && row._id != null ? row._id : id);
@@ -193,6 +193,9 @@
     }
 
     const items = [...clipboardItems];
+    if(config.report){
+      for(const link of config.links||[])items.push({label:link.label,run:()=>window.open(link.url,'_blank','noopener,noreferrer')});
+    }
     if (clipboardItems.length) items.push({ separator: true });
     // PLM numune talepleri (CoreNectum Requests): CP aşamasında takip edilir,
     // koleksiyonda numune çalışılmaz. Yalnız PLM ID'si olan CP/Sipariş satırı.
@@ -212,13 +215,19 @@
         run: () => plmBom.openForRow(row, config.module),
       });
     }
-    const tools = [...toolEntries(config.tools), ...toolEntries(config.excel)];
+    const tools = [...toolEntries(config.tools), ...toolEntries(config.excel)].map(item=>!config.report?item:{...item,run:()=>{
+      // Only a row action changes checked rows; opening/copying preserves the cell range.
+      const selected=selectionSetFor(config.module),rowId=row?._partialViewSourceId??row?._id??row?.id??id;
+      if(selected&&![...selected].some(value=>String(value)===String(rowId))){selected.clear();selected.add(rowId);config.refresh?.();}
+      item.run();
+    }});
     if (items.length && tools.length) items.push({ separator: true });
     items.push(...tools);
     if (!items.length) return false;
 
     event.preventDefault();
     render(items, event.clientX, event.clientY, scopeText);
+    if(config.report)window.BLMotionPlus?.play('overlay',menu);
     return true;
   }
 
@@ -250,5 +259,9 @@
   // listesindeki cp/orders/collection hücre modeline uymuyor) aynı menü kabuğunu
   // kendi öğe listesiyle yeniden kullanır — ikinci bir popover bileşeni kurulmaz.
   window.BLRowMenu = { close, render, toolEntries, columnKeyOfCell, MODEL_COLUMN_KEYS, TABLES };
+  window.BLRowMenu.openReport=function({module,table,cell,row,links,event,refresh}){
+      const base=TABLES.find(config=>config.module===module);if(!base||!row)return false;
+      return openForCell({...base,report:true,row,links,refresh},table,cell,event);
+  };
 
 })();
