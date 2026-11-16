@@ -101,7 +101,8 @@
   function aggregate(models, slotLevelValue) {
     const level = slotLevel(slotLevelValue);
     const list = Array.isArray(models) ? models : [];
-    const withBom = list.filter(model => model && model.hasBom && Array.isArray(model.components) && model.components.length);
+    // Tam okunmuş boş BOM da karşılaştırmaya girer (ortak kalemleri 'absent' olur).
+    const withBom = list.filter(model => model && model.hasBom && Array.isArray(model.components));
     const withSet = new Set(withBom);
     const noBom = list.filter(model => !withSet.has(model)).map(model => model && model.plmId).filter(Boolean);
     const n = withBom.length;

@@ -77,6 +77,11 @@
     const section = document.createElement('section');
     section.className = 'plmBomFull';
     section.dataset.bomFull = '';
+    if (!full.length && entry && entry.fullCoverage === 'all-normalized') {
+      section.innerHTML = `<p class="cpaEmpty">${esc(L('PLM\'deki BOM boş: bu modelde hiç BOM kalemi yok.', 'The BOM in PLM is empty: this style has no BOM items.'))}</p>`;
+      body.appendChild(section);
+      return;
+    }
     if (!full.length) {
       section.innerHTML = `<p class="cpaEmpty">${esc(L('Bu modelin kayıtlı BOM\'u eski: yalnız baskı kalemleri var. Tüm BOM kalemleri için CP\'de PLM SYNC → Artwork/Fabric ile yenileyin.', 'This style\'s stored BOM is outdated and only contains print items. Refresh it in CP with PLM SYNC → Artwork/Fabric to see all BOM items.'))}</p>`;
       body.appendChild(section);

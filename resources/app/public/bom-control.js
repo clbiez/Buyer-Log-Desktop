@@ -26,6 +26,15 @@
     text = text.replace(/^0+(?=\d)/, '');
     return /^\d+$/.test(text) && Number(text) > 0 ? text : '';
   }
+  /* Ortak alanlar canonical ID + CP bağlamasıyla okunur (ör. PLM ID / Plm Kod /
+     plmId); ham başlık eşleştirmesi yapılmaz. */
+  function canonicalValue(row, fieldId) {
+    try {
+      const canonical = window.BLCanonicalFields;
+      // value(): ham değer (model adı görüntü için korunur; PLM ID numericId ile normalize edilir).
+      return canonical && typeof canonical.value === 'function' ? canonical.value(row, 'cp', fieldId) : '';
+    } catch (_) { return ''; }
+  }
   function loadPrefs() {
     let raw = null;
     try { raw = JSON.parse(storage()?.getItem(PREF_KEY) || 'null'); } catch (_) { raw = null; }
@@ -116,8 +125,8 @@
     function rebuild() {
       view.models = E.modelsFromRows(rows, {
         fields: prefs.levels,
-        plmIdOf: row => numericId(row && row['PLM ID']),
-        labelOf: row => String(row && row['Model Name'] || '').trim(),
+        plmIdOf: row => numericId(canonicalValue(row, 'plmId')),
+        labelOf: row => String(canonicalValue(row, 'modelName') || '').trim(),
         getValue,
       }).map(model => {
         const entry = view.bom && view.bom.get(model.plmId);

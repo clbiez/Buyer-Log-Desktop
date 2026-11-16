@@ -108,6 +108,14 @@ test('one aggregate is re-evaluated per mark change without re-aggregating', () 
   assert.deepEqual(E.analyze(models, { marks: { [key]: 'common' } }).summary, E.evaluate(agg, { marks: { [key]: 'common' } }).summary);
 });
 
+test('a fully synced but empty BOM is compared: every common item is reported missing', () => {
+  const models = [...group(4, () => [label('L1'), fabric('F1')]), { plmId: '77', label: 'Empty', hasBom: true, components: [] }];
+  const result = E.analyze(models, {});
+  assert.equal(result.bomModelCount, 5);
+  assert.deepEqual(result.noBom, []);
+  for (const slot of result.slots) assert.deepEqual(slot.findings.map(item => [item.plmId, item.kind]), [['77', 'absent']]);
+});
+
 test('mark normalization drops unknown values', () => {
   assert.deepEqual(E.normalizeMarks({ a: 'common', b: 'model', c: 'other', '': 'common' }), { a: 'common', b: 'model' });
 });
@@ -119,6 +127,12 @@ test('controlEntry exposes full components and flags decoration-only legacy reco
   assert.equal(full.components[0].quantity, 1);
   const legacy = bomStore.controlEntry({ plmId: '6', components: [print('P')] });
   assert.equal(legacy.coverage, 'decorations-only');
+  // PLM SYNC'in başarıyla okuduğu boş BOM eski kayıt değildir.
+  const empty = bomStore.controlEntry({ plmId: '7', fullCoverage: 'all-normalized', fullComponents: [], components: [] });
+  assert.equal(empty.coverage, 'full');
+  assert.deepEqual(empty.components, []);
+  const stored = bomStore.controlEntry(bomStore.normalizeEntry({ plmId: '8', styleId: '1', fullCoverage: 'all-normalized', fullComponents: [] }, '8'));
+  assert.equal(stored.coverage, 'full');
   assert.equal(bomStore.controlEntry(null), null);
 });
 
@@ -138,6 +152,11 @@ test('BOM Check is wired lazily into CP tools with CP-only access and synced per
   assert.match(read('server/lib/user-preferences.js'), /'lcw\.cp\.bomControl\.'/);
   const ui = read('public/bom-control.js');
   assert.match(ui, /PREF_KEY = 'lcw\.cp\.bomControl\.v1'/);
+  // Model kimliği ve adı canonical registry'den okunur (Plm Kod / plmId bağlamaları dahil).
+  assert.match(ui, /canonical\.value\(row, 'cp', fieldId\)/);
+  assert.match(ui, /canonicalValue\(row, 'plmId'\)/);
+  assert.match(ui, /canonicalValue\(row, 'modelName'\)/);
+  assert.doesNotMatch(ui, /row\['PLM ID'\]|row\['Model Name'\]/);
   assert.match(ui, /BLMotionPlus\.play\('overlay'/);
   assert.match(ui, /bindDialogKeyboard/);
   assert.deepEqual([...ui.matchAll(/fetch\('([^']+)'/g)].map(m => m[1]), ['/api/plm-sync/bom/control']);
@@ -147,6 +166,8 @@ test('BOM Check is wired lazily into CP tools with CP-only access and synced per
 test('right-click BOM detail lists all stored BOM items with read-only BOM Check marks', () => {
   const ui = read('public/plm-bom.js');
   assert.match(ui, /void renderFullBom\(body, entry\)/);
+  // Başarıyla okunmuş boş BOM eski kayıt mesajı almaz.
+  assert.match(ui, /!full\.length && entry && entry\.fullCoverage === 'all-normalized'/);
   assert.match(ui, /BOM_CONTROL_PREF_KEY = 'lcw\.cp\.bomControl\.v1'/);
   // Motor perf-runtime 'bomControl' özelliğiyle aynı dizeyle yüklenir (tek kez).
   assert.match(ui, /_loadScript\?\.\('bom-control-engine\.js\?rev=1'\)/);
