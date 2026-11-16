@@ -91,6 +91,7 @@
         isRisk: isBase ? false : (raw.isRisk !== undefined ? Boolean(raw.isRisk) : builtInMeta.isRisk),
         builtIn: true,
         base: isBase,
+        ...(Array.isArray(raw.hides) ? { hides: raw.hides.filter(id => typeof id === 'string') } : {}),
         ...(raw.managed === true ? { managed: true } : {}),
       };
     }
@@ -109,11 +110,12 @@
       isRisk: raw.usage === 'tracking' ? false : (raw.isRisk !== undefined ? Boolean(raw.isRisk) : true),
       builtIn: false,
       base: false,
+      ...(Array.isArray(raw.hides) ? { hides: raw.hides.filter(id => typeof id === 'string') } : {}),
       ...(raw.managed === true ? { managed: true } : {}),
     };
   }
 
-  function normalizePriorityCatalog(list) {
+  function normalizePriorityCatalog(list, referenceCatalog) {
     const items = [];
     const seen = new Set();
     let onTrackEntry = null;
@@ -131,8 +133,11 @@
     }
     items.push(onTrackEntry || { ...DEFAULT_PRIORITY_CATALOG[DEFAULT_PRIORITY_CATALOG.length - 1] });
     let customCount = 0;
-    return items.filter(item => item.builtIn || customCount++ < 40 - DEFAULT_PRIORITY_CATALOG.length)
-      .map((item, rank) => ({ ...item, rank }));
+    const result = items.filter(item => item.builtIn || customCount++ < 40 - DEFAULT_PRIORITY_CATALOG.length);
+    const validIds = new Set([...result, ...(Array.isArray(referenceCatalog) ? referenceCatalog : [])].map(item => item.id));
+    return result.map((item, rank) => ({ ...item, rank,
+      ...(item.hides ? { hides: [...new Set(item.hides)].filter(id => id !== item.id && validIds.has(id)) } : {}),
+    }));
   }
 
   function effectivePriorityCatalog(personalList, managedList) {
@@ -221,6 +226,31 @@
   function priorityTone(key, catalog) {
     const meta = priorityMeta(key, catalog);
     return meta && meta.tone ? meta.tone : 'gray';
+  }
+
+  // Display only: urgency, matched rules and reasons are never changed here.
+  // Follow only matched nodes. In imported cycles keep the first ranked tag.
+  function resolvePriorityTags(priority, priorityTags, trackingTags, catalog) {
+    const { map } = catalogIndex(catalog);
+    const all = [...new Set([priority, ...(priorityTags || []), ...(trackingTags || [])].filter(Boolean))]
+      .sort((a, b) => Number(map.get(a)?.usage === 'tracking') - Number(map.get(b)?.usage === 'tracking')
+        || (map.get(a)?.rank ?? Infinity) - (map.get(b)?.rank ?? Infinity));
+    const present = new Set(all);
+    const reach = new Map();
+    for (const id of all) {
+      const found = new Set(), pending = [...(map.get(id)?.hides || [])];
+      while (pending.length) {
+        const next = pending.pop();
+        if (next === id || found.has(next) || !present.has(next)) continue;
+        found.add(next);
+        pending.push(...(map.get(next)?.hides || []));
+      }
+      reach.set(id, found);
+    }
+    const hidden = all.filter(id => all.some(other => other !== id && reach.get(other).has(id)
+      && (!reach.get(id).has(other) || all.indexOf(other) < all.indexOf(id))));
+    const hiddenSet = new Set(hidden);
+    return { visible: all.filter(id => !hiddenSet.has(id)), hidden };
   }
 
   function isRiskPriority(key, catalog) {
@@ -387,7 +417,7 @@
     CALCULATION_STATUS, REASON_POLICY,
     normalizeTone, makePriorityId, isCustomPriorityCode, normalizePriorityEntry, normalizePriorityCatalog,
     effectivePriorityCatalog, setPriorityCatalog, getPriorityCatalog, priorityIds, priorityMeta,
-    priorityLabel, priorityTone, isRiskPriority,
+    priorityLabel, priorityTone, isRiskPriority, resolvePriorityTags,
     priorityRank, normalizePriority, moreUrgent, maxPriority, reasonObject, dedupeReasons,
     calculationStatusFor, resolveActionPriority, needsAttention, createDecision, traceDecision,
   };

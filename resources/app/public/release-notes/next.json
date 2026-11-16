@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-16",
   "bootstrapVisual": false,
   "title": {
-    "tr": "İçeriğe uyumlu pivotlar ve canlı INTAKE Excel",
-    "en": "Content-sized pivots and live INTAKE Excel"
+    "tr": "Birlikte gösterilen Priority etiketleri",
+    "en": "Priority tags shown together"
   },
   "summary": {
-    "tr": "OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır. Siparişler'de Priority sütunu geri geldi (checklist hariç); Backlog CP dışındaki grupların önceliğini Siparişler'den alır.",
-    "en": "OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection. The Priority column is back in Orders (excluding checklist); Backlog takes the priority of groups outside CP from Orders."
+    "tr": "Priority, eşleşen etiketleri birlikte gösterir; kapsanan etiketler ayardan gizlenebilir. OAB ve INTAKE tablo yüksekliğini izler; gruplar ve modüller birlikte animasyonla boyutlanır. INTAKE pivotu veritabanı bağlantısıyla Excel’e aktarılır. Siparişler'de Priority sütunu geri geldi (checklist hariç); Backlog CP dışındaki grupların önceliğini Siparişler'den alır.",
+    "en": "Priority shows matching tags together; covered tags can be hidden in tag settings. OAB and INTAKE follow table height, with animated groups and module resizing. Export the INTAKE pivot to Excel with a database connection. The Priority column is back in Orders (excluding checklist); Backlog takes the priority of groups outside CP from Orders."
   },
   "changes": [
+    {
+      "id": "priority-multiple-tags",
+      "type": "feature",
+      "module": {
+        "tr": "Öncelik Kuralları",
+        "en": "Priority Rules"
+      },
+      "title": {
+        "tr": "Eşleşen etiketleri birlikte görün, kapsananları gizleyin",
+        "en": "See matching tags together and hide covered tags"
+      },
+      "body": {
+        "tr": "CP ve Siparişler artık eşleşen tüm öncelik etiketlerini birlikte gösterir; her kombinasyon için ayrı etiket gerekmez. Etiket ayarlarında bir etiketin birlikte eşleştiğinde hangilerini gizleyeceğini seçebilirsiniz. Gizlenen eşleşmeler hücrenin ipucunda korunur. Sıralamadaki ana öncelik değişmez; takip etiketleri aciliyetten bağımsız kalır. Etiketler ortak Backlog/Global Flow dizinine ve CP/Siparişler kopyalama ile Excel çıktısına taşınır. Varsayılan Priority sütunu çoklu etiketler için genişletildi; elle seçilen genişlikler korunur.",
+        "en": "CP and Orders now show all matching priority tags together, without a separate tag for every combination. In tag settings, choose which other matching tags each tag hides. Hidden matches remain in the cell tooltip. The main sorting priority stays unchanged, and tracking tags remain independent of urgency. Tags flow through the shared Backlog/Global Flow index and CP/Orders clipboard and Excel output. The default Priority column is wider for multiple tags; manually selected widths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "priority-multiple-tags.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda aynı siparişin A ve B etiketleri birlikte görünür.",
+          "en": "An actual Buyer Log CP table showing tags A and B together on the same order."
+        },
+        "caption": {
+          "tr": "B, C etiketini kapsayacak şekilde ayarlandı: A ve B görünür, C ipucunda kalır. İzole demo verisiyle gerçek uygulama.",
+          "en": "B is configured to cover C: A and B stay visible while C remains in the tooltip. Actual application with isolated demo data."
+        }
+      }
+    },
     {
       "id": "table-search-missing-values",
       "type": "improvement",

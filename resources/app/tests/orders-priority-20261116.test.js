@@ -26,13 +26,13 @@ test('checklist kuralları Siparişler’de tetiklenmez; CP’de tetiklenir',()=
   const r=row();
   const cp=Rules.evaluateOrder(CP.analyzeOrder(r,{}),{rules:Rules.DEFAULT_RULES,answers:{},checklistEnabled:true});
   assert.equal(cp.priority,'ACTION_THIS_WEEK','CP: cevapsız checklist aksiyon üretir');
-  assert.deepEqual(Engine.createSession({rules:Rules.DEFAULT_RULES}).evaluateRow(r),{priority:'ON_TRACK',trackingTags:[]},'Siparişler: checklist yok');
+  assert.deepEqual(Engine.createSession({rules:Rules.DEFAULT_RULES}).evaluateRow(r),{priority:'ON_TRACK',trackingTags:[],priorityTags:[]},'Siparişler: checklist yok');
 });
 
 test('checklist’ten bağımsız kurallar ve takip etiketleri Siparişler’de CP ile aynıdır',()=>{
   const session=Engine.createSession({rules:[...Rules.DEFAULT_RULES,...custom],priorityCatalog:CATALOG});
-  assert.deepEqual(session.evaluateRow(row()),{priority:'prio:yakin-yukleme',trackingTags:['prio:s7-takip']});
-  assert.deepEqual(session.evaluateRow(row({'Ex-factory':day(40),Season:'W7'})),{priority:'ON_TRACK',trackingTags:[]});
+  assert.deepEqual(session.evaluateRow(row()),{priority:'prio:yakin-yukleme',trackingTags:['prio:s7-takip'],priorityTags:['prio:yakin-yukleme']});
+  assert.deepEqual(session.evaluateRow(row({'Ex-factory':day(40),Season:'W7'})),{priority:'ON_TRACK',trackingTags:[],priorityTags:[]});
   const batch=session.evaluateBatch([row(),row({'Ex-factory':day(40),Season:'W7'}),null]);
   assert.deepEqual(batch.codes,['prio:yakin-yukleme','ON_TRACK','']);
   assert.deepEqual(batch.tags,[['prio:s7-takip'],null,null],'etiketsiz satır null (az veri)');

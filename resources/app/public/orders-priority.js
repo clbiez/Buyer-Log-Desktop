@@ -38,17 +38,17 @@
     });
     try {
       await send('begin', spec);
-      const codes = new Array(rows.length), tags = new Array(rows.length);
+      const codes = new Array(rows.length), tags = new Array(rows.length), priorityTags = new Array(rows.length);
       for (let start = 0; start < rows.length; start += BATCH) {
         if (!isCurrent()) throw cancelled();
         const batch = prepareBatch ? prepareBatch(rows.slice(start, start + BATCH)) : rows.slice(start, start + BATCH);
         const result = await send('batch', fields ? batch.map(row => root.BLOrdersPriorityEngine.projectRow(row, fields)) : batch);
-        for (let i = 0; i < result.codes.length; i += 1) { codes[start + i] = result.codes[i]; tags[start + i] = result.tags[i]; }
+        for (let i = 0; i < result.codes.length; i += 1) { codes[start + i] = result.codes[i]; tags[start + i] = result.tags[i]; priorityTags[start + i] = result.priorityTags[i]; }
         // Bir sonraki partinin kopyalanmasından önce ekrana nefes aldırılır.
         await yieldTask();
       }
       await send('end', null).catch(() => null);
-      return { codes, tags };
+      return { codes, tags, priorityTags };
     } finally { worker.terminate(); }
   }
 
@@ -56,7 +56,7 @@
     const engine = root.BLOrdersPriorityEngine;
     if (!engine || typeof engine.createSession !== 'function') throw new Error('ORDERS_PRIORITY_ENGINE_MISSING');
     const session = engine.createSession(spec);
-    const codes = new Array(rows.length), tags = new Array(rows.length);
+    const codes = new Array(rows.length), tags = new Array(rows.length), priorityTags = new Array(rows.length);
     let sliceStart = now();
     let prepared = null, preparedStart = -1;
     for (let i = 0; i < rows.length; i += 1) {
@@ -64,8 +64,9 @@
       if (prepareBatch && (preparedStart < 0 || i >= preparedStart + BATCH)) { preparedStart = i - (i % BATCH); prepared = prepareBatch(rows.slice(preparedStart, preparedStart + BATCH)); }
       const result = session.evaluateRow(prepared ? prepared[i - preparedStart] : rows[i]);
       codes[i] = result.priority; tags[i] = result.trackingTags.length ? result.trackingTags : null;
+      priorityTags[i] = result.priorityTags.length ? result.priorityTags : null;
     }
-    return { codes, tags };
+    return { codes, tags, priorityTags };
   }
 
   /* rows: Siparişler satırları. spec: { context, rules, priorityCatalog }.

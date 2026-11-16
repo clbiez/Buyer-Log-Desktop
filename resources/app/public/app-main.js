@@ -979,7 +979,7 @@ function actionPriorityCodes(){
 }
 function priorityHas(priority, flag, row){
   const left=actionPriorityCode(priority),right=actionPriorityCode(flag);
-  return !!right&&((!!left&&left===right)||(row?._trackingTags||[]).includes(right));
+  return !!right&&((!!left&&left===right)||(row?._priorityTags||[]).includes(right)||(row?._trackingTags||[]).includes(right));
 }
 function priorityDisplay(priority){
   const code=actionPriorityCode(priority);
@@ -1023,7 +1023,7 @@ function priorityRank(priority){
 function actionPriorityCounts(rows){
   const counts=Object.fromEntries(actionPriorityCodes().map(code=>[code,0]));
   for(const row of rows||[]){
-    const ids=new Set([actionPriorityCode(row&&row['Priority']),...(row?._trackingTags||[])]);
+    const ids=new Set([actionPriorityCode(row&&row['Priority']),...(row?._priorityTags||[]),...(row?._trackingTags||[])]);
     for(const code of ids)if(code&&Object.prototype.hasOwnProperty.call(counts,code))counts[code]+=1;
   }
   return counts;
@@ -1098,6 +1098,7 @@ function applyUnifiedPriorityAnalysis(row,analysis){
   row['Priority']=code;
   row._calculationStatus=analysis&&analysis.calculationStatus||'KNOWN';
   row._trackingTags=Array.isArray(analysis?.trackingTags)?analysis.trackingTags.slice():[];
+  row._priorityTags=Array.isArray(analysis?.priorityTags)?analysis.priorityTags.slice():[];
   row._actionPriorityReasons=analysis&&Array.isArray(analysis.actionReasons)?analysis.actionReasons.slice():[];
   row._actionPrioritySignals=analysis&&Array.isArray(analysis.signals)?analysis.signals.slice():[];
 }
@@ -1113,7 +1114,7 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
   const result=preparedResult||assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
     if(!unifiedPriorityRowActive(tableKey,row)){
-      row['Priority']='';row._trackingTags=[];row._actionPriorityReasons=[];row._actionPrioritySignals=[];continue;
+      row['Priority']='';row._trackingTags=[];row._priorityTags=[];row._actionPriorityReasons=[];row._actionPrioritySignals=[];continue;
     }
     const analysis=result&&result.byRow?result.byRow.get(row):null;
     applyUnifiedPriorityAnalysis(row,analysis);
@@ -1189,10 +1190,11 @@ function priorityIndexFromRows(rows){
   const merge=(map,key,entry)=>{
     if(!key)return;
     const prev=map.get(key);
-    if(!prev){map.set(key,{priority:entry.priority,trackingTags:new Set(entry.trackingTags),count:1,model:entry.model,colour:entry.colour});return;}
+    if(!prev){map.set(key,{priority:entry.priority,priorityTags:new Set(entry.priorityTags),trackingTags:new Set(entry.trackingTags),count:1,model:entry.model,colour:entry.colour});return;}
     prev.count+=1;
     prev.priority=OD&&typeof OD.moreUrgent==='function'?OD.moreUrgent(prev.priority,entry.priority):prev.priority;
     entry.trackingTags.forEach(tag=>prev.trackingTags.add(tag));
+    entry.priorityTags.forEach(tag=>prev.priorityTags.add(tag));
   };
   const orderKey=cpPriorityHeaderKey(rows,'orderCode','Order Code'),modelKey=cpPriorityHeaderKey(rows,'modelName','Model Name'),colourKey=cpPriorityHeaderKey(rows,'colourCode','C.Code');
   for(const row of rows||[]){
@@ -1202,7 +1204,7 @@ function priorityIndexFromRows(rows){
     const orderCode=row[orderKey];
     if(!String(orderCode==null?'':orderCode).trim())continue;
     const model=row[modelKey],colour=row[colourKey];
-    const entry={priority,trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
+    const entry={priority,priorityTags:Array.isArray(row._priorityTags)?row._priorityTags.filter(Boolean):[],trackingTags:Array.isArray(row._trackingTags)?row._trackingTags.filter(Boolean):[]};
     merge(line,cpPriorityIdentity(orderCode,model,colour),entry);
     merge(orderColour,cpPriorityIdentity(orderCode,colour),entry);
     merge(order,cpPriorityIdentity(orderCode),{...entry,model:cpPriorityIdentityPart(model),colour:cpPriorityIdentityPart(colour)});
@@ -1246,7 +1248,7 @@ function lookupCpPriority(orderCode,model,colourCode){
   if(!String(orderCode||'').trim())return null;
   let hit=lookupPriorityIn(buildCpPriorityIndex(),orderCode,model,colourCode),source='cp';
   if(!hit){hit=lookupPriorityIn(buildOrdersPriorityIndex(),orderCode,model,colourCode);source='orders';}
-  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags],source}:null;
+  return hit?{priority:hit.priority,trackingTags:[...hit.trackingTags],source,...(hit.priorityTags.size?{priorityTags:[...hit.priorityTags]}:{})}:null;
 }
 
 /* ---- Siparişler (Orders) önceliği ----
@@ -1308,10 +1310,11 @@ function scheduleOrdersPriorities(){
         const row=active[i];
         row['Priority']=actionPriorityCode(result.codes[i])||'ON_TRACK';
         row._trackingTags=Array.isArray(result.tags[i])?result.tags[i].slice():[];
+        row._priorityTags=Array.isArray(result.priorityTags[i])?result.priorityTags[i].slice():[];
       }
       if(end<active.length){await new Promise(resolve=>setTimeout(resolve,0));if(!isCurrent())return false;}
     }
-    for(const row of rows)if(!unifiedPriorityRowActive('orders',row)){row['Priority']='';row._trackingTags=[];}
+    for(const row of rows)if(!unifiedPriorityRowActive('orders',row)){row['Priority']='';row._trackingTags=[];row._priorityTags=[];}
     _ordersPriority.stamp={rows,dataRevision:revision,day,key:ctx.key};
     _ordersPriorityIndex=null;_cpPriorityIndexRevision+=1;
     window.BLPerf?.mark?.('ORDERS_PRIORITY_READY',{rows:active.length,mode:result.mode,ms:result.ms});
@@ -5569,6 +5572,7 @@ function defaultMinPx(c, tableKey){
 function colWidthPx(tableKey, c){
   const cs = colmgr[tableKey];
   if(cs.widthPx[c.k]!=null) return Math.max(Number(cs.widthPx[c.k])||0, defaultMinPx(c, tableKey));
+  if(c.type==='priority') return Math.max(300,Math.round(defaultMinPx(c,tableKey)*1.35));
   return Math.round(defaultMinPx(c, tableKey) * 1.35);
 }
 function computeWidths(tableKey){
@@ -6665,10 +6669,14 @@ function cellHtml(c,r,cf,tableKey='cp'){
     }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
-      const reason=priorityReasonText(r),title=reason?` title="${escapeHtml(reason)}"`:'';
-      const tracking=(r._trackingTags||[]).map(id=>`<span class="cpTrackingTag badge b-${escapeHtml(priorityTone(id))}" title="${escapeHtml(appLang==='en'?'Tracking tag; urgency is unchanged':'Takip etiketi; aciliyet değişmez')}">${escapeHtml(priorityDisplay(id))}</span>`).join(' ');
-      if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(escapeHtml(priorityDisplay(value)||'—'), priorityTone(value)))} ${tracking}</td>`;
-      return `<td${title}>${badge(escapeHtml(priorityDisplay(v)||'—'), priorityTone(v))} ${tracking}</td>`;
+      const tags=window.BLOrderDecisionEngine.resolvePriorityTags(actionPriorityCode(v),r._priorityTags,r._trackingTags);
+      const hidden=tags.hidden.length?(appLang==='en'?'Hidden matching tags: ':'Gizlenen eşleşen etiketler: ')+tags.hidden.map(priorityDisplay).join(', '):'';
+      const reason=[tags.visible.map(priorityDisplay).join(' · '),priorityReasonText(r),hidden].filter(Boolean).join('\n'),title=reason?` title="${escapeHtml(reason)}"`:'';
+      const html=tags.visible.map(code=>{
+        if(rev&&code===actionPriorityCode(v))return revisionHtml(c.k,rev,value=>badge(escapeHtml(priorityDisplay(value)||'—'),priorityTone(value)));
+        return badge(escapeHtml(priorityDisplay(code)),priorityTone(code));
+      }).join(' ');
+      return `<td${title}>${html||'—'}</td>`;
     }
     case 'status': return r&&r._partialViewActive ? partialViewStatusCellHtml(r) : cpLogisticHasDetails(r) ? cpLogisticStatusCellHtml(r,tableKey) : `<td>${badge(escapeHtml(statusDisplay(v)||'—'), statusTone(v))}</td>`;
     case 'active': { const t = norm(v)==='Active'?'green':'gray'; return `<td>${badge(norm(v), t)}</td>`; }
@@ -6808,7 +6816,7 @@ function cellPlainText(c,r,cf){
   if(cpLogisticHasDetails(r)&&c.k==='STATUS') return cpLogisticStatusPlainText(r);
   if(cpLogisticHasDetails(r)&&c.k==='Ant. Arrival') return cpLogisticArrivalPlainText(r);
   if(cpLogisticHasDetails(r)&&(c.type==='deltype'||c.k==='Del. Type')) return cpLogisticDelTypePlainText(r);
-  if(c.type==='priority') return priorityDisplay(v);
+  if(c.type==='priority') return window.BLOrderDecisionEngine.resolvePriorityTags(actionPriorityCode(v),r._priorityTags,r._trackingTags).visible.map(priorityDisplay).join(' · ');
   if(c.type==='importance') return window.BLOrderImportanceUI?window.BLOrderImportanceUI.plainText(r):(norm(v)||'Regular');
   if(c.type==='plmSample') return norm(v);
   if(c.type==='status') return statusDisplay(v);

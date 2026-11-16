@@ -363,7 +363,9 @@ function normalizeRecord(row,source,index,resolver){
   if(!rec.actionPriority)rec.actionPriority=backlogActionPriority(src);
   const ownTags=Array.isArray(src._trackingTags)?src._trackingTags:(shared&&Array.isArray(shared.trackingTags)?shared.trackingTags:[]);
   rec.trackingTags=[...new Set(ownTags.map(clean).filter(Boolean))].filter(code=>code!==rec.actionPriority);
-  rec.priorityTags=[rec.actionPriority,...rec.trackingTags].filter(Boolean);
+  const matchedTags=Array.isArray(src._priorityTags)?src._priorityTags:(shared?.priorityTags||[]);
+  const OD=globalThis.BLOrderDecisionEngine;
+  rec.priorityTags=OD?.resolvePriorityTags?OD.resolvePriorityTags(rec.actionPriority,matchedTags,rec.trackingTags).visible:[...new Set([rec.actionPriority,...matchedTags,...rec.trackingTags].filter(Boolean))];
   rec.vesselKey=vesselKey(rec.vesselName);
   rec.orderKey=orderKeyOf(rec);
   rec.critical=rec.actionPriority==='CRITICAL';
@@ -1880,6 +1882,7 @@ function cpDetailRows(records){
     Object.assign(row,{
       'Priority':rec.actionPriority||actionPriorityCode(rec.priority)||'',
       _trackingTags:Array.isArray(rec.trackingTags)?rec.trackingTags.slice():[],
+      _priorityTags:Array.isArray(rec.priorityTags)?rec.priorityTags.slice():[],
       'Season':rec.season||'',
       'Country':rec.country||'',
       'Buyer Grup (TR)':rec.buyingGroup||'',

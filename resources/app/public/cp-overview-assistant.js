@@ -131,6 +131,11 @@
     if (OD && typeof OD.priorityTone === 'function') return OD.priorityTone(key, state.priorityCatalog);
     return ({ CRITICAL: 'red', ACTION_TODAY: 'orange', ACTION_THIS_WEEK: 'yellow', WATCH: 'blue', ON_TRACK: 'green' })[key] || 'gray';
   };
+  function priorityPills(item) {
+    const tags = OD.resolvePriorityTags(item.priority, item.priorityTags, item.trackingTags, state.priorityCatalog);
+    const title = tags.hidden.length ? L('Gizlenen eşleşen etiketler: ', 'Hidden matching tags: ') + tags.hidden.map(priorityLabel).join(', ') : '';
+    return `<span title="${esc(title)}">${tags.visible.map(id => `<span class="cpaPill tone-${esc(priorityToneOf(id))}">${esc(priorityLabel(id))}</span>`).join(' ')}</span>`;
+  }
   const statusToneOf = status => {
     if (Checklist && typeof Checklist.statusTone === 'function') return Checklist.statusTone(status);
     return ({ open: 'blue', approved: 'green', rejected: 'red', notRequired: 'gray' })[status] || 'blue';
@@ -201,7 +206,7 @@
         state.deletedRuleIds = stored.deletedRuleIds;
         state.sharedChecklistAdopted = stored.sharedChecklistAdopted;
         if (stored.priorityCatalog && OD && typeof OD.normalizePriorityCatalog === 'function') {
-          state.personalPriorityCatalog = OD.normalizePriorityCatalog(stored.priorityCatalog);
+          state.personalPriorityCatalog = OD.normalizePriorityCatalog(stored.priorityCatalog, state.managed.priorityCatalog);
         }
         if (stored.customStatuses) hydrateSharedCustomStatuses(stored.customStatuses);
         applyRuleLayers(stored.rules);
@@ -987,7 +992,7 @@
       return `<td class="${numeric ? 'num ' : ''}cpaAttentionCell" title="${esc(text)}">${esc(text)}</td>`;
     }
     switch (column.id) {
-      case 'sys:priority': return `<td><span class="cpaPill tone-${esc(priorityToneOf(item.priority))}">${esc(priorityLabel(item.priority))}</span></td>`;
+      case 'sys:priority': return `<td>${priorityPills(item)}</td>`;
       case 'sys:order': return `<td class="cpaAttentionCell" title="${esc(item.orderCode || '—')}">${esc(item.orderCode || '—')}</td>`;
       case 'sys:style': return `<td class="cpaAttentionCell" title="${esc([item.modelName, item.colourCode].filter(Boolean).join(' · ') || '—')}">${esc(item.modelName || '—')}${item.colourCode ? `<small>${esc(item.colourCode)}</small>` : ''}</td>`;
       case 'sys:supplier': return `<td class="cpaAttentionCell" title="${esc(item.dims.manufacturer || '—')}">${esc(item.dims.manufacturer || '—')}</td>`;
@@ -1212,7 +1217,7 @@
         <div class="cpaExcludeOrderFacts">
           <div><span>${esc(L('Sipariş', 'Order'))}</span><b>${esc(item.orderCode || '—')}</b></div>
           <div><span>${esc(L('Model', 'Style'))}</span><b>${esc([item.modelName, item.colourCode].filter(Boolean).join(' · ') || '—')}</b></div>
-          <div><span>${esc(L('Öncelik', 'Priority'))}</span><b>${esc(priorityLabel(item.priority))}</b></div>
+          <div><span>${esc(L('Öncelik', 'Priority'))}</span><b>${priorityPills(item)}</b></div>
           <div><span>${esc(L('Hedef', 'Target'))}</span><b>${esc(targetLabel)}</b></div>
         </div>
         <fieldset class="cpaExcludeGroup">
@@ -2292,13 +2297,13 @@
       : (OD && typeof OD.makePriorityId === 'function'
         ? OD.makePriorityId(rawEn || rawTr, existingIds)
         : `prio:${rawTr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'custom'}`);
-    const entry = { id, tr: rawTr, en: rawEn, tone, isRisk, ...(usage === 'tracking' ? { usage } : {}), builtIn: false };
+    const entry = { id, tr: rawTr, en: rawEn, tone, isRisk, hides: spec?.hides || [], ...(usage === 'tracking' ? { usage } : {}), builtIn: false };
     const nextList = (state.personalPriorityCatalog || defaultCatalog()).slice();
     const watchIdx = nextList.findIndex(item => item.id === 'WATCH' || item.id === 'ON_TRACK');
     if (watchIdx >= 0) nextList.splice(watchIdx, 0, entry);
     else nextList.push(entry);
     state.personalPriorityCatalog = OD && typeof OD.normalizePriorityCatalog === 'function'
-      ? OD.normalizePriorityCatalog(nextList)
+      ? OD.normalizePriorityCatalog(nextList, state.managed.priorityCatalog)
       : nextList;
     applyRuleLayers(personalRuleList());
     savePrefs();
@@ -2310,6 +2315,17 @@
   function updatePriorityTag(id, patch) {
     const tagId = String(id || '').trim();
     if (!tagId) return null;
+    if (Array.isArray(patch?.hides)) {
+      const byId = new Map((state.priorityCatalog || []).map(entry => [entry.id, entry]));
+      const seen = new Set(), pending = patch.hides.slice();
+      while (pending.length) {
+        const next = pending.pop();
+        if (next === tagId) throw new Error(L('Etiket gizleme ilişkisi döngü oluşturamaz.', 'Tag hiding relationships cannot form a cycle.'));
+        if (seen.has(next)) continue;
+        seen.add(next);
+        pending.push(...(byId.get(next)?.hides || []));
+      }
+    }
     const tr = String(patch && (patch.tr ?? patch.name) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
     if (!tr) throw new Error(L('Öncelik etiketi adı boş olamaz.', 'Priority tag label cannot be empty.'));
     const en = String(patch && patch.en || '').replace(/\s+/g, ' ').trim().slice(0, 80) || tr;
@@ -2323,15 +2339,15 @@
     const updated = currentList.map(item => {
       if (item.id !== tagId || item.builtIn) return item;
       found = true;
-      return { ...item, tr, en, tone, isRisk, usage };
+      return { ...item, tr, en, tone, isRisk, usage, hides: patch.hides ?? item.hides ?? [] };
     });
     if (!found) {
       const managedExisting = (state.priorityCatalog || []).find(item => item.id === tagId && !item.builtIn);
       if (!managedExisting) return null;
-      updated.push({ id: tagId, tr, en, tone, isRisk, usage, builtIn: false });
+      updated.push({ id: tagId, tr, en, tone, isRisk, usage, hides: patch.hides || [], builtIn: false });
     }
     state.personalPriorityCatalog = OD && typeof OD.normalizePriorityCatalog === 'function'
-      ? OD.normalizePriorityCatalog(updated)
+      ? OD.normalizePriorityCatalog(updated, state.managed.priorityCatalog)
       : updated;
     applyRuleLayers(personalRuleList());
     savePrefs();
@@ -2354,7 +2370,7 @@
     const [moved] = base.splice(idx, 1);
     base.splice(targetIdx, 0, moved);
     state.personalPriorityCatalog = OD && typeof OD.normalizePriorityCatalog === 'function'
-      ? OD.normalizePriorityCatalog([...base.slice(0, -1), ...tracking, base.at(-1)].map(({ managed, ...rest }) => rest))
+      ? OD.normalizePriorityCatalog([...base.slice(0, -1), ...tracking, base.at(-1)].map(({ managed, ...rest }) => rest), state.managed.priorityCatalog)
       : base;
     applyRuleLayers(personalRuleList());
     savePrefs();
@@ -2783,7 +2799,6 @@
         }
         const ans = state.answers[Checklist.answerKey(analysis.orderKey, itemId)] || {};
         const hasEvidence = Boolean(ans.note || ans.reportNumber || ans.actualDate || (Array.isArray(ans.attachments) && ans.attachments.length));
-        const prioTone = priorityToneOf(analysis.priority);
         const days = analysis.daysToLoad;
         return `<tr data-cpa-queue-row="${esc(entry.rowKey)}">
           <td class="chk"><input type="checkbox" data-cpa-queue-check="${esc(entry.rowKey)}" ${selectedQueueKeys.has(entry.rowKey) ? 'checked' : ''} aria-label="${esc(analysis.orderCode || '')}"></td>
@@ -2791,7 +2806,7 @@
           <td>${esc(supplier)}</td>
           <td><span class="cpaPill tone-blue">${esc(bucketLabel)}</span></td>
           <td class="num${days != null && days <= 7 ? ' is-urgent' : ''}">${days == null ? '—' : int(days)}</td>
-          <td><span class="cpaPill tone-${esc(prioTone)}">${esc(priorityLabel(analysis.priority))}</span>${(analysis.trackingTags || []).map(id => `<span class="cpaPill tone-${esc(priorityToneOf(id))}">${esc(priorityLabel(id))}</span>`).join('')}</td>
+          <td>${priorityPills(analysis)}</td>
           <td>${plmCell(analysis, itemId) || '<span class="cpaNote">—</span>'}</td>
           <td>${statusControl}</td>
           <td class="act">
@@ -2860,11 +2875,10 @@
 
     function priorityCatalogHtml() {
       const catalog = state.priorityCatalog || defaultCatalog();
-      const byPrio = new Map(((state.model && state.model.priorities) || []).map(item => [item.name, item]));
       const nonTrackMax = Math.max(0, catalog.filter(item => item.usage !== 'tracking').findIndex(item => item.id === 'ON_TRACK') - 1);
       const moderator = isModerator();
       const renderTag = (entry, idx) => {
-        const count = entry.usage === 'tracking' ? (state.model?.orders || []).filter(order => order.trackingTags?.includes(entry.id)).length : (byPrio.get(entry.id) || { rows: 0 }).rows || 0;
+        const count = (state.model?.orders || []).filter(order => order.priority === entry.id || order.priorityTags?.includes(entry.id) || order.trackingTags?.includes(entry.id)).length;
         const canMove = entry.id !== 'ON_TRACK' && entry.usage !== 'tracking';
         const canUp = canMove && idx > 0;
         const canDown = canMove && idx < nonTrackMax;
@@ -2880,6 +2894,7 @@
           <span class="cpaCatalogTagMain" data-no-i18n>
             <b>${esc(isEn() ? (entry.en || entry.tr) : entry.tr)}</b>
             ${entry.en && entry.en !== entry.tr ? `<small>${esc(isEn() ? entry.tr : entry.en)}</small>` : ''}
+            ${entry.hides?.length ? `<small>${esc(L('Birlikte eşleşince gizler: ', 'Hides when matched together: '))}${esc(entry.hides.map(priorityLabel).join(', '))}</small>` : ''}
           </span>
           <span class="cpaCatalogTagBadges">
             ${entry.usage === 'tracking' ? `<span class="cpaBuiltIn">${esc(L('Takip etiketi', 'Tracking tag'))}</span>` : entry.isRisk ? `<span class="cpaBuiltIn">${esc(L('Aksiyon / Risk', 'Action / Risk'))}</span>` : `<span class="cpaBuiltIn">${esc(L('Bilgi / Normal', 'Info / Normal'))}</span>`}
@@ -2899,7 +2914,7 @@
       const rows = catalog.filter(entry => entry.usage !== 'tracking').map(renderTag).join('');
       const trackingRows = catalog.filter(entry => entry.usage === 'tracking').map(renderTag).join('');
 
-      const form = prioEditor ? `<div class="cpaCatalogInlineForm cpaFrame" data-cpa-priority-form>
+      const form = prioEditor ? `<div class="cpaCatalogInlineForm cpaFrame blMotionEnter" data-cpa-priority-form>
         <div class="cpaRowBetween">
           <b>${esc(prioEditor.mode === 'edit' ? L('Öncelik Etiketini Düzenle', 'Edit Priority Tag') : L('Yeni Öncelik Durumu Etiketi', 'New Priority Status Tag'))}</b>
           ${prioEditor.pendingRuleId ? `<small class="cpaNote">${esc(L('Kaydedildiğinde kural hedefi olarak otomatik seçilecek.', 'Will be selected automatically as the rule target on save.'))}</small>` : ''}
@@ -2911,6 +2926,10 @@
             <input data-cpa-priority-en value="${esc(prioEditor.en)}" placeholder="${esc(L('Örn. Waiting Fabric', 'e.g. Waiting Fabric'))}" maxlength="80"></label>
         </div>
         <label class="cpaRuleTarget"><span>${esc(L('Etiket kullanımı', 'Tag purpose'))}</span><select data-cpa-priority-usage><option value="priority"${prioEditor.usage !== 'tracking' ? ' selected' : ''}>${esc(L('Aciliyet önceliği', 'Urgency priority'))}</option><option value="tracking"${prioEditor.usage === 'tracking' ? ' selected' : ''}>${esc(L('Takip etiketi — aciliyeti değiştirmez', 'Tracking tag — keeps urgency unchanged'))}</option></select></label>
+        <fieldset class="cpaFrame"><legend>${esc(L('Bu etiket gösterildiğinde gizlenecek etiketler', 'Tags to hide when this tag is shown'))}</legend>
+          <small class="cpaNote">${esc(L('Yalnız birlikte eşleşen etiketler gizlenir. Aciliyet ve kural gerekçeleri korunur; gizlenen etiketler siparişin üzerine gelince görünür.', 'Only tags that match together are hidden. Urgency and rule reasons are preserved; hover over the order priority to see hidden matches.'))}</small>
+          <div class="cpaPriorityHideOptions">${catalog.filter(entry => entry.id !== prioEditor.id && entry.id !== 'ON_TRACK').map(entry => `<label class="cpaCheck"><input type="checkbox" data-cpa-priority-hide="${esc(entry.id)}"${prioEditor.hides?.includes(entry.id) ? ' checked' : ''}><span>${esc(priorityLabel(entry.id))}</span></label>`).join('')}</div>
+        </fieldset>
         <div class="cpaCatalogFormToneRow">
           <span>${esc(L('Renk tonu', 'Color tone'))}</span>
           ${toneSwatchPicker(prioEditor.tone, 'data-cpa-priority-tone')}
@@ -2929,7 +2948,7 @@
         <div class="cpaRowBetween cpaCatalogHead">
           <div>
             <b>${esc(L('Öncelik Durumu Etiketleri ve Aciliyet Sırası', 'Priority Status Tags & Urgency Order'))}</b>
-            <small>${esc(L('Birden fazla kural eşleşirse daha üstteki (#1 en acil) etiket kazanır. En fazla 35 özel etiket ekleyebilirsiniz.', 'When multiple rules match, the higher-ranked tag (#1 most urgent) wins. Add up to 35 custom tags.'))}</small>
+            <small>${esc(L('Eşleşen etiketler birlikte gösterilir. Aciliyet sırasını en üstteki etiket belirler; kapsanan etiketleri düzenleme ekranında gizleyebilirsiniz. En fazla 35 özel etiket ekleyebilirsiniz.', 'Matching tags are shown together. The highest-ranked tag determines urgency; hide covered tags in the tag editor. Add up to 35 custom tags.'))}</small>
           </div>
           <button type="button" class="cpaBtn sm primary" data-cpa-priority-add>+ ${esc(L('Yeni Öncelik Etiketi', 'New Priority Tag'))}</button>
         </div>
@@ -3961,6 +3980,7 @@
         prioEditor = {
           mode: 'edit', id: entry.id, tr: entry.tr || '', en: entry.en || '',
           tone: entry.tone || 'copper', isRisk: entry.isRisk !== false, usage: entry.usage || 'priority', pendingRuleId: '',
+          hides: (entry.hides || []).slice(),
         };
         draw();
         modal.querySelector('[data-cpa-priority-tr]')?.focus();
@@ -3969,6 +3989,9 @@
       modal.querySelector('[data-cpa-priority-usage]')?.addEventListener('change', el => {
         prioEditor.tr = modal.querySelector('[data-cpa-priority-tr]').value; prioEditor.en = modal.querySelector('[data-cpa-priority-en]').value;
         prioEditor.usage = el.target.value; if (prioEditor.usage === 'tracking') prioEditor.isRisk = false; draw();
+      });
+      modal.querySelectorAll('[data-cpa-priority-hide]').forEach(el => el.onchange = () => {
+        prioEditor.hides = [...modal.querySelectorAll('[data-cpa-priority-hide]:checked')].map(input => input.dataset.cpaPriorityHide);
       });
       modal.querySelectorAll('[data-cpa-priority-tone]').forEach(el => el.onclick = () => {
         if (!prioEditor) return;
@@ -3996,11 +4019,11 @@
         try {
           if (prioEditor.mode === 'edit' && prioEditor.id) {
             const tagId = prioEditor.id;
-            updatePriorityTag(tagId, { tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage });
+            updatePriorityTag(tagId, { tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage, hides: prioEditor.hides || [] });
             if (isModerator() && state.managed.priorityCatalog.some(item => item.id === tagId)) await publishPriorityTagToAll(tagId);
             setStatus(L('Öncelik etiketi güncellendi', 'Priority tag updated'), 'ok');
           } else {
-            const created = addPriorityTag({ tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage });
+            const created = addPriorityTag({ tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage, hides: prioEditor.hides || [] });
             if (prioEditor.pendingRuleId) {
               const targetRule = findRule(prioEditor.pendingRuleId);
               if (targetRule && targetRule.kind === 'priority') {
@@ -4685,6 +4708,7 @@
       analysis.basePriority = analysis.basePriority || analysis.priority;
       analysis.priority = applied.priority;
       analysis.trackingTags = applied.trackingTags || [];
+      analysis.priorityTags = applied.priorityTags || [];
       analysis.checklistState = applied.checklistState;
       analysis.ruleState = applied.ruleState;
       analysis.matchedRules = (applied.matched || []).map(rule => ({

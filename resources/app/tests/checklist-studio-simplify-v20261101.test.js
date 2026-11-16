@@ -9,7 +9,10 @@ test('preview separates matching orders from effective changes and detects disab
  const critical = rule('critical', 'CRITICAL'), watch = rule('watch', 'WATCH');
  const preview = Rules.previewRuleImpact([order], watch, { rules: [critical] });
  assert.equal(preview.count, 1);
- assert.equal(preview.changed, 0, 'a stronger existing rule keeps the effective priority');
+ assert.equal(Rules.evaluateOrder(order, { rules: [critical, watch] }).priority, 'CRITICAL', 'a stronger existing rule keeps the effective priority');
+ assert.equal(preview.changed, 1, 'the additional matching label is now a visible change');
+ const hiddenPreview = Rules.previewRuleImpact([order], watch, { rules: [critical], priorityCatalog: OD.normalizePriorityCatalog([{ id: 'CRITICAL', hides: ['WATCH'] }]) });
+ assert.equal(hiddenPreview.changed, 0, 'a hidden secondary label does not change the displayed priority');
  const changed = Rules.previewRuleImpact([{ ...order, priority: 'CRITICAL' }], { ...critical, enabled: false }, { rules: [critical] });
  assert.equal(changed.changed, 1, 'preview recalculates from base priority rather than the already escalated result');
 });

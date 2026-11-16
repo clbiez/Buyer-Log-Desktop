@@ -35,23 +35,25 @@
     const options = { rules, preparedRules, answers: {}, checklistEnabled: false, priorityCatalog: priorityCatalog || undefined };
     if (spec.today != null) options.today = spec.today;
     function evaluateRow(row) {
-      if (!row || typeof row !== 'object') return { priority: '', trackingTags: [] };
+      if (!row || typeof row !== 'object') return { priority: '', trackingTags: [], priorityTags: [] };
       const analysis = CP.analyzeOrder(row, context);
       const evaluated = Rules.evaluateOrder(analysis, options);
       return {
         priority: String(evaluated && evaluated.priority || analysis.priority || ''),
+        priorityTags: evaluated.priorityTags || [],
         trackingTags: Array.isArray(evaluated && evaluated.trackingTags) ? evaluated.trackingTags.slice() : [],
       };
     }
     function evaluateBatch(rows) {
       const list = Array.isArray(rows) ? rows : [];
-      const codes = new Array(list.length), tags = new Array(list.length);
+      const codes = new Array(list.length), tags = new Array(list.length), priorityTags = new Array(list.length);
       for (let i = 0; i < list.length; i += 1) {
         const result = evaluateRow(list[i]);
         codes[i] = result.priority;
         tags[i] = result.trackingTags.length ? result.trackingTags : null;
+        priorityTags[i] = result.priorityTags.length ? result.priorityTags : null;
       }
-      return { codes, tags };
+      return { codes, tags, priorityTags };
     }
     return { evaluateRow, evaluateBatch, ruleCount: rules.length };
   }

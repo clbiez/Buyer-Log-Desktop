@@ -358,7 +358,7 @@ function annotatePriorities(list){
     // 'cp' = CP (checklist dahil) · 'orders' = Siparişler (aynı kurallar, checklist hariç)
     item.prioritySource=hit&&hit.source||'';
     item.trackingTags=hit&&Array.isArray(hit.trackingTags)?hit.trackingTags.filter(tag=>tag&&tag!==code):[];
-    item.priorityTags=[code,...item.trackingTags].filter(Boolean);
+    item.priorityTags=window.BLOrderDecisionEngine.resolvePriorityTags(code,hit?.priorityTags,item.trackingTags).visible;
     item._priorityStamp=stamp;
   }
   priorityStamp=stamp;

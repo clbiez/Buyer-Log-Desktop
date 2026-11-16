@@ -1,0 +1,8 @@
+{
+  "base": "08fefc06e6ac025c013fc2f89d69446b0dc395f5",
+  "tier": "L2",
+  "scenario": "30000 synthetic Orders, 20 priority rules, 3 alternating baseline/candidate pairs; real browser worker and visible cells",
+  "existingBudget": "No repeatable regression in single-label calculation; new multi-label calculation within measured baseline workflow budget, first feedback <=200ms, no new main-thread task >50ms",
+  "newFeatureBudget": "30000 rows multi-label worker <=10000ms; visible priority cells <=200ms; catalog <=40 entries and <=40 matched labels per order",
+  "data": "synthetic, no business data"
+}
