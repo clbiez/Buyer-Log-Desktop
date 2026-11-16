@@ -169,6 +169,23 @@
 
     table.parseTerms=parseTerms;
     table.matches=matches;
+    // Rank once per row, never inside the sort comparator. Keep the existing
+    // column order within each search item; clearing search restores that order.
+    table.orderRows=(rows,terms,getHaystack,options)=>{
+      const parsed=Array.isArray(terms)?terms:parseTerms(terms);
+      const grouped=isRowGroupTerms(parsed);
+      const groups=Array.isArray(parsed[0])?parsed:[parsed];
+      const alternatives=grouped?parsed:(groups.find(group=>group.filter(term=>term.mode!=='notContains').length>1)||[]).filter(term=>term.mode!=='notContains');
+      if(alternatives.length<2||rows.length<2)return rows;
+      const buckets=Array.from({length:alternatives.length+1},()=>[]);
+      for(const row of rows){
+        const value=getHaystack(row);
+        const haystacks=Array.isArray(value)?value:[value];
+        const rank=alternatives.findIndex(term=>haystacks.some(haystack=>matches(haystack,[term],options)));
+        buckets[rank<0?alternatives.length:rank].push(row);
+      }
+      return buckets.flat();
+    };
     try{Object.defineProperty(table,'__rowGroupsV1',{value:true,enumerable:false});}
     catch(_){table.__rowGroupsV1=true;}
 

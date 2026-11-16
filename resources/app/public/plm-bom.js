@@ -52,10 +52,88 @@
     return status === 'resolved' || status === 'not-needed' ? 'ok' : status === 'failed' ? 'bad' : 'wait';
   }
 
+  /* Tüm BOM kalemleri: PLM SYNC'in sakladığı tam liste, kategori yoluna göre
+     gruplu. Her kalemin yanında CP BOM Kontrol'deki kişisel işaret (Ortak /
+     Model bazlı) salt okunur etiket olarak görünür. Sapma burada hesaplanmaz:
+     sapma bir karşılaştırma grubuna bağlıdır ve BOM Kontrol ekranındadır. */
+  const BOM_CONTROL_PREF_KEY = 'lcw.cp.bomControl.v1';
+  function bomControlPrefs() {
+    try {
+      const storage = window.BLStorage || window.localStorage;
+      const raw = JSON.parse(storage && storage.getItem(BOM_CONTROL_PREF_KEY) || 'null');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch (_) { return {}; }
+  }
+  async function bomControlEngine() {
+    if (window.BLBomControlEngine) return window.BLBomControlEngine;
+    try {
+      // perf-runtime 'bomControl' özelliğiyle aynı dize: dosya tek kez yüklenir.
+      await window.BLPerf?._loadScript?.('bom-control-engine.js?rev=1');
+    } catch (_) { /* işaretsiz liste gösterilir */ }
+    return window.BLBomControlEngine || null;
+  }
+  async function renderFullBom(body, entry) {
+    const full = Array.isArray(entry && entry.fullComponents) ? entry.fullComponents : [];
+    const section = document.createElement('section');
+    section.className = 'plmBomFull';
+    section.dataset.bomFull = '';
+    if (!full.length && entry && entry.fullCoverage === 'all-normalized') {
+      section.innerHTML = `<p class="cpaEmpty">${esc(L('PLM\'deki BOM boş: bu modelde hiç BOM kalemi yok.', 'The BOM in PLM is empty: this style has no BOM items.'))}</p>`;
+      body.appendChild(section);
+      return;
+    }
+    if (!full.length) {
+      section.innerHTML = `<p class="cpaEmpty">${esc(L('Bu modelin kayıtlı BOM\'u eski: yalnız baskı kalemleri var. Tüm BOM kalemleri için CP\'de PLM SYNC → Artwork/Fabric ile yenileyin.', 'This style\'s stored BOM is outdated and only contains print items. Refresh it in CP with PLM SYNC → Artwork/Fabric to see all BOM items.'))}</p>`;
+      body.appendChild(section);
+      return;
+    }
+    /* Liste motoru beklemeden hemen çizilir (kategori gruplu, işaretsiz); motor
+       ilk kez yükleniyorsa geldiğinde aynı bölüm işaret sütunuyla yenilenir. */
+    body.appendChild(section);
+    drawFullBom(section, full, window.BLBomControlEngine || null);
+    if (!window.BLBomControlEngine) {
+      const engine = await bomControlEngine();
+      if (engine && section.isConnected) drawFullBom(section, full, engine);
+    }
+  }
+  function drawFullBom(section, full, engine) {
+    const prefs = bomControlPrefs();
+    const level = engine && engine.SLOT_LEVELS.includes(prefs.slotLevel) ? prefs.slotLevel : 'category';
+    const marks = engine ? engine.normalizeMarks(prefs.marks) : {};
+    const groups = new Map();
+    for (const component of full) {
+      const slot = engine
+        ? engine.slotOf(component, level)
+        : { key: [component.setPart, component.mainCategoryName, component.categoryGroupName, component.categoryName].join('|'), markKey: '', part: component.setPart || '', label: [component.mainCategoryName, component.categoryGroupName, component.categoryName].filter(Boolean).join(' › ') || '—' };
+      if (!groups.has(slot.key)) groups.set(slot.key, { slot, items: [] });
+      groups.get(slot.key).items.push(component);
+    }
+    const markTag = markKey => {
+      const mark = marks[markKey];
+      if (mark === 'common') return `<span class="cpaPlm tone-ok">${esc(L('Ortak', 'Common'))}</span>`;
+      if (mark === 'model') return `<span class="cpaPlm tone-off">${esc(L('Model bazlı', 'Model-specific'))}</span>`;
+      return `<span class="cpaPlm tone-off">${esc(L('İşaretsiz', 'Unmarked'))}</span>`;
+    };
+    const rows = [...groups.values()].map(({ slot, items }) => items.map((item, index) => `<tr>
+        ${index === 0 ? `<td rowspan="${items.length}"><b>${esc(slot.label)}</b>${slot.part ? ` <span class="cpaPlm">${esc(L('Parça', 'Part'))} ${esc(slot.part)}</span>` : ''}</td>` : ''}
+        <td>${esc(item.componentCode || '—')}</td>
+        <td>${esc(item.componentName || '—')}${item.description ? `<small>${esc(item.description)}</small>` : ''}</td>
+        <td class="num">${item.quantity == null ? '—' : esc(item.quantity)}</td>
+        ${index === 0 && engine ? `<td rowspan="${items.length}">${markTag(slot.markKey)}</td>` : ''}
+      </tr>`).join('')).join('');
+    section.innerHTML = `<b class="plmBomFullTitle">${esc(L(`Tüm BOM kalemleri (${full.length})`, `All BOM items (${full.length})`))}</b>
+      <div class="cpaScroll"><table class="cpaTable"><thead><tr>
+        <th>${esc(L('Kalem', 'Item'))}</th><th>${esc(L('Kod', 'Code'))}</th><th>${esc(L('Ad / Açıklama', 'Name / Description'))}</th><th class="num">${esc(L('Miktar', 'Qty'))}</th>${engine ? `<th>${esc(L('BOM Kontrol işareti', 'BOM Check mark'))}</th>` : ''}
+      </tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="cpaEmpty">${esc(L('İşaretler CP → Araçlar → BOM Kontrol\'de verilir; sapmalar orada, seçilen grupla karşılaştırılarak gösterilir.', 'Marks are set in CP → Tools → BOM Check, where deviations are shown against the selected group.'))}</p>`;
+  }
+
   function openForPlm(plmId, title, context = {}) {
     const id = numericId(plmId);
     // Yerel BOM okuması, dialogun odak/layout hazırlığını beklemez.
     const entryPromise = id ? entryForPlm(id) : Promise.resolve(null);
+    // İşaret motoru BOM okumasıyla paralel yüklenir; ilk açılış iki bekleme sırası yaşamaz.
+    if (id) void bomControlEngine();
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
     let releaseKeyboard = () => {};
@@ -129,6 +207,7 @@
           ${entry.needsAi ? `<p class="cpaEmpty">${esc(L('Bazı baskı yerleşimleri hâlâ belirsiz. Manuel kontrol önerilir.', 'Some print placements remain ambiguous. Manual review is recommended.'))}</p>` : ''}
           ${ai.error ? `<p class="cpaEmpty">${esc(ai.error)}</p>` : ''}
         `;
+        void renderFullBom(body, entry);
         if (artwork && context.row) {
           const button = document.createElement('button');
           button.type = 'button';

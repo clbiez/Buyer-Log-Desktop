@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.358",
+      "publishedAt": "2026-11-14",
+      "title": {
+        "tr": "Tablolarda Rapor görünümü ve hızlı not kaydı · Genişleyen tablo araması",
+        "en": "Report view and faster note saving in tables · Broader table search"
+      },
+      "stats": {
+        "features": 5,
+        "improvements": 7,
+        "fixes": 13
+      },
+      "file": "release-notes/7.0.358/release.json"
+    },
+    {
       "version": "7.0.355",
       "publishedAt": "2026-11-13",
       "title": {

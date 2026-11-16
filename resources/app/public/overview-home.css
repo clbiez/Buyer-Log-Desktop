@@ -174,11 +174,12 @@
 @container ovw (max-width:640px){.ovCollectionSummaryHeader{flex-direction:column;gap:8px;}.ovCollectionSummaryKpi{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @container ovw (max-height:300px){.ovCollectionSummaryIntro{display:none;}}
 
-/* OAB / INTAKE: tablo kalan yüksekliği doldurur, başlık satırı yapışık kalır */
+/* Pivot widgets own their natural height; only wide columns scroll locally. */
+.ovHome:not(.isEditing)>:is(#oabSection,#intakeSection)[data-overview-widget]{height:auto;align-self:start;container-type:inline-size;overflow:visible;}
 .ovHome>#oabSection,.ovHome>#intakeSection{padding:12px 14px;}
-.ovHome>#oabSection>.oabBody,.ovHome>#intakeSection>.intakeBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+.ovHome>#oabSection>.oabBody,.ovHome>#intakeSection>.intakeBody{flex:0 0 auto;min-height:0;display:flex;flex-direction:column;}
 .ovHome>#oabSection>.oabBody[hidden],.ovHome>#intakeSection>.intakeBody[hidden]{display:none;}
-.ovHome>#oabSection .oabTableWrap,.ovHome>#intakeSection .intakeTableWrap{flex:1 1 auto;min-height:0;overflow:auto;}
+.ovHome>#oabSection .oabTableWrap,.ovHome>#intakeSection .intakeTableWrap{flex:0 0 auto;height:auto;max-height:none;min-height:0;overflow-x:auto;overflow-y:hidden;}
 .ovHome>#oabSection .oabFilterBar{flex-wrap:wrap;}
 @container ovw (max-width:760px){.oabTopActions{margin-left:0;}.intakeHeader{flex-direction:column;align-items:flex-start;}.intakeHeaderActions{flex-wrap:wrap;}}
 

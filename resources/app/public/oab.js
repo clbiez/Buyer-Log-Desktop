@@ -1915,7 +1915,8 @@
     oabSaveLocalFilterFields();
   }
 
-  function oabRenderTable() {
+  function oabRenderTable(options = {}) {
+    if(options.disclosure && global.BLMotionPlus?.pivotChange) return global.BLMotionPlus.pivotChange(oabEl('oabTable'), () => oabRenderTable());
     oabRenderStateMeta();
     const table = oabEl('oabTable');
     if (!table) return;
@@ -2228,7 +2229,6 @@
     const grouped = config.grouped !== false && base.rowDescriptors.length > 0;
     const showSubtotals = config.showSubtotals !== false;
     const respectCollapse = options.respectCollapse !== false;
-    if (grouped) oabSeedDefaultCollapsedGroups(rows, config);
 
     if (!grouped) {
       const displayRows = visibleLeaves.map(leaf => ({ ...leaf.display, __oabKind: 'leaf', __oabLevel: Math.max(0, base.rowDescriptors.length - 1), __oabPath: (leaf.rowValues || []).slice(), __oabSourceRows: (leaf.sourceRows || []).slice() }));
@@ -2303,6 +2303,10 @@
   }
 
   function oabBuildPivotViewModel(rows, options = {}) {
+    const config=S.pivotConfig||defaultPivotConfigClient();
+    // Seed before hashing: otherwise the collapsed first render was cached
+    // under the expanded key, and Expand All could return that stale model.
+    if(config.grouped!==false&&config.rows?.length)oabSeedDefaultCollapsedGroups(rows,config);
     const cacheKey=global.BLAnalysisCache?.key?global.BLAnalysisCache.key({data:oabDataRevision,rows:oabRowsKey(rows),config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options}):`${oabDataRevision}|${oabRowsKey(rows)}|${JSON.stringify({config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options})}`;
     const cached=oabPivotViewCache.get(cacheKey);if(cached)return cached;
     const model=oabBuildPivotViewModelUncached(rows,options);oabPivotViewCache.set(cacheKey,model);return model;
@@ -2317,13 +2321,13 @@
 
   function oabExpandAllGroups() {
     S.collapsedGroups.clear();
-    oabRenderTable();
+    oabRenderTable({ disclosure: true });
   }
 
   function oabCollapseAllGroups() {
     const model = oabBuildPivotViewModel(oabFilteredRows(), { respectCollapse: false });
     S.collapsedGroups = new Set(model.groupPathKeys || []);
-    oabRenderTable();
+    oabRenderTable({ disclosure: true });
   }
 
   function oabPivotCellHtml(row, descriptor) {
@@ -2985,7 +2989,7 @@
       const key = btn.dataset.oabGroupKey || '';
       if (!key) return;
       if (S.collapsedGroups.has(key)) S.collapsedGroups.delete(key); else S.collapsedGroups.add(key);
-      oabRenderTable();
+      oabRenderTable({ disclosure: true });
     }));
     table.querySelectorAll('thead th[data-oab-pivot-key]').forEach(th => {
       const descriptor = model.descriptors.find(d => d.key === th.dataset.oabPivotKey); if (!descriptor) return;
@@ -3451,6 +3455,8 @@
   /* --------------------------------------------------------------- INIT */
   async function oabInit() {
     if (!oabEl('oabSection')) return; // Overview HTML'i henüz yoksa sessizce çık.
+    if(global.MutationObserver)new global.MutationObserver(() => { if(S.rows.length){oabRenderStateMeta();oabRenderTable();} })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     // v7.20: üç filtre de çoklu seçim açılırı; tıklama gövde düzeyinde
     // yakalanıyor (oabOpenMultiPopover), burada ayrı dinleyici gerekmiyor.
     oabEl('oabGetBtn')?.addEventListener('click', () => void oabRefreshFromButton());

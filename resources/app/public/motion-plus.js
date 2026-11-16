@@ -531,7 +531,40 @@
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});
   }
-  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,disclosure,speeds:SPEED});
+  // Shared layout motion: owners commit geometry first. Keep real rows, focus
+  // and selection intact; cancel an interrupted resize at its current pixels.
+  const layoutEffects=new WeakMap();
+  function pivotChange(table,update){
+    if(!table||!enabled()||table.querySelector?.(ROW_GUARD))return update();
+    const anchor=doc.activeElement?.closest?.('tr');
+    const startIndex=Math.max(0,(anchor?.sectionRowIndex||0)-2);
+    const sample=()=>Array.from(table.tBodies?.[0]?.rows||[]).slice(startIndex,startIndex+32).filter(visible).slice(0,8);
+    const key=row=>row.textContent.replace(/[▾▸]/g,'');
+    const before=new Map(sample().map(row=>[key(row),row.getBoundingClientRect()]));
+    const result=update();
+    for(const row of sample()){
+      if(row.querySelector?.(ROW_GUARD))continue;
+      const from=before.get(key(row)),to=row.getBoundingClientRect();
+      const dy=from?from.top-to.top:-4;
+      if(from&&Math.abs(dy)<1)continue;
+      animate(row,[{opacity:from?1:0,transform:`translateY(${dy}px)`},{opacity:1,transform:'none'}],{duration:duration('disclosure')});
+    }
+    return result;
+  }
+  function reflow(element,before){
+    if(!element||!before)return null;
+    const previous=layoutEffects.get(element);
+    const from=previous?element.getBoundingClientRect():before;
+    previous?.cancel();
+    const to=element.getBoundingClientRect();
+    if(element.querySelector?.(ROW_GUARD)||!enabled())return null;
+    const dy=from.top-to.top,dh=from.height-to.height;
+    if(Math.abs(dy)<1&&Math.abs(dh)<1)return null;
+    const effect=animate(element,[{height:from.height+'px',transform:`translateY(${dy}px)`},{height:to.height+'px',transform:'none'}],{duration:duration('disclosure')});
+    if(effect){layoutEffects.set(element,effect);const done=()=>{if(layoutEffects.get(element)===effect)layoutEffects.delete(element);};effect.addEventListener?.('finish',done,{once:true});effect.addEventListener?.('cancel',done,{once:true});}
+    return effect;
+  }
+  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,disclosure,reflow,pivotChange,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

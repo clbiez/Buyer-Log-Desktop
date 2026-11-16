@@ -124,6 +124,23 @@ app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp'
   } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
 });
 
+/* CP BOM Kontrol: kapsamdaki modellerin saklanan tam BOM kalemleri. Yalnız
+   Buyer Log deposunu okur; CoreNectum'a veya LCW AI'a istek atmaz. */
+app.post('/api/plm-sync/bom/control', userAccess.requireAnyArea('cp'), express.json({ limit: '128kb' }), (req, res) => {
+  try {
+    const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
+    if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 1000);
+    const store = plmBomStore.load();
+    const entries = {};
+    for (const plmId of plmIds) {
+      const entry = store.models && store.models[plmId];
+      if (entry) entries[plmId] = plmBomStore.controlEntry(entry);
+    }
+    res.set('Cache-Control', 'no-store').json({ ok: true, entries, requested: plmIds.length, found: Object.keys(entries).length });
+  } catch (err) { apiError(res, err, 'BOM kontrol verisi okunamadı.'); }
+});
+
 /* CP / Orders sessiz arka plan BOM tazelemesi (lib/plm-bom-silent-sync).
    Yalnız istemci zamanlayıcısı (public/cp-plm-silent-bom.js) çağırır: plan
    CoreNectum'a gitmez; run sessiz başlık ister, LCW AI kullanmaz, Koleksiyon

@@ -412,8 +412,16 @@ function tableSearchMatches(haystack,terms,options){
   const parsed=Array.isArray(terms)?terms:parseTableSearchTerms(terms);
   if(!parsed.length)return true;
   const plainMode=options?.plainMode||'exact';
-  const normalize=value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR')
-    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  // tr-TR büyük harf + Türkçe harf sadeleştirme + küçük harf. Metin yalnız ASCII
+  // ve Türkçe harflerden oluşuyorsa aynı sonuç yerel ayar dönüşümü olmadan
+  // üretilir (her satırın tüm arama metnine uygulanan sıcak yol); diğer
+  // karakterlerde birebir eski dönüşüm çalışır.
+  const normalize=value=>{
+    const text=String(value==null?'':value).trim();
+    if(/^[\x00-\x7FçğıöşüÇĞİÖŞÜ]*$/.test(text))return text.replace(/İ/g,'I').toLowerCase().replace(/[çğıöşü]/g,ch=>'cgiosu'['çğıöşü'.indexOf(ch)]); // i18n-ignore
+    return text.toLocaleUpperCase('tr-TR')
+      .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  };
   const text=normalize(haystack);
   const exactMatch=(source,needle)=>{
     if(!needle)return false;
@@ -1742,6 +1750,29 @@ document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async e
   catch(error){showToast((appLang==='en'?'Document center could not be opened: ':'Belge merkezi açılamadı: ')+(error.message||error));}
   finally{button.disabled=false;}
 });
+/* CP BOM Kontrol: seçili satır varsa onlar, yoksa görünen (filtrelenmiş) CP
+   satırları kapsamdır. Kırılım alanları tablonun sütunlarıdır; değer tablo
+   hücresinin düz metniyle aynıdır (filtre ile aynı görünüm). */
+document.getElementById('cpBomControlBtn')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;button.disabled=true;
+  const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById('cpToolsBtn')?.setAttribute('aria-expanded','false');
+  try{
+    const visible=filteredCP();
+    const selected=state.cpSelected.size?visible.filter(row=>state.cpSelected.has(row._id)):[];
+    const rows=selected.length?selected:visible;
+    const skip=new Set(['priority','plmSample','cpImage']);
+    const cols=(COLS_BY_TABLE.cp||CP_COLS).filter(col=>col&&col.k&&!skip.has(col.type)&&!String(col.k).startsWith('__'));
+    const colByKey=new Map(cols.map(col=>[col.k,col]));
+    await window.BLPerf.ensureFeature('bomControl');
+    window.BLBomControl.open({
+      rows,scope:selected.length?'selected':'filtered',trigger:document.getElementById('cpToolsBtn'),
+      columns:cols.map(col=>({key:col.k,label:tableColumnLabel('cp',col)})),
+      getValue:(row,key)=>{const col=colByKey.get(key);return col?cellPlainText(col,row):row&&row[key];}
+    });
+  }catch(error){showToast((appLang==='en'?'BOM Check could not be opened: ':'BOM Kontrol açılamadı: ')+(error&&error.message||error));}
+  finally{button.disabled=false;}
+});
 const _sharedTableActionIds=['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
 function sharedTableActionNode(id){
   const el=document.getElementById(id);
@@ -2806,10 +2837,17 @@ function fitActiveTableColumns(){
 document.getElementById('navFitColumnsBtn')?.addEventListener('click',fitActiveTableColumns);
 document.getElementById('navFreezeBtn')?.addEventListener('click', freezeStart);
 loadFreezeState();
+/* Filtre çipi etiketi, tablo başlığıyla AYNI çözümleyiciyi kullanır (kişisel
+   ad, checklist/formül/özel sütun adı, EN/TR). Ham anahtar (__checklist__…)
+   yalnız sütun tanımı hiç bulunamazsa son çaredir. */
 function activeFilterColumnLabel(tableKey,key){
-  if(tableKey==='koleksiyon')return L(kolFilterMeta(key)?.label||key);
+  if(tableKey==='koleksiyon'){
+    const base=kolColDefs().find(c=>c.k===key);
+    if(base)return kolColumnLabel(base);
+    return L(kolFilterMeta(key)?.label||key);
+  }
   const column=(COLS_BY_TABLE[tableKey]||[]).find(item=>item.k===key);
-  return L(column?.l||column?.k||key);
+  return column?tableColumnLabel(tableKey,column):L(key);
 }
 function activeFilterEntrySummary(entry){
   const values=[...(entry?.values||[])].map(value=>norm(value)||'—');
@@ -2932,6 +2970,7 @@ function updateGridSelectionStatus(tableKey,size){
   node.hidden=false;node.textContent=`${size.label} · ${size.cells} ${appLang==='en'?'cells':'hücre'}`;
 }
 function managedGridHasRange(tab=document.body.dataset.activeTab){
+  if(window.BLTableReportInline?.isActive(tab))return false;
   const tableId=tab==='cp'?'cpTable':tab==='orders'?'ordersTable':'';
   return Boolean(tableId&&window.BLGridClipboard?.state?.(tableId)?.selectionRange);
 }
@@ -2941,7 +2980,9 @@ function managedSelectionSourceRows(tableKey){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
   // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
-  return sort?.key?sortRows(rows,sort.key,sort.dir):rows;
+  const ordered=sort?.key?sortRows(rows,sort.key,sort.dir):rows;
+  const terms=parseTableSearchTerms(document.getElementById(tableKey==='orders'?'ordersSearch':'cpSearch')?.value);
+  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,{plainMode:'contains'});
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
@@ -2974,6 +3015,7 @@ function managedTableHasCheckedRows(tab){
 }
 function copyGridSelection(includeHeaders=true,event=null){
   const tab=document.body.dataset.activeTab||'';
+  if(window.BLTableReportInline?.copySelection(tab,event,{includeHeaders}))return true;
   if(tab==='koleksiyon'){
     if(window.BLCollectionSpreadsheet?.handleCopyShortcut?.(event||new Event('copy'),{includeHeaders}))return true;
     // İşaretli model varsa handleCopyShortcut kasıtlı olarak devretti (satır
@@ -3038,6 +3080,7 @@ document.addEventListener('keydown', event=>{
 });
 document.getElementById('navCopy').addEventListener('click', event=>{
   const info = activeTableInfo(); if(!info){ showToast(appLang==='en'?'Select a tab first':'Önce bir sekme seç'); return; }
+  if(window.BLTableReportInline?.copySelection(info.tableKey,event,{includeHeaders:true}))return;
   if(info.tableKey==='cp'||info.tableKey==='orders')window.BLTableToolbarActionCleanup?.begin?.(event.currentTarget);
   if((info.tableKey==='cp'||info.tableKey==='orders')&&!managedTableHasCheckedRows(info.tableKey)&&managedGridHasRange(info.tableKey)){void window.BLGridClipboard.copyActive(event,{includeHeaders:true});return;}
   // Shipping Comparison'da üstteki karar tablosu asıl kullanıcı görünümüdür.
@@ -4949,13 +4992,12 @@ function renderTableViewContext(tableKey){
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
   root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
-  const fieldsButton=root.querySelector('[data-table-fields]');
-  if(fieldsButton){
+  root.querySelectorAll('[data-table-fields]').forEach(fieldsButton=>{
     const count=Object.keys(tableGroupOverrides(tableKey)).length;
     fieldsButton.classList.toggle('hasOverrides',count>0);
     const badge=fieldsButton.querySelector('.tableFieldsBadge');
     if(badge){badge.textContent=count?String(count):'';badge.hidden=!count;}
-  }
+  });
   const menu=document.getElementById('_tableFieldsMenu');
   if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);
 }
@@ -5264,7 +5306,7 @@ function detailTableViewSnapshot(tableKey='cp'){
     return {
       key,
       label:tableColumnLabel(tableKey,column),
-      group:tableColumnGroupLabel(column.group||''),
+      group:tableColumnGroupLabel(column.group||''),groupId:column.group||'',
       type:column.type||'ro',
       weight:Number(column.weight)||10,
       widthPx:colWidthPx(tableKey,column),
@@ -5318,11 +5360,61 @@ function tableRangeTotalRows(tableKey){
 function tableReportCoreColumns(tableKey){
   const snapshot=detailTableViewSnapshot(tableKey);if(!snapshot)return [];
   const visible=new Set(snapshot.visible);
-  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
+  return snapshot.columns.filter(col=>visible.has(col.key)).map(col=>({key:col.key,label:col.label,group:col.group,groupId:col.groupId,type:col.type,dataType:col.dataType,text:row=>col.format(col.value(row),row)}));
 }
 function tableReportKolColumns(){
   const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
-  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+  return kolDisplayDescriptors().map(d=>({key:d.k,label:d.label,group:tableColumnGroupLabel(kolColumnGroupFor(d.k,order)),groupId:kolColumnGroupFor(d.k,order),dataType:d.col?._blSchema?.dataType,text:record=>kolCollectionExportCellText(d,record),filterable:d.kind==='base'&&!d.col?.noFilter}));
+}
+/* Rapor yalnız bir seçim yüzeyidir; aktarım normal tablonun alan sırasını ve
+   serializer'ını kullanır. Rapor düzeni kaynak sütunları veya veriyi değiştirmez. */
+function tableReportInteraction(key){
+  const collection=key==='koleksiyon';
+  const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
+  return {
+    pictureKey:collection?'__picture__':'__picture',
+    view:()=>tableViewPresetState(key),
+    selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
+    rowId:row=>collection?row.id:row._id,
+    selected:row=>selectionHasId(selected(),collection?row.id:row._id),
+    checked:()=>selected().size>0,
+    selectRows:(rows,on)=>{
+      const set=selected();
+      rows.forEach(row=>{const id=collection?row.id:row._id;for(const value of set)if(String(value)===String(id))set.delete(value);if(on)set.add(id);});
+      if(set.size>0)window.BLGridClipboard?.clear('blTableReport-'+key);
+      if(collection)renderKol();else if(key==='orders')renderOrders();else renderCP();
+      window.BLSelectionBar?.refresh();
+    },
+    selectionChanged:size=>updateGridSelectionStatus(key,size),
+    contextMenu:(event,row,cell)=>{
+      const module=collection?'collection':key,canonical=window.BLCanonicalFields;
+      const source=collection?kolCollectionProjectionSource(row):row;
+      const plm=canonical?.value(source,module,'plmId'),model=canonical?.value(source,module,'modelName');
+      const url=window.BLPlmModelLinks?.url(model,plm,{allowNameMatch:false}),links=[];
+      if(url)links.push({label:appLang==='en'?'Open in PLM':'PLM’de aç',url});
+      const order=String(canonical?.value(source,module,'orderCode')||'').trim();
+      if(/^\d+$/.test(order)){
+        links.push({label:appLang==='en'?'Open TROY Order':'TROY Order sayfasını aç',url:ORDER_URL(order)});
+        links.push({label:appLang==='en'?'Open TROY Shipment Request':'TROY Shipment Request sayfasını aç',url:SHIP_URL(order)});
+      }
+      window.BLRowMenu?.openReport({module,table:cell.closest('table'),cell,row:source,links,event,refresh:()=>collection?renderKol():key==='orders'?renderOrders():renderCP()});
+    },
+    copy:async (rows,fieldKeys,options)=>{
+      const keys=new Set(fieldKeys);
+      // Re-read the normal table descriptors: display reorder never affects output.
+      const columns=collection?[...(keys.has('__picture__')?[{k:'__picture__',label:L('Picture'),kind:'picture'}]:[]),...kolDisplayDescriptors().filter(d=>keys.has(d.k))]:visibleCols(key).filter(c=>keys.has(c.k));
+      const records=collection?(()=>{const index=new Map(kolCollectionExportProjection(filteredKol()).map(record=>[String(record.id),record]));return rows.map(row=>index.get(String(row.id))||row);})():rows;
+      const flags=collection?null:records.map(row=>computeFlags(row));
+      const matrix=BLTableExport.buildMatrix({records,columns,
+        columnLabel:c=>collection?c.label:tableColumnLabel(key,c),
+        cellText:(c,row,index)=>collection?(c.kind==='picture'?'':kolCollectionExportCellText(c,row)):cellPlainText(c,row,flags[index])});
+      const payload=window.BLGridClipboard.serialize(matrix,BLTableExport,options);
+      const ok=await copyRichToClipboard(payload.html,payload.plain);
+      window.BLGridClipboard.diagnostics.record({module:key,operation:'copy',selection:{rows:rows.length,columns:columns.length},includeHeaders:payload.includeHeaders,transport:'rich',ok});
+      showToast(ok?(appLang==='en'?'Table cells copied.':'Tablo hücreleri kopyalandı.'):(appLang==='en'?'Copy failed.':'Kopyalama başarısız.'));
+      return ok;
+    }
+  };
 }
 function syncTableReportButtons(tableKey){
   const on=Boolean(window.BLTableReportInline?.isActive(tableKey));
@@ -5343,6 +5435,7 @@ function ensureTableReportAdapters(){
     rows:()=>tableRangeVisibleRows(key),total:()=>tableRangeTotalRows(key),
     columns:()=>tableReportCoreColumns(key),
     images:()=>!colmgr[key]?.hidden?.has('__picture'),
+    ...tableReportInteraction(key),
     filter:(field,anchor)=>openHeaderFilter(key,field,anchor,key==='cp'?renderCP:renderOrders),
     changed:changed(key)
   });
@@ -5354,6 +5447,7 @@ function ensureTableReportAdapters(){
     rows:()=>tableRangeVisibleRows('koleksiyon'),total:()=>tableRangeTotalRows('koleksiyon'),
     columns:tableReportKolColumns,
     images:()=>!kolPictureHidden,
+    ...tableReportInteraction('koleksiyon'),
     filter:(field,anchor)=>{if(tableReportKolColumns().some(col=>col.key===field&&col.filterable))openKolHeaderFilter(field,anchor);else showToast(appLang==='en'?'This field has no column filter.':'Bu alanın sütun filtresi yok.');},
     changed:changed('koleksiyon')
   });
@@ -5473,7 +5567,7 @@ function computeWidths(tableKey){
   const cols = visibleCols(tableKey);
   return cols.map(c=>({col:c, px: colWidthPx(tableKey,c)}));
 }
-const MANAGED_CHECK_COLUMN_WIDTH=64;
+const MANAGED_CHECK_COLUMN_WIDTH=8;
 function tableTotalPx(tableKey, withChk){
   return (withChk?MANAGED_CHECK_COLUMN_WIDTH:0) + computeWidths(tableKey).reduce((s,w)=>s+w.px,0);
 }
@@ -6720,7 +6814,7 @@ function cellPlainText(c,r,cf){
   if(c.type==='num'){ if(c.k==='Ex→Retail' && cf) return cf.exr==null?'':String(cf.exr); if(c.k==='LT' && cf) return cf.lt==null?'':String(cf.lt); return v==null?'':String(v); }
   return norm(v);
 }
-function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ---------- per-column header filters (Excel-like) ----------
 const DATE_COL_TYPES = ['date','exfactory','retail','retailEdit','instoreEdit'];
@@ -8178,7 +8272,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   }
   const checkFilterActive = !!normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const checkFilterLabel=appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele';
-  theadHtml += '<tr class="colRow">' + (withChk?`<th class="chkTh${checkFilterActive?' columnFilterActive':''}"><input type="checkbox" id="${tableId}_selAll"><button type="button" class="thFilterBtn chkFilterBtn${checkFilterActive?' filterActive':''}" data-table="${tableId}" data-tablekey="${tableKey}" aria-label="${escapeHtml(checkFilterLabel)}" title="${escapeHtml(checkFilterLabel)}">▾</button></th>`:'') +
+  theadHtml += '<tr class="colRow">' + (withChk?`<th class="chkTh${checkFilterActive?' columnFilterActive':''}"><input type="checkbox" id="${tableId}_selAll" aria-label="${escapeHtml(appLang==='en'?'Select all rows':'Tüm satırları seç')}"><button type="button" class="thFilterBtn chkFilterBtn${checkFilterActive?' filterActive':''}" data-table="${tableId}" data-tablekey="${tableKey}" aria-label="${escapeHtml(checkFilterLabel)}" title="${escapeHtml(checkFilterLabel)}">▾</button></th>`:'') +
     cols.map(c=>{
       const arrow = sortState.key===c.k ? (sortState.dir===1?'▲':'▼') : '';
       const isFiltered = c.type==='cpImage' ? false : colFilterActive(tableKey, c.k);
@@ -8267,7 +8361,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     if(r._id!=null && opts.dirtySet && (typeof opts.isDirty==='function'?opts.isDirty(r):opts.dirtySet.has(r._id))) tr.classList.add('rowDirty');
     if(r._canEdit===false) tr.classList.add('rowViewOnly');
     if(r._id!=null) tr.dataset.id = r._id;
-    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
+    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
     rowHtml += cols.map(c=>typeof opts.cellHtmlFn==='function'?opts.cellHtmlFn(c,r,cf,tableKey):cellHtml(c,r,cf,tableKey)).join('');
     tr.innerHTML = rowHtml;
     const tds=tr.children,offset=withChk?1:0;
@@ -9576,7 +9670,29 @@ function matchesQuickExFactory(row, period){
 // AYNI iki yuklemi kullanir: cpPassesBase (aynali olmayan tum filtreler) + cpPassesGroup
 // (Priority / STATUS / Del. Type / Season / Ex-factory gruplarindan biri). Boylece capraz
 // kapsamlarin tamami tek gecisten turetilebiliyor ve mantik kaymasi mumkun degil.
-const CP_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
+const CP_BASE_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
+// Ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line aramaya kanonik alan
+// bağlamalarıyla (cp + orders) girer; ham başlık listesi burada çoğaltılmaz.
+const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line'];
+function cpCanonicalSearchKeys(fields,ids){
+  const keys=[];
+  ids.forEach(id=>['cp','orders'].forEach(mod=>{ (fields?.bindingFor?.(mod,id)?.keys||[]).forEach(k=>keys.push(k)); }));
+  return keys;
+}
+const CP_SEARCH_KEYS=Array.from(new Set([...CP_BASE_SEARCH_KEYS,...cpCanonicalSearchKeys(window.BLCanonicalFields,CP_CANONICAL_SEARCH_FIELDS)]));
+// CP/Siparişler arama metni: yalnız dolu alanlar eklenir. Kanonik bağlamaların
+// çoğu başlık varyantı satırda bulunmaz; boşları atlamak 30k satırda süzgeç
+// geçişini eski alan sayısına yakın tutar.
+function cpSearchHaystack(r){
+  let hay='';
+  for(let i=0;i<CP_SEARCH_KEYS.length;i++){
+    const v=r[CP_SEARCH_KEYS[i]];
+    if(v==null||v==='')continue;
+    const s=norm(v).toLowerCase();
+    if(s)hay=hay?hay+' '+s:s;
+  }
+  return hay;
+}
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
   {id:'status',col:'STATUS'},
@@ -9624,9 +9740,7 @@ function cpPassesBase(r,ctx){
   if(ctx.fC && norm(r['Country'])!==ctx.fC) return false;
   if(ctx.fL && norm(r['License'])!==ctx.fL) return false;
   if(ctx.q.length){
-    let hay='';
-    for(let i=0;i<CP_SEARCH_KEYS.length;i++){ if(i)hay+=' '; hay+=norm(r[CP_SEARCH_KEYS[i]]).toLowerCase(); }
-    if(!tableSearchMatches(hay,ctx.q,{plainMode:'contains'})) return false;
+    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,{plainMode:'contains'})) return false;
   }
   return true;
 }
@@ -9707,7 +9821,7 @@ function filteredCP(){
   const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
-  return rows;
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
 // Capraz kapsam kurali: bir satir, yalnizca kendi grubu disinda hicbir grupta elenmiyorsa
@@ -9826,7 +9940,7 @@ function renderCPNow(){
   document.getElementById('cpContent').style.display='block';
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
-  const rows = partialViewEnabled('cp') ? filteredCP() : (state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all);
+  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,{plainMode:'contains'});
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
@@ -10005,9 +10119,7 @@ function ordersPassesBase(row,ctx,ignoreActive=false){
   if(ctx.fC&&norm(row.Country)!==ctx.fC)return false;
   if(ctx.fL&&norm(row.License)!==ctx.fL)return false;
   if(ctx.q.length){
-    let hay='';
-    for(let i=0;i<CP_SEARCH_KEYS.length;i++){if(i)hay+=' ';hay+=norm(row[CP_SEARCH_KEYS[i]]).toLowerCase();}
-    if(!tableSearchMatches(hay,ctx.q,{plainMode:'contains'}))return false;
+    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,{plainMode:'contains'}))return false;
   }
   if(!ignoreActive){
     if(ctx.activeFilter&&!preparedColFilterPasses(ctx.activeFilter,'Active/Inactive',row))return false;
@@ -10067,7 +10179,7 @@ function filteredOrders(){
   const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
-  return rows;
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 function ordersImageCellHtml(row){
   const dims=ordersImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
@@ -10135,7 +10247,7 @@ function renderOrdersNow(){
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
-  const rows=partialViewEnabled('orders')?filteredOrders():(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all);
+  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
   const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
@@ -10245,7 +10357,7 @@ function refreshCpRowOnly(id,rowIndex=null){
   const trCP = document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(trCP){
     const withChk = 1;
-    trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
+    trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
       visibleCols('cp').map(c=>cellHtml(c,row,cf)).join('');
     const chk = trCP.querySelector('input.rowChk');
     chk.addEventListener('change', ()=>{ if(chk.checked) state.cpSelected.add(id); else state.cpSelected.delete(id); if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility(); });
@@ -13009,7 +13121,6 @@ let modelConnSchema=null;    // { columns:[{table,name,kind}], measures:[{table,
 let modelConnValueCache={};
 
 
-
 // SERVER_BACKED ana iş verisinin en az bir kez başarıyla yüklenip yüklenmediğini
 // anlatır; yerel Buyer Log API'sinin erişilebilirliğini anlatmaz. Kurumsal
 // kaynak/VPN kapalıyken ana yükleme başarısız olabilir fakat bağlantı ayarları
@@ -13032,20 +13143,6 @@ async function modelConnLoad(){
   return modelConnState;
 }
 
-async function modelConnSave(items){
-  if(!modelConnectionApiAvailable()){ modelConnState.items=items; void refreshFieldMappingReadinessUI(items); return items; }
-  const res=await fetch('/api/model-connections',{method:'PUT',
-    headers:{'Content-Type':'application/json','If-Match':String(modelConnState.revision||0)},
-    body:JSON.stringify({items})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||res.statusText);
-  modelConnState.items=Array.isArray(data.items)?data.items:items;
-  modelConnState.revision=Number(data.revision)||modelConnState.revision;
-  void refreshFieldMappingReadinessUI(modelConnState.items);
-  return modelConnState.items;
-}
-
-function modelConnDurationLabel(ms){ return fmtDurationSn(ms); }
 
 /* v7.81 — ESKİ "HORIZON VE BAĞLANTI" MODALI KALDIRILDI.
 
@@ -14758,7 +14855,7 @@ function registerManagedGridClipboard(tableId,tableKey){
       :(tableKey==='orders'?'Siparişler veri tablosu':'CP Tracker veri tablosu'),
     // Alt detay raporu çekmecesi açıkken Ctrl+C arkadaki CP/Orders seçimini değil
     // çekmecedeki seçimi kopyalar.
-    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
+    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!window.BLTableReportInline?.isActive(tableKey)&&!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
     rows:table=>table?._blRenderedRows||meta.rowsFn(),
     columns:table=>table?._blRenderedColumns||visibleCols(meta.tableKey),
     rowId:row=>row?._id,
@@ -14889,41 +14986,12 @@ function refreshPhaseLabel(phase){
 function refreshSeconds(ms){ return fmtDurationSn(ms); }
 function refreshStagesModalOpen(){ return Boolean(document.getElementById('_refreshStages')); }
 
-function refreshEtaBasisLabel(basis,en){
-  const labels={exact:en?'same horizon + similar data volume':'aynı horizon + benzer veri hacmi',
-    horizon:en?'same horizon':'aynı horizon',volume:en?'similar data volume':'benzer veri hacmi',
-    target:en?'same refresh scope':'aynı yenileme kapsamı'};
-  return labels[String(basis||'')]||(en?'shared refresh history':'ortak yenileme geçmişi');
-}
 function refreshEtaRangeText(eta){
   if(!eta||eta.available!==true)return'';
   const low=Math.max(0,Number(eta.lowMs)||0),high=Math.max(low,Number(eta.highMs)||0);
   return high>low?`${refreshSeconds(low)} – ${refreshSeconds(high)}`:refreshSeconds(low);
 }
 function refreshEtaInlineText(eta){const range=refreshEtaRangeText(eta);return range?`~${range}`:'';}
-function refreshEtaPanelHtml(job,en){
-  const eta=job&&job.eta||null;if(!eta)return'';
-  const running=Boolean(job&&job.running),available=eta.available===true,sampleCount=Math.max(0,Number(eta.sampleCount)||0);
-  const needed=Math.max(3,Number(eta.neededSamples)||3),scope=eta.scope&&typeof eta.scope==='object'?eta.scope:{};
-  const targets=Array.isArray(scope.targets)&&scope.targets.length?scope.targets.join(' + ').toUpperCase():'';
-  const volume=scope.rowBucket&&scope.rowBucket!=='unknown'?`${scope.rowBucket} ${en?'row band':'satır bandı'}`:(en?'data volume learning':'veri hacmi öğreniliyor');
-  let main,meta,state;
-  if(available){
-    main=refreshEtaRangeText(eta);meta=`${sampleCount} ${en?'similar refreshes':'benzer yenileme'} · ${refreshEtaBasisLabel(eta.basis,en)}`;
-    state=!running?(en?'Actual duration recorded':'Gerçek süre kaydedildi')
-      :eta.exceeded?(en?'Estimate range exceeded · refresh continues':'Tahmin aralığı aşıldı · yenileme sürüyor')
-      :`~${refreshSeconds(Math.max(0,Number(eta.remainingMs)||0))} ${en?'remaining':'kaldı'}`;
-  }else{
-    main=en?'Learning estimate':'Tahmin öğreniliyor';
-    meta=sampleCount?`${sampleCount}/${needed} ${en?'similar samples collected':'benzer örnek birikti'}`:(en?'Shared refresh history is building':'Ortak yenileme geçmişi birikiyor');
-    state=en?'No artificial percentage is shown':'Sahte ilerleme yüzdesi gösterilmez';
-  }
-  return `<div class="refreshEtaCard${available?' isReady':' isLearning'}">
-    <span class="blOrb blOrb--sm" data-state="${running?'thinking':'done'}" aria-hidden="true"></span>
-    <div class="refreshEtaMain"><span>${escapeHtml(en?'Estimated duration':'Tahmini süre')}</span><b>${escapeHtml(main)}</b><small>${escapeHtml(meta)}</small></div>
-    <div class="refreshEtaState"><strong>${escapeHtml(state)}</strong><span>${escapeHtml([targets,volume].filter(Boolean).join(' · '))}</span></div>
-  </div>`;
-}
 
 function refreshCompactConnectionKind(value){
   const text=String(value||'').toLocaleUpperCase('tr-TR');
@@ -16907,7 +16975,6 @@ async function openSyncLocalDataModal(){
   modal.querySelector('[data-save]')?.addEventListener('click',async()=>{const errorBox=modal.querySelector('#_syncError');try{const response=await fetch('/api/sync-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({sharedSyncRoot:folder().value})}),r=handleSyncFolderResult(await response.json().catch(()=>({})));if(r.ok){setHubInitVisible(false);render(r.settings);errorBox.textContent='';showToast(label('Sync ayarları kaydedildi.','Sync settings saved.'));}else errorBox.textContent=r.error||response.statusText||'Error';}catch(error){setHubInitVisible(false);errorBox.textContent=error.message||String(error);}});
   modal.querySelector('[data-now]')?.addEventListener('click',async e=>{const button=e.currentTarget;button.disabled=true;try{const r=await fetch('/api/sync-settings/sync-now',{method:'POST'}).then(x=>x.json());if(r.settings)render(r.settings);if(!r.ok)modal.querySelector('#_syncError').textContent=r.error||'Error';}catch(err){modal.querySelector('#_syncError').textContent=err.message||String(err);}finally{button.disabled=false;}});
 }
-function syncStatusText(s){if(s&&s.progress)return '↻ Syncing';const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0);if(pending)return `● ${pending} Pending`;if(!s||!s.online)return '! Offline';return '✓ Synced';}
 function syncStatusBadgeView(s){
   const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0),en=appLang==='en';
   if(s&&s.progress)return {icon:'i-cloud',tone:'syncing',label:en?'Syncing':'Senkronize ediliyor',count:0};
@@ -17259,7 +17326,6 @@ document.getElementById('cpRefreshBtn')?.addEventListener('click',()=>{
 setTimeout(()=>{ try{ renderSourceTargets(); }catch(_){} },0);
 
 
-
 // "Kur Dosyası Yükle": Ön Maliyet'teki "Pick FX Excel" ile aynı işi yapar —
 // Aylık Kur Tahmin Raporu Excel'ini okuyup kurları kaydeder.
 // "LFL İçin ASAS Yükle" düğmesi kaldırıldı: LFL artık kendi Excel/Database
@@ -17403,7 +17469,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=20261115')
+  overviewOabLoadPromise=loader('oab.js?rev=20261116')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
@@ -17415,7 +17481,7 @@ function ensureOverviewIntakeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'intake',mode:'after-ui'});
-  overviewIntakeLoadPromise=loader('intake.js?rev=20261115')
+  overviewIntakeLoadPromise=loader('intake.js?rev=20261116')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui'});return window.BLINTAKE||null;})
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;
@@ -20338,24 +20404,6 @@ function backlogRowImageUrl(row,index){
   const direct=norm(row&&row._imageRef);if(direct)return `${CP_IMAGE_API}/${encodeURIComponent(direct)}`;
   return detailImageUrlFrom(index,{plmId:row&&row._plmId,colourCode:row&&row._colourCode,modelName:row&&row._modelName||row&&row['Model Adı']});
 }
-async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
-  const raw=XLSX.write(wb,{type:'array',bookType:'xlsx',cellStyles:true});
-  if(!includeImages||!rows.length)return raw;
-  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
-  if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel image engine could not be loaded.':'Excel görsel motoru yüklenemedi.');
-  const book=new ExcelJS.Workbook();await book.xlsx.load(raw);const sheet=book.getWorksheet('BACKLOG')||book.worksheets[0],index=buildDetailImageIndex();
-  const preparedByUrl=new Map(),imageIdByUrl=new Map();
-  sheet.getColumn(1).width=kolExcelImageMetrics().colChars;
-  for(let start=0;start<rows.length;start+=12){
-    const slice=rows.slice(start,start+12),prepared=await Promise.all(slice.map(row=>{
-      const url=backlogRowImageUrl(row,index);if(!url)return Promise.resolve({url:'',image:null});
-      if(!preparedByUrl.has(url))preparedByUrl.set(url,kolPrepareExcelImage(url));
-      return preparedByUrl.get(url).then(image=>({url,image}));
-    }));
-    prepared.forEach(({url,image},offset)=>{const rowNum=start+offset+2;sheet.getRow(rowNum).height=kolExcelImageMetrics().rowPt;if(!image)return;const imageId=kolAddCellBoundExcelImage(sheet,book,image,rowNum,1,imageIdByUrl.get(url));if(imageId!=null&&!imageIdByUrl.has(url))imageIdByUrl.set(url,imageId);});
-  }
-  return book.xlsx.writeBuffer();
-}
 window.BLBacklogChartContext={
   prepareQuery:()=>prepareBacklogChartQuery(),
   whenRowsReady:()=>waitForBacklogRowsReady(),
@@ -20909,21 +20957,6 @@ async function updateShipFxByExFactory(rows, options={}){
 // olarak aciga zorlanir. Karanlik temada bu, ekranin bir an bembeyaz olmasina yol
 // aciyordu. Bu perde, gecis oncesindeki gercek renkleri satir ici stil olarak alip uste
 // serer; tema arkada degisir, kullanici beyaz parlama gormez.
-function beginThemeSwapCurtain(label){
-  const body=document.body;
-  if(!body) return ()=>{};
-  const cs=getComputedStyle(body);
-  const curtain=document.createElement('div');
-  curtain.id='_themeSwapCurtain';
-  curtain.setAttribute('role','status');
-  curtain.setAttribute('aria-live','polite');
-  curtain.style.cssText='position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:center;justify-content:center;font:500 var(--ui-font-base)/1.45 var(--ui-font-body);';
-  curtain.style.background=cs.backgroundColor||'#fff';
-  curtain.style.color=cs.color||'#000';
-  curtain.textContent=String(label||'');
-  body.appendChild(curtain);
-  return ()=>{ try{ curtain.remove(); }catch(e){} };
-}
 function selectedCpRowsForAction(){
   // CP ve Siparişler ayni satir seklini paylasir (ikisi de ASAS'tan uretilir), ama
   // secim state'leri ayridir. Aktif sekmeye gore dogru kaynagi kullaniriz; aksi halde
@@ -21152,8 +21185,27 @@ function shipTransitDays(row){
 function shipLandedMultipliers(){
   return BLShippingEngine.landedMultipliers(state.overrides.landedMultipliers);
 }
+/* Kullanıcı tanımlı ek nakliye şekilleri (ör. Uçak+Uçak AKTARMALI). Ortak
+   navlun ayarında durur; her biri karşılaştırmada kendi sütununu açar. */
+// Satır başına çağrılır; ayar nesnesi değişmedikçe normalizasyon tekrarlanmaz.
+let _shipMethodsCache={raw:undefined,value:[]};
+function shipCustomMethods(){
+  const raw=state.overrides&&state.overrides.freightRates;
+  if(_shipMethodsCache.raw===raw&&raw!==undefined) return _shipMethodsCache.value;
+  let value=[];
+  try{ value=BLShippingEngine.cleanMethods(BLFreight.normalizeSettings(raw).methods); }catch(_){ value=[]; }
+  _shipMethodsCache={raw,value};
+  return value;
+}
+// Kart/tablo düzenleyicisinin sütun tanımı: sabit SHIP_COLS + özel yöntem Landed alanı.
+function shipColForKey(key){
+  const fixed=SHIP_COLS.find(item=>item.k===key);
+  if(fixed) return fixed;
+  const method=shipCustomMethods().find(item=>BLShippingEngine.methodKeys(item.id).landed===key);
+  return method?{k:key,label:method.label,type:'manual-num'}:null;
+}
 function computeShipFormulas(row){
-  return BLShippingEngine.compute(row,{coerceDateLoose,toNum,toISODate,days:shipTransitDays(row),multipliers:shipLandedMultipliers()});
+  return BLShippingEngine.compute(row,{coerceDateLoose,toNum,toISODate,days:shipTransitDays(row),multipliers:shipLandedMultipliers(),methods:shipCustomMethods()});
 }
 
 function shipCellDisplay(c, row){
@@ -21270,6 +21322,13 @@ function shipDecisionOptions(row){
     {key:'ucak', name:'AIR Landed',
      unit:num(row.ydFiyatUsdLandedUcak), pct:num(row.ucakAvantaj), date:row.ucakAntrepoTeslim, transit:days['Uçak'],
      inputs:[{key:'ydFiyatUsdLandedUcak', label:'USD'}]},
+    // Ek nakliye şekilleri AIR'in sağına, tanım sırasıyla eklenir.
+    ...shipCustomMethods().map(method=>{
+      const keys=BLShippingEngine.methodKeys(method.id);
+      return {key:method.id, name:method.label, custom:true, editable:true,
+        unit:num(row[keys.landed]), pct:num(row[keys.advantage]), date:row[keys.eta]||'', transit:method.transitDays,
+        inputs:[{key:keys.landed, label:'USD'}]};
+    }),
   ];
 }
 
@@ -21335,7 +21394,7 @@ function previewShipCardInput(inp){
   const row=shipRowByEditor(inp);
   if(!row) return false;
   const key=inp.dataset.key;
-  const col=SHIP_COLS.find(item=>item.k===key);
+  const col=shipColForKey(key);
   if(!col) return false;
   const parsed=shipParseEditorValue(inp,col);
   inp.classList.toggle('isInvalid',!parsed.ok);
@@ -21365,7 +21424,7 @@ function previewShipCardInput(inp){
   if(transit){
     const days=shipTransitDays(preview);
     const ruleBased=Object.values(days._source||{}).some(value=>value==='rule');
-    transit.innerHTML=`<b>${tr?'Transit':'Transit'}</b><span>SEA ${days['Gemi']} · SEA+AIR ${days['Gemi+Uçak']} · AIR ${days['Uçak']} ${tr?'gün':'days'}</span>${ruleBased?'':`<i>${tr?'varsayılan':'default'}</i>`}`;
+    transit.innerHTML=`<b>${tr?'Transit':'Transit'}</b><span>SEA ${days['Gemi']} · SEA+AIR ${days['Gemi+Uçak']} · AIR ${days['Uçak']}${shipCustomMethods().map(method=>' · '+escapeHtml(method.label)+' '+method.transitDays).join('')} ${tr?'gün':'days'}</span>${ruleBased?'':`<i>${tr?'varsayılan':'default'}</i>`}`;
   }
   return true;
 }
@@ -21401,7 +21460,7 @@ function shipModelCard(row){
   ];
   // Ex-Factory artık her zaman görünen ayrı bir giriş taşımaz: tarih satırının
   // kendisi çift tıklamayla açılan bir düzenleyicidir (bkz. renderShipDecision).
-  return `<td class="shipCellChk"><input type="checkbox" class="shipCompareChk" data-shipid="${escapeHtml(String(row._shipId))}" ${shipSelected.has(row._shipId)?'checked':''} ${row._canEdit===false?'disabled':''}></td>
+  return `<td class="shipCellChk"><input type="checkbox" class="shipCompareChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" data-shipid="${escapeHtml(String(row._shipId))}" ${shipSelected.has(row._shipId)?'checked':''} ${row._canEdit===false?'disabled':''}></td>
     <td class="shipCellImage">${detailImageThumbHtml(imageUrl,{modelId:row.plm||row.styleName,plmId:row.plm||'',modelName:row.styleName||'',colourCode:row.colorCode||'',colour:row.colour||''},{classes:'shipThumb',allowEmpty:true,title:tr?'Büyük önizleme için üzerine gelin':'Hover for large preview'})}</td>
     <td class="shipCellProduct">
       <div class="shipProductName" title="${escapeHtml(row.styleName||row.orderCode||'')}">${escapeHtml(row.styleName||row.orderCode||'—')}</div>
@@ -21424,7 +21483,7 @@ function shipCompareCards(row){
 
   return state.options.map(option=>{
     const missing=option.unit==null;
-    const priceEditable=SHIP_PRICE_EDITABLE_KEYS.has(option.key);
+    const priceEditable=SHIP_PRICE_EDITABLE_KEYS.has(option.key)||option.editable===true;
     const inputs=(option.inputs||[]).map(field=>shipCardInput(row,field.key,field.label,'num')).join('');
     const priceText=shipMoney(option.unit);
     const pctText=shipPct(option.pct);
@@ -21490,7 +21549,7 @@ const SHIP_COMPARE_WIDTH_KEY='buyerlog.shipCompare.colWidths.v1';
 /* Varsayılanlar içeriğe göre ölçüldü: girişi olan sütun daha geniş, ham fiyat
    sütunu dar. Başlık metni de sığmalı, yoksa iki satıra kırılıp satırı uzatır. */
 const SHIP_COMPARE_COLUMNS=[
-  {key:'chk',      def:34,  min:30},
+  {key:'chk',      def:8,  min:8},
   {key:'image',    def:62,  min:44},
   {key:'product',  def:214, min:150},
   {key:'dates',    def:120, min:96},
@@ -21500,15 +21559,23 @@ const SHIP_COMPARE_COLUMNS=[
   {key:'gemiUcak', def:132, min:104},
   {key:'ucak',     def:132, min:104},
 ];
+// Sabit sütunlar + kullanıcı tanımlı nakliye şekilleri (AIR'in sağında).
+function shipCompareColumns(){
+  return SHIP_COMPARE_COLUMNS.concat(shipCustomMethods().map(method=>({key:method.id,def:132,min:104})));
+}
 let _shipCompareWidths=null;
 function shipCompareWidths(){
-  if(_shipCompareWidths) return _shipCompareWidths;
+  const columns=shipCompareColumns();
+  if(_shipCompareWidths)_shipCompareWidths.chk=8;
+  // Yeni eklenen nakliye şekli sütunu ilk görüldüğünde kayıttan/varsayılandan doldurulur.
+  if(_shipCompareWidths&&columns.every(column=>Number.isFinite(_shipCompareWidths[column.key]))) return _shipCompareWidths;
   let saved={};
   try{ saved=JSON.parse(BLStorage.getItem(SHIP_COMPARE_WIDTH_KEY)||'{}')||{}; }catch(_){ saved={}; }
-  _shipCompareWidths={};
-  for(const column of SHIP_COMPARE_COLUMNS){
+  _shipCompareWidths=_shipCompareWidths||{};
+  for(const column of columns){
+    if(Number.isFinite(_shipCompareWidths[column.key])) continue;
     const value=Number(saved[column.key]);
-    _shipCompareWidths[column.key]=Number.isFinite(value)&&value>0?Math.max(column.min,value):column.def;
+    _shipCompareWidths[column.key]=column.key==='chk'?8:(Number.isFinite(value)&&value>0?Math.max(column.min,value):column.def);
   }
   return _shipCompareWidths;
 }
@@ -21517,7 +21584,7 @@ function saveShipCompareWidths(){
 }
 function shipCompareColgroup(){
   const widths=shipCompareWidths();
-  return `<colgroup>${SHIP_COMPARE_COLUMNS.map(column=>`<col data-ship-col="${column.key}" style="width:${widths[column.key]}px">`).join('')}</colgroup>`;
+  return `<colgroup>${shipCompareColumns().map(column=>`<col data-ship-col="${column.key}" style="width:${widths[column.key]}px">`).join('')}</colgroup>`;
 }
 /* Genişliği colgroup üzerinden uygular. Sürükleme sırasında tablo yeniden
    ÇİZİLMEZ: binlerce hücreyi her fare hareketinde yeniden kurmak sürüklemeyi
@@ -21527,7 +21594,7 @@ function applyShipCompareWidths(){
   if(!table) return;
   const widths=shipCompareWidths();
   let total=0;
-  for(const column of SHIP_COMPARE_COLUMNS){
+  for(const column of shipCompareColumns()){
     total+=widths[column.key];
     const col=table.querySelector(`col[data-ship-col="${column.key}"]`);
     if(col) col.style.width=widths[column.key]+'px';
@@ -21537,7 +21604,7 @@ function applyShipCompareWidths(){
 function attachShipCompareResize(){
   const table=document.querySelector('.shipCompare');
   if(!table) return;
-  SHIP_COMPARE_COLUMNS.forEach((column,index)=>{
+  shipCompareColumns().forEach((column,index)=>{
     const th=table.querySelectorAll('thead th')[index];
     if(!th||th.querySelector('.colResizer')) return;
     const grip=document.createElement('div');
@@ -21607,7 +21674,7 @@ function bindShipCompareSelection(host){
 }
 function resetShipCompareWidths(){
   const widths=shipCompareWidths();
-  SHIP_COMPARE_COLUMNS.forEach(column=>{ widths[column.key]=column.def; });
+  shipCompareColumns().forEach(column=>{ widths[column.key]=column.def; });
   applyShipCompareWidths(); saveShipCompareWidths();
   showToast(appLang==='en'?'Column widths reset.':'Sütun genişlikleri sıfırlandı.');
 }
@@ -21621,6 +21688,7 @@ function shipCompareHeadCells(){
     {key:'gemi', name:'SEA Landed'},
     {key:'gemiUcak', name:'SEA+AIR Landed'},
     {key:'ucak', name:'AIR Landed'},
+    ...shipCustomMethods().map(method=>({key:method.id, name:method.label+' Landed'})),
   ];
   return columns.map(column=>`<th class="shipColPrice" data-ship-col="${escapeHtml(column.key)}">
     <span>${escapeHtml(column.name)}</span>${column.role?`<i class="shipBadge ${column.key==='fob'?'isSource':'isBase'}">${escapeHtml(column.role)}</i>`:''}
@@ -21669,6 +21737,12 @@ function shipComparisonClipboardColumns(){
     {key:'airSavingPct',label:'AIR Saving %'},
     {key:'airEta',label:'AIR ETA'},
     {key:'airTransit',label:tr?'AIR Transit Gün':'AIR Transit Days'},
+    ...shipCustomMethods().flatMap(method=>[
+      {key:'m:'+method.id+':landed',label:method.label+' Landed'},
+      {key:'m:'+method.id+':pct',label:method.label+' Saving %'},
+      {key:'m:'+method.id+':eta',label:method.label+' ETA'},
+      {key:'m:'+method.id+':transit',label:method.label+(tr?' Transit Gün':' Transit Days')},
+    ]),
     {key:'cheapest',label:tr?'En Ucuz':'Cheapest'},
     {key:'earliest',label:tr?'En Erken':'Earliest'},
   ];
@@ -21697,6 +21771,10 @@ function shipComparisonClipboardRows(){
       seaLanded:sea.unit, seaSavingPct:pct(sea.pct), seaEta:sea.date||'', seaTransit:sea.transit,
       seaAirLanded:seaAir.unit, seaAirSavingPct:pct(seaAir.pct), seaAirEta:seaAir.date||'', seaAirTransit:seaAir.transit,
       airLanded:air.unit, airSavingPct:pct(air.pct), airEta:air.date||'', airTransit:air.transit,
+      ...Object.fromEntries(state.options.filter(option=>option.custom).flatMap(option=>[
+        ['m:'+option.key+':landed',option.unit], ['m:'+option.key+':pct',pct(option.pct)],
+        ['m:'+option.key+':eta',option.date||''], ['m:'+option.key+':transit',option.transit],
+      ])),
       cheapest, earliest,
     };
   });
@@ -21727,7 +21805,7 @@ async function copyShipComparisonFlat(button){
 function shipCopyTableHtml(){
   const tr=appLang!=='en';
   const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates',
-    'Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed'];
+    'Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed',...shipCustomMethods().map(method=>method.label)];
   const border='border:1px solid #d0d5dd;padding:4px 6px;font-family:Arial,sans-serif;font-size:11px;';
   const rows=shipCopyRows().map(row=>{
     const options=shipDecisionOptions(row);
@@ -21754,7 +21832,7 @@ function shipCopyTableHtml(){
 }
 function shipCopyTablePlain(){
   const tr=appLang!=='en';
-  const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates','Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed'];
+  const heads=[tr?'Görsel':'Image',tr?'Ürün':'Product',tr?'Tarihler':'Dates','Overseas FOB','Domestic Landed','SEA Landed','SEA+AIR Landed','AIR Landed',...shipCustomMethods().map(method=>method.label)];
   const lines=[heads.join('\t')];
   for(const row of shipCopyRows()){
     const options=shipDecisionOptions(row);
@@ -21990,7 +22068,7 @@ function commitShipEditor(inp, options={}){
   const row=shipRowByEditor(inp); if(!row) return false;
   if(row._canEdit===false){showToast(appLang==='en'?'You have view-only access for this order.':'Bu sipariş için yalnız görüntüleme yetkiniz var.');return false;}
   const key=inp.dataset.key;
-  const col=SHIP_COLS.find(item=>item.k===key); if(!col) return false;
+  const col=shipColForKey(key); if(!col) return false;
   const parsed=shipParseEditorValue(inp,col);
   if(!parsed.ok){
     inp.classList.add('isInvalid');
@@ -22196,6 +22274,17 @@ function openFreightModal(rows){
           <button type="button" class="tbtn" id="_freightRateSave" ${canEditRates?'':'disabled'}><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(en?'Save settings':'Ayarları kaydet')}</button>
         </div>
         ${canEditRates?'':`<div class="freightNotice">${escapeHtml(en?'You can calculate with the current rates, but changing them needs the business-rules permission.':'Mevcut ücretlerle hesap yapabilirsin; ücretleri değiştirmek için iş kuralları yetkisi gerekir.')}</div>`}
+        <div class="freightMethods">
+          <div class="freightSectionHead">
+            <b>${escapeHtml(en?'Extra shipping methods':'Ek nakliye şekilleri')}</b>
+            <span>${escapeHtml(en?'Sea, Sea+Air and Air are built in. Each method added here opens its own Landed column in Shipping Comparison and can be picked as a rate type; transit days set its ETA. Save settings to apply.':'Gemi, Gemi+Uçak ve Uçak hazır gelir. Buraya eklenen her yöntem Nakliye Kıyaslama’da kendi Landed sütununu açar ve ücret tipi olarak seçilebilir; transit gün tahmini teslim tarihini belirler. Uygulamak için ayarları kaydet.')}</span>
+          </div>
+          <div id="_freightMethodList" class="freightRateList"></div>
+          <div class="freightRateFoot">
+            <span style="flex:1"></span>
+            <button type="button" class="tbtn" id="_freightMethodAdd" ${canEditRates?'':'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg>${escapeHtml(en?'Add shipping method':'Nakliye şekli ekle')}</button>
+          </div>
+        </div>
       </section>
 
       <section class="freightSection">
@@ -22232,6 +22321,7 @@ function openFreightModal(rows){
 
   const status = modal.querySelector('#_freightStatus');
   const rateList = modal.querySelector('#_freightRateList');
+  const methodList = modal.querySelector('#_freightMethodList');
   const factorInput = modal.querySelector('#_freightFactor');
   const landedMultInput = modal.querySelector('#_freightLandedMult');
   const grid = modal.querySelector('#_freightInputGrid');
@@ -22245,7 +22335,21 @@ function openFreightModal(rows){
     grid.querySelectorAll('[data-freight-input]').forEach(el=>{ entry.inputs[el.dataset.freightInput]=el.value; });
     return entry;
   }
+  function readMethods(){
+    return [...methodList.querySelectorAll('[data-method-index]')].map(rowEl=>({
+      id: settings.methods[Number(rowEl.dataset.methodIndex)]?.id,
+      label: rowEl.querySelector('[data-method-label]').value,
+      transitDays: BLFreight.num(rowEl.querySelector('[data-method-days]').value),
+    }));
+  }
+  function modeLabel(mode){
+    if(mode==='air') return en?'Air':'Uçak';
+    if(mode==='seaAir') return en?'Sea+Air':'Gemi+Uçak';
+    const method=(settings.methods||[]).find(item=>item.id===mode);
+    return method?method.label:mode;
+  }
   function readSettings(){
+    const methods=readMethods();
     const rates=[...rateList.querySelectorAll('[data-rate-index]')].map((rowEl,index)=>({
       id: settings.rates[Number(rowEl.dataset.rateIndex)]?.id || `rate-${index+1}`,
       label: rowEl.querySelector('[data-rate-label]').value,
@@ -22254,6 +22358,7 @@ function openFreightModal(rows){
     }));
     settings = BLFreight.normalizeSettings({
       rates,
+      methods,
       volumetricFactor: BLFreight.num(factorInput.value),
       landedMultiplier: BLFreight.num(landedMultInput.value),
       carton: settings.carton,
@@ -22269,6 +22374,7 @@ function openFreightModal(rows){
         <select data-rate-mode ${canEditRates?'':'disabled'}>
           <option value="seaAir" ${rate.mode==='seaAir'?'selected':''}>${escapeHtml(en?'Sea+Air':'Gemi+Uçak')}</option>
           <option value="air" ${rate.mode==='air'?'selected':''}>${escapeHtml(en?'Air':'Uçak')}</option>
+          ${(settings.methods||[]).map(method=>`<option value="${escapeHtml(method.id)}" ${rate.mode===method.id?'selected':''}>${escapeHtml(method.label)}</option>`).join('')}
         </select>
         <div class="freightRateValue"><i>$</i><input type="text" inputmode="decimal" data-rate-value value="${escapeHtml(String(rate.rate))}" ${canEditRates?'':'disabled'}></div>
         <button type="button" class="pricingRuleIconBtn" data-rate-remove="${index}" title="${escapeHtml(en?'Remove':'Kaldır')}" ${canEditRates&&settings.rates.length>1?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button>
@@ -22278,6 +22384,29 @@ function openFreightModal(rows){
       settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
     }));
     rateList.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',recalc));
+    // Tip değişince yöntem silme düğmelerinin durumu da güncellensin.
+    rateList.querySelectorAll('select').forEach(el=>el.addEventListener('change',()=>{ readSettings(); renderRates(); recalc(); }));
+    renderMethods();
+  }
+  function renderMethods(){
+    const methods=settings.methods||[];
+    methodList.innerHTML = methods.length ? methods.map((method,index)=>{
+      const used=settings.rates.some(rate=>rate.mode===method.id);
+      const removeTitle=used
+        ? (en?'Remove the rates that use this method first':'Önce bu yöntemi kullanan ücretleri kaldır')
+        : (en?'Remove':'Kaldır');
+      return `<div class="freightRateRow freightMethodRow" data-method-index="${index}">
+        <input type="text" data-method-label maxlength="40" value="${escapeHtml(method.label)}" ${canEditRates?'':'disabled'} placeholder="${escapeHtml(en?'Method name (e.g. AIR+AIR transfer)':'Yöntem adı (ör. Uçak+Uçak Aktarmalı)')}">
+        <div class="freightRateValue"><input type="text" inputmode="numeric" data-method-days value="${escapeHtml(String(method.transitDays))}" ${canEditRates?'':'disabled'} aria-label="${escapeHtml(en?'Transit days':'Transit gün')}"><i>${escapeHtml(en?'days':'gün')}</i></div>
+        <button type="button" class="pricingRuleIconBtn" data-method-remove="${index}" title="${escapeHtml(removeTitle)}" ${canEditRates&&!used?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button>
+      </div>`;
+    }).join('') : `<div class="freightEmpty">${escapeHtml(en?'No extra shipping method yet.':'Henüz ek nakliye şekli yok.')}</div>`;
+    methodList.querySelectorAll('[data-method-remove]').forEach(btn=>btn.addEventListener('click',()=>{
+      readSettings(); settings.methods.splice(Number(btn.dataset.methodRemove),1);
+      settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
+    }));
+    // Ad yazılırken odak kaybolmasın; ücret tipi listesi blur'da tazelenir.
+    methodList.querySelectorAll('input').forEach(el=>el.addEventListener('change',()=>{ readSettings(); renderRates(); recalc(); }));
   }
 
   // Koli ölçüleri tek satırda üç dar kutu: üç ayrı geniş alan yer kaplıyordu ve
@@ -22343,7 +22472,7 @@ function openFreightModal(rows){
         <th></th>
       </tr></thead><tbody>${result.results.map((item,index)=>`
         <tr>
-          <td><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.mode==='air'?(en?'Air':'Uçak'):(en?'Sea+Air':'Gemi+Uçak'))}</small></td>
+          <td><b>${escapeHtml(item.label)}</b><small>${escapeHtml(modeLabel(item.mode))}</small></td>
           <td>${freightMoneyText(item.rate,2)}</td>
           <td>${freightMoneyText(item.total,2)}</td>
           <td>${freightMoneyText(item.perPiece,2)}</td>
@@ -22405,8 +22534,8 @@ function openFreightModal(rows){
   }
   function applyNotice(){
     return `<div class="freightNotice">${escapeHtml(en
-      ? 'Apply writes the Landed value into the row: Air rates go to “YD Fiyat (USD) Landed Uçak”, Sea+Air rates to “YD Fiyat (USD) Landed Gemi+Uçak”.'
-      : 'Uygula, Landed değerini satıra yazar: Uçak ücretleri “YD Fiyat (USD) Landed Uçak”, Gemi+Uçak ücretleri “YD Fiyat (USD) Landed Gemi+Uçak” sütununa gider.')}</div>`;
+      ? 'Apply writes the Landed value into the row: Air rates go to “YD Fiyat (USD) Landed Uçak”, Sea+Air rates to “YD Fiyat (USD) Landed Gemi+Uçak”, extra-method rates to that method’s own Landed column.'
+      : 'Uygula, Landed değerini satıra yazar: Uçak ücretleri “YD Fiyat (USD) Landed Uçak”, Gemi+Uçak ücretleri “YD Fiyat (USD) Landed Gemi+Uçak”, ek yöntem ücretleri o yöntemin kendi Landed sütununa gider.')}</div>`;
   }
 
   function storedInputs(entry){
@@ -22420,11 +22549,17 @@ function openFreightModal(rows){
   }
   function applyResult(entry, item, options){
     if(!canWrite(entry) || !item || item.landed==null) return;
-    const key = item.mode==='air' ? 'ydFiyatUsdLandedUcak' : 'ydFiyatUsdLandedGemiUcak';
+    const key = BLFreight.landedFieldKey(item.mode);
+    // Ek yöntem kaydedilmeden uygulanırsa değer satırda görünmeyen bir alana
+    // düşerdi; yalnız kayıtlı (ortak) ayardaki yöntemlere yazılır.
+    const nativePatch = key ? BLFreight.landedPatch(item, undefined, freightSettings()) : null;
+    if(!nativePatch){
+      status.textContent = en?'Save settings first: this shipping method is not saved yet.':'Önce ayarları kaydet: bu nakliye şekli henüz kaydedilmedi.';
+      return;
+    }
     const prev = entry.row[key];
     // Modalda 2 basamak gösteriliyor; satıra da 2 basamak yazılır ki
     // kullanıcının gördüğü sayı ile hücreye düşen sayı ayrışmasın.
-    const nativePatch = BLFreight.landedPatch(item); if(!nativePatch)return;
     const next = nativePatch[key];
     saveInputs(entry, nativePatch);
     computeShipFormulas(entry.row);
@@ -22449,8 +22584,22 @@ function openFreightModal(rows){
     settings.rates.push({id:`rate-${Date.now()}`, mode:'seaAir', label:en?'New route':'Yeni rota', rate:1});
     settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
   });
+  modal.querySelector('#_freightMethodAdd')?.addEventListener('click',()=>{
+    readSettings();
+    if((settings.methods||[]).length>=BLFreight.MAX_METHODS){
+      status.textContent = en?`At most ${BLFreight.MAX_METHODS} extra shipping methods can be added.`:`En fazla ${BLFreight.MAX_METHODS} ek nakliye şekli eklenebilir.`;
+      return;
+    }
+    settings.methods.push({id:`m-${Date.now().toString(36)}`, label:en?'New method':'Yeni yöntem', transitDays:BLFreight.DEFAULT_METHOD_TRANSIT_DAYS});
+    settings = BLFreight.normalizeSettings(settings); renderRates(); recalc();
+    methodList.querySelector('[data-method-index]:last-child [data-method-label]')?.select();
+  });
   modal.querySelector('#_freightRateSave')?.addEventListener('click',async e=>{
-    const btn=e.currentTarget; const config=readSettings();
+    const btn=e.currentTarget;
+    const rawMethods=readMethods();
+    if(rawMethods.some(method=>!String(method.label||'').trim())){ status.textContent = en?'Every shipping method needs a name.':'Her nakliye şeklinin bir adı olmalı.'; return; }
+    if(rawMethods.some(method=>!(method.transitDays>=1&&method.transitDays<=365))){ status.textContent = en?'Transit days must be between 1 and 365.':'Transit gün 1 ile 365 arasında olmalı.'; return; }
+    const config=readSettings();
     if(config.rates.some(rate=>!(rate.rate>0))){ status.textContent = en?'Every rate must be greater than zero.':'Her navlun ücreti sıfırdan büyük olmalı.'; return; }
     // Kaydetme anındaki koli ölçüsü bir sonraki hesabın varsayılanı olur.
     const active = readInputs();
@@ -22463,6 +22612,9 @@ function openFreightModal(rows){
     try{
       settings = await persistFreightSettings(config);
       renderRates(); recalc();
+      // Eklenen/silinen nakliye şekli karşılaştırma sütunlarını değiştirir.
+      shipRows.forEach(row=>computeShipFormulas(row));
+      renderShipTable();
       status.textContent=''; showToast(en?'Freight settings saved.':'Navlun ayarları kaydedildi.');
     }catch(err){ status.textContent=err.message; }
     finally{ btn.disabled=false; }
@@ -26462,11 +26614,6 @@ function kolDefaultDisplayOrder(){
   valid.forEach(key=>{if(!seen.has(key)){seen.add(key);out.push(key);}});
   return kolPlaceLandedAtEnd(out);
 }
-function kolResetDisplayOrderKeepingCustom(previousOrder){
-  const customKeys=new Set(kolCustomCols.map(c=>c.k));
-  const base=kolDefaultDisplayOrder().filter(key=>!customKeys.has(key));
-  return kolNormalizeDisplayOrder(mergeDeferredColumnOrder(previousOrder,base,base));
-}
 /* Koleksiyon ana başlığı (group). Sistem sütunları sabit başlık taşır; kullanıcının
    eklediği serbest sütun, tablodaki solundaki sütunun başlığına katılır. */
 function kolColumnGroupFor(key,orderKeys){
@@ -27112,8 +27259,10 @@ function kolSearchHaystack(row){
 function tableSearchSpace(tab){
   if(tab==='cp'||tab==='orders'){
     const rows=(tab==='cp'?state.cp?.rows:state.orders?.rows)||[];
-    const haystacks=rows.map(r=>CP_SEARCH_KEYS.map(k=>norm(r[k]).toLowerCase()).join(' '));
-    return {tab,rows,haystacks,fields:CP_SEARCH_KEYS.map(k=>({key:k,label:k})),valueOf:(row,key)=>row?.[key]};
+    const haystacks=rows.map(cpSearchHaystack);
+    // Kanonik başlık varyantlarından yalnız veride dolu olanlar LCW AI bağlamına gider.
+    const present=CP_SEARCH_KEYS.filter(k=>rows.some(r=>r&&r[k]!=null&&r[k]!==''));
+    return {tab,rows,haystacks,fields:present.map(k=>({key:k,label:k})),valueOf:(row,key)=>row?.[key]};
   }
   if(tab==='koleksiyon'){
     const rows=Array.isArray(kolRows)?kolRows:[];
@@ -27161,7 +27310,7 @@ function kolGroupMembersIndex(rows){
   });
   return index;
 }
-function kolGroupAwareOrder(rows){
+function kolGroupAwareOrder(rows,searchTerms=[]){
   const source=Array.isArray(rows)?rows:[];
   if(source.length<2)return source.slice();
   const allGroups=kolGroupMembersIndex(kolRows);
@@ -27198,8 +27347,9 @@ function kolGroupAwareOrder(rows){
       block.rows=parent?[parent,...variants]:variants;
     });
   }
-  let ordered=blocks.flatMap(block=>block.rows);
-  if(kolTransientTopRowId!=null){
+  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(kolSearchHaystack),{plainMode:'contains'});
+  let ordered=searchOrdered.flatMap(block=>block.rows);
+  if(kolTransientTopRowId!=null&&!searchTerms.length){
     const pinned=kolRows.find(row=>Number(row.id)===Number(kolTransientTopRowId));
     if(pinned){
       const pinGroup=allGroups.get(String(pinned.modelGroupId||''))||[];
@@ -27225,7 +27375,7 @@ function filteredKol(){
   });
   // Collapse is presentation-only. Logical filtering retains every physical
   // colour record; UI/copy/visual Excel derive their visible projection later.
-  return kolGroupAwareOrder(rows);
+  return kolGroupAwareOrder(rows,q);
 }
 function kolPresentationRows(logicalRows){
   const rows=Array.isArray(logicalRows)?logicalRows:filteredKol();
@@ -29926,7 +30076,7 @@ function renderKol(){
     const groupToggle=isParent
       ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><svg class="ic" aria-hidden="true"><use href="${collapsed?'#i-chevron-right':'#i-chevron-down'}"/></svg></button>`
       :`<span class="kolModelGroupGutterSpacer${showAsVariant?' isVariant':''}" aria-hidden="true"></span>`;
-    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
+    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
       const sharedCollectionImageSource=String(r&&r._sharedCollectionImageUrl||'');
@@ -31345,6 +31495,7 @@ function kolTableClipboardColumns(){
   return meta&&meta.colsFn?meta.colsFn():kolOrderedCols().map(c=>({k:c.k,label:kolColumnLabel(c),kol:c}));
 }
 async function copyKolSelectedRows(){
+  if(window.BLTableReportInline?.copySelection('koleksiyon',null,{includeHeaders:true}))return;
   commitActiveTableEditor({refresh:false});
   const rows=kolCollectionExportProjection(filteredKol()).filter(record=>kolCollectionProjectionSelected(record,kolSelected));
   if(!rows.length){ showToast(L('Kopyalamak için önce satır seç.')); return; }
@@ -32670,7 +32821,6 @@ let kolFabricCardsConflicts=[],kolFabricCardsSharingPending=false;
 const kolFabricDismissed=new Set();
 const KOL_FABRIC_AUTO_LIMIT=200;
 function kolFabricApi(){return window.BLFabricCards||null;}
-function kolFabricCodeOf(raw){const api=kolFabricApi();return api?api.codeOf(raw):'';}
 /* Hücredeki kumaşlar: tek kumaş ya da takım modelde "A - 3859-…", "B - 361819-…". */
 function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):[];}
 /* Yapıştırılan/yazılan kumaş metni → kanonik PLM metni (BLFabricCards.resolveInput). */
@@ -32703,6 +32853,7 @@ function fabricCardsRepaintTables(){
   if(currentActiveTab()==='koleksiyon')renderKol();else kolFabricRepaintPending=true;
   if(state.cp)renderCP();
   if(state.orders)renderOrders();
+  if(['quotations','pricinghistory'].includes(currentActiveTab()))window.BL_QUOTATIONS?.desk?.refreshFabricSummary?.();
 }
 function kolFabricCardsEnsureLoaded(){
   if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
@@ -36157,117 +36308,6 @@ function kolExportSingleLineText(value){
   if(window.BLTableExport?.normalizeCell)return window.BLTableExport.normalizeCell(value);
   return String(value==null?'':value).replace(/[\r\n\u000B\u000C\u0085\u2028\u2029\t]+/g,' ').replace(/ {2,}/g,' ').trim();
 }
-// ---- Biçimli (görselsiz) hızlı dışa aktarım: xlsx-js-style, CP ile aynı görsel dil ----
-function buildKolStyledSheet(rows){
-  const bd = _XLS_BORDERS;
-  const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
-  const mfrCols = kolManufacturers.map(m=>m.name);
-  const exportCols = kolOrderedCols();
-  exportCols.forEach(c=>{c._blSchema=columnSchemaFor(c,sourceRows);});
-  // Görsel sütunu ekranda gizliyse dışa aktarımda da yer almaz; ofsetler kayar.
-  const withImg = !kolPictureHidden;
-  const imgOff = withImg ? 1 : 0;
-  const headers = [...(withImg?['Görsel Notu']:[]), ...exportCols.map(c=>c.label), ...mfrCols.map(m=>m+' ($)'), ...(mfrCols.length?['Conf. Manufacturer','Conf. FOB']:[])];
-  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
-  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true}}}));
-  rows.forEach((record,ri)=>{
-    const r=kolCollectionProjectionSource(record),summary=kolCollectionProjectionSummary(record);
-    if(withImg) put(ri+1,0,{v:kolModelImageSource(r)?'Uygulamada görsel mevcut':'Görsel yok',t:'s',s:{border:bd,font:{sz:9,italic:true,color:{rgb:'FF98A2B3'}}}});
-    exportCols.forEach((c,ci)=>{
-      const summaryEntry=summary?.get?.(c.k);
-      if(summaryEntry){
-        put(ri+1,ci+imgOff,{v:kolExportSingleLineText(summaryEntry.display),t:'s',s:{border:bd,font:{sz:10,bold:c.k==='modelKod'},alignment:{vertical:'middle',wrapText:true}}});
-        return;
-      }
-      const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
-      if(c.k==='fabric'){put(ri+1,ci+imgOff,{v:kolExportSingleLineText(kolFabricDisplay(raw)),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'middle',wrapText:true}}});return;}
-      const schema=columnSchemaFor(c,sourceRows);
-      const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
-      let cell;
-      // Checklist hücresi kanonik durum kimliğini değil, ekrandaki TR/EN etiketi yazar.
-      if(c.checklist){put(ri+1,ci+imgOff,{v:kolChecklistDisplay(raw,r),t:'s',s:{...s,alignment:{vertical:'middle'}}});return;}
-      if(c.endeksmatik){
-        // v6.42 — Ekranda hücre fiyat + index olmak üzere İKİ satır gösterirken
-        // ("YD $.. · TR $.." ve "YD %.. · TR %.."), bu yol yalnız fiyat satırını
-        // (endeksmatikCompactText) yazıyordu; index satırı Excel'e hiç gitmiyordu.
-        // endeksmatikExcelText ikisini birden verir — Kopyala yolunda zaten
-        // bu kullanılıyordu, buradaki eksiklik ikisini tutarsız kılıyordu.
-        const textValue=kolExportSingleLineText(endeksmatikExcelText(r));
-        cell={v:textValue,t:'s',s:{...s,alignment:{horizontal:'left',vertical:'center',wrapText:true}}};
-        put(ri+1,ci+imgOff,cell);return;
-      }
-      // Landed sütunları hesaplanmış sayıdır; Excel'de para biçiminde yazılır.
-      if(c.trLanded || c.ydLanded){
-        const k=kolLandedCalc(r);
-        const value=c.trLanded?k.trLanded:k.ydLanded;
-        cell = value==null ? {v:'',t:'s',s} : {v:value,t:'n',s:{...s,numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}};
-        put(ri+1, ci+imgOff, cell);
-        return;
-      }
-      if(c.k==='colourCode'){
-        cell={v:kolExportSingleLineText(raw),t:'s',s:{...s,numFmt:'@',alignment:{horizontal:'left',vertical:'center'}}};
-      } else if(c.exToRetail){
-        cell = raw==='' ? {v:'',t:'s',s} : {v:Number(raw),t:'n',s:{...s,numFmt:'#,##0" g."',alignment:{horizontal:'right'},font:{sz:10,color:{rgb:'FF98A2B3'}}}};
-      } else if(c.date && raw){
-        const d = coerceDateLoose(raw);
-        cell = !d ? {v:kolExportSingleLineText(raw),t:'s',s} : {v:d,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}};
-      } else if(c.qty && raw!==''&&raw!=null && Number.isFinite(kolParseQuantityNum(raw))){
-        cell = {v:kolParseQuantityNum(raw),t:'n',s:{...s,numFmt:'#,##0',alignment:{horizontal:'right'}}};
-      } else if(c.percent && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw)/100,t:'n',s:{...s,numFmt:'0.00%',alignment:{horizontal:'right'}}};
-      } else if(c.hologram && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw),t:'n',s:{...s,numFmt:'#,##0.######',alignment:{horizontal:'right'}}};
-      } else if(c.money && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw),t:'n',s:{...s,numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}};
-      } else if(c.custom && schema){
-        const value=schema.exportValue(raw);
-        cell=value instanceof Date?{v:value,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}}:typeof value==='number'?{v:value,t:'n',s:{...s,numFmt:Number.isInteger(value)?'#,##0':'#,##0.00',alignment:{horizontal:'right'}}}:{v:kolExportSingleLineText(value),t:'s',s};
-      } else if(c.status||c.k==='durum'){
-        const argb=kolStatusExcelArgb(raw),fontArgb=kolStatusExcelTextArgb(raw);
-        cell = {v:kolExportSingleLineText(raw),t:'s',s:{...s,fill:{fgColor:{rgb:argb}},font:{sz:10,bold:true,color:{rgb:fontArgb}}}};
-      } else {
-        cell = {v:kolExportSingleLineText(raw),t:'s',s};
-      }
-      put(ri+1, ci+imgOff, cell);
-    });
-    const effectivePricing=kolEffectivePricing(r),validPrices = mfrCols.map(m=>kolParseMoneyNum(effectivePricing && effectivePricing[m])).filter(n=>Number.isFinite(n) && n>0);
-    mfrCols.forEach((m,mi)=>{
-      const v = effectivePricing && effectivePricing[m];
-      const ci = imgOff + exportCols.length + mi;
-      const n = kolParseMoneyNum(v);
-      if(v==='0' || v==='0,00'){
-        put(ri+1,ci,{v:0,t:'n',s:{border:bd,font:{sz:10},numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}});
-      } else if(v!=='' && v!=null && Number.isFinite(n)){
-        let fill;
-        if(n>0 && validPrices.length){
-          const min=Math.min(...validPrices), max=Math.max(...validPrices);
-          const t = max===min ? 0 : (n-min)/(max-min);
-          const hue = 150 - t*150;
-          fill = {fgColor:{rgb: hslToArgb(hue,55,88)}};
-        }
-        put(ri+1,ci,{v:n,t:'n',s:{border:bd,font:{sz:10},numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}, ...(fill?{fill}:{})}});
-      }
-      else if(v!=='' && v!=null){
-        // "Fiyatlamada" gibi metin bir değer — sayı değil, olduğu gibi yazılır.
-        put(ri+1,ci,{v:kolExportSingleLineText(v),t:'s',s:{border:bd,font:{sz:10,italic:true}}});
-      }
-      else put(ri+1,ci,{v:'',t:'s',s:{border:bd}});
-    });
-    if(mfrCols.length){
-      const confirmed = kolConfirmedPricing(r);
-      const bi = imgOff + exportCols.length + mfrCols.length;
-      const confirmedFill = confirmed ? {fgColor:{rgb:'FFE4F3EB'}} : undefined;
-      put(ri+1,bi,{v:confirmed?kolExportSingleLineText(confirmed.name):'',t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}}, ...(confirmedFill?{fill:confirmedFill}:{})}});
-      put(ri+1,bi+1,{v:confirmed?confirmed.price:'',t: confirmed?'n':'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}},numFmt:confirmed?'"$"#,##0.00':undefined,alignment:{horizontal:'right'}, ...(confirmedFill?{fill:confirmedFill}:{})}});
-    }
-  });
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:headers.length-1}});
-  ws['!cols']=[...(withImg?[{wch:kolExcelImageMetrics().colChars}]:[]), ...exportCols.map(c=>({wch:Math.max(11,Math.round(kolColWidth(c)/7))})), ...mfrCols.map(()=>({wch:14})), ...(mfrCols.length?[{wch:22},{wch:14}]:[])];
-  ws['!rows']=[{hpx:26}];
-  return ws;
-}
-
-
 // ---- Görsel gömülü dışa aktarım: ExcelJS (ayrı kütüphane; xlsx-js-style resim desteklemiyor) ----
 // Fiyatlama talebi Excel'i: Export with Pictures ile aynı ExcelJS görsel/biçim motorunu kullanır.
 // Görsel sütunu sabittir; diğer sütunlar kalıcı Pricing Excel Columns seçimine göre eklenir.
@@ -36291,35 +36331,6 @@ function kolPricingMailDate(d=new Date()){
   const p=x=>String(x).padStart(2,'0');
   return `${p(d.getDate())}.${p(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)}`;
 }
-function kolPricingPreviewValue(r,c){
-  const raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k);
-  if(c.k==='fabric')return kolFabricDisplay(raw);
-  if(raw==null || raw==='') return '';
-  if(c.date) return fmtDate(raw);
-  if(c.qty){ const n=kolParseQuantityNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR'):String(raw); }
-  if(c.percent){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?`%${n.toLocaleString('tr-TR',{maximumFractionDigits:3})}`:String(raw); }
-  if(c.hologram){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR',{maximumFractionDigits:6}):String(raw); }
-  if(c.money){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?`$${n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:String(raw); }
-  return String(raw);
-}
-function kolCanvasTextLines(ctx,text,maxWidth,maxLines){
-  const words=String(text??'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
-  if(!words.length) return [''];
-  const lines=[]; let line='';
-  for(const word of words){
-    const trial=line?`${line} ${word}`:word;
-    if(ctx.measureText(trial).width<=maxWidth || !line) line=trial;
-    else { lines.push(line); line=word; if(lines.length>=maxLines-1) break; }
-  }
-  if(line && lines.length<maxLines) lines.push(line);
-  const consumed=lines.join(' ').split(' ').filter(Boolean).length;
-  if(consumed<words.length && lines.length){
-    let last=lines[lines.length-1];
-    while(last && ctx.measureText(last+'…').width>maxWidth) last=last.slice(0,-1);
-    lines[lines.length-1]=(last||'')+'…';
-  }
-  return lines;
-}
 function kolLoadPricingImage(src){
   return new Promise(resolve=>{
     if(!src){ resolve(null); return; }
@@ -36328,71 +36339,6 @@ function kolLoadPricingImage(src){
     const timer=setTimeout(()=>done(null),4000);
     img.onload=()=>done(img); img.onerror=()=>done(null); img.src=src;
   });
-}
-async function kolBuildPricingPreviewImages(rows){
-  const exportCols=kolPricingExcelCols();
-  const defs=[{label:'Görsel',width:108,image:true},...exportCols.map(c=>({label:kolColumnLabel(c),width:Math.max(90,Math.min(185,Math.round((kolColWidth(c)||110)*0.9))),col:c}))];
-  const rawWidth=defs.reduce((sum,d)=>sum+d.width,0);
-  const maxWidth=1900, scale=Math.min(1,maxWidth/rawWidth), width=Math.max(720,Math.round(rawWidth*scale));
-  const headerH=Math.round(44*scale), rowH=Math.max(58,Math.round(86*scale));
-  const maxRowsPerImage=Math.max(12,Math.min(38,Math.floor((5600-headerH)/rowH)));
-  const loadedImages=await Promise.all(rows.map(async r=>{
-    for(const source of kolModelImageSources(r)){
-      const image=await kolLoadPricingImage(source);
-      if(image)return image;
-    }
-    return null;
-  }));
-  const previews=[];
-  for(let offset=0;offset<rows.length;offset+=maxRowsPerImage){
-    const chunkRows=rows.slice(offset,offset+maxRowsPerImage), chunkImgs=loadedImages.slice(offset,offset+maxRowsPerImage);
-    const height=headerH+chunkRows.length*rowH;
-    const dpr=1, canvas=document.createElement('canvas');
-    canvas.width=Math.ceil(width*dpr); canvas.height=Math.ceil(height*dpr);
-    const ctx=canvas.getContext('2d');
-    if(!ctx) throw new Error('E-posta tablo görseli oluşturulamadı.');
-    ctx.scale(dpr,dpr);
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,width,height);
-    ctx.textBaseline='middle'; ctx.lineWidth=1;
-    let x=0;
-    defs.forEach(d=>{
-      const w=d.width*scale;
-      ctx.fillStyle='#F2F4F7'; ctx.fillRect(x,0,w,headerH);
-      ctx.strokeStyle='#D0D5DD'; ctx.strokeRect(x,0,w,headerH);
-      ctx.fillStyle='#475467'; ctx.font=`600 ${Math.max(10,Math.round(12*scale))}px Arial, sans-serif`;
-      const lines=kolCanvasTextLines(ctx,d.label,Math.max(20,w-12),2), lh=Math.max(12,Math.round(14*scale));
-      lines.forEach((line,i)=>ctx.fillText(line,x+6,headerH/2+(i-(lines.length-1)/2)*lh));
-      x+=w;
-    });
-    chunkRows.forEach((r,ri)=>{
-      const y=headerH+ri*rowH; let cx=0;
-      defs.forEach((d,di)=>{
-        const w=d.width*scale;
-        ctx.fillStyle=ri%2?'#FCFCFD':'#FFFFFF'; ctx.fillRect(cx,y,w,rowH);
-        ctx.strokeStyle='#D0D5DD'; ctx.strokeRect(cx,y,w,rowH);
-        if(d.image){
-          const img=chunkImgs[ri];
-          if(img){
-            const pad=Math.max(4,Math.round(6*scale)), aw=w-pad*2, ah=rowH-pad*2;
-            const ratio=Math.min(aw/img.naturalWidth,ah/img.naturalHeight);
-            const iw=img.naturalWidth*ratio, ih=img.naturalHeight*ratio;
-            ctx.drawImage(img,cx+(w-iw)/2,y+(rowH-ih)/2,iw,ih);
-          }
-        }else{
-          const value=kolPricingPreviewValue(r,d.col);
-          ctx.fillStyle='#101828';
-          ctx.font=`${d.col.k==='modelKod'?'600':'400'} ${Math.max(9,Math.round(11*scale))}px Arial, sans-serif`;
-          const lines=kolCanvasTextLines(ctx,value,Math.max(20,w-12),4), lh=Math.max(11,Math.round(14*scale));
-          lines.forEach((line,i)=>ctx.fillText(line,cx+6,y+rowH/2+(i-(lines.length-1)/2)*lh));
-        }
-        cx+=w;
-      });
-    });
-    const cid=`pricing-preview-${offset/maxRowsPerImage+1}-${Date.now()}@buyerlog`;
-    const dataUrl=canvas.toDataURL('image/jpeg',0.78);
-    previews.push({cid,filename:`Pricing_Preview_${String(previews.length+1).padStart(2,'0')}.jpg`,mimeType:'image/jpeg',base64:dataUrl.split(',')[1]});
-  }
-  return previews;
 }
 /* ===================================================================
    E-POSTA KONU VE TASLAK AYARLARI
@@ -40203,6 +40149,8 @@ function initLiveSync(){
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
     if(['fx','endeksmatik','merchCalendar','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
+    }else if(payload.area==='tableReportLayouts'){
+      void window.BLTableReportInline?.refreshShared(true);
     }else if(payload.area==='cpManagedRules'||payload.area==='master-rules'){
       // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kuralları.
       window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
@@ -40349,6 +40297,7 @@ window.addEventListener('bl-shared-revision',event=>{
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden
   // yükleme demekti. Yalnız canlı akış kopmuşsa yedek olarak çalışır.
   if(changed.has('collection')&&kolWorkspaceOwnerId&&!liveSyncConnected)void kolHandleRemoteChange(kolWorkspaceOwnerId);
+  if(changed.has('tableReportLayouts')&&!liveSyncConnected)void window.BLTableReportInline?.refreshShared(true);
   if(changed.has('cpManagedRules')&&!liveSyncConnected)window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
   if(changed.has('quotation'))void window.BL_QUOTATIONS?.refresh?.();
   if(changed.has('licenseCards')&&!liveSyncConnected)window.BLLicenseCardsPage?.invalidate?.();
@@ -41907,6 +41856,7 @@ function applyLanguage(lang){
     else if(tab==='lcwai') window.BLLcwAiChat?.refreshLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
+  window.BLTableReportInline?.schedule(tab);
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil
   // değişince yeniden çizilmesi gerekir.
   try{ if(typeof renderHorizonBadges==='function') renderHorizonBadges(); }catch(e){}

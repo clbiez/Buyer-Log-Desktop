@@ -19,7 +19,7 @@ test('each table view picker offers a Report view toggle in TR/EN after the pres
   for (const key of ['cp', 'orders', 'koleksiyon']) {
     const start = html.indexOf(`data-bl-view-picker="${key}"`);
     assert.ok(start > 0, key);
-    const picker = html.slice(start, html.indexOf('</div>', html.indexOf('blViewPickerMenu', start)));
+    const picker = html.slice(start, html.indexOf('data-table-report="'+key+'"', start)+1000);
     const all = picker.indexOf(`data-table-view-preset="all" data-table-key="${key}"`);
     const report = picker.indexOf(`data-table-report="${key}"`);
     assert.ok(all > 0 && report > all, key + ': Report view follows All');
@@ -61,7 +61,7 @@ test('inline report stacks fields by the table column main headers, stays read-o
   assert.match(src, /const projected=columns\.some\(col=>clean\(col\.group\)\)\?groupProjection\(columns\):\n    layout\?layout\.project\(columns,moduleId,canonical,labels\(\)\)/);
   assert.match(src, /if\(group&&last&&last\.group===group\)\{last\.fields\.push\(col\);continue;\}/);
   const app = read('app-main.js');
-  assert.match(app, /map\(col=>\(\{key:col\.key,label:col\.label,group:col\.group,/);
+  assert.match(app, /map\(col=>\(\{key:col\.key,label:col\.label,group:col\.group,groupId:col\.groupId,/);
   assert.match(app, /group:tableColumnGroupLabel\(kolColumnGroupFor\(d\.k,order\)\)/);
   // Visible text is TR/EN.
   for (const pair of [["'Rapor görünümü','Report view'"], ["'Tablo görünümüne dön','Back to table view'"], ["'Daha fazla göster','Show more'"], ["'Gösterilecek satır yok.','No rows to display.'"]])

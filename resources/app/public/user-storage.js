@@ -8,7 +8,7 @@
     'bl.dataManagement.', // Veri Yönetimi panel aç/kapa tercihi kişiseldir (cihazda kalır, eşitlenmez).
     'bl.cpPlmSilentBom.', // CP/Orders sessiz PLM BOM tazelemesi aç/kapa tercihi kişiseldir.
     'lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','lcw.startup.',
-    'lcw.corePageFilters.','lcw.table.columnState.','lcw.table.density.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
+    'lcw.corePageFilters.','lcw.table.columnState.','lcw.table.density.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.bomControl.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
     // v2026-10-22 — Koleksiyon fiyat görünümü, Fiyat Masası tercihleri ve kullanıcının
@@ -117,7 +117,7 @@
      Collection satırları/notları gibi ortak iş verileri bu listede değildir. */
   var SYNCED=[
     'bl.privateOrderNotes.v1.','lcw.personalOrderNotes.','bl.excelTemplates.','lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
-    'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
+    'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.bomControl.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
     'lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',
     'lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.koleksiyon.colState.','lcw.koleksiyon.pricingExcelColumns.',

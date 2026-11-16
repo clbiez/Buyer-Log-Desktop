@@ -30,6 +30,7 @@
     refreshQueued: null,
     saveInFlight: null,
     savePending: false,
+    exporting: false,
   };
 
   const byId = id => document.getElementById(id);
@@ -54,11 +55,12 @@
   const axisNamesEn = { rows: 'Rows', columns: 'Columns', measures: 'Measures', filters: 'Filters' };
 
   function setStatus(message, kind) {
+    state.statusCopy = message && typeof message === 'object' ? { ...message, kind } : null;
     const node = byId('intakeStatus');
     if (!node) return;
     node.hidden = !message;
     node.className = `intakeStatus${kind ? ` ${kind}` : ''}`;
-    node.textContent = message || '';
+    node.textContent = state.statusCopy ? text(message.tr, message.en) : (message || '');
   }
 
   function setMeta(value) {
@@ -72,6 +74,20 @@
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || response.statusText || text('İstek başarısız.', 'Request failed.'));
     return payload;
+  }
+
+  async function exportExcel() {
+    if (state.exporting || state.loading || !state.rows.length) return;
+    state.exporting = true;renderChrome();
+    try {
+      const response = await fetch('/api/intake/export', { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewConfig: clone(state.viewConfig), language: isEnglish() ? 'en' : 'tr' }) });
+      if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || text('Excel aktarımı başarısız.', 'Excel export failed.')); }
+      const url = URL.createObjectURL(await response.blob()), link = document.createElement('a');
+      link.href = url;link.download = 'INTAKE-Live-Pivot.xlsx';link.click();setTimeout(() => URL.revokeObjectURL(url), 30000);
+      setStatus({ tr: 'Canlı INTAKE pivotu aktarıldı. Excel’de Veri → Tümünü Yenile ile güncelleyebilirsiniz.', en: 'Live INTAKE pivot exported. In Excel, use Data → Refresh All to update it.' }, 'ok');
+    } catch (error) { setStatus(error.message || text('Excel aktarımı başarısız.', 'Excel export failed.'), 'error'); }
+    finally { state.exporting = false;renderChrome(); }
   }
 
   function activeColumns() {
@@ -283,14 +299,14 @@
     const next = clone(state.viewConfig);
     next.display = { ...(next.display || {}), collapsedGroups: [] };
     state.viewConfig = next;
-    renderTable();
+    renderTable({ disclosure: true });
   }
 
   function intakeCollapseAllGroups() {
     const next = clone(state.viewConfig);
     next.display = { ...(next.display || {}), collapsedGroups: intakeGroupPathKeys(state.rows) };
     state.viewConfig = next;
-    renderTable();
+    renderTable({ disclosure: true });
   }
 
   function intakeDisplayRows(sorted) {
@@ -403,6 +419,7 @@
     const body = byId('intakeBody');
     const table = byId('intakeTable');
     if (!body || !table) return;
+    if (options.disclosure && window.BLMotionPlus?.pivotChange) return window.BLMotionPlus.pivotChange(table, () => renderTable({ ...options, disclosure: false }));
     body.hidden = false;
     const signature = intakeTableSignature();
     if (!options.force && signature === state.tableSignature && table.firstChild) return;
@@ -441,7 +458,7 @@
     const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
     const rowCells = item => fields.map(field => intakeCellHtml(item, field)).join('');
     const rowHtml = (item, index) => `<tr class="${rowClass(item)}" data-bl-virtual-index="${index}">${rowCells(item)}</tr>`;
-    const virtualize = viewRows.length > 300 && typeof window.setupVirtualizedBody === 'function' && window.BLGridClipboard?.withNativeSelection;
+    const virtualize = !section.closest('.ovHome') && viewRows.length > 300 && typeof window.setupVirtualizedBody === 'function' && window.BLGridClipboard?.withNativeSelection;
     const rows = virtualize ? '' : viewRows.map(rowHtml).join('');
     table.innerHTML = `<thead><tr>${header}</tr></thead><tbody>${rows || `<tr><td class="intakeEmpty" colspan="${fields.length}">${esc(text('Veri yok.', 'No data.'))}</td></tr>`}</tbody>`;
     if (virtualize) {
@@ -555,6 +572,8 @@
     renderFilters();
     const refreshButton = byId('intakeRefreshBtn');
     if (refreshButton) refreshButton.disabled = state.loading;
+    const exportButton = byId('intakeExcelExportBtn');
+    if (exportButton) { exportButton.disabled = state.loading || state.exporting || !state.rows.length;exportButton.setAttribute('aria-busy', String(state.exporting)); }
     const body = byId('intakeBody');
     if (body) {
       body.classList.toggle('isBusy', state.loading);
@@ -1173,6 +1192,9 @@
   }
 
   function bind() {
+    new MutationObserver(() => { if (state.statusCopy) setStatus(state.statusCopy, state.statusCopy.kind);render(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    byId('intakeExcelExportBtn')?.addEventListener('click', () => void exportExcel());
     byId('intakeFieldsBtn')?.addEventListener('click', () => { void loadMetadata().finally(openFields); });
     byId('intakeResetBtn')?.addEventListener('click', async () => {
       try {
@@ -1227,7 +1249,7 @@
         collapsed.has(key) ? collapsed.delete(key) : collapsed.add(key);
         next.display.collapsedGroups = [...collapsed];
         state.viewConfig = next;
-        renderTable();
+        renderTable({ disclosure: true });
         return;
       }
       const header = event.target.closest('[data-intake-sort]');

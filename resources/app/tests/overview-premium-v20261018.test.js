@@ -46,3 +46,12 @@ test('premium defaults surface map above details; saved v2 geometry and density 
  assert.equal(restored.density,'comfortable');assert.equal(layout.locate(restored,'globalFlowMap').item.y,16);
  assert.equal(layout.normalize(next).density,'compact');
 });
+
+test('delivery horizon overdue list excludes orders whose production is finished (loading/transit/customs/warehouse)',()=>{
+ const past=day-3;
+ const stages=['PRODUCTION','SHORTAGE','UNKNOWN',undefined,'LOADING','IN_TRANSIT','CUSTOMS','IN_WAREHOUSE','AWAITING_RETAIL_TRANSFER'];
+ const orders=stages.map((stage,i)=>({orderKey:'o'+i,plannedLoadDate:past,qty:10,priority:'ON_TRACK',stage}));
+ const h=P.buildHorizon(orders,{start:day,days:7});
+ assert.deepEqual(h.overdue.map(o=>o.stage),['PRODUCTION','SHORTAGE','UNKNOWN',undefined]);
+ assert.deepEqual(h.completed.map(o=>o.stage),['LOADING','IN_TRANSIT','CUSTOMS','IN_WAREHOUSE','AWAITING_RETAIL_TRANSFER']);
+});

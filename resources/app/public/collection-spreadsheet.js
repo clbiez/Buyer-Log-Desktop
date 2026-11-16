@@ -15,7 +15,7 @@
   function cellSelectionWins(){return Boolean(state.active)&&state.cellIntent>state.rowIntent;}
   function domToken(value){return encodeURIComponent(String(value??'')).replace(/%/g,'_');}
   function cellDomId(rowId,key){return `bl-grid-kolTable-${domToken(rowId)}-${domToken(key)}`;}
-  function isCollectionActive(){return (document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'')==='koleksiyon';}
+  function isCollectionActive(){if(global.BLTableReportInline?.isActive('koleksiyon'))return false;return (document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'')==='koleksiyon';}
   /* v7.81 — ÖLÇÜLEN HATA: bu kontrol VARLIĞA bakıyordu, GÖRÜNÜRLÜĞE değil.
      index.html üç adet [role="dialog"][aria-modal="true"] öğesini statik olarak
      taşıyor (lflScenarioEditorDialog, ocCompareCard, ocFxCard). Üçü de 'hidden'

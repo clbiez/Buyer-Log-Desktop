@@ -764,6 +764,7 @@ const oabAuthState = require('./lib/oab-auth-state');
 const oabApiClient = require('./lib/oab-api-client');
 const oabDesktopRelay = require('./lib/oab-desktop-relay');
 const intakeReport = require('./lib/intake-report');
+const intakeExcel = require('./lib/intake-excel');
 const intakeStore = require('./lib/intake-store');
 const intakeConnectionSelector = require('./lib/intake-connection');
 const technicalSheetOwnership = require('./lib/plm-technical-sheet-ownership');
@@ -950,7 +951,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -6077,6 +6078,23 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
+app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
+  try {
+    const found = await intakeLiveFields();
+    const plan = intakeExcel.prepare({ fields: found.fields, viewConfig: req.body?.viewConfig || intakeStoredView(req.currentUser.id), horizon: intakeHorizon() });
+    const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog,
+      query: plan.built.query, headerMap: plan.built.headerMap, generated: true, maxRows: plan.built.maxRows, timeoutMs: 180000 });
+    const rows = intakeReport.normalizeRows(result.rows, plan.config);
+    const buffer = intakeExcel.createWorkbook({ connection: found.connection, plan, rows, language: req.body?.language });
+    userAccess.appendAudit(req.currentUser, 'INTAKE_EXCEL_EXPORT', '', { rows: rows.length });
+    res.set('Cache-Control', 'no-store').set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .attachment('INTAKE-Live-Pivot.xlsx').send(buffer);
+  } catch (err) {
+    const failure = intakeErrorResponse(err);
+    res.status(failure.status).json({ error: failure.message, code: failure.code });
+  }
+});
+
 app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
   const userId = req.currentUser.id;
   const previous = intakeStore.loadSnapshot(userId);
@@ -7036,11 +7054,6 @@ async function hydrateModelSnapshotAsync(value) {
   return hydrateSnapshotPayload(id, await loadModelSnapshotAsync(id));
 }
 
-function hydrateSharedModelSnapshot(value) {
-  const id = sourceUserId(value);
-  if (id === 'moderator') return null;
-  return hydrateSnapshotPayload(id, loadModelSnapshot('moderator'), { shared: true });
-}
 
 async function saveRuntimeModelSnapshot(id, runtime) {
   if (!runtime || !runtime.loadedAt) return null;
@@ -8289,7 +8302,6 @@ function pageCacheRuntimeMeta(runtime) { return projectionRuntimeMeta(runtime); 
 function cachedRuntimeFromManifest(manifest) {
   return { ...emptySourceCache(), ...((manifest && manifest.runtimeMeta) || {}) };
 }
-function pageProjectionCanEdit(currentUser, row) { return canUserEditOrderCode(currentUser, row && row['Order Code']); }
 // UI edit hints only: reuse the existing per-invocation permission context.
 // Mutation endpoints continue to resolve live authority at their commit guard.
 function pageProjectionEditResolver(currentUser){
@@ -8797,15 +8809,6 @@ app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ lim
 });
 
 const pageProjectionBuildInFlight = new Map();
-async function singleFlightPageProjection(currentUser, module, builder) {
-  const ctx = pageProjectionContext(currentUser), key = `${ctx.id}\u0000${ctx.contextHash}\u0000${module}`;
-  if (pageProjectionBuildInFlight.has(key)) return pageProjectionBuildInFlight.get(key);
-  const promise = Promise.resolve().then(() => builder(ctx)).finally(() => {
-    if (pageProjectionBuildInFlight.get(key) === promise) pageProjectionBuildInFlight.delete(key);
-  });
-  pageProjectionBuildInFlight.set(key, promise);
-  return promise;
-}
 async function storeOnDemandProjection(currentUser, ctx, module, value, runtime) {
   const manifest=pageProjectionCache.loadManifest(ctx.id);
   let saved=manifest&&pageProjectionMatchesRuntime(manifest,runtime)
@@ -9013,26 +9016,6 @@ function cachedBacklogTemplateRows(key,compute){
   return rows;
 }
 
-function backlogRowFilterOptions(options={}){
-  return Object.fromEntries(['retailFrom','retailTo','inStoreFrom','inStoreTo','exFactoryFrom','exFactoryTo','buyerGrup','dimFilters','analysisFilters','antrepoFrom','antrepoTo'].map(key=>[key,options[key]||'']));
-}
-function backlogQueryForRequest(req,options={},includeWindowed=false,context=null){
-  const id=sourceUserId(req),active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
-  const ctx=context || pageProjectionContext(req.currentUser);
-  const sourceKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,['query-v1',ctx.contextHash]);
-  const sourceRevision=crypto.createHash('sha256').update(BACKLOG_ROWS_PROCESS_NONCE).update(sourceKey).digest('hex');
-  const filterOpts=backlogRowFilterOptions(options),key=JSON.stringify([sourceKey,filterOpts,includeWindowed]);
-  return backlogQueryCache.get(key,()=>{
-    const orders=userAccess.filterRowsByScope(req.currentUser,filterRowsByEffectiveHorizon(req.currentUser,'backlog',ordersForTarget(active,'backlog',overrides)));
-    const antrepo=antrepoForTarget(active,'backlog');
-    let custom=backlogCatalogCache.get(sourceKey);
-    if(!custom){
-      custom=parseLib.backlogCustomDimensionContext(orders,antrepo);backlogCatalogCache.set(sourceKey,custom);
-      while(backlogCatalogCache.size>4)backlogCatalogCache.delete(backlogCatalogCache.keys().next().value);
-    }
-    return {orders,antrepo,overrides,sourceRevision,query:parseLib.prepareBacklogQuery(orders,antrepo,overrides,filterOpts,custom,includeWindowed)};
-  });
-}
 
 // Only these Backlog reads opt into consumer cancellation. IncomingMessage
 // 'close' also fires for a normally received GET; use response completion instead.
@@ -9853,10 +9836,6 @@ app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) =>
 
 /* Asenkron model yenilemesini başlatan tek native yol. HTTP /api/refresh ve
    Paylaşılan yenileme servisi aynı fonksiyonu kullanır. */
-function nativeRefreshPlan(currentUser, rawTargets) {
-  const { requestedTargets } = nativeRefreshTargets(rawTargets, currentUser), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
-  return { requestedTargets, filterReady: !filterError, running: refreshInFlight.has(id), activeJobId: refreshInFlight.has(id) ? (refreshJobs.get(id) || {}).jobId || null : null };
-}
 function nativeRefreshTargets(rawTargets, value = null) {
   rawTargets = Array.isArray(rawTargets) ? rawTargets : null;
   const wanted = rawTargets ? rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t))) : null;
@@ -10170,6 +10149,15 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   return Boolean(manifest);
 }
 
+// The override write is already durable; rewriting every cached module
+// (gunzip → patch → gzip) took seconds on large data and delayed the save
+// acknowledgement. It starts now, serialized per user, and cache reads wait
+// for it (page-projection-cache pendingRewrites).
+function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label){
+  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items).catch(cacheError=>logRuntimeFailure(label,cacheError));
+  return true;
+}
+
 function assertAutomaticDatesReadOnly(currentUser,items){
   const sourceFields=['shipConfirmationDate','shippingApproval','loadingApprovalDate','Buying Son Onay Tarihi','_exFactoryRevision'];
   if(items.some(item=>sourceFields.some(key=>Object.prototype.hasOwnProperty.call(item?.patch||{},key)||Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},key)))){
@@ -10201,13 +10189,11 @@ app.post('/api/overrides/batch', async (req, res) => {
     const beforeContext=pageProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    let pageCachePatched=false;
-    try { pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,items); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'ORDER_BATCH_UPDATE', 'orders', { orderCodes: items.map(item=>Number(item&&item.orderCode)).filter(Number.isFinite), count: items.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(items) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, skipped: saved.skipped || [], pageCachePatched });
+    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, skipped: saved.skipped || [], pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Toplu sipariş düzenlemeleri kaydedilemedi.'); }
 });
 
@@ -10228,15 +10214,13 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     const { origin: _ignoredOrigin, ...patchBody } = req.body && typeof req.body === 'object' ? req.body : {};
     const saved = patchOrderOverride(orderCode, patchBody, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    let pageCachePatched=false;
-    try { pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}]); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}],'rowProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'ORDER_UPDATE', String(orderCode), {
       fields: Object.keys(patchBody).filter(key => !/^expected/.test(key)),
     });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor([{ orderCode, patch: patchBody }]) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, pageCachePatched });
+    res.json({ ok: true, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Sipariş düzenlemesi kaydedilemedi.'); }
 });
 
@@ -10465,14 +10449,12 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
       .map(item => ({ orderCode: item.orderCode, reason: 'invalid-order-code-or-value' }));
     const validItems = clean.filter(item => Number.isFinite(item.orderCode) && Number.isFinite(item.suppFob));
     const saved = patchSuppFobOverrides(validItems, requestRevision(req), { actor: noteActorOf(req.currentUser) });
-    let pageCachePatched=false;
     const rowPatches=validItems.map(item=>({orderCode:item.orderCode,patch:{model:item.model,ccode:item.ccode,suppFob:item.suppFob,suppFobMeta:item.suppFobMeta}}));
-    try{pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,rowPatches);}
-    catch(cacheError){logRuntimeFailure('suppFobProjectionCachePatch',cacheError);}
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,rowPatches,'suppFobProjectionCachePatch');
     userAccess.appendAudit(req.currentUser, 'SUPP_FOB_BATCH_UPDATE', 'orders', { orderCodes: validItems.map(item=>item.orderCode), count: validItems.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(rowPatches) });
     res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, skipped: [...preFilterSkipped, ...(saved.skipped || [])], pageCachePatched });
+    res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, skipped: [...preFilterSkipped, ...(saved.skipped || [])], pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Supp. FOB düzenlemeleri kaydedilemedi.'); }
 });
 
@@ -11327,6 +11309,19 @@ app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.re
    yayını. Okuma herkese açıktır (her kullanıcı kendi ekranında uygular);
    yazma yalnız Moderatör. Değişiklik Master kural yayınıyla diğer cihazlara
    gider; kullanıcıların kendi kurallarına dokunulmaz. */
+// Shared report defaults use the existing revisioned master transport.
+app.get('/api/table-report-layouts', (_req,res)=>{
+  try{res.set('Cache-Control','no-store').json(require('./lib/table-report-layouts').normalize(loadOverrides().tableReportLayouts));}
+  catch(error){apiError(res,error,'Rapor düzenleri okunamadı. / Report layouts could not be read.');}
+});
+app.put('/api/table-report-layouts', userAccess.requireModerator, express.json({limit:'256kb'}), (req,res)=>{
+  try{
+    const body=req.body||{},saved=require('./db').replaceTableReportLayout(body,req.currentUser);
+    userAccess.appendAudit(req.currentUser,'TABLE_REPORT_LAYOUT_UPDATE',body.table+'.'+body.view,{publicationId:saved.slots[body.table+'.'+body.view]?.id});
+    publishSharedMasterChange('tableReportLayouts',req);
+    res.set('Cache-Control','no-store').json(saved);
+  }catch(error){apiError(res,error,'Rapor düzeni kaydedilemedi. / Report layout could not be saved.');}
+});
 app.get('/api/cp-managed-rules', (_req, res) => {
   try {
     const ov = loadOverrides();

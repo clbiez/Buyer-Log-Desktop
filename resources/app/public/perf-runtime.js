@@ -172,6 +172,9 @@
        penceresi); loadScript aynı dosyayı tek kez yükler. */
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','orders-priority-engine.js','orders-priority.js','cp-managed-rules.js?rev=20261101','cp-overview-assistant.js?rev=20261105-workspace'],
     exceptionInbox:['backlog-delivery-engine.js','cp-readiness-engine.js','exception-inbox.js','exception-inbox-view.js'],
+    /* CP BOM Kontrol: yalnız Araçlar menüsünden açılınca yüklenir. Saf motor
+       görünümden ÖNCE gelir. */
+    bomControl:['bom-control-engine.js?rev=1','bom-control.js?rev=1'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
     testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=3','test-report-assessment.js?rev=1','test-report-focus-view.js?rev=1','test-report-import.js?rev=6'],
@@ -209,7 +212,7 @@
     collectionTools:['collection-analytics.css','price-supplier-analysis.css','pricing-workspace.css','pricing-desk.css','collection-spreadsheet.css'],
     backlogAnalysis:['backlog-delivery-analysis.css','backlog-plan-actual.css','backlog-presentation.css'],
     excelImport:['excel-import.css'],dataManagement:['data-maintenance.css','data-management.css'],
-    userManagement:['user-management.css'],exceptionInbox:['exception-inbox.css'],
+    userManagement:['user-management.css'],exceptionInbox:['exception-inbox.css'],bomControl:['bom-control.css'],
   };
   const featureViews={
     openCosting:'#view-opencosting',automations:'#view-automations',lfl:'#view-lfl',

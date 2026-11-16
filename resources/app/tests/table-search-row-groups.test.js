@@ -133,3 +133,39 @@ test('parantez grubunda sonek ! önek ! ile aynı hariç tutmadır',()=>{
   assert.equal(table.matches('SHIRT RED',suffix,{plainMode:'contains'}),false);
   assert.deepEqual(rowGroups.criterionFromCell('ABC!DEF'),{mode:'exact',value:'abc!def'});
 });
+
+
+test('arama sırası ilk eşleşmeye göre, kararlı ve kaynak satırlara dokunmadan uygulanır',()=>{
+  const {table}=installedSearch();
+  const rows=[{text:'A',n:1},{text:'C',n:2},{text:'B',n:3},{text:'B C',n:4},{text:'B',n:5}];
+  const ordered=table.orderRows(rows,table.parseTerms('B, C, A'),row=>row.text,{plainMode:'contains'});
+  assert.deepEqual(ordered.map(row=>row.n),[3,4,5,2,1]);
+  assert.deepEqual(rows.map(row=>row.n),[1,2,3,4,5]);
+  assert.equal(table.orderRows(rows,table.parseTerms(''),row=>row.text),rows);
+  assert.equal(table.orderRows(rows,table.parseTerms('!Z'),row=>row.text),rows);
+});
+
+test('Excel satır grupları, tek sütun ve VE içindeki VEYA sırası korunur',()=>{
+  const {table}=installedSearch();
+  const rows=['MODEL-A RED','MODEL-B BLUE','MODEL-C GREEN'];
+  const order=query=>table.orderRows(rows,table.parseTerms(query),row=>row,{plainMode:'contains'});
+  assert.deepEqual(order(rowGroups.formatClipboardMatrix('MODEL-C\tGREEN\nMODEL-A\tRED\nMODEL-B\tBLUE')), [rows[2],rows[0],rows[1]]);
+  assert.deepEqual(order(rowGroups.formatClipboardMatrix('MODEL-B\nMODEL-C\nMODEL-A')), [rows[1],rows[2],rows[0]]);
+  assert.deepEqual(order('MODEL; GREEN, BLUE, RED; !Z'),[rows[2],rows[1],rows[0]]);
+});
+
+test('grup sıralaması her koşulu aynı fiziksel satırda arar',()=>{
+  const {table}=installedSearch();
+  const rows=[['A 2','B 1'],['B 2'],['A 1']];
+  assert.deepEqual(table.orderRows(rows,table.parseTerms('(B; 2), (A; 1)'),row=>row),[rows[1],rows[2],rows[0]]);
+});
+
+test('Collection arama sırası aktif sütun sırasını ve geçici sabitlemeyi aşar; model ailesi birlikte kalır',()=>{
+  const {table}=installedSearch();
+  const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+  const code=source.slice(source.indexOf('function kolGroupMembersIndex('),source.indexOf('function filteredKol('));
+  const rows=[{id:1,text:'A',modelGroupId:'g',modelGroupRole:'parent'}, {id:2,text:'A',modelGroupId:'g'}, {id:3,text:'B'}];
+  const order=new Function('window','kolRows','kolSort','kolTransientTopRowId','kolIsColorSpecific','kolCompareRowsForActiveSort','kolSearchHaystack',code+';return kolGroupAwareOrder;')({BLTableSearch:table},rows,{key:'text'},1,()=>false,(a,b)=>a.text.localeCompare(b.text),row=>row.text);
+  assert.deepEqual(order(rows,table.parseTerms('B, A')).map(row=>row.id),[3,1,2]);
+  assert.deepEqual(order(rows,table.parseTerms('')).map(row=>row.id),[1,2,3]);
+});

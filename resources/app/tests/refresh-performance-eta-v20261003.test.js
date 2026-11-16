@@ -66,10 +66,9 @@ test('sunucu yenilemeleri anonim performans servisine bağlar ve job durumuna ET
 });
 
 test('ETA mevcut Refresh Stages ve Thinking Orb tasarım dilini kullanır',()=>{
-  assert.match(APP,/function refreshEtaPanelHtml/);
-  assert.match(APP,/class="refreshEtaCard/);
+  // Ayrı ETA kartı (refreshEtaPanelHtml / .refreshEtaCard) emekliye ayrıldı;
+  // ETA yenileme sayacı üzerinden gösterilir.
   assert.match(APP,/blOrb blOrb--sm/);
   assert.match(APP,/sourceRefreshTimers\[refreshTimerKey\]\.eta/);
-  assert.match(CSS,/\.refreshEtaCard\{/);
-  assert.match(CSS,/\.refreshEtaState/);
+  assert.doesNotMatch(APP,/class="refreshEtaCard/);
 });

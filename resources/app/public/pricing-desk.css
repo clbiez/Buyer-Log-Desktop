@@ -72,20 +72,22 @@
 .pdAddMfr .ic{width:14px;height:14px}
 @media (max-width:720px){.pdMfrFields{grid-template-columns:1fr}.pdOptRow{grid-template-columns:minmax(0,1fr) 88px}.pdOptRow>:nth-child(3),.pdOptRow>:nth-child(4){grid-column:1 / -1}}
 .pdMatrixScroll{flex:1 1 auto;min-height:0;overflow:auto}
-.pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed;width:calc(504px + var(--pd-columns)*96px)}
+.pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed;width:calc(504px + var(--pd-context-width,0px) + var(--pd-columns)*96px)}
 .pdMatrix thead th{position:sticky;top:0;padding:6px 8px;text-align:left;white-space:nowrap}
 .pdMatrix thead th.pdNum{text-align:right}
 .pdMatrix .pdModelHead,.pdMatrix .pdModelCell{position:sticky;left:0}
 .pdMatrix tbody td,.pdMatrix tbody th{padding:4px 8px;vertical-align:middle}
 .pdModelWidth{width:200px}
+.pdSummaryWidth{width:144px}
+.pdContextWidth{width:150px}
 .pdTargetWidth{width:80px}
 .pdBestWidth{width:144px}
 .pdDeltaWidth{width:80px}
 .pdSupplierWidth{width:96px}
 .pdMatrix .pdTarget,.pdMatrix .pdStickyBest,.pdMatrix .pdStickyDelta{position:sticky}
-.pdMatrix .pdTarget{left:200px}
-.pdMatrix .pdStickyBest{left:280px}
-.pdMatrix .pdStickyDelta{left:424px}
+.pdMatrix .pdTarget{left:calc(200px + var(--pd-summary-width,0px))}
+.pdMatrix .pdStickyBest{left:calc(280px + var(--pd-summary-width,0px))}
+.pdMatrix .pdStickyDelta{left:calc(424px + var(--pd-summary-width,0px))}
 .pdMatrix tbody tr{height:36px}
 .pdMatrix tbody tr.pdVirtualSpacer{height:0}
 .pdMatrix tbody tr.pdVirtualSpacer>td{padding:0}
@@ -96,7 +98,7 @@
 .pdMfrHead small{display:block}
 .pdModel{display:flex;align-items:center;gap:6px;min-width:0;max-width:184px}
 .pdModel .pdThumb{width:24px;height:28px;flex:0 0 24px}
-.pdModelText small{display:none}
+.pdModelText small{display:block}
 .pdModelText{display:flex;flex-direction:column;gap:1px;min-width:0}
 .pdModelText b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdModelText span,.pdModelText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -313,3 +315,13 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .pdRoundQuote{display:inline-flex;align-items:center;gap:5px;padding:3px 5px}
 .kolPsTrack>.kolPsBand{left:var(--start);width:calc(var(--end) - var(--start));min-width:2px;height:5px;transform:translateY(-50%)}
 .kolPsMedian{width:1px;height:10px}
+
+/* Collection context and per-user column selection. */
+.pdMatrix .pdSummary{position:sticky;left:200px}
+.pdSummary>span{display:flex;flex-direction:column;gap:2px}
+.pdSummary>span>span{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pdSummary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdCollectionValue{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdColumnsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px;padding:12px}
+.pdColumnsPanel[hidden]{display:none}
+.pdColumnsList{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));max-height:240px;overflow:auto;gap:2px 12px}

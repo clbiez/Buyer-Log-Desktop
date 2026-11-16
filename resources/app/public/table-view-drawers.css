@@ -38,3 +38,8 @@
   .blViewPicker .blViewPickerTrigger{min-width:100px;}
   .blPriceViewPicker .blViewPickerTrigger{min-width:110px;}
 }
+
+.blViewPresetRow{display:flex;align-items:center;gap:var(--ui-space-1)}
+.blViewPresetRow>.tableViewPreset{flex:1;min-width:0}
+.blViewPickerMenu .blViewEdit{display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--ui-control-height);height:var(--ui-control-height);margin:0;padding:0;cursor:pointer}
+.blViewEdit .ic{width:14px;height:14px}

@@ -66,6 +66,42 @@
     grid()?.querySelectorAll(':scope > [data-overview-widget]').forEach(el=>{if(!el.classList.contains('ovHomeOff'))map.set(el.dataset.overviewWidget,el.getBoundingClientRect());});
     return map;
   }
+  let contentFrame=0,contentRects=new Map(),contentSignature='';
+  function pivotContentHeight(el){
+    if(!el)return 0;
+    const rect=el.getBoundingClientRect(),style=getComputedStyle(el);
+    // A running Motion+ height is only presentation. Measure the natural
+    // flow children so a second toggle never sizes the grid to mid-animation pixels.
+    let bottom=rect.top+(parseFloat(style.paddingTop)||0)+(parseFloat(style.borderTopWidth)||0);
+    for(const child of el.children){
+      const css=getComputedStyle(child);
+      if(css.display==='none'||css.position==='absolute'||css.position==='fixed')continue;
+      bottom=Math.max(bottom,child.getBoundingClientRect().bottom+(parseFloat(css.marginBottom)||0));
+    }
+    return Math.round((bottom-rect.top+(parseFloat(style.paddingBottom)||0)+(parseFloat(style.borderBottomWidth)||0))*100)/100;
+  }
+  function fitPivotHeights(){
+    contentFrame=0;
+    const g=grid();if(!g||!state||editing||session||!g.getClientRects().length)return;
+    const items=state.pages[state.page]?.items||[],m=metrics();if(!m)return;
+    const boundaries=[...new Set([0,...items.flatMap(item=>[item.y,item.y+item.h])])].sort((a,b)=>a-b);
+    const sizes=items.map(item=>({item,el:widgetEl(item.key),height:['oab','intake'].includes(item.key)?pivotContentHeight(widgetEl(item.key)):item.h*m.stepY-m.rowGap}));
+    const signature=JSON.stringify([state.page,isNarrow(),boundaries,sizes.map(({item,height})=>[item.key,height])]);
+    if(signature===contentSignature)return;
+    contentSignature=signature;
+    if(!isNarrow()){
+      const tracks=boundaries.slice(1).map((end,i)=>{
+        const start=boundaries[i],cover=sizes.filter(({item})=>item.y<=start&&item.y+item.h>=end);
+        return Math.max(0,...(cover.length?cover.map(({item,height})=>Math.max(0,(height+m.rowGap)*(end-start)/item.h-m.rowGap)):[(end-start)*m.stepY-m.rowGap]));
+      });
+      g.style.gridTemplateRows=tracks.map(n=>n+'px').join(' ');
+      sizes.forEach(({item,el})=>{if(el)el.style.gridRow=`${boundaries.indexOf(item.y)+1} / ${boundaries.indexOf(item.y+item.h)+1}`;});
+    }else g.style.removeProperty('grid-template-rows');
+    const next=snapshotRects();
+    next.forEach((rect,key)=>window.BLMotionPlus?.reflow(widgetEl(key),contentRects.get(key)));
+    contentRects=next;
+  }
+  function schedulePivotFit(){if(!contentFrame)contentFrame=requestAnimationFrame(fitPivotHeights);}
   function flip(before,skipKey){
     if(!before||reducedMotion())return;
     grid()?.querySelectorAll(':scope > [data-overview-widget]').forEach(el=>{
@@ -100,6 +136,8 @@
     window.BLOverviewPremium?.onViewChanged?.();
     g.style.setProperty('--ov-rows',String(Math.max(L.rows(page.items)+(editing?3:0),editing?6:1)));
     g.classList.toggle('isEditing',editing);
+    g.style.removeProperty('grid-template-rows');contentSignature='';contentRects=new Map();
+    schedulePivotFit();
     document.body.classList.toggle('ovHomeEditing',editing);
     renderEmptyPage(page);
     renderShields(view);
@@ -510,6 +548,9 @@
     try{window.matchMedia(NARROW_QUERY).addEventListener('change',()=>{if(isNarrow())setEditing(false);syncNarrow();});}catch(_){}
     document.addEventListener('bl:language-changed',()=>apply());
     new MutationObserver(()=>apply()).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    const pivotResize=new ResizeObserver(schedulePivotFit);
+    g.querySelectorAll(':scope > :is(#oabSection,#intakeSection) > *').forEach(el=>pivotResize.observe(el));
+    window.addEventListener('resize',schedulePivotFit,{passive:true});
     syncNarrow();
   }
   function syncNarrow(){

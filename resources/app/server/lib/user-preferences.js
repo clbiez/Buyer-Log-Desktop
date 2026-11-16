@@ -93,6 +93,8 @@ const SYNCED_PREFIXES = Object.freeze([
   // the same CP context used by the UI and deterministic agent previews.
   'lcw.cp.assistant.',
   'lcw.cp.checklist.',
+  // CP BOM Kontrol: kırılım seçimi ve kalem işaretleri (Ortak / Model bazlı).
+  'lcw.cp.bomControl.',
   'lcw_view_favorite_',   // kayıtlı görünümler
   'lcw_filter_favorite_', // kayıtlı filtreler
   // v2026-10-30: kişisel ASAS ⇄ IAS alan eşleme hafızası (horizon-field-pairs).

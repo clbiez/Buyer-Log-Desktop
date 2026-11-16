@@ -90,7 +90,7 @@ test('startup omits optional scripts and blocking module styles while preserving
     assert.ok(source.includes("'"+file+'.js'),file+' missing from feature manifest');
   }
   const anchors=[...html.matchAll(/<template data-bl-style="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(anchors.length,18);
+  assert.equal(anchors.length,19); // +bom-control.css (CP BOM Kontrol, tembel)
   for(const file of anchors){assert.doesNotMatch(html,new RegExp('<link[^>]+href="'+file.replaceAll('.','\\.')+'[?]'));assert.ok(source.includes("'"+file+"'"));}
   for(const file of ['excel-import-mapping','backlog-chart','backlog-v3-report','backlog-overview'])assert.ok(html.includes('<script src="'+file+'.js?'));
 });

@@ -22,6 +22,13 @@ const MEMORY_MAX_BYTES = Math.max(4 * 1024 * 1024, Number(process.env.BL_PAGE_CA
 const compressedLru = new Map();
 const singleFlights = new Map();
 const userMutationTails = new Map();
+// Row-level rewrites run after the write is acknowledged. A projection read for
+// that user waits for them so a fresh context never becomes a cache miss.
+const pendingRewrites = new Map();
+async function pendingRewritesSettled(userId) {
+  const pending = pendingRewrites.get(safeUserId(userId));
+  if (pending && pending.size) await Promise.allSettled([...pending]);
+}
 let compressedLruBytes = 0;
 
 function safeUserId(value) {
@@ -155,6 +162,7 @@ async function readCompressed(file, expectedChecksum = '') {
 }
 async function readProjectionCompressed(userId, module, contextHash) {
   if (!MODULES.has(module)) return null;
+  await pendingRewritesSettled(userId);
   const started = Date.now(), candidates = loadManifestCandidates(userId);
   for (let index = 0; index < candidates.length; index += 1) {
     const manifest = candidates[index];
@@ -279,7 +287,9 @@ async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null
 // kalır; refresh ile yarışırsa yarım manifest yayımlanmaz.
 async function rewriteGeneration(userId, { fromContextHash, toContextHash, transform } = {}) {
   if (typeof transform !== 'function') throw new TypeError('transform fonksiyonu zorunludur.');
-  return singleFlight(`rewrite:${safeUserId(userId)}:${fromContextHash}:${toContextHash}`, () => enqueueUserMutation(userId, async () => {
+  const key = safeUserId(userId), pending = pendingRewrites.get(key) || new Set();
+  pendingRewrites.set(key, pending);
+  const promise = singleFlight(`rewrite:${safeUserId(userId)}:${fromContextHash}:${toContextHash}`, () => enqueueUserMutation(userId, async () => {
     const previous = loadManifest(userId);
     if (!previous || String(previous.contextHash || '') !== String(fromContextHash || '')) return null;
     const projections = {};
@@ -299,6 +309,9 @@ async function rewriteGeneration(userId, { fromContextHash, toContextHash, trans
       previous,
     });
   }));
+  pending.add(promise);
+  promise.catch(() => {}).finally(() => { pending.delete(promise); if (!pending.size && pendingRewrites.get(key) === pending) pendingRewrites.delete(key); });
+  return promise;
 }
 async function cleanupGenerations(userId, keep) {
   const dir = userRoot(userId);
@@ -328,6 +341,7 @@ async function writeProjection(userId, module, contextHash, value) {
 }
 
 async function readBacklog(userId, contextHash, key) {
+  await pendingRewritesSettled(userId);
   const candidates = loadManifestCandidates(userId);
   for (let index = 0; index < candidates.length; index += 1) {
     const manifest = candidates[index];

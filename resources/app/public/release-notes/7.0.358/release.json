@@ -1,0 +1,722 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.358",
+  "channel": "stable",
+  "publishedAt": "2026-11-14",
+  "title": {
+    "tr": "Tablolarda Rapor görünümü ve hızlı not kaydı · Genişleyen tablo araması",
+    "en": "Report view and faster note saving in tables · Broader table search"
+  },
+  "summary": {
+    "tr": "CP Tracker ve Siparişler'de hücreler Koleksiyon gibi çift tıkla düzenlenir; klavyeyle geçilen hücre doğrudan düzenlenir. Koleksiyon'da tek hücreye Ctrl+V önizlemesiz yapıştırır ve hücre seçimi dış çerçeveyle görünür. Koleksiyon hazırlanırken yarım boş ekran yerine yükleme kutusu ve genel kültür kartı görünür. LCW AI’a gönderilen görsel ve dosyalar yeniden mesaja eklenir; Görselden Arama ve dosyalı LCW AI özellikleri eki görür. PowerPoint düzenleyicide önizleme yeniden görünür; panel genişliği sürüklenerek ayarlanır, “Önizle ve oluştur” alt barda sabit durur ve oluşturulan dosya belirgin bir bantta gösterilir. CP Tracker, Siparişler ve Koleksiyon tablolarına, tabloyu kendi yerinde rapor düzenine çeviren Rapor görünümü eklendi. Öncelik Kuralları etiketleri Backlog Genel Bakış'ta (adet kutucukları ve Öncelik kırılımı) ve Global Flow'da da görünür. Küresel Akış Haritası etiketli sembolleri işaretler; Excel Backlog V3 Öncelik kırılımını içerir. Backlog Zaman Akışı'na Öncelik kırılımı eklendi. CP Tracker ve Siparişler araması ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line alanlarında da arar. Beklenmeyen JS/Promise hataları ekranda kalan kırmızı kutu yerine kendiliğinden kapanan hata bildirimi olarak görünür ve Bildirim Geçmişi'ne yazılır. Not kaydı artık sunucu önbelleğinin yeniden yazılmasını beklemeden tamamlanır.",
+    "en": "In CP Tracker and Orders, cells are edited with a double click like in Collection; a cell reached with the keyboard opens directly for editing. In Collection, Ctrl+V into a single cell pastes without a preview and the cell selection shows an outer border. While Collection is being prepared, a loading box and trivia card replace the half-empty screen. Images and files sent to LCW AI are attached to the message again, so Search from Image and other LCW AI file features see the attachment. In the PowerPoint editor the preview is visible again; the panel width can be dragged, “Preview and create” stays fixed in the bottom bar and the created file is shown in a prominent band. CP Tracker, Orders and Collection tables gained a Report view that switches the table to report layout in place. Priority Rules tags also appear in Backlog Overview (quantity tiles and a Priority breakdown) and in Global Flow. The Global Flow Map marks tagged symbols; Excel Backlog V3 includes the Priority breakdown. A Priority breakdown was added to the Backlog Timeline. CP Tracker and Orders search also looks in product description, category, MAG, buyer group, buyer and line. Unexpected JS/Promise errors now appear as a self-closing error notification recorded in Notification History instead of a red box that stayed on screen. Saving a note now completes without waiting for the server cache rewrite."
+  },
+  "stats": {
+    "features": 5,
+    "improvements": 7,
+    "fixes": 13
+  },
+  "changes": [
+    {
+      "id": "table-report-view",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablolarda Rapor görünümü",
+        "en": "Report view for tables"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-report-view.png",
+        "alt": {
+          "tr": "CP Tracker tablosu Rapor görünümünde: Öncelik, Marka Detayları, Model Detayları, Sipariş Detayları ve Lisans Detayları ana başlıkları sütun; alanlar alt alta",
+          "en": "The CP Tracker table in Report view: the Priority, Brand Details, Model Details, Order Details and License Details main headers as columns with their fields stacked"
+        },
+        "caption": {
+          "tr": "Aynı ana başlıktaki alanlar tek sütunda alt alta durur; tekrar tıklayınca ya da “Tablo görünümüne dön” ile tablo geri gelir.",
+          "en": "Fields under the same main header stack in one column; click again or use “Back to table view” to return."
+        }
+      },
+      "body": {
+        "tr": "CP Tracker, Siparişler ve Koleksiyon'un görünüm seçicisinin sonuna Rapor görünümü eklendi. Tablo sağdan açılan bir pencereye gitmeden kendi yerinde rapor düzenine döner: aynı sütun ana başlığı altındaki alanlar (ör. Marka Detayları, Model Detayları) tek sütunda alt alta görünür, böylece tablo daha az sütunla okunur. Hangi alanların birlikte duracağını Alanlar çekmecesindeki başlık düzeni belirler. Geçerli filtre, sıralama ve sayfa aynen geçerlidir; sayfa değiştirme ve başlıktaki alan filtreleri bu görünümde de çalışır. Seçiminiz tablo başına hatırlanır. Rapor görünümü yalnız gösterimdir; tablonuz, filtreleriniz ve kayıtlar değişmez.",
+        "en": "Report view was added at the end of the view picker of CP Tracker, Orders and Collection. The table switches to report layout in place instead of opening a window on the right: fields under the same column main header (e.g. Brand Details, Model Details) appear stacked in one column, so the table reads with fewer columns. The header layout in the Fields drawer decides which fields stay together. The current filters, sorting and page still apply; paging and the field filters in the headers work in this view too. Your choice is remembered per table. Report view only displays the data; your table, filters and records do not change."
+      }
+    },
+    {
+      "id": "collection-single-cell-paste-direct",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Tek hücreye kopyala-yapıştır her sütunda doğrudan çalışır",
+        "en": "Copy-paste into a single cell works directly in every column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-single-cell-paste-direct.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda üst satırdan kopyalanan sezon değeri alttaki seçili hücreye yapıştırılmış ve bilgi mesajı görünüyor",
+          "en": "In the Collection table the season value copied from the row above is pasted into the selected cell below with an info message"
+        },
+        "caption": {
+          "tr": "Tek tıkla seçilen hücreye Ctrl+V değeri hemen yazar; Ctrl+Z tek adımda geri alır.",
+          "en": "Ctrl+V writes the value into the cell selected with a single click at once; Ctrl+Z reverts it in one step."
+        }
+      },
+      "body": {
+        "tr": "Tek tık artık yalnız hücreyi seçtiği için Ctrl+V her seferinde toplu yapıştırma önizlemesi açıyordu. Tek hücre yapıştırma ve temizleme artık yazarak düzenleme gibi doğrudan uygulanır; birden çok hücreye yapıştırmada önizleme korunur. Bekleyen kayıt nedeniyle yapıştırma uygulanamazsa artık uyarı gösterilir.",
+        "en": "Because a single click now only selects the cell, Ctrl+V opened the bulk paste preview every time. Pasting into or clearing a single cell is now applied directly, like typing; pasting into several cells still shows the preview. If a paste cannot be applied because of a pending save, a warning is now shown."
+      }
+    },
+    {
+      "id": "collection-multi-cell-paste-plm-image-rows",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM görselli koleksiyonlarda çok hücreli yapıştırma yeniden çalışır",
+        "en": "Multi-cell paste works again in collections with PLM images"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-multi-cell-paste-preview.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda iki hücreye yapıştırma için önizleme penceresi: iki Sezon değişikliği ve Uygula ve kaydet düğmesi",
+          "en": "Paste preview window for two cells in the Collection table: two Season changes and the Apply and save button"
+        },
+        "caption": {
+          "tr": "Birden çok hücre seçilip yapıştırıldığında önizleme açılır; uyarı vermeden değişiklikleri uygular.",
+          "en": "Pasting into several selected cells opens the preview and applies the changes without a warning."
+        }
+      },
+      "body": {
+        "tr": "PLM görseli olan modeller, kaydedildikten sonra bile değişmiş sayılıyordu. Bu yüzden birden çok hücreye yapıştırmada \"Önceki değişiklikler henüz kaydedilemedi\" uyarısı çıkıyor ve hiçbir şey yapıştırılmıyordu. Artık kayıttan sonra tablo temiz sayılır, yapıştırma önizlemesi açılır; bu modeller her kayıtta gereksiz yere yeniden gönderilmez.",
+        "en": "Models with a PLM image were treated as changed even after saving, so pasting into several cells showed the \"Earlier changes could not be saved yet\" warning and nothing was pasted. The table is now clean after saving and the paste preview opens; these models are no longer re-sent on every save."
+      }
+    },
+    {
+      "id": "collection-range-selection-outline",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Hücre seçimi CP Tracker'daki gibi çerçeveli görünür",
+        "en": "Cell selection is outlined like in CP Tracker"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-range-selection-outline.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda işaretli satırların üzerinde seçilen hücre aralığı ince bir dış çerçeve ve ayrı zemin rengiyle, aktif hücre ise kalın mavi çerçeveyle görünüyor",
+          "en": "In the Collection table a cell range selected over checked rows shows a thin outer outline and its own background, and the active cell has a bold blue frame"
+        },
+        "caption": {
+          "tr": "Seçim alanı tek dış çerçeveyle belirginleşir; işaretli satır rengiyle karışmaz.",
+          "en": "The selection stands out with one outer outline and no longer blends with checked rows."
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda sürükleyerek, Shift veya Ctrl ile seçilen hücreler yalnız zemin rengiyle gösteriliyordu ve işaretli satırların üzerinde neredeyse görünmüyordu. Seçim artık CP Tracker ve Siparişler ile aynı ortak stili kullanır: alanın çevresine tek bir dış çerçeve çizilir, zemin işaretli satır renginden ayrıdır ve aktif hücre kalın mavi çerçeveyle belirtilir.",
+        "en": "In the Collection table, cells selected by dragging, Shift or Ctrl were shown only with a background tint and were almost invisible over checked rows. The selection now uses the same shared style as CP Tracker and Orders: one outer outline is drawn around the area, its background differs from the checked-row colour and the active cell has a bold blue frame."
+      }
+    },
+    {
+      "id": "cp-orders-double-click-edit",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Hücre düzenleme çift tıkla açılır, klavyeyle doğrudan düzenlenir",
+        "en": "Cell editing opens with a double click, keyboard moves edit directly"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-double-click-edit.png",
+        "alt": {
+          "tr": "CP Tracker tablosunda iki satır ve iki sütunluk hücre aralığı tek tıkla sürüklenerek seçilmiş, araç çubuğunda 2×2 · 4 hücre yazıyor",
+          "en": "In the CP Tracker table a two-row, two-column cell range is selected by dragging, and the toolbar shows 2×2 · 4 cells"
+        },
+        "caption": {
+          "tr": "Tek tık hücreyi seçer ve düzenlenebilir hücreler üzerinde de sürükleyerek aralık seçilir; çift tık düzenlemeyi açar.",
+          "en": "A single click selects the cell and ranges can be dragged across editable cells too; a double click opens editing."
+        }
+      },
+      "body": {
+        "tr": "Tek tık artık hücreyi seçer; düzenleme Koleksiyon'daki gibi çift tıkla açılır. Del. Type, önem, checklist, tarih ve not hücreleri de ilk tıkta değil çift tıkla açılır. Ok, Tab ve Enter ile varılan düzenlenebilir hücre doğrudan düzenleme modunda açılır; seçili hücrede yazmaya başlamak ya da F2 de düzenlemeyi açar, Esc değişikliği geri alır. Çoklu hücre kopyala-yapıştır aynen çalışır; Shift+ok aralığı genişletir, tek hücreye tek değer önizlemesiz yapıştırılır. Düzenleme sırasında açılan takvim, öneri listesi ve seçim menüleri artık başka bir yere tıklayınca kapanır.",
+        "en": "A single click now selects the cell; editing opens with a double click, as in Collection. Del. Type, importance, checklist, date and note cells also open on a double click instead of the first click. An editable cell reached with the arrow keys, Tab or Enter opens directly in edit mode; typing in a selected cell or F2 also starts editing, and Esc reverts the change. Multi-cell copy-paste works as before; Shift+arrow extends the range and a single value pastes into a single cell without a preview. The calendar, suggestion list and choice menus opened while editing now close when you click elsewhere."
+      }
+    },
+    {
+      "id": "deferred-modules-optional-ai-client",
+      "type": "fix",
+      "module": {
+        "tr": "Uygulama açılışı",
+        "en": "App startup"
+      },
+      "title": {
+        "tr": "Arka plan modül yüklemesi tek dosya hatasında kesilmez",
+        "en": "Background module loading no longer stops on a single file error"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "deferred-modules-friendly-warning.png",
+        "alt": {
+          "tr": "CP Tracker ekranında sağ altta 'Bazı yardımcı modüller yüklenemedi' bilgi mesajı görünüyor",
+          "en": "The CP Tracker screen shows a 'Some helper modules could not be loaded' info message at the bottom right"
+        },
+        "caption": {
+          "tr": "Teknik dosya adı yerine anlaşılır bir uyarı gösterilir; ayrıntı konsola yazılır.",
+          "en": "A clear warning is shown instead of a technical file name; details go to the console."
+        }
+      },
+      "body": {
+        "tr": "LCW AI istemcisi açılıştan sonra arka planda yüklenemediğinde (ör. sunucu geçici olarak meşgulken) diğer yardımcı modüllerin yüklenmesi de duruyor ve CP/Siparişler ekranında 'lcwai-assistant.js?rev=1 yüklenemedi' uyarısı çıkıyordu. Artık bu dosya düşse de kullanıcı erişimi, sağ tık menüsü ve kur gibi modüller yüklenir; AI paneli istemciyi açıldığında yeniden ister. Zorunlu bir modül yüklenemezse dosya adı yerine anlaşılır bir mesaj gösterilir.",
+        "en": "When the LCW AI client failed to load in the background after startup (e.g. while the server was briefly busy), loading of the other helper modules stopped too and CP/Orders showed 'lcwai-assistant.js?rev=1 could not be loaded'. Now modules such as user access, the context menu and FX still load if that file fails; the AI panel requests the client again when opened. If a required module cannot be loaded, a clear message is shown instead of a file name."
+      }
+    },
+    {
+      "id": "orders-image-preview-closes-on-scroll",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Model görseli önizlemesi kaydırınca kapanır",
+        "en": "Model image preview closes when you scroll"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-image-preview-closes-on-scroll.png",
+        "alt": {
+          "tr": "Siparişler tablosu fare görsel sütunundayken aşağı kaydırılmış; büyük görsel önizlemesi açık kalmamış",
+          "en": "The Orders table scrolled down with the pointer on the picture column; no large image preview is left open"
+        },
+        "caption": {
+          "tr": "Kaydırma sonrası önceki modelin büyük görseli ekranda kalmaz.",
+          "en": "After scrolling, the previous model's large image no longer stays on screen."
+        }
+      },
+      "body": {
+        "tr": "Fare model görselinin üzerindeyken tablo kaydırıldığında veya yeniden çizildiğinde son görselin büyük önizlemesi açık kalıyordu. Önizleme artık kaydırmada, imleç görselden çıktığında ya da görsel tablodan kalktığında kapanır; bekleyen önizleme de kaydırmadan sonra açılmaz. Düzeltme ortak önizlemeyi kullanan tüm tablolarda geçerlidir.",
+        "en": "When the table was scrolled or redrawn while the pointer was over a model image, the large preview of the last image stayed open. The preview now closes on scroll, when the pointer leaves the image, or when the image is removed from the table, and a pending preview no longer opens after scrolling. The fix applies to every table that uses the shared preview."
+      }
+    },
+    {
+      "id": "lfl-borders-compact-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL kartları çerçeveli, filtre çubuğu kompakt",
+        "en": "Framed LFL cards and a compact filter bar"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-borders-compact-filters.png",
+        "alt": {
+          "tr": "LFL analiz koşulları kartı ve KPI kartları ince çerçeveyle; dönem seçimi tek birleşik kontrol, boyut filtreleri eşit yükseklikte kompakt düğmeler",
+          "en": "LFL analysis conditions card and KPI cards with a thin frame; the period picker is one combined control and dimension filters are compact, equal-height buttons"
+        },
+        "caption": {
+          "tr": "Tarih alanı ve ay seçimi tek kutuda birleşir; dönem filtreleri boyut filtrelerinden ince bir ayraçla ayrılır.",
+          "en": "The date field and month picker form one box; period filters are separated from dimension filters by a thin divider."
+        }
+      },
+      "body": {
+        "tr": "LFL sayfasındaki tüm kartlar, karşılaştırma senaryoları ve eylem düğmeleri ortak ince çerçeveyi kullanır. Üstteki filtre çubuğunda düğmeler aynı yükseklikte ve daha sıkı aralıklıdır; tarih alanı seçimi ay seçimiyle tek kontrolde birleşti.",
+        "en": "All cards, comparison scenarios and action buttons on the LFL page now use the shared thin frame. In the filter bar at the top, buttons have the same height and tighter spacing; the date field picker is merged with the month picker into one control."
+      }
+    },
+    {
+      "id": "collection-loading-trivia",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon yüklenirken yarım boş ekran yerine genel kültür kartı",
+        "en": "A trivia card instead of a half-empty screen while Collection loads"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-loading-trivia-20261114.png",
+        "alt": {
+          "tr": "Koleksiyon ekranı hazırlanırken \"Ekran hazırlanıyor\" kutusu ve altında Biliyor muydunuz genel kültür kartı görünüyor",
+          "en": "While the Collection screen is being prepared, a \"Preparing the screen\" box with a Did you know trivia card below it is shown"
+        },
+        "caption": {
+          "tr": "Modül hazırlanırken artık yalnız grup başlıkları görünmez; bekleme uzarsa genel kültür kartı açılır.",
+          "en": "While the module is being prepared, only group headings no longer show; if the wait is long a trivia card opens."
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon ilk açılırken ekran bileşenleri yüklenene kadar sayfada yalnız MARKA/MODEL DETAYLARI başlıkları kalıyor, geri kalan alan boş görünüyordu. Artık bu sürede ortak yükleme kutusu gösterilir; bekleme uzarsa genel kültür kartı eklenir. Aynı düzeltme yükleme sırasında gizlenen diğer modül ekranlarında da geçerlidir.",
+        "en": "When Collection first opened, only the BRAND/MODEL DETAILS headings stayed on the page until the screen components loaded, and the rest looked empty. A shared loading box is now shown during this time, with a trivia card added if the wait is long. The same fix applies to other module screens hidden while loading."
+      }
+    },
+    {
+      "id": "cp-projection-stale-read-retry",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP, okuma sırasında gelen kayıt veya senkronla \"hazırlanamadı\" hatasına düşmez",
+        "en": "CP no longer fails with \"could not be prepared\" when a save or sync lands during loading"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu okumayı güncel veriyle yeniden dener; arayüzde yeni bir öğe yoktur, yalnız hata ekranı artık görünmez.",
+          "en": "The server retries the read with the current data; there is no new UI element, the error screen simply no longer appears."
+        }
+      },
+      "body": {
+        "tr": "CP verisi okunurken bir düzenleme kaydı veya senkron aynı anda veriyi değiştirirse okuma reddediliyor ve CP ekranı \"Hazır ekran önbelleği okunamadı\" hatasıyla boş kalıyordu. Okuma artık güncel veriyle otomatik yeniden denenir; arka plan yenilemesi yine de başarısız olursa açık CP tablosu ve kaydedilmemiş değişiklikler yerinde kalır.",
+        "en": "If an edit save or a sync changed the data while CP was being read, the read was rejected and the CP screen stayed empty with \"The prepared screen cache could not be read\". The read is now retried automatically with the current data; if a background refresh still fails, the open CP table and unsaved changes stay in place."
+      }
+    },
+    {
+      "id": "lcwai-attachment-upload-session",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a gönderilen dosya ve görseller yeniden mesaja eklenir",
+        "en": "Files and images sent to LCW AI are attached to the message again"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik LCW AI’a giden istek gövdesindedir; ekranda yeni bir öğe yoktur.",
+          "en": "The change is in the request body sent to LCW AI; nothing new appears on screen."
+        }
+      },
+      "body": {
+        "tr": "Görselden arama, sohbet ve diğer LCW AI özelliklerinde dosya yükleniyor ama LCW AI eki mesajda görmüyordu (“No image was attached”). Ek artık LCW AI’ın yeni dosya modeline uygun olarak yükleme oturumuyla birlikte gönderilir.",
+        "en": "In Search from Image, chat and other LCW AI features the file was uploaded but LCW AI did not see it on the message (“No image was attached”). The attachment is now sent together with its upload session, matching LCW AI’s new file model."
+      }
+    },
+    {
+      "id": "lcwai-pptx-studio-preview-layout",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · PowerPoint düzenleyici",
+        "en": "LCW AI · PowerPoint editor"
+      },
+      "title": {
+        "tr": "Sunum önizlemesi görünür; panel genişliği sürüklenerek ayarlanır",
+        "en": "Presentation preview is visible; panel width can be dragged"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-pptx-studio-preview-layout.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicide solda sıkılaştırılmış sütun listesi, sağda model kartlarıyla slayt önizlemesi ve altta yeşil “Dosya oluşturuldu” bandı görünüyor",
+          "en": "In the PowerPoint editor a tighter column list is on the left, a slide preview with model cards on the right and a green “File created” band at the bottom"
+        },
+        "caption": {
+          "tr": "Önizleme kartları gösterir; alt bant dosyayı açma ve klasörde gösterme düğmelerini sunar.",
+          "en": "The preview shows the cards; the bottom band offers Open and Show in folder buttons."
+        }
+      },
+      "body": {
+        "tr": "“Sunumu şekillendir” adımında önizleme alanı boş kalıyordu; slaytlar ve kartlar artık doğru çizilir. Sol panel ile önizleme arasındaki sınır sürüklenerek (klavyede ok tuşlarıyla) genişletilir, çift tıklama varsayılana döner ve genişlik hatırlanır. “Önizle ve oluştur” düğmesi alt barda sabit durur. Dosya oluşturulduğunda alt barda dosya adı, Aç, Klasörde Göster ve Şablon olarak kaydet düğmeleriyle yeşil bir bant görünür. Sütun satırları daha sıkıdır; işaretlenmemiş kutular ve bağlı olmayan Bağlantılar noktaları daha soluk griyle gösterilir.",
+        "en": "In the “Shape the presentation” step the preview area stayed empty; slides and cards are now drawn correctly. The border between the left panel and the preview can be dragged (or moved with the arrow keys), a double click restores the default and the width is remembered. The “Preview and create” button stays fixed in the bottom bar. When a file is created, a green band with the file name and Open, Show in folder and Save as template buttons appears in the bottom bar. Column rows are tighter; unticked boxes and disconnected Connections dots use a much softer grey."
+      }
+    },
+    {
+      "id": "priority-tags-everywhere",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Global Flow · CP Öncelik Kuralları",
+        "en": "Backlog · Global Flow · CP Priority Rules"
+      },
+      "title": {
+        "tr": "Öncelik etiketleriniz Backlog ve Global Flow'da da görünür",
+        "en": "Your priority tags also appear in Backlog and Global Flow"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-priority-tags.png",
+        "alt": {
+          "tr": "Backlog Genel Bakış: öncelik etiketi kutucukları (Bu Hafta Aksiyon, Gecikme - Yükleme Tarihi) ve Operasyon Dağılımı'nda seçili Öncelik kırılımı",
+          "en": "Backlog Overview: priority tag tiles (Action This Week, Delay - Loading Date) and the Priority breakdown selected in Operational Distribution"
+        },
+        "caption": {
+          "tr": "Etiket kutucuğuna tıklayınca o etiketin siparişleri sağda açılır; Öncelik kırılımı her satırı ana önceliğiyle sayar.",
+          "en": "Click a tag tile to open its orders on the right; the Priority breakdown counts each line by its main priority."
+        }
+      },
+      "body": {
+        "tr": "Öncelik Kuralları'nda oluşturduğunuz etiketler artık yalnız CP'de değil, Backlog ve Global Flow'da da görünür. Backlog Genel Bakış'ta Eksik Yükleme ve Riskli adet kutucuklarının yerine, kapsamdaki her öncelik ve takip etiketinin adedi, sipariş sayısı ve payı gösterilir; kutucuğa tıklayınca siparişler açılır. Operasyon Dağılımı'na Öncelik kırılımı eklendi. Global Flow detayında özel etiketler artık “—” ya da “Yolunda” görünmez; takip etiketleri ayrı sütunda listelenir ve filtrelerde Öncelik etiketi seçilebilir. Backlog satırları CP'deki aynı sipariş/model/renk satırının önceliğini kullanır; kurallar ikinci kez hesaplanmaz.",
+        "en": "The tags you create in Priority Rules now appear not only in CP but also in Backlog and Global Flow. In Backlog Overview, the Shortage and At-risk qty tiles are replaced by the quantity, order count and share of every priority and tracking tag in scope; click a tile to open its orders. A Priority breakdown was added to Operational Distribution. In the Global Flow detail, custom tags no longer show as “—” or “On Track”; tracking tags are listed in their own column and Priority tag can be selected in the filters. Backlog lines use the priority of the matching order/model/colour line in CP; rules are not evaluated twice."
+      }
+    },
+    {
+      "id": "intake-source-error-detail",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE canlı veriyi yeniden alır; bağlantı hatası nedeniyle gösterilir",
+        "en": "INTAKE loads live data again; connection errors show their reason"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-source-error-detail.png",
+        "alt": {
+          "tr": "INTAKE tablosunun üstündeki uyarıda son snapshot bilgisine ek olarak kaynak hatasının ayrıntısı görünüyor",
+          "en": "The warning above the INTAKE table shows the source error detail next to the last snapshot notice"
+        },
+        "caption": {
+          "tr": "Uyarı artık bağlantı, model adı veya sorgu hatasını ayrıntısıyla gösterir.",
+          "en": "The warning now shows the connection, model name or query error in detail."
+        }
+      },
+      "body": {
+        "tr": "INTAKE, sunucuda bulunmayan boşluklu model adıyla (WSSI Intake Raporu4) sorgulandığı için canlı veri alamıyor ve hep son snapshot'ı gösteriyordu. Bağlantı gerçek veritabanı adına (WSSI_Intake_Raporu4) taşındı; eski adla kayıtlı ayarlar otomatik düzeltilir. Canlı kaynak yine okunamazsa uyarı artık hatanın ayrıntısını içerir ve hata sunucu günlüğüne kaynak adıyla kaydedilir.",
+        "en": "INTAKE queried a model name with spaces (WSSI Intake Raporu4) that does not exist on the server, so it could not load live data and always showed the last snapshot. The connection now uses the real database name (WSSI_Intake_Raporu4) and settings saved with the old name are corrected automatically. If the live source still cannot be read, the warning now includes the error detail and the error is written to the server log with the source name."
+      }
+    },
+    {
+      "id": "intake-pivot-oab-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE pivotu OAB gibi okunur",
+        "en": "INTAKE pivot reads like OAB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-pivot-oab-layout.png",
+        "alt": {
+          "tr": "INTAKE pivotunda açılmış grupların detay satırlarında yalnız en alt kademe değeri yazıyor",
+          "en": "In the INTAKE pivot, expanded detail rows show only the lowest level value"
+        },
+        "caption": {
+          "tr": "Açılan grupta üst kademeler boş kalır; grup adı kesilmeden okunur.",
+          "en": "Upper levels stay blank in expanded groups; group names are no longer cut off."
+        }
+      },
+      "body": {
+        "tr": "Daraltılmış satırlar açıldığında detay satırları her kademeyi tekrar yazıyordu ve grup adları dar sütunda kesiliyordu. Artık OAB'daki gibi yalnız en alt kademe kendi sütununda yazılır; grup adı boş alt kademe sütunlarını kaplayarak tam görünür.",
+        "en": "When collapsed rows were expanded, detail rows repeated every level and group names were cut off in narrow columns. Now, as in OAB, only the lowest level is written in its own column and group names span the empty lower-level columns so they show in full."
+      }
+    },
+    {
+      "id": "oab-header-filter-panel",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB başlığı sadeleşti; tüm filtreler filtre panelinde",
+        "en": "Simpler OAB header; all filters in the filter panel"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-header-filter-panel.png",
+        "alt": {
+          "tr": "OAB başlığında özet metin, Yenile ve filtre düğmesi; açık filtre panelinde Sezon, MAG, Buyer Group ve alan filtreleri",
+          "en": "OAB header with summary text, Refresh and filter button; the open filter panel shows Season, MAG, Buyer Group and field filters"
+        },
+        "caption": {
+          "tr": "Season, MAG, Buyer Group ve alan filtreleri filtre düğmesinin panelinde.",
+          "en": "Season, MAG, Buyer Group and field filters live in the filter button's panel."
+        }
+      },
+      "body": {
+        "tr": "OAB başlığı INTAKE ile aynı düzene geçti: başlığın yanında satır, alan ve zaman özeti görünür. Get OAB komutu Yenile adıyla INTAKE'teki Yenile'nin yerinde; ayrı yenile düğmesi kaldırıldı. Seçim değiştiyse Yenile önbelleği kullanır, aynı seçimin verisi ekrandaysa kaynaktan tazeler. Season, MAG, Buyer Group ve alan filtreleri filtre panelindedir; seçim eksikken Yenile paneli açar.",
+        "en": "The OAB header now follows the INTAKE layout: a rows, fields and time summary appears next to the title. Get OAB is now Refresh, in the same place as INTAKE's Refresh; the separate refresh button was removed. If the selection changed, Refresh uses the cache; if the same selection's data is already on screen, it reloads from the source. Season, MAG, Buyer Group and field filters are in the filter panel; Refresh opens the panel when the selection is incomplete."
+      }
+    },
+    {
+      "id": "oab-intake-pivot-chart",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · OAB / INTAKE",
+        "en": "Overview · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "OAB ve INTAKE grafikleri pivot ayarına göre çizilir",
+        "en": "OAB and INTAKE charts follow the pivot settings"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-intake-pivot-chart.png",
+        "alt": {
+          "tr": "OAB grafiğinde sezonlar eksende, plan başlangıç ayları renkli seriler olarak yığılmış sütunlarda",
+          "en": "OAB chart with seasons on the axis and plan start months as coloured stacked series"
+        },
+        "caption": {
+          "tr": "İlk satır alanı eksen, sütun ya da ikinci satır alanı seri olur.",
+          "en": "The first row field is the axis; the column or second row field becomes the series."
+        }
+      },
+      "body": {
+        "tr": "İlk 5 satırlık çubuk listesi yerine Backlog grafikleriyle aynı görünümde sütun/çizgi grafiği geldi. Eksen pivotun ilk satır alanı, seriler sütun alanı (yoksa ikinci satır alanı) olur; değerler pivotla aynı hesaplanır. Yığılmış, gruplu ve çizgi görünümü seçilebilir, lejanttan seri gizlenir, sütuna tıklayınca detay açılır.",
+        "en": "The top-5 bar list was replaced with a column/line chart that looks like the Backlog charts. The axis is the pivot's first row field and series come from the column field (or the second row field); values are calculated like the pivot. Stacked, grouped and line views are available, series can be hidden from the legend, and clicking a column opens its detail."
+      }
+    },
+    {
+      "id": "global-flow-priority-marker",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Küresel Akış Haritası",
+        "en": "Overview · Global Flow Map"
+      },
+      "title": {
+        "tr": "Haritada öncelik etiketi işareti",
+        "en": "Priority tag marker on the map"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-priority-marker.png",
+        "alt": {
+          "tr": "Küresel Akış Haritası: araç ve konum karelerinin sol alt köşesinde etiket tonunda eşkenar dörtgen işaretler; lejantta Öncelik etiketi",
+          "en": "Global Flow Map: diamond markers in the tag tone at the bottom-left corner of vehicle and location squares; Priority tag in the legend"
+        },
+        "caption": {
+          "tr": "İşaret, sembolün taşıdığı en öncelikli etiketin rengindedir; üzerine gelince etiketler ve sipariş sayıları görünür.",
+          "en": "The marker takes the colour of the most urgent tag the symbol carries; hover to see the tags and order counts."
+        }
+      },
+      "body": {
+        "tr": "Küresel Akış Haritası'nda Öncelik Kuralları etiketi taşıyan araç, filo ve konumların sol alt köşesinde, en öncelikli etiketin tonunda küçük bir eşkenar dörtgen görünür. Kritik zaten kırmızı alarm noktasıyla gösterildiği için işaret onu tekrarlamaz. Sembolün üzerine gelince ipucunda ilk üç etiket sipariş sayısıyla listelenir; lejanta Öncelik etiketi eklendi. İşaret 2D ve 3D Buyer Log görünümünde çizilir.",
+        "en": "On the Global Flow Map, vehicles, fleets and locations carrying a Priority Rules tag show a small diamond at their bottom-left corner in the tone of the most urgent tag. Critical is already shown by the red alarm dot, so the marker does not repeat it. Hovering a symbol lists the top three tags with order counts in the tooltip; Priority tag was added to the legend. The marker is drawn in the 2D and 3D Buyer Log views."
+      }
+    },
+    {
+      "id": "backlog-v3-excel-priority",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Excel Backlog V3",
+        "en": "Backlog · Excel Backlog V3"
+      },
+      "title": {
+        "tr": "Excel Backlog V3'te Öncelik kırılımı",
+        "en": "Priority breakdown in Excel Backlog V3"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Değişiklik indirilen Excel dosyasının içeriğindedir; Buyer Log ekranında değişen bir şey yoktur.",
+          "en": "The change is inside the downloaded Excel file; nothing changes on the Buyer Log screen."
+        }
+      },
+      "body": {
+        "tr": "Backlog Genel Bakış'ta Öncelik kırılımı seçiliyken Excel Backlog V3 raporunun Özet sayfası artık Öncelik kırılımını ve grafiğini kullanır (eskiden Buyer'a dönüyordu). Kırılımlar sayfasının başına Öncelik tablosu, Backlog V3 detay sayfasına Öncelik ve Takip etiketleri sütunları eklendi. Değerler CP'deki aynı sipariş/model/renk satırının önceliğinden gelir; CP önceliği hazır değilse rapor önce onu hazırlar, hazırlanamazsa öncelik sütunları olmadan eskisi gibi çıkar.",
+        "en": "With the Priority breakdown selected in Backlog Overview, the Summary sheet of the Excel Backlog V3 report now uses the Priority breakdown and its chart (it used to fall back to Buyer). A Priority table was added at the top of the Breakdowns sheet, and Priority and Tracking tags columns were added to the Backlog V3 detail sheet. Values come from the priority of the matching order/model/colour line in CP; if CP priorities are not ready the report prepares them first, and if that fails it is produced as before without priority columns."
+      }
+    },
+    {
+      "id": "backlog-timeline-priority",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Genel Bakış · Zaman Akışı",
+        "en": "Backlog · Overview · Timeline"
+      },
+      "title": {
+        "tr": "Zaman Akışı'nda Öncelik kırılımı",
+        "en": "Priority breakdown in the Timeline"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-timeline-priority.png",
+        "alt": {
+          "tr": "Backlog Zaman Akışı: üstte lojistik durum, altta haftalara göre öncelik etiketlerine yığılmış adet; lejantta Bu Hafta Aksiyon, Gecikme - Yükleme Tarihi ve CP eşleşmesi yok",
+          "en": "Backlog Timeline: logistics status on top, quantity stacked by priority tag per week below; the legend shows Action This Week, Delay - Loading Date and no CP match"
+        },
+        "caption": {
+          "tr": "Alt grafikte her satır ana önceliğiyle sayılır; dönem toplamı Backlog adedine eşittir.",
+          "en": "In the lower chart each line counts under its main priority; the period total equals the Backlog quantity."
+        }
+      },
+      "body": {
+        "tr": "Zaman Akışı'nın alt grafik seçicisine Buyer Grup ve Buyer'ın yanına Öncelik eklendi. Her dönem çubuğu satırların ana önceliğine göre yığılır, bu yüzden toplam o dönemin Backlog adedine eşittir. Renkler ve sıra Öncelik Kuralları'ndaki etiket kataloğunuzdan gelir. Takip etiketleri çubukta ayrıca sayılmaz; çubuğun üzerine gelince ipucunda adetleriyle listelenir. Parçaya tıklayınca o dönem ve etiketin siparişleri sağda açılır.",
+        "en": "Priority was added next to Buying Group and Buyer in the Timeline's lower chart picker. Each period bar is stacked by the lines' main priority, so the total equals that period's Backlog quantity. Colours and order come from your tag catalogue in Priority Rules. Tracking tags are not counted again in the bar; hover the bar to see them with quantities in the tooltip. Click a segment to open the orders of that period and tag on the right."
+      }
+    },
+    {
+      "id": "active-filter-chip-column-name",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablo filtreleri sütunu başlıktaki adıyla gösterir",
+        "en": "Table filters show the column by its header name"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "active-filter-chip-column-name.png",
+        "alt": {
+          "tr": "CP Tracker'da Tablo Filtreleri alanında checklist sütunu filtresi tablo başlığıyla aynı adla, “PPS onayı: Bekliyor” olarak görünüyor",
+          "en": "In CP Tracker the Table Filters area shows the checklist column filter with the same name as the table header, “PPS onayı: Bekliyor”"
+        },
+        "caption": {
+          "tr": "Filtre çipi artık iç anahtar yerine sütunun tablodaki adını gösterir.",
+          "en": "The filter chip now shows the column's name from the table instead of an internal key."
+        }
+      },
+      "body": {
+        "tr": "Tablo Filtreleri alanındaki çipler, checklist sütunlarında “__checklist__…” gibi iç anahtarları gösteriyordu. Çip adı artık tablo başlığıyla aynı kaynaktan gelir: checklist, formül ve sonradan eklenen sütunlar ile sütunlara verdiğiniz kişisel adlar başlıkta nasıl görünüyorsa çipte de öyle görünür ve dil değişimine uyar. Koleksiyon'da da kişisel sütun adları çipte kullanılır.",
+        "en": "Chips in the Table Filters area showed internal keys such as “__checklist__…” for checklist columns. The chip name now comes from the same source as the table header: checklist, formula and added columns, and the personal names you gave columns, appear in the chip exactly as in the header and follow the language switch. Collection chips use personal column names too."
+      }
+    },
+    {
+      "id": "cp-orders-search-more-fields",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Arama kutusu daha fazla alanda arar",
+        "en": "Search box looks in more fields"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-search-more-fields.png",
+        "alt": {
+          "tr": "CP Tracker'da arama kutusuna bir Buyer adı yazılmış; tablo yalnız o Buyer'ın satırlarını gösteriyor",
+          "en": "In CP Tracker a buyer name is typed into the search box; the table shows only that buyer's rows"
+        },
+        "caption": {
+          "tr": "Buyer adıyla arama yalnız o Buyer'ın kayıtlarını getirir; MAG, Line, kategori ve Buyer Grup da aynı şekilde aranır.",
+          "en": "Searching for a buyer name returns only that buyer's records; MAG, line, category and buyer group are searched the same way."
+        }
+      },
+      "body": {
+        "tr": "CP Tracker ve Siparişler'deki arama kutusu artık ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line sütunlarında da arar. Örneğin bir Buyer adı, MAG kodu veya Line yazarak ilgili kayıtları doğrudan bulabilirsiniz. Önceki arama alanları ve virgül/noktalı virgül/! yazımları aynen çalışır; ! ile hariç tutma bu yeni alanları da kapsar. Arama büyük tablolarda da daha hızlı süzer.",
+        "en": "The search box in CP Tracker and Orders now also looks in the product description, category, MAG, buyer group, buyer and line columns. For example, type a buyer name, MAG code or line to find the related records directly. The earlier search fields and the comma/semicolon/! syntax work as before; exclusion with ! also covers these new fields. Search also filters faster on large tables."
+      }
+    },
+    {
+      "id": "runtime-error-notifications",
+      "type": "fix",
+      "module": {
+        "tr": "Genel",
+        "en": "General"
+      },
+      "title": {
+        "tr": "Hata mesajları ekranda takılı kalmıyor",
+        "en": "Error messages no longer stick on screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "runtime-error-notification.png",
+        "alt": {
+          "tr": "Genel Bakış ekranında sağ altta kapatılabilir HATA bildirimi; zil simgesinde okunmamış bildirim rozeti",
+          "en": "A dismissible ERROR notification at the bottom right of Overview; an unread badge on the bell icon"
+        },
+        "caption": {
+          "tr": "Hata, diğer bildirimlerle aynı yerde görünür, kendiliğinden kapanır ve Bildirim Geçmişi'nde kalır.",
+          "en": "The error appears with the other notifications, closes by itself and stays in Notification History."
+        }
+      },
+      "body": {
+        "tr": "Beklenmeyen bir JS veya Promise hatası (ör. “Cannot read properties of null”) sol altta silinmeyen kırmızı bir kutuda birikiyordu. Artık diğer bildirimlerle aynı yerde hata bildirimi olarak görünür, birkaç saniye sonra kendiliğinden kapanır ve zil simgesindeki Bildirim Geçmişi'ne kaydedilir. Aynı hata art arda tekrarlanırsa bir kez gösterilir.",
+        "en": "An unexpected JS or Promise error (e.g. “Cannot read properties of null”) used to pile up in a red box at the bottom left that never went away. It now appears as an error notification alongside the other notifications, closes by itself after a few seconds and is saved to Notification History under the bell icon. The same error repeated in a row is shown once."
+      }
+    },
+    {
+      "id": "overview-horizon-overdue-production-only",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Termin Ufku: tarihi geçmiş sayısı yalnız üretimdeki siparişleri sayar",
+        "en": "Delivery Horizon: the past-date count only includes orders still in production"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-horizon-overdue-production-only.png",
+        "alt": {
+          "tr": "Planlı yükleme tarihi geçmiş listesinde yalnız Üretimde durumundaki demo siparişler",
+          "en": "The planned-loading-date-passed list showing only demo orders with In Production status"
+        },
+        "caption": {
+          "tr": "Yükleme, Yol, Gümrük-Liman ve Depo aşamasındaki siparişler artık listede yer almaz.",
+          "en": "Orders in Loading, Transit, Customs & Port and Warehouse stages are no longer listed."
+        }
+      },
+      "body": {
+        "tr": "Termin Ufku'ndaki “tarihi geçmiş” sayısı ve açılan Planlı Yükleme Tarihi Geçmiş listesi, Ex-F tarihi geçmiş olsa da üretimi bitmiş (Yükleme Operasyonları, Yol Operasyonları, Gümrük-Liman Operasyonları, Depoda, Retaile Aktarım Bekliyor) siparişleri de sayıyordu. Artık yalnız üretimi süren siparişler sayılır; eksik yüklemeler ve durumu tanınmayan satırlar görünür kalır.",
+        "en": "The “past date” count in the Delivery Horizon and the Planned Loading Date Passed list also counted orders whose production had already finished (Loading, Transit, Customs & Port, In Warehouse, Awaiting Retail Transfer) when their Ex-F date had passed. Now only orders still in production are counted; shortages and rows with an unrecognised status stay visible."
+      }
+    },
+    {
+      "id": "note-save-fast-ack",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Not",
+        "en": "CP Tracker · Orders · Notes"
+      },
+      "title": {
+        "tr": "Not kaydı beklemeden tamamlanır",
+        "en": "Saving a note no longer makes you wait"
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran aynı kalır; yalnız Notu Kaydet'e bastıktan sonraki bekleme kısalır.",
+          "en": "The screen stays the same; only the wait after pressing Save Note is shorter."
+        }
+      },
+      "body": {
+        "tr": "Notu Kaydet, sunucunun ekran önbelleğindeki bütün modülleri yeniden yazmasını bekliyordu; büyük veride bu birkaç saniye sürebiliyordu. Not artık kalıcı olarak yazıldığı anda onaylanır ve pencere kapanır; önbellek arka planda güncellenir. Bu sırada açılan ekranlar güncel notu görür. Hücre ve Supp. FOB düzenlemeleri de aynı yolla daha hızlı onaylanır.",
+        "en": "Save Note used to wait for the server to rewrite every module in the screen cache, which could take several seconds on large data. The note is now confirmed and the dialog closes as soon as it is stored; the cache updates in the background. Screens opened meanwhile still show the current note. Cell and Supp. FOB edits are confirmed faster the same way."
+      }
+    }
+  ]
+}

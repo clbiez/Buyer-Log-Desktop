@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.css'), 'utf8');
+const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'ui-components.css'), 'utf8');
 
 test('v10.50 CP ve Orders sütun filtreleri, filtre eylemini ve sütun adını birlikte bildirir', () => {
   const renderStart = APP.indexOf('function renderFullTable(');
@@ -20,10 +20,11 @@ test('v10.50 CP ve Orders sütun filtreleri, filtre eylemini ve sütun adını b
 });
 
 
-test('CP ve Orders seçim sütunu Collection gibi checkbox + filtre düğmesini görünür tutacak genişliktedir', () => {
-  assert.match(APP, /const MANAGED_CHECK_COLUMN_WIDTH=64;/);
+test('CP ve Orders seçim şeridi 8px olur; filtre hover ve klavye odağında erişilir', () => {
+  assert.match(APP, /const MANAGED_CHECK_COLUMN_WIDTH=8;/);
   assert.match(APP, /withChk\?MANAGED_CHECK_COLUMN_WIDTH:0/);
   assert.match(APP, /data-key="__chk" style="width:\$\{MANAGED_CHECK_COLUMN_WIDTH\}px"/);
-  assert.match(CSS, /td\.chkCell\{width:64px;min-width:64px;text-align:center;\}/);
-  assert.match(CSS, /\.chkTh\{width:64px;min-width:64px;text-align:center;\}/);
+  assert.match(CSS, /\.chkTh:is\(:hover,:focus-within\)>\.chkFilterBtn/);
+  assert.match(CSS, /col:is\(\[data-key="__chk"\]/);
+  assert.match(CSS, /width:var\(--ui-row-select-width\)/);
 });

@@ -253,11 +253,10 @@ test('Collection Fabric detail facets use same-card AND semantics, active filter
   assert.match(css,/\.kolFabricFacetPanel/);
 });
 
-test('Collection copy, range clipboard, and both Excel exporters use visible Fabric Card summary',()=>{
+test('Collection copy, range clipboard, and the Excel exporter use visible Fabric Card summary',()=>{
   const sheet=fs.readFileSync(path.join(ROOT,'public','collection-spreadsheet.js'),'utf8');
   assert.match(APP,/if\(c\.k==='fabric'\)return kolFabricDisplay\(v\)/);
   assert.match(sheet,/coord\.key==='fabric'&&typeof global\.kolFabricDisplay==='function'/);
-  assert.match(APP,/if\(c\.k==='fabric'\)\{put\(ri\+1,ci\+imgOff/);
   assert.match(APP,/if\(c\.k==='fabric'\)\{cell\.value=kolExportSingleLineText\(kolFabricDisplay\(raw\)\)/);
   assert.match(APP,/function kolStyleExportValue\(field,row\)[\s\S]*?if\(field\.k==='fabric'\)return kolFabricDisplay\(raw\)/);
 });
