@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "table-search-missing-values",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo araması",
+        "en": "Table search"
+      },
+      "title": {
+        "tr": "Bulunamayan arama değerleri kırmızı gösterilir",
+        "en": "Missing search values are highlighted in red"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon tablolarında çoklu aramadan sonra filtrelenmiş sonuçlarda bulunamayan değerler arama kutusunun altında kırmızı etiketlerle gösterilir. Örneğin sekiz modelden üçü sonuçlarda yoksa bu üç model ayrı ayrı listelenir. Excel satır grupları birlikte değerlendirilir; arama temizlendiğinde uyarı kalkar.",
+        "en": "After a multi-value search in CP, Orders and Collection, values absent from the filtered results appear as red labels below the search box. For example, if three of eight models are missing, those three models are listed individually. Excel row groups are evaluated together; clearing the search removes the warning."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "search-missing-values.png",
+        "alt": {
+          "tr": "Sekiz model aramasında sonuçlarda bulunamayan üç kırmızı model etiketi",
+          "en": "Three red labels for models absent from an eight-model search"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log; beş bulunan, üç bulunamayan model içeren izole demo verisi.",
+          "en": "Actual Buyer Log with isolated demo data: five models found and three missing."
+        }
+      }
+    },
+    {
       "id": "report-save-everyone",
       "type": "feature",
       "module": {

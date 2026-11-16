@@ -16029,3 +16029,6 @@ html[data-ui-system="manifest"] .blReportDropLine{background:var(--ui-surface-so
 html[data-ui-system="manifest"] .blReportDropLine>small{color:var(--ui-text-secondary);font-size:var(--ui-font-2xs)}
 html[data-ui-system="manifest"] .blReportDropLine.isDropTarget{background:var(--ui-selected)}
 html[data-ui-system="manifest"] .blReportField:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
+
+html[data-ui-system="manifest"] .tableSearchFeedback{font-size:var(--ui-font-sm);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .tableSearchMissingTerm{border-radius:var(--ui-radius);color:var(--ui-danger);background:var(--ui-danger-bg);}

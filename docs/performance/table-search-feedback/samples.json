@@ -1,0 +1,57 @@
+{
+  "base": "dacd2ddb",
+  "rows": 30000,
+  "dataHash": "6771f2b07cc64e8d3295ca5a9f385c116f5c1e2c1d5ec5d4e88697999cafb054",
+  "runtime": "v24.19.0",
+  "browser": "151.0.7922.173",
+  "pairs": [
+    {
+      "main": {
+        "renderMs": 1082.899999999965,
+        "frameMs": 1133.2999999999884,
+        "feedbackMs": 0,
+        "results": 5,
+        "heap": 68826506
+      },
+      "candidate": {
+        "renderMs": 1158.6999999999534,
+        "frameMs": 1237.399999999965,
+        "feedbackMs": 0.5,
+        "results": 5,
+        "heap": 60740325
+      }
+    },
+    {
+      "main": {
+        "renderMs": 1023.7999999999884,
+        "frameMs": 1078,
+        "feedbackMs": 0,
+        "results": 5,
+        "heap": 66553306
+      },
+      "candidate": {
+        "renderMs": 976.2000000000116,
+        "frameMs": 1034.3000000000466,
+        "feedbackMs": 0.29999999998835847,
+        "results": 5,
+        "heap": 58201710
+      }
+    },
+    {
+      "main": {
+        "renderMs": 1027,
+        "frameMs": 1089.1999999999534,
+        "feedbackMs": 0,
+        "results": 5,
+        "heap": 62402777
+      },
+      "candidate": {
+        "renderMs": 1013.5,
+        "frameMs": 1078.2000000000116,
+        "feedbackMs": 0.40000000002328306,
+        "results": 5,
+        "heap": 57163695
+      }
+    }
+  ]
+}
