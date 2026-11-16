@@ -2449,6 +2449,8 @@ tfoot .collectionWeightedAverage strong{display:inline-block;min-width:0;max-wid
 .freightRateValue{height:33px;display:flex;align-items:center;gap:5px;padding:0 8px;}
 .freightRateValue input{height:auto;padding:0;}
 .freightRateFoot{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}
+.freightMethods{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.freightMethodRow{grid-template-columns:1fr 130px 32px;}
 .freightFactor{display:grid;gap:4px;}
 .freightFactor input{height:33px;width:120px;padding:0 9px;}
 .freightInputGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}

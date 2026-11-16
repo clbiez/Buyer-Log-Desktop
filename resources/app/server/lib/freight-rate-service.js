@@ -12,11 +12,23 @@ function validateSettings(raw) {
   const rates = Array.isArray(raw && raw.rates) ? raw.rates : null;
   if (!rates || !rates.length) fail('En az bir navlun ücreti tanımlanmalıdır.');
   if (rates.length > 20) fail('En fazla 20 navlun ücreti tanımlanabilir.');
+  const rawMethods = raw && raw.methods == null ? [] : raw && raw.methods;
+  if (!Array.isArray(rawMethods)) fail('Nakliye şekilleri bir liste olmalıdır.');
+  if (rawMethods.length > Freight.MAX_METHODS) fail(`En fazla ${Freight.MAX_METHODS} ek nakliye şekli tanımlanabilir.`);
+  for (const method of rawMethods) {
+    if (!String(method && method.label || '').trim()) fail('Her nakliye şeklinin bir adı olmalıdır.');
+    const days = Number(method && method.transitDays);
+    if (!Number.isFinite(days) || days < 1 || days > 365) fail('Nakliye şekli transit süresi 1 ile 365 gün arasında olmalıdır.');
+  }
+  const methods = Freight.normalizeMethods(rawMethods);
+  // Normalizasyon tekrar eden kimliği sessizce düşürmesin: satır verisi o kimliğe bağlı.
+  if (methods.length !== rawMethods.length) fail('Nakliye şekli kimlikleri benzersiz olmalıdır.');
+  const modes = Freight.modesFor({ methods });
   for (const item of rates) {
     const rate = Number(item && item.rate);
     if (!Number.isFinite(rate) || rate <= 0 || rate > 1000) fail('Her navlun birim ücreti 0 ile 1000 arasında pozitif bir sayı olmalıdır.');
     if (!String(item && item.label || '').trim()) fail('Her navlun satırının bir adı olmalıdır.');
-    if (!Freight.MODES.includes(item && item.mode)) fail('Navlun tipi yalnız Uçak veya Gemi+Uçak olabilir.');
+    if (!modes.includes(item && item.mode)) fail('Navlun tipi Uçak, Gemi+Uçak veya tanımlı bir nakliye şekli olmalıdır.');
   }
   const factor = Number(raw && raw.volumetricFactor);
   if (!Number.isFinite(factor) || factor <= 0 || factor > 1000) fail('Hacimsel ağırlık katsayısı 0 ile 1000 arasında pozitif bir sayı olmalıdır.');
@@ -27,7 +39,7 @@ function validateSettings(raw) {
     const side = Number(carton && carton[key]);
     if (!Number.isFinite(side) || side <= 0 || side > 1000) fail('Varsayılan koli ölçüleri 0 ile 1000 cm arasında olmalıdır.');
   }
-  return Freight.normalizeSettings({ rates, volumetricFactor: factor, landedMultiplier, carton });
+  return Freight.normalizeSettings({ rates, methods, volumetricFactor: factor, landedMultiplier, carton });
 }
 
 function ownerImpact(store, before, next) {
@@ -51,7 +63,7 @@ function createFreightRateService({ db }) {
   const read = () => { const ov = db.loadOverrides(); return { freight: Freight.normalizeSettings(ov.freightRates), revision: Number(ov._revisions.freightRates) || 0 }; };
   const snapshot = ctx => db.mutateSharedResource('freightRates', () => { ctx.assertAuthority(); return read(); });
   async function preview(raw, ctx) {
-    const next = validateSettings(raw);
+    const next = validateSettings(withCurrentMethods(raw));
     // Agent plans cannot silently drop duplicate routes during normalization.
     if (next.rates.length !== raw.rates.length) throw error('OFFICE_TOOL_SCHEMA', 422);
     return db.mutateShipping(ctx.ownerId, () => db.mutateSharedResource('freightRates', () => {
@@ -79,7 +91,11 @@ function createFreightRateService({ db }) {
       return { verified: true, ...actual, fingerprint: fingerprint(actual.freight) };
     });
   }
-  const replace = (raw, expected, ctx) => commit(validateSettings(raw), expected, ctx);
+  // methods alanını hiç bilmeyen (eski sürüm) istemci kaydı ortak nakliye
+  // şekillerini silmesin. Eşzamanlı değişiklik revizyon kontrolüyle yakalanır.
+  const withCurrentMethods = raw => (raw && typeof raw === 'object' && !Array.isArray(raw) && raw.methods === undefined)
+    ? { ...raw, methods: read().freight.methods } : raw;
+  const replace = (raw, expected, ctx) => commit(validateSettings(withCurrentMethods(raw)), expected, ctx);
   // Only the adapter's immutable owner backup reaches this native inverse.
   const restore = (before, expected, ctx) => {
     const canonical = Freight.normalizeSettings(before);
