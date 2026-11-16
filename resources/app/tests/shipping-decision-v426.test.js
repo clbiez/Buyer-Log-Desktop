@@ -45,7 +45,7 @@ function loadCompute(transitDays, multipliers) {
     const p = x => String(x).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
-  return new Function('BLShippingEngine', 'coerceDateLoose', 'toNum', 'toISODate', 'shipTransitDays', 'shipLandedMultipliers', `return (${match[0]})`)(BLShippingEngine, coerceDateLoose, toNum, toISODate, shipTransitDays, shipLandedMultipliers);
+  return new Function('BLShippingEngine', 'coerceDateLoose', 'toNum', 'toISODate', 'shipTransitDays', 'shipLandedMultipliers', 'shipCustomMethods', `return (${match[0]})`)(BLShippingEngine, coerceDateLoose, toNum, toISODate, shipTransitDays, shipLandedMultipliers, () => []);
 }
 
 function shipRow(extra) {

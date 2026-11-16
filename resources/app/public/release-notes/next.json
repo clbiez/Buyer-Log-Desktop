@@ -68,6 +68,35 @@
           "en": "Actual post-change Buyer Log with isolated demo data, totals visible without internal vertical scrolling, and the Excel export button."
         }
       }
+    },
+    {
+      "id": "shipping-custom-method-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Nakliye Kıyaslama · Navlun Hesaplama",
+        "en": "Shipping Comparison · Freight Calculation"
+      },
+      "title": {
+        "tr": "Yeni nakliye şekli sütunu eklenebilir",
+        "en": "Add your own shipping method columns"
+      },
+      "body": {
+        "tr": "Navlun Hesaplama’daki “Ek nakliye şekilleri” bölümünden Uçak+Uçak Aktarmalı gibi yeni bir yöntem ad ve transit gün ile eklenir. Yöntem ücret tipi olarak seçilebilir ve Nakliye Kıyaslama’da kendi Landed, avantaj % ve tahmini teslim sütununu açar; Uygula sonucu bu sütuna yazar. Ayar herkes için ortaktır ve kopyalama çıktısına da eklenir.",
+        "en": "Add a new method such as AIR+AIR transfer with a name and transit days under “Extra shipping methods” in Freight Calculation. It can be chosen as a rate type and opens its own Landed, saving % and estimated arrival column in Shipping Comparison; Apply writes the result there. The setting is shared with everyone and included in copied output."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shipping-custom-method-column.png",
+        "alt": {
+          "tr": "Nakliye Kıyaslama’da AIR+AIR Transfer Landed sütunu",
+          "en": "AIR+AIR Transfer Landed column in Shipping Comparison"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; demo verisiyle eklenen AIR+AIR Transfer yöntemi, kendi fiyat, avantaj ve teslim tarihiyle.",
+          "en": "Actual post-change Buyer Log with demo data; the added AIR+AIR Transfer method with its own price, saving and arrival date."
+        }
+      }
     }
   ]
 }

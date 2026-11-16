@@ -30,7 +30,17 @@ function landedMultipliers(raw={}){
   return {tr:pick(raw.tr,1.05), overseas:pick(raw.overseas,1.11)};
 }
 
-function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers}){
+/* Kullanıcı tanımlı ek nakliye şekilleri (freight-calc.js normalizeMethods).
+   Alan adları kimliğe bağlıdır; yöntemin adı değişse de satır verisi korunur.
+   Landed elle/navlun hesabından gelir, avantaj ve ETA formüldür. */
+function methodKeys(id){
+  return {landed:'ydLanded__'+id, advantage:'ydAvantaj__'+id, eta:'ydTeslim__'+id, total:'_total__'+id};
+}
+function cleanMethods(methods){
+  return (Array.isArray(methods)?methods:[]).filter(method=>method&&/^m-[a-z0-9-]{1,38}$/.test(String(method.id||'')));
+}
+
+function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers,methods}){
   const exf = row.exFactory ? coerceDateLoose(row.exFactory) : null;
   const opd = row.opd ? coerceDateLoose(row.opd) : null;
   row.leadTime = (exf && opd && !isNaN(exf) && !isNaN(opd)) ? Math.round((exf-opd)/86400000) : '';
@@ -94,6 +104,15 @@ function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers}){
   row._totalGemiUcak = totalDiff(gemiUcak);
   row._totalUcak = totalDiff(ucak);
   row._totalTr = (trLanded!=='' && qty!=null) ? (trLanded * qty) : null;
+
+  for(const method of cleanMethods(methods)){
+    const keys=methodKeys(method.id);
+    const landed=toNum(row[keys.landed]);
+    const transit=Number(method.transitDays);
+    row[keys.advantage]=advantage(landed);
+    row[keys.eta]=Number.isFinite(transit)&&transit>0?addDaysIso(row.exFactory, transit):'';
+    row[keys.total]=totalDiff(landed);
+  }
   return row;
 }
 
@@ -176,5 +195,5 @@ function mapCollectionRow(row,{toISODate,toNum,norm,normalizeTransitDelType,pars
     ...(row._ydLicense&&typeof row._ydLicense==='object'?row._ydLicense:{}),
   };
 }
-return {compute,transitDays,landedMultipliers,roundFx,mapCPRow,mapCollectionRow,collectionShippingModelKey};
+return {compute,methodKeys,cleanMethods,transitDays,landedMultipliers,roundFx,mapCPRow,mapCollectionRow,collectionShippingModelKey};
 });
