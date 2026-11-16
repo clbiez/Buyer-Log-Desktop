@@ -7036,11 +7036,6 @@ async function hydrateModelSnapshotAsync(value) {
   return hydrateSnapshotPayload(id, await loadModelSnapshotAsync(id));
 }
 
-function hydrateSharedModelSnapshot(value) {
-  const id = sourceUserId(value);
-  if (id === 'moderator') return null;
-  return hydrateSnapshotPayload(id, loadModelSnapshot('moderator'), { shared: true });
-}
 
 async function saveRuntimeModelSnapshot(id, runtime) {
   if (!runtime || !runtime.loadedAt) return null;
@@ -8289,7 +8284,6 @@ function pageCacheRuntimeMeta(runtime) { return projectionRuntimeMeta(runtime); 
 function cachedRuntimeFromManifest(manifest) {
   return { ...emptySourceCache(), ...((manifest && manifest.runtimeMeta) || {}) };
 }
-function pageProjectionCanEdit(currentUser, row) { return canUserEditOrderCode(currentUser, row && row['Order Code']); }
 // UI edit hints only: reuse the existing per-invocation permission context.
 // Mutation endpoints continue to resolve live authority at their commit guard.
 function pageProjectionEditResolver(currentUser){
@@ -8797,15 +8791,6 @@ app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ lim
 });
 
 const pageProjectionBuildInFlight = new Map();
-async function singleFlightPageProjection(currentUser, module, builder) {
-  const ctx = pageProjectionContext(currentUser), key = `${ctx.id}\u0000${ctx.contextHash}\u0000${module}`;
-  if (pageProjectionBuildInFlight.has(key)) return pageProjectionBuildInFlight.get(key);
-  const promise = Promise.resolve().then(() => builder(ctx)).finally(() => {
-    if (pageProjectionBuildInFlight.get(key) === promise) pageProjectionBuildInFlight.delete(key);
-  });
-  pageProjectionBuildInFlight.set(key, promise);
-  return promise;
-}
 async function storeOnDemandProjection(currentUser, ctx, module, value, runtime) {
   const manifest=pageProjectionCache.loadManifest(ctx.id);
   let saved=manifest&&pageProjectionMatchesRuntime(manifest,runtime)
@@ -9013,26 +8998,6 @@ function cachedBacklogTemplateRows(key,compute){
   return rows;
 }
 
-function backlogRowFilterOptions(options={}){
-  return Object.fromEntries(['retailFrom','retailTo','inStoreFrom','inStoreTo','exFactoryFrom','exFactoryTo','buyerGrup','dimFilters','analysisFilters','antrepoFrom','antrepoTo'].map(key=>[key,options[key]||'']));
-}
-function backlogQueryForRequest(req,options={},includeWindowed=false,context=null){
-  const id=sourceUserId(req),active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
-  const ctx=context || pageProjectionContext(req.currentUser);
-  const sourceKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,['query-v1',ctx.contextHash]);
-  const sourceRevision=crypto.createHash('sha256').update(BACKLOG_ROWS_PROCESS_NONCE).update(sourceKey).digest('hex');
-  const filterOpts=backlogRowFilterOptions(options),key=JSON.stringify([sourceKey,filterOpts,includeWindowed]);
-  return backlogQueryCache.get(key,()=>{
-    const orders=userAccess.filterRowsByScope(req.currentUser,filterRowsByEffectiveHorizon(req.currentUser,'backlog',ordersForTarget(active,'backlog',overrides)));
-    const antrepo=antrepoForTarget(active,'backlog');
-    let custom=backlogCatalogCache.get(sourceKey);
-    if(!custom){
-      custom=parseLib.backlogCustomDimensionContext(orders,antrepo);backlogCatalogCache.set(sourceKey,custom);
-      while(backlogCatalogCache.size>4)backlogCatalogCache.delete(backlogCatalogCache.keys().next().value);
-    }
-    return {orders,antrepo,overrides,sourceRevision,query:parseLib.prepareBacklogQuery(orders,antrepo,overrides,filterOpts,custom,includeWindowed)};
-  });
-}
 
 // Only these Backlog reads opt into consumer cancellation. IncomingMessage
 // 'close' also fires for a normally received GET; use response completion instead.
@@ -9853,10 +9818,6 @@ app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) =>
 
 /* Asenkron model yenilemesini başlatan tek native yol. HTTP /api/refresh ve
    Paylaşılan yenileme servisi aynı fonksiyonu kullanır. */
-function nativeRefreshPlan(currentUser, rawTargets) {
-  const { requestedTargets } = nativeRefreshTargets(rawTargets, currentUser), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
-  return { requestedTargets, filterReady: !filterError, running: refreshInFlight.has(id), activeJobId: refreshInFlight.has(id) ? (refreshJobs.get(id) || {}).jobId || null : null };
-}
 function nativeRefreshTargets(rawTargets, value = null) {
   rawTargets = Array.isArray(rawTargets) ? rawTargets : null;
   const wanted = rawTargets ? rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t))) : null;

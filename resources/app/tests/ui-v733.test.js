@@ -142,7 +142,6 @@ test('v7.33 · bilinen tüm süre sayaçları ortak biçimlendiriciden geçer', 
     /* v7.81: 'ranOk' ve 'countResult' silinen bağlantı modalının metinleriydi
        (modelConnText). Kural değişmedi — kalan her sayaç hâlâ listede ve yeni
        bir sayaç eklendiğinde bu test onu da zorunlu kılar. */
-    ['modelConnDurationLabel', /function modelConnDurationLabel\(ms\)\{\s*return fmtDurationSn\(ms\);/],
     ['refreshSeconds', /function refreshSeconds\(ms\)\{\s*return fmtDurationSn\(ms\);/],
     ['prepareEmailProgressFormatElapsed', /function prepareEmailProgressFormatElapsed\(ms\)\{\s*return fmtDurationSn\(ms\);/],
     ['yenileme zamanlaması', /const t=c\.timings,\s*sec=ms=>fmtDurationSn\(ms\)/],

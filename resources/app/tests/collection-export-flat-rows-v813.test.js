@@ -227,11 +227,8 @@ test('Excel görsel aktarımı model başına tek satır yazar', () => {
   assert.match(block,/cell\.value=kolExportSingleLineText\(summaryEntry\.display\)/);
   assert.match(block,/else\{cell\.value=kolExportSingleLineText\(raw\);cell\.alignment=/,
     'Fabric dahil serbest metin ExcelJS hücresine fiziksel satır sonu taşımamalı');
-  const styled = APP_MAIN.slice(APP_MAIN.indexOf('function buildKolStyledSheet'),
-    APP_MAIN.indexOf('// ---- Görsel gömülü dışa aktarım'));
-  assert.match(styled,/v:kolExportSingleLineText\(summaryEntry\.display\)/);
-  assert.match(styled,/cell = \{v:kolExportSingleLineText\(raw\),t:'s',s\};/,
-    'görselsiz Collection export da aynı tek-satır normalizasyonunu kullanmalı');
+  // Görselsiz ikinci export yolu (buildKolStyledSheet) kaldırıldı; tek yol budur.
+  assert.doesNotMatch(APP_MAIN,/function buildKolStyledSheet/);
 });
 
 test('normal metin kopyalaması körlemesine ele geçirilmez', () => {

@@ -62,11 +62,8 @@ test('INTAKE bağlantı ayarları ana veri offline olsa da yerel sunucudan yükl
   assert.match(app, /function modelConnectionApiAvailable\(\)/);
   assert.match(app, /location\.protocol==='http:'\|\|location\.protocol==='https:'/);
   const load = app.match(/async function modelConnLoad\(\)\{([\s\S]*?)\n\}/)?.[1] || '';
-  const save = app.match(/async function modelConnSave\(items\)\{([\s\S]*?)\n\}/)?.[1] || '';
   assert.match(load, /modelConnectionApiAvailable\(\)/);
-  assert.match(save, /modelConnectionApiAvailable\(\)/);
   assert.doesNotMatch(load, /SERVER_BACKED/);
-  assert.doesNotMatch(save, /SERVER_BACKED/);
 });
 
 test('INTAKE UI OAB-parite pivot alanı, sürükleyerek sıralama, etiket ve filtre akışlarını içerir', () => {

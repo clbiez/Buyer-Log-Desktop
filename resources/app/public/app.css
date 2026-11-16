@@ -2494,8 +2494,6 @@ tfoot .collectionWeightedAverage strong{display:inline-block;min-width:0;max-wid
 .refreshStagesRunning{display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;white-space:nowrap;}
 .refreshStagesRunning .blOrb{transform:scale(.55);margin:-4px -3px;}
 .refreshStagesBody{padding:8px 10px 9px;display:grid;gap:7px;overflow:visible;}
-.refreshEtaCard{display:none;}
-.refreshEtaState{display:none;}
 .refreshCompactSummary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;}
 .refreshCompactSummary>div{display:flex;align-items:baseline;gap:5px;}
 .refreshCompactEta{justify-self:start;white-space:nowrap;}

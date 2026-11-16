@@ -6604,7 +6604,7 @@ function cellPlainText(c,r,cf){
   if(c.type==='num'){ if(c.k==='Ex→Retail' && cf) return cf.exr==null?'':String(cf.exr); if(c.k==='LT' && cf) return cf.lt==null?'':String(cf.lt); return v==null?'':String(v); }
   return norm(v);
 }
-function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ---------- per-column header filters (Excel-like) ----------
 const DATE_COL_TYPES = ['date','exfactory','retail','retailEdit','instoreEdit'];
@@ -12911,7 +12911,6 @@ let modelConnSchema=null;    // { columns:[{table,name,kind}], measures:[{table,
 let modelConnValueCache={};
 
 
-
 // SERVER_BACKED ana iş verisinin en az bir kez başarıyla yüklenip yüklenmediğini
 // anlatır; yerel Buyer Log API'sinin erişilebilirliğini anlatmaz. Kurumsal
 // kaynak/VPN kapalıyken ana yükleme başarısız olabilir fakat bağlantı ayarları
@@ -12934,20 +12933,6 @@ async function modelConnLoad(){
   return modelConnState;
 }
 
-async function modelConnSave(items){
-  if(!modelConnectionApiAvailable()){ modelConnState.items=items; void refreshFieldMappingReadinessUI(items); return items; }
-  const res=await fetch('/api/model-connections',{method:'PUT',
-    headers:{'Content-Type':'application/json','If-Match':String(modelConnState.revision||0)},
-    body:JSON.stringify({items})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||res.statusText);
-  modelConnState.items=Array.isArray(data.items)?data.items:items;
-  modelConnState.revision=Number(data.revision)||modelConnState.revision;
-  void refreshFieldMappingReadinessUI(modelConnState.items);
-  return modelConnState.items;
-}
-
-function modelConnDurationLabel(ms){ return fmtDurationSn(ms); }
 
 /* v7.81 — ESKİ "HORIZON VE BAĞLANTI" MODALI KALDIRILDI.
 
@@ -14791,41 +14776,12 @@ function refreshPhaseLabel(phase){
 function refreshSeconds(ms){ return fmtDurationSn(ms); }
 function refreshStagesModalOpen(){ return Boolean(document.getElementById('_refreshStages')); }
 
-function refreshEtaBasisLabel(basis,en){
-  const labels={exact:en?'same horizon + similar data volume':'aynı horizon + benzer veri hacmi',
-    horizon:en?'same horizon':'aynı horizon',volume:en?'similar data volume':'benzer veri hacmi',
-    target:en?'same refresh scope':'aynı yenileme kapsamı'};
-  return labels[String(basis||'')]||(en?'shared refresh history':'ortak yenileme geçmişi');
-}
 function refreshEtaRangeText(eta){
   if(!eta||eta.available!==true)return'';
   const low=Math.max(0,Number(eta.lowMs)||0),high=Math.max(low,Number(eta.highMs)||0);
   return high>low?`${refreshSeconds(low)} – ${refreshSeconds(high)}`:refreshSeconds(low);
 }
 function refreshEtaInlineText(eta){const range=refreshEtaRangeText(eta);return range?`~${range}`:'';}
-function refreshEtaPanelHtml(job,en){
-  const eta=job&&job.eta||null;if(!eta)return'';
-  const running=Boolean(job&&job.running),available=eta.available===true,sampleCount=Math.max(0,Number(eta.sampleCount)||0);
-  const needed=Math.max(3,Number(eta.neededSamples)||3),scope=eta.scope&&typeof eta.scope==='object'?eta.scope:{};
-  const targets=Array.isArray(scope.targets)&&scope.targets.length?scope.targets.join(' + ').toUpperCase():'';
-  const volume=scope.rowBucket&&scope.rowBucket!=='unknown'?`${scope.rowBucket} ${en?'row band':'satır bandı'}`:(en?'data volume learning':'veri hacmi öğreniliyor');
-  let main,meta,state;
-  if(available){
-    main=refreshEtaRangeText(eta);meta=`${sampleCount} ${en?'similar refreshes':'benzer yenileme'} · ${refreshEtaBasisLabel(eta.basis,en)}`;
-    state=!running?(en?'Actual duration recorded':'Gerçek süre kaydedildi')
-      :eta.exceeded?(en?'Estimate range exceeded · refresh continues':'Tahmin aralığı aşıldı · yenileme sürüyor')
-      :`~${refreshSeconds(Math.max(0,Number(eta.remainingMs)||0))} ${en?'remaining':'kaldı'}`;
-  }else{
-    main=en?'Learning estimate':'Tahmin öğreniliyor';
-    meta=sampleCount?`${sampleCount}/${needed} ${en?'similar samples collected':'benzer örnek birikti'}`:(en?'Shared refresh history is building':'Ortak yenileme geçmişi birikiyor');
-    state=en?'No artificial percentage is shown':'Sahte ilerleme yüzdesi gösterilmez';
-  }
-  return `<div class="refreshEtaCard${available?' isReady':' isLearning'}">
-    <span class="blOrb blOrb--sm" data-state="${running?'thinking':'done'}" aria-hidden="true"></span>
-    <div class="refreshEtaMain"><span>${escapeHtml(en?'Estimated duration':'Tahmini süre')}</span><b>${escapeHtml(main)}</b><small>${escapeHtml(meta)}</small></div>
-    <div class="refreshEtaState"><strong>${escapeHtml(state)}</strong><span>${escapeHtml([targets,volume].filter(Boolean).join(' · '))}</span></div>
-  </div>`;
-}
 
 function refreshCompactConnectionKind(value){
   const text=String(value||'').toLocaleUpperCase('tr-TR');
@@ -16809,7 +16765,6 @@ async function openSyncLocalDataModal(){
   modal.querySelector('[data-save]')?.addEventListener('click',async()=>{const errorBox=modal.querySelector('#_syncError');try{const response=await fetch('/api/sync-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({sharedSyncRoot:folder().value})}),r=handleSyncFolderResult(await response.json().catch(()=>({})));if(r.ok){setHubInitVisible(false);render(r.settings);errorBox.textContent='';showToast(label('Sync ayarları kaydedildi.','Sync settings saved.'));}else errorBox.textContent=r.error||response.statusText||'Error';}catch(error){setHubInitVisible(false);errorBox.textContent=error.message||String(error);}});
   modal.querySelector('[data-now]')?.addEventListener('click',async e=>{const button=e.currentTarget;button.disabled=true;try{const r=await fetch('/api/sync-settings/sync-now',{method:'POST'}).then(x=>x.json());if(r.settings)render(r.settings);if(!r.ok)modal.querySelector('#_syncError').textContent=r.error||'Error';}catch(err){modal.querySelector('#_syncError').textContent=err.message||String(err);}finally{button.disabled=false;}});
 }
-function syncStatusText(s){if(s&&s.progress)return '↻ Syncing';const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0);if(pending)return `● ${pending} Pending`;if(!s||!s.online)return '! Offline';return '✓ Synced';}
 function syncStatusBadgeView(s){
   const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0),en=appLang==='en';
   if(s&&s.progress)return {icon:'i-cloud',tone:'syncing',label:en?'Syncing':'Senkronize ediliyor',count:0};
@@ -17159,7 +17114,6 @@ document.getElementById('cpRefreshBtn')?.addEventListener('click',()=>{
 // renderSourceTargets() dil değişkenini okur; o değişken çok daha aşağıda
 // tanımlanıyor. Doğrudan çağırmak betiği çökertirdi (bkz. v3.57 notu).
 setTimeout(()=>{ try{ renderSourceTargets(); }catch(_){} },0);
-
 
 
 // "Kur Dosyası Yükle": Ön Maliyet'teki "Pick FX Excel" ile aynı işi yapar —
@@ -20240,24 +20194,6 @@ function backlogRowImageUrl(row,index){
   const direct=norm(row&&row._imageRef);if(direct)return `${CP_IMAGE_API}/${encodeURIComponent(direct)}`;
   return detailImageUrlFrom(index,{plmId:row&&row._plmId,colourCode:row&&row._colourCode,modelName:row&&row._modelName||row&&row['Model Adı']});
 }
-async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
-  const raw=XLSX.write(wb,{type:'array',bookType:'xlsx',cellStyles:true});
-  if(!includeImages||!rows.length)return raw;
-  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
-  if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel image engine could not be loaded.':'Excel görsel motoru yüklenemedi.');
-  const book=new ExcelJS.Workbook();await book.xlsx.load(raw);const sheet=book.getWorksheet('BACKLOG')||book.worksheets[0],index=buildDetailImageIndex();
-  const preparedByUrl=new Map(),imageIdByUrl=new Map();
-  sheet.getColumn(1).width=kolExcelImageMetrics().colChars;
-  for(let start=0;start<rows.length;start+=12){
-    const slice=rows.slice(start,start+12),prepared=await Promise.all(slice.map(row=>{
-      const url=backlogRowImageUrl(row,index);if(!url)return Promise.resolve({url:'',image:null});
-      if(!preparedByUrl.has(url))preparedByUrl.set(url,kolPrepareExcelImage(url));
-      return preparedByUrl.get(url).then(image=>({url,image}));
-    }));
-    prepared.forEach(({url,image},offset)=>{const rowNum=start+offset+2;sheet.getRow(rowNum).height=kolExcelImageMetrics().rowPt;if(!image)return;const imageId=kolAddCellBoundExcelImage(sheet,book,image,rowNum,1,imageIdByUrl.get(url));if(imageId!=null&&!imageIdByUrl.has(url))imageIdByUrl.set(url,imageId);});
-  }
-  return book.xlsx.writeBuffer();
-}
 window.BLBacklogChartContext={
   prepareQuery:()=>prepareBacklogChartQuery(),
   whenRowsReady:()=>waitForBacklogRowsReady(),
@@ -20811,21 +20747,6 @@ async function updateShipFxByExFactory(rows, options={}){
 // olarak aciga zorlanir. Karanlik temada bu, ekranin bir an bembeyaz olmasina yol
 // aciyordu. Bu perde, gecis oncesindeki gercek renkleri satir ici stil olarak alip uste
 // serer; tema arkada degisir, kullanici beyaz parlama gormez.
-function beginThemeSwapCurtain(label){
-  const body=document.body;
-  if(!body) return ()=>{};
-  const cs=getComputedStyle(body);
-  const curtain=document.createElement('div');
-  curtain.id='_themeSwapCurtain';
-  curtain.setAttribute('role','status');
-  curtain.setAttribute('aria-live','polite');
-  curtain.style.cssText='position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:center;justify-content:center;font:500 var(--ui-font-base)/1.45 var(--ui-font-body);';
-  curtain.style.background=cs.backgroundColor||'#fff';
-  curtain.style.color=cs.color||'#000';
-  curtain.textContent=String(label||'');
-  body.appendChild(curtain);
-  return ()=>{ try{ curtain.remove(); }catch(e){} };
-}
 function selectedCpRowsForAction(){
   // CP ve Siparişler ayni satir seklini paylasir (ikisi de ASAS'tan uretilir), ama
   // secim state'leri ayridir. Aktif sekmeye gore dogru kaynagi kullaniriz; aksi halde
@@ -26363,11 +26284,6 @@ function kolDefaultDisplayOrder(){
   preferred.forEach(key=>{if(validSet.has(key)&&!seen.has(key)){seen.add(key);out.push(key);}});
   valid.forEach(key=>{if(!seen.has(key)){seen.add(key);out.push(key);}});
   return kolPlaceLandedAtEnd(out);
-}
-function kolResetDisplayOrderKeepingCustom(previousOrder){
-  const customKeys=new Set(kolCustomCols.map(c=>c.k));
-  const base=kolDefaultDisplayOrder().filter(key=>!customKeys.has(key));
-  return kolNormalizeDisplayOrder(mergeDeferredColumnOrder(previousOrder,base,base));
 }
 /* Koleksiyon ana başlığı (group). Sistem sütunları sabit başlık taşır; kullanıcının
    eklediği serbest sütun, tablodaki solundaki sütunun başlığına katılır. */
@@ -32574,7 +32490,6 @@ let kolFabricCardsConflicts=[],kolFabricCardsSharingPending=false;
 const kolFabricDismissed=new Set();
 const KOL_FABRIC_AUTO_LIMIT=200;
 function kolFabricApi(){return window.BLFabricCards||null;}
-function kolFabricCodeOf(raw){const api=kolFabricApi();return api?api.codeOf(raw):'';}
 /* Hücredeki kumaşlar: tek kumaş ya da takım modelde "A - 3859-…", "B - 361819-…". */
 function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):[];}
 /* Yapıştırılan/yazılan kumaş metni → kanonik PLM metni (BLFabricCards.resolveInput). */
@@ -36061,117 +35976,6 @@ function kolExportSingleLineText(value){
   if(window.BLTableExport?.normalizeCell)return window.BLTableExport.normalizeCell(value);
   return String(value==null?'':value).replace(/[\r\n\u000B\u000C\u0085\u2028\u2029\t]+/g,' ').replace(/ {2,}/g,' ').trim();
 }
-// ---- Biçimli (görselsiz) hızlı dışa aktarım: xlsx-js-style, CP ile aynı görsel dil ----
-function buildKolStyledSheet(rows){
-  const bd = _XLS_BORDERS;
-  const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
-  const mfrCols = kolManufacturers.map(m=>m.name);
-  const exportCols = kolOrderedCols();
-  exportCols.forEach(c=>{c._blSchema=columnSchemaFor(c,sourceRows);});
-  // Görsel sütunu ekranda gizliyse dışa aktarımda da yer almaz; ofsetler kayar.
-  const withImg = !kolPictureHidden;
-  const imgOff = withImg ? 1 : 0;
-  const headers = [...(withImg?['Görsel Notu']:[]), ...exportCols.map(c=>c.label), ...mfrCols.map(m=>m+' ($)'), ...(mfrCols.length?['Conf. Manufacturer','Conf. FOB']:[])];
-  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
-  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true}}}));
-  rows.forEach((record,ri)=>{
-    const r=kolCollectionProjectionSource(record),summary=kolCollectionProjectionSummary(record);
-    if(withImg) put(ri+1,0,{v:kolModelImageSource(r)?'Uygulamada görsel mevcut':'Görsel yok',t:'s',s:{border:bd,font:{sz:9,italic:true,color:{rgb:'FF98A2B3'}}}});
-    exportCols.forEach((c,ci)=>{
-      const summaryEntry=summary?.get?.(c.k);
-      if(summaryEntry){
-        put(ri+1,ci+imgOff,{v:kolExportSingleLineText(summaryEntry.display),t:'s',s:{border:bd,font:{sz:10,bold:c.k==='modelKod'},alignment:{vertical:'middle',wrapText:true}}});
-        return;
-      }
-      const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
-      if(c.k==='fabric'){put(ri+1,ci+imgOff,{v:kolExportSingleLineText(kolFabricDisplay(raw)),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'middle',wrapText:true}}});return;}
-      const schema=columnSchemaFor(c,sourceRows);
-      const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
-      let cell;
-      // Checklist hücresi kanonik durum kimliğini değil, ekrandaki TR/EN etiketi yazar.
-      if(c.checklist){put(ri+1,ci+imgOff,{v:kolChecklistDisplay(raw,r),t:'s',s:{...s,alignment:{vertical:'middle'}}});return;}
-      if(c.endeksmatik){
-        // v6.42 — Ekranda hücre fiyat + index olmak üzere İKİ satır gösterirken
-        // ("YD $.. · TR $.." ve "YD %.. · TR %.."), bu yol yalnız fiyat satırını
-        // (endeksmatikCompactText) yazıyordu; index satırı Excel'e hiç gitmiyordu.
-        // endeksmatikExcelText ikisini birden verir — Kopyala yolunda zaten
-        // bu kullanılıyordu, buradaki eksiklik ikisini tutarsız kılıyordu.
-        const textValue=kolExportSingleLineText(endeksmatikExcelText(r));
-        cell={v:textValue,t:'s',s:{...s,alignment:{horizontal:'left',vertical:'center',wrapText:true}}};
-        put(ri+1,ci+imgOff,cell);return;
-      }
-      // Landed sütunları hesaplanmış sayıdır; Excel'de para biçiminde yazılır.
-      if(c.trLanded || c.ydLanded){
-        const k=kolLandedCalc(r);
-        const value=c.trLanded?k.trLanded:k.ydLanded;
-        cell = value==null ? {v:'',t:'s',s} : {v:value,t:'n',s:{...s,numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}};
-        put(ri+1, ci+imgOff, cell);
-        return;
-      }
-      if(c.k==='colourCode'){
-        cell={v:kolExportSingleLineText(raw),t:'s',s:{...s,numFmt:'@',alignment:{horizontal:'left',vertical:'center'}}};
-      } else if(c.exToRetail){
-        cell = raw==='' ? {v:'',t:'s',s} : {v:Number(raw),t:'n',s:{...s,numFmt:'#,##0" g."',alignment:{horizontal:'right'},font:{sz:10,color:{rgb:'FF98A2B3'}}}};
-      } else if(c.date && raw){
-        const d = coerceDateLoose(raw);
-        cell = !d ? {v:kolExportSingleLineText(raw),t:'s',s} : {v:d,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}};
-      } else if(c.qty && raw!==''&&raw!=null && Number.isFinite(kolParseQuantityNum(raw))){
-        cell = {v:kolParseQuantityNum(raw),t:'n',s:{...s,numFmt:'#,##0',alignment:{horizontal:'right'}}};
-      } else if(c.percent && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw)/100,t:'n',s:{...s,numFmt:'0.00%',alignment:{horizontal:'right'}}};
-      } else if(c.hologram && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw),t:'n',s:{...s,numFmt:'#,##0.######',alignment:{horizontal:'right'}}};
-      } else if(c.money && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
-        cell = {v:kolParseMoneyNum(raw),t:'n',s:{...s,numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}};
-      } else if(c.custom && schema){
-        const value=schema.exportValue(raw);
-        cell=value instanceof Date?{v:value,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}}:typeof value==='number'?{v:value,t:'n',s:{...s,numFmt:Number.isInteger(value)?'#,##0':'#,##0.00',alignment:{horizontal:'right'}}}:{v:kolExportSingleLineText(value),t:'s',s};
-      } else if(c.status||c.k==='durum'){
-        const argb=kolStatusExcelArgb(raw),fontArgb=kolStatusExcelTextArgb(raw);
-        cell = {v:kolExportSingleLineText(raw),t:'s',s:{...s,fill:{fgColor:{rgb:argb}},font:{sz:10,bold:true,color:{rgb:fontArgb}}}};
-      } else {
-        cell = {v:kolExportSingleLineText(raw),t:'s',s};
-      }
-      put(ri+1, ci+imgOff, cell);
-    });
-    const effectivePricing=kolEffectivePricing(r),validPrices = mfrCols.map(m=>kolParseMoneyNum(effectivePricing && effectivePricing[m])).filter(n=>Number.isFinite(n) && n>0);
-    mfrCols.forEach((m,mi)=>{
-      const v = effectivePricing && effectivePricing[m];
-      const ci = imgOff + exportCols.length + mi;
-      const n = kolParseMoneyNum(v);
-      if(v==='0' || v==='0,00'){
-        put(ri+1,ci,{v:0,t:'n',s:{border:bd,font:{sz:10},numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}});
-      } else if(v!=='' && v!=null && Number.isFinite(n)){
-        let fill;
-        if(n>0 && validPrices.length){
-          const min=Math.min(...validPrices), max=Math.max(...validPrices);
-          const t = max===min ? 0 : (n-min)/(max-min);
-          const hue = 150 - t*150;
-          fill = {fgColor:{rgb: hslToArgb(hue,55,88)}};
-        }
-        put(ri+1,ci,{v:n,t:'n',s:{border:bd,font:{sz:10},numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}, ...(fill?{fill}:{})}});
-      }
-      else if(v!=='' && v!=null){
-        // "Fiyatlamada" gibi metin bir değer — sayı değil, olduğu gibi yazılır.
-        put(ri+1,ci,{v:kolExportSingleLineText(v),t:'s',s:{border:bd,font:{sz:10,italic:true}}});
-      }
-      else put(ri+1,ci,{v:'',t:'s',s:{border:bd}});
-    });
-    if(mfrCols.length){
-      const confirmed = kolConfirmedPricing(r);
-      const bi = imgOff + exportCols.length + mfrCols.length;
-      const confirmedFill = confirmed ? {fgColor:{rgb:'FFE4F3EB'}} : undefined;
-      put(ri+1,bi,{v:confirmed?kolExportSingleLineText(confirmed.name):'',t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}}, ...(confirmedFill?{fill:confirmedFill}:{})}});
-      put(ri+1,bi+1,{v:confirmed?confirmed.price:'',t: confirmed?'n':'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}},numFmt:confirmed?'"$"#,##0.00':undefined,alignment:{horizontal:'right'}, ...(confirmedFill?{fill:confirmedFill}:{})}});
-    }
-  });
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:headers.length-1}});
-  ws['!cols']=[...(withImg?[{wch:kolExcelImageMetrics().colChars}]:[]), ...exportCols.map(c=>({wch:Math.max(11,Math.round(kolColWidth(c)/7))})), ...mfrCols.map(()=>({wch:14})), ...(mfrCols.length?[{wch:22},{wch:14}]:[])];
-  ws['!rows']=[{hpx:26}];
-  return ws;
-}
-
-
 // ---- Görsel gömülü dışa aktarım: ExcelJS (ayrı kütüphane; xlsx-js-style resim desteklemiyor) ----
 // Fiyatlama talebi Excel'i: Export with Pictures ile aynı ExcelJS görsel/biçim motorunu kullanır.
 // Görsel sütunu sabittir; diğer sütunlar kalıcı Pricing Excel Columns seçimine göre eklenir.
@@ -36195,35 +35999,6 @@ function kolPricingMailDate(d=new Date()){
   const p=x=>String(x).padStart(2,'0');
   return `${p(d.getDate())}.${p(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)}`;
 }
-function kolPricingPreviewValue(r,c){
-  const raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k);
-  if(c.k==='fabric')return kolFabricDisplay(raw);
-  if(raw==null || raw==='') return '';
-  if(c.date) return fmtDate(raw);
-  if(c.qty){ const n=kolParseQuantityNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR'):String(raw); }
-  if(c.percent){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?`%${n.toLocaleString('tr-TR',{maximumFractionDigits:3})}`:String(raw); }
-  if(c.hologram){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR',{maximumFractionDigits:6}):String(raw); }
-  if(c.money){ const n=kolParseMoneyNum(raw); return Number.isFinite(n)?`$${n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:String(raw); }
-  return String(raw);
-}
-function kolCanvasTextLines(ctx,text,maxWidth,maxLines){
-  const words=String(text??'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
-  if(!words.length) return [''];
-  const lines=[]; let line='';
-  for(const word of words){
-    const trial=line?`${line} ${word}`:word;
-    if(ctx.measureText(trial).width<=maxWidth || !line) line=trial;
-    else { lines.push(line); line=word; if(lines.length>=maxLines-1) break; }
-  }
-  if(line && lines.length<maxLines) lines.push(line);
-  const consumed=lines.join(' ').split(' ').filter(Boolean).length;
-  if(consumed<words.length && lines.length){
-    let last=lines[lines.length-1];
-    while(last && ctx.measureText(last+'…').width>maxWidth) last=last.slice(0,-1);
-    lines[lines.length-1]=(last||'')+'…';
-  }
-  return lines;
-}
 function kolLoadPricingImage(src){
   return new Promise(resolve=>{
     if(!src){ resolve(null); return; }
@@ -36232,71 +36007,6 @@ function kolLoadPricingImage(src){
     const timer=setTimeout(()=>done(null),4000);
     img.onload=()=>done(img); img.onerror=()=>done(null); img.src=src;
   });
-}
-async function kolBuildPricingPreviewImages(rows){
-  const exportCols=kolPricingExcelCols();
-  const defs=[{label:'Görsel',width:108,image:true},...exportCols.map(c=>({label:kolColumnLabel(c),width:Math.max(90,Math.min(185,Math.round((kolColWidth(c)||110)*0.9))),col:c}))];
-  const rawWidth=defs.reduce((sum,d)=>sum+d.width,0);
-  const maxWidth=1900, scale=Math.min(1,maxWidth/rawWidth), width=Math.max(720,Math.round(rawWidth*scale));
-  const headerH=Math.round(44*scale), rowH=Math.max(58,Math.round(86*scale));
-  const maxRowsPerImage=Math.max(12,Math.min(38,Math.floor((5600-headerH)/rowH)));
-  const loadedImages=await Promise.all(rows.map(async r=>{
-    for(const source of kolModelImageSources(r)){
-      const image=await kolLoadPricingImage(source);
-      if(image)return image;
-    }
-    return null;
-  }));
-  const previews=[];
-  for(let offset=0;offset<rows.length;offset+=maxRowsPerImage){
-    const chunkRows=rows.slice(offset,offset+maxRowsPerImage), chunkImgs=loadedImages.slice(offset,offset+maxRowsPerImage);
-    const height=headerH+chunkRows.length*rowH;
-    const dpr=1, canvas=document.createElement('canvas');
-    canvas.width=Math.ceil(width*dpr); canvas.height=Math.ceil(height*dpr);
-    const ctx=canvas.getContext('2d');
-    if(!ctx) throw new Error('E-posta tablo görseli oluşturulamadı.');
-    ctx.scale(dpr,dpr);
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,width,height);
-    ctx.textBaseline='middle'; ctx.lineWidth=1;
-    let x=0;
-    defs.forEach(d=>{
-      const w=d.width*scale;
-      ctx.fillStyle='#F2F4F7'; ctx.fillRect(x,0,w,headerH);
-      ctx.strokeStyle='#D0D5DD'; ctx.strokeRect(x,0,w,headerH);
-      ctx.fillStyle='#475467'; ctx.font=`600 ${Math.max(10,Math.round(12*scale))}px Arial, sans-serif`;
-      const lines=kolCanvasTextLines(ctx,d.label,Math.max(20,w-12),2), lh=Math.max(12,Math.round(14*scale));
-      lines.forEach((line,i)=>ctx.fillText(line,x+6,headerH/2+(i-(lines.length-1)/2)*lh));
-      x+=w;
-    });
-    chunkRows.forEach((r,ri)=>{
-      const y=headerH+ri*rowH; let cx=0;
-      defs.forEach((d,di)=>{
-        const w=d.width*scale;
-        ctx.fillStyle=ri%2?'#FCFCFD':'#FFFFFF'; ctx.fillRect(cx,y,w,rowH);
-        ctx.strokeStyle='#D0D5DD'; ctx.strokeRect(cx,y,w,rowH);
-        if(d.image){
-          const img=chunkImgs[ri];
-          if(img){
-            const pad=Math.max(4,Math.round(6*scale)), aw=w-pad*2, ah=rowH-pad*2;
-            const ratio=Math.min(aw/img.naturalWidth,ah/img.naturalHeight);
-            const iw=img.naturalWidth*ratio, ih=img.naturalHeight*ratio;
-            ctx.drawImage(img,cx+(w-iw)/2,y+(rowH-ih)/2,iw,ih);
-          }
-        }else{
-          const value=kolPricingPreviewValue(r,d.col);
-          ctx.fillStyle='#101828';
-          ctx.font=`${d.col.k==='modelKod'?'600':'400'} ${Math.max(9,Math.round(11*scale))}px Arial, sans-serif`;
-          const lines=kolCanvasTextLines(ctx,value,Math.max(20,w-12),4), lh=Math.max(11,Math.round(14*scale));
-          lines.forEach((line,i)=>ctx.fillText(line,cx+6,y+rowH/2+(i-(lines.length-1)/2)*lh));
-        }
-        cx+=w;
-      });
-    });
-    const cid=`pricing-preview-${offset/maxRowsPerImage+1}-${Date.now()}@buyerlog`;
-    const dataUrl=canvas.toDataURL('image/jpeg',0.78);
-    previews.push({cid,filename:`Pricing_Preview_${String(previews.length+1).padStart(2,'0')}.jpg`,mimeType:'image/jpeg',base64:dataUrl.split(',')[1]});
-  }
-  return previews;
 }
 /* ===================================================================
    E-POSTA KONU VE TASLAK AYARLARI
