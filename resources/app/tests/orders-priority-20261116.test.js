@@ -91,3 +91,12 @@ test('Siparişler Priority sütununu taşır, checklist/PLM numune taşımaz; ç
   assert.match(src,/const result=await window\.BLOrdersPriority\.run\(active,ctx\.spec,\{isCurrent\}\);/);
   assert.match(src,/stamp\.key===ordersPriorityContextKey\(\)/,'checklist cevabı değil kural/katalog anahtarı');
 });
+
+test('öncelik hazır olunca tüm tablo değil görünen Priority hücreleri güncellenir',()=>{
+  const src=read('app-main.js');
+  assert.match(src,/if\(currentActiveTab\(\)==='orders'&&!refreshOrdersPriorityCells\(\)\)renderOrders\(\);/);
+  const fnStart=src.indexOf('function refreshOrdersPriorityCells(');const body=src.slice(fnStart,src.indexOf('\n}',fnStart));
+  assert.match(body,/state\.ordersSort\?\.key==='Priority'\|\|colFilterActive\('orders','Priority'\)\)return false;/,'Priority sıralama/filtre varsa tam çizim');
+  assert.match(body,/td\[data-key="Priority"\]/);
+  assert.doesNotMatch(body,/renderOrders\(/);
+});

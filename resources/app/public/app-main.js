@@ -1290,10 +1290,35 @@ function scheduleOrdersPriorities(){
     _ordersPriorityIndex=null;_cpPriorityIndexRevision+=1;
     window.BLPerf?.mark?.('ORDERS_PRIORITY_READY',{rows:active.length,mode:result.mode,ms:result.ms});
     try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed',{detail:{source:'orders'}}));}catch(_){}
-    if(currentActiveTab()==='orders')renderOrders();
+    if(currentActiveTab()==='orders'&&!refreshOrdersPriorityCells())renderOrders();
     return true;
   })().catch(()=>false).finally(()=>{if(_ordersPriority.job===job)_ordersPriority.job=null;});
   return job.promise;
+}
+/* Öncelik hazır olunca 30–50 bin satırlık Siparişler tablosunu baştan çizmek
+   (ölçüm: 30k satırda ~1 sn tek uzun görev) yerine yalnız görünen Priority
+   hücreleri güncellenir. Priority'ye göre sıralama/filtre varsa satır kümesi ve
+   sırası değişebileceğinden false döner ve tam çizim yapılır. */
+function refreshOrdersPriorityCells(){
+  const table=document.getElementById('ordersTable');
+  if(!table||!state.orders||!Array.isArray(state.orders.rows))return false;
+  if(state.ordersSort?.key==='Priority'||colFilterActive('orders','Priority'))return false;
+  const col=ORDERS_COLS.find(c=>c.k==='Priority');
+  if(!col)return false;
+  const cells=table.querySelectorAll('tbody tr[data-id] > td[data-key="Priority"]');
+  if(!cells.length)return true;
+  const wanted=new Set([...cells].map(td=>td.parentElement.dataset.id)),byId=new Map();
+  for(const row of state.orders.rows){const id=row&&row._id!=null?String(row._id):'';if(id&&wanted.has(id)&&!byId.has(id))byId.set(id,row);}
+  const holder=document.createElement('tr');
+  cells.forEach(td=>{
+    const row=byId.get(td.parentElement.dataset.id);if(!row)return;
+    holder.innerHTML=cellHtml(col,row,null,'orders');
+    const next=holder.firstElementChild;if(!next)return;
+    td.innerHTML=next.innerHTML;
+    if(next.title)td.title=next.title;else td.removeAttribute('title');
+    next.classList.forEach(cls=>td.classList.add(cls));
+  });
+  return true;
 }
 function priorityIndexReady(){
   const cp=cpPriorityIndexReady(),orders=ordersPriorityReady();
