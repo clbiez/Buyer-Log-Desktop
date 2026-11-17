@@ -43,3 +43,10 @@ test('feedback is accessible, preserves query text safely, updates language and 
   input.value='';feedback.render('kolSearch',[],()=>{throw Error('empty search must not scan rows');},false);assert.equal(panel.hidden,true);assert.deepEqual(panel.children,[]);
  }finally{Object.assign(global,previous);}
 });
+
+test('invalid filters have a separate bilingual panel and negative-only row groups stay silent',()=>{
+ const s=createTableSearch();
+ assert.deepEqual(feedback.findMissing('(!BLOCKED)',[],x=>x,s),[]);
+ const invalid=['EX=W60','EX=M13','XX=W5','EX=W','EX = W22','!EX=W22'];
+ assert.deepEqual(feedback.inspect(invalid.join(', '),[],x=>x,s),{missing:[],invalid});
+});

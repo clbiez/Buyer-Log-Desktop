@@ -90,6 +90,8 @@ test('app-main: arama uzayı ekrandaki aramayla aynı alanları ve haystack’i 
   const cpHaystack = source.match(/\nfunction cpSearchHaystack\(r\)\{[^]*?\n\}/);
   const space = Function('state', 'kolRows', `
     const norm = value => String(value == null ? '' : value).trim();
+    const _cpSearchCache=new WeakMap();
+    const tableSearchDisplayValues=values=>values.join(' ').trim().toLowerCase();
     const CP_SEARCH_KEYS = ${cpKeys};
     ${cpHaystack[0]}
     const KOL_SEARCH_KEYS = ['plmId', 'modelKod'];

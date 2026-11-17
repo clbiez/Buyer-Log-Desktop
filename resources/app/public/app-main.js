@@ -383,68 +383,10 @@ function selectionSetId(selection,value,checked){
 // Ortak tablo araması: giriş değiştiğinde bir kez parse edilir; satır eşleşmesi
 // yalnızca önceden hazırlanmış terimler üzerinden yapılır.
 function parseTableSearchTerms(value){
-  const normalize=value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR')
-    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
-  const parseCriterion=part=>{
-    const raw=norm(part); if(!raw)return null;
-    const marker=raw[0];
-    const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
-    const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
-    const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
-    return criterion?{mode,value:normalize(criterion)}:null;
-  };
-  // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
-  // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
-  const splitPart=part=>String(part).split(/(?<=[^\s!]!)\s+/);
-  // Hariç tutma (!X / X!) bir VEYA grubunda anlamsızdır (X içermeyen her satır
-  // grubu geçirir). Bu yüzden yazıldığı gruptan çıkarılır ve tüm aramaya ayrı
-  // bir VE grubu olarak uygulanır: "A; B, C, X!" ≡ "A; B, C; !X".
-  const groups=[];
-  String(value==null?'':value).split(/;\s+/).forEach(group=>{
-    const terms=group.split(/,\s+/).flatMap(splitPart).map(parseCriterion).filter(Boolean);
-    const positive=terms.filter(term=>term.mode!=='notContains');
-    if(positive.length)groups.push(positive);
-    terms.filter(term=>term.mode==='notContains').forEach(term=>groups.push([term]));
-  });
-  return groups.length===1?groups[0]:groups;
+  return window.BLTableSearchCore.parseTerms(value);
 }
 function tableSearchMatches(haystack,terms,options){
-  const parsed=Array.isArray(terms)?terms:parseTableSearchTerms(terms);
-  if(!parsed.length)return true;
-  const plainMode=options?.plainMode||'exact';
-  // tr-TR büyük harf + Türkçe harf sadeleştirme + küçük harf. Metin yalnız ASCII
-  // ve Türkçe harflerden oluşuyorsa aynı sonuç yerel ayar dönüşümü olmadan
-  // üretilir (her satırın tüm arama metnine uygulanan sıcak yol); diğer
-  // karakterlerde birebir eski dönüşüm çalışır.
-  const normalize=value=>{
-    const text=String(value==null?'':value).trim();
-    if(/^[\x00-\x7FçğıöşüÇĞİÖŞÜ]*$/.test(text))return text.replace(/İ/g,'I').toLowerCase().replace(/[çğıöşü]/g,ch=>'cgiosu'['çğıöşü'.indexOf(ch)]); // i18n-ignore
-    return text.toLocaleUpperCase('tr-TR')
-      .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
-  };
-  const text=normalize(haystack);
-  const exactMatch=(source,needle)=>{
-    if(!needle)return false;
-    const isWordChar=char=>/[a-z0-9]/.test(char||'');
-    let offset=source.indexOf(needle);
-    while(offset!==-1){
-      const before=offset?source[offset-1]:'';
-      const after=source[offset+needle.length]||'';
-      if(!isWordChar(before)&&!isWordChar(after))return true;
-      offset=source.indexOf(needle,offset+1);
-    }
-    return false;
-  };
-  const criterionMatches=criterion=>{
-    const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};
-    const value=normalize(item.value);
-    if(!value)return false;
-    if(item.mode==='contains')return text.includes(value);
-    if(item.mode==='notContains')return !text.includes(value);
-    return plainMode==='contains'?text.includes(value):exactMatch(text,value);
-  };
-  const groups=Array.isArray(parsed[0])?parsed:[parsed];
-  return groups.every(group=>group.some(criterionMatches));
+  return window.BLTableSearchCore.matches(haystack,terms,options);
 }
 // Excel/tablo panosundan (TAB = sütun, satır sonu = satır) yapıştırılan dikdörtgen
 // seçimi bağımsız OR terimlerine çevirir: satır-öncelikli sırayla düzleştirir,
@@ -479,7 +421,7 @@ function bindTableSearchClipboardPaste(el){
     el.dispatchEvent(new Event('input',{bubbles:true}));
   });
 }
-window.BLTableSearch={parseTerms:parseTableSearchTerms,matches:tableSearchMatches,parseClipboardMatrix:parseTableSearchClipboardMatrix,bindPaste:bindTableSearchClipboardPaste};
+window.BLTableSearch={...window.BLTableSearchCore,parseTerms:parseTableSearchTerms,matches:tableSearchMatches,parseClipboardMatrix:parseTableSearchClipboardMatrix,bindPaste:bindTableSearchClipboardPaste};
 function isProductionStatus(v){ return BLBusinessRules.isProductionStatus(v); }
 function isShortageStatus(v){ return BLBusinessRules.isShortageStatus(v); }
 function isWarehouseShortageStatus(v){ return BLBusinessRules.isWarehouseShortageStatus(v); }
@@ -3079,7 +3021,7 @@ function managedSelectionSourceRows(tableKey){
   // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
   const ordered=sort?.key?sortRows(rows,sort.key,sort.dir):rows;
   const terms=parseTableSearchTerms(document.getElementById(tableKey==='orders'?'ordersSearch':'cpSearch')?.value);
-  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,{plainMode:'contains'});
+  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,tableSearchOrderOptions(tableKey));
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
@@ -9795,7 +9737,7 @@ function matchesQuickExFactory(row, period){
 const CP_BASE_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
 // Ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line aramaya kanonik alan
 // bağlamalarıyla (cp + orders) girer; ham başlık listesi burada çoğaltılmaz.
-const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line'];
+const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line','season','country','orderStatus','deliveryType','orderActivity','inStore'];
 function cpCanonicalSearchKeys(fields,ids){
   const keys=[];
   ids.forEach(id=>['cp','orders'].forEach(mod=>{ (fields?.bindingFor?.(mod,id)?.keys||[]).forEach(k=>keys.push(k)); }));
@@ -9805,16 +9747,101 @@ const CP_SEARCH_KEYS=Array.from(new Set([...CP_BASE_SEARCH_KEYS,...cpCanonicalSe
 // CP/Siparişler arama metni: yalnız dolu alanlar eklenir. Kanonik bağlamaların
 // çoğu başlık varyantı satırda bulunmaz; boşları atlamak 30k satırda süzgeç
 // geçişini eski alan sayısına yakın tutar.
-function cpSearchHaystack(r){
-  let hay='';
-  for(let i=0;i<CP_SEARCH_KEYS.length;i++){
-    const v=r[CP_SEARCH_KEYS[i]];
-    if(v==null||v==='')continue;
-    const s=norm(v).toLowerCase();
-    if(s)hay=hay?hay+' '+s:s;
+function tableSearchDisplayValues(values,monthValue){
+  monthValue=norm(monthValue);
+  const fold=window.BLTableSearch.fold;
+  let aliases=tableSearchDisplayValues.aliases;
+  if(!aliases){
+    aliases=new Map();
+    for(const dict of [STATUS_EN,STATUS_TR,TR_EN_DICT,KOL_DURUM_EN,KOL_EN_TR_DICT,Object.fromEntries([{tr:'Aktif',en:'Active'},{tr:'Pasif',en:'Inactive'}].map(pair=>[pair.en,pair.tr]))]){
+      for(const [a,b] of Object.entries(dict))for(const key of [fold(a),fold(b)])aliases.set(key,[...(aliases.get(key)||[]),a,b]);
+    }
+    tableSearchDisplayValues.aliases=aliases;
   }
-  return hay;
+  const cache=tableSearchDisplayValues.cache||(tableSearchDisplayValues.cache=new Map());
+  const out=[];
+  for(const value of values){
+    const raw=norm(value);if(!raw)continue;
+    const isMonth=raw===monthValue,cacheKey=isMonth?'\u0000month:'+raw:raw;
+    let display=cache.get(cacheKey);
+    if(display===undefined){
+      const rawFold=fold(raw),parts=[raw],pair=aliases.get(rawFold);if(pair)parts.push(...pair);
+      if(/^\d{4}-\d{2}-\d{2}/.test(raw)){
+        const date=window.BLDateDimension?.parseDate?.(raw);
+        if(date)parts.push(String(date.getDate()).padStart(2,'0')+'.'+String(date.getMonth()+1).padStart(2,'0')+'.'+String(date.getFullYear()).slice(-2));
+      }
+      if(isMonth){
+        const code=kolMonthCode(raw);
+        if(code){const month=Number(code.slice(4))-1,year=code.slice(0,4);parts.push(KOL_MONTHS_TR[month]+' '+year,KOL_MONTHS_EN[month]+' '+year);}
+      }
+      display=parts.length===1?rawFold:fold(parts.join(' '));
+      if(cache.size>=100000)cache.clear();cache.set(cacheKey,display);
+    }
+    out.push(display);
+  }
+  return out.join(' ');
 }
+const _cpSearchCache=new WeakMap();
+function cpSearchHaystack(r){
+  const values=[];
+  for(let i=0;i<CP_SEARCH_KEYS.length;i++){
+    const v=r[CP_SEARCH_KEYS[i]];if(v!=null&&v!=='')values.push(String(v));
+  }
+  const signature=JSON.stringify(values),cached=_cpSearchCache.get(r);
+  if(cached?.signature===signature)return cached.value;
+  const value=tableSearchDisplayValues(values);
+  _cpSearchCache.set(r,{signature,value});return value;
+}
+const _tableSearchPeriodCache=new WeakMap();
+function tableSearchPeriods(row,moduleId){
+  const fields=window.BLCanonicalFields,date=window.BLDateDimension;
+  const read=id=>{
+    const keys=fields.bindingFor(moduleId,id)?.keys||[];
+    for(const key of keys){const value=moduleId==='collection'?kolEffectiveValue(row,key):row[key];if(value!=null&&value!=='')return value;}
+    return '';
+  };
+  const values=['exFactory','retailDate','inStore','inStoreMonth','inStoreWeek'].map(read);
+  const signature=JSON.stringify([moduleId,date?.calendarVersion?.(),...values]);
+  const cached=_tableSearchPeriodCache.get(row);if(cached?.signature===signature)return cached.value;
+  const version=date?.calendarVersion?.();
+  let dateCache=tableSearchPeriods.dates;
+  if(!dateCache||tableSearchPeriods.version!==version){tableSearchPeriods.version=version;dateCache=tableSearchPeriods.dates=new Map();}
+  const describe=raw=>{
+    const key=raw instanceof Date?raw.getTime():raw;
+    if(dateCache.has(key))return {...dateCache.get(key)};
+    const value=raw;
+    // A missing Merch Calendar must never fall back to ISO/GLB or calendar month.
+    if(!date?.hasMerchCalendar?.())return {};
+    const period=date.describe(value);
+    const keys=period?.businessValid?{w:period.lcwWeek,m:period.lcwMonth}:{};
+    if(dateCache.size>=50000)dateCache.clear();dateCache.set(key,keys);return {...keys};
+  };
+  const value={ex:describe(values[0]),re:describe(values[1]),mb:describe(values[2])};
+  if(moduleId==='collection'){
+    const codes=tableSearchPeriods.codes||(tableSearchPeriods.codes=new Map());
+    const code=(unit,raw,parse)=>{
+      const key=unit+String(raw);let result=codes.get(key);
+      if(result===undefined){result=parse(raw);if(codes.size>=50000)codes.clear();codes.set(key,result);}
+      return result;
+    };
+    const month=code('m',values[3],kolMonthCode),week=code('w',values[4],kolWeekCode);
+    if(month)value.mb.m=Number(month.slice(4));
+    if(week)value.mb.w=Number(week.slice(5));
+  }
+  _tableSearchPeriodCache.set(row,{signature,value});return value;
+}
+function tableSearchFeedbackRows(tab){
+  const ctx=tab==='cp'?cpBuildFilterContext():ordersBuildFilterContext();ctx.q=[];
+  const rows=partialViewRows(tab,state[tab]?.rows||[]);
+  return tab==='cp'?rows.filter(row=>cpRowPasses(row,ctx,CP_MIRROR_IDS)):rows.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
+}
+function tableSearchOptions(row,moduleId){
+  return {plainMode:'contains',folded:true,periods:()=>tableSearchPeriods(row,moduleId)};
+}
+function tableSearchOrderOptions(moduleId){
+  return {plainMode:'contains',folded:true,periodsOf:row=>tableSearchPeriods(row,moduleId)};
+}
+
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
   {id:'status',col:'STATUS'},
@@ -9862,7 +9889,7 @@ function cpPassesBase(r,ctx){
   if(ctx.fC && norm(r['Country'])!==ctx.fC) return false;
   if(ctx.fL && norm(r['License'])!==ctx.fL) return false;
   if(ctx.q.length){
-    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,{plainMode:'contains'})) return false;
+    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,tableSearchOptions(r,'cp'))) return false;
   }
   return true;
 }
@@ -9943,7 +9970,7 @@ function filteredCP(){
   const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
-  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,tableSearchOrderOptions('cp'));
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
 // Capraz kapsam kurali: bir satir, yalnizca kendi grubu disinda hicbir grupta elenmiyorsa
@@ -10063,8 +10090,8 @@ function renderCPNow(){
   document.getElementById('cpContent').style.display='block';
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
-  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,{plainMode:'contains'});
-  window.BLTableSearchFeedback?.render('cpSearch',rows,cpSearchHaystack,appLang==='en');
+  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,tableSearchOrderOptions('cp'));
+  window.BLTableSearchFeedback?.render('cpSearch',()=>tableSearchFeedbackRows('cp'),cpSearchHaystack,appLang==='en',tableSearchOrderOptions('cp'));
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
@@ -10243,7 +10270,7 @@ function ordersPassesBase(row,ctx,ignoreActive=false){
   if(ctx.fC&&norm(row.Country)!==ctx.fC)return false;
   if(ctx.fL&&norm(row.License)!==ctx.fL)return false;
   if(ctx.q.length){
-    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,{plainMode:'contains'}))return false;
+    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,tableSearchOptions(row,'orders')))return false;
   }
   if(!ignoreActive){
     if(ctx.activeFilter&&!preparedColFilterPasses(ctx.activeFilter,'Active/Inactive',row))return false;
@@ -10303,7 +10330,7 @@ function filteredOrders(){
   const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
-  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,tableSearchOrderOptions('orders'));
 }
 function ordersImageCellHtml(row){
   const dims=ordersImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
@@ -10371,8 +10398,8 @@ function renderOrdersNow(){
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
-  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
-  window.BLTableSearchFeedback?.render('ordersSearch',rows,cpSearchHaystack,appLang==='en');
+  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,tableSearchOrderOptions('orders'));
+  window.BLTableSearchFeedback?.render('ordersSearch',()=>tableSearchFeedbackRows('orders'),cpSearchHaystack,appLang==='en',tableSearchOrderOptions('orders'));
   const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
@@ -24939,7 +24966,7 @@ function kolWeekCodeForDate(value){
 function kolWeekCode(value,fallbackDate=''){
   const raw=norm(value);if(!raw)return fallbackDate?kolWeekCodeForDate(fallbackDate):'';
   let m=/^(\d{4})[-/. ]?W?(\d{1,2})$/i.exec(raw);
-  if(m){const w=Number(m[2]);return w>=1&&w<=52?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
+  if(m){const w=Number(m[2]);return w>=1&&w<=53?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
   m=/^(\d{1,2})$/.exec(raw);
   if(m&&fallbackDate){const fromDate=kolWeekCodeForDate(fallbackDate);if(fromDate&&Number(fromDate.slice(5))===Number(m[1]))return fromDate;}
   return '';
@@ -27359,14 +27386,15 @@ function passesKolColFilters(r){
     return set.has(kolFilterValue(r,k));
   });
 }
-const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not'];
+const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not','durum'];
 const _kolSearchCache=new WeakMap();
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const signature=KOL_SEARCH_KEYS.map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
+  const values=KOL_SEARCH_KEYS.map(key=>kolEffectiveValue(row,key));
+  const signature=JSON.stringify(values);
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
-  const value=KOL_SEARCH_KEYS.map(key=>norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const value=tableSearchDisplayValues(values,kolEffectiveValue(row,'inStoreMonth'));
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
@@ -27464,7 +27492,7 @@ function kolGroupAwareOrder(rows,searchTerms=[]){
       block.rows=parent?[parent,...variants]:variants;
     });
   }
-  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(kolSearchHaystack),{plainMode:'contains'});
+  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(row=>({text:kolSearchHaystack(row),periods:()=>tableSearchPeriods(row,'collection')})),{plainMode:'contains',folded:true});
   let ordered=searchOrdered.flatMap(block=>block.rows);
   if(kolTransientTopRowId!=null&&!searchTerms.length){
     const pinned=kolRows.find(row=>Number(row.id)===Number(kolTransientTopRowId));
@@ -27477,8 +27505,9 @@ function kolGroupAwareOrder(rows,searchTerms=[]){
   }
   return ordered;
 }
-function filteredKol(){
+function filteredKol(ignoreSearch=false){
   const q = parseTableSearchTerms(document.getElementById('kolSearch').value);
+  if(ignoreSearch)q.length=0;
   const checkMode = normalizeCheckFilterMode(kolCheckFilter);
   let rows = kolRows.filter(r=>{
     if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
@@ -27486,13 +27515,13 @@ function filteredKol(){
     if(!passesKolColFilters(r)||!kolFabricDetailMatches(r)) return false;
     if(kolHealthState.filter&&!kolHealthMatches(r,kolHealthState.filter)) return false;
     if(q.length){
-      if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
+      if(!tableSearchMatches(kolSearchHaystack(r),q,tableSearchOptions(r,'collection'))) return false;
     }
     return true;
   });
   // Collapse is presentation-only. Logical filtering retains every physical
   // colour record; UI/copy/visual Excel derive their visible projection later.
-  return kolGroupAwareOrder(rows,q);
+  return ignoreSearch?rows:kolGroupAwareOrder(rows,q);
 }
 function kolPresentationRows(logicalRows){
   const rows=Array.isArray(logicalRows)?logicalRows:filteredKol();
@@ -29554,7 +29583,7 @@ function kolQuickScoped(excludeKey){
     });
     if(!passesOthers) return false;
     if(q.length){
-      if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
+      if(!tableSearchMatches(kolSearchHaystack(r),q,tableSearchOptions(r,'collection'))) return false;
     }
     return true;
   });
@@ -30040,7 +30069,7 @@ function renderKol(){
   renderKolScopeFilters();
   updateKolSendBtnState();
   const logicalRows=filteredKol(),rows=kolPresentationRows(logicalRows);
-  window.BLTableSearchFeedback?.render('kolSearch',logicalRows,kolSearchHaystack,appLang==='en');
+  window.BLTableSearchFeedback?.render('kolSearch',()=>filteredKol(true),kolSearchHaystack,appLang==='en',tableSearchOrderOptions('collection'));
   renderKolEmptyState(logicalRows);
   const kolStats=pageModelOptionStats(logicalRows),kolScopeText=`${pageModelOptionText(logicalRows)} · ${logicalRows.length} / ${kolRows.length} ${appLang==='en'?'rows':'satır'}`;
   document.getElementById('kolCount').textContent=kolScopeText;

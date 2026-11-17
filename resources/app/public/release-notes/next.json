@@ -35,6 +35,64 @@
       }
     },
     {
+      "id": "table-search-period-filter",
+      "type": "feature",
+      "module": {
+        "tr": "Tablo araması",
+        "en": "Table search"
+      },
+      "title": {
+        "tr": "Tarih dönemi süzgeci",
+        "en": "Date period filter"
+      },
+      "body": {
+        "tr": "EX, RE ve MB alanlarını LCW Merch Calendar haftası veya merch ayına göre süzün. Aralıklar, yıl sonu sarması ve geçersiz süzgeç bildirimi desteklenir.",
+        "en": "Filter EX, RE and MB by LCW Merch Calendar week or merch month. Includes ranges, year-end wrapping and invalid-filter feedback."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-search-period.png",
+        "alt": {
+          "tr": "Tarih dönemi süzgeci",
+          "en": "Date period filter"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log üzerinde izole demo verisiyle değişiklik sonrası arama sonucu.",
+          "en": "Post-change search result in actual Buyer Log using isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "table-search-turkish-grammar-scope",
+      "type": "fix",
+      "module": {
+        "tr": "Tablo araması",
+        "en": "Table search"
+      },
+      "title": {
+        "tr": "Arama Türkçe harf / ayraç / alan düzeltmeleri",
+        "en": "Search fixes for Turkish letters, separators and fields"
+      },
+      "body": {
+        "tr": "Türkçe harfler, sondaki ayraçlar ve boyut alanları ortak aramada düzeltildi. TR/EN gösterim değerleri iki dilde de aranır; bulunamayan listesi arama dışındaki filtre kapsamını kullanır.",
+        "en": "Shared search now handles Turkish letters, trailing separators and dimension fields. TR/EN display values are searchable in both languages; missing terms are checked within the scope of filters other than search."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-search-fold.png",
+        "alt": {
+          "tr": "Arama Türkçe harf / ayraç / alan düzeltmeleri",
+          "en": "Search fixes for Turkish letters, separators and fields"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log üzerinde izole demo verisiyle değişiklik sonrası arama sonucu.",
+          "en": "Post-change search result in actual Buyer Log using isolated demo data."
+        }
+      }
+    },
+    {
       "id": "startup-user-access-recovery",
       "type": "fix",
       "module": {

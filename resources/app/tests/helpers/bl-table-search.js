@@ -23,12 +23,13 @@ function extract(source, name) {
 
 function createTableSearch() {
   const source = fs.readFileSync(APP_MAIN, 'utf8');
-  return Function(`
+  return Function('requireCore',`
+    const window={BLTableSearchCore:requireCore};
     const norm = value => String(value == null ? '' : value).trim();
     ${extract(source, 'parseTableSearchTerms')}
     ${extract(source, 'tableSearchMatches')}
-    return { parseTerms: parseTableSearchTerms, matches: tableSearchMatches };
-  `)();
+    return { ...requireCore, parseTerms: parseTableSearchTerms, matches: tableSearchMatches };
+  `)(require('../../public/table-search-core'));
 }
 
 module.exports = { createTableSearch };

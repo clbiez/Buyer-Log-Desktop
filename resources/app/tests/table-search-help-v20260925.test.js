@@ -59,3 +59,7 @@ test('overflowing table search stays editable and expands on hover or focus', ()
   assert.match(CSS, /flex:0 0 var\(--table-search-hover-width/);
   assert.match(CSS, /max-width:var\(--table-search-hover-width/);
 });
+
+test('period help documents LCW units, ranges, wrapping and invalid syntax in TR and EN',()=>{
+ for(const text of ['EX=W22, EX=W23','RE=W22-W30','MB=M5; MINEC','EX=M4-M6','EX=W50-W3','MB=M11-M2','W1–W53','M1–M12','Geçersiz süzgeçler','Invalid filters'])assert.ok(JS.includes(text),text);
+});

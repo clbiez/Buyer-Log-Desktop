@@ -38,5 +38,5 @@ test('LUNA 3 Collection araması debounce ve satır arama cache kullanır',()=>{
   assert.match(collectionSearch,/renderKolDebounced/);
   assert.match(APP,/const _kolSearchCache=new WeakMap\(\)/);
   assert.match(APP,/function kolSearchHaystack\(row\)/);
-  assert.match(APP,/tableSearchMatches\(kolSearchHaystack\(r\),q,\{plainMode:'contains'\}\)/);
+  assert.match(APP,/tableSearchMatches\(kolSearchHaystack\(r\),q,tableSearchOptions\(r,'collection'\)\)/);
 });
