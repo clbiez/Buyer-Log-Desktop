@@ -70,3 +70,14 @@ test('PLM SYNC detail scope excludes unresolved names, including an empty regist
  context.registerModelAssetScopeHost(host,{identities:[{styleName:'SAME',colourCode:'CVL'}]});
  assert.equal(context.modelAssetIdentitiesFromHost(host).length,0);
 });
+
+test('silent completion cannot infer an old PLM from a detail thumbnail name',()=>{
+ const context={window:{},norm:v=>String(v||'').trim(),normalizePlmLinkId:v=>/^\d+$/.test(String(v||''))?String(v):''};
+ vm.createContext(context);
+ vm.runInContext(app.slice(app.indexOf('function silentImageThumbIdentity'),app.indexOf('/* Görünür satırlar önce',app.indexOf('function silentImageThumbIdentity'))),context);
+ assert.equal(context.silentImageThumbIdentity({dataset:{modelId:'SAME',modelName:'SAME',colourCode:'CVL'}}).plmId,'');
+ assert.equal(context.silentImageThumbIdentity({dataset:{plmId:'202',colourCode:'CVL'}}).plmId,'202');
+ const source=app.slice(app.indexOf('function silentImageEntry(raw)'),app.indexOf('const BLSilentImageComplete='));
+ assert.doesNotMatch(source,/modelAssetCanonicalPlmId/);
+ assert.match(source,/detailImageUrlFrom\(null,/);
+});

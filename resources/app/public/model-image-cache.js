@@ -144,12 +144,13 @@
   const buildDetailIndex=records=>{
     const matches=new Map(),images=new Map();
     for(const row of records||[]){
-      const keys=detailKeys(row).filter(Boolean);
-      if(!keys.length)continue;
-      const target=keys[0];
-      for(const key of keys){
-        if(!matches.has(key))matches.set(key,new Set());
-        matches.get(key).add(target);
+      const keys=detailKeys(row),target=keys.find(Boolean);
+      if(!target)continue;
+      // Explicit PLM pairs resolve directly; index only the two fallback keys.
+      // null is a permanent ambiguity marker, never first/last-row wins.
+      for(const key of keys.slice(1).filter(Boolean)){
+        if(!matches.has(key))matches.set(key,target);
+        else if(matches.get(key)!==target)matches.set(key,null);
       }
       // Only an original Collection image with a complete matching key is admitted.
       if(row.originalImage){
@@ -165,10 +166,10 @@
     // An explicit PLM + colour never needs a name lookup.
     if(keys[0])return {plmId:normalizeModelId(id.plmId),colourCode:normalizeColourCode(id.colourCode),target:keys[0]};
     for(const key of keys.slice(1).filter(Boolean)){
-      const hits=index&&index.matches.get(key);
-      if(!hits)continue;
-      if(hits.size!==1)return null;
-      const target=[...hits][0],parts=JSON.parse(target);
+      const target=index?.matches.get(key);
+      if(target===undefined)continue;
+      if(target===null)return null;
+      const parts=JSON.parse(target);
       return {plmId:parts[0]==='plm'?parts[1]:'',colourCode:parts[parts.length-1],target};
     }
     return null;

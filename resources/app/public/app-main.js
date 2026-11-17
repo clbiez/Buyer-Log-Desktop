@@ -19744,8 +19744,16 @@ function setDetailShowImages(on){
 // Görsel dizini tablo başına BİR kez kurulur; satır başına tüm siparişleri taramak
 // binlerce satırda kabul edilemez olurdu. Yalnız tam kimlikler indekslenir;
 // sezon veya renk eksikse model adıyla görsel tahmin edilmez.
-function detailRowImageIdentity(row,moduleId='overview'){
-  const value=id=>window.BLCanonicalFields?.canonicalValue?.(row,moduleId,id)||'';
+function detailRowImageIdentity(row,moduleId='overview',exactBindings=false){
+  const canonical=window.BLCanonicalFields;
+  const value=id=>{
+    if(!exactBindings)return canonical?.canonicalValue?.(row,moduleId,id)||'';
+    if(row?.__canonical&&Object.prototype.hasOwnProperty.call(row.__canonical,id))return row.__canonical[id]||'';
+    for(const key of canonical?.bindingFor?.(moduleId,id)?.keys||[]){
+      const found=row&&row[key];if(found!=null&&found!=='')return found;
+    }
+    return '';
+  };
   return {plmId:row?._plmId||value('plmId'),modelName:row?._modelName||value('modelName'),
     colourCode:row?._colourCode||value('colourCode'),colour:value('colour'),
     specialCode:value('specialCode'),season:value('season'),orderCode:value('orderCode')};
@@ -19753,10 +19761,10 @@ function detailRowImageIdentity(row,moduleId='overview'){
 function buildDetailImageIndex(){
   const records=[];
   if(typeof kolRows!=='undefined')for(const row of kolRows||[]){
-    const id=detailRowImageIdentity(row,'collection');
+    const id=detailRowImageIdentity(row,'collection',true);
     records.push({...id,originalImage:row._sharedCollectionImageUrl?'':row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`||''});
   }
-  for(const source of [state.cp,state.orders])for(const row of source?.rows||[])records.push(detailRowImageIdentity(row,'cp'));
+  for(const source of [state.cp,state.orders])for(const row of source?.rows||[])records.push(detailRowImageIdentity(row,'cp',true));
   for(const order of [state.asasOrders||[],...Object.values(state.asasOrdersByTarget||{})].flat()){
     records.push({plmId:order.plm,modelName:order.model,colourCode:order.ccode,colour:order.colour,specialCode:order.ozel,season:order.season});
   }
@@ -35070,8 +35078,8 @@ function silentImageRowColour(row){return row?norm(row.Colour||row['Colour']||ro
 function silentImageEntry(raw){
   const api=modelAssetScopeApi();if(!api||!raw)return null;
   const styleName=norm(raw.styleName);
-  const plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
-  if(!plmId&&!styleName)return null;
+  const plmId=normalizePlmLinkId(raw.plmId);
+  if(!plmId)return null;
   const identity={plmId,colourCode:norm(raw.colourCode),colour:norm(raw.colour),styleName,orderCode:norm(raw.orderCode),hasImage:null};
   if(!modelAssetIdentityMissing(identity))return null;
   const key=api.identityKey(api.normalizePlmId(plmId),identity.colourCode,identity.colour,styleName,identity.orderCode);
@@ -35079,7 +35087,7 @@ function silentImageEntry(raw){
 }
 function silentImageThumbIdentity(img){
   const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
-  return {plmId:img.dataset.plmId||img.dataset.modelId||'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
+  return {plmId:img.dataset.colourCode?normalizePlmLinkId(img.dataset.plmId):'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
 }
 /* Görünür satırlar önce; liste `limit` ile sınırlıdır (30k satırda tarama yok). */
 function silentImageCollect({limit,skip}){
@@ -35146,8 +35154,8 @@ function silentImagePatchCells(keys){
   if(host){
     for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){
       const raw=silentImageThumbIdentity(img);if(!keyOf(raw))continue;
-      const plmId=modelAssetCanonicalPlmId(raw.plmId,raw.styleName);
-      const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
+      const plmId=normalizePlmLinkId(raw.plmId);
+      const source=detailImageUrlFrom(null,{plmId,colourCode:img.dataset.colourCode,colour:img.dataset.colourName||''});
       if(!source)continue;
       img.dataset.src=source;img.dataset.blImageLoaded='0';img.classList.remove('isPlaceholder');
       delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
@@ -35173,8 +35181,8 @@ function silentImagePatchCells(keys){
 }
 function silentImageEntryKey(raw){
   const api=modelAssetScopeApi();if(!api||!raw)return '';
-  const styleName=norm(raw.styleName),plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
-  return api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode));
+  const styleName=norm(raw.styleName),plmId=normalizePlmLinkId(raw.plmId);
+  return plmId?api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode)):'';
 }
 const BLSilentImageComplete=(()=>{
   const factory=window.BLSilentImageCompleteFactory;
