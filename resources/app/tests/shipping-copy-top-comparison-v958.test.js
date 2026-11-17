@@ -57,7 +57,8 @@ test('v9.58 Copy mevcut Shipping state ve seçim kümesini kullanır', () => {
 
 
 test('Shipping clipboard prices, dates and transit units match the display in EN/TR', () => {
-  assert.match(fn('shipComparisonClipboardMatrix'), /shipComparisonClipboardValue\(column\.key,row\[column\.key\]\)/);
+  assert.match(fn('shipComparisonClipboardMatrix'), /shipComparisonClipboardValue\(column\.key,row\[column\.key\],formatMoney\)/);
+  assert.match(fn('shipComparisonClipboardMatrix'), /new Intl\.NumberFormat/);
   const dateValue = new Function('coerceDateLoose','norm',fn('fmtDate')+'\nreturn fmtDate;')(
     iso => {
       const [year,month,day]=String(iso).split('-').map(Number);
