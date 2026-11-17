@@ -1593,20 +1593,22 @@ function coerceDateLoose(v){
 function normalizeCPDates(rows){
   rows.forEach(r=>{
     CP_DATE_KEYS.forEach(k=>{ if(k in r) r[k] = coerceDateLoose(r[k]); });
-    applyCpApprovalDate(r,r._exFactoryRevision?.previousDate||r['Ex-factory']);
+    const planned=BLRevision.isAutomaticExFactory(r)?r._exFactoryRevision.previousDate:r['Ex-factory'];
+    applyCpApprovalDate(r,planned);
     cpLogisticSegments(r).forEach(segment=>{ segment.arrival=coerceDateLoose(segment.arrival);segment.handover=coerceDateLoose(segment.handover); });
     if(cpLogisticHasDetails(r)) rebuildCpLogisticCaches(r);
   });
 }
 function applyCpApprovalDate(row,planned=row['Ex-factory']){
+  const previousDate=coerceDateLoose(planned);
   const effective=BLBusinessRules.resolveExFactoryDate(planned,row['Buying Son Onay Tarihi'],dateOrdinal);
   if(effective.automatic){
-    if(!Object.prototype.hasOwnProperty.call(row,'_asasExFactory'))row._asasExFactory=coerceDateLoose(planned);
-    row._exFactoryRevision={source:'loading-approval',previousDate:coerceDateLoose(planned)};
+    if(!Object.prototype.hasOwnProperty.call(row,'_asasExFactory'))row._asasExFactory=previousDate;
+    row._exFactoryRevision={source:'loading-approval',previousDate};
     row['Ex-factory']=coerceDateLoose(effective.value);
   }else{
     row._exFactoryRevision=null;
-    row['Ex-factory']=coerceDateLoose(planned);
+    row['Ex-factory']=previousDate;
   }
   delete row._revBaseRow;
 }
@@ -6301,23 +6303,28 @@ function setupColBtn(btnId, panelId, tableKey, rerenderFn){
 // Karşılaştırma mantığı public/revision-display.js içinde (testli); burada
 // yalnız hücrenin nasıl çizildiği kalır.
 const REVISION_DATE_KEYS = new Set(BLRevision.DATE_KEYS);
+const REVISION_KEYS = new Set(BLRevision.KEYS);
 
 // Revizyon öncesi gölge satır: tarihler ASAS orijinalleriyle değiştirilip
 // türevler (Priority, Ex→Retail, LT) yeniden hesaplanır.
 function revisionBaseRow(row){ return BLRevision.baselineRow(row, base=>applyFormulas(base)); }
 function revisionInfo(row,key,computed){
+  if(!REVISION_KEYS.has(key)) return null;
+  if(key==='Ex-factory'&&BLRevision.isAutomaticExFactory(row)){
+    const from=Object.hasOwn(row._exFactoryRevision,'previousDate')?row._exFactoryRevision.previousDate:BLRevision.baselineDate(row,key);
+    return {from,to:row[key],source:'loading-approval'};
+  }
   const base=revisionBaseRow(row);
-  const withSource=rev=>rev&&BLRevision.isAutomaticExFactory(row)&&['Ex-factory','Ex→Retail','LT','Priority'].includes(key)?{...rev,source:'loading-approval'}:rev;
   // Türev hücrelerde karşılaştırma ham row değerine değil, bu render için anlık
   // hesaplanan değere yapılır. Böylece Ex-Factory revizyonu geri alındığı anda
   // Ex→Retail de sayfa yenilemeden orijinaline döner; LT ise sunucudan ham değer
   // gelmese bile yanlışlıkla “131→—” gibi revize görünmez.
   if(computed){
-    if(key==='Ex→Retail') return withSource(BLRevision.infoValue(row,key,base,computed.exr==null?'':computed.exr));
-    if(key==='LT') return withSource(BLRevision.infoValue(row,key,base,computed.lt==null?'':computed.lt));
+    if(key==='Ex→Retail') return BLRevision.infoValue(row,key,base,computed.exr==null?'':computed.exr);
+    if(key==='LT') return BLRevision.infoValue(row,key,base,computed.lt==null?'':computed.lt);
   }
-  if(key==='Priority') return withSource(BLRevision.infoValue(row,key,base,actionPriorityCode(row&&row['Priority'])||''));
-  return withSource(BLRevision.info(row,key,base));
+  if(key==='Priority') return BLRevision.infoValue(row,key,base,actionPriorityCode(row&&row['Priority'])||'');
+  return BLRevision.info(row,key,base);
 }
 
 function revisionText(key,value){
@@ -6326,21 +6333,24 @@ function revisionText(key,value){
   return (value==null||value==='')?'—':String(value);
 }
 
-// "67→35" — eski solda soluk, yeni sağda vurgulu.
 function revisionHtml(key,rev,renderValue){
   const render=typeof renderValue==='function'?renderValue:(value=>escapeHtml(revisionText(key,value)));
-  const title=`${revisionText(key,rev.from)} → ${revisionText(key,rev.to)}`;
-  if(rev.source==='loading-approval'){
-    const hint=appLang==='en'?'Calculated using the loading approval date from ASAS. This automatic date cannot be edited.':'ASAS yükleme onay tarihi esas alınır. Bu otomatik tarih elle değiştirilemez.';
-    if(key==='Ex-factory'){
-      const sources=appLang==='en'?`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Loading approval: ${revisionText(key,rev.to)}`:`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Yükleme onayı: ${revisionText(key,rev.to)}`;
-      return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(sources+'. '+hint)}"><span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span><strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
-    }
-    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}">${render(rev.to)}</span>`;
+  const en=appLang==='en';
+  const from=revisionText(key,rev.from), to=revisionText(key,rev.to);
+  if(key==='Ex-factory'&&rev.source==='loading-approval'){
+    const hint=escapeHtml(en?'Loading approval · Read-only':'Yükleme onayı · Salt okunur');
+    const showPrevious=rev.from!=null&&from!==to;
+    const title=showPrevious?escapeHtml(en?`Previous date ${from} · Loading approval ${to} · Read-only`:`Önceki tarih ${from} · Yükleme onayı ${to} · Salt okunur`):hint;
+    const previous=showPrevious?`<span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span>`:'';
+    return `<span class="revAutomatic revAutomaticDates" role="group" aria-label="${hint}" title="${title}">${previous}<strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
   }
-  return `<span class="revPair" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
+  const manual=REVISION_DATE_KEYS.has(key);
+  const separator=manual?'→':'·';
+  const source=escapeHtml(manual?(en?'Manual revision':'Manuel revizyon'):(en?'Automatic calculation':'Otomatik hesap'));
+  const title=escapeHtml(`${from} ${separator} ${to}`);
+  return `<span class="revPair" title="${source} (${title})" data-rev-title="${title}">`
     +`<span class="revOld">${render(rev.from)}</span>`
-    +`<span class="revArrow" aria-hidden="true">→</span>`
+    +`<span class="revArrow" role="img" aria-label="${source}">${separator}</span>`
     +`<span class="revNew">${render(rev.to)}</span></span>`;
 }
 
@@ -6535,7 +6545,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div class="cpLogisticQty">${fmtInt(segment.quantity)} <small>${appLang==='en'?'units':'adet'}</small></div>
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
       <div>${escapeHtml(segment.delType?transitDelTypeDisplay(segment.delType):'—')}</div>
-      <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',{from:row._asasExFactory,to:exFactory,source:'loading-approval'}):(fmtDate(exFactory)||'—')}</div>
+      <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',revisionInfo(row,'Ex-factory')):(fmtDate(exFactory)||'—')}</div>
       <div>${fmtDate(loadingApproval)||'—'}</div>
       <div>${fmtDate(handover)||'—'}</div>
       <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
@@ -6619,7 +6629,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     return `<td class="${schema.sortType==='number'?'num':''}"${display?` title="${escapeHtml(display)}"`:''}>${escapeHtml(display)}</td>`;
   }
   if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_FABRIC_PLM_KEY) return cpFabricCellHtml(r);
-  // Elle revize edilmiş bir alansa hücre "eski → yeni" olarak çizilir.
+  // Tarih revizyonları okla, onay ve hesaplanan farklar noktayla çizilir.
   // Siparişler'de Priority'nin revizyon öncesi karşılığı hesaplanmaz (iş yükünü
   // ikiye katlar); bu yüzden orada Priority yalnız güncel değeriyle çizilir.
   const rev = tableKey==='orders'&&c.k==='Priority' ? null : revisionInfo(r, c.k, cf);
@@ -10970,6 +10980,9 @@ function commitCpEditor(t, options={}){
   }
   if(kind==='exfactory'){
     if(BLRevision.isAutomaticExFactory(row))return false;
+    if(dateOrdinal(row['Buying Son Onay Tarihi'])!=null){
+      showToast(appLang==='en'?'Ex-Factory from loading approval is read-only.':'Yükleme onayından gelen Ex-Factory salt okunur.');return false;
+    }
     const prev = row[key];
     let next = null;
     const isoVal=dateValueISO(t); if(isoVal){ const [y,mo,da] = isoVal.split('-').map(Number); next = new Date(y,mo-1,da); }
@@ -10978,9 +10991,6 @@ function commitCpEditor(t, options={}){
     // toDateOnly, temel metin olarak gelmiş olsa bile gün bazlı Date'e çevirir;
     // aksi halde satırda Date ile metin karışıp gün kaymasına yol açabiliyor.
     if(next==null) next = toDateOnly(BLRevision.baselineDate(row,key));
-    if(BLBusinessRules.resolveExFactoryDate(next,row['Buying Son Onay Tarihi'],dateOrdinal).automatic){
-      showToast(appLang==='en'?'Ex-Factory cannot be earlier than the loading approval date.':'Ex-Factory yükleme onay tarihinden önce olamaz.');return false;
-    }
     if(editableValuesEqual(prev,next)) return false;
     row[key] = next;
     if(kind==='exfactory')syncCpProductionLogisticSegment(row);
@@ -21667,12 +21677,19 @@ function shipCopyRows(){
   return chosen.length?chosen:shipRows;
 }
 
+function shipClipboardTransit(value,tr){
+  return Number.isFinite(value)?`${value} ${tr?'g':'d'}`:'';
+}
+
 /* Üst Shipping Comparison tablosunun Excel-ready clipboard modeli.
    DOM scrape edilmez: görünümü besleyen aynı shipRows + hesaplama state'i kullanılır.
    Her model tam olarak bir satırdır; görsel ve çok satırlı UI metinleri clipboard'a
    taşınmaz. */
 function shipComparisonClipboardColumns(){
   const tr=appLang!=='en';
+  const usd=new Intl.NumberFormat(tr?'tr-TR':'en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const money=value=>Number.isFinite(value)?'$'+usd.format(value):'';
+  const transit=value=>shipClipboardTransit(value,tr);
   return [
     {key:'orderCode',label:'Order Code'},
     {key:'styleName',label:'Style Name'},
@@ -21683,29 +21700,29 @@ function shipComparisonClipboardColumns(){
     {key:'supplier',label:tr?'Üretici':'Supplier'},
     {key:'quantity',label:tr?'Adet':'Quantity'},
     {key:'category',label:tr?'Klasman':'Category'},
-    {key:'opd',label:'OPD'},
-    {key:'exFactory',label:'Ex-Factory'},
-    {key:'retailDate',label:'Retail Date'},
-    {key:'fob',label:'Overseas FOB'},
-    {key:'domesticFob',label:'Domestic FOB'},
-    {key:'domesticLanded',label:'Domestic Landed'},
-    {key:'seaLanded',label:'SEA Landed'},
+    {key:'opd',label:'OPD',format:fmtDate},
+    {key:'exFactory',label:'Ex-Factory',format:fmtDate},
+    {key:'retailDate',label:'Retail Date',format:fmtDate},
+    {key:'fob',label:'Overseas FOB',format:money},
+    {key:'domesticFob',label:'Domestic FOB',format:money},
+    {key:'domesticLanded',label:'Domestic Landed',format:money},
+    {key:'seaLanded',label:'SEA Landed',format:money},
     {key:'seaSavingPct',label:'SEA Saving %'},
-    {key:'seaEta',label:'SEA ETA'},
-    {key:'seaTransit',label:tr?'SEA Transit Gün':'SEA Transit Days'},
-    {key:'seaAirLanded',label:'SEA+AIR Landed'},
+    {key:'seaEta',label:'SEA ETA',format:fmtDate},
+    {key:'seaTransit',label:tr?'SEA Transit Gün':'SEA Transit Days',format:transit},
+    {key:'seaAirLanded',label:'SEA+AIR Landed',format:money},
     {key:'seaAirSavingPct',label:'SEA+AIR Saving %'},
-    {key:'seaAirEta',label:'SEA+AIR ETA'},
-    {key:'seaAirTransit',label:tr?'SEA+AIR Transit Gün':'SEA+AIR Transit Days'},
-    {key:'airLanded',label:'AIR Landed'},
+    {key:'seaAirEta',label:'SEA+AIR ETA',format:fmtDate},
+    {key:'seaAirTransit',label:tr?'SEA+AIR Transit Gün':'SEA+AIR Transit Days',format:transit},
+    {key:'airLanded',label:'AIR Landed',format:money},
     {key:'airSavingPct',label:'AIR Saving %'},
-    {key:'airEta',label:'AIR ETA'},
-    {key:'airTransit',label:tr?'AIR Transit Gün':'AIR Transit Days'},
+    {key:'airEta',label:'AIR ETA',format:fmtDate},
+    {key:'airTransit',label:tr?'AIR Transit Gün':'AIR Transit Days',format:transit},
     ...shipCustomMethods().flatMap(method=>[
-      {key:'m:'+method.id+':landed',label:method.label+' Landed'},
+      {key:'m:'+method.id+':landed',label:method.label+' Landed',format:money},
       {key:'m:'+method.id+':pct',label:method.label+' Saving %'},
-      {key:'m:'+method.id+':eta',label:method.label+' ETA'},
-      {key:'m:'+method.id+':transit',label:method.label+(tr?' Transit Gün':' Transit Days')},
+      {key:'m:'+method.id+':eta',label:method.label+' ETA',format:fmtDate},
+      {key:'m:'+method.id+':transit',label:method.label+(tr?' Transit Gün':' Transit Days'),format:transit},
     ]),
     {key:'cheapest',label:tr?'En Ucuz':'Cheapest'},
     {key:'earliest',label:tr?'En Erken':'Earliest'},
@@ -21717,10 +21734,10 @@ function shipClipboardScalar(value){
   if(value instanceof Date) return isNaN(value)?'':toISODate(value);
   return String(value).replace(/[\t\r\n]+/g,' ').trim();
 }
-function shipComparisonClipboardRows(){
-  return shipCopyRows().map(source=>{
+function shipComparisonClipboardRows(sources){
+  return sources.map(source=>{
     // Copy daima kullanıcının o anda gördüğü hesapla aynı sonucu versin.
-    const row=computeShipFormulas(source);
+    const row=computeShipFormulas({...source});
     const state=shipDecisionState(row);
     const byKey=Object.fromEntries(state.options.map(option=>[option.key,option]));
     const sea=byKey.gemi||{}, seaAir=byKey.gemiUcak||{}, air=byKey.ucak||{}, domestic=byKey.tr||{}, fob=byKey.fob||{};
@@ -21730,8 +21747,8 @@ function shipComparisonClipboardRows(){
     return {
       orderCode:row.orderCode, styleName:row.styleName, colour:row.colour, colorCode:row.colorCode,
       season:row.season, country:row.country, supplier:row.supplier, quantity:toNum(row.quantity), category:row.category,
-      opd:row.opd?toISODate(coerceDateLoose(row.opd)):'', exFactory:row.exFactory?toISODate(coerceDateLoose(row.exFactory)):'', retailDate:row.retailDate?toISODate(coerceDateLoose(row.retailDate)):'',
-      fob:fob.unit, domesticFob:toNum(row.trFiyatUsd), domesticLanded:domestic.unit,
+      opd:coerceDateLoose(row.opd), exFactory:coerceDateLoose(row.exFactory), retailDate:coerceDateLoose(row.retailDate),
+      fob:fob.unit, domesticFob:row.trFiyatUsd, domesticLanded:domestic.unit,
       seaLanded:sea.unit, seaSavingPct:pct(sea.pct), seaEta:sea.date||'', seaTransit:sea.transit,
       seaAirLanded:seaAir.unit, seaAirSavingPct:pct(seaAir.pct), seaAirEta:seaAir.date||'', seaAirTransit:seaAir.transit,
       airLanded:air.unit, airSavingPct:pct(air.pct), airEta:air.date||'', airTransit:air.transit,
@@ -21743,15 +21760,14 @@ function shipComparisonClipboardRows(){
     };
   });
 }
-function shipComparisonClipboardMatrix(){
-  const columns=shipComparisonClipboardColumns(), rows=shipComparisonClipboardRows();
-  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(row[column.key])))];
+function shipComparisonClipboardMatrix(sources){
+  const columns=shipComparisonClipboardColumns(), rows=shipComparisonClipboardRows(sources);
+  return [columns.map(column=>shipClipboardScalar(column.label)), ...rows.map(row=>columns.map(column=>(column.format||shipClipboardScalar)(row[column.key])))];
 }
-function shipComparisonFlatPlain(){
-  return shipComparisonClipboardMatrix().map(row=>row.join('\t')).join('\n');
+function shipComparisonFlatPlain(matrix){
+  return matrix.map(row=>row.join('\t')).join('\n');
 }
-function shipComparisonFlatHtml(){
-  const matrix=shipComparisonClipboardMatrix();
+function shipComparisonFlatHtml(matrix){
   const border='border:1px solid #d0d5dd;padding:4px 6px;font-family:Arial,sans-serif;font-size:11px;white-space:nowrap;';
   const head=(matrix[0]||[]).map(value=>`<th style="${border}background:#f2f4f7;text-align:left">${escapeHtml(value)}</th>`).join('');
   const body=matrix.slice(1).map(row=>`<tr>${row.map(value=>`<td style="${border}">${escapeHtml(value)}</td>`).join('')}</tr>`).join('');
@@ -21759,8 +21775,10 @@ function shipComparisonFlatHtml(){
 }
 async function copyShipComparisonFlat(button){
   if(!shipRows.length){ showToast(appLang==='en'?'Nothing to copy.':'Kopyalanacak satır yok.'); return; }
-  const count=shipCopyRows().length, partial=shipSelected.size>0;
-  const ok=await copyRichToClipboard(shipComparisonFlatHtml(),shipComparisonFlatPlain());
+  const sources=shipCopyRows();
+  const count=sources.length, partial=shipSelected.has(sources[0]._shipId);
+  const matrix=shipComparisonClipboardMatrix(sources);
+  const ok=await copyRichToClipboard(shipComparisonFlatHtml(matrix),shipComparisonFlatPlain(matrix));
   if(!ok){ showToast(appLang==='en'?'Copy failed.':'Kopyalanamadı.'); return; }
   showToast(appLang==='en'
     ?`${count} ${partial?'selected ':''}comparison row(s) copied.`
@@ -21786,7 +21804,8 @@ function shipCopyTableHtml(){
       if(option.priceOnly) return `<td style="${border}text-align:right">${escapeHtml(shipMoney(option.unit))}</td>`;
       const parts=[`<b>${escapeHtml(shipPct(option.pct)||'—')}</b>`, escapeHtml(shipMoney(option.unit))];
       if(option.date) parts.push(escapeHtml(fmtDate(option.date)));
-      parts.push(`${Number(option.transit)||0}${tr?'g':'d'}`);
+      const transit=shipClipboardTransit(option.transit,tr);
+      if(transit) parts.push(transit);
       return `<td style="${border}text-align:right">${parts.join('<br>')}</td>`;
     }).join('');
     return `<tr><td style="${border}">${image}</td><td style="${border}">${product}</td><td style="${border}">${dates}</td>${cells}</tr>`;
@@ -21802,7 +21821,7 @@ function shipCopyTablePlain(){
     const options=shipDecisionOptions(row);
     const qty=toNum(row.quantity);
     const cells=options.map(option=>option.priceOnly?shipMoney(option.unit)
-      :[shipPct(option.pct)||'—',shipMoney(option.unit),option.date?fmtDate(option.date):'',`${Number(option.transit)||0}${tr?'g':'d'}`].filter(Boolean).join(' '));
+      :[shipPct(option.pct)||'—',shipMoney(option.unit),option.date?fmtDate(option.date):'',shipClipboardTransit(option.transit,tr)].filter(Boolean).join(' '));
     lines.push(['',
       [row.styleName,row.orderCode,row.colour,row.season,row.country,row.supplier,qty!=null?qty:''].filter(v=>String(v||'').trim()).join(' · '),
       [['OPD',row.opd],['Ex-Fac.',row.exFactory],['Retail',row.retailDate]].map(([k,v])=>`${k}: ${v?fmtDate(v):'—'}`).join(' '),
