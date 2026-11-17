@@ -7,10 +7,33 @@
     "en": "Flow selection and row illumination"
   },
   "summary": {
-    "tr": "Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur. Açılışta kullanıcı erişim betiği geçici hata alırsa yeniden denenir; kalıcı hatada kullanıcı bilgilerine özel hata ve Tekrar dene gösterilir.",
-    "en": "Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows. Startup retries temporary user access script failures; persistent failures show a user information error and Retry."
+    "tr": "7.0.360 Kaynak Kontrolü PR’ı geri alındı. Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur. Açılışta kullanıcı erişim betiği geçici hata alırsa yeniden denenir; kalıcı hatada kullanıcı bilgilerine özel hata ve Tekrar dene gösterilir.",
+    "en": "The 7.0.360 Source Control PR was reverted. Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows. Startup retries temporary user access script failures; persistent failures show a user information error and Retry."
   },
   "changes": [
+    {
+      "id": "source-control-360-rollback",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "7.0.360 Kaynak Kontrolü değişikliği geri alındı",
+        "en": "Revert the 7.0.360 Source Control change"
+      },
+      "body": {
+        "tr": "Buyer Log Kaynak Kontrolü / ASAS–IAS–Excel kaynak doğrulama aracı paketten çıkarıldı. Araca ait kumaşsız ASAS ölçümü ve deneysel IAS RELATED sorgu seçenekleri kaldırıldı; model alanları ve sorgu oluşturma kodu bu PR öncesindeki sürüme döndürüldü. Kullanıcı verileri ve kayıtlı bağlantı ayarları değiştirilmez.",
+        "en": "The Buyer Log Source Control / ASAS–IAS–Excel source verification utility was removed from the package. Its fabric-free ASAS measurement and experimental IAS RELATED query options were removed; model fields and query generation code were restored to their versions before that PR. User data and saved connection settings are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Geri alma komut satırı aracını ve arka plandaki sorgu seçeneklerini kaldırır; Buyer Log ekranında yeni bir görünüm oluşturmaz.",
+          "en": "This rollback removes a command-line utility and background query options; it adds no new in-app visual presentation."
+        }
+      }
+    },
     {
       "id": "table-search-period-filter",
       "type": "feature",
@@ -292,29 +315,6 @@
         "reason": {
           "tr": "Uygulama ekranında değişiklik yok; düzeltme yalnız harici uygulamaya yapıştırılan pano içeriğini biçimlendirir.",
           "en": "There is no change to the in-app view; this fix only formats clipboard content pasted into an external application."
-        }
-      }
-    },
-    {
-      "id": "source-parity-check-tool",
-      "type": "improvement",
-      "module": {
-        "tr": "Kaynak Veri · ASAS / IAS",
-        "en": "Source Data · ASAS / IAS"
-      },
-      "title": {
-        "tr": "ASAS / IAS / Excel kaynak doğrulama aracı",
-        "en": "ASAS / IAS / Excel source verification tool"
-      },
-      "body": {
-        "tr": "BuyerLog-Kaynak-Dogrulama.cmd, Buyer Log ayarlarıyla ASAS ve IAS verisini Database üzerinden çeker. Pivotu yenilenmiş Excel raporu kopyasıyla sipariş, parsiyel, adet ve eşleştirme sonucunu birebir karşılaştırır. Excel doğruluk referansıdır. Daha hızlı IAS aday sorgusu ve kumaşsız ASAS sorgusu yalnız bu araçta ölçülür; normal yenileme değişmez. Ayarlara ve kaynak Excel dosyalarına yazılmaz.",
-        "en": "BuyerLog-Kaynak-Dogrulama.cmd pulls ASAS and IAS data from the database using the Buyer Log settings. It compares orders, partial shipments, quantities and matching results one-to-one with a pivot-refreshed copy of the Excel report. Excel is the reference. A faster IAS candidate query and an ASAS query without fabric fields are measured only in this tool; the normal refresh is unchanged. Settings and source Excel files are not modified."
-      },
-      "visual": {
-        "kind": "none",
-        "reason": {
-          "tr": "Buyer Log ekranında değişiklik yok; araç ayrı bir komut penceresinde çalışır ve raporu klasöre yazar.",
-          "en": "There is no change to the Buyer Log screen; the tool runs in a separate command window and writes its report to a folder."
         }
       }
     },

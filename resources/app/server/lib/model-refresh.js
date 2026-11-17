@@ -824,16 +824,9 @@ function buildConnectionQuery(item, options = {}) {
   // Ufuk sütunları çıktıdan çıkarılsa bile sezon/tarih filtrelerinin hangi model
   // alanına bağlı olduğu önce tam eşleme üzerinden çözülür.
   const aligned = alignHorizonWithMapping(item, fullMapping);
-  let mapping = role === 'antrepo'
+  const mapping = role === 'antrepo'
     ? antrepoProjectionMapping(fullMapping, options.matchRule)
     : fullMapping;
-  // Yalnız kaynak doğrulama aracı (scripts/source-parity-check.js) açar:
-  // kumaş alanları ASAS projeksiyonundan çıkarılır. Zorunlu alan denetimi
-  // yukarıda tam eşlemeyle yapıldığı için eşleme hatası gizlenmez.
-  if (options.excludeFabric === true && role === 'asas') {
-    const fabric = new Set(modelFields.FABRIC_HEADERS);
-    mapping = Object.fromEntries(Object.entries(mapping).filter(([header]) => !fabric.has(header)));
-  }
   const horizonWithExtra = options.extraExpression
     ? { ...aligned.horizon, extraExpression: options.extraExpression }
     : aligned.horizon;
@@ -860,11 +853,7 @@ function buildConnectionQuery(item, options = {}) {
     // Ufuk alanları (Sezon, MAG, MMYG, Buyer Grup…) çıktıya projekte edilmez ama
     // filtre koşulları onları Field Mapping'deki gerçek sütuna çözmelidir. Aksi
     // halde ASAS başlığı IAS tablosunda sütun adı sanılıp DAX'a yazılıyordu.
-    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, {
-      grainTable, columnType: options.columnType, filterMapping: fullMapping,
-      // Aday sorgu yalnız açıkça istenirse; üretim varsayılanı değişmez.
-      relatedLookup: options.iasLookup === 'related',
-    });
+    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, { grainTable, columnType: options.columnType, filterMapping: fullMapping });
   } else {
     built = modelHorizon.buildMappedQuery(horizonWithExtra, mapping, { columnType: options.columnType });
   }
@@ -898,10 +887,7 @@ async function queryConnectionRows(item, options = {}) {
   if (telemetry) telemetry({ type:'end', category:'wait', connection:label, operation:'mapping-check', timestampMs:Date.now(), durationMs:mappingMs });
   const columnType = await resolveColumnTypes(item, options);
   const liveHorizonRepair = repairHorizonAgainstSchema(item, columnType && columnType.schema);
-  const built = buildConnectionQuery(item, {
-    extraExpression: options.extraExpression, matchRule: options.matchRule, columnType,
-    iasLookup: options.iasLookup, excludeFabric: options.excludeFabric,
-  });
+  const built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType });
   debugGeneratedDax(label, built.query, options);
   const runRows = options.runModelRows || modelQuery.runModelRows;
   const queryStartedMs = Date.now();
