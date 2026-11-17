@@ -6334,18 +6334,19 @@ function revisionText(key,value){
 // "67→35" — eski solda soluk, yeni sağda vurgulu.
 function revisionHtml(key,rev,renderValue){
   const render=typeof renderValue==='function'?renderValue:(value=>escapeHtml(revisionText(key,value)));
-  const title=`${revisionText(key,rev.from)} → ${revisionText(key,rev.to)}`;
+  const automatic=rev.source==='loading-approval'||['LT','Ex→Retail','Priority'].includes(key);
+  const separator=automatic?'·':'→';
+  const title=`${revisionText(key,rev.from)} ${separator} ${revisionText(key,rev.to)}`;
   if(rev.source==='loading-approval'){
     const hint=appLang==='en'?'Calculated using the loading approval date from ASAS. This automatic date cannot be edited.':'ASAS yükleme onay tarihi esas alınır. Bu otomatik tarih elle değiştirilemez.';
     if(key==='Ex-factory'){
       const sources=appLang==='en'?`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Loading approval: ${revisionText(key,rev.to)}`:`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Yükleme onayı: ${revisionText(key,rev.to)}`;
       return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(sources+'. '+hint)}"><span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span><strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
     }
-    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}">${render(rev.to)}</span>`;
   }
-  return `<span class="revPair" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
+  return `<span class="revPair${automatic?' revAutomatic':''}" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
     +`<span class="revOld">${render(rev.from)}</span>`
-    +`<span class="revArrow" aria-hidden="true">→</span>`
+    +`<span class="revArrow" aria-hidden="true">${separator}</span>`
     +`<span class="revNew">${render(rev.to)}</span></span>`;
 }
 
