@@ -1,0 +1,591 @@
+{
+  "base": "15b364dd6cac88778174b565d5199ae60fa23222",
+  "candidate": "f256f702",
+  "manual": true,
+  "aa": false,
+  "node": "v24.19.0",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "sourceHashes": {
+    "A": {
+      "app-main.js": "adb15e1502287f5e06a34a49c7d6c073526a364d12484caa98b32c8d0e6bf4a6",
+      "business-rules.js": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6"
+    },
+    "B": {
+      "app-main.js": "91f52713ae217e66f4185b66f14edb58ed7e5ce8f90b690596ecec7978444c31",
+      "business-rules.js": "c7c78917a6e58589da840f7d701263b21bf8ad88233c4f161c5a4cc7962a02a7"
+    }
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "variant": "A",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 34.5,
+          "visibleMs": 125,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17224303
+        },
+        {
+          "syncMs": 16.200000000186265,
+          "visibleMs": 76.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17253255
+        },
+        {
+          "syncMs": 14.800000000046566,
+          "visibleMs": 68.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17289723
+        },
+        {
+          "syncMs": 14.800000000046566,
+          "visibleMs": 71,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17335083
+        },
+        {
+          "syncMs": 14.800000000046566,
+          "visibleMs": 69.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17353829
+        }
+      ],
+      "tasks": [
+        56
+      ],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 1,
+      "variant": "B",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 16.5,
+          "visibleMs": 126.0999999998603,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17269955
+        },
+        {
+          "syncMs": 15.600000000093132,
+          "visibleMs": 79.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17298615
+        },
+        {
+          "syncMs": 14.899999999906868,
+          "visibleMs": 74.19999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17337187
+        },
+        {
+          "syncMs": 13.699999999953434,
+          "visibleMs": 73.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17383515
+        },
+        {
+          "syncMs": 15.199999999953434,
+          "visibleMs": 78.5,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17402251
+        }
+      ],
+      "tasks": [
+        58
+      ],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 2,
+      "variant": "B",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 16.699999999953434,
+          "visibleMs": 125.39999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17276745
+        },
+        {
+          "syncMs": 17.5,
+          "visibleMs": 85.19999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17300189
+        },
+        {
+          "syncMs": 16.100000000093132,
+          "visibleMs": 80.89999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17340437
+        },
+        {
+          "syncMs": 12.400000000139698,
+          "visibleMs": 70.9000000001397,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17385785
+        },
+        {
+          "syncMs": 13.300000000046566,
+          "visibleMs": 78.70000000018626,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17404065
+        }
+      ],
+      "tasks": [
+        58
+      ],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 2,
+      "variant": "A",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 19.300000000046566,
+          "visibleMs": 96.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17176309
+        },
+        {
+          "syncMs": 13.300000000046566,
+          "visibleMs": 71.39999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17230876
+        },
+        {
+          "syncMs": 15.100000000093132,
+          "visibleMs": 74.69999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17266912
+        },
+        {
+          "syncMs": 12.300000000046566,
+          "visibleMs": 67.5,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17311796
+        },
+        {
+          "syncMs": 14.600000000093132,
+          "visibleMs": 67.80000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17330552
+        }
+      ],
+      "tasks": [],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 3,
+      "variant": "A",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 35,
+          "visibleMs": 108.69999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17251756
+        },
+        {
+          "syncMs": 18.100000000093132,
+          "visibleMs": 77.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17247228
+        },
+        {
+          "syncMs": 13.199999999953434,
+          "visibleMs": 68.69999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17280760
+        },
+        {
+          "syncMs": 13.200000000186265,
+          "visibleMs": 73.60000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17328636
+        },
+        {
+          "syncMs": 11.599999999860302,
+          "visibleMs": 66.5,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17347756
+        }
+      ],
+      "tasks": [],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 3,
+      "variant": "B",
+      "requests": 8,
+      "size": 200,
+      "samples": [
+        {
+          "syncMs": 23,
+          "visibleMs": 110.0999999998603,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17252054
+        },
+        {
+          "syncMs": 33.10000000009313,
+          "visibleMs": 96.60000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17304761
+        },
+        {
+          "syncMs": 13.900000000139698,
+          "visibleMs": 81,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17343265
+        },
+        {
+          "syncMs": 13,
+          "visibleMs": 70.89999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17388085
+        },
+        {
+          "syncMs": 12.300000000046566,
+          "visibleMs": 80,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 17407501
+        }
+      ],
+      "tasks": [
+        75
+      ],
+      "sourceRows": 200,
+      "dataChecksum": 58200
+    },
+    {
+      "pair": 1,
+      "variant": "A",
+      "requests": 9,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 19.0999999998603,
+          "visibleMs": 94.5999999998603,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20719606
+        },
+        {
+          "syncMs": 17.199999999953434,
+          "visibleMs": 76.39999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20747582
+        },
+        {
+          "syncMs": 14.5,
+          "visibleMs": 72.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20781639
+        },
+        {
+          "syncMs": 12.200000000186265,
+          "visibleMs": 70.80000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20827695
+        },
+        {
+          "syncMs": 12.800000000046566,
+          "visibleMs": 115.5,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20832262
+        }
+      ],
+      "tasks": [
+        50,
+        79
+      ],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    },
+    {
+      "pair": 1,
+      "variant": "B",
+      "requests": 8,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 24.5,
+          "visibleMs": 106.80000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20692925
+        },
+        {
+          "syncMs": 14.300000000046566,
+          "visibleMs": 75.69999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20720609
+        },
+        {
+          "syncMs": 14.899999999906868,
+          "visibleMs": 76.79999999981374,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20758246
+        },
+        {
+          "syncMs": 12.5,
+          "visibleMs": 70.89999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20804546
+        },
+        {
+          "syncMs": 12.399999999906868,
+          "visibleMs": 67.80000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20810430
+        }
+      ],
+      "tasks": [
+        54
+      ],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    },
+    {
+      "pair": 2,
+      "variant": "B",
+      "requests": 9,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 18.300000000046566,
+          "visibleMs": 125.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20737075
+        },
+        {
+          "syncMs": 14.399999999906868,
+          "visibleMs": 76.79999999981374,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20766619
+        },
+        {
+          "syncMs": 13.699999999953434,
+          "visibleMs": 76.5999999998603,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20802803
+        },
+        {
+          "syncMs": 12.800000000046566,
+          "visibleMs": 72.5,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20848867
+        },
+        {
+          "syncMs": 11.899999999906868,
+          "visibleMs": 71.89999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20854311
+        }
+      ],
+      "tasks": [
+        70
+      ],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    },
+    {
+      "pair": 2,
+      "variant": "A",
+      "requests": 9,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 20.200000000186265,
+          "visibleMs": 147.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20722927
+        },
+        {
+          "syncMs": 16.699999999953434,
+          "visibleMs": 86.19999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20774095
+        },
+        {
+          "syncMs": 14.199999999953434,
+          "visibleMs": 80.39999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20807699
+        },
+        {
+          "syncMs": 12.100000000093132,
+          "visibleMs": 88.9000000001397,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20853447
+        },
+        {
+          "syncMs": 14,
+          "visibleMs": 80.19999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20858814
+        }
+      ],
+      "tasks": [
+        87,
+        55
+      ],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    },
+    {
+      "pair": 3,
+      "variant": "A",
+      "requests": 8,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 15.199999999953434,
+          "visibleMs": 77.89999999990687,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20748984
+        },
+        {
+          "syncMs": 13.899999999906868,
+          "visibleMs": 70.60000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20779508
+        },
+        {
+          "syncMs": 12.199999999953434,
+          "visibleMs": 65.19999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20808576
+        },
+        {
+          "syncMs": 12.099999999860302,
+          "visibleMs": 65.29999999981374,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20856388
+        },
+        {
+          "syncMs": 11.600000000093132,
+          "visibleMs": 68.80000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20862604
+        }
+      ],
+      "tasks": [],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    },
+    {
+      "pair": 3,
+      "variant": "B",
+      "requests": 8,
+      "size": 30000,
+      "samples": [
+        {
+          "syncMs": 21.899999999906868,
+          "visibleMs": 101.69999999995343,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20745073
+        },
+        {
+          "syncMs": 14.100000000093132,
+          "visibleMs": 84.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20774285
+        },
+        {
+          "syncMs": 16.199999999953434,
+          "visibleMs": 76.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20807073
+        },
+        {
+          "syncMs": 12.699999999953434,
+          "visibleMs": 76.30000000004657,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20856617
+        },
+        {
+          "syncMs": 12.100000000093132,
+          "visibleMs": 68.10000000009313,
+          "dom": 1595,
+          "renderedRows": 50,
+          "heap": 20861861
+        }
+      ],
+      "tasks": [],
+      "sourceRows": 30000,
+      "dataChecksum": 8730000
+    }
+  ],
+  "browser": "151.0.7922.173"
+}
