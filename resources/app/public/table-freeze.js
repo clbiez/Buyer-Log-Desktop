@@ -56,6 +56,8 @@
   selectionStyle.textContent = selectionCell+'{position:sticky!important;left:0!important;clip-path:none!important;pointer-events:auto!important;z-index:calc(var(--ui-z-frozen-cell) + 1)!important}\n'+
     selectionCell+':is(th){z-index:calc(var(--ui-z-sticky-column) + 1)!important}\n'+
     ':where('+selectionCell+'){background-color:var(--ui-surface)}';
+  var selectionRows = 'html[data-ui-system="manifest"] body[data-ui-migrated] table>tbody>tr:is(:has(>td:first-child>'+selectionControls+'),:has(>td:first-child>label>'+selectionControls+'))';
+  selectionStyle.textContent += '\n'+selectionRows+'::after{z-index:var(--ui-z-frozen-cell)}';
   document.head.appendChild(selectionStyle);
 
   function cssId(id) {

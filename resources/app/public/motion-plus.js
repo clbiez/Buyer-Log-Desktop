@@ -15,6 +15,7 @@
     const parsed=css?Number.parseFloat(css):NaN;
     return Number.isFinite(parsed)&&parsed>0?parsed:SPEED[name];
   };
+  const ROW_SELECTION_CONTROL='input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"])';
   const TAB='main > section.active';
   const PAGE_HEADER='.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader,.psaHead,.mfrHeader,.mfpHead,.lcHeader,.lcHead,.dmHead,.lcwaiChatHead';
   const PAGE_SUMMARY='.kpirow,.psaKpis,.pdKpis,.bpaKpis';
@@ -290,8 +291,33 @@
       for(const el of surfaces)play('overlay',el);
     });
   }
+  // Only rows reached by the pointer get a light layer. No table observers,
+  // per-cell listeners, row movement or idle pseudo-elements across large grids.
+  const rowLights=new WeakMap();
+  function rowLight(row,on){
+    const previous=rowLights.get(row);if(previous?.on===on)return;
+    const from=previous?Number(root.getComputedStyle?.(row,'::after').opacity||'0'):0;
+    const state={on,animation:null};rowLights.set(row,state);previous?.animation?.cancel();
+    row.classList.add('blSoftRowHover');row.classList.toggle('blRowHoverActive',on);
+    const a=animate(row,[{opacity:from},{opacity:on?1:0}],{duration:duration('theme'),pseudoElement:'::after'});state.animation=a;
+    const done=()=>{if(rowLights.get(row)!==state)return;state.animation=null;if(!on){row.classList.remove('blSoftRowHover');rowLights.delete(row);}};
+    if(a){a.id='bl-row-light';a.addEventListener?.('finish',done,{once:true});a.addEventListener?.('cancel',done,{once:true});}else done();
+  }
+  function hoverRow(event){
+    const row=event.target.closest?.('tbody tr');
+    if(!row||row.parentElement?.tagName!=='TBODY'||row===event.relatedTarget?.closest?.('tr'))return null;
+    return row.firstElementChild?.querySelector?.(':scope > '+ROW_SELECTION_CONTROL+',:scope > label > '+ROW_SELECTION_CONTROL)?row:null;
+  }
   function play(kind,element){
     if(!element||!enabled())return null;
+    if(kind==='row-select'||kind==='row-deselect'){
+      const on=kind==='row-select';
+      element.classList?.add('blFlowSelection');
+      const a=animate(element,[{transform:on?'scaleY(0)':'scaleY(1)',opacity:1},{transform:on?'scaleY(1)':'scaleY(0)',opacity:on?1:0}],{duration:duration('card'),pseudoElement:'::before'});
+      const done=()=>element.classList?.remove('blFlowSelection');
+      if(a){a.addEventListener?.('finish',done,{once:true});a.addEventListener?.('cancel',done,{once:true});}else done();
+      return a;
+    }
     if(kind==='branch')return animate(element,[{opacity:0,transform:'scaleY(0)'},{opacity:1,transform:'scaleY(1)'}],{duration:duration('overlay')});
     // Overview page navigation: one finite slide of the existing grid, without
     // cloning widgets or moving the toolbar. Shared cancellation owns its lifetime.
@@ -493,6 +519,25 @@
       }
     },true);
     bindActivityControls();
+    doc.addEventListener('pointerover',event=>{const row=hoverRow(event);if(row)rowLight(row,true);});
+    doc.addEventListener('pointerout',event=>{const row=hoverRow(event);if(row)rowLight(row,false);});
+    doc.addEventListener('change',event=>{
+      const input=event.target;
+      if(!input?.matches?.(ROW_SELECTION_CONTROL))return;
+      const table=input.closest('table');if(!table)return;
+      const row=input.closest('tr'),rowId=row?.getAttribute('data-id'),id=input.id,on=input.checked;
+      const head=Boolean(input.closest('thead'));
+      const ready=()=>{
+        if(!table.isConnected)return;
+        let current=input.isConnected?input:null;
+        const escape=value=>root.CSS?.escape?root.CSS.escape(String(value)):String(value).replace(/[^a-zA-Z0-9_-]/g,'');
+        if(!current&&rowId!=null)current=table.querySelector('tbody tr[data-id="'+escape(rowId)+'"] '+ROW_SELECTION_CONTROL);
+        if(!current&&id)current=table.querySelector('#'+escape(id));
+        if(!current&&head)current=table.querySelector('thead '+ROW_SELECTION_CONTROL);
+        if(current&&current.checked===on&&!current.disabled){const a=play(on?'row-select':'row-deselect',current);if(a)a.id='bl-row-selection';}
+      };
+      later(()=>{if(root.requestAnimationFrame)root.requestAnimationFrame(()=>root.requestAnimationFrame(ready));else ready();},0);
+    },true);
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
     doc.addEventListener('click',ev=>{

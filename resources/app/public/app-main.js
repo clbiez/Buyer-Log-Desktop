@@ -5392,6 +5392,7 @@ function tableReportInteraction(key){
     selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
     rowId:row=>collection?row.id:row._id,
     selected:row=>selectionHasId(selected(),collection?row.id:row._id),
+    dirty:row=>key==='cp'&&selectionHasId(state.cpDirty,row._id),
     checked:()=>selected().size>0,
     selectRows:(rows,on)=>{
       const set=selected();
@@ -10346,6 +10347,7 @@ function renderOrdersNow(){
 function markDirty(id){
   if(cpBulkPreparing)return;
   state.cpDirty.add(id);
+  window.BLTableReportInline?.schedule('cp');
   const tr=document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(tr)tr.classList.add('rowDirty');
   updateSavebar('cp');
@@ -10698,6 +10700,7 @@ async function discardAllChangesAsync(){
   // undo() her satırı yeniden dirty olarak işaretler; toplu geri alma tamamlandığında
   // bildirim ve satır vurguları kesin olarak temizlenmelidir.
   state.cpDirty.clear();
+  window.BLTableReportInline?.schedule('cp');
   redoStack.length = 0;
   document.querySelectorAll('#cpTable tr.rowDirty').forEach(tr=>tr.classList.remove('rowDirty'));
   updateUndoRedoButtons();
