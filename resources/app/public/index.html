@@ -93,6 +93,10 @@
     });
     var chooser=el.querySelector('.blBootLanguage');
     if(chooser)chooser.setAttribute('aria-label',active==='en'?'Language':'Dil');
+    if(lastFailure==='user-access-failed'&&el.dataset.failed==='1'){
+      window.BLBootGuard.fail(lastFailure);
+      var retry=el.querySelector('[data-boot-retry]');if(retry)retry.textContent=english()?'Retry':'Tekrar dene';
+    }
     renderDetail();
   }
   function applyBootLanguage(next){
@@ -240,7 +244,15 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(intent){if(finished)dismiss(intent);},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,refreshLanguage:syncBootLanguage,continue:function(intent){if(finished)dismiss(intent);},fail:function(reason){
+    if(finished)return;lastFailure=String(reason||'initial-data-failed');
+    if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
+    if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}
+    var text=lastFailure==='user-access-failed'
+      ?(english()?'User information could not be prepared. Press Retry.':'Kullanıcı bilgileri hazırlanamadı. Yeniden denemek için düğmeye basın.')
+      :(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.');
+    message(text,true);if(screenFailed)ready('ui');
+  },noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}});
