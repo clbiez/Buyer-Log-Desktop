@@ -12,7 +12,6 @@
   const MONTHS_TR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const pad2=value=>String(value).padStart(2,'0');
-  let calendarVersion=0;
   let merch={active:false,weeks:[],byDate:new Map(),byWeek:new Map(),meta:null};
 
   function dateParts(year,month,day){
@@ -90,7 +89,6 @@
     return {year,week,month,monthWeek,start,end};
   }
   function setMerchCalendar(payload){
-    calendarVersion++;
     const input=payload&&payload.calendar?payload.calendar:payload;
     const weeks=Array.isArray(input&&input.weeks)?input.weeks.map(normalizeWeek).filter(Boolean):[];
     if(!weeks.length){merch=emptyMerch();return false;}
@@ -116,7 +114,7 @@
     };
     return true;
   }
-  function clearMerchCalendar(){calendarVersion++;merch=emptyMerch();}
+  function clearMerchCalendar(){merch=emptyMerch();}
   function merchCalendarMeta(){
     return merch.active?{active:true,weeks:merch.weeks.length,...(merch.meta||{})}:{active:false,weeks:0};
   }
@@ -276,7 +274,7 @@
 
   return {
     MONTHS_TR,MONTHS_EN,parseDate,toISO,mondayOf,sundayOf,isoWeekYear,isoWeekNumber,mondayFromIsoWeek,mondayFromBusinessWeek,
-    calendarVersion:()=>calendarVersion,setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,
+    setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,
     describe,businessWeekRange,businessMonthRange,previousBusinessMonthRange,weekPair,
     bucketKey,bucketLabel,monthLabel,weekLabel
   };

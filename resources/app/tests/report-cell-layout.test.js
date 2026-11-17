@@ -50,13 +50,3 @@ test('new Moderator publication replaces older personal layouts, then personal s
  assert.equal(effective({version:2,sharedId:'publication-2'},shared),shared.layout);
  assert.deepEqual(effective({version:2,sharedId:'',layout:{}},null),{});
 });
-
-test('CP report dirty state shares the existing owner and remains independent of selection',()=>{
- const app=read('app-main.js'),row={_id:'7'},before=JSON.stringify(row),state={cpDirty:new Set([7]),cpSelected:new Set([7]),ordersSelected:new Set()};
- const c={window:{},state,kolSelected:new Set()};vm.createContext(c);
- vm.runInContext(app.slice(app.indexOf('function selectionIdKey('),app.indexOf('function selectionActualId('))+app.slice(app.indexOf('function tableReportInteraction('),app.indexOf('function syncTableReportButtons(')),c);
- const cp=c.tableReportInteraction('cp');assert.equal(cp.dirty(row),true);assert.equal(cp.selected(row),true);
- state.cpSelected.clear();assert.equal(cp.dirty(row),true);assert.equal(cp.selected(row),false);
- assert.equal(c.tableReportInteraction('orders').dirty(row),false);assert.equal(c.tableReportInteraction('koleksiyon').dirty({id:7}),false);
- state.cpDirty.clear();assert.equal(cp.dirty(row),false);assert.equal(JSON.stringify(row),before);
-});

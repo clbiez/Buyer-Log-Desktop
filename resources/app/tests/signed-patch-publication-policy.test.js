@@ -4,9 +4,6 @@ const root=path.resolve(__dirname,'../../..'),publisher=require(path.join(root,'
 test('publication configuration requires per-publication explicit approval and complete immutable identity',()=>{
  const valid={APPROVED_SOURCE_SHA:'a'.repeat(40),BASE_VERSION:'7.0.294',PATCH_SEQUENCE:'1',RELEASE_REPO:'clbiez/Buyer-Log-Releases',PUBLISH_APPROVED:'true',RUNNER_TEMP:path.resolve(__dirname,'fixture-temp')};
  assert.equal(publisher.config(valid).tag,'signed-patch-v7.0.294-1');
- assert.equal(publisher.config(valid).baseChannel,'stable');
- assert.equal(publisher.config({...valid,BASE_CHANNEL:'test'}).baseChannel,'test');
- for(const channel of ['TEST','preview','../test'])assert.throws(()=>publisher.config({...valid,BASE_CHANNEL:channel}));
  for(const patch of [{PUBLISH_APPROVED:'false'},{PUBLISH_APPROVED:''},{APPROVED_SOURCE_SHA:'main'},{PATCH_SEQUENCE:'0'},{PATCH_SEQUENCE:'1.5'},{BASE_VERSION:'latest'},{RELEASE_REPO:'../source'},{RUNNER_TEMP:''}])assert.throws(()=>publisher.config({...valid,...patch}));
 });
 test('the approved workflow has no automatic publication event or Actions ZIP storage and gates signing behind full tests',()=>{

@@ -110,8 +110,6 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
    üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
-Satır seçicileri mevcut sade `--ui-group-divider` konturunu kullanır; boş zemin şeffaftır. Akış dolgusu Motion+ içinde merkezden açılır. Turuncu değişiklik çizgisi mavi seçim dolgusunun üzerinde ayrı kalır. Tüm satırın yumuşak aydınlatma katmanı yalnız fareyle girilen satırda oluşturulur ve çıkış geçişi bitince kaldırılır.
-
 8. Sütun dondurmanın tek sahibi `public/table-freeze.js` (`BLTableFreeze`):
    konum, ofset ve katman sırası (kayan gövde < `--ui-z-frozen-cell` < kayan
    başlık `--ui-z-sticky` < donmuş başlık `--ui-z-sticky-column`) yalnız orada

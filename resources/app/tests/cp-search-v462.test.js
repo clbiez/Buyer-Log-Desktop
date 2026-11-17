@@ -43,18 +43,21 @@ test('v4.68 CP araması başlık varyasyonlarını ve mevcut alanları korur', (
 });
 
 test('v4.68 CP arama filtresi tüm tanımlı alanları tek metinde tarar', () => {
-  const {cpSearchHaystack:haystack}=require('./helpers/bl-table-search-rows').createRows();
+  const helper = html.match(/\nfunction cpSearchHaystack\(r\)\{[^]*?\n\}/);
+  assert.ok(helper, 'cpSearchHaystack bulunmalı');
+  const haystack = Function('CP_SEARCH_KEYS', 'norm', `${helper[0]}\nreturn cpSearchHaystack;`)(
+    ['PLM ID', 'Model Name', 'Buyer', 'Line'], value => String(value == null ? '' : value).trim());
   assert.equal(haystack({ 'PLM ID': ' 2135851 ', 'Model Name': 'BOST', Buyer: '', Line: null }), '2135851 bost');
   assert.equal(haystack({ Quantity: 5 }), '', 'arama alanı olmayan sütun eşleşmeye girmez');
   // CP ve Siparişler süzgeci aynı yardımcıyı kullanır.
-  assert.match(html, /if\(!tableSearchMatches\(cpSearchHaystack\(r\),ctx\.q,tableSearchOptions\(r,'cp'\)\)\) return false/);
-  assert.match(html, /if\(!tableSearchMatches\(cpSearchHaystack\(row\),ctx\.q,tableSearchOptions\(row,'orders'\)\)\)return false/);
+  assert.match(html, /if\(!tableSearchMatches\(cpSearchHaystack\(r\),ctx\.q,\{plainMode:'contains'\}\)\) return false/);
+  assert.match(html, /if\(!tableSearchMatches\(cpSearchHaystack\(row\),ctx\.q,\{plainMode:'contains'\}\)\)return false/);
 });
 
 test('CP/Siparişler araması ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line alanlarını kanonik bağlamayla kapsar', () => {
   const fields = loadCanonicalFields();
   const keys = cpSearchKeysFromSource(fields);
-  assert.match(html, /const CP_CANONICAL_SEARCH_FIELDS=\['productDescription','category','mag','buyingGroup','buyer','line','season','country','orderStatus','deliveryType','orderActivity','inStore'\];/);
+  assert.match(html, /const CP_CANONICAL_SEARCH_FIELDS=\['productDescription','category','mag','buyingGroup','buyer','line'\];/);
   for (const id of ['productDescription', 'category', 'mag', 'buyingGroup', 'buyer', 'line']) {
     for (const mod of ['cp', 'orders']) {
       for (const key of fields.bindingFor(mod, id).keys) assert.ok(keys.includes(key), `${mod}.${id} → ${key} aramaya dahil olmalı`);

@@ -4,11 +4,11 @@ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'
 const helper=source.slice(source.indexOf('function managedSelectionSourceRows('),source.indexOf('function managedSelectionChange('));
 const table=require('./helpers/bl-table-search').createTableSearch();
 require('../public/table-search-row-groups').install({BLTableSearch:table});
-const searchContext=query=>({window:{BLTableSearch:table},document:{getElementById:()=>({value:query})},parseTableSearchTerms:table.parseTerms,cpSearchHaystack:row=>table.fold(Object.values(row).join(' ')),tableSearchOrderOptions:require('./helpers/bl-table-search-rows').createRows().tableSearchOrderOptions});
+const searchContext=query=>({window:{BLTableSearch:table},document:{getElementById:()=>({value:query})},parseTableSearchTerms:table.parseTerms,cpSearchHaystack:row=>Object.values(row).join(' ')});
 const sortHelper=source.slice(source.indexOf('function sortRows('),source.indexOf('/* Boş tablo yönlendirmesi:'));
 function selectionApi(state,scope=rows=>rows,visible=()=>[],query=''){
  const sortRows=new Function('BLBusinessRules','COLS_BY_TABLE','columnSchemaFor','norm',sortHelper+';return sortRows;')(require('../public/business-rules'),{cp:[],orders:[]},()=>null,value=>String(value??''));
- return new Function('state','partialViewRows','filteredCP','filteredOrders','selectionHasId','sortRows','window','document','parseTableSearchTerms','cpSearchHaystack','tableSearchOrderOptions',helper+';return {managedSelectionSourceRows,managedSelectionSnapshot};')(state,(key,rows)=>scope(rows),visible,visible,(selected,id)=>[...selected].some(value=>String(value)===String(id)),sortRows,...Object.values(searchContext(query)));
+ return new Function('state','partialViewRows','filteredCP','filteredOrders','selectionHasId','sortRows','window','document','parseTableSearchTerms','cpSearchHaystack',helper+';return {managedSelectionSourceRows,managedSelectionSnapshot};')(state,(key,rows)=>scope(rows),visible,visible,(selected,id)=>[...selected].some(value=>String(value)===String(id)),sortRows,...Object.values(searchContext(query)));
 }
 for(const key of ['cp','orders']){
  test(key+': selection follows the latest sort column/direction without mutating records or selection',()=>{
@@ -36,7 +36,7 @@ for(const key of ['cp','orders']){
 }
 for(const key of ['cp','orders'])test(key+': filtered-out rows stay in selected copy source and current scope is preserved',()=>{
  const rows=[{_id:1},{_id:2},{_id:3}],state={[key]:{rows},cpSelected:new Set([1,2,3]),ordersSelected:new Set([1,2,3])};
- const api=new Function('state','partialViewRows','filteredCP','filteredOrders','selectionHasId','window','document','parseTableSearchTerms','cpSearchHaystack','tableSearchOrderOptions',helper+';return {managedSelectionSourceRows,managedSelectionSnapshot};')(state,(k,r)=>r.filter(x=>x._id!==3),()=>[rows[0]],()=>[rows[0]],(s,id)=>s.has(id),...Object.values(searchContext('')));
+ const api=new Function('state','partialViewRows','filteredCP','filteredOrders','selectionHasId','window','document','parseTableSearchTerms','cpSearchHaystack',helper+';return {managedSelectionSourceRows,managedSelectionSnapshot};')(state,(k,r)=>r.filter(x=>x._id!==3),()=>[rows[0]],()=>[rows[0]],(s,id)=>s.has(id),...Object.values(searchContext('')));
  const result=api.managedSelectionSnapshot(key);assert.deepEqual(result.rows.map(x=>x._id),[1,2]);assert.deepEqual(result.hidden.map(x=>x._id),[2]);
 });
 test('record-based clipboard and Excel use the full scoped source only when rows are selected',()=>{

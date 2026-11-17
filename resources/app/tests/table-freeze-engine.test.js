@@ -15,9 +15,9 @@ const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const ENGINE = read('public/table-freeze.js');
 const APP = read('public/app-main.js');
 
-function engine(styles = []) {
+function engine() {
   const window = { CSS: { escape: value => String(value) }, requestAnimationFrame: fn => fn() };
-  vm.runInNewContext(ENGINE, { window, document: {createElement: () => ({}), head: {appendChild: style => styles.push(style)}} });
+  vm.runInNewContext(ENGINE, { window, document: {} });
   return window.BLTableFreeze;
 }
 
@@ -133,16 +133,4 @@ test('freeze commit and removal refresh only the selected table',()=>{
 test('cancelling the picker preserves both virtual windows without rendering',()=>{
  const p=picker();p.context.freezeStartFor('cpTable','cp');p.context.freezeCancel();
  assert.deepEqual(p.calls,['pick','cancel']);assert.equal(p.tables.cpTable.virtual,true);assert.equal(p.tables.ordersTable.virtual,true);
-});
-
-test('selection pinning is global, first-cell scoped and remains above frozen body cells', () => {
-  const styles=[];engine(styles);assert.equal(styles.length,1);
-  assert.equal(styles[0].id,'blRowSelectionPinStyle');
-  const css=styles[0].textContent;
-  assert.match(css,/:first-child:is\(:has\(>input/);
-  assert.ok(css.includes('[data-tr-check]'));assert.ok(css.includes('[data-xim="include"]'));
-  assert.match(css,/left:0!important;clip-path:none!important/);
-  assert.match(css,/calc\(var\(--ui-z-frozen-cell\) \+ 1\)/);
-  assert.match(css,/calc\(var\(--ui-z-sticky-column\) \+ 1\)/);
-  assert.doesNotMatch(css,/data-um-rolecell|data-ed-xbar/);
 });

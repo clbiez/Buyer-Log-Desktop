@@ -106,7 +106,6 @@ test('× seçimi temizler; aynı sayıda yeni seçim yapıldığında çubuk tek
   const cleared=[];
   s.ctx.window.BLManagedSelection={
     clear(key){cleared.push(key);s.ctx.state.cpSelected.clear();},
-    summary(){return {hidden:0};},
     snapshot(){return {rows:[],hidden:[]};},
   };
   s.fire();

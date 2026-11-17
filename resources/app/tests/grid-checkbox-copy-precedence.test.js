@@ -22,10 +22,8 @@ test('row checkbox selection clears the stale managed-grid cell/range state', ()
   const delegatedStart = APP.indexOf("if(!chk.classList || !chk.classList.contains('rowChk')) return;");
   const delegatedEnd = APP.indexOf('});', delegatedStart);
   const delegatedBlock = APP.slice(delegatedStart, delegatedEnd);
-  assert.match(delegatedBlock, /BLGridClipboard\.clear\(meta\.tableId\)/,
+  assert.match(delegatedBlock, /BLGridClipboard\?\.clear\?\.\(meta\.tableId\)/,
     'row checkbox change does not clear the stale active-cell/range selection');
-  assert.ok(delegatedBlock.indexOf('BLGridClipboard.clear')<delegatedBlock.indexOf('requestAnimationFrame'),
-    'stale cell selection must clear synchronously before deferred UI effects');
   assert.match(APP, /tbody\._chkMeta = \{ selSet, table, tableKey, tableId, rows/,
     'checkbox delegation metadata does not carry tableId for clearing the grid clipboard');
 });

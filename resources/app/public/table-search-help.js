@@ -12,8 +12,6 @@
     try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return false;}
   }
 
-  const SEARCH_NOTE={tr:'İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır. CU4;W7, A!B ve BUDDY(YD) olduğu gibi aranır. Sonda ayraç kullanılabilir. Türkçe harfler ve TR/EN gösterim değerleri iki dilde de eşleşir.',en:'Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value. CU4;W7, A!B and BUDDY(YD) stay literal. A final separator is allowed. Turkish letters and TR/EN display values match in both languages.'};
-
   function copy(){
     if(isEnglish()){
       return {
@@ -26,17 +24,12 @@
           ['Disney; Bangladesh','Semicolon + space = AND. Both conditions must match the same row.'],
           ['(A; 1), (B; 2)','Parentheses = independent row groups. A + 1 OR B + 2 may match.'],
           ['Disney; Mine, Form, 14! Sad!','! before or after a value = must not contain it. Wherever it is written, it excludes from the whole search.'],
-          ['EX=W22, EX=W23','Ex-Factory in LCW week 22 OR 23. RE = Retail Date; MB = Model Budget / In-Store.'],
-          ['RE=W22-W30','LCW weeks 22–30 inclusive, across all years.'],
-          ['MB=M5; MINEC','LCW merch month 5 AND MINEC. EX=M4-M6 selects months 4–6.'],
-          ['EX=W50-W3','Ranges wrap across year end; MB=M11-M2 does the same for months.'],
-          ['EX=W60 / !EX=W22','Invalid filters never match. Use W1–W53 or M1–M12 without spaces or !. Dates require a Merch Calendar.'],
         ],
         imageTitle:'Paste a screenshot',
         image:'Paste a screenshot (an e-mail, a pivot or a PLM list) into the search box. LCW AI reads the values you are probably looking for; only values found in this table are offered, and they are written to the search box after you approve.',
         excelTitle:'Paste from Excel',
         excel:'Paste an Excel block directly into the search box. A single column stays an OR list. With multiple columns, each Excel row becomes its own parenthesized group, for example (A; 1), (B; 2), so values from different source rows never mix.',
-        note:SEARCH_NOTE.en
+        note:'Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value.'
       };
     }
     return {
@@ -49,17 +42,12 @@
         ['Disney; Bangladesh','Noktalı virgül + boşluk = VE. Aynı kayıtta iki koşul da bulunmalıdır.'],
         ['(A; 1), (B; 2)','Parantez = bağımsız satır grubu. A + 1 VEYA B + 2 eşleşebilir.'],
         ['Disney; Mine, Form, 14! Sad!','Değerin önünde veya sonunda ! = bu değeri içermesin. Nereye yazılırsa yazılsın tüm aramadan eler.'],
-        ['EX=W22, EX=W23','Ex-Factory LCW 22. VEYA 23. haftada. RE = Retail Tarihi; MB = Model Bütçe / In-Store.'],
-        ['RE=W22-W30','Tüm yıllarda LCW 22–30. haftalar, iki uç dahil.'],
-        ['MB=M5; MINEC','LCW merch 5. ayı VE MINEC. EX=M4-M6, 4–6. ayları seçer.'],
-        ['EX=W50-W3','Aralıklar yıl sonunda sarar; MB=M11-M2 aylar için aynı şekilde çalışır.'],
-        ['EX=W60 / !EX=W22','Geçersiz süzgeçler eşleşmez. Boşluk ve ! olmadan W1–W53 veya M1–M12 kullanın. Tarihler için Merch Calendar gerekir.'],
       ],
       imageTitle:'Ekran görüntüsü yapıştırma',
       image:'Bir ekran görüntüsünü (e-posta, pivot, PLM listesi) arama kutusuna yapıştırın. LCW AI aramak istediğiniz değerleri okur; yalnız bu tabloda bulunan değerler önerilir ve onayınızdan sonra arama kutusuna yazılır.',
       excelTitle:'Excel’den yapıştırma',
       excel:'Excel’de bir bloğu doğrudan arama kutusuna yapıştırın. Tek sütun eski VEYA listesi olarak kalır. Birden fazla sütunda ise her Excel satırı kendi parantez grubuna dönüşür; örneğin (A; 1), (B; 2). Böylece farklı kaynak satırlarındaki değerler birbirine karışmaz.',
-      note:SEARCH_NOTE.tr
+      note:'İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.'
     };
   }
 

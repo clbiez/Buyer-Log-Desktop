@@ -27,5 +27,5 @@ test('Ortak çekmece görselli Excel export yapar',()=>{
 });
 test('Collection modelKod kimliği görsel eşleştirmesinde desteklenir',()=>{
   assert.ok(DRAWER.includes('modelKod'));
-  assert.ok(DRAWER.includes('helper.urlFrom'));
+  assert.ok(DRAWER.includes('helper.sourceFor'));
 });

@@ -383,10 +383,68 @@ function selectionSetId(selection,value,checked){
 // Ortak tablo araması: giriş değiştiğinde bir kez parse edilir; satır eşleşmesi
 // yalnızca önceden hazırlanmış terimler üzerinden yapılır.
 function parseTableSearchTerms(value){
-  return window.BLTableSearchCore.parseTerms(value);
+  const normalize=value=>String(value==null?'':value).trim().toLocaleUpperCase('tr-TR')
+    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  const parseCriterion=part=>{
+    const raw=norm(part); if(!raw)return null;
+    const marker=raw[0];
+    const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
+    const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
+    const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
+    return criterion?{mode,value:normalize(criterion)}:null;
+  };
+  // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
+  // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
+  const splitPart=part=>String(part).split(/(?<=[^\s!]!)\s+/);
+  // Hariç tutma (!X / X!) bir VEYA grubunda anlamsızdır (X içermeyen her satır
+  // grubu geçirir). Bu yüzden yazıldığı gruptan çıkarılır ve tüm aramaya ayrı
+  // bir VE grubu olarak uygulanır: "A; B, C, X!" ≡ "A; B, C; !X".
+  const groups=[];
+  String(value==null?'':value).split(/;\s+/).forEach(group=>{
+    const terms=group.split(/,\s+/).flatMap(splitPart).map(parseCriterion).filter(Boolean);
+    const positive=terms.filter(term=>term.mode!=='notContains');
+    if(positive.length)groups.push(positive);
+    terms.filter(term=>term.mode==='notContains').forEach(term=>groups.push([term]));
+  });
+  return groups.length===1?groups[0]:groups;
 }
 function tableSearchMatches(haystack,terms,options){
-  return window.BLTableSearchCore.matches(haystack,terms,options);
+  const parsed=Array.isArray(terms)?terms:parseTableSearchTerms(terms);
+  if(!parsed.length)return true;
+  const plainMode=options?.plainMode||'exact';
+  // tr-TR büyük harf + Türkçe harf sadeleştirme + küçük harf. Metin yalnız ASCII
+  // ve Türkçe harflerden oluşuyorsa aynı sonuç yerel ayar dönüşümü olmadan
+  // üretilir (her satırın tüm arama metnine uygulanan sıcak yol); diğer
+  // karakterlerde birebir eski dönüşüm çalışır.
+  const normalize=value=>{
+    const text=String(value==null?'':value).trim();
+    if(/^[\x00-\x7FçğıöşüÇĞİÖŞÜ]*$/.test(text))return text.replace(/İ/g,'I').toLowerCase().replace(/[çğıöşü]/g,ch=>'cgiosu'['çğıöşü'.indexOf(ch)]); // i18n-ignore
+    return text.toLocaleUpperCase('tr-TR')
+      .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').toLowerCase();
+  };
+  const text=normalize(haystack);
+  const exactMatch=(source,needle)=>{
+    if(!needle)return false;
+    const isWordChar=char=>/[a-z0-9]/.test(char||'');
+    let offset=source.indexOf(needle);
+    while(offset!==-1){
+      const before=offset?source[offset-1]:'';
+      const after=source[offset+needle.length]||'';
+      if(!isWordChar(before)&&!isWordChar(after))return true;
+      offset=source.indexOf(needle,offset+1);
+    }
+    return false;
+  };
+  const criterionMatches=criterion=>{
+    const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};
+    const value=normalize(item.value);
+    if(!value)return false;
+    if(item.mode==='contains')return text.includes(value);
+    if(item.mode==='notContains')return !text.includes(value);
+    return plainMode==='contains'?text.includes(value):exactMatch(text,value);
+  };
+  const groups=Array.isArray(parsed[0])?parsed:[parsed];
+  return groups.every(group=>group.some(criterionMatches));
 }
 // Excel/tablo panosundan (TAB = sütun, satır sonu = satır) yapıştırılan dikdörtgen
 // seçimi bağımsız OR terimlerine çevirir: satır-öncelikli sırayla düzleştirir,
@@ -421,7 +479,7 @@ function bindTableSearchClipboardPaste(el){
     el.dispatchEvent(new Event('input',{bubbles:true}));
   });
 }
-window.BLTableSearch={...window.BLTableSearchCore,parseTerms:parseTableSearchTerms,matches:tableSearchMatches,parseClipboardMatrix:parseTableSearchClipboardMatrix,bindPaste:bindTableSearchClipboardPaste};
+window.BLTableSearch={parseTerms:parseTableSearchTerms,matches:tableSearchMatches,parseClipboardMatrix:parseTableSearchClipboardMatrix,bindPaste:bindTableSearchClipboardPaste};
 function isProductionStatus(v){ return BLBusinessRules.isProductionStatus(v); }
 function isShortageStatus(v){ return BLBusinessRules.isShortageStatus(v); }
 function isWarehouseShortageStatus(v){ return BLBusinessRules.isWarehouseShortageStatus(v); }
@@ -1681,8 +1739,7 @@ document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.a
   const moduleId=button.dataset.orderLicenseAtlas;
   if(document.body.dataset.activeTab!==moduleId)return;
   // Atlas generation only reads visible selected rows, including view-only orders.
-  const selected=moduleId==='orders'?state.ordersSelected:state.cpSelected;
-  const rows=(moduleId==='orders'?filteredOrders():filteredCP()).filter(row=>selected.has(row._id)).map(row=>({
+  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
     license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
     licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
   }));
@@ -2930,98 +2987,13 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 }
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
-// Render-owned indexes preserve raw ID equality, numeric aliases and partial rows.
-// They are rebuilt with the full filtered set, never with just the current page.
-function selectionRowsIndex(rows,countsOnly=false){
-  const entries=new Map(),index=new Map();
-  for(const row of rows){
-    const id=row._id;
-    let entry=entries.get(id);
-    if(!entry){
-      entry={id,count:0,rows:countsOnly?null:[]};entries.set(id,entry);
-      const key=selectionIdKey(id),tokens=new Set([id]);
-      if(key){tokens.add(key);const numeric=Number(key);if(Number.isFinite(numeric))tokens.add(numeric);}
-      for(const token of tokens){
-        const previous=index.get(token);
-        if(!previous)index.set(token,entry);
-        else if(Array.isArray(previous))previous.push(entry);
-        else index.set(token,[previous,entry]);
-      }
-    }
-    entry.count++;if(entry.rows)entry.rows.push(row);
-  }
-  return index;
-}
-function selectionIndexEntries(index,selected){
-  const entries=new Set();
-  for(const value of selected){
-    const match=index.get(value);if(!match)continue;
-    if(Array.isArray(match))for(const entry of match)entries.add(entry);
-    else entries.add(match);
-  }
-  return entries;
-}
-function selectionActualIds(rows){
-  const ids=new Map();
-  for(const row of rows){const key=selectionIdKey(row._id);if(key&&!ids.has(key))ids.set(key,row._id);}
-  return ids;
-}
-function updateManagedSelectionView(table,tableKey,fullRows){
-  const actualIds=selectionActualIds(fullRows);
-  const source=partialViewRows(tableKey,state[tableKey]?.rows||[]);
-  const checkMode=normalizeCheckFilterMode(state.checkFilter?.[tableKey]);
-  let eligible=fullRows;
-  if(checkMode){
-    if(tableKey==='cp')ensurePlmSampleAccessors(source);
-    const ctx=tableKey==='orders'?ordersBuildFilterContext():cpBuildFilterContext();ctx.checkFilter='';
-    eligible=source.filter(row=>tableKey==='orders'?ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS):cpRowPasses(row,ctx,CP_MIRROR_IDS));
-  }
-  const visibleIndex=selectionRowsIndex(eligible);
-  if(checkMode){
-    for(const entry of selectionIndexEntries(visibleIndex,visibleIndex.keys())){entry.rendered=false;entry.rows=[];}
-    for(const row of fullRows){
-      const match=visibleIndex.get(row._id),entries=Array.isArray(match)?match:[match];
-      const entry=entries.find(entry=>entry&&(entry.id===row._id||Object.is(entry.id,row._id)));if(entry){entry.rendered=true;entry.rows.push(row);}
-    }
-  }
-  table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,checkMode,
-    visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex,
-    sourceIndex:selectionRowsIndex(source,true)};
-  return table._blSelectionView;
-}
-function managedSelectionView(tableKey){
-  const table=document.getElementById(tableKey==='orders'?'ordersTable':'cpTable');
-  const view=table?._blSelectionView;
-  if(!view||view.sourceRows!==state[tableKey]?.rows)return null;
-  // Row-only edits do not redraw the table. Revalidate once on the next read,
-  // preserving the existing filter semantics without polling or per-tick work.
-  return view.dirty?updateManagedSelectionView(table,tableKey,tableKey==='orders'?filteredOrders():filteredCP()):view;
-}
-function managedVisibleSelectedEntries(view,selected){
-  const entries=selectionIndexEntries(view.visibleIndex,selected);
-  for(const entry of entries)if(!selected.has(entry.id)||view.checkMode==='unchecked')entries.delete(entry);
-  return entries;
-}
-function managedSelectionVisibleId(view,selected,id){
-  const key=String(id);if(!view.checkMode)return view.visibleIds.has(key);
-  const match=view.visibleIndex.get(key),entries=Array.isArray(match)?match:[match];
-  return entries.some(entry=>entry&&String(entry.id)===key&&(view.checkMode==='checked'?selected.has(entry.id):!selected.has(entry.id)));
-}
-function managedSelectionSummary(tableKey){
-  const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
-  const view=managedSelectionView(tableKey);
-  if(!view)return null;
-  let hidden=0;
-  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!managedSelectionVisibleId(view,selected,entry.id))hidden+=entry.count;
-  return {hidden};
-}
 function managedSelectionSourceRows(tableKey){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
   // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
   const ordered=sort?.key?sortRows(rows,sort.key,sort.dir):rows;
   const terms=parseTableSearchTerms(document.getElementById(tableKey==='orders'?'ordersSearch':'cpSearch')?.value);
-  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,tableSearchOrderOptions(tableKey));
+  return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,{plainMode:'contains'});
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
@@ -3043,7 +3015,6 @@ function managedSelectionChange(tableKey,change){
 window.BLManagedSelection={
   clear(tableKey){managedSelectionChange(tableKey,selected=>selected.clear());},
   snapshot:managedSelectionSnapshot,
-  summary:managedSelectionSummary,
   remove(tableKey,id){
     managedSelectionChange(tableKey,selected=>{for(const value of selected)if(String(value)===String(id))selected.delete(value);});
   },
@@ -3526,7 +3497,6 @@ function applyTableDensityDom(tableKey){
   const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
   syncVirtualizedTableRowHeight(tableKey,dims.row,{preserveAnchor:true});
   renderTableViewContext(tableKey);
-  window.BLTableReportInline?.schedule(tableKey);
 }
 window.addEventListener('buyerlog:table-density-change',event=>applyTableDensityDom(event.detail?.tableKey));
 function setTableImageSize(tableKey,value,{persist=false}={}){
@@ -3548,7 +3518,6 @@ function setTableImageSize(tableKey,value,{persist=false}={}){
     syncVirtualizedTableRowHeight(tableKey,dims.row);
   }
   scheduleTableImageSizeDom(tableKey);
-  window.BLTableReportInline?.schedule(tableKey);
   if(persist)persistTableImageSize(tableKey,next);
   return dims;
 }
@@ -5414,14 +5383,11 @@ function tableReportInteraction(key){
   const collection=key==='koleksiyon';
   const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
   return {
-    imageDimensions:()=>tableImageSizeDimensions(key,tableImageSizeCurrentValue(key)),
-    resizeImages:anchor=>openTableImageSizePopover(anchor,key),
     pictureKey:collection?'__picture__':'__picture',
     view:()=>tableViewPresetState(key),
     selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
     rowId:row=>collection?row.id:row._id,
     selected:row=>selectionHasId(selected(),collection?row.id:row._id),
-    dirty:row=>key==='cp'&&selectionHasId(state.cpDirty,row._id),
     checked:()=>selected().size>0,
     selectRows:(rows,on)=>{
       const set=selected();
@@ -6363,19 +6329,18 @@ function revisionText(key,value){
 // "67→35" — eski solda soluk, yeni sağda vurgulu.
 function revisionHtml(key,rev,renderValue){
   const render=typeof renderValue==='function'?renderValue:(value=>escapeHtml(revisionText(key,value)));
-  const automatic=rev.source==='loading-approval'||['LT','Ex→Retail','Priority'].includes(key);
-  const separator=automatic?'·':'→';
-  const title=`${revisionText(key,rev.from)} ${separator} ${revisionText(key,rev.to)}`;
+  const title=`${revisionText(key,rev.from)} → ${revisionText(key,rev.to)}`;
   if(rev.source==='loading-approval'){
     const hint=appLang==='en'?'Calculated using the loading approval date from ASAS. This automatic date cannot be edited.':'ASAS yükleme onay tarihi esas alınır. Bu otomatik tarih elle değiştirilemez.';
     if(key==='Ex-factory'){
       const sources=appLang==='en'?`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Loading approval: ${revisionText(key,rev.to)}`:`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Yükleme onayı: ${revisionText(key,rev.to)}`;
       return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(sources+'. '+hint)}"><span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span><strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
     }
+    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}">${render(rev.to)}</span>`;
   }
-  return `<span class="revPair${automatic?' revAutomatic':''}" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
+  return `<span class="revPair" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
     +`<span class="revOld">${render(rev.from)}</span>`
-    +`<span class="revArrow" aria-hidden="true">${separator}</span>`
+    +`<span class="revArrow" aria-hidden="true">→</span>`
     +`<span class="revNew">${render(rev.to)}</span></span>`;
 }
 
@@ -7851,7 +7816,7 @@ function selectionFooterCellHtml(count){
 function updateSelectionFooterCount(table,rows,selectedSet,getId){
   const cell=table&&table.tFoot&&table.tFoot.querySelector('.selectionTotalCell');
   if(!cell)return;
-  const count=arguments[4]??tableVisibleSelectedCount(rows,selectedSet,getId);
+  const count=tableVisibleSelectedCount(rows,selectedSet,getId);
   const includeTotal=cell.dataset.includeTotal==='1';
   const selectedTitle=appLang==='en'?`${count} selected row${count===1?'':'s'}`:`${count} seçili satır`;
   const totalLabel=appLang==='en'?'Total':'Toplam';
@@ -8287,9 +8252,6 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   const table = document.getElementById(tableId);
   if(!table)return;
   const fullRows=rows;
-  if((tableKey==='cp'||tableKey==='orders')&&!pageOnly){
-    updateManagedSelectionView(table,tableKey,fullRows);
-  }
   if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
     rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
   }
@@ -8483,29 +8445,19 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
-        const key=selectionIdKey(chk.dataset.id);
-        const id = key?(meta.actualIds.get(key) ?? chk.dataset.id):chk.dataset.id;
+        const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
         selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
         // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
         // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi
         // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).
-        const grid=window.BLGridClipboard?.state?.(meta.tableId);
-        if(meta.selSet.size>0&&(grid?.activeCell||grid?.selectionRange||grid?.editingCell))window.BLGridClipboard.clear(meta.tableId);
-        if(tbody._selectionUpdateQueued)return;
-        tbody._selectionUpdateQueued=true;
-        requestAnimationFrame(()=>{
-          tbody._selectionUpdateQueued=false;
-          const meta=tbody._chkMeta;if(!meta)return;
-          const count=meta.visibleIndex?[...selectionIndexEntries(meta.visibleIndex,meta.selSet)].filter(entry=>entry.rendered!==false).length:undefined;
-          updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
-          meta.onSelectionChange?.(meta.selSet,meta.rows);
-          window.BLSelectionBar?.refresh();
-        });
+        if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
+        updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId);
+        if(typeof meta.onSelectionChange==='function') meta.onSelectionChange(meta.selSet,meta.rows);
+        else if((meta.tableKey==='cp'||meta.tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
       });
     }
-    const selectionView=table._blSelectionView,matchingView=selectionView?.fullRows===fullRows;
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:matchingView?selectionView.visibleIndex:selectionRowsIndex(fullRows), actualIds:matchingView?selectionView.actualIds:selectionActualIds(fullRows), getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
@@ -8521,7 +8473,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   // CP/Orders yeni DOM satırlarını her render'da kendi kayıtlı Picture ölçüsüne
   // tekrar bağlar. Böylece CP max yükseklikte takılı kalmaz ve Orders davranışıyla
   // aynı sözleşmeyi kullanır.
-  if(tableKey==='cp'||tableKey==='orders'){applyTableImageSizeDom(tableKey);window.BLSelectionBar?.refresh();}
+  if(tableKey==='cp'||tableKey==='orders')applyTableImageSizeDom(tableKey);
   window.BLGridClipboard?.afterRender?.(tableId);
   if(typeof fitTableHeights==='function') setTimeout(fitTableHeights, 0);
 }
@@ -9737,7 +9689,7 @@ function matchesQuickExFactory(row, period){
 const CP_BASE_SEARCH_KEYS=['PLM ID','Model Name','Ürün Tanım','License','Manufacturer','Sub-Manufacturer','Sub Manufacturer','Special Code','Order Code','Colour Code','Color Code','Colour'];
 // Ürün tanımı, kategori, MAG, Buyer Grup, Buyer ve Line aramaya kanonik alan
 // bağlamalarıyla (cp + orders) girer; ham başlık listesi burada çoğaltılmaz.
-const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line','season','country','orderStatus','deliveryType','orderActivity','inStore'];
+const CP_CANONICAL_SEARCH_FIELDS=['productDescription','category','mag','buyingGroup','buyer','line'];
 function cpCanonicalSearchKeys(fields,ids){
   const keys=[];
   ids.forEach(id=>['cp','orders'].forEach(mod=>{ (fields?.bindingFor?.(mod,id)?.keys||[]).forEach(k=>keys.push(k)); }));
@@ -9747,101 +9699,16 @@ const CP_SEARCH_KEYS=Array.from(new Set([...CP_BASE_SEARCH_KEYS,...cpCanonicalSe
 // CP/Siparişler arama metni: yalnız dolu alanlar eklenir. Kanonik bağlamaların
 // çoğu başlık varyantı satırda bulunmaz; boşları atlamak 30k satırda süzgeç
 // geçişini eski alan sayısına yakın tutar.
-function tableSearchDisplayValues(values,monthValue){
-  monthValue=norm(monthValue);
-  const fold=window.BLTableSearch.fold;
-  let aliases=tableSearchDisplayValues.aliases;
-  if(!aliases){
-    aliases=new Map();
-    for(const dict of [STATUS_EN,STATUS_TR,TR_EN_DICT,KOL_DURUM_EN,KOL_EN_TR_DICT,Object.fromEntries([{tr:'Aktif',en:'Active'},{tr:'Pasif',en:'Inactive'}].map(pair=>[pair.en,pair.tr]))]){
-      for(const [a,b] of Object.entries(dict))for(const key of [fold(a),fold(b)])aliases.set(key,[...(aliases.get(key)||[]),a,b]);
-    }
-    tableSearchDisplayValues.aliases=aliases;
-  }
-  const cache=tableSearchDisplayValues.cache||(tableSearchDisplayValues.cache=new Map());
-  const out=[];
-  for(const value of values){
-    const raw=norm(value);if(!raw)continue;
-    const isMonth=raw===monthValue,cacheKey=isMonth?'\u0000month:'+raw:raw;
-    let display=cache.get(cacheKey);
-    if(display===undefined){
-      const rawFold=fold(raw),parts=[raw],pair=aliases.get(rawFold);if(pair)parts.push(...pair);
-      if(/^\d{4}-\d{2}-\d{2}/.test(raw)){
-        const date=window.BLDateDimension?.parseDate?.(raw);
-        if(date)parts.push(String(date.getDate()).padStart(2,'0')+'.'+String(date.getMonth()+1).padStart(2,'0')+'.'+String(date.getFullYear()).slice(-2));
-      }
-      if(isMonth){
-        const code=kolMonthCode(raw);
-        if(code){const month=Number(code.slice(4))-1,year=code.slice(0,4);parts.push(KOL_MONTHS_TR[month]+' '+year,KOL_MONTHS_EN[month]+' '+year);}
-      }
-      display=parts.length===1?rawFold:fold(parts.join(' '));
-      if(cache.size>=100000)cache.clear();cache.set(cacheKey,display);
-    }
-    out.push(display);
-  }
-  return out.join(' ');
-}
-const _cpSearchCache=new WeakMap();
 function cpSearchHaystack(r){
-  const values=[];
+  let hay='';
   for(let i=0;i<CP_SEARCH_KEYS.length;i++){
-    const v=r[CP_SEARCH_KEYS[i]];if(v!=null&&v!=='')values.push(String(v));
+    const v=r[CP_SEARCH_KEYS[i]];
+    if(v==null||v==='')continue;
+    const s=norm(v).toLowerCase();
+    if(s)hay=hay?hay+' '+s:s;
   }
-  const signature=JSON.stringify(values),cached=_cpSearchCache.get(r);
-  if(cached?.signature===signature)return cached.value;
-  const value=tableSearchDisplayValues(values);
-  _cpSearchCache.set(r,{signature,value});return value;
+  return hay;
 }
-const _tableSearchPeriodCache=new WeakMap();
-function tableSearchPeriods(row,moduleId){
-  const fields=window.BLCanonicalFields,date=window.BLDateDimension;
-  const read=id=>{
-    const keys=fields.bindingFor(moduleId,id)?.keys||[];
-    for(const key of keys){const value=moduleId==='collection'?kolEffectiveValue(row,key):row[key];if(value!=null&&value!=='')return value;}
-    return '';
-  };
-  const values=['exFactory','retailDate','inStore','inStoreMonth','inStoreWeek'].map(read);
-  const signature=JSON.stringify([moduleId,date?.calendarVersion?.(),...values]);
-  const cached=_tableSearchPeriodCache.get(row);if(cached?.signature===signature)return cached.value;
-  const version=date?.calendarVersion?.();
-  let dateCache=tableSearchPeriods.dates;
-  if(!dateCache||tableSearchPeriods.version!==version){tableSearchPeriods.version=version;dateCache=tableSearchPeriods.dates=new Map();}
-  const describe=raw=>{
-    const key=raw instanceof Date?raw.getTime():raw;
-    if(dateCache.has(key))return {...dateCache.get(key)};
-    const value=raw;
-    // A missing Merch Calendar must never fall back to ISO/GLB or calendar month.
-    if(!date?.hasMerchCalendar?.())return {};
-    const period=date.describe(value);
-    const keys=period?.businessValid?{w:period.lcwWeek,m:period.lcwMonth}:{};
-    if(dateCache.size>=50000)dateCache.clear();dateCache.set(key,keys);return {...keys};
-  };
-  const value={ex:describe(values[0]),re:describe(values[1]),mb:describe(values[2])};
-  if(moduleId==='collection'){
-    const codes=tableSearchPeriods.codes||(tableSearchPeriods.codes=new Map());
-    const code=(unit,raw,parse)=>{
-      const key=unit+String(raw);let result=codes.get(key);
-      if(result===undefined){result=parse(raw);if(codes.size>=50000)codes.clear();codes.set(key,result);}
-      return result;
-    };
-    const month=code('m',values[3],kolMonthCode),week=code('w',values[4],kolWeekCode);
-    if(month)value.mb.m=Number(month.slice(4));
-    if(week)value.mb.w=Number(week.slice(5));
-  }
-  _tableSearchPeriodCache.set(row,{signature,value});return value;
-}
-function tableSearchFeedbackRows(tab){
-  const ctx=tab==='cp'?cpBuildFilterContext():ordersBuildFilterContext();ctx.q=[];
-  const rows=partialViewRows(tab,state[tab]?.rows||[]);
-  return tab==='cp'?rows.filter(row=>cpRowPasses(row,ctx,CP_MIRROR_IDS)):rows.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
-}
-function tableSearchOptions(row,moduleId){
-  return {plainMode:'contains',folded:true,periods:()=>tableSearchPeriods(row,moduleId)};
-}
-function tableSearchOrderOptions(moduleId){
-  return {plainMode:'contains',folded:true,periodsOf:row=>tableSearchPeriods(row,moduleId)};
-}
-
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
   {id:'status',col:'STATUS'},
@@ -9889,7 +9756,7 @@ function cpPassesBase(r,ctx){
   if(ctx.fC && norm(r['Country'])!==ctx.fC) return false;
   if(ctx.fL && norm(r['License'])!==ctx.fL) return false;
   if(ctx.q.length){
-    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,tableSearchOptions(r,'cp'))) return false;
+    if(!tableSearchMatches(cpSearchHaystack(r),ctx.q,{plainMode:'contains'})) return false;
   }
   return true;
 }
@@ -9970,7 +9837,7 @@ function filteredCP(){
   const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
-  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,tableSearchOrderOptions('cp'));
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
 // Capraz kapsam kurali: bir satir, yalnizca kendi grubu disinda hicbir grupta elenmiyorsa
@@ -10036,13 +9903,12 @@ function quickSeasonEntries(counts){
 function sortRows(rows,key,dir){
   const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
     ||(COLS_BY_TABLE.orders||[]).some(col=>col.k===key&&col.personalNote);
-  const season=String(key).toLocaleLowerCase('tr-TR')==='season';
-  const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
-  const schema=key==='Priority'||season?null:columnSchemaFor(column||{k:key},rows);
   return [...rows].sort((a,b)=>{
     let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
     if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
-    if(season) return BLBusinessRules.compareChronologicalValues(x,y,dir);
+    if(String(key).toLocaleLowerCase('tr-TR')==='season') return BLBusinessRules.compareChronologicalValues(x,y,dir);
+    const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
+    const schema=columnSchemaFor(column||{k:key},rows);
     const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
     if(schema&&(schema.sortType==='number'||schema.sortType==='date')){
       // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
@@ -10090,8 +9956,8 @@ function renderCPNow(){
   document.getElementById('cpContent').style.display='block';
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
-  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,tableSearchOrderOptions('cp'));
-  window.BLTableSearchFeedback?.render('cpSearch',()=>tableSearchFeedbackRows('cp'),cpSearchHaystack,appLang==='en',tableSearchOrderOptions('cp'));
+  const rows = partialViewEnabled('cp') ? filteredCP() : window.BLTableSearch.orderRows(state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all,parseTableSearchTerms(document.getElementById('cpSearch').value),cpSearchHaystack,{plainMode:'contains'});
+  window.BLTableSearchFeedback?.render('cpSearch',rows,cpSearchHaystack,appLang==='en');
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
@@ -10270,7 +10136,7 @@ function ordersPassesBase(row,ctx,ignoreActive=false){
   if(ctx.fC&&norm(row.Country)!==ctx.fC)return false;
   if(ctx.fL&&norm(row.License)!==ctx.fL)return false;
   if(ctx.q.length){
-    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,tableSearchOptions(row,'orders')))return false;
+    if(!tableSearchMatches(cpSearchHaystack(row),ctx.q,{plainMode:'contains'}))return false;
   }
   if(!ignoreActive){
     if(ctx.activeFilter&&!preparedColFilterPasses(ctx.activeFilter,'Active/Inactive',row))return false;
@@ -10330,7 +10196,7 @@ function filteredOrders(){
   const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
-  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,tableSearchOrderOptions('orders'));
+  return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 function ordersImageCellHtml(row){
   const dims=ordersImageDims(),{modelId,colourCode,has,source}=tableRowImageSource(row);
@@ -10398,8 +10264,8 @@ function renderOrdersNow(){
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
-  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,tableSearchOrderOptions('orders'));
-  window.BLTableSearchFeedback?.render('ordersSearch',()=>tableSearchFeedbackRows('orders'),cpSearchHaystack,appLang==='en',tableSearchOrderOptions('orders'));
+  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
+  window.BLTableSearchFeedback?.render('ordersSearch',rows,cpSearchHaystack,appLang==='en');
   const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
@@ -10476,7 +10342,6 @@ function renderOrdersNow(){
 function markDirty(id){
   if(cpBulkPreparing)return;
   state.cpDirty.add(id);
-  window.BLTableReportInline?.schedule('cp');
   const tr=document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(tr)tr.classList.add('rowDirty');
   updateSavebar('cp');
@@ -10512,6 +10377,8 @@ function refreshCpRowOnly(id,rowIndex=null){
     const withChk = 1;
     trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
       visibleCols('cp').map(c=>cellHtml(c,row,cf)).join('');
+    const chk = trCP.querySelector('input.rowChk');
+    chk.addEventListener('change', ()=>{ if(chk.checked) state.cpSelected.add(id); else state.cpSelected.delete(id); if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility(); });
     const cpOffset=1,cpVisible=visibleCols('cp');cpVisible.forEach((c,ci)=>{const td=trCP.children[ci+cpOffset];if(td){td.dataset.r=trCP.sectionRowIndex;td.dataset.c=ci;td.dataset.key=c.k;if(c.k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}});applyGroupedBoundariesToRow(trCP,cpVisible,cpOffset);
     if(state.cpDirty.has(id)) trCP.classList.add('rowDirty'); else trCP.classList.remove('rowDirty');
     trCP.classList.toggle('rowViewOnly',row._canEdit===false);
@@ -10543,10 +10410,6 @@ function refreshRowsEverywhere(ids){
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const uniqueIds=new Set(ids),rowIndex=buildIndex();
   uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
-  for(const tableId of ['cpTable','ordersTable']){
-    const view=document.getElementById(tableId)?._blSelectionView;if(view)view.dirty=true;
-  }
-  window.BLSelectionBar?.refresh();
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
   function buildIndex(){
@@ -10831,7 +10694,6 @@ async function discardAllChangesAsync(){
   // undo() her satırı yeniden dirty olarak işaretler; toplu geri alma tamamlandığında
   // bildirim ve satır vurguları kesin olarak temizlenmelidir.
   state.cpDirty.clear();
-  window.BLTableReportInline?.schedule('cp');
   redoStack.length = 0;
   document.querySelectorAll('#cpTable tr.rowDirty').forEach(tr=>tr.classList.remove('rowDirty'));
   updateUndoRedoButtons();
@@ -17584,20 +17446,6 @@ async function loadInitialBuyerLogData(){
   setServerStatus(msg);showToast(msg);return false;
 }
 
-async function ensureStartupUserAccess(){
-  try{
-    // This hard startup gate must retry independently of screen preparation.
-    await window.BLPerf.ensureFeature('userAccess');
-    if(typeof window.applyUserAccessUI!=='function')throw new Error('USER_ACCESS_API_UNAVAILABLE');
-    window.applyUserAccessUI();
-    return true;
-  }catch(error){
-    console.warn('Startup user access:',error);
-    window.BLBootGuard?.fail('user-access-failed');
-    return false;
-  }
-}
-
 function signalStartupReady(){
   if(startupReadySignaled)return;startupReadySignaled=true;
   void fetch('/api/startup/ready',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({marks:window.BLPerf?.timeline?.()||[]})})
@@ -17639,7 +17487,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=20261117')
+  overviewOabLoadPromise=loader('oab.js?rev=20261116')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
@@ -17797,7 +17645,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
   // Profil katmanı ilk veriyle gelir; deferredUi sonrasına kalmaz.
   // İlk çağrı ve lazy manifest aynı script anahtarını paylaşır.
-  const userAccessReady=ensureStartupUserAccess();
+  void window.BLPerf?._loadScript?.('user-access-ui.js?rev=APP-UPDATE-V3')?.catch(error=>console.warn('Kullanıcı erişim katmanı erken yüklenemedi:',error));
   const initialDataLoaded=await loadInitialBuyerLogData();
   if(initialDataLoaded)window.BLBootGuard?.ready('data');
   else window.BLBootGuard?.fail('initial-data-failed');
@@ -17818,8 +17666,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     try{window.BL_START_HEARTBEAT?.();}catch(error){console.warn('Heartbeat başlatılamadı:',error);}
     void afterStartupReveal(()=>{
     // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
-    if(primaryScreenReady)void userAccessReady.then(ok=>{if(ok)scheduleBackgroundModuleWarmup();else finishStartupModules();})
-      .catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
+    if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
+      .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
@@ -19886,39 +19734,95 @@ function setDetailShowImages(on){
   try{ BLStorage.setItem(DETAIL_IMAGE_PREF_KEY,detailShowImages?'1':'0'); }catch(_){}
 }
 // Görsel dizini tablo başına BİR kez kurulur; satır başına tüm siparişleri taramak
-// binlerce satırda kabul edilemez olurdu. Yalnız tam kimlikler indekslenir;
-// sezon veya renk eksikse model adıyla görsel tahmin edilmez.
-function detailRowImageIdentity(row,moduleId='overview',exactBindings=false){
-  const canonical=window.BLCanonicalFields;
-  const value=id=>{
-    if(!exactBindings)return canonical?.canonicalValue?.(row,moduleId,id)||'';
-    if(row?.__canonical&&Object.prototype.hasOwnProperty.call(row.__canonical,id))return row.__canonical[id]||'';
-    for(const key of canonical?.bindingFor?.(moduleId,id)?.keys||[]){
-      const found=row&&row[key];if(found!=null&&found!=='')return found;
-    }
-    return '';
-  };
-  return {plmId:row?._plmId||value('plmId'),modelName:row?._modelName||value('modelName'),
-    colourCode:row?._colourCode||value('colourCode'),colour:value('colour'),
-    specialCode:value('specialCode'),season:value('season'),orderCode:value('orderCode')};
-}
+// binlerce satırda kabul edilemez olurdu. LFL satırları PLM ID taşımadığı için
+// model adı + renk kodu üzerinden ikinci bir anahtar da tutulur.
 function buildDetailImageIndex(){
-  const records=[];
-  if(typeof kolRows!=='undefined')for(const row of kolRows||[]){
-    const id=detailRowImageIdentity(row,'collection',true);
-    records.push({...id,originalImage:row._sharedCollectionImageUrl?'':row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`||''});
+  const byPlm=new Map(),byPlmOnly=new Map(),byModel=new Map(),modelToPlm=new Map();
+  const add=(plmId,colourCode,modelName,url)=>{
+    if(!url)return;
+    const plmKey=cpImageOverrideKey(plmId,colourCode),plmOnly=cpNormalizePlmImageId(plmId),model=turknorm(modelName||'');
+    if(plmKey&&!byPlm.has(plmKey))byPlm.set(plmKey,url);
+    if(plmOnly&&!byPlmOnly.has(plmOnly))byPlmOnly.set(plmOnly,url);
+    if(!model)return;
+    const withColour=`${model}|${turknorm(colourCode||'')}`;
+    if(!byModel.has(withColour))byModel.set(withColour,url);
+    if(!byModel.has(model))byModel.set(model,url);
+  };
+  // Otomatik CoreNectum taraması görseli overrides.imagemap'e PLM-only
+  // (plm:2108736) olarak kaydeder. Backlog detayında PLM ID sütunu olmadığı
+  // için bu kalıcı kayıtları, saklanan PLM bağlantısındaki Style Name ile
+  // tekrar modele bağlamak gerekir. Yalnız açık CP/Orders satırlarını taramak
+  // Backlog ufkundaki diğer modellerin görsellerini boş bırakıyordu.
+  const overrideImages=state?.overrides?.imagemap||{};
+  Object.entries(overrideImages).forEach(([key,ref])=>{
+    // Kanonik anahtar renk ADI da taşıyabilir (plm:X|colour:Y|name:Z). Eski
+    // desen adı renk koduna yapıştırdığı için renk düzeyindeki kayıtlar
+    // bozuk bir anahtarla indeksleniyor, yalnız model düzeyi çözülüyordu.
+    const match=/^plm:([^|]+)(?:\|colour:([^|]+))?(?:\|name:(.+))?$/i.exec(String(key||'')),imageRef=norm(ref);
+    if(!match||!imageRef)return;
+    const plmId=cpNormalizePlmImageId(match[1]),colourCode=match[2]||'',url=`${CP_IMAGE_API}/${encodeURIComponent(imageRef)}`;
+    add(plmId,colourCode,'',url);
+  });
+  /* Koleksiyon satırları kanonik kayıttan HEMEN SONRA gelir. Daha önce bu blok
+     en sonda duruyordu; `add` ilk yazanı koruduğu için kullanıcının Koleksiyon'da
+     ELLE eklediği görsel, aynı model adına ait ESKİ otomatik/projeksiyon kaydına
+     yeniliyordu ve OAB alt detayı gibi model adıyla çözen tüketiciler eski
+     görseli gösteriyordu. Ayrıca model adı → PLM ID köprüsü buradan da beslenir:
+     PLM bağlantı listesi henüz yüklenmemiş olsa bile Koleksiyon satırı kendi
+     PLM ID'sini taşıdığı için kanonik anahtar çözülebilir. */
+  if(typeof kolRows!=='undefined')for(const row of (kolRows||[])){
+    if(row&&row._sharedCollectionImageUrl)continue;
+    const url=row&&(row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`)||'';
+    const rowPlm=cpNormalizePlmImageId(row&&row.plmId),rowModel=turknorm(row&&row.modelKod||'');
+    if(rowPlm&&rowModel&&!modelToPlm.has(rowModel))modelToPlm.set(rowModel,rowPlm);
+    add(row&&row.plmId,row&&row.colourCode,row&&row.modelKod,url);
   }
-  for(const source of [state.cp,state.orders])for(const row of source?.rows||[])records.push(detailRowImageIdentity(row,'cp',true));
-  for(const order of [state.asasOrders||[],...Object.values(state.asasOrdersByTarget||{})].flat()){
-    records.push({plmId:order.plm,modelName:order.model,colourCode:order.ccode,colour:order.colour,specialCode:order.ozel,season:order.season});
+  // Backlog satırının kendisinde PLM ID sütunu gösterilmese de aynı satırın
+  // ASAS kaynağı model/plm/ccode kimliğini taşır. PLM bağlantı listesi henüz
+  // yüklenmemiş olsa bile bu kaynak ilişkiyle kalıcı görsel çözülebilir.
+  (state?.asasOrders||[]).forEach(order=>{
+    const plmId=cpNormalizePlmImageId(order&&order.plm),model=turknorm(order&&order.model||''),colourCode=order&&order.ccode||'';
+    if(!plmId||!model)return;
+    if(!modelToPlm.has(model))modelToPlm.set(model,plmId);
+    const exact=cpImageOverrideKey(plmId,colourCode),url=exact&&byPlm.get(exact)||byPlmOnly.get(plmId)||'';
+    if(url)add(plmId,colourCode,order&&order.model,url);
+  });
+  plmStyleLinksByModel.forEach((item,modelKey)=>{
+    const plmId=cpNormalizePlmImageId(item&&item.plmId);if(!plmId)return;
+    modelToPlm.set(turknorm(modelKey),plmId);
+    const url=byPlmOnly.get(plmId);if(url)add(plmId,'',item&&item.styleName,url);
+  });
+  for(const source of [state.cp,state.orders]){
+    if(!source||!Array.isArray(source.rows))continue;
+    for(const row of source.rows){
+      if(!row||!row._imageUrl)continue;
+      add(row['PLM ID'],row['C.Code'],row['Model Name'],row._imageUrl);
+    }
   }
-  return window.BLModelImageCache?.buildDetailIndex?.(records)||null;
+  return {byPlm,byPlmOnly,byModel,modelToPlm};
 }
 function detailImageUrlFrom(index,identity){
-  return window.BLModelImageCache?.resolveDetailSource?.(index,identity)||'';
-}
-function detailResolvePlmId(value,modelName='',identity={}){
-  return window.BLModelImageCache?.resolveDetailIdentity?.(buildDetailImageIndex(),{...identity,plmId:value,modelName})?.plmId||'';
+  const resolvedPlm=modelAssetCanonicalPlmId(identity&&identity.plmId,identity&&identity.modelName);
+  /* Detay/analiz ekranları artık önce TEK kanonik registry okuyucusunu
+     kullanır. Eski byPlm/byModel index yalnız migration fallback'tir. Böylece
+     PLM SYNC'in az önce yazdığı imagemap kaydı LFL/OAB/analiz renderer'ında
+     ikinci ve farklı bir çözüm algoritmasına takılmaz. */
+  const canonical=resolvedPlm?canonicalModelImageSource(resolvedPlm,identity&&identity.colourCode,identity&&identity.colour||''):'';
+  if(canonical)return canonical;
+  if(!index)return '';
+  const plmKey=cpImageOverrideKey(resolvedPlm||identity.plmId,identity.colourCode);
+  if(plmKey&&index.byPlm.has(plmKey))return index.byPlm.get(plmKey);
+  const plmOnly=cpNormalizePlmImageId(resolvedPlm||identity.plmId);
+  if(plmOnly&&index.byPlmOnly&&index.byPlmOnly.has(plmOnly))return index.byPlmOnly.get(plmOnly);
+  const model=turknorm(identity.modelName||'');
+  if(!model)return '';
+  const mappedPlm=index.modelToPlm&&index.modelToPlm.get(model);
+  if(mappedPlm){
+    const mappedExact=cpImageOverrideKey(mappedPlm,identity.colourCode);
+    if(mappedExact&&index.byPlm.has(mappedExact))return index.byPlm.get(mappedExact);
+    if(index.byPlmOnly&&index.byPlmOnly.has(mappedPlm))return index.byPlmOnly.get(mappedPlm);
+  }
+  return index.byModel.get(`${model}|${turknorm(identity.colourCode||'')}`)||index.byModel.get(model)||'';
 }
 // Detay tablosunun başlıkları sabit değil (rapora göre değişir); kimlik
 // sütunlarını ada göre esnek biçimde buluruz.
@@ -19932,10 +19836,11 @@ function detailIdentityColumns(cols){
   };
 }
 function detailImageCellHtml(row,identity,index){
+  const directRef=norm(row&&row._imageRef);
   const plmId=row&&row._plmId||(identity.plm?row[identity.plm]:'');
   const colourCode=row&&row._colourCode||(identity.colour?row[identity.colour]:'');
   const modelName=row&&row._modelName||(identity.model?row[identity.model]:'');
-  const url=detailImageUrlFrom(index,{...detailRowImageIdentity(row),plmId,colourCode,modelName});
+  const url=directRef?`${CP_IMAGE_API}/${encodeURIComponent(directRef)}`:detailImageUrlFrom(index,{plmId,colourCode,modelName});
   const title=appLang==='en'?'Hover for large preview':'Büyük önizleme için üzerine gelin';
   /* Görseli olmayan satır da kimliğini bırakır: "Eksikleri Tamamla" tam da o
      satırları ister. Boş hücre bırakan eski davranış eksik modelleri
@@ -19955,7 +19860,7 @@ function detailImageThumbHtml(url,{modelId='',colourCode='',plmId='',modelName='
      taşıyabiliyor (OAB alt detayı yalnız "Option Adı" bilir). Kanonik PLM ID
      ve model adı AYRI özniteliklere yazılır; kapsam çözümleyicisi artık model
      adını PLM ID sanmaz. */
-  const canonicalPlm=normalizePlmLinkId(plmId);
+  const canonicalPlm=modelAssetCanonicalPlmId(plmId||modelId,modelName||modelId);
   const styleName=norm(modelName)||(normalizePlmLinkId(modelId)?'':norm(modelId));
   const identityAttrs=`${canonicalPlm?` data-plm-id="${escapeHtml(canonicalPlm)}"`:''}${styleName?` data-model-name="${escapeHtml(styleName)}"`:''}${norm(colour)?` data-colour-name="${escapeHtml(norm(colour))}"`:''}`;
   if(!source){
@@ -20017,9 +19922,11 @@ window.BLDetailImages={
   /* Ortak kapsam kaydı: pencere kendi kimlik listesini ve yeniden çizimini
      bildirir, modül başına ayrı indirici/çözümleyici yazılmaz. */
   registerScope:registerModelAssetScopeHost,
-  identityFromRow:detailRowImageIdentity,
-  resolvePlmId:detailResolvePlmId,
-  sourceFor:(identity,index)=>detailImageUrlFrom(index,identity)||(!index?detailImageUrlFrom(buildDetailImageIndex(),identity):''),
+  resolvePlmId:modelAssetCanonicalPlmId,
+  sourceFor:({plmId='',modelName='',colourCode='',colour=''}={})=>{
+    const id=modelAssetCanonicalPlmId(plmId,modelName);
+    return id?canonicalModelImageSource(id,colourCode,colour):'';
+  },
 };
 
 const BACKLOG_CANONICAL_DATE_HEADERS = new Set([
@@ -20146,7 +20053,7 @@ function renderBacklogDetailTable(rows,headers){
       const colourCode=row&&row._colourCode||(identityCols.colour?row[identityCols.colour]:'');
       const styleName=row&&row._modelName||(identityCols.model?row[identityCols.model]:'');
       return {plmId,colourCode,styleName,rowId:String(rowIndex),
-        hasImage:imageIndex?Boolean(detailImageUrlFrom(imageIndex,{...detailRowImageIdentity(row,'backlog'),plmId,colourCode,modelName:styleName})):null};
+        hasImage:imageIndex?Boolean(norm(row&&row._imageRef)||detailImageUrlFrom(imageIndex,{plmId,colourCode,modelName:styleName})):null};
     }),
     repaint:()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders),
   });
@@ -21164,11 +21071,7 @@ function updateShippingBtnVisibility(){
   for(const mode of ['cp','orders']){
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
     const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
-    if(atlasButton){
-      const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
-      const view=activeTab===mode&&selected.size?managedSelectionView(mode):null;
-      atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||managedVisibleSelectedEntries(view,selected).size===0;
-    }
+    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
     const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
@@ -21868,23 +21771,6 @@ function shipClipboardScalar(value){
   if(value instanceof Date) return isNaN(value)?'':toISODate(value);
   return String(value).replace(/[\t\r\n]+/g,' ').trim();
 }
-function shipComparisonClipboardValue(key,value,formatMoney=shipMoney){
-  if(value==null||value==='') return '';
-  // Kopyalanan değerler arayüzün fiyat, tarih ve transit gösterimini izler.
-  const prices=['fob','domesticFob','domesticLanded','seaLanded','seaAirLanded','airLanded'];
-  if(prices.includes(key)||/^m:[^:]+:landed$/.test(key)){
-    const amount=Number(value);
-    return Number.isFinite(amount)?formatMoney(amount):'';
-  }
-  const dates=['opd','exFactory','retailDate','seaEta','seaAirEta','airEta'];
-  if(dates.includes(key)||/^m:[^:]+:eta$/.test(key)) return fmtDate(value);
-  const transit=['seaTransit','seaAirTransit','airTransit'];
-  if(transit.includes(key)||/^m:[^:]+:transit$/.test(key)){
-    const days=Number(value);
-    return Number.isFinite(days)?`${days} ${appLang==='en'?'d':'g'}`:'';
-  }
-  return value;
-}
 function shipComparisonClipboardRows(){
   return shipCopyRows().map(source=>{
     // Copy daima kullanıcının o anda gördüğü hesapla aynı sonucu versin.
@@ -21913,10 +21799,7 @@ function shipComparisonClipboardRows(){
 }
 function shipComparisonClipboardMatrix(){
   const columns=shipComparisonClipboardColumns(), rows=shipComparisonClipboardRows();
-  // Çok satırlı kopyalamada aynı USD formatter yeniden kullanılır.
-  const formatter=new Intl.NumberFormat(appLang==='en'?'en-GB':'tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const formatMoney=amount=>'$'+formatter.format(amount);
-  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(shipComparisonClipboardValue(column.key,row[column.key],formatMoney))))];
+  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(row[column.key])))];
 }
 function shipComparisonFlatPlain(){
   return shipComparisonClipboardMatrix().map(row=>row.join('\t')).join('\n');
@@ -24966,7 +24849,7 @@ function kolWeekCodeForDate(value){
 function kolWeekCode(value,fallbackDate=''){
   const raw=norm(value);if(!raw)return fallbackDate?kolWeekCodeForDate(fallbackDate):'';
   let m=/^(\d{4})[-/. ]?W?(\d{1,2})$/i.exec(raw);
-  if(m){const w=Number(m[2]);return w>=1&&w<=53?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
+  if(m){const w=Number(m[2]);return w>=1&&w<=52?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
   m=/^(\d{1,2})$/.exec(raw);
   if(m&&fallbackDate){const fromDate=kolWeekCodeForDate(fallbackDate);if(fromDate&&Number(fromDate.slice(5))===Number(m[1]))return fromDate;}
   return '';
@@ -25285,21 +25168,12 @@ function endeksmatikRoyaltyRule(mode,row){
 function selectedEndeksmatikRows(mode){
   const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
   if(!selected?.size)return [];
-  const view=managedSelectionView(mode);if(!view)return [];
-  let row=null;
-  for(const entry of managedVisibleSelectedEntries(view,selected)){
-    if(row||entry.count!==1)return [];
-    // Only rendered projections need retained records. Hidden checked-filter
-    // entries keep counts; an explicit programmatic selection resolves its ID.
-    row=entry.rows[0]||state[mode]?.rows?.find(item=>item._id===entry.id||Object.is(item._id,entry.id));
-  }
-  return row?[row]:[];
+  return (mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
 }
 function selectedEndeksmatikOrder(mode){
   const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
   if(activeTab!==mode)return null;
-  const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
-  const rows=(mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+  const rows=selectedEndeksmatikRows(mode);
   if(rows.length!==1){showToast(appLang==='en'?'Select exactly one visible order for Endeksmatik.':'Endeksmatik için görünür tek bir sipariş seçin.');return null;}
   return rows[0];
 }
@@ -27386,15 +27260,14 @@ function passesKolColFilters(r){
     return set.has(kolFilterValue(r,k));
   });
 }
-const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not','durum'];
+const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not'];
 const _kolSearchCache=new WeakMap();
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const values=KOL_SEARCH_KEYS.map(key=>kolEffectiveValue(row,key));
-  const signature=JSON.stringify(values);
+  const signature=KOL_SEARCH_KEYS.map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
-  const value=tableSearchDisplayValues(values,kolEffectiveValue(row,'inStoreMonth'));
+  const value=KOL_SEARCH_KEYS.map(key=>norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
@@ -27492,7 +27365,7 @@ function kolGroupAwareOrder(rows,searchTerms=[]){
       block.rows=parent?[parent,...variants]:variants;
     });
   }
-  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(row=>({text:kolSearchHaystack(row),periods:()=>tableSearchPeriods(row,'collection')})),{plainMode:'contains',folded:true});
+  const searchOrdered=window.BLTableSearch.orderRows(blocks,searchTerms,block=>block.rows.map(kolSearchHaystack),{plainMode:'contains'});
   let ordered=searchOrdered.flatMap(block=>block.rows);
   if(kolTransientTopRowId!=null&&!searchTerms.length){
     const pinned=kolRows.find(row=>Number(row.id)===Number(kolTransientTopRowId));
@@ -27505,9 +27378,8 @@ function kolGroupAwareOrder(rows,searchTerms=[]){
   }
   return ordered;
 }
-function filteredKol(ignoreSearch=false){
+function filteredKol(){
   const q = parseTableSearchTerms(document.getElementById('kolSearch').value);
-  if(ignoreSearch)q.length=0;
   const checkMode = normalizeCheckFilterMode(kolCheckFilter);
   let rows = kolRows.filter(r=>{
     if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
@@ -27515,13 +27387,13 @@ function filteredKol(ignoreSearch=false){
     if(!passesKolColFilters(r)||!kolFabricDetailMatches(r)) return false;
     if(kolHealthState.filter&&!kolHealthMatches(r,kolHealthState.filter)) return false;
     if(q.length){
-      if(!tableSearchMatches(kolSearchHaystack(r),q,tableSearchOptions(r,'collection'))) return false;
+      if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
     }
     return true;
   });
   // Collapse is presentation-only. Logical filtering retains every physical
   // colour record; UI/copy/visual Excel derive their visible projection later.
-  return ignoreSearch?rows:kolGroupAwareOrder(rows,q);
+  return kolGroupAwareOrder(rows,q);
 }
 function kolPresentationRows(logicalRows){
   const rows=Array.isArray(logicalRows)?logicalRows:filteredKol();
@@ -29583,7 +29455,7 @@ function kolQuickScoped(excludeKey){
     });
     if(!passesOthers) return false;
     if(q.length){
-      if(!tableSearchMatches(kolSearchHaystack(r),q,tableSearchOptions(r,'collection'))) return false;
+      if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
     }
     return true;
   });
@@ -30069,7 +29941,7 @@ function renderKol(){
   renderKolScopeFilters();
   updateKolSendBtnState();
   const logicalRows=filteredKol(),rows=kolPresentationRows(logicalRows);
-  window.BLTableSearchFeedback?.render('kolSearch',()=>filteredKol(true),kolSearchHaystack,appLang==='en',tableSearchOrderOptions('collection'));
+  window.BLTableSearchFeedback?.render('kolSearch',logicalRows,kolSearchHaystack,appLang==='en');
   renderKolEmptyState(logicalRows);
   const kolStats=pageModelOptionStats(logicalRows),kolScopeText=`${pageModelOptionText(logicalRows)} · ${logicalRows.length} / ${kolRows.length} ${appLang==='en'?'rows':'satır'}`;
   document.getElementById('kolCount').textContent=kolScopeText;
@@ -31613,18 +31485,18 @@ window.BLPriceSupplierAnalysisBridge={
     if(source==='collection')return window.BLCollectionAnalyticsBridge.openDrilldown(items,title);
     if(source==='lfl'&&window.BLPriceSupplierLFLBridge?.openDrilldown)return window.BLPriceSupplierLFLBridge.openDrilldown(observations,title);
     document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
-    const label=title||labels.title,list=observations||[],detailIndex=buildDetailImageIndex();
+    const label=title||labels.title,list=observations||[];
     /* Model kimliği kanonik alanlardan gelir (plmId + renk kodu); model ADI
        PLM ID sanılmaz. Görsel hücresi ortak katmandandır, böylece bu rapor da
        aynı "Model Görselleri" akışına katılır. */
     const identityOf=item=>{
       const plmId=item&&(item.plmId||item.row&&item.row.plmId||item.raw&&item.raw.plmId)||'';
       const colourCode=norm(item&&(item.colourCode||item.row&&item.row.colourCode))||'',colour=norm(item&&item.colour)||'';
-      const resolved=window.BLModelImageCache?.resolveDetailIdentity?.(detailIndex,{plmId,modelName:item&&item.model,season:item&&item.season,colourCode,specialCode:item&&item.specialCode})?.plmId||'';
-      return {plmId:resolved,season:item&&item.season,specialCode:item&&item.specialCode,colourCode,colour,styleName:norm(item&&item.model)||'',orderCode:norm(item&&(item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode))||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
+      const resolved=modelAssetCanonicalPlmId(plmId,norm(item&&item.model));
+      return {plmId,colourCode,colour,styleName:norm(item&&item.model)||'',orderCode:norm(item&&(item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode))||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
         hasImage:resolved?Boolean(canonicalModelImageSource(resolved,colourCode,colour)):null};
     };
-    const bodyHtml=()=>`<table><thead><tr><th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th><th>${labels.order}</th><th>${labels.model}</th><th>${labels.supplier}</th><th>${labels.country}</th><th>${labels.buyer}</th><th>${labels.season}</th><th>${labels.price}</th><th>${labels.currency}</th><th>${labels.quantity}</th></tr></thead><tbody>${list.map(item=>{const id=identityOf(item),plmId=id.plmId;const source=detailImageUrlFrom(detailIndex,{...id,plmId});return `<tr data-id="${escapeHtml(id.rowId)}"><td class="detailImgCell">${detailImageThumbHtml(source,{modelId:plmId||id.styleName,colourCode:id.colourCode,plmId,modelName:id.styleName,colour:id.colour},{allowEmpty:true})}</td><td>${escapeHtml(item.orderKey||'')}</td><td>${escapeHtml(item.model||'')}</td><td>${escapeHtml(item.manufacturer||'')}</td><td>${escapeHtml(item.country||'')}</td><td>${escapeHtml(item.buyer||'')}</td><td>${escapeHtml(item.season||'')}</td><td>${escapeHtml(item.price??'')}</td><td>${escapeHtml(item.currency||'')}</td><td>${escapeHtml(item.quantity??'')}</td></tr>`;}).join('')}</tbody></table>`;
+    const bodyHtml=()=>`<table><thead><tr><th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th><th>${labels.order}</th><th>${labels.model}</th><th>${labels.supplier}</th><th>${labels.country}</th><th>${labels.buyer}</th><th>${labels.season}</th><th>${labels.price}</th><th>${labels.currency}</th><th>${labels.quantity}</th></tr></thead><tbody>${list.map(item=>{const id=identityOf(item),plmId=modelAssetCanonicalPlmId(id.plmId,id.styleName);const source=plmId?canonicalModelImageSource(plmId,id.colourCode,id.colour):'';return `<tr data-id="${escapeHtml(id.rowId)}"><td class="detailImgCell">${detailImageThumbHtml(source,{modelId:plmId||id.styleName,colourCode:id.colourCode,plmId,modelName:id.styleName,colour:id.colour},{allowEmpty:true})}</td><td>${escapeHtml(item.orderKey||'')}</td><td>${escapeHtml(item.model||'')}</td><td>${escapeHtml(item.manufacturer||'')}</td><td>${escapeHtml(item.country||'')}</td><td>${escapeHtml(item.buyer||'')}</td><td>${escapeHtml(item.season||'')}</td><td>${escapeHtml(item.price??'')}</td><td>${escapeHtml(item.currency||'')}</td><td>${escapeHtml(item.quantity??'')}</td></tr>`;}).join('')}</tbody></table>`;
     overlay.innerHTML=`<div class="modalCard priceAnalysisDrillCard" role="dialog" aria-modal="true"><div class="modalHead"><div><b>${escapeHtml(label)}</b><div class="muted">${items.length} ${labels.records}</div></div><div class="modalHeadActions">${detailModelImagesButtonHtml('_priceAnalysisDrillModelImages')}<button type="button" class="modalX" data-close>×</button></div></div><div class="priceAnalysisDrillBody">${bodyHtml()}</div><div class="modalFoot"><button type="button" class="tbtn" data-close>${labels.close}</button></div></div>`;
     const card=overlay.querySelector('.modalCard'),body=overlay.querySelector('.priceAnalysisDrillBody');
     const close=()=>{window.BLLayerSystem?.closeDialog?.(overlay);overlay.remove();};
@@ -34795,13 +34667,16 @@ function registerModelAssetScopeHost(host,{identities,repaint,label,contextType}
   if(!host)return null;
   host.dataset.blModelAssetScope=norm(contextType)||host.dataset.blModelAssetScope||'detail-view';
   if(norm(label))host.dataset.blModelAssetLabel=norm(label);
-  const seen=new Set(),list=[],imageIndex=buildDetailImageIndex();
+  const seen=new Set(),list=[];
   (Array.isArray(identities)?identities:[]).forEach(item=>{
     if(!item)return;
     const styleName=norm(item.styleName||item.modelName||item.model);
-    const plmId=window.BLModelImageCache?.resolveDetailIdentity?.(imageIndex,{...item,modelName:styleName})?.plmId||'';
-    // Belirsiz kimlik sunucudaki eski ad çözümleyicisine gönderilmez.
-    if(!plmId||!norm(item.colourCode))return;
+    const plmId=modelAssetCanonicalPlmId(item.plmId||item.modelId,styleName);
+    /* PLM ID ÇÖZÜLEMEDİYSE KİMLİK DÜŞÜRÜLMEZ. OAB "Option Adı" değerleri PLM
+       style adlarıyla eşleşmez; burada eleyince ekranda 11 satır varken eylem
+       "bu görünümde model görseli yok" diyordu. Model adı taşıyan kimlik
+       korunur, PLM ID'yi sunucu kendi ASAS kaynağından çözer. */
+    if(!plmId&&!styleName)return;
     const colourCode=norm(item.colourCode!=null?item.colourCode:item.ccode);
     const colour=norm(item.colour!=null?item.colour:item.colourName);
     const orderCode=norm(item.orderCode!=null?item.orderCode:item.ocode);
@@ -34893,13 +34768,13 @@ function activeModelAssetViewHost(){
 }
 function modelAssetIdentitiesFromHost(host){
   if(!host)return [];
-  if(Array.isArray(host.__blModelIdentities))return host.__blModelIdentities;
+  if(Array.isArray(host.__blModelIdentities)&&host.__blModelIdentities.length)return host.__blModelIdentities;
   return [...host.querySelectorAll('img[data-bl-thumb="1"][data-model-id],img[data-bl-thumb="1"][data-plm-id]')].map(img=>{
     const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
     return {
       // Model ADI PLM ID sanılmaz: kanonik köprüden çözülür. Çözülemezse kimlik
       // DÜŞÜRÜLMEZ; model adıyla taşınır ve PLM ID'yi sunucu çözer.
-      plmId:normalizePlmLinkId(img.dataset.plmId),
+      plmId:img.dataset.plmId||modelAssetCanonicalPlmId(img.dataset.modelId,styleName),
       colourCode:img.dataset.colourCode||'',
       colour:img.dataset.colourName||'',
       styleName,
@@ -34907,7 +34782,7 @@ function modelAssetIdentitiesFromHost(host){
       // Hücrede gerçek bir kaynak var mı? Yer tutucu thumb'da data-src yoktur.
       hasImage:Boolean(img.dataset.src)&&img.dataset.blImageFailed!=='1',
     };
-  }).filter(item=>item.plmId&&item.colourCode);
+  }).filter(item=>item.plmId||item.styleName);
 }
 function registerCurrentViewModelAssetProvider(){
   const api=modelAssetScopeApi();if(!api)return;
@@ -34945,8 +34820,8 @@ function registerCurrentViewModelAssetProvider(){
             try{current.__blModelAssetRepaint();return;}catch(err){console.warn('Detay görsel yenilemesi başarısız:',err);}
           }
           current.querySelectorAll('img[data-bl-thumb="1"]').forEach(img=>{
-            const plmId=normalizePlmLinkId(img.dataset.plmId);
-            const source=detailImageUrlFrom(null,{plmId,colourCode:img.dataset.colourCode,colour:img.dataset.colourName||''});
+            const plmId=img.dataset.plmId||modelAssetCanonicalPlmId(img.dataset.modelId,img.dataset.modelName||'');
+            const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
             if(!source||img.dataset.src===source)return;
             img.dataset.src=source;img.dataset.blImageLoaded='0';
             img.classList.remove('isPlaceholder');
@@ -35237,8 +35112,8 @@ function silentImageRowColour(row){return row?norm(row.Colour||row['Colour']||ro
 function silentImageEntry(raw){
   const api=modelAssetScopeApi();if(!api||!raw)return null;
   const styleName=norm(raw.styleName);
-  const plmId=normalizePlmLinkId(raw.plmId);
-  if(!plmId)return null;
+  const plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  if(!plmId&&!styleName)return null;
   const identity={plmId,colourCode:norm(raw.colourCode),colour:norm(raw.colour),styleName,orderCode:norm(raw.orderCode),hasImage:null};
   if(!modelAssetIdentityMissing(identity))return null;
   const key=api.identityKey(api.normalizePlmId(plmId),identity.colourCode,identity.colour,styleName,identity.orderCode);
@@ -35246,7 +35121,7 @@ function silentImageEntry(raw){
 }
 function silentImageThumbIdentity(img){
   const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
-  return {plmId:img.dataset.colourCode?normalizePlmLinkId(img.dataset.plmId):'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
+  return {plmId:img.dataset.plmId||img.dataset.modelId||'',colourCode:img.dataset.colourCode||'',colour:img.dataset.colourName||'',styleName};
 }
 /* Görünür satırlar önce; liste `limit` ile sınırlıdır (30k satırda tarama yok). */
 function silentImageCollect({limit,skip}){
@@ -35313,8 +35188,8 @@ function silentImagePatchCells(keys){
   if(host){
     for(const img of host.querySelectorAll('img[data-bl-thumb="1"].isPlaceholder')){
       const raw=silentImageThumbIdentity(img);if(!keyOf(raw))continue;
-      const plmId=normalizePlmLinkId(raw.plmId);
-      const source=detailImageUrlFrom(null,{plmId,colourCode:img.dataset.colourCode,colour:img.dataset.colourName||''});
+      const plmId=modelAssetCanonicalPlmId(raw.plmId,raw.styleName);
+      const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
       if(!source)continue;
       img.dataset.src=source;img.dataset.blImageLoaded='0';img.classList.remove('isPlaceholder');
       delete img.dataset.blImageObserved;delete img.dataset.blImageFailed;
@@ -35340,8 +35215,8 @@ function silentImagePatchCells(keys){
 }
 function silentImageEntryKey(raw){
   const api=modelAssetScopeApi();if(!api||!raw)return '';
-  const styleName=norm(raw.styleName),plmId=normalizePlmLinkId(raw.plmId);
-  return plmId?api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode)):'';
+  const styleName=norm(raw.styleName),plmId=modelAssetCanonicalPlmId(raw.plmId,styleName);
+  return api.identityKey(api.normalizePlmId(plmId),norm(raw.colourCode),norm(raw.colour),styleName,norm(raw.orderCode));
 }
 const BLSilentImageComplete=(()=>{
   const factory=window.BLSilentImageCompleteFactory;
@@ -41960,7 +41835,6 @@ function syncVfMenuLanguage(){
 }
 function applyLanguage(lang){
   appLang = (lang==='en') ? 'en' : 'tr';
-  window.BLBootGuard?.refreshLanguage?.();
   window.BLGuide?.refreshLanguage();
   if(document.getElementById('todoModal')) renderTodoModal();
   // CSS text-transform:uppercase follows the document language. Keep English
