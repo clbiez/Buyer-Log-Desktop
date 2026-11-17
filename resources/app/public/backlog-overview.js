@@ -845,44 +845,37 @@ function drawerModelIdentity(it){
   const row=it&&it.row&&typeof it.row==='object'?it.row:{};
   const take=(...values)=>{for(const value of values){const text=String(value==null?'':value).trim();if(text)return text;}return '';};
   const modelName=take(it&&it.modelName,row._modelName,row['Model Adı'],row['Model Name'],row['Style Name']);
-  let plmId=take(it&&it.plmId,row._plmId,row.plmId,row.plm,row['PLM ID'],row['PLM Id'],row['Plm Kod'],row['PLM Kod'],row['PLM Code']);
-  try{plmId=window.BLDetailImages?.resolvePlmId?.(plmId,modelName)||plmId;}catch(_){}
+  const plmId=take(it&&it.plmId,row._plmId,row.plmId,row.plm,row['PLM ID'],row['PLM Id'],row['Plm Kod'],row['PLM Kod'],row['PLM Code']);
+
+  const canonical=window.BLDetailImages?.identityFromRow?.(row,'backlog');
   return {
+    ...canonical,
     plmId,
     modelName,
+    season:it?.season||canonical?.season,
+    specialCode:it?.specialCode||canonical?.specialCode,
     colourCode:take(it&&it.colourCode,row._colourCode,row.colourCode,row.ccode,row['C.Code'],row['Renk Kod'],row['Renk Kodu'],row['Colour Code'],row['Color Code']),
     colour:take(it&&it.colour,row.colour,row.color,row.Colour,row.Color,row.Renk,row['Renk Adı']),
     orderCode:take(it&&it.orderCode,row.orderCode,row.ocode,row['Sipariş Kod'],row['Sipariş Kodu'],row['Order Code'])
   };
 }
-function drawerModelImageUrl(it){
-  const api=window.BLDetailImages,id=drawerModelIdentity(it),row=it&&it.row&&typeof it.row==='object'?it.row:{};
-  if(!api)return '';
-  const directRef=String(row._imageRef==null?'':row._imageRef).trim();
-  return api.sourceFor?.({plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour})||
-    (directRef?'/api/cp-images/'+encodeURIComponent(directRef):'')||'';
-}
-function drawerModelImageHtml(it){
-  const api=window.BLDetailImages,id=drawerModelIdentity(it);
+function drawerModelImageHtml(it,imageIndex){
+  const api=window.BLDetailImages;
   if(!api?.thumbHtml)return '<span class="bpaSub">—</span>';
-  return api.thumbHtml(drawerModelImageUrl(it),{
-    modelId:id.plmId||id.modelName,plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour
-  },{
+  const id=api.resolve(imageIndex,drawerModelIdentity(it));
+  return api.thumbHtml(id.source,{...id,modelId:id.plmId||id.modelName},{
     classes:'detailModelThumb blvModelThumb',
     title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),
     allowEmpty:true
   });
 }
-function registerDrawerModelImages(aside,list,spec){
+function registerDrawerModelImages(aside,list,spec,imageIndex){
   const api=window.BLDetailImages;if(!api)return;
-  const identities=(list||[]).map((it,index)=>{
-    const id=drawerModelIdentity(it);
-    return {...id,rowId:String(index),hasImage:Boolean(drawerModelImageUrl(it))};
-  });
   api.registerScope?.(aside,{
     contextType:'backlog-overview-detail',
     label:String(spec&&spec.title||L('Backlog detay','Backlog detail')),
-    identities,
+    imageIndex,
+    identities:list.map((it,index)=>({...drawerModelIdentity(it),rowId:String(index)})),
     repaint:()=>openDrawer(spec)
   });
   api.bindThumbs?.(aside);
@@ -901,11 +894,12 @@ function drawerEl(){
 function closeDrawer(){const el=$('blvDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
 function openDrawer(spec){
   if(!spec)return;hideTip();
+  const imageIndex=window.BLDetailImages?.buildIndex?.()||null;
   const root=drawerEl(),aside=root.querySelector('.bpaDrawer');
   const list=(spec.items||[]).slice().sort((a,b)=>(b.overdueDays-a.overdueDays)||(b.qty-a.qty));
   const s=R().summarize(list);
   const rows=list.slice(0,ROW_LIMIT).map(it=>`<tr>
-    <td class="detailImgCell">${drawerModelImageHtml(it)}</td>
+    <td class="detailImgCell">${drawerModelImageHtml(it,imageIndex)}</td>
     <td><span class="bpaBadge blvBadge" data-stage="${it.stage}">${esc(stageLabel(it.stage))}</span>${it.status&&it.status!==stageLabel(it.stage)?`<small class="bpaSub">${esc(it.status)}</small>`:''}</td>
     <td><div class="bpaIdentity">${esc(it.orderCode||'—')}<small>${esc([it.modelName,it.colourCode,it.colour].filter(Boolean).join(' · '))}</small></div></td>
     <td>${esc(it.buyer||'—')}<small class="bpaSub">${esc([it.buyingGroup,it.category].filter(Boolean).join(' · '))}</small></td>
@@ -927,7 +921,7 @@ function openDrawer(spec){
     </div>
     <div class="bpaBar bpaDrawerBar">${R().STAGES.filter(x=>s.stages[x.key]>0).map(x=>`<span class="bpaSeg" data-stage="${x.key}" style="flex-grow:${s.stages[x.key]}" title="${esc(stageLabel(x.key)+': '+n(s.stages[x.key]))}"></span>`).join('')}</div>
     <div class="bpaTableWrap bpaDrawerTable"><table class="bpaTable"><thead><tr><th class="detailImgCell">${esc(L('Görsel','Image'))}</th><th>${esc(L('Aşama','Stage'))}</th><th>${esc(L('Sipariş','Order'))}</th><th>Buyer</th><th>${esc(L('Üretici / Sezon','Manufacturer / Season'))}</th><th class="num">${esc(L('Adet','Qty'))}</th><th>Ex-Factory</th><th>${esc(L('Antrepo','Warehouse'))}</th><th>Retail</th><th>${esc(L('Sinyal','Signal'))}</th></tr></thead><tbody>${rows}</tbody></table>${list.length>ROW_LIMIT?`<div class="bpaNote">${esc(L(`İlk ${ROW_LIMIT} satır gösteriliyor; tamamı Excel Backlog V3'te.`,`Showing first ${ROW_LIMIT} rows; Excel Backlog V3 contains all.`))}</div>`:''}</div>`;
-  registerDrawerModelImages(aside,list,spec);
+  registerDrawerModelImages(aside,list,spec,imageIndex);
   root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));
   aside.querySelector('[data-blv-close]')?.focus();
 }

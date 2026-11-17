@@ -284,37 +284,31 @@ function modelIdentity(row){
     }
     return '';
   };
-  /* Backlog detay satırı PLM ID/renk/model kimliğini görünmeyen iç meta
-     alanlarında (_plmId/_colourCode/_modelName) taşır. Bunlar okunmazsa
-     istemci PLM ID'yi model adından çözemez ve PLM SYNC'in kaydettiği
-     görsel tabloya hiç işlenmez. */
-  const modelName=get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style','Option Adı','Option Name','_modelName');
-  const rawPlmId=get('plmId','plm','_plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code');
-  let plmId=rawPlmId;
-  try{
-    if(root.BLDetailImages?.resolvePlmId)plmId=root.BLDetailImages.resolvePlmId(rawPlmId,modelName)||rawPlmId;
-  }catch(_){}
-  return {
-    plmId,
-    modelName,
-    colourCode:get('colourCode','ccode','_colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
-    colour:get('colour','color','Colour','Color','Renk','Renk Tanım','Renk Adı'),
-    orderCode:get('orderCode','ocode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
+  const cached=active?.imageIdentities?.get(row);
+  if(cached)return cached;
+  const read=root.BLDetailImages?.identityFromRow,moduleId=detailModule()||'overview';
+  const fromRow=read?.(row,moduleId),fromNested=nested&&read?.(nested,moduleId);
+  const id={
+    plmId:fromRow?.plmId||fromNested?.plmId||get('plmId','plm','_plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code'),
+    modelName:fromRow?.modelName||fromNested?.modelName||get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style','Option Adı','Option Name','_modelName'),
+    colourCode:fromRow?.colourCode||fromNested?.colourCode||get('colourCode','ccode','_colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
+    colour:fromRow?.colour||fromNested?.colour||get('colour','color','Colour','Color','Renk','Renk Tanım','Renk Adı'),
+    orderCode:fromRow?.orderCode||fromNested?.orderCode||get('orderCode','ocode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No'),
+    specialCode:fromRow?.specialCode||fromNested?.specialCode,
+    season:fromRow?.season||fromNested?.season,
+    allowOptionPrefix:active?.source==='oab'
   };
+  if(row&&typeof row==='object')active?.imageIdentities?.set(row,id);
+  return id;
 }
 function imageUrl(row,index){
-  const helper=root.BLDetailImages,id=modelIdentity(row);
-  if(!helper)return '';
-  const directRef=clean(row&&row._imageRef);
-  return helper.urlFrom?.(index,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||
-    helper.sourceFor?.({plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||
-    (directRef?'/api/cp-images/'+encodeURIComponent(directRef):'');
+  return root.BLDetailImages?.urlFrom?.(index,modelIdentity(row))||'';
 }
 function imageCell(row,index){
-  const helper=root.BLDetailImages,id=modelIdentity(row);
-  if(!helper||!helper.thumbHtml)return '<span class="blDetailNoImage">—</span>';
-  const url=imageUrl(row,index);
-  return helper.thumbHtml(url,{modelId:id.plmId||id.modelName,plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour},{
+  const helper=root.BLDetailImages;
+  if(!helper?.thumbHtml)return '<span class="blDetailNoImage">—</span>';
+  const id=helper.resolve(index,modelIdentity(row));
+  return helper.thumbHtml(id.source,{...id,modelId:id.plmId||id.modelName},{
     title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true
   });
 }
@@ -501,13 +495,9 @@ function groupHeaderHtml(columns,showImages){
 function registerAssetScope(panel,rows,imageIndex){
   const helper=root.BLDetailImages;if(!helper?.registerScope)return;
   try{
-    const index=imageIndex||helper.buildIndex?.();
     helper.registerScope(panel,{
-      contextType:'shared-detail-drawer',label:active.title,
-      identities:rows.map((row,i)=>{
-        const id=modelIdentity(row);
-        return {...id,rowId:String(i),hasImage:index?Boolean(imageUrl(row,index)):null};
-      }),
+      contextType:'shared-detail-drawer',label:active.title,imageIndex,
+      identities:rows.map(row=>({...modelIdentity(row),rowId:rowKey(row)})),
       repaint:render
     });
   }catch(err){console.warn('Detay çekmecesi model varlık kapsamı kaydedilemedi:',err);}
@@ -620,6 +610,7 @@ function renderTable(){
   const host=document.getElementById('blSharedDetailDrawer');if(!host||!active)return;
   const table=host.querySelector('[data-bl-detail-table]'),summary=host.querySelector('[data-bl-detail-summary]');if(!table)return;
   releaseVirtualBody(table);
+  active.imageIdentities=new WeakMap();
   active.backlogLookupPlans=active.source==='backlog'?new WeakMap():null;
   const rows=filteredRows(),columns=reportColumns(),helper=root.BLDetailImages;
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);

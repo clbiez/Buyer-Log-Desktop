@@ -76,9 +76,9 @@ test('model asset scope unresolved kimliklerde orderCode bilgisini korur ve fark
 test('LFL, OAB ve Price Analysis alt detayları gizli kimlik metadata taşır', () => {
   assert.match(LFL_UI, /orderCode:norm\(row&&row\.orderCode\)/);
   assert.match(OAB, /function oabDrillModelIdentity\(source\)/);
-  assert.match(OAB, /orderCode: row\['Sipariş Kod'\]/);
-  assert.match(APP, /orderCode:norm\(item&&\(item\.orderKey\|\|item\.orderCode/);
-  assert.match(APP, /list\.push\(\{plmId,colourCode,colour,styleName,orderCode,rowId/);
+  assert.match(OAB, /identityFromRow\?\.\(source, 'overview'\)/);
+  assert.match(APP, /orderCode:item\?\.orderKey\|\|item\?\.orderCode/);
+  assert.match(APP, /list\.push\(\{plmId,colourCode:id\?\.colourCode\|\|colourCode,colour,styleName,orderCode,rowId/);
 });
 
 test('sunucu boş ASAS dizisini yüklenmiş authoritative snapshot sanmaz', () => {
@@ -107,11 +107,12 @@ test('istemci kanonik PLM çözümü önekli adı da dener', () => {
   assert.match(APP, /const bare=key\.replace\(\/\^\[\^\\s,\]\{1,16\},\\s\*\(\?=\\S\)\/,''\)/);
 });
 
-test('ortak detay çekmecesi Backlog iç meta kimliğini (_plmId/_colourCode/_imageRef) okur', () => {
+test('ortak detay çekmecesi Backlog kimliğini okur, eski _imageRef eşleştirmeyi aşamaz', () => {
   const DRAWER = fs.readFileSync(path.join(ROOT, 'public', 'detail-drawer.js'), 'utf8');
-  assert.match(DRAWER, /const rawPlmId=get\('plmId','plm','_plmId'/);
-  assert.match(DRAWER, /colourCode:get\('colourCode','ccode','_colourCode'/);
-  assert.match(DRAWER, /orderCode:get\('orderCode','ocode','orderKey'/);
+  assert.match(DRAWER, /get\('plmId','plm','_plmId'/);
+  assert.match(DRAWER, /get\('colourCode','ccode','_colourCode'/);
+  assert.match(DRAWER, /get\('orderCode','ocode','orderKey'/);
   assert.match(DRAWER, /'Option Name','_modelName'\)/);
-  assert.match(DRAWER, /directRef\?'\/api\/cp-images\/'\+encodeURIComponent\(directRef\)/);
+  assert.doesNotMatch(DRAWER, /directRef\?'\/api\/cp-images\/'/);
+  assert.match(DRAWER, /helper\.resolve\(index,modelIdentity\(row\)\)/);
 });

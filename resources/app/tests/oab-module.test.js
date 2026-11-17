@@ -1190,9 +1190,8 @@ test('OAB: drill-down görselleri Option Adı hemen sağına açılıp kapanabil
   assert.match(body, /oabIsOptionNameField\(field\).*kind: 'image'/s);
   assert.match(body, /global\.BLDetailImages\.buildIndex/);
   assert.match(body, /function oabDrillModelIdentity\(source\)/);
-  assert.match(body, /const styleName = row\['Option Adı'\]/);
-  assert.match(body, /colourCode: row\['Renk Kodu'\]/);
-  assert.match(body, /orderCode: row\['Sipariş Kod'\]/);
+  assert.match(body, /identityFromRow\?\.\(source, 'overview'\)/);
+  assert.match(body, /BLDetailImages\?\.resolve\?\.\(imageIndex, oabDrillModelIdentity\(source\)\)/);
   assert.match(body, /detailModelThumb/);
 });
 
