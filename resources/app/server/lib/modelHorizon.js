@@ -634,6 +634,12 @@ function buildFactRowQuery(horizonInput, mapping, options = {}) {
     if (String(entry.table || '').toLocaleUpperCase('tr-TR') === grainTable.toLocaleUpperCase('tr-TR')) {
       return column;
     }
+    // ADAY (yalnız kaynak doğrulama aracı açar, üretim varsayılanı değildir):
+    // RELATED, fact satırından çoka-bir ilişkiyle tek değeri doğrudan okur ve
+    // satır başına CALCULATE gerektirmez. İlişki çoka-bir değilse DAX hata
+    // verir; tahmini/yanlış değer üretmez. scripts/source-parity-check.js
+    // sonucu bugünkü ifadeyle satır satır karşılaştırır.
+    if (options.relatedLookup === true) return `RELATED(${column})`;
     // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
     // tabloya (ör. Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE BLANK döner.
     // Geçerli fact satırı tablo filtresi olarak verildiğinde genişletilmiş tablo

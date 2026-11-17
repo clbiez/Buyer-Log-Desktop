@@ -207,6 +207,29 @@
           "en": "There is no change to the in-app view; this fix only formats clipboard content pasted into an external application."
         }
       }
+    },
+    {
+      "id": "source-parity-check-tool",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "ASAS / IAS / Excel kaynak doğrulama aracı",
+        "en": "ASAS / IAS / Excel source verification tool"
+      },
+      "body": {
+        "tr": "BuyerLog-Kaynak-Dogrulama.cmd, Buyer Log ayarlarıyla ASAS ve IAS verisini Database üzerinden çeker. Pivotu yenilenmiş Excel raporu kopyasıyla sipariş, parsiyel, adet ve eşleştirme sonucunu birebir karşılaştırır. Excel doğruluk referansıdır. Daha hızlı IAS aday sorgusu ve kumaşsız ASAS sorgusu yalnız bu araçta ölçülür; normal yenileme değişmez. Ayarlara ve kaynak Excel dosyalarına yazılmaz.",
+        "en": "BuyerLog-Kaynak-Dogrulama.cmd pulls ASAS and IAS data from the database using the Buyer Log settings. It compares orders, partial shipments, quantities and matching results one-to-one with a pivot-refreshed copy of the Excel report. Excel is the reference. A faster IAS candidate query and an ASAS query without fabric fields are measured only in this tool; the normal refresh is unchanged. Settings and source Excel files are not modified."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranında değişiklik yok; araç ayrı bir komut penceresinde çalışır ve raporu klasöre yazar.",
+          "en": "There is no change to the Buyer Log screen; the tool runs in a separate command window and writes its report to a folder."
+        }
+      }
     }
   ]
 }
