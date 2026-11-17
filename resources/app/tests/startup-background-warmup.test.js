@@ -58,7 +58,7 @@ test('preparation waits for Continue without timers under the startup curtain', 
 
 test('a warmup that cannot start still releases the startup modules gate',()=>{
   const startup=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"),APP.indexOf('async function refreshFolderLabel()'));
-  assert.match(startup,/userAccessReady\.then\(ok=>\{if\(ok\)scheduleBackgroundModuleWarmup\(\);else finishStartupModules\(\);\}\)\s*\.catch\(error=>\{console\.warn\('Arka plan ön yükleme başlatılamadı:',error\);finishStartupModules\(\);\}\)/);
+  assert.match(startup,/\.then\(scheduleBackgroundModuleWarmup\)\.catch\(error=>\{console\.warn\('Arka plan ön yükleme başlatılamadı:',error\);finishStartupModules\(\);\}\)/);
 });
 
 test('denied and source-filter-blocked model modules send no request', async () => {

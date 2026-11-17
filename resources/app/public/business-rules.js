@@ -459,11 +459,11 @@
     return 0;
   }
 
-  // A valid loading approval is authoritative over planned and revised dates.
+  // Approval is an operational lower bound for a planned shipment date.
   // Keep the original values; compare calendar days with the caller's parser.
   function resolveExFactoryDate(planned, approval, dateOrdinal = defaultDateOrdinal) {
-    const approvalDay = dateOrdinal(approval);
-    const automatic = approvalDay != null;
+    const plannedDay = dateOrdinal(planned), approvalDay = dateOrdinal(approval);
+    const automatic = plannedDay != null && approvalDay != null && approvalDay > plannedDay;
     return { value: automatic ? approval : planned, automatic };
   }
 

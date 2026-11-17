@@ -1,7 +1,7 @@
 (function(root,factory){
   'use strict';
 
-  const api=factory(typeof module==='object'&&module.exports?require('./table-search-core'):root.BLTableSearchCore);
+  const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
 
   if(root){
@@ -9,7 +9,7 @@
     if(root.BLTableSearch)api.install(root);
     if(root.document)api.bindPaste(root.document,root);
   }
-})(typeof globalThis!=='undefined'?globalThis:this,function(core){
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
   const SEARCH_IDS=Object.freeze(['cpSearch','ordersSearch','kolSearch']);
@@ -18,8 +18,90 @@
 
   const clean=value=>String(value==null?'':value).trim();
 
-  const criterionFromCell=core.criterion;
-  const parseRowGroups=core.parseRowGroups;
+  function criterionFromCell(value){
+    let text=clean(value);
+    if(!text)return null;
+    let mode='exact';
+    if(text[0]==='/'&&text.length>1){mode='contains';text=clean(text.slice(1));}
+    else if(text[0]==='!'&&text.length>1){mode='notContains';text=clean(text.slice(1));}
+    else if(text.length>1&&text[text.length-1]==='!'){mode='notContains';text=clean(text.slice(0,-1));}
+    if(!text)return null;
+    return {mode,value:text.toLocaleLowerCase('tr-TR')};
+  }
+
+  function decodeEscaped(value){
+    let out='',escaped=false;
+    for(const ch of String(value==null?'':value)){
+      if(escaped){out+=ch;escaped=false;continue;}
+      if(ch==='\\'){escaped=true;continue;}
+      out+=ch;
+    }
+    if(escaped)out+='\\';
+    return out;
+  }
+
+  function splitGroupContent(content){
+    const out=[];
+    let current='',escaped=false;
+    for(const ch of String(content==null?'':content)){
+      if(escaped){current+=ch;escaped=false;continue;}
+      if(ch==='\\'){escaped=true;continue;}
+      if(ch===';'){out.push(current);current='';continue;}
+      current+=ch;
+    }
+    if(escaped)current+='\\';
+    out.push(current);
+    return out;
+  }
+
+  function parseRowGroups(value){
+    const source=clean(value);
+    if(!source||source[0]!=='(')return null;
+
+    const groups=[];
+    let index=0;
+    const skipSpace=()=>{while(index<source.length&&/\s/.test(source[index]))index++;};
+
+    while(index<source.length){
+      skipSpace();
+      if(source[index]!=='(')return null;
+      index++;
+
+      const start=index;
+      let depth=1,escaped=false;
+      for(;index<source.length;index++){
+        const ch=source[index];
+        if(escaped){escaped=false;continue;}
+        if(ch==='\\'){escaped=true;continue;}
+        if(ch==='('){depth++;continue;}
+        if(ch===')'){
+          depth--;
+          if(depth===0)break;
+        }
+      }
+      if(depth!==0||index>=source.length)return null;
+
+      const rawContent=source.slice(start,index);
+      const terms=splitGroupContent(rawContent)
+        .map(decodeEscaped)
+        .map(criterionFromCell)
+        .filter(Boolean);
+      if(!terms.length)return null;
+
+      groups.push({mode:ROW_GROUP_MODE,value:'',terms});
+      index++;
+      skipSpace();
+      if(index>=source.length)break;
+      if(source[index]!==',')return null;
+      index++;
+      skipSpace();
+      if(source[index]!=='(')return null;
+    }
+
+    if(!groups.length)return null;
+    try{Object.defineProperty(groups,'__blRowGroups',{value:true,enumerable:false});}catch(_){}
+    return groups;
+  }
 
   function isRowGroupTerms(terms){
     return Array.isArray(terms)&&terms.length>0&&terms.every(group=>
@@ -81,9 +163,9 @@
     const legacyParse=table.parseTerms;
     const legacyMatches=table.matches;
 
-    const parseTerms=legacyParse;
+    const parseTerms=value=>parseRowGroups(value)||legacyParse(value);
     const matches=(haystack,terms,options)=>
-      legacyMatches(haystack,terms,options);
+      isRowGroupTerms(terms)?groupedMatches(haystack,terms,legacyMatches,options):legacyMatches(haystack,terms,options);
 
     table.parseTerms=parseTerms;
     table.matches=matches;
@@ -99,7 +181,7 @@
       for(const row of rows){
         const value=getHaystack(row);
         const haystacks=Array.isArray(value)?value:[value];
-        const rank=alternatives.findIndex(term=>haystacks.some(haystack=>matches(haystack,[term],{...options,periods:options?.periodsOf?()=>options.periodsOf(row):options?.periods})));
+        const rank=alternatives.findIndex(term=>haystacks.some(haystack=>matches(haystack,[term],options)));
         buckets[rank<0?alternatives.length:rank].push(row);
       }
       return buckets.flat();

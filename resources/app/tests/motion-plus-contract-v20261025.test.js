@@ -176,13 +176,3 @@ test('pivot disclosure animates a bounded set of real rows and commits the updat
  const reduced=harness({reduced:true});reduced.flush();
  reduced.root.BLMotionPlus.pivotChange(table,()=>updated++);assert.equal(updated,2);assert.equal(reduced.calls.length,0);
 });
-
-test('Akış selection animates only the checkbox fill with shared cancellation and motion guards',()=>{
- const h=harness();h.flush();h.calls.length=0;
- assert.ok(h.root.BLMotionPlus.play('row-select',h.cells[0]));
- assert.equal(h.calls[0].options.pseudoElement,'::before');assert.equal(h.calls[0].options.duration,360);
- assert.deepEqual(Array.from(h.calls[0].frames,f=>f.transform),['scaleY(0)','scaleY(1)']);
- h.root.BLMotionPlus.play('row-deselect',h.cells[0]);
- assert.deepEqual(Array.from(h.calls[1].frames,f=>f.transform),['scaleY(1)','scaleY(0)']);
- for(const config of [{off:true},{reduced:true},{hidden:true}]){const quiet=harness(config);quiet.flush();assert.equal(quiet.root.BLMotionPlus.play('row-select',quiet.cells[0]),null);}
-});

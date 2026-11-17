@@ -78,7 +78,7 @@
     cashRetailPrice:{label:{en:'Cash Retail Price',tr:'Peşin Satış Fiyatı'},type:'number',role:'measure',aliases:['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price'],modules:{cp:binding(['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price','cashRetailPrice'],'cashRetailPrice')}},
     modelName:{label:{en:'Model Name',tr:'Model Adı'},type:'text',role:'identity',aliases:['Model Name','Model Adı','Style Name','Product Name','Ürün Adı','Model'],modules:{
       collection:binding(['modelKod','Style Name'],'plmStyleName'),cp:binding(['Model Name','Model Adı','modelName'],'asasModelName'),orders:binding(['Model Name','Model Adı','modelName'],'asasModelName'),
-      backlog:binding(['Model Name','Model Adı','modelName'],'asasModelName'),overview:binding(['Model Name','Model Adı','modelName','Option Adı','Option Name'],'asasModelName'),lfl:binding(['modelName','Model Name','Model Adı'],'asasModelName'),
+      backlog:binding(['Model Name','Model Adı','modelName'],'asasModelName'),overview:binding(['Model Name','Model Adı','modelName'],'asasModelName'),lfl:binding(['modelName','Model Name','Model Adı'],'asasModelName'),
       logistics:binding(['modelName','Model Name','Ürün Adı'],'asasModelName'),antrepo:binding(['modelName','Model Name','Ürün Adı'],'asasModelName'),openCosting:binding(['modelCode','modelName'],'mixedModelName')
     }},
     productDescription:{label:{en:'Product Description',tr:'Ürün Tanımı'},type:'text',role:'dimension',aliases:['Product Description','Product Definition','Product Desc','Ürün Tanım','Ürün Tanımı'],modules:{
@@ -99,14 +99,14 @@
     }},
     colourCode:{label:{en:'Colour Code',tr:'Renk Kodu'},type:'code',role:'identity',aliases:['C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu'],modules:{
       collection:binding(['colourCode','C.Code','Colour Code'],'colourCode'),cp:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),orders:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),
-      backlog:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),overview:binding(['C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu','colourCode'],'colourCode'),lfl:binding(['colourCode','C.Code','Colour Code'],'colourCode'),
+      backlog:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),overview:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),lfl:binding(['colourCode','C.Code','Colour Code'],'colourCode'),
       logistics:binding(['colourCode','Renk Kod','Renk Kodu','C.Code'],'colourCode'),antrepo:binding(['colourCode','Renk Kod','Renk Kodu','C.Code'],'colourCode')
     }},
     colour:{label:{en:'Colour',tr:'Renk'},type:'text',role:'dimension',aliases:['Colour','Color','Renk','Renk Tanım'],modules:{
-      collection:binding(['colour','Colour'],'colour'),cp:binding(['Colour','Color','Renk','colour'],'colour'),orders:binding(['Colour','Color','Renk','colour'],'colour'),backlog:binding(['Colour','Color','Renk','colour'],'colour'),overview:binding(['Colour','Color','Renk','colour','Renk Adı','Colour Name'],'colour'),lfl:binding(['colour','Colour','Renk'],'colour'),logistics:binding(['colour','Renk Tanım','Renk'],'colour'),antrepo:binding(['colour','Renk Tanım','Renk'],'colour')
+      collection:binding(['colour','Colour'],'colour'),cp:binding(['Colour','Color','Renk','colour'],'colour'),orders:binding(['Colour','Color','Renk','colour'],'colour'),backlog:binding(['Colour','Color','Renk','colour'],'colour'),overview:binding(['Colour','Color','Renk','colour'],'colour'),lfl:binding(['colour','Colour','Renk'],'colour'),logistics:binding(['colour','Renk Tanım','Renk'],'colour'),antrepo:binding(['colour','Renk Tanım','Renk'],'colour')
     }},
     specialCode:{label:{en:'Special Code',tr:'Özel Kod'},type:'code',role:'dimension',aliases:['Special Code','Special Code 1','Sp. Code','Özel Kod','Özel Kod 1'],modules:{
-      collection:binding(['specialCode','Special Code'],'specialCode'),cp:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),orders:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),backlog:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),overview:binding(['Special Code','Özel Kod 1','Özel Kod','specialCode'],'specialCode')
+      collection:binding(['specialCode','Special Code'],'specialCode'),cp:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),orders:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),backlog:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),overview:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode')
     }},
     mag:{label:{en:'MAG',tr:'MAG'},type:'code',role:'dimension',aliases:['MAG','Merch Alt Grup','Merch Alt Grup Kod'],modules:{
       collection:binding(['mag','MAG'],'mag'),cp:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),orders:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),backlog:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),overview:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),lfl:binding(['mag','MAG'],'mag'),logistics:binding(['mag','MAG','Merch Alt Grup Kod'],'mag'),antrepo:binding(['mag','MAG','Merch Alt Grup Kod'],'mag')
@@ -129,8 +129,6 @@
     country:{label:{en:'Country',tr:'Ülke'},type:'country',role:'dimension',aliases:['Country','Country of Origin','Ülke','Siparişin Üretildiği Ülke'],modules:{
       collection:binding(['country','Country'],'productionCountry'),cp:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),orders:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),backlog:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),overview:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),lfl:binding(['country','Country'],'productionCountry'),openCosting:binding(['country'],'productionCountry')
     }},
-    orderActivity:{label:{en:'Order state',tr:'Sipariş durumu'},type:'text',role:'dimension',aliases:['Active/Inactive'],modules:{cp:binding(['Active/Inactive'],'orderActivity'),orders:binding(['Active/Inactive'],'orderActivity')}},
-    inStoreWeek:{label:{en:'Model Budget Week',tr:'Model Bütçe Hafta'},type:'text',role:'date',aliases:['Model Budget Week'],modules:{collection:binding(['inStoreWeek'],'merchBudgetWeek')}},
     orderStatus:{label:{en:'Status',tr:'Durum'},type:'text',role:'dimension',aliases:['Order Status','Status','Durum'],modules:{
       collection:binding(['durum','status'],'collectionWorkflowStatus'),cp:binding(['STATUS','Status','status'],'asasOrderStatus'),orders:binding(['STATUS','Status','status'],'asasOrderStatus'),backlog:binding(['STATUS','Status','status'],'asasOrderStatus'),overview:binding(['STATUS','Status','status'],'asasOrderStatus'),lfl:binding(['status','STATUS'],'asasOrderStatus')
     }},

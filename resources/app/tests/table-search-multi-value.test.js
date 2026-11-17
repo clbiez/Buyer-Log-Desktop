@@ -13,8 +13,7 @@ const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
 function helper(name, args) {
   const match = APP.match(new RegExp(`function ${name}\\(${args}\\)\\{[^]*?\\n\\}`));
   assert.ok(match, `${name} ortak yardımcı fonksiyonu bulunmalı`);
-  const search=require('./helpers/bl-table-search').createTableSearch();
-  return name==='parseTableSearchTerms'?search.parseTerms:search.matches;
+  return Function(`const norm=value=>String(value==null?'':value).trim(); function parseTableSearchTerms(value){ const groups=String(value==null?'':value).split(';').map(group=>group.split(',').map(part=>norm(part).toLocaleLowerCase('tr-TR')).filter(Boolean)).filter(group=>group.length); return groups.length===1?groups[0]:groups; } ${match[0]}; return ${name};`)();
 }
 
 test('arama kriterlerini trim eder, operatorü yalnız başta tanır ve boş kriterleri atar', () => {
@@ -131,9 +130,9 @@ test('ana tablo aramaları terimleri satır başına yeniden parse etmez', () =>
   assert.match(APP, /q:parseTableSearchTerms\(document\.getElementById\('cpSearch'\)\.value\)/);
   assert.match(APP, /q:parseTableSearchTerms\(document\.getElementById\('ordersSearch'\)\?\.value\)/);
   assert.match(APP, /const q = parseTableSearchTerms\(document\.getElementById\('kolSearch'\)\.value\)/);
-  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(r\),ctx\.q,tableSearchOptions\(r,'cp'\)\)/);
-  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(row\),ctx\.q,tableSearchOptions\(row,'orders'\)\)/);
-  assert.match(APP, /tableSearchMatches\(kolSearchHaystack\(r\),q,tableSearchOptions\(r,'collection'\)\)/);
+  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(r\),ctx\.q,\{plainMode:'contains'\}\)/);
+  assert.match(APP, /tableSearchMatches\(cpSearchHaystack\(row\),ctx\.q,\{plainMode:'contains'\}\)/);
+  assert.match(APP, /tableSearchMatches\(kolSearchHaystack\(r\),q,\{plainMode:'contains'\}\)/);
 });
 
 test('tablo detay aramaları da ortak çoklu arama yardımcısını kullanır', () => {
@@ -180,10 +179,10 @@ test('pano matrisinden üretilen terimler OR olarak eşleşir', () => {
   assert.equal(matches('SIPARIS 99999', parse(terms)), false);
 });
 
-test('arama katlaması NFKD işaret temizliği dahil ortak dönüşümle aynı sonucu verir', () => {
+test('arama katlamasının hızlı yolu eski tr-TR dönüşümüyle birebir aynı sonucu verir', () => {
   const matches = helper('tableSearchMatches', 'haystack,terms,options');
   const legacy = value => String(value == null ? '' : value).trim().toLocaleUpperCase('tr-TR')
-    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ç/g, 'C').replace(/Ö/g, 'O').replace(/Ü/g, 'U').replace(/Ğ/g, 'G').toLowerCase().normalize('NFKD').replace(/\p{M}/gu,'');
+    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ç/g, 'C').replace(/Ö/g, 'O').replace(/Ü/g, 'U').replace(/Ğ/g, 'G').toLowerCase();
   // contains modunda haystack ⊇ needle; katlanmış metni tek karakterlik iğnelerle
   // sınayarak her karakterin katlamasını eski dönüşümle karşılaştırır.
   const chars = [];
@@ -202,13 +201,4 @@ test('arama katlaması NFKD işaret temizliği dahil ortak dönüşümle aynı s
   for (const [hay, needle] of [['ERKEK GENÇ İŞLEME', 'genc isleme'], ['  Ürün Tanımı: KAZAK  ', 'urun tanimi'], ['CAFÉ ŞAL', 'cafe'], ['Straße', 'strasse']]) {
     assert.equal(matches(hay, [{ mode: 'contains', value: needle }], { plainMode: 'contains' }), legacy(hay).includes(legacy(needle)), `${hay} / ${needle}`);
   }
-});
-
-test('Turkish decomposed haystacks and terminal separators share the same grammar',()=>{
- const parse=helper('parseTableSearchTerms','value'),matches=helper('tableSearchMatches','haystack,terms,options');
- for(const q of ['FATİH','fatih','FATIH'])assert.equal(matches('FATİH AVCI'.toLowerCase(),parse(q)),true);
- assert.equal(matches('TRİKO'.toLowerCase(),parse('TRIKO')),true);
- assert.deepEqual(parse('CU4; W7;'),parse('CU4; W7; '));
- assert.equal(matches('CU4 W7',parse('CU4; W7;')),true);
- for(const q of ['CU4;W7','A,B','A!B','BUDDY(YD)'])assert.equal(parse(q)[0].value,q.toLowerCase());
 });

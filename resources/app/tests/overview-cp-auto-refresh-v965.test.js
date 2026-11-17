@@ -69,9 +69,7 @@ test('personal Priority Rules / checklist changes invalidate Overview too', () =
 
 test('local CP edits, remote decision patches and transit-rule changes invalidate Overview', () => {
   const refreshRowStart = APP.indexOf('function refreshRowEverywhere(id)');
-  const refreshRowEnd = APP.indexOf('// ================= GERİ AL',refreshRowStart);
-  assert.ok(refreshRowEnd>refreshRowStart);
-  const refreshRowBlock = APP.slice(refreshRowStart,refreshRowEnd);
+  const refreshRowBlock = APP.slice(refreshRowStart, refreshRowStart + 700);
   assert.match(refreshRowBlock, /scheduleOverviewRender\('cp-row-updated'\)/);
   assert.match(APP, /invalidateUnifiedPriorityDecisions\('transit-rules-local'\);\s*scheduleOverviewRender\('transit-rules-local'\)/);
   assert.match(APP, /invalidateUnifiedPriorityDecisions\('remote-cp-decision-patch'\);scheduleOverviewRender\('remote-cp-decision-patch'\)/);

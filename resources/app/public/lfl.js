@@ -979,12 +979,12 @@
      sipariş kodu ortak çözümleyiciye bırakılır. */
   function lflModelIdentity(row){
     const styleName=norm(row&&row.modelName);
-    const plmId=norm(row&&row.plmId);
-    return {...window.BLDetailImages?.identityFromRow?.(row,'lfl'),plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName,orderCode:norm(row&&row.orderCode)};
+    const plmId=window.BLDetailImages?.resolvePlmId?.(row&&row.plmId,styleName)||norm(row&&row.plmId);
+    return {plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName,orderCode:norm(row&&row.orderCode)};
   }
   function lflModelImageCellHtml(row,imageIndex,title){
     const id=lflModelIdentity(row);
-    const url=window.BLDetailImages?.urlFrom?.(imageIndex,{...id,modelName:id.styleName})||'';
+    const url=window.BLDetailImages?.urlFrom?.(imageIndex,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.styleName})||'';
     if(!window.BLDetailImages?.thumbHtml)return '';
     // Görseli olmayan satır da kimliğini bırakır; yoksa "Eksikleri Tamamla"
     // tam da o satırları hiç istemez.
@@ -999,7 +999,7 @@
           const id=lflModelIdentity(row);
           return {...id,rowId:String(row&&row.id!=null?row.id:index),
             // Görsel sütunu açıkken ekranın gerçeği bildirilir.
-            hasImage:imageIndex?Boolean(window.BLDetailImages?.urlFrom?.(imageIndex,{...id,modelName:id.styleName})):null};
+            hasImage:imageIndex?Boolean(window.BLDetailImages?.urlFrom?.(imageIndex,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.styleName})):null};
         }),
         repaint,
       });

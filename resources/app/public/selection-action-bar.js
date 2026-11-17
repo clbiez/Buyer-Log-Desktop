@@ -65,7 +65,6 @@
   }
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function snapshot(){return (lastKey==='cp'||lastKey==='orders')?root.BLManagedSelection?.snapshot(lastKey):null;}
-  function summary(){return (lastKey==='cp'||lastKey==='orders')?root.BLManagedSelection?.summary(lastKey):null;}
   function drawPanel(){
     const data=snapshot();if(!data)return;
     const hiddenIds=new Set(data.hidden.map(row=>String(row._id)));
@@ -78,7 +77,7 @@
     bar.hidden=true;
     if(poll){root.clearInterval(poll);poll=0;}
   }
-  function render(key,count,data){
+  function render(key,count){
     const page=PAGES[key];
     const items=page.actions.map(([action,id])=>{
       const target=doc.getElementById(id);
@@ -86,7 +85,7 @@
       const meta=ACTIONS[action],label=T(meta.label[0],meta.label[1]);
       return `<button type="button" class="tbtn blSelectionAction" data-selection-target="${id}"${target.disabled?' disabled':''}><svg class="ic" aria-hidden="true"><use href="${meta.icon}"/></svg><span>${label}</span></button>`;
     }).join('');
-    const hidden=data?.hidden||0;
+    const data=snapshot(),hidden=data?.hidden.length||0;
     const details=T('Seçili satırları göster','Show selected rows');
     const badge=hidden?`<button type="button" class="blSelectionHidden" data-selection-details title="${details}">${hidden} ${T('filtre dışında','outside filters')}</button>`:'';
     const dismiss=data?T('Tüm seçimleri temizle','Clear all selections'):T('Seçim çubuğunu gizle','Hide selection bar');
@@ -105,24 +104,21 @@
     if(dismissedAt&&dismissedAt!==signature)dismissedAt='';
     const lang=en()?'en':'tr';
     const oldKey=lastKey;lastKey=key;
-    const data=summary();
-    const signatureRows=String(Boolean(data))+'|'+String(data?.hidden||0)+'|'+PAGES[key].actions.map(([,id])=>{const target=doc.getElementById(id);return target?String(target.disabled)+':'+target.title:'';}).join('|');
+    const data=snapshot();
+    const signatureRows=data?data.rows.map(row=>String(row._id)).join(',')+'|'+data.hidden.map(row=>String(row._id)).join(','):'';
     const changed=signatureRows!==lastSignature||key!==oldKey||count!==lastCount||lang!==lastLang||bar.hidden;
     lastKey=key;lastCount=count;lastLang=lang;
-    if(!changed){if(!panel.hidden)drawPanel();return;}
+    if(!changed)return;
     if(oldKey!==key)closePanel();
     lastSignature=signatureRows;
     const wasHidden=bar.hidden;
     const panelOpen=!panel.hidden;
-    render(key,count,data);
+    render(key,count);
     if(panelOpen){drawPanel();bar.querySelector('[data-selection-details]')?.setAttribute('aria-expanded','true');}
     bar.hidden=false;
     if(wasHidden)root.BLMotionPlus?.play?.('overlay',bar);
     // Seçim kodla temizlenirse (işlem sonrası) çubuk da kapanır; yalnız görünürken yoklanır.
-    if(!poll)poll=root.setInterval(()=>{
-      const key=String(doc.body?.dataset.activeTab||'');
-      if(key!==lastKey||selected(key)!==lastCount)schedule();
-    },700);
+    if(!poll)poll=root.setInterval(schedule,700);
   }
   function schedule(){
     if(queued)return;

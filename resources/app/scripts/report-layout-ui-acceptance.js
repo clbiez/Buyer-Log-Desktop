@@ -32,139 +32,8 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
  await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
- if(process.env.REPORT_FLOW_ONLY==='1'){
-   await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.waitForTimeout(650);
-   const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=120;const x=c.getContext('2d');x.fillStyle='#ebeff3';x.fillRect(0,0,200,120);for(const offset of [0,100]){x.fillStyle=offset?'#7b263a':'#96354a';x.beginPath();for(const [i,[a,b]] of [[0,[30,10]],[1,[5,25]],[2,[0,50]],[3,[24,60]],[4,[28,45]],[5,[28,110]],[6,[78,110]],[7,[78,45]],[8,[84,60]],[9,[100,50]],[10,[95,25]],[11,[70,10]]]){if(i===0)x.moveTo(a+offset,b);else x.lineTo(a+offset,b);}x.closePath();x.fill();}return c.toDataURL('image/png');});
-   await page.route('**/api/*-images/flow-demo',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/collection-images/flow-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
-   const evidence=[];
-   async function checkFlow(key,report){
-     await page.evaluate(({key,report})=>BLTableReportInline.setMode(key,report),{key,report});await page.waitForTimeout(100);
-     const tableId=report?'blTableReport-'+key:key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
-     const input=page.locator('#'+tableId+(report?' [data-tr-check="0"]':' tbody input.rowChk')).first();
-     const idle=await input.evaluate(i=>({background:getComputedStyle(i).backgroundColor,border:getComputedStyle(i).borderColor,borderWidth:getComputedStyle(i).borderTopWidth,width:i.getBoundingClientRect().width,checked:i.checked}));
-     assert.equal(idle.checked,false);assert.equal(idle.width,8);assert.equal(idle.borderWidth,'1px');assert.equal(idle.background,'rgba(0, 0, 0, 0)');
-     await input.check();await page.waitForFunction(tableId=>document.getAnimations().some(a=>a.id==='bl-row-selection'&&a.effect?.target?.closest('table')?.id===tableId),tableId);
-     const motion=await page.evaluate(()=>{const a=document.getAnimations().find(a=>a.id==='bl-row-selection');return {frames:a.effect.getKeyframes().map(f=>({transform:f.transform,opacity:f.opacity})),duration:a.effect.getTiming().duration};});assert.equal(motion.duration,360);assert.equal(motion.frames[0].transform,'scaleY(0)');
-     await page.waitForTimeout(440);assert.equal(await input.isChecked(),true);assert.equal(await input.evaluate(i=>getComputedStyle(i,'::before').transform),'matrix(1, 0, 0, 1, 0, 0)');
-     if(key==='cp'){
-       await page.evaluate(()=>markDirty(1));await page.waitForTimeout(100);
-       const dirty=await input.evaluate(i=>({row:i.closest('tr').classList.contains('rowDirty'),blue:getComputedStyle(i,'::before').backgroundColor,orange:getComputedStyle(i,'::after').backgroundColor,stripe:getComputedStyle(i,'::after').width,display:getComputedStyle(i,'::after').display}));
-       assert.equal(dirty.row,true);assert.equal(dirty.stripe,'3px');assert.equal(dirty.display,'block');assert.notEqual(dirty.blue,dirty.orange);assert.notEqual(dirty.orange,'rgba(0, 0, 0, 0)');
-     }
-     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
-     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
-     const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
-     if(key==='cp'&&report){
-       await page.waitForFunction(()=>document.querySelector('#blTableReport-cp img')?.dataset.blImageLoaded==='1');
-       for(const theme of ['dark','light']){await page.evaluate(theme=>applyTheme(theme),theme);await page.waitForTimeout(650);await page.screenshot({path:path.join(assets,'flow-selection-'+theme+'.png')});}
-       await page.evaluate(()=>applyTheme('dark'));
-       await page.evaluate(()=>{renderCP();BLFlushTableRenders();});await page.waitForTimeout(130);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0,'refresh does not replay selection motion');
-     }
-     await input.uncheck();await page.waitForTimeout(500);assert.equal(await input.isChecked(),false);
-     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and full-row fade: '+key+' '+(report?'report':'table'));
-   }
-   for(const key of ['cp','orders','koleksiyon']){
-     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
-     if(key==='koleksiyon'){
-       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
-       await page.evaluate(()=>{kolRows=Array.from({length:3},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();});
-     }
-     await checkFlow(key,true);await checkFlow(key,false);
-   }
-   await page.evaluate(async()=>{switchTab('cp');await discardAllChangesAsync();BLTableReportInline.setMode('cp',true);});await page.waitForTimeout(100);assert.equal(await page.locator('#blTableReport-cp tr.rowDirty').count(),0,'discard removes dirty stripe in report');
-   await page.evaluate(()=>{switchTab('cp');BLMotionPlus.setEnabled(false);BLTableReportInline.setMode('cp',true);});await page.locator('#blTableReport-cp [data-tr-check="0"]').check();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
-   await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.locator('#blTableReport-cp [data-tr-check="0"]').uncheck();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
-   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'flow-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
- }
- if(process.env.REPORT_STICKY_ONLY==='1'){
-   const results=[];
-   async function checkPin(selector,label){
-     const target=page.locator(selector).first();await target.waitFor();
-     const before=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap');wrap.scrollLeft=0;return {left:cell.getBoundingClientRect().left,wrap:wrap.getBoundingClientRect().left,width:cell.getBoundingClientRect().width};});
-     await target.evaluate(input=>{input.closest('.tablewrap').scrollLeft=260;});await page.waitForTimeout(80);
-     const after=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap'),r=input.getBoundingClientRect();return {left:cell.getBoundingClientRect().left,scroll:wrap.scrollLeft,position:getComputedStyle(cell).position,z:getComputedStyle(cell).zIndex,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===input,hitHtml:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.outerHTML.slice(0,500),rect:{left:r.left,top:r.top,width:r.width,height:r.height}};});
-     assert.ok(after.scroll>100,label+' actually scrolled');assert.ok(Math.abs(before.left-after.left)<2,label+' stays fixed: '+JSON.stringify({before,after}));assert.equal(after.position,'sticky');if(!after.hit){await page.screenshot({path:path.join(root,'sticky-failure.png')});console.log(await target.evaluate(input=>{const td=input.closest('td,th'),r=input.getBoundingClientRect();return {input:input.outerHTML,td:td.outerHTML.slice(0,600),pe:getComputedStyle(input).pointerEvents,tdPe:getComputedStyle(td).pointerEvents,stack:document.elementsFromPoint(r.left+r.width/2,r.top+r.height/2).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,z:getComputedStyle(el).zIndex,pe:getComputedStyle(el).pointerEvents}))};}));}assert.ok(after.hit,label+' remains clickable '+JSON.stringify(after));results.push({label,before,after});
-   }
-   for(const key of ['cp','orders','koleksiyon']){
-     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
-     if(key==='koleksiyon'){
-       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
-       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
-     }
-     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);const table=tableImageSizeTable(key),wrap=table.closest('.tablewrap');wrap.style.width='620px';wrap.style.maxWidth='620px';table.style.minWidth='1500px';BLTableFreeze.clear(table);},key);
-     const tableId=key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
-     await checkPin('#'+tableId+' tbody input.rowChk',key+' normal body');
-     await checkPin('#'+tableId+' thead input[type="checkbox"]',key+' normal header');
-     await page.evaluate(key=>{const table=tableImageSizeTable(key);BLTableFreeze.apply(table,{count:3,pane:100});},key);
-     await page.waitForTimeout(120);
-     await page.evaluate(key=>BLTableFreeze.scrollPane(tableImageSizeTable(key),180),key);
-     await checkPin('#'+tableId+' tbody input.rowChk',key+' inner frozen pane');
-     await page.evaluate(key=>{BLTableFreeze.clear(tableImageSizeTable(key));BLTableReportInline.setMode(key,true);document.querySelector('#blTableReport-'+key).style.minWidth='1500px';},key);
-     await checkPin('#blTableReport-'+key+' [data-tr-check="0"]',key+' report body');
-     await checkPin('#blTableReport-'+key+' [data-tr-check="all"]',key+' report header');
-     await page.locator('#blTableReport-'+key+' [data-tr-check="0"]').check();
-     if(key==='cp')await page.screenshot({path:path.join(assets,'selection-rail-sticky.png')});
-     console.log('PASS selection pin: '+key+' normal/report/header/inner pane');
-   }
-   const matrix=await page.evaluate(()=>{
-     const attrs=['class="rowChk"','class="shipCompareChk"','class="shipRowChk"','data-tr-check="0"','data-ship-chk-all','data-fabric-pick="0"','data-bin-id="demo"','data-cpa-queue-check="demo"','data-dc-item="demo"','data-dc-toggle-all','data-ta-pick="demo"','data-ta-all','data-act="selectRow"','data-act="selectAll"','id="fixture_selAll"'];
-     const wrap=document.createElement('div');wrap.style.cssText='position:fixed;left:900px;top:100px;width:300px;overflow:auto';
-     wrap.innerHTML='<table style="width:1500px"><tbody>'+attrs.map(attr=>'<tr><td><input type="checkbox" '+attr+'></td><td>Demo</td></tr>').join('')+'<tr><td><label><input type="checkbox" data-xim="include">Source row</label></td><td>Demo</td></tr><tr><td><input type="checkbox" data-um-rolecell="read"></td><td>Permission</td></tr><tr><td>Value</td><td><input type="checkbox" class="rowChk"></td></tr></tbody></table>';document.body.append(wrap);
-     wrap.scrollLeft=260;const result=[...wrap.querySelectorAll('input')].map(input=>({position:getComputedStyle(input.closest('td')).position,left:input.closest('td').getBoundingClientRect().left}));wrap.remove();return result;
-   });
-   for(const result of matrix.slice(0,-2)){assert.equal(result.position,'sticky');assert.ok(Math.abs(result.left-900)<2);}for(const result of matrix.slice(-2))assert.notEqual(result.position,'sticky');
-   await page.evaluate(()=>{switchTab('cp');const seed=state.cp.rows[0],rows=Array.from({length:300},(_,i)=>({...seed,_id:i+1,'Model Name':'DEMO MODEL '+i}));BLTableReportInline.register('cp',{tab:'cp',table:()=>document.getElementById('cpTable'),rows:()=>rows,columns:()=>tableReportCoreColumns('cp'),images:()=>false,...tableReportInteraction('cp')});BLTableReportInline.setMode('cp',true);document.getElementById('blTableReport-cp').style.minWidth='2200px';});
-   const samples=[];
-   for(let pair=0;pair<3;pair++)for(const candidate of [false,true]){
-     const raw=await page.evaluate(candidate=>{
-       const sheet=document.getElementById('blRowSelectionPinStyle').sheet;sheet.disabled=!candidate;
-       const table=document.getElementById('blTableReport-cp'),wrap=table.closest('.tablewrap'),rail=table.querySelector('[data-tr-check="0"]');wrap.scrollLeft=0;rail.getBoundingClientRect();
-       const values=[];for(let i=0;i<30;i++){const start=performance.now();wrap.scrollLeft=i%2?220:560;rail.getBoundingClientRect();values.push(performance.now()-start);}sheet.disabled=false;return values;
-     },candidate);samples.push({pair,variant:candidate?'pinned':'baseline',raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length});
-   }
-   fs.writeFileSync(path.join(root,'sticky-performance.json'),JSON.stringify({scenario:'L2: synchronous horizontal scroll plus rail geometry; 300 actual report rows, three alternating pairs, 30 samples each; baseline disables only the new pin stylesheet',samples},null,2));
-   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'sticky-results.json'),JSON.stringify({ok:true,results,matrix,errors},null,2));return;
- }
- if(process.env.REPORT_IMAGES_ONLY==='1'){
-   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
-   const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
-   await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/cp-images/report-size-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
-   const evidence=[];
-   for(const key of ['cp','orders','koleksiyon']){
-     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});
-     if(key==='koleksiyon'){
-       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
-       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();BLTableReportInline.setMode('koleksiyon',true);});
-     }
-     const header=page.locator('#blTableReport-'+key+' [data-tr-image-size]');
-     await page.waitForFunction(key=>{const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');return img?.dataset.blImageLoaded==='1'&&img.complete&&img.naturalWidth>0;},key).catch(async error=>{console.log(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({html:img.outerHTML,src:img.currentSrc})));throw error;});
-     await header.click();
-     const range=page.locator('#tableImageSizeRange');await range.waitFor();
-     const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
-     const sizes=[];
-     for(const value of [minimum,maximum]){
-       await range.fill(String(value));await range.dispatchEvent('input');await range.dispatchEvent('change');
-       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===value,{key,value});
-       sizes.push(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,col:img.closest('td').getBoundingClientRect().width,row:img.closest('tr').getBoundingClientRect().height,loaded:img.complete&&img.naturalWidth>0})));
-     }
-     assert.equal(sizes[0].width,minimum);assert.equal(sizes[1].width,maximum);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);assert.ok(sizes[1].col>sizes[0].col);
-     const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
-     // Same underlying preference and renderer, including resize while the report is hidden.
-     await page.keyboard.press('Escape');
-     if(key==='cp'){
-       await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
-       await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
-     }
-     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
-     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===minimum,{key,minimum});
-     evidence.push({key,minimum,maximum,sizes});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
-   }
-   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
- }
  if(process.env.REPORT_PERF_ONLY==='1'){
-   const baseline=process.env.REPORT_PERF_BASE||'e6794e78fc4ec8c841f664dde7b65ba60c3cf454';
+   const baseline='e6794e78fc4ec8c841f664dde7b65ba60c3cf454';
    const original=name=>execFileSync('git',['show',baseline+':resources/app/public/'+name],{cwd:app,encoding:'utf8',maxBuffer:8*1024*1024});
    const sources={main:original('table-report-inline.js'),candidate:fs.readFileSync(path.join(app,'public/table-report-inline.js'),'utf8')};
    const styles={main:original('ui-tokens.css')+'\n'+original('ui-components.css'),candidate:fs.readFileSync(path.join(app,'public/ui-tokens.css'),'utf8')+'\n'+fs.readFileSync(path.join(app,'public/ui-components.css'),'utf8')};
@@ -186,7 +55,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        return {raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length,rows:document.querySelectorAll('#blTableReport-cp tbody tr[data-id]').length||300};
      });samples.push({pair,variant,...measurement});
    }
-   const evidence={base:baseline,scenario:'Actual Buyer Log unchanged report refresh and layout; baseline/candidate report JS and canonical CSS, same final app shell; 300 synthetic rows, 12 fields; 3 alternating pairs, 10 renders per sample',budget:'Existing report rendering: no reproducible regression; new edit and selection interactions <=200ms',samples};
+   const evidence={base:'e6794e78fc4ec8c841f664dde7b65ba60c3cf454',scenario:'Actual Buyer Log unchanged report refresh and layout; baseline/candidate report JS and canonical CSS, same final app shell; 300 synthetic rows, 12 fields; 3 alternating pairs, 10 renders per sample',budget:'Existing report rendering: no reproducible regression; new edit and selection interactions <=200ms',samples};
    fs.writeFileSync(path.join(root,'performance.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));return;
  }
  console.log('Report rows',await page.locator('#blTableReport-cp tbody tr[data-id]').count());

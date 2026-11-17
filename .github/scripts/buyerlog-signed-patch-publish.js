@@ -10,10 +10,9 @@ const {extractZipSafe}=require(path.join(APP,'electron/update/zip'));
 const {verifyPackagedCore}=require(path.join(APP,'electron/manual-patch/core-verification'));
 const run=args=>cp.execFileSync('gh',args,{encoding:'utf8',stdio:['ignore','pipe','pipe']});
 function config(env=process.env){
- const source=String(env.APPROVED_SOURCE_SHA||''),baseVersion=String(env.BASE_VERSION||''),sequence=Number(env.PATCH_SEQUENCE),repo=String(env.RELEASE_REPO||''),baseChannel=String(env.BASE_CHANNEL||'stable');
- if(!['stable','test'].includes(baseChannel))throw Error('The base channel must be stable or test.');
+ const source=String(env.APPROVED_SOURCE_SHA||''),baseVersion=String(env.BASE_VERSION||''),sequence=Number(env.PATCH_SEQUENCE),repo=String(env.RELEASE_REPO||'');
  if(env.PUBLISH_APPROVED!=='true'||!/^[a-f0-9]{40}$/.test(source)||!/^\d+\.\d+\.\d+$/.test(baseVersion)||!Number.isSafeInteger(sequence)||sequence<1||!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/.test(repo)||!env.RUNNER_TEMP)throw Error('Explicit publication approval, exact SHA, base version, sequence, release repository and RUNNER_TEMP are required.');
- return {source,baseVersion,baseChannel,sequence,repo,root:path.join(path.resolve(env.RUNNER_TEMP),'buyerlog-signed-patch'),tag:`signed-patch-v${baseVersion}-${sequence}`};
+ return {source,baseVersion,sequence,repo,root:path.join(path.resolve(env.RUNNER_TEMP),'buyerlog-signed-patch'),tag:`signed-patch-v${baseVersion}-${sequence}`};
 }
 function assertSource(c){
  const actual=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:APP,encoding:'utf8'}).trim();
@@ -53,9 +52,8 @@ function stageApprovedTarget({baseRoot,sourceRoot,targetRoot,sourceCommit}){
 }
 function prepare(c){
  assertSource(c);fs.mkdirSync(c.root,{recursive:true});const input=path.join(c.root,'base');fs.mkdirSync(input);
- run(['release','download',`${c.baseChannel}-v${c.baseVersion}`,'--repo',c.repo,'--pattern',`BuyerLog-${c.baseVersion}.zip`,'--pattern',`BuyerLog-${c.baseVersion}.json`,'--dir',input]);
- const raw=F.readJsonStrict(path.join(input,`BuyerLog-${c.baseVersion}.json`)),manifest=parseReleaseManifest(raw,c.baseChannel),keys=loadTrustedKeys(APP);
- if(raw.channel!==c.baseChannel)throw Error('The signed base belongs to another channel.');
+ run(['release','download',`stable-v${c.baseVersion}`,'--repo',c.repo,'--pattern',`BuyerLog-${c.baseVersion}.zip`,'--pattern',`BuyerLog-${c.baseVersion}.json`,'--dir',input]);
+ const raw=F.readJsonStrict(path.join(input,`BuyerLog-${c.baseVersion}.json`)),manifest=parseReleaseManifest(raw,'stable'),keys=loadTrustedKeys(APP);
  if(!keys.length)throw Error('Pinned publisher keys are required.');verifyManifestSignature(manifest,keys);
  const zip=path.join(input,`BuyerLog-${c.baseVersion}.zip`),stat=fs.statSync(zip);
  if(manifest.version!==c.baseVersion||stat.size!==manifest.size||F.sha(fs.readFileSync(zip))!==manifest.sha256)throw Error('Signed base archive identity mismatch.');

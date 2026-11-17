@@ -108,17 +108,6 @@ approved sequence or full installation after a failed patch.
 
 ## Üretim ve yayın / Build and publication
 
-Yayın formundaki `base_channel`, imzalı tam tabanın bulunduğu `stable` veya
-`test` kanalını seçer (varsayılan `stable`). Örneğin son TEST 7.0.360 için
-`base_channel=test` ve `base_version=7.0.360` kullanılır. İndirilen taban
-manifestinin kanalı, sürümü, resmi imzası ve ZIP özeti birlikte doğrulanır.
-Bu seçim TEST/STABLE yayın kayıtlarını değiştirmez.
-
-`base_channel` selects the published signed full base (`stable` by default,
-or explicitly `test`). The base manifest must match that channel and version;
-its official signature and ZIP identity are verified. This does not promote
-or change either release channel.
-
 `resources/app/scripts/signed-manual-patch.js` yalnız temiz ve tam SHA'sı eşleşen
 Git kaynak ağacını imzalar. İkinci ve sonraki yamalar önceki imzalı manifesti
 gerektirir; geçmiş dosya özetleri kümülatif taşınır. Yalnız belge veya sürüm notu
