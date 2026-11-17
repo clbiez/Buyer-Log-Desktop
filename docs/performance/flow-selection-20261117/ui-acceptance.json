@@ -1,0 +1,192 @@
+{
+  "ok": true,
+  "evidence": [
+    {
+      "key": "cp",
+      "report": true,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(203, 209, 217)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.207843 0.415686 0.588235 / 0.2)",
+        "width": 1376,
+        "rowWidth": 1376,
+        "pointerEvents": "none"
+      }
+    },
+    {
+      "key": "cp",
+      "report": false,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(80, 92, 106)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.560784 0.74902 0.909804 / 0.2)",
+        "width": 1583,
+        "rowWidth": 1583,
+        "pointerEvents": "none"
+      }
+    },
+    {
+      "key": "orders",
+      "report": true,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(80, 92, 106)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.560784 0.74902 0.909804 / 0.2)",
+        "width": 1376,
+        "rowWidth": 1376,
+        "pointerEvents": "none"
+      }
+    },
+    {
+      "key": "orders",
+      "report": false,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(80, 92, 106)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.560784 0.74902 0.909804 / 0.2)",
+        "width": 1738,
+        "rowWidth": 1738,
+        "pointerEvents": "none"
+      }
+    },
+    {
+      "key": "koleksiyon",
+      "report": true,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(80, 92, 106)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.560784 0.74902 0.909804 / 0.2)",
+        "width": 1376,
+        "rowWidth": 1376,
+        "pointerEvents": "none"
+      }
+    },
+    {
+      "key": "koleksiyon",
+      "report": false,
+      "idle": {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "rgb(80, 92, 106)",
+        "borderWidth": "1px",
+        "width": 8,
+        "checked": false
+      },
+      "motion": {
+        "frames": [
+          {
+            "transform": "scaleY(0)",
+            "opacity": "1"
+          },
+          {
+            "transform": "scaleY(1)",
+            "opacity": "1"
+          }
+        ],
+        "duration": 360
+      },
+      "hover": {
+        "opacity": "1",
+        "background": "color(srgb 0.560784 0.74902 0.909804 / 0.2)",
+        "width": 1376,
+        "rowWidth": 1376,
+        "pointerEvents": "none"
+      }
+    }
+  ],
+  "errors": []
+}

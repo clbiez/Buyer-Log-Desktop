@@ -268,7 +268,7 @@ function render(key){
       (filterable?'<details class="blDetailReportFilter"><summary aria-label="'+esc(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+
         col.fields.map(field=>'<button type="button" data-tr-filter="'+esc(field.key)+'">'+esc(field.label)+'</button>').join('')+'</div></details>':'')+'</div></th>';
   }).join('')+'</tr>');
-  const body=shown.map((row,r)=>'<tr data-id="'+esc(adapter.rowId?.(row)??r)+'"'+(adapter.selected?.(row)?' class="selected"':'')+'>'+
+  const body=shown.map((row,r)=>'<tr data-id="'+esc(adapter.rowId?.(row)??r)+'" class="'+[adapter.selected?.(row)?'selected':'',adapter.dirty?.(row)?'rowDirty':''].filter(Boolean).join(' ')+'">'+
     (checkable?'<td><input type="checkbox" data-tr-check="'+r+'" aria-label="'+esc(L('Satırı seç','Select row'))+'"'+(adapter.selected?.(row)?' checked':'')+'></td>':'')+
     (images?'<td class="blDetailImageCell" data-key="__report_picture" data-r="'+r+'" data-c="0">'+imageCell(row)+'</td>':'')+projected.map((col,c)=>'<td data-key="'+esc(col.key)+'" data-r="'+r+'" data-c="'+(c+(images?1:0))+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'>'+cellHtml(col,row,moduleId)+'</td>').join('')+'</tr>').join('');
   const editor=editing?'<tr class="blReportLayoutRow">'+(checkable?'<td></td>':'')+(images?'<td></td>':'')+projected.map(editorHtml).join('')+'</tr>':'';

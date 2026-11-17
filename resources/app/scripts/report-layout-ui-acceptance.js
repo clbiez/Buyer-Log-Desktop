@@ -32,6 +32,51 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
  await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
+ if(process.env.REPORT_FLOW_ONLY==='1'){
+   await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.waitForTimeout(650);
+   const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=120;const x=c.getContext('2d');x.fillStyle='#ebeff3';x.fillRect(0,0,200,120);for(const offset of [0,100]){x.fillStyle=offset?'#7b263a':'#96354a';x.beginPath();for(const [i,[a,b]] of [[0,[30,10]],[1,[5,25]],[2,[0,50]],[3,[24,60]],[4,[28,45]],[5,[28,110]],[6,[78,110]],[7,[78,45]],[8,[84,60]],[9,[100,50]],[10,[95,25]],[11,[70,10]]]){if(i===0)x.moveTo(a+offset,b);else x.lineTo(a+offset,b);}x.closePath();x.fill();}return c.toDataURL('image/png');});
+   await page.route('**/api/*-images/flow-demo',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
+   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/collection-images/flow-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   const evidence=[];
+   async function checkFlow(key,report){
+     await page.evaluate(({key,report})=>BLTableReportInline.setMode(key,report),{key,report});await page.waitForTimeout(100);
+     const tableId=report?'blTableReport-'+key:key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     const input=page.locator('#'+tableId+(report?' [data-tr-check="0"]':' tbody input.rowChk')).first();
+     const idle=await input.evaluate(i=>({background:getComputedStyle(i).backgroundColor,border:getComputedStyle(i).borderColor,borderWidth:getComputedStyle(i).borderTopWidth,width:i.getBoundingClientRect().width,checked:i.checked}));
+     assert.equal(idle.checked,false);assert.equal(idle.width,8);assert.equal(idle.borderWidth,'1px');assert.equal(idle.background,'rgba(0, 0, 0, 0)');
+     await input.check();await page.waitForFunction(tableId=>document.getAnimations().some(a=>a.id==='bl-row-selection'&&a.effect?.target?.closest('table')?.id===tableId),tableId);
+     const motion=await page.evaluate(()=>{const a=document.getAnimations().find(a=>a.id==='bl-row-selection');return {frames:a.effect.getKeyframes().map(f=>({transform:f.transform,opacity:f.opacity})),duration:a.effect.getTiming().duration};});assert.equal(motion.duration,360);assert.equal(motion.frames[0].transform,'scaleY(0)');
+     await page.waitForTimeout(440);assert.equal(await input.isChecked(),true);assert.equal(await input.evaluate(i=>getComputedStyle(i,'::before').transform),'matrix(1, 0, 0, 1, 0, 0)');
+     if(key==='cp'){
+       await page.evaluate(()=>markDirty(1));await page.waitForTimeout(100);
+       const dirty=await input.evaluate(i=>({row:i.closest('tr').classList.contains('rowDirty'),blue:getComputedStyle(i,'::before').backgroundColor,orange:getComputedStyle(i,'::after').backgroundColor,stripe:getComputedStyle(i,'::after').width,display:getComputedStyle(i,'::after').display}));
+       assert.equal(dirty.row,true);assert.equal(dirty.stripe,'3px');assert.equal(dirty.display,'block');assert.notEqual(dirty.blue,dirty.orange);assert.notEqual(dirty.orange,'rgba(0, 0, 0, 0)');
+     }
+     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
+     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
+     const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     if(key==='cp'&&report){
+       await page.waitForFunction(()=>document.querySelector('#blTableReport-cp img')?.dataset.blImageLoaded==='1');
+       for(const theme of ['dark','light']){await page.evaluate(theme=>applyTheme(theme),theme);await page.waitForTimeout(650);await page.screenshot({path:path.join(assets,'flow-selection-'+theme+'.png')});}
+       await page.evaluate(()=>applyTheme('dark'));
+       await page.evaluate(()=>{renderCP();BLFlushTableRenders();});await page.waitForTimeout(130);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0,'refresh does not replay selection motion');
+     }
+     await input.uncheck();await page.waitForTimeout(500);assert.equal(await input.isChecked(),false);
+     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and full-row fade: '+key+' '+(report?'report':'table'));
+   }
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=Array.from({length:3},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();});
+     }
+     await checkFlow(key,true);await checkFlow(key,false);
+   }
+   await page.evaluate(async()=>{switchTab('cp');await discardAllChangesAsync();BLTableReportInline.setMode('cp',true);});await page.waitForTimeout(100);assert.equal(await page.locator('#blTableReport-cp tr.rowDirty').count(),0,'discard removes dirty stripe in report');
+   await page.evaluate(()=>{switchTab('cp');BLMotionPlus.setEnabled(false);BLTableReportInline.setMode('cp',true);});await page.locator('#blTableReport-cp [data-tr-check="0"]').check();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
+   await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.locator('#blTableReport-cp [data-tr-check="0"]').uncheck();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'flow-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
+ }
  if(process.env.REPORT_STICKY_ONLY==='1'){
    const results=[];
    async function checkPin(selector,label){

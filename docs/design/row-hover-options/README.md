@@ -1,11 +1,13 @@
-# Üç deneysel hover seçeneği
+# Satır boyunca aydınlatma — üç seçenek
 
-Her HTML bağımsızdır, sunucu/kurulum/internet gerektirmez. Fareyi satırlarda gezdirin veya **Hover turu** düğmesine basın. Dar sol seçim alanı ve başlıktaki toplu seçim yatay kaydırmada sabittir.
+Her HTML bağımsızdır. Fareyle satıra girin veya **Hover turu** düğmesine basın. Üçünde de ışık satırın tamamını kaplar, fare satırdayken açık kalır ve satırdan ayrılınca yumuşakça söner. Dar seçim alanı yatay kaydırmada solda sabittir.
 
-1. **Spot ışığı — 01-spot.html:** imleci takip eden yumuşak ışık havuzu; satırdan çıkınca sönümlenir.
-2. **Radar dalgası — 02-radar.html:** satıra girişte soldan sağa bir kez geçen tarama bandı.
-3. **Aurora — 03-aurora.html:** giriş noktasından genişleyen, fareyi takip eden mavi/eflatun hale.
+1. **Soldan yayılma — 01-spot.html:** ışık soldan sağa açılır.
+2. **Merkezden açılma — 02-radar.html:** ışık ortadan iki yana yayılır.
+3. **Yumuşak geçiş — 03-aurora.html:** bütün satır aynı anda, yavaşça aydınlanır.
 
-Satır/aralık/toplu seçim, seçili satırın okunabilirliği, klavye, açık/koyu tema, animasyonu kapatma ve azaltılmış hareket desteği korunur. İşaretçi konumu kare başına en çok bir kez yazılır. Boşta sonsuz animasyon yoktur. Hover efektleri henüz üretim uygulamasına uygulanmaz; kullanıcının seçim yapması için öneridir.
+Satır/aralık/toplu seçim, seçili satırın okunabilirliği, klavye, açık/koyu tema, animasyonu kapatma ve azaltılmış hareket desteği korunur. Hareket veri/metin konumunu değiştirmez. İşaretçi hareketinde çalışan takip kodu veya sonsuz animasyon yoktur. Otomatik tur sonludur ve hareket kapatılınca durur.
 
-Chromium kontrolleri: yatay kaydırmada sabit ve tıklanabilir seçim, imleç takibi, satırdan çıkışta temizleme, hover sırasında seçim sayısının korunması, sonlu otomatik tur, hareket kapatma, temalar ve azaltılmış hareket. JavaScript hatası görülmedi.
+Chromium ile üç dosyada tam genişlikte tek renk aydınlatma, hover devam ederken ışığın korunması, satırlar arası sönümlenme, yatay kaydırmada seçim alanının sabitliği ve tıklanması, temalar, hareket kapatma ve azaltılmış hareket kontrol edildi. JavaScript hatası görülmedi. Bunlar kullanıcı seçimi için örnek HTML'lerdir.
+
+Uygulama için seçilen birleşim: **01 Akış satır seçimi + 03 tüm satırda yumuşak geçiş**. Boş seçim alanları sade, şeffaf ve ince konturludur; turuncu CP değişiklik çizgisi mavi seçim dolgusunun üzerinde ayrı kalır.
