@@ -1,0 +1,63 @@
+Continuing the single full-suite attempt after completed batches 1–2; only previously unrun batches follow.
+Remaining batch 3/10 (300 files)
+tests 2054 · pass 2054 · fail 0 · cancelled 0 · skipped 0 · todo 0
+Remaining batch 4/10 (300 files)
+
+✖ local CP edits, remote decision patches and transit-rule changes invalidate Overview (tests/overview-cp-auto-refresh-v965.test.js:70:1)
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /scheduleOverviewRender\('cp-row-updated'\)/. Input:
+
+'function refreshRowEverywhere(id){\n' +
+  '  refreshRowsEverywhere([id]);\n' +
+  '}\n' +
+  'function refreshRowsEverywhere(ids){\n' +
+  '  invalidateCoreFacetCaches();\n' +
+  '  // Priority hücresi artık türetilmiş legacy warning metni değildir. Kararı\n' +
+  '  // değiştirebilen bir edit sonrası tek satırı çizmeden önce aynı unified\n' +
+  "  // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.\n" +
+  "  if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');\n" +
+  '  const uniqueIds=new Set(ids),rowIndex=buildIndex();\n' +
+  '  uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));\n' +
+  "  for(const tableId of ['cpTable','ordersTable']){\n" +
+  '    const view=document.getE'
+
+    at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/overview-cp-auto-refresh-v965.test.js:73:10)
+
+✖ checkbox selection keeps the source row id instead of coercing every id to Number (tests/plm-selected-scope-regression.test.js:24:1)
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /selectionActualId\(meta\.rows,meta\.getId,chk\.dataset\.id\)/. Input:
+
+"// Satır checkbox'ları: her birine ayrı listener yerine tbody'de TEK delege listener —\n" +
+  '  // N satırlık tabloda N listener oluşturma maliyetini ortadan kaldırır.\n' +
+  '  if(withChk){\n' +
+  '    if(!tbody._chkDelegated){\n' +
+  '      tbody._chkDelegated = true;\n' +
+  "      tbody.addEventListener('change', e=>{\n" +
+  '        const chk = e.target;\n' +
+  "        if(!chk.classList || !chk.classList.contains('rowChk')) return;\n" +
+  '        const meta = tbody._chkMeta; if(!meta) return;\n' +
+  '        const key=selectionIdKey(chk.dataset.id);\n' +
+  '        const id = key?(meta.actualIds.get(key) ?? chk.dataset.id):chk.dataset.id;\n' +
+  '        selectionSetId(meta.selSet,id,chk.checked);\n' +
+  '        // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki\n' +
+  '        // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve\n' +
+  '        // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi\n' +
+  '        // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).\n' +
+  '        const grid=window.BLGridClipboard?.state?.(meta.tableId);\n' +
+  '        if(meta.selSet.size>0&&(grid?.activeCell||grid?.selectionRange||grid?.editingCell))window.BLGridClipboard.clear(meta.tableId);\n' +
+  '        if(tbody._selectionUpdateQueued)return;\n' +
+  '        tbody._selectionUpdateQueued=true;\n' +
+  '        requestAnimationFrame(()=>{\n' +
+  '          tbody._selectionUpdateQueued=false;\n' +
+  '          const meta=tbody._chkMeta;if(!meta)return;\n' +
+  '          const count=meta.visibleIndex?[...selectionIndexEntries(meta.visibleIndex,meta.selSet)].filter(entry=>entry.rendered!==false).length:undefined;\n' +
+  '          updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);\n' +
+  '          meta.onSelectionChange?.(meta.selSet,meta.rows);\n' +
+  '          window.BLSelectionBar?.refresh();\n' +
+  '        });\n' +
+  '      });\n' +
+  '    }\n' +
+  '    const selectionView=table._blSelectionView,matchingView=selectionView?.fullRows===fullRows;\n' +
+  '    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:matchingView?selectionView.visibleIndex:selectionRowsIndex(fullRows), actualIds:matchingView?selectionView.actualIds:selectionActualIds(fullRows), getId:row=>row._id, onSelectionChange:notifySelectionChange };\n' +
+  '    '
+
+    at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/plm-selected-scope-regression.test.js:29:10)
+tests 2160 · pass 2157 · fail 2 · cancelled 0 · skipped 1 · todo 0
