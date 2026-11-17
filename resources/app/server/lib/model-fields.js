@@ -510,8 +510,12 @@ function mappingHealth(role, mapping) {
   };
 }
 
+// ASAS sorgusundaki kumaş alanları. Kaynak doğrulama aracı kumaşsız ölçüm
+// yaparken bu başlıkları projeksiyondan çıkarır (model-refresh excludeFabric).
+const FABRIC_HEADERS = Object.freeze(['Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım']); // i18n-ignore
+
 module.exports = {
-  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES,
+  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS,
   fieldKey, fieldsForRole, intakeFieldsForMapping, autoMapColumns, autoMapSchema,
   normalizeMappingEntry, mappingHasInvalidEntries, missingRequired, suspectIdentityMappings,
   productDescriptionNeedsRepair, repairAsasProductDescriptionMapping,
