@@ -107,11 +107,12 @@ test('istemci kanonik PLM çözümü önekli adı da dener', () => {
   assert.match(APP, /const bare=key\.replace\(\/\^\[\^\\s,\]\{1,16\},\\s\*\(\?=\\S\)\/,''\)/);
 });
 
-test('ortak detay çekmecesi Backlog iç meta kimliğini (_plmId/_colourCode/_imageRef) okur', () => {
+test('ortak detay çekmecesi Backlog kimliğini okur, eski _imageRef eşleştirmeyi aşamaz', () => {
   const DRAWER = fs.readFileSync(path.join(ROOT, 'public', 'detail-drawer.js'), 'utf8');
   assert.match(DRAWER, /const rawPlmId=get\('plmId','plm','_plmId'/);
   assert.match(DRAWER, /colourCode:get\('colourCode','ccode','_colourCode'/);
   assert.match(DRAWER, /orderCode:get\('orderCode','ocode','orderKey'/);
   assert.match(DRAWER, /'Option Name','_modelName'\)/);
-  assert.match(DRAWER, /directRef\?'\/api\/cp-images\/'\+encodeURIComponent\(directRef\)/);
+  assert.doesNotMatch(DRAWER, /directRef\?'\/api\/cp-images\/'/);
+  assert.match(DRAWER, /helper\.urlFrom\?\.\(index,id\)/);
 });

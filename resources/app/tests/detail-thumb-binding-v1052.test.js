@@ -48,17 +48,10 @@ test('v10.52 quotations bağlayıcıları ortak katmanın bağladığı görseli
 /* Kanonik kayıt defteri anahtarı renk ADI da taşıyabilir: plm:X|colour:Y|name:Z.
    Eski desen adı renk koduna yapıştırıyor, renk düzeyindeki görsel bozuk bir
    anahtarla indeksleniyordu. */
-test('v10.52 detay görsel dizini adlı kanonik anahtarı doğru ayrıştırır', () => {
-  const index = block(APP_MAIN, 'function buildDetailImageIndex', 'function detailImageUrlFrom');
-  const pattern = index.match(/\/\^plm:\(\[\^\|\]\+\)[^/]*\/i/);
-  assert.ok(pattern, 'imagemap anahtar deseni bulunamadı');
-  const regex = new Function(`return ${pattern[0]};`)();
-  const named = regex.exec('plm:215013|colour:0012|name:LACIVERT');
-  assert.ok(named, 'adlı anahtar eşleşmeli');
-  assert.equal(named[1], '215013');
-  assert.equal(named[2], '0012', 'renk kodu renk adını içermemeli');
-  const plain = regex.exec('plm:215013|colour:0012');
-  assert.equal(plain[2], '0012');
-  const legacy = regex.exec('plm:215013');
-  assert.ok(legacy && !legacy[2], 'PLM-only legacy anahtar korunmalı');
+test('detail registry reader preserves named colour keys through the common cache', () => {
+  const cache=require('../public/model-image-cache').createModelImageCache(globalThis);
+  cache.setRegistryMap({'plm:123|colour:CVL|name:NEW BLACK':'named-image'});
+  const index=cache.buildDetailIndex([]);
+  assert.equal(cache.resolveDetailSource(index,{plmId:'123',colourCode:'CVL',colour:'NEW BLACK'}),'/api/collection-images/named-image');
+  assert.equal(cache.resolveDetailSource(index,{plmId:'123',colourCode:'CVL'}),'/api/collection-images/named-image');
 });
