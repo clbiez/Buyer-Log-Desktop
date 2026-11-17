@@ -3019,12 +3019,32 @@ function selectionIndexEntries(index,selected){
   }
   return entries;
 }
+function selectionActualIds(rows){
+  const ids=new Map();
+  for(const row of rows){const key=selectionIdKey(row._id);if(key&&!ids.has(key))ids.set(key,row._id);}
+  return ids;
+}
 function updateManagedSelectionView(table,tableKey,fullRows){
-  const actualIds=new Map();
-  for(const row of fullRows){const key=selectionIdKey(row._id);if(!actualIds.has(key))actualIds.set(key,row._id);}
-  table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,
-    visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex:selectionRowsIndex(fullRows),
-    sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]),true)};
+  const actualIds=selectionActualIds(fullRows);
+  const source=partialViewRows(tableKey,state[tableKey]?.rows||[]);
+  const checkMode=normalizeCheckFilterMode(state.checkFilter?.[tableKey]);
+  let eligible=fullRows;
+  if(checkMode){
+    if(tableKey==='cp')ensurePlmSampleAccessors(source);
+    const ctx=tableKey==='orders'?ordersBuildFilterContext():cpBuildFilterContext();ctx.checkFilter='';
+    eligible=source.filter(row=>tableKey==='orders'?ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS):cpRowPasses(row,ctx,CP_MIRROR_IDS));
+  }
+  const visibleIndex=selectionRowsIndex(eligible);
+  if(checkMode){
+    for(const entry of selectionIndexEntries(visibleIndex,visibleIndex.keys()))entry.rendered=false;
+    for(const row of fullRows){
+      const match=visibleIndex.get(row._id),entries=Array.isArray(match)?match:[match];
+      const entry=entries.find(entry=>entry&&(entry.id===row._id||Object.is(entry.id,row._id)));if(entry)entry.rendered=true;
+    }
+  }
+  table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,checkMode,
+    visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex,
+    sourceIndex:selectionRowsIndex(source,true)};
   return table._blSelectionView;
 }
 function managedSelectionView(tableKey){
@@ -3035,12 +3055,22 @@ function managedSelectionView(tableKey){
   // preserving the existing filter semantics without polling or per-tick work.
   return view.dirty?updateManagedSelectionView(table,tableKey,tableKey==='orders'?filteredOrders():filteredCP()):view;
 }
+function managedVisibleSelectedEntries(view,selected){
+  const entries=selectionIndexEntries(view.visibleIndex,selected);
+  for(const entry of entries)if(!selected.has(entry.id)||view.checkMode==='unchecked')entries.delete(entry);
+  return entries;
+}
+function managedSelectionVisibleId(view,selected,id){
+  const key=String(id);if(!view.checkMode)return view.visibleIds.has(key);
+  const match=view.visibleIndex.get(key),entries=Array.isArray(match)?match:[match];
+  return entries.some(entry=>entry&&String(entry.id)===key&&(view.checkMode==='checked'?selected.has(entry.id):!selected.has(entry.id)));
+}
 function managedSelectionSummary(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
   const view=managedSelectionView(tableKey);
   if(!view)return null;
   let hidden=0;
-  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!view.visibleIds.has(String(entry.id)))hidden+=entry.count;
+  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!managedSelectionVisibleId(view,selected,entry.id))hidden+=entry.count;
   return {hidden};
 }
 function managedSelectionSourceRows(tableKey){
@@ -8511,7 +8541,8 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
-        const id = meta.actualIds.get(selectionIdKey(chk.dataset.id)) ?? chk.dataset.id;
+        const key=selectionIdKey(chk.dataset.id);
+        const id = key?(meta.actualIds.get(key) ?? chk.dataset.id):chk.dataset.id;
         selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
         // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
@@ -8524,14 +8555,15 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         requestAnimationFrame(()=>{
           tbody._selectionUpdateQueued=false;
           const meta=tbody._chkMeta;if(!meta)return;
-          const count=meta.visibleIndex?selectionIndexEntries(meta.visibleIndex,meta.selSet).size:undefined;
+          const count=meta.visibleIndex?[...selectionIndexEntries(meta.visibleIndex,meta.selSet)].filter(entry=>entry.rendered!==false).length:undefined;
           updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
           meta.onSelectionChange?.(meta.selSet,meta.rows);
           window.BLSelectionBar?.refresh();
         });
       });
     }
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:table._blSelectionView?.visibleIndex, actualIds:table._blSelectionView?.actualIds||new Map(fullRows.map(row=>[selectionIdKey(row._id),row._id])), getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    const selectionView=table._blSelectionView,matchingView=selectionView?.fullRows===fullRows;
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:matchingView?selectionView.visibleIndex:selectionRowsIndex(fullRows), actualIds:matchingView?selectionView.actualIds:selectionActualIds(fullRows), getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
@@ -21153,7 +21185,7 @@ function updateShippingBtnVisibility(){
     if(atlasButton){
       const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
       const view=activeTab===mode&&selected.size?managedSelectionView(mode):null;
-      atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||selectionIndexEntries(view.visibleIndex,selected).size===0;
+      atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||managedVisibleSelectedEntries(view,selected).size===0;
     }
     const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
@@ -25273,7 +25305,7 @@ function selectedEndeksmatikRows(mode){
   if(!selected?.size)return [];
   const view=managedSelectionView(mode);if(!view)return [];
   let row=null;
-  for(const entry of selectionIndexEntries(view.visibleIndex,selected)){
+  for(const entry of managedVisibleSelectedEntries(view,selected)){
     if(row||entry.rows.length!==1)return [];
     row=entry.rows[0];
   }

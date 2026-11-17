@@ -7,7 +7,7 @@ test('checkbox selection coalesces effects and resolves IDs from the render inde
  const handler=block("tbody.addEventListener('change', e=>{",'// v10.11 — CP/Orders');
  assert.match(handler,/requestAnimationFrame/);assert.match(handler,/actualIds\.get/);
  assert.doesNotMatch(handler,/selectionActualId\(|filteredOrders\(|filteredCP\(/);
- assert.match(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/selectionIndexEntries/);
+ assert.match(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/managedVisibleSelectedEntries/);
  assert.doesNotMatch(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/filteredOrders\(|filteredCP\(/);
 });
 test('closed selection details use a cheap summary; polling reads only key and count',()=>{
@@ -25,8 +25,8 @@ test('sort metadata is resolved once outside the comparator',()=>{
 });
 function indexApi(document={},state={},visible=()=>[]){
  const helpers=block('function selectionIdKey(','// Ortak tablo araması:');
- const indexes=block('function selectionRowsIndex(','function managedSelectionSourceRows(');
- return new Function('document','state','partialViewRows','filteredOrders','filteredCP',helpers+indexes+';return {selectionRowsIndex,selectionIndexEntries,selectionHasId,managedSelectionSummary,managedSelectionView};')(document,state,(key,rows)=>rows,visible,visible);
+ const indexes=block('function selectionRowsIndex(','function managedSelectionSourceRows(')+block('function normalizeCheckFilterMode(','const CHECK_FILTER_CYCLE');
+ return new Function('document','state','partialViewRows','filteredOrders','filteredCP','cpBuildFilterContext','ordersBuildFilterContext','cpRowPasses','ordersRowPasses','CP_MIRROR_IDS','ORDERS_MIRROR_IDS','ensurePlmSampleAccessors',helpers+indexes+';return {selectionRowsIndex,selectionIndexEntries,selectionHasId,managedSelectionSummary,managedSelectionView,updateManagedSelectionView,managedVisibleSelectedEntries,selectionActualIds,selectionActualId};')(document,state,(key,rows)=>rows,visible,visible,()=>({}),()=>({}),row=>row.eligible!==false,row=>row.eligible!==false,[],[],rows=>rows);
 }
 test('indexed hidden and visible counts equal snapshots for partial rows and mixed IDs',()=>{
  const api=indexApi();
@@ -90,14 +90,14 @@ test('render views reject replaced source data and the summary never sorts or fi
  state.orders.rows=[{_id:1}];assert.equal(api.managedSelectionView('orders'),null);assert.equal(api.managedSelectionSummary('orders'),null);
 });
 test('Endeksmatik button uses exactly one visible order even with other hidden selections',()=>{
- const rows=[{_id:1},{_id:2}],state={ordersSelected:new Set(['2'])},api=indexApi();
+ const rows=[{_id:1},{_id:2}],state={ordersSelected:new Set([2])},api=indexApi();
  const view={visibleIndex:api.selectionRowsIndex(rows)};
- const select=new Function('state','managedSelectionView','selectionIndexEntries',block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder(')+';return selectedEndeksmatikRows;')(state,()=>view,api.selectionIndexEntries);
+ const select=new Function('state','managedSelectionView','managedVisibleSelectedEntries',block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder(')+';return selectedEndeksmatikRows;')(state,()=>view,api.managedVisibleSelectedEntries);
  assert.deepEqual(select('orders'),[rows[1]]);
  state.ordersSelected.add('outside');assert.deepEqual(select('orders'),[rows[1]],'hidden selections must not disable the only visible order');
  state.ordersSelected.add(1);assert.deepEqual(select('orders'),[]);
  state.ordersSelected=new Set(['outside']);assert.deepEqual(select('orders'),[]);
- state.ordersSelected=new Set(['1']);view.visibleIndex=api.selectionRowsIndex([rows[0],rows[0]]);assert.equal(select('orders').length,0,'two projected rows must keep Endeksmatik disabled');
+ state.ordersSelected=new Set([1]);view.visibleIndex=api.selectionRowsIndex([rows[0],rows[0]]);assert.equal(select('orders').length,0,'two projected rows must keep Endeksmatik disabled');
 });
 test('selection bar polls only key/count and reserves snapshots for open details',()=>{
  const vm=require('node:vm'),frames=[],timers=new Map(),events={},nodes=[];
@@ -135,4 +135,29 @@ test('a row-only edit revalidates filters once and subsequent selection reads st
  assert.equal(api.managedSelectionSummary('orders').hidden,1);
  assert.equal(api.managedSelectionSummary('orders').hidden,1);
  assert.equal(filters,1);assert.equal(table._blSelectionView.dirty,undefined);
+});
+
+test('checked/unchecked filters keep snapshot hidden counts after Set changes without filtering again',()=>{
+ const rows=[{_id:1},{_id:'1'},{_id:'01'},{_id:2},{_id:2},{_id:3,eligible:false}],values=[1,'1','01',2,'2',3];
+ for(const mode of ['checked','unchecked'])for(let before=0;before<8;before++){
+  const selected=new Set(values.filter((_,i)=>before&(1<<i))),state={orders:{rows},ordersSelected:selected,checkFilter:{orders:mode}},table={};
+  const api=indexApi({getElementById:()=>table},state),visible=()=>rows.filter(row=>row.eligible!==false&&(mode==='checked'?selected.has(row._id):!selected.has(row._id)));
+  api.updateManagedSelectionView(table,'orders',visible());
+  for(let mask=0;mask<1<<values.length;mask++){
+   selected.clear();values.forEach((value,i)=>{if(mask&(1<<i))selected.add(value);});
+   const ids=new Set(visible().map(row=>String(row._id)));
+   const oldHidden=rows.filter(row=>api.selectionHasId(selected,row._id)&&!ids.has(String(row._id))).length;
+   assert.equal(api.managedSelectionSummary('orders').hidden,oldHidden,mode+':'+mask);
+   const entries=api.managedVisibleSelectedEntries(table._blSelectionView,selected);
+   assert.equal([...entries].reduce((n,e)=>n+e.rows.length,0),visible().filter(row=>selected.has(row._id)).length);
+  }
+ }
+});
+
+test('render ID map keeps the original first-match and blank-key semantics',()=>{
+ const api=indexApi(),rows=[{_id:''},{_id:' '},{_id:' 2 '},{_id:2},{_id:'1'},{_id:1},{_id:'01'}],ids=api.selectionActualIds(rows);
+ for(const raw of ['',' ','1','01','2',' 2 ','missing']){
+  const key=String(raw).trim(),actual=key?(ids.get(key)??raw):raw;
+  assert.equal(actual,api.selectionActualId(rows,row=>row._id,raw));
+ }
 });
