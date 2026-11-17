@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "detail-image-strict-matching",
+      "type": "fix",
+      "module": {
+        "tr": "Alt detay raporları",
+        "en": "Detail reports"
+      },
+      "title": {
+        "tr": "Aynı adlı modellerde güvenli görsel eşleştirme",
+        "en": "Safe image matching for models sharing a name"
+      },
+      "body": {
+        "tr": "Görseller sırasıyla PLM ID + Renk Kodu, Özel Kod + Renk Kodu ve Sezon + Model Adı + Renk Kodu ile eşleştirilir. Belirsiz veya eksik kimliklerde görsel gösterilmez. Yalnız model adı, yalnız PLM ID ve eski satır görsel referansları alt detay eşleştirmesini aşamaz. PLM SYNC yalnız güvenle çözülen kimliklerle çalışır.",
+        "en": "Images match by PLM ID + colour code, special code + colour code, then season + model name + colour code. Ambiguous or incomplete identities show no image. Model-only, PLM-only and old row image references cannot bypass detail matching. PLM SYNC uses only safely resolved identities."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-image-strict-matching.png",
+        "alt": {
+          "tr": "Aynı adlı S7 ve W7 modellerinin ayrıldığı OAB alt detayı",
+          "en": "OAB detail separating S7 and W7 models with the same name"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi. Yalnız ad taşıyan üçüncü satırda görsel yok.",
+          "en": "Actual Buyer Log with isolated demo data. The third row with only a name has no image."
+        }
+      }
+    },
+    {
       "id": "revision-origin-separators",
       "type": "fix",
       "module": {

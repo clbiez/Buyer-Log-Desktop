@@ -17495,7 +17495,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=20261116')
+  overviewOabLoadPromise=loader('oab.js?rev=20261117')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
@@ -19742,95 +19742,31 @@ function setDetailShowImages(on){
   try{ BLStorage.setItem(DETAIL_IMAGE_PREF_KEY,detailShowImages?'1':'0'); }catch(_){}
 }
 // Görsel dizini tablo başına BİR kez kurulur; satır başına tüm siparişleri taramak
-// binlerce satırda kabul edilemez olurdu. LFL satırları PLM ID taşımadığı için
-// model adı + renk kodu üzerinden ikinci bir anahtar da tutulur.
+// binlerce satırda kabul edilemez olurdu. Yalnız tam kimlikler indekslenir;
+// sezon veya renk eksikse model adıyla görsel tahmin edilmez.
+function detailRowImageIdentity(row,moduleId='overview'){
+  const value=id=>window.BLCanonicalFields?.canonicalValue?.(row,moduleId,id)||'';
+  return {plmId:row?._plmId||value('plmId'),modelName:row?._modelName||value('modelName'),
+    colourCode:row?._colourCode||value('colourCode'),colour:value('colour'),
+    specialCode:value('specialCode'),season:value('season'),orderCode:value('orderCode')};
+}
 function buildDetailImageIndex(){
-  const byPlm=new Map(),byPlmOnly=new Map(),byModel=new Map(),modelToPlm=new Map();
-  const add=(plmId,colourCode,modelName,url)=>{
-    if(!url)return;
-    const plmKey=cpImageOverrideKey(plmId,colourCode),plmOnly=cpNormalizePlmImageId(plmId),model=turknorm(modelName||'');
-    if(plmKey&&!byPlm.has(plmKey))byPlm.set(plmKey,url);
-    if(plmOnly&&!byPlmOnly.has(plmOnly))byPlmOnly.set(plmOnly,url);
-    if(!model)return;
-    const withColour=`${model}|${turknorm(colourCode||'')}`;
-    if(!byModel.has(withColour))byModel.set(withColour,url);
-    if(!byModel.has(model))byModel.set(model,url);
-  };
-  // Otomatik CoreNectum taraması görseli overrides.imagemap'e PLM-only
-  // (plm:2108736) olarak kaydeder. Backlog detayında PLM ID sütunu olmadığı
-  // için bu kalıcı kayıtları, saklanan PLM bağlantısındaki Style Name ile
-  // tekrar modele bağlamak gerekir. Yalnız açık CP/Orders satırlarını taramak
-  // Backlog ufkundaki diğer modellerin görsellerini boş bırakıyordu.
-  const overrideImages=state?.overrides?.imagemap||{};
-  Object.entries(overrideImages).forEach(([key,ref])=>{
-    // Kanonik anahtar renk ADI da taşıyabilir (plm:X|colour:Y|name:Z). Eski
-    // desen adı renk koduna yapıştırdığı için renk düzeyindeki kayıtlar
-    // bozuk bir anahtarla indeksleniyor, yalnız model düzeyi çözülüyordu.
-    const match=/^plm:([^|]+)(?:\|colour:([^|]+))?(?:\|name:(.+))?$/i.exec(String(key||'')),imageRef=norm(ref);
-    if(!match||!imageRef)return;
-    const plmId=cpNormalizePlmImageId(match[1]),colourCode=match[2]||'',url=`${CP_IMAGE_API}/${encodeURIComponent(imageRef)}`;
-    add(plmId,colourCode,'',url);
-  });
-  /* Koleksiyon satırları kanonik kayıttan HEMEN SONRA gelir. Daha önce bu blok
-     en sonda duruyordu; `add` ilk yazanı koruduğu için kullanıcının Koleksiyon'da
-     ELLE eklediği görsel, aynı model adına ait ESKİ otomatik/projeksiyon kaydına
-     yeniliyordu ve OAB alt detayı gibi model adıyla çözen tüketiciler eski
-     görseli gösteriyordu. Ayrıca model adı → PLM ID köprüsü buradan da beslenir:
-     PLM bağlantı listesi henüz yüklenmemiş olsa bile Koleksiyon satırı kendi
-     PLM ID'sini taşıdığı için kanonik anahtar çözülebilir. */
-  if(typeof kolRows!=='undefined')for(const row of (kolRows||[])){
-    if(row&&row._sharedCollectionImageUrl)continue;
-    const url=row&&(row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`)||'';
-    const rowPlm=cpNormalizePlmImageId(row&&row.plmId),rowModel=turknorm(row&&row.modelKod||'');
-    if(rowPlm&&rowModel&&!modelToPlm.has(rowModel))modelToPlm.set(rowModel,rowPlm);
-    add(row&&row.plmId,row&&row.colourCode,row&&row.modelKod,url);
+  const records=[];
+  if(typeof kolRows!=='undefined')for(const row of kolRows||[]){
+    const id=detailRowImageIdentity(row,'collection');
+    records.push({...id,originalImage:row._sharedCollectionImageUrl?'':row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`||''});
   }
-  // Backlog satırının kendisinde PLM ID sütunu gösterilmese de aynı satırın
-  // ASAS kaynağı model/plm/ccode kimliğini taşır. PLM bağlantı listesi henüz
-  // yüklenmemiş olsa bile bu kaynak ilişkiyle kalıcı görsel çözülebilir.
-  (state?.asasOrders||[]).forEach(order=>{
-    const plmId=cpNormalizePlmImageId(order&&order.plm),model=turknorm(order&&order.model||''),colourCode=order&&order.ccode||'';
-    if(!plmId||!model)return;
-    if(!modelToPlm.has(model))modelToPlm.set(model,plmId);
-    const exact=cpImageOverrideKey(plmId,colourCode),url=exact&&byPlm.get(exact)||byPlmOnly.get(plmId)||'';
-    if(url)add(plmId,colourCode,order&&order.model,url);
-  });
-  plmStyleLinksByModel.forEach((item,modelKey)=>{
-    const plmId=cpNormalizePlmImageId(item&&item.plmId);if(!plmId)return;
-    modelToPlm.set(turknorm(modelKey),plmId);
-    const url=byPlmOnly.get(plmId);if(url)add(plmId,'',item&&item.styleName,url);
-  });
-  for(const source of [state.cp,state.orders]){
-    if(!source||!Array.isArray(source.rows))continue;
-    for(const row of source.rows){
-      if(!row||!row._imageUrl)continue;
-      add(row['PLM ID'],row['C.Code'],row['Model Name'],row._imageUrl);
-    }
+  for(const source of [state.cp,state.orders])for(const row of source?.rows||[])records.push(detailRowImageIdentity(row,'cp'));
+  for(const order of [state.asasOrders||[],...Object.values(state.asasOrdersByTarget||{})].flat()){
+    records.push({plmId:order.plm,modelName:order.model,colourCode:order.ccode,colour:order.colour,specialCode:order.ozel,season:order.season});
   }
-  return {byPlm,byPlmOnly,byModel,modelToPlm};
+  return window.BLModelImageCache?.buildDetailIndex?.(records)||null;
 }
 function detailImageUrlFrom(index,identity){
-  const resolvedPlm=modelAssetCanonicalPlmId(identity&&identity.plmId,identity&&identity.modelName);
-  /* Detay/analiz ekranları artık önce TEK kanonik registry okuyucusunu
-     kullanır. Eski byPlm/byModel index yalnız migration fallback'tir. Böylece
-     PLM SYNC'in az önce yazdığı imagemap kaydı LFL/OAB/analiz renderer'ında
-     ikinci ve farklı bir çözüm algoritmasına takılmaz. */
-  const canonical=resolvedPlm?canonicalModelImageSource(resolvedPlm,identity&&identity.colourCode,identity&&identity.colour||''):'';
-  if(canonical)return canonical;
-  if(!index)return '';
-  const plmKey=cpImageOverrideKey(resolvedPlm||identity.plmId,identity.colourCode);
-  if(plmKey&&index.byPlm.has(plmKey))return index.byPlm.get(plmKey);
-  const plmOnly=cpNormalizePlmImageId(resolvedPlm||identity.plmId);
-  if(plmOnly&&index.byPlmOnly&&index.byPlmOnly.has(plmOnly))return index.byPlmOnly.get(plmOnly);
-  const model=turknorm(identity.modelName||'');
-  if(!model)return '';
-  const mappedPlm=index.modelToPlm&&index.modelToPlm.get(model);
-  if(mappedPlm){
-    const mappedExact=cpImageOverrideKey(mappedPlm,identity.colourCode);
-    if(mappedExact&&index.byPlm.has(mappedExact))return index.byPlm.get(mappedExact);
-    if(index.byPlmOnly&&index.byPlmOnly.has(mappedPlm))return index.byPlmOnly.get(mappedPlm);
-  }
-  return index.byModel.get(`${model}|${turknorm(identity.colourCode||'')}`)||index.byModel.get(model)||'';
+  return window.BLModelImageCache?.resolveDetailSource?.(index,identity)||'';
+}
+function detailResolvePlmId(value,modelName='',identity={}){
+  return window.BLModelImageCache?.resolveDetailIdentity?.(buildDetailImageIndex(),{...identity,plmId:value,modelName})?.plmId||'';
 }
 // Detay tablosunun başlıkları sabit değil (rapora göre değişir); kimlik
 // sütunlarını ada göre esnek biçimde buluruz.
@@ -19844,11 +19780,10 @@ function detailIdentityColumns(cols){
   };
 }
 function detailImageCellHtml(row,identity,index){
-  const directRef=norm(row&&row._imageRef);
   const plmId=row&&row._plmId||(identity.plm?row[identity.plm]:'');
   const colourCode=row&&row._colourCode||(identity.colour?row[identity.colour]:'');
   const modelName=row&&row._modelName||(identity.model?row[identity.model]:'');
-  const url=directRef?`${CP_IMAGE_API}/${encodeURIComponent(directRef)}`:detailImageUrlFrom(index,{plmId,colourCode,modelName});
+  const url=detailImageUrlFrom(index,{...detailRowImageIdentity(row),plmId,colourCode,modelName});
   const title=appLang==='en'?'Hover for large preview':'Büyük önizleme için üzerine gelin';
   /* Görseli olmayan satır da kimliğini bırakır: "Eksikleri Tamamla" tam da o
      satırları ister. Boş hücre bırakan eski davranış eksik modelleri
@@ -19868,7 +19803,7 @@ function detailImageThumbHtml(url,{modelId='',colourCode='',plmId='',modelName='
      taşıyabiliyor (OAB alt detayı yalnız "Option Adı" bilir). Kanonik PLM ID
      ve model adı AYRI özniteliklere yazılır; kapsam çözümleyicisi artık model
      adını PLM ID sanmaz. */
-  const canonicalPlm=modelAssetCanonicalPlmId(plmId||modelId,modelName||modelId);
+  const canonicalPlm=normalizePlmLinkId(plmId);
   const styleName=norm(modelName)||(normalizePlmLinkId(modelId)?'':norm(modelId));
   const identityAttrs=`${canonicalPlm?` data-plm-id="${escapeHtml(canonicalPlm)}"`:''}${styleName?` data-model-name="${escapeHtml(styleName)}"`:''}${norm(colour)?` data-colour-name="${escapeHtml(norm(colour))}"`:''}`;
   if(!source){
@@ -19930,11 +19865,9 @@ window.BLDetailImages={
   /* Ortak kapsam kaydı: pencere kendi kimlik listesini ve yeniden çizimini
      bildirir, modül başına ayrı indirici/çözümleyici yazılmaz. */
   registerScope:registerModelAssetScopeHost,
-  resolvePlmId:modelAssetCanonicalPlmId,
-  sourceFor:({plmId='',modelName='',colourCode='',colour=''}={})=>{
-    const id=modelAssetCanonicalPlmId(plmId,modelName);
-    return id?canonicalModelImageSource(id,colourCode,colour):'';
-  },
+  identityFromRow:detailRowImageIdentity,
+  resolvePlmId:detailResolvePlmId,
+  sourceFor:(identity,index)=>detailImageUrlFrom(index,identity)||(!index?detailImageUrlFrom(buildDetailImageIndex(),identity):''),
 };
 
 const BACKLOG_CANONICAL_DATE_HEADERS = new Set([
@@ -20061,7 +19994,7 @@ function renderBacklogDetailTable(rows,headers){
       const colourCode=row&&row._colourCode||(identityCols.colour?row[identityCols.colour]:'');
       const styleName=row&&row._modelName||(identityCols.model?row[identityCols.model]:'');
       return {plmId,colourCode,styleName,rowId:String(rowIndex),
-        hasImage:imageIndex?Boolean(norm(row&&row._imageRef)||detailImageUrlFrom(imageIndex,{plmId,colourCode,modelName:styleName})):null};
+        hasImage:imageIndex?Boolean(detailImageUrlFrom(imageIndex,{...detailRowImageIdentity(row,'backlog'),plmId,colourCode,modelName:styleName})):null};
     }),
     repaint:()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders),
   });
@@ -31513,18 +31446,18 @@ window.BLPriceSupplierAnalysisBridge={
     if(source==='collection')return window.BLCollectionAnalyticsBridge.openDrilldown(items,title);
     if(source==='lfl'&&window.BLPriceSupplierLFLBridge?.openDrilldown)return window.BLPriceSupplierLFLBridge.openDrilldown(observations,title);
     document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
-    const label=title||labels.title,list=observations||[];
+    const label=title||labels.title,list=observations||[],detailIndex=buildDetailImageIndex();
     /* Model kimliği kanonik alanlardan gelir (plmId + renk kodu); model ADI
        PLM ID sanılmaz. Görsel hücresi ortak katmandandır, böylece bu rapor da
        aynı "Model Görselleri" akışına katılır. */
     const identityOf=item=>{
       const plmId=item&&(item.plmId||item.row&&item.row.plmId||item.raw&&item.raw.plmId)||'';
       const colourCode=norm(item&&(item.colourCode||item.row&&item.row.colourCode))||'',colour=norm(item&&item.colour)||'';
-      const resolved=modelAssetCanonicalPlmId(plmId,norm(item&&item.model));
-      return {plmId,colourCode,colour,styleName:norm(item&&item.model)||'',orderCode:norm(item&&(item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode))||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
+      const resolved=window.BLModelImageCache?.resolveDetailIdentity?.(detailIndex,{plmId,modelName:item&&item.model,season:item&&item.season,colourCode,specialCode:item&&item.specialCode})?.plmId||'';
+      return {plmId:resolved,season:item&&item.season,specialCode:item&&item.specialCode,colourCode,colour,styleName:norm(item&&item.model)||'',orderCode:norm(item&&(item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode))||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
         hasImage:resolved?Boolean(canonicalModelImageSource(resolved,colourCode,colour)):null};
     };
-    const bodyHtml=()=>`<table><thead><tr><th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th><th>${labels.order}</th><th>${labels.model}</th><th>${labels.supplier}</th><th>${labels.country}</th><th>${labels.buyer}</th><th>${labels.season}</th><th>${labels.price}</th><th>${labels.currency}</th><th>${labels.quantity}</th></tr></thead><tbody>${list.map(item=>{const id=identityOf(item),plmId=modelAssetCanonicalPlmId(id.plmId,id.styleName);const source=plmId?canonicalModelImageSource(plmId,id.colourCode,id.colour):'';return `<tr data-id="${escapeHtml(id.rowId)}"><td class="detailImgCell">${detailImageThumbHtml(source,{modelId:plmId||id.styleName,colourCode:id.colourCode,plmId,modelName:id.styleName,colour:id.colour},{allowEmpty:true})}</td><td>${escapeHtml(item.orderKey||'')}</td><td>${escapeHtml(item.model||'')}</td><td>${escapeHtml(item.manufacturer||'')}</td><td>${escapeHtml(item.country||'')}</td><td>${escapeHtml(item.buyer||'')}</td><td>${escapeHtml(item.season||'')}</td><td>${escapeHtml(item.price??'')}</td><td>${escapeHtml(item.currency||'')}</td><td>${escapeHtml(item.quantity??'')}</td></tr>`;}).join('')}</tbody></table>`;
+    const bodyHtml=()=>`<table><thead><tr><th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th><th>${labels.order}</th><th>${labels.model}</th><th>${labels.supplier}</th><th>${labels.country}</th><th>${labels.buyer}</th><th>${labels.season}</th><th>${labels.price}</th><th>${labels.currency}</th><th>${labels.quantity}</th></tr></thead><tbody>${list.map(item=>{const id=identityOf(item),plmId=id.plmId;const source=detailImageUrlFrom(detailIndex,{...id,plmId});return `<tr data-id="${escapeHtml(id.rowId)}"><td class="detailImgCell">${detailImageThumbHtml(source,{modelId:plmId||id.styleName,colourCode:id.colourCode,plmId,modelName:id.styleName,colour:id.colour},{allowEmpty:true})}</td><td>${escapeHtml(item.orderKey||'')}</td><td>${escapeHtml(item.model||'')}</td><td>${escapeHtml(item.manufacturer||'')}</td><td>${escapeHtml(item.country||'')}</td><td>${escapeHtml(item.buyer||'')}</td><td>${escapeHtml(item.season||'')}</td><td>${escapeHtml(item.price??'')}</td><td>${escapeHtml(item.currency||'')}</td><td>${escapeHtml(item.quantity??'')}</td></tr>`;}).join('')}</tbody></table>`;
     overlay.innerHTML=`<div class="modalCard priceAnalysisDrillCard" role="dialog" aria-modal="true"><div class="modalHead"><div><b>${escapeHtml(label)}</b><div class="muted">${items.length} ${labels.records}</div></div><div class="modalHeadActions">${detailModelImagesButtonHtml('_priceAnalysisDrillModelImages')}<button type="button" class="modalX" data-close>×</button></div></div><div class="priceAnalysisDrillBody">${bodyHtml()}</div><div class="modalFoot"><button type="button" class="tbtn" data-close>${labels.close}</button></div></div>`;
     const card=overlay.querySelector('.modalCard'),body=overlay.querySelector('.priceAnalysisDrillBody');
     const close=()=>{window.BLLayerSystem?.closeDialog?.(overlay);overlay.remove();};
@@ -34695,16 +34628,13 @@ function registerModelAssetScopeHost(host,{identities,repaint,label,contextType}
   if(!host)return null;
   host.dataset.blModelAssetScope=norm(contextType)||host.dataset.blModelAssetScope||'detail-view';
   if(norm(label))host.dataset.blModelAssetLabel=norm(label);
-  const seen=new Set(),list=[];
+  const seen=new Set(),list=[],imageIndex=buildDetailImageIndex();
   (Array.isArray(identities)?identities:[]).forEach(item=>{
     if(!item)return;
     const styleName=norm(item.styleName||item.modelName||item.model);
-    const plmId=modelAssetCanonicalPlmId(item.plmId||item.modelId,styleName);
-    /* PLM ID ÇÖZÜLEMEDİYSE KİMLİK DÜŞÜRÜLMEZ. OAB "Option Adı" değerleri PLM
-       style adlarıyla eşleşmez; burada eleyince ekranda 11 satır varken eylem
-       "bu görünümde model görseli yok" diyordu. Model adı taşıyan kimlik
-       korunur, PLM ID'yi sunucu kendi ASAS kaynağından çözer. */
-    if(!plmId&&!styleName)return;
+    const plmId=window.BLModelImageCache?.resolveDetailIdentity?.(imageIndex,{...item,modelName:styleName})?.plmId||'';
+    // Belirsiz kimlik sunucudaki eski ad çözümleyicisine gönderilmez.
+    if(!plmId||!norm(item.colourCode))return;
     const colourCode=norm(item.colourCode!=null?item.colourCode:item.ccode);
     const colour=norm(item.colour!=null?item.colour:item.colourName);
     const orderCode=norm(item.orderCode!=null?item.orderCode:item.ocode);
@@ -34796,13 +34726,13 @@ function activeModelAssetViewHost(){
 }
 function modelAssetIdentitiesFromHost(host){
   if(!host)return [];
-  if(Array.isArray(host.__blModelIdentities)&&host.__blModelIdentities.length)return host.__blModelIdentities;
+  if(Array.isArray(host.__blModelIdentities))return host.__blModelIdentities;
   return [...host.querySelectorAll('img[data-bl-thumb="1"][data-model-id],img[data-bl-thumb="1"][data-plm-id]')].map(img=>{
     const styleName=img.dataset.modelName||(normalizePlmLinkId(img.dataset.modelId)?'':img.dataset.modelId||'');
     return {
       // Model ADI PLM ID sanılmaz: kanonik köprüden çözülür. Çözülemezse kimlik
       // DÜŞÜRÜLMEZ; model adıyla taşınır ve PLM ID'yi sunucu çözer.
-      plmId:img.dataset.plmId||modelAssetCanonicalPlmId(img.dataset.modelId,styleName),
+      plmId:normalizePlmLinkId(img.dataset.plmId),
       colourCode:img.dataset.colourCode||'',
       colour:img.dataset.colourName||'',
       styleName,
@@ -34810,7 +34740,7 @@ function modelAssetIdentitiesFromHost(host){
       // Hücrede gerçek bir kaynak var mı? Yer tutucu thumb'da data-src yoktur.
       hasImage:Boolean(img.dataset.src)&&img.dataset.blImageFailed!=='1',
     };
-  }).filter(item=>item.plmId||item.styleName);
+  }).filter(item=>item.plmId&&item.colourCode);
 }
 function registerCurrentViewModelAssetProvider(){
   const api=modelAssetScopeApi();if(!api)return;
@@ -34848,8 +34778,8 @@ function registerCurrentViewModelAssetProvider(){
             try{current.__blModelAssetRepaint();return;}catch(err){console.warn('Detay görsel yenilemesi başarısız:',err);}
           }
           current.querySelectorAll('img[data-bl-thumb="1"]').forEach(img=>{
-            const plmId=img.dataset.plmId||modelAssetCanonicalPlmId(img.dataset.modelId,img.dataset.modelName||'');
-            const source=canonicalModelImageSource(plmId||img.dataset.modelId,img.dataset.colourCode,img.dataset.colourName||'');
+            const plmId=normalizePlmLinkId(img.dataset.plmId);
+            const source=detailImageUrlFrom(null,{plmId,colourCode:img.dataset.colourCode,colour:img.dataset.colourName||''});
             if(!source||img.dataset.src===source)return;
             img.dataset.src=source;img.dataset.blImageLoaded='0';
             img.classList.remove('isPlaceholder');

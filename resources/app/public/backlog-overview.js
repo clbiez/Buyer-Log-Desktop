@@ -846,8 +846,9 @@ function drawerModelIdentity(it){
   const take=(...values)=>{for(const value of values){const text=String(value==null?'':value).trim();if(text)return text;}return '';};
   const modelName=take(it&&it.modelName,row._modelName,row['Model Adı'],row['Model Name'],row['Style Name']);
   let plmId=take(it&&it.plmId,row._plmId,row.plmId,row.plm,row['PLM ID'],row['PLM Id'],row['Plm Kod'],row['PLM Kod'],row['PLM Code']);
-  try{plmId=window.BLDetailImages?.resolvePlmId?.(plmId,modelName)||plmId;}catch(_){}
+
   return {
+    ...window.BLDetailImages?.identityFromRow?.(row,'backlog'),
     plmId,
     modelName,
     colourCode:take(it&&it.colourCode,row._colourCode,row.colourCode,row.ccode,row['C.Code'],row['Renk Kod'],row['Renk Kodu'],row['Colour Code'],row['Color Code']),
@@ -855,12 +856,11 @@ function drawerModelIdentity(it){
     orderCode:take(it&&it.orderCode,row.orderCode,row.ocode,row['Sipariş Kod'],row['Sipariş Kodu'],row['Order Code'])
   };
 }
+let drawerImageIndex=null;
 function drawerModelImageUrl(it){
   const api=window.BLDetailImages,id=drawerModelIdentity(it),row=it&&it.row&&typeof it.row==='object'?it.row:{};
   if(!api)return '';
-  const directRef=String(row._imageRef==null?'':row._imageRef).trim();
-  return api.sourceFor?.({plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour})||
-    (directRef?'/api/cp-images/'+encodeURIComponent(directRef):'')||'';
+  return api.sourceFor?.(id,drawerImageIndex)||'';
 }
 function drawerModelImageHtml(it){
   const api=window.BLDetailImages,id=drawerModelIdentity(it);
@@ -901,6 +901,7 @@ function drawerEl(){
 function closeDrawer(){const el=$('blvDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
 function openDrawer(spec){
   if(!spec)return;hideTip();
+  drawerImageIndex=window.BLDetailImages?.buildIndex?.()||null;
   const root=drawerEl(),aside=root.querySelector('.bpaDrawer');
   const list=(spec.items||[]).slice().sort((a,b)=>(b.overdueDays-a.overdueDays)||(b.qty-a.qty));
   const s=R().summarize(list);

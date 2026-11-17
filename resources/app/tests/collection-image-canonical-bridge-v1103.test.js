@@ -37,26 +37,12 @@ test('Koleksiyon görseli kanonik kayda TEK çıkıştan bağlanır', () => {
   assert.match(linker, /if\(!norm\(row&&row\.plmId\)\|\|!norm\(row&&row\.colourCode\)\)return false;/);
 });
 
-test('Detay görsel dizini Koleksiyon satırlarını türetilmiş projeksiyonlardan ÖNCE indeksler', () => {
+test('Detay dizini Koleksiyon özgün görsellerini kimlikle taşır, CP projeksiyonunu taşımaz', () => {
   const index = block('function buildDetailImageIndex', 'function detailImageUrlFrom');
-  const registryAt = index.indexOf('const overrideImages=');
-  const collectionAt = index.indexOf("if(typeof kolRows!=='undefined')");
-  const asasAt = index.indexOf('(state?.asasOrders||[]).forEach');
-  const projectionAt = index.indexOf('for(const source of [state.cp,state.orders])');
-  assert.ok(registryAt >= 0, 'Kanonik kayıt döngüsü bulunamadı');
-  assert.ok(collectionAt >= 0, 'Koleksiyon satırı döngüsü bulunamadı');
-  assert.ok(asasAt >= 0, 'ASAS döngüsü bulunamadı');
-  assert.ok(projectionAt >= 0, 'CP/Orders projeksiyon döngüsü bulunamadı');
-  // `add` ilk yazanı korur: kullanıcının manuel Koleksiyon görseli, aynı model
-  // adına ait eski otomatik/projeksiyon kaydına yenilmemelidir.
-  assert.ok(registryAt < collectionAt, 'Kanonik kayıt Koleksiyon satırlarından önce gelmeli');
-  assert.ok(collectionAt < asasAt, 'Koleksiyon satırları ASAS kayıtlarından önce gelmeli');
-  assert.ok(collectionAt < projectionAt, 'Koleksiyon satırları CP/Orders projeksiyonundan önce gelmeli');
-
-  // Model adı → PLM ID köprüsü Koleksiyon satırından da beslenir; OAB alt
-  // detayı yalnız model adı taşır ve kanonik anahtara ancak böyle ulaşır.
-  const collectionBlock = index.slice(collectionAt, asasAt);
-  assert.match(collectionBlock, /modelToPlm\.set\(rowModel,rowPlm\)/);
+  assert.match(index, /originalImage:row\._sharedCollectionImageUrl\?'':row\.img/);
+  assert.match(index, /buildDetailIndex\?\.\(records\)/);
+  assert.doesNotMatch(index, /row\._imageUrl|byModel|modelToPlm/);
+  // Executable exact/manual precedence and reused-name tests: detail-image-strict-matching.test.js.
 });
 
 test('Bağ kaldırıldığında CP/Orders satırındaki görsel projeksiyonu da düşer', () => {

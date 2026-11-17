@@ -133,6 +133,56 @@
     if(!ref)return '';
     return /^\/api\/(?:cp|collection)-images$/i.test(clean(base))?imageUrlForRef(ref):`${base}/${encodeURIComponent(ref)}`;
   };
+  // Detail policy v3: no model-only, PLM-only or projected row image fallback.
+  const detailKeys=id=>{
+    const c=normalizeColourCode(id&&id.colourCode);
+    if(!c)return [];
+    const plm=/^\d+$/.test(clean(id.plmId))?normalizeModelId(id.plmId):'',special=upper(id.specialCode),season=upper(id.season);
+    const model=upper(id.modelName||id.styleName).replace(/^[^\s,]{1,16},\s*(?=\S)/,'');
+    return [plm?JSON.stringify(['plm',plm,c]):'',special?JSON.stringify(['special',special,c]):'',season&&model?JSON.stringify(['season',season,model,c]):''];
+  };
+  const buildDetailIndex=records=>{
+    const matches=new Map(),images=new Map();
+    for(const row of records||[]){
+      const keys=detailKeys(row).filter(Boolean);
+      if(!keys.length)continue;
+      const target=keys[0];
+      for(const key of keys){
+        if(!matches.has(key))matches.set(key,new Set());
+        matches.get(key).add(target);
+      }
+      // Only an original Collection image with a complete matching key is admitted.
+      if(row.originalImage){
+        if(!images.has(target))images.set(target,new Set());
+        images.get(target).add(imageUrl(row.originalImage));
+      }
+    }
+    return {matches,images};
+  };
+  const resolveDetailIdentity=(index,id)=>{
+    const keys=detailKeys(id||{});
+    if(!keys.length)return null;
+    // An explicit PLM + colour never needs a name lookup.
+    if(keys[0])return {plmId:normalizeModelId(id.plmId),colourCode:normalizeColourCode(id.colourCode),target:keys[0]};
+    for(const key of keys.slice(1).filter(Boolean)){
+      const hits=index&&index.matches.get(key);
+      if(!hits)continue;
+      if(hits.size!==1)return null;
+      const target=[...hits][0],parts=JSON.parse(target);
+      return {plmId:parts[0]==='plm'?parts[1]:'',colourCode:parts[parts.length-1],target};
+    }
+    return null;
+  };
+  const resolveDetailSource=(index,id)=>{
+    const exact=resolveDetailIdentity(index,id);
+    if(!exact)return '';
+    const ref=exact.plmId?resolveImageRef(registryMap,exact.plmId,exact.colourCode,id.colour||'',registryNamed):'';
+    if(ref)return imageUrlForRef(ref);
+    // Existing registry entries (including empty/conflicting entries) are authoritative.
+    if(hasRegistryKey(exact.plmId,exact.colourCode,id.colour||''))return '';
+    const urls=index&&index.images.get(exact.target);
+    return urls&&urls.size===1?[...urls][0]:'';
+  };
   const hasRegistryKey=(modelId,colourCode,colourName='')=>hasImageKey(registryMap,modelId,colourCode,colourName,registryNamed);
   const sourceHash=value=>{
     const input=clean(value);let hash=2166136261;
@@ -315,5 +365,5 @@
     return true;
   }
   const stats=()=>({thumbnailMemoryEntries:thumbnailMemory.size,originalMemoryEntries:originalMemory.size,thumbnailInFlight:thumbnailInFlight.size,originalInFlight:originalInFlight.size});
-  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,patchRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
+  return {buildDetailIndex,resolveDetailIdentity,resolveDetailSource,identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,patchRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
 });
