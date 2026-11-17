@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-16",
+  "publishedAt": "2026-11-17",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Raporda görsel boyutu",
-    "en": "Image size in report view"
+    "tr": "Rapor görselleri ve sabit seçim",
+    "en": "Report images and pinned selection"
   },
   "summary": {
-    "tr": "Rapor görünümündeki görselleri normal tablonun kaydırıcısıyla boyutlandırın.",
-    "en": "Resize report images with the normal table slider."
+    "tr": "Rapor görsellerini boyutlandırın; yatay kaydırırken satır seçim alanı görünür kalsın.",
+    "en": "Resize report images and keep row selection visible while scrolling horizontally."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "İzole demo verisiyle gerçek uygulama; tabloyla aynı görsel boyutu ayarı.",
           "en": "Actual application with isolated demo data; the same image-size setting as the table."
+        }
+      }
+    },
+    {
+      "id": "row-selection-pinned",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Satır seçim alanı yatay kaydırmada sabit",
+        "en": "Row selection stays pinned during horizontal scrolling"
+      },
+      "body": {
+        "tr": "Tabloların sol başındaki dar seçim alanı ve başlıktaki toplu seçim, sağa sola kaydırırken görünür ve tıklanabilir kalır. Normal tablo ve rapor görünümü aynı davranır. Donmuş sütunların iç kaydırması seçim alanını gizlemez.",
+        "en": "The narrow row selector on the left and the select-all heading remain visible and clickable while scrolling horizontally. Normal tables and report views behave alike. Scrolling within frozen columns does not hide row selection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "selection-rail-sticky.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda tablo sağa kaydırılmışken seçili satırın şeridi sol kenarda görünür.",
+          "en": "Actual Buyer Log report with the table scrolled horizontally and the selected row rail visible at the left edge."
+        },
+        "caption": {
+          "tr": "İzole demo verisi: yatay kaydırmada seçim solda kalır.",
+          "en": "Isolated demo data: selection stays on the left during horizontal scrolling."
         }
       }
     }

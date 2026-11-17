@@ -32,6 +32,55 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
  await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
+ if(process.env.REPORT_STICKY_ONLY==='1'){
+   const results=[];
+   async function checkPin(selector,label){
+     const target=page.locator(selector).first();await target.waitFor();
+     const before=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap');wrap.scrollLeft=0;return {left:cell.getBoundingClientRect().left,wrap:wrap.getBoundingClientRect().left,width:cell.getBoundingClientRect().width};});
+     await target.evaluate(input=>{input.closest('.tablewrap').scrollLeft=260;});await page.waitForTimeout(80);
+     const after=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap'),r=input.getBoundingClientRect();return {left:cell.getBoundingClientRect().left,scroll:wrap.scrollLeft,position:getComputedStyle(cell).position,z:getComputedStyle(cell).zIndex,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===input,hitHtml:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.outerHTML.slice(0,500),rect:{left:r.left,top:r.top,width:r.width,height:r.height}};});
+     assert.ok(after.scroll>100,label+' actually scrolled');assert.ok(Math.abs(before.left-after.left)<2,label+' stays fixed: '+JSON.stringify({before,after}));assert.equal(after.position,'sticky');if(!after.hit){await page.screenshot({path:path.join(root,'sticky-failure.png')});console.log(await target.evaluate(input=>{const td=input.closest('td,th'),r=input.getBoundingClientRect();return {input:input.outerHTML,td:td.outerHTML.slice(0,600),pe:getComputedStyle(input).pointerEvents,tdPe:getComputedStyle(td).pointerEvents,stack:document.elementsFromPoint(r.left+r.width/2,r.top+r.height/2).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,z:getComputedStyle(el).zIndex,pe:getComputedStyle(el).pointerEvents}))};}));}assert.ok(after.hit,label+' remains clickable '+JSON.stringify(after));results.push({label,before,after});
+   }
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
+     }
+     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);const table=tableImageSizeTable(key),wrap=table.closest('.tablewrap');wrap.style.width='620px';wrap.style.maxWidth='620px';table.style.minWidth='1500px';BLTableFreeze.clear(table);},key);
+     const tableId=key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     await checkPin('#'+tableId+' tbody input.rowChk',key+' normal body');
+     await checkPin('#'+tableId+' thead input[type="checkbox"]',key+' normal header');
+     await page.evaluate(key=>{const table=tableImageSizeTable(key);BLTableFreeze.apply(table,{count:3,pane:100});},key);
+     await page.waitForTimeout(120);
+     await page.evaluate(key=>BLTableFreeze.scrollPane(tableImageSizeTable(key),180),key);
+     await checkPin('#'+tableId+' tbody input.rowChk',key+' inner frozen pane');
+     await page.evaluate(key=>{BLTableFreeze.clear(tableImageSizeTable(key));BLTableReportInline.setMode(key,true);document.querySelector('#blTableReport-'+key).style.minWidth='1500px';},key);
+     await checkPin('#blTableReport-'+key+' [data-tr-check="0"]',key+' report body');
+     await checkPin('#blTableReport-'+key+' [data-tr-check="all"]',key+' report header');
+     await page.locator('#blTableReport-'+key+' [data-tr-check="0"]').check();
+     if(key==='cp')await page.screenshot({path:path.join(assets,'selection-rail-sticky.png')});
+     console.log('PASS selection pin: '+key+' normal/report/header/inner pane');
+   }
+   const matrix=await page.evaluate(()=>{
+     const attrs=['class="rowChk"','class="shipCompareChk"','class="shipRowChk"','data-tr-check="0"','data-ship-chk-all','data-fabric-pick="0"','data-bin-id="demo"','data-cpa-queue-check="demo"','data-dc-item="demo"','data-dc-toggle-all','data-ta-pick="demo"','data-ta-all','data-act="selectRow"','data-act="selectAll"','id="fixture_selAll"'];
+     const wrap=document.createElement('div');wrap.style.cssText='position:fixed;left:900px;top:100px;width:300px;overflow:auto';
+     wrap.innerHTML='<table style="width:1500px"><tbody>'+attrs.map(attr=>'<tr><td><input type="checkbox" '+attr+'></td><td>Demo</td></tr>').join('')+'<tr><td><label><input type="checkbox" data-xim="include">Source row</label></td><td>Demo</td></tr><tr><td><input type="checkbox" data-um-rolecell="read"></td><td>Permission</td></tr><tr><td>Value</td><td><input type="checkbox" class="rowChk"></td></tr></tbody></table>';document.body.append(wrap);
+     wrap.scrollLeft=260;const result=[...wrap.querySelectorAll('input')].map(input=>({position:getComputedStyle(input.closest('td')).position,left:input.closest('td').getBoundingClientRect().left}));wrap.remove();return result;
+   });
+   for(const result of matrix.slice(0,-2)){assert.equal(result.position,'sticky');assert.ok(Math.abs(result.left-900)<2);}for(const result of matrix.slice(-2))assert.notEqual(result.position,'sticky');
+   await page.evaluate(()=>{switchTab('cp');const seed=state.cp.rows[0],rows=Array.from({length:300},(_,i)=>({...seed,_id:i+1,'Model Name':'DEMO MODEL '+i}));BLTableReportInline.register('cp',{tab:'cp',table:()=>document.getElementById('cpTable'),rows:()=>rows,columns:()=>tableReportCoreColumns('cp'),images:()=>false,...tableReportInteraction('cp')});BLTableReportInline.setMode('cp',true);document.getElementById('blTableReport-cp').style.minWidth='2200px';});
+   const samples=[];
+   for(let pair=0;pair<3;pair++)for(const candidate of [false,true]){
+     const raw=await page.evaluate(candidate=>{
+       const sheet=document.getElementById('blRowSelectionPinStyle').sheet;sheet.disabled=!candidate;
+       const table=document.getElementById('blTableReport-cp'),wrap=table.closest('.tablewrap'),rail=table.querySelector('[data-tr-check="0"]');wrap.scrollLeft=0;rail.getBoundingClientRect();
+       const values=[];for(let i=0;i<30;i++){const start=performance.now();wrap.scrollLeft=i%2?220:560;rail.getBoundingClientRect();values.push(performance.now()-start);}sheet.disabled=false;return values;
+     },candidate);samples.push({pair,variant:candidate?'pinned':'baseline',raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length});
+   }
+   fs.writeFileSync(path.join(root,'sticky-performance.json'),JSON.stringify({scenario:'L2: synchronous horizontal scroll plus rail geometry; 300 actual report rows, three alternating pairs, 30 samples each; baseline disables only the new pin stylesheet',samples},null,2));
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'sticky-results.json'),JSON.stringify({ok:true,results,matrix,errors},null,2));return;
+ }
  if(process.env.REPORT_IMAGES_ONLY==='1'){
    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
    const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);

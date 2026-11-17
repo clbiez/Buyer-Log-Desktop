@@ -1,0 +1,410 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "label": "cp normal body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"1\">",
+        "rect": {
+          "left": 216,
+          "top": 201.5625,
+          "width": 8,
+          "height": 41
+        }
+      }
+    },
+    {
+      "label": "cp normal header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" id=\"cpTable_selAll\" aria-label=\"Select all matching rows\">",
+        "rect": {
+          "left": 216,
+          "top": 169.265625,
+          "width": 8,
+          "height": 32.296875
+        }
+      }
+    },
+    {
+      "label": "cp inner frozen pane",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"1\">",
+        "rect": {
+          "left": 216,
+          "top": 201.5625,
+          "width": 8,
+          "height": 41
+        }
+      }
+    },
+    {
+      "label": "cp report body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.34375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"0\" aria-label=\"Select row\">",
+        "rect": {
+          "left": 216,
+          "top": 210.296875,
+          "width": 8,
+          "height": 50.1875
+        }
+      }
+    },
+    {
+      "label": "cp report header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.34375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"all\" aria-label=\"Select rows on this page\">",
+        "rect": {
+          "left": 216,
+          "top": 174,
+          "width": 8,
+          "height": 36.296875
+        }
+      }
+    },
+    {
+      "label": "orders normal body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"1\">",
+        "rect": {
+          "left": 216,
+          "top": 201.5625,
+          "width": 8,
+          "height": 41
+        }
+      }
+    },
+    {
+      "label": "orders normal header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" id=\"ordersTable_selAll\" aria-label=\"Select all matching rows\">",
+        "rect": {
+          "left": 216,
+          "top": 169.265625,
+          "width": 8,
+          "height": 32.296875
+        }
+      }
+    },
+    {
+      "label": "orders inner frozen pane",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 8
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"1\">",
+        "rect": {
+          "left": 216,
+          "top": 201.5625,
+          "width": 8,
+          "height": 41
+        }
+      }
+    },
+    {
+      "label": "orders report body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.15625
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"0\" aria-label=\"Select row\">",
+        "rect": {
+          "left": 216,
+          "top": 210.296875,
+          "width": 8,
+          "height": 50.1875
+        }
+      }
+    },
+    {
+      "label": "orders report header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.15625
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"all\" aria-label=\"Select rows on this page\">",
+        "rect": {
+          "left": 216,
+          "top": 174,
+          "width": 8,
+          "height": 36.296875
+        }
+      }
+    },
+    {
+      "label": "koleksiyon normal body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 100
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"91001\">",
+        "rect": {
+          "left": 216,
+          "top": 195.5625,
+          "width": 8,
+          "height": 47.390625
+        }
+      }
+    },
+    {
+      "label": "koleksiyon normal header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 99.984375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" id=\"kolSelAll\">",
+        "rect": {
+          "left": 216,
+          "top": 160.625,
+          "width": 8,
+          "height": 33.9375
+        }
+      }
+    },
+    {
+      "label": "koleksiyon inner frozen pane",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 99.984375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" class=\"rowChk\" aria-label=\"Select row\" data-id=\"91001\">",
+        "rect": {
+          "left": 216,
+          "top": 195.5625,
+          "width": 8,
+          "height": 47.390625
+        }
+      }
+    },
+    {
+      "label": "koleksiyon report body",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.34375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "21",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"0\" aria-label=\"Select row\">",
+        "rect": {
+          "left": 216,
+          "top": 210.296875,
+          "width": 8,
+          "height": 50.1875
+        }
+      }
+    },
+    {
+      "label": "koleksiyon report header",
+      "before": {
+        "left": 216,
+        "wrap": 216,
+        "width": 19.34375
+      },
+      "after": {
+        "left": 216,
+        "scroll": 260,
+        "position": "sticky",
+        "z": "32",
+        "hit": true,
+        "hitHtml": "<input type=\"checkbox\" data-tr-check=\"all\" aria-label=\"Select rows on this page\">",
+        "rect": {
+          "left": 216,
+          "top": 174,
+          "width": 8,
+          "height": 36.296875
+        }
+      }
+    }
+  ],
+  "matrix": [
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "sticky",
+      "left": 900
+    },
+    {
+      "position": "static",
+      "left": 642
+    },
+    {
+      "position": "relative",
+      "left": 1418.890625
+    }
+  ],
+  "errors": []
+}
