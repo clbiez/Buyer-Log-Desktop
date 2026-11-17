@@ -21,19 +21,19 @@ test('late approval revises effective date without changing ASAS, manual maps or
  assert.equal(JSON.stringify({source,ov}),snapshot);
  assert.deepEqual(parse.applyDateOverrides([effective],ov),[effective],'repeated application is stable');
 });
-test('missing, invalid, equal or earlier approvals do not revise dates; no clock based postponement',()=>{
- for(const approval of [null,'','invalid','2026-10-29','2026-10-30']){
+test('missing and invalid approvals leave planned dates unchanged; no clock based postponement',()=>{
+ for(const approval of [null,'','invalid']){
   const source=order({shipConf:approval});assert.equal(parse.applyDateOverrides([source],{})[0],source);
  }
- assert.equal(parse.applyDateOverrides([order({ex:null})],{})[0].ex,null);
+ assert.equal(day(parse.applyDateOverrides([order({ex:null})],{})[0].ex),'2026-11-05');
 });
-test('manual planning remains distinct, later manual dates win; refreshed approvals are recomputed',()=>{
+test('approval overrides earlier and later manual planning; refreshed approvals are recomputed',()=>{
  const ov={datemap:{'1001|DEMO|BLUE':{ex:'2026-11-03',retail:'2026-12-20'}}};
  const [effective]=parse.applyDateOverrides([order()],ov);
  assert.equal(day(effective.ex),'2026-11-05');assert.equal(day(effective.retail),'2026-12-20');
  assert.equal(day(effective._exFactoryRevision.previousDate),'2026-11-03');
  const [later]=parse.applyDateOverrides([order()],{datemap:{1001:{ex:'2026-11-10'}}});
- assert.equal(day(later.ex),'2026-11-10');assert.ok(!later._exFactoryRevision);
+ assert.equal(day(later.ex),'2026-11-05');assert.equal(later._exFactoryRevision.source,'loading-approval');
  const [refreshed]=parse.applyDateOverrides([{...effective,shipConf:'2026-11-08'}],ov);
  assert.equal(day(refreshed.ex),'2026-11-08');assert.equal(day(refreshed._asasEx),'2026-10-30');
  const [removed]=parse.applyDateOverrides([{...effective,shipConf:null}],ov);
@@ -68,7 +68,7 @@ test('client resolves the same date and renders a separate translated automatic 
  assert.match(rendered,/ASAS Ex-Factory/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
  assert.doesNotMatch(rendered,/🔒|<small>/);
  assert.equal(rendered.replace(/<[^>]*>/g,''),'2026-10-30·2026-11-05','only the two dates and a dot are visible');
- assert.equal(ctx.revisionHtml('LT',{from:29,to:35,source:'loading-approval'}).replace(/<[^>]*>/g,''),'35','derived values have no automatic-mode labels');
+ assert.equal(ctx.revisionHtml('LT',{from:29,to:35,source:'loading-approval'}).replace(/<[^>]*>/g,''),'29·35','derived values compare the baseline and calculation with a dot');
  ctx.appLang='en';assert.match(ctx.revisionHtml('Ex-factory',rev),/Loading approval/);
  assert.match(ctx.revisionHtml('Ex-factory',{...rev,source:'manual'}),/class="revPair"/);
 });

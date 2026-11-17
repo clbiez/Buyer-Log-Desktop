@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "revision-origin-separators",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Backlog",
+        "en": "CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Elle değişiklikte ok, otomatik hesapta nokta",
+        "en": "Arrows for manual changes, dots for automatic calculations"
+      },
+      "body": {
+        "tr": "Elle revize edilen tarih hücreleri eski → yeni gösterimini korur. Hesaplanan LT, Ex→Retail ve Priority değişiklikleri eski · yeni biçiminde gösterilir; yükleme onayından gelen Ex-Factory de nokta kullanır. Ayraç, karşılaştırma ipucu ve bağlantılı değerler CP ve Siparişler ortak gösteriminde tutarlıdır. Geçerli yükleme onayı planlanan tarihten önce, sonra veya aynı gün olsa da Ex-Factory için esas alınır ve alan elle girişe kapanır. Eski tarih hesabıyla hazırlanan sayfa önbellekleri yeniden kurulur.",
+        "en": "Manually revised date cells keep the old → new comparison. Calculated LT, Ex→Retail and Priority changes show old · new; Ex-Factory from loading approval also uses a dot. Separators, comparison tooltips and linked values stay consistent in the shared CP and Orders renderer. A valid loading approval governs Ex-Factory whether it is before, after or on the planned date, and locks manual entry. Page caches built with the previous date precedence are rebuilt."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "revision-origin-separators.png",
+        "alt": {
+          "tr": "Demo CP satırlarında elle revizyon oku ve otomatik hesaplanan değerlerde nokta ayracı",
+          "en": "Demo CP rows with manual revision arrows and dots for automatically calculated values"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: ilk satırda elle Ex-Factory revizyonu okla, LT ve Ex→Retail noktayla; ikinci satırda yükleme onayı noktayla gösterilir.",
+          "en": "Actual Buyer Log with isolated demo data: the first row shows a manual Ex-Factory arrow and dots for LT and Ex→Retail; the second row shows loading approval with a dot."
+        }
+      }
+    },
+    {
       "id": "report-image-size",
       "type": "improvement",
       "module": {

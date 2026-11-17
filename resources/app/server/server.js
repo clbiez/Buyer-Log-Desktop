@@ -8190,7 +8190,7 @@ function pageProjectionContext(currentUser = null) {
   const filterStatus = sourceFilterReadiness(['cp','orders','backlog'], currentUser || id);
   const contextHash = stableHashValue({
     schema: pageProjectionCache.CACHE_SCHEMA_VERSION,
-    exFactoryApprovalVersion: 1,
+    exFactoryApprovalVersion: 2,
     userId: id,
     resolvedAccessHash: currentUser ? userAccess.computeAccessContext(currentUser).accessHash : null,
     profile: profile ? {
