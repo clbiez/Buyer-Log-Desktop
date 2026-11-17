@@ -38,7 +38,7 @@ function row(id, group, role, colour, buyer) { return { id, modelGroupId:group, 
 
 test('Concept 2 collapse yalnız presentation projection; logical colour records değişmez ve filtered child kaybolmaz', () => {
   const ctx = {
-    console, window:{BLTableSearch:Search},kolSearchHaystack:r=>[r.colour,r.buyer].join(' '), kolRows:[], kolSort:{key:null,dir:1}, kolTransientTopRowId:null,
+    console, window:{BLTableSearch:Search},kolSearchHaystack:r=>Search.fold([r.colour,r.buyer].join(' ')), kolRows:[], kolSort:{key:null,dir:1}, kolTransientTopRowId:null,
     kolColDefs:()=>[{k:'colour'},{k:'buyer'}], columnSchemaFor:()=>null,
     kolEffectiveValue:(r,k)=>r[k], compareSeasonValues:(a,b)=>String(a).localeCompare(String(b)),
     norm:v=>String(v ?? ''), kolIsColorSpecific:key=>['colour','colourCode','quantity','status','durum','img','imgRef'].includes(key),
