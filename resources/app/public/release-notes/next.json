@@ -126,6 +126,29 @@
           "en": "The first row is both selected and edited in the dark theme, using isolated demo data."
         }
       }
+    },
+    {
+      "id": "shipping-clipboard-display-format",
+      "type": "fix",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Kopyalanan nakliye tablosunda tutarlı biçimler",
+        "en": "Consistent formatting in copied shipping comparison"
+      },
+      "body": {
+        "tr": "Dışarıya kopyalanan karşılaştırma tablosunda USD fiyatları arayüzdeki gibi iki ondalıkla, tarihler GG.AA.YY ve transit süreleri sayı + g biçiminde aktarılır. Ek nakliye şekilleri de dahildir; hesaplama değerleri değişmez.",
+        "en": "Copied comparison tables now show USD prices with two decimal places, dates as DD.MM.YY and transit durations as a number followed by d. Custom shipping methods are included; underlying calculations remain unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Uygulama ekranında değişiklik yok; düzeltme yalnız harici uygulamaya yapıştırılan pano içeriğini biçimlendirir.",
+          "en": "There is no change to the in-app view; this fix only formats clipboard content pasted into an external application."
+        }
+      }
     }
   ]
 }
