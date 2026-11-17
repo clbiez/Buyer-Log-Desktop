@@ -7,10 +7,39 @@
     "en": "Flow selection and row illumination"
   },
   "summary": {
-    "tr": "Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur.",
-    "en": "Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows."
+    "tr": "Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur. Açılışta kullanıcı erişim betiği geçici hata alırsa yeniden denenir; kalıcı hatada kullanıcı bilgilerine özel hata ve Tekrar dene gösterilir.",
+    "en": "Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows. Startup retries temporary user access script failures; persistent failures show a user information error and Retry."
   },
   "changes": [
+    {
+      "id": "startup-user-access-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Kullanıcı bilgileri adımında takılmaya karşı kurtarma",
+        "en": "Recovery when user information stalls at startup"
+      },
+      "body": {
+        "tr": "Kullanıcı erişim betiği geçici bir yükleme hatası aldığında, açılış artık yavaş ekran verisinin tamamlanmasını beklemeden betiği bir kez yeniden dener. Profil, başlangıç verisi ve açılış ekranı hazır olduğunda Devam düğmesi açılır. Betik yine yüklenemezse kullanıcı bilgilerine özel hata ve Tekrar dene düğmesi gösterilir; doğrulanmış profil olmadan çalışma alanı açılmaz.",
+        "en": "If the user access script encounters a temporary loading error, startup now retries it once without waiting for slow screen data. Continue becomes available when the profile, initial data and opening screen are ready. If the script still cannot load, a user information error and Retry button appear; the workspace remains gated until a validated profile is ready."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-user-access-recovered.png",
+        "alt": {
+          "tr": "Geçici betik yükleme hatasından sonra tamamlanan kullanıcı bilgileri ve Devam düğmesi",
+          "en": "User information ready and Continue available after a temporary script loading error"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo: ekran verisi beklerken kullanıcı erişim betiği ikinci denemede yüklenir; açılış ekranı da hazır olunca Devam görünür.",
+          "en": "Actual Buyer Log with isolated demo data: the user access script loads on the second attempt while screen data is pending; Continue appears once the opening screen is also ready."
+        }
+      }
+    },
     {
       "id": "detail-image-strict-matching",
       "type": "fix",

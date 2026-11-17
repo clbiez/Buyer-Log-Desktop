@@ -1,0 +1,38 @@
+[
+  {
+    "variant": "main",
+    "gateMs": 2414.7000000001863,
+    "usableMs": 3488.2999999998137,
+    "scripts": 1
+  },
+  {
+    "variant": "candidate",
+    "gateMs": 2152.399999999441,
+    "usableMs": 2812.600000000559,
+    "scripts": 1
+  },
+  {
+    "variant": "main",
+    "gateMs": 2273.5,
+    "usableMs": 3394.800000000745,
+    "scripts": 1
+  },
+  {
+    "variant": "candidate",
+    "gateMs": 1789.8999999994412,
+    "usableMs": 2840,
+    "scripts": 1
+  },
+  {
+    "variant": "main",
+    "gateMs": 1541.2999999998137,
+    "usableMs": 2302.7000000001863,
+    "scripts": 1
+  },
+  {
+    "variant": "candidate",
+    "gateMs": 1432.3999999994412,
+    "usableMs": 1917.300000000745,
+    "scripts": 1
+  }
+]

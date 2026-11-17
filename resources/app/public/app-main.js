@@ -17454,6 +17454,20 @@ async function loadInitialBuyerLogData(){
   setServerStatus(msg);showToast(msg);return false;
 }
 
+async function ensureStartupUserAccess(){
+  try{
+    // This hard startup gate must retry independently of screen preparation.
+    await window.BLPerf.ensureFeature('userAccess');
+    if(typeof window.applyUserAccessUI!=='function')throw new Error('USER_ACCESS_API_UNAVAILABLE');
+    window.applyUserAccessUI();
+    return true;
+  }catch(error){
+    console.warn('Startup user access:',error);
+    window.BLBootGuard?.fail('user-access-failed');
+    return false;
+  }
+}
+
 function signalStartupReady(){
   if(startupReadySignaled)return;startupReadySignaled=true;
   void fetch('/api/startup/ready',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({marks:window.BLPerf?.timeline?.()||[]})})
@@ -17653,7 +17667,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
   // Profil katmanı ilk veriyle gelir; deferredUi sonrasına kalmaz.
   // İlk çağrı ve lazy manifest aynı script anahtarını paylaşır.
-  void window.BLPerf?._loadScript?.('user-access-ui.js?rev=APP-UPDATE-V3')?.catch(error=>console.warn('Kullanıcı erişim katmanı erken yüklenemedi:',error));
+  const userAccessReady=ensureStartupUserAccess();
   const initialDataLoaded=await loadInitialBuyerLogData();
   if(initialDataLoaded)window.BLBootGuard?.ready('data');
   else window.BLBootGuard?.fail('initial-data-failed');
@@ -17674,8 +17688,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     try{window.BL_START_HEARTBEAT?.();}catch(error){console.warn('Heartbeat başlatılamadı:',error);}
     void afterStartupReveal(()=>{
     // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
-    if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
-      .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
+    if(primaryScreenReady)void userAccessReady.then(ok=>{if(ok)scheduleBackgroundModuleWarmup();else finishStartupModules();})
+      .catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
@@ -41801,6 +41815,7 @@ function syncVfMenuLanguage(){
 }
 function applyLanguage(lang){
   appLang = (lang==='en') ? 'en' : 'tr';
+  window.BLBootGuard?.refreshLanguage?.();
   window.BLGuide?.refreshLanguage();
   if(document.getElementById('todoModal')) renderTodoModal();
   // CSS text-transform:uppercase follows the document language. Keep English
