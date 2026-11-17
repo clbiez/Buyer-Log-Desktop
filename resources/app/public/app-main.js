@@ -2987,6 +2987,41 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 }
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
+// Render-owned indexes preserve raw ID equality, numeric aliases and partial rows.
+// They are rebuilt with the full filtered set, never with just the current page.
+function selectionRowsIndex(rows){
+  const entries=new Map(),index=new Map();
+  for(const row of rows){
+    const id=row._id;
+    let entry=entries.get(id);
+    if(!entry){
+      entry={id,rows:[]};entries.set(id,entry);
+      const key=selectionIdKey(id),tokens=new Set([id]);
+      if(key){tokens.add(key);const numeric=Number(key);if(Number.isFinite(numeric))tokens.add(numeric);}
+      for(const token of tokens){if(!index.has(token))index.set(token,[]);index.get(token).push(entry);}
+    }
+    entry.rows.push(row);
+  }
+  return index;
+}
+function selectionIndexEntries(index,selected){
+  const entries=new Set();
+  for(const value of selected)for(const entry of index.get(value)||[])entries.add(entry);
+  return entries;
+}
+function managedSelectionView(tableKey){
+  const table=document.getElementById(tableKey==='orders'?'ordersTable':'cpTable');
+  const view=table?._blSelectionView;
+  return view&&view.sourceRows===state[tableKey]?.rows?view:null;
+}
+function managedSelectionSummary(tableKey){
+  const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
+  const view=managedSelectionView(tableKey);
+  if(!view)return null;
+  let hidden=0;
+  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!view.visibleIds.has(String(entry.id)))hidden+=entry.rows.length;
+  return {hidden};
+}
 function managedSelectionSourceRows(tableKey){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
@@ -3015,6 +3050,7 @@ function managedSelectionChange(tableKey,change){
 window.BLManagedSelection={
   clear(tableKey){managedSelectionChange(tableKey,selected=>selected.clear());},
   snapshot:managedSelectionSnapshot,
+  summary:managedSelectionSummary,
   remove(tableKey,id){
     managedSelectionChange(tableKey,selected=>{for(const value of selected)if(String(value)===String(id))selected.delete(value);});
   },
@@ -7822,7 +7858,7 @@ function selectionFooterCellHtml(count){
 function updateSelectionFooterCount(table,rows,selectedSet,getId){
   const cell=table&&table.tFoot&&table.tFoot.querySelector('.selectionTotalCell');
   if(!cell)return;
-  const count=tableVisibleSelectedCount(rows,selectedSet,getId);
+  const count=arguments[4]??tableVisibleSelectedCount(rows,selectedSet,getId);
   const includeTotal=cell.dataset.includeTotal==='1';
   const selectedTitle=appLang==='en'?`${count} selected row${count===1?'':'s'}`:`${count} seçili satır`;
   const totalLabel=appLang==='en'?'Total':'Toplam';
@@ -8258,6 +8294,13 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   const table = document.getElementById(tableId);
   if(!table)return;
   const fullRows=rows;
+  if((tableKey==='cp'||tableKey==='orders')&&!pageOnly){
+    const actualIds=new Map();
+    for(const row of fullRows){const key=selectionIdKey(row._id);if(!actualIds.has(key))actualIds.set(key,row._id);}
+    table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,
+      visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex:selectionRowsIndex(fullRows),
+      sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]))};
+  }
   if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
     rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
   }
@@ -8451,19 +8494,27 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
-        const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
+        const id = meta.actualIds.get(selectionIdKey(chk.dataset.id)) ?? chk.dataset.id;
         selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
         // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
         // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi
         // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).
-        if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
-        updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId);
-        if(typeof meta.onSelectionChange==='function') meta.onSelectionChange(meta.selSet,meta.rows);
-        else if((meta.tableKey==='cp'||meta.tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
+        if(tbody._selectionUpdateQueued)return;
+        tbody._selectionUpdateQueued=true;
+        requestAnimationFrame(()=>{
+          tbody._selectionUpdateQueued=false;
+          const meta=tbody._chkMeta;if(!meta)return;
+          if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
+          const view=meta.table._blSelectionView;
+          const count=view?selectionIndexEntries(view.visibleIndex,meta.selSet).size:undefined;
+          updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
+          meta.onSelectionChange?.(meta.selSet,meta.rows);
+          window.BLSelectionBar?.refresh();
+        });
       });
     }
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, actualIds:table._blSelectionView?.actualIds||new Map(fullRows.map(row=>[selectionIdKey(row._id),row._id])), getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
@@ -9909,12 +9960,13 @@ function quickSeasonEntries(counts){
 function sortRows(rows,key,dir){
   const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
     ||(COLS_BY_TABLE.orders||[]).some(col=>col.k===key&&col.personalNote);
+  const season=String(key).toLocaleLowerCase('tr-TR')==='season';
+  const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
+  const schema=key==='Priority'||season?null:columnSchemaFor(column||{k:key},rows);
   return [...rows].sort((a,b)=>{
     let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
     if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
-    if(String(key).toLocaleLowerCase('tr-TR')==='season') return BLBusinessRules.compareChronologicalValues(x,y,dir);
-    const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
-    const schema=columnSchemaFor(column||{k:key},rows);
+    if(season) return BLBusinessRules.compareChronologicalValues(x,y,dir);
     const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
     if(schema&&(schema.sortType==='number'||schema.sortType==='date')){
       // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
@@ -25195,13 +25247,15 @@ function endeksmatikRoyaltyRule(mode,row){
 }
 function selectedEndeksmatikRows(mode){
   const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
-  if(!selected?.size)return [];
-  return (mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+  if(selected?.size!==1)return [];
+  const view=managedSelectionView(mode);
+  return view?[...selectionIndexEntries(view.visibleIndex,selected)].flatMap(entry=>entry.rows):[];
 }
 function selectedEndeksmatikOrder(mode){
   const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
   if(activeTab!==mode)return null;
-  const rows=selectedEndeksmatikRows(mode);
+  const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+  const rows=(mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
   if(rows.length!==1){showToast(appLang==='en'?'Select exactly one visible order for Endeksmatik.':'Endeksmatik için görünür tek bir sipariş seçin.');return null;}
   return rows[0];
 }

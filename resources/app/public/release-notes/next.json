@@ -178,6 +178,29 @@
           "en": "There is no change to the in-app view; this fix only formats clipboard content pasted into an external application."
         }
       }
+    },
+    {
+      "id": "orders-cp-selection-performance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler / CP",
+        "en": "Orders / CP"
+      },
+      "title": {
+        "tr": "Büyük tablolarda hızlı satır seçimi",
+        "en": "Faster row selection in large tables"
+      },
+      "body": {
+        "tr": "Satır seçimi sırasında tüm veri tekrar filtrelenip sıralanmaz. Shift ile aralık seçiminin sayaç ve buton güncellemeleri birleştirilir; seçim çubuğu boştayken tüm veriyi işlemez. Seçim sayısı, filtre dışı seçimler ve mevcut işlemler korunur.",
+        "en": "Selecting rows no longer filters and sorts the entire dataset. Shift range selection batches counter and button updates; the selection bar avoids full data processing while idle. Selection counts, selections outside filters and existing actions are preserved."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız performans düzeltmesi; ekran görünümü değişmez.",
+          "en": "Performance-only fix; the screen appearance is unchanged."
+        }
+      }
     }
   ]
 }
