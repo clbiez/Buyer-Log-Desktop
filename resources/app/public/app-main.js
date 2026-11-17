@@ -25262,9 +25262,14 @@ function endeksmatikRoyaltyRule(mode,row){
 }
 function selectedEndeksmatikRows(mode){
   const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
-  if(selected?.size!==1)return [];
-  const view=managedSelectionView(mode);
-  return view?[...selectionIndexEntries(view.visibleIndex,selected)].flatMap(entry=>entry.rows):[];
+  if(!selected?.size)return [];
+  const view=managedSelectionView(mode);if(!view)return [];
+  let row=null;
+  for(const entry of selectionIndexEntries(view.visibleIndex,selected)){
+    if(row||entry.rows.length!==1)return [];
+    row=entry.rows[0];
+  }
+  return row?[row]:[];
 }
 function selectedEndeksmatikOrder(mode){
   const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';

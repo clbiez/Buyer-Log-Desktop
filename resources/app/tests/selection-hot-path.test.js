@@ -7,7 +7,7 @@ test('checkbox selection coalesces effects and resolves IDs from the render inde
  const handler=block("tbody.addEventListener('change', e=>{",'// v10.11 — CP/Orders');
  assert.match(handler,/requestAnimationFrame/);assert.match(handler,/actualIds\.get/);
  assert.doesNotMatch(handler,/selectionActualId\(|filteredOrders\(|filteredCP\(/);
- assert.match(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/selected\?\.size!==1/);
+ assert.match(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/selectionIndexEntries/);
  assert.doesNotMatch(block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder('),/filteredOrders\(|filteredCP\(/);
 });
 test('closed selection details use a cheap summary; polling reads only key and count',()=>{
@@ -89,14 +89,15 @@ test('render views reject replaced source data and the summary never sorts or fi
  assert.equal(api.managedSelectionSummary('orders').hidden,1);
  state.orders.rows=[{_id:1}];assert.equal(api.managedSelectionView('orders'),null);assert.equal(api.managedSelectionSummary('orders'),null);
 });
-test('Endeksmatik button uses only a single selection in the full visible set',()=>{
+test('Endeksmatik button uses exactly one visible order even with other hidden selections',()=>{
  const rows=[{_id:1},{_id:2}],state={ordersSelected:new Set(['2'])},api=indexApi();
  const view={visibleIndex:api.selectionRowsIndex(rows)};
  const select=new Function('state','managedSelectionView','selectionIndexEntries',block('function selectedEndeksmatikRows(','function selectedEndeksmatikOrder(')+';return selectedEndeksmatikRows;')(state,()=>view,api.selectionIndexEntries);
  assert.deepEqual(select('orders'),[rows[1]]);
+ state.ordersSelected.add('outside');assert.deepEqual(select('orders'),[rows[1]],'hidden selections must not disable the only visible order');
  state.ordersSelected.add(1);assert.deepEqual(select('orders'),[]);
  state.ordersSelected=new Set(['outside']);assert.deepEqual(select('orders'),[]);
- state.ordersSelected=new Set(['1']);view.visibleIndex=api.selectionRowsIndex([rows[0],rows[0]]);assert.equal(select('orders').length,2);
+ state.ordersSelected=new Set(['1']);view.visibleIndex=api.selectionRowsIndex([rows[0],rows[0]]);assert.equal(select('orders').length,0,'two projected rows must keep Endeksmatik disabled');
 });
 test('selection bar polls only key/count and reserves snapshots for open details',()=>{
  const vm=require('node:vm'),frames=[],timers=new Map(),events={},nodes=[];
