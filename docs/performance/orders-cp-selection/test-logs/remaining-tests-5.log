@@ -1,0 +1,13 @@
+Continuing the single full-suite attempt after completed batches 1–4; only previously unrun batches follow.
+Remaining batch 5/10 (194 files)
+
+✖ × seçimi temizler; aynı sayıda yeni seçim yapıldığında çubuk tekrar görünür (tests/ui-polish-v70319.test.js:104:1)
+TypeError: root.BLManagedSelection?.summary is not a function
+    at summary (evalmachine.<anonymous>:68:91)
+    at update (evalmachine.<anonymous>:108:16)
+    at Object.requestAnimationFrame (/workspace/Buyer-Log-Desktop/resources/app/tests/ui-polish-v70319.test.js:44:65)
+    at schedule (evalmachine.<anonymous>:130:10)
+    at Object.change (evalmachine.<anonymous>:136:7)
+    at Object.fire (/workspace/Buyer-Log-Desktop/resources/app/tests/ui-polish-v70319.test.js:47:73)
+    at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/ui-polish-v70319.test.js:111:5)
+tests 1263 · pass 1262 · fail 1 · cancelled 0 · skipped 0 · todo 0

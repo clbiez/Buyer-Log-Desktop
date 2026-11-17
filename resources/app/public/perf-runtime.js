@@ -187,6 +187,7 @@
     /* user-access-ui.js LCW AI istemcisi ve güncelleme testinin hemen ardından gelir: açılış
        perdesinin "profil" kapısı ona bağlıdır ve diğer ertelenmiş modüllerin
        yüklenmesini beklemez. */
+    userAccess:['user-access-ui.js?rev=APP-UPDATE-V3'],
     deferredUi:[
       'lcwai-assistant.js?rev=1','update-test-ui.js?rev=6','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js',

@@ -12,9 +12,15 @@ on:
         default: false
         type: boolean
       base_version:
-        description: Previously accepted signed full-bootstrap STABLE version
+        description: Previously published signed full-bootstrap version
         required: true
         type: string
+      base_channel:
+        description: Channel containing the signed full-bootstrap base
+        required: true
+        default: stable
+        type: choice
+        options: [stable, test]
       sequence:
         description: Next immutable sequence (first patch is 1)
         required: true
@@ -41,6 +47,7 @@ jobs:
       APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
       PUBLISH_APPROVED: ${{ inputs.publish_approved }}
       BASE_VERSION: ${{ inputs.base_version }}
+      BASE_CHANNEL: ${{ inputs.base_channel }}
       PATCH_SEQUENCE: ${{ inputs.sequence }}
       PATCH_NOTES_TR: ${{ inputs.notes_tr }}
       PATCH_NOTES_EN: ${{ inputs.notes_en }}

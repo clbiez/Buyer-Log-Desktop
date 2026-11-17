@@ -26,7 +26,8 @@ test('checkbox selection keeps the source row id instead of coercing every id to
   const frameworkEnd = APP.indexOf('// v10.11 — CP/Orders özet satırı', frameworkStart);
   const framework = APP.slice(frameworkStart, frameworkEnd);
   assert.ok(frameworkStart >= 0 && frameworkEnd > frameworkStart, 'CP/Orders checkbox delegasyonu bulunamadı');
-  assert.match(framework, /selectionActualId\(meta\.rows,meta\.getId,chk\.dataset\.id\)/);
+  assert.match(framework, /selectionIdKey\(chk\.dataset\.id\)/);
+  assert.match(framework, /meta\.actualIds\.get\(key\)/);
   assert.match(framework, /selectionSetId\(meta\.selSet,id,chk\.checked\)/);
   assert.doesNotMatch(framework, /Number\(chk\.dataset\.id\)/);
 

@@ -228,6 +228,7 @@ test('the profile gate script is requested with the initial data, not after the 
   const PERF=read('perf-runtime.js');const src='user-access-ui.js?rev=APP-UPDATE-V3';
   assert.ok(PERF.includes(`'${src}'`),'deferredUi and the early load must use the same key');
   const boot=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"));
-  const early=boot.indexOf(`_loadScript?.('${src}')`);
+  assert.match(PERF,/userAccess:\['user-access-ui.js\?rev=APP-UPDATE-V3'\]/);
+  const early=boot.indexOf('const userAccessReady=ensureStartupUserAccess()');
   assert.ok(early>0&&early<boot.indexOf('await loadInitialBuyerLogData()'));
 });
