@@ -23,10 +23,10 @@ test('sort metadata is resolved once outside the comparator',()=>{
  const comparator=block('function sortRows(','/* Boş tablo yönlendirmesi').split('return [...rows].sort((a,b)=>{')[1];
  assert.doesNotMatch(comparator,/COLS_BY_TABLE|columnSchemaFor|toLocaleLowerCase/);
 });
-function indexApi(document={},state={}){
+function indexApi(document={},state={},visible=()=>[]){
  const helpers=block('function selectionIdKey(','// Ortak tablo araması:');
  const indexes=block('function selectionRowsIndex(','function managedSelectionSourceRows(');
- return new Function('document','state',helpers+indexes+';return {selectionRowsIndex,selectionIndexEntries,selectionHasId,managedSelectionSummary,managedSelectionView};')(document,state);
+ return new Function('document','state','partialViewRows','filteredOrders','filteredCP',helpers+indexes+';return {selectionRowsIndex,selectionIndexEntries,selectionHasId,managedSelectionSummary,managedSelectionView};')(document,state,(key,rows)=>rows,visible,visible);
 }
 test('indexed hidden and visible counts equal snapshots for partial rows and mixed IDs',()=>{
  const api=indexApi();
@@ -46,7 +46,7 @@ test('200 checkbox changes synchronously update selection and flush effects once
  const api=indexApi(),frames=[],selected=new Set(),rows=Array.from({length:200},(_,i)=>({_id:i}));
  const table={_blSelectionView:{visibleIndex:api.selectionRowsIndex(rows)}};
  let change,footers=0,notifications=0,clipboardClears=0;
- const tbody={_chkMeta:{selSet:selected,table,rows,actualIds:new Map(rows.map(row=>[String(row._id),row._id])),getId:r=>r._id,onSelectionChange(){notifications++;}},addEventListener(type,fn){change=fn;}};
+ const tbody={_chkMeta:{selSet:selected,table,rows,visibleIndex:table._blSelectionView.visibleIndex,actualIds:new Map(rows.map(row=>[String(row._id),row._id])),getId:r=>r._id,onSelectionChange(){notifications++;}},addEventListener(type,fn){change=fn;}};
  const handler=block("tbody.addEventListener('change', e=>{",'    tbody._chkMeta =');
  // The extracted block includes the closing brace of the one-time binding guard.
  new Function('tbody','requestAnimationFrame','selectionIdKey','selectionSetId','selectionIndexEntries','updateSelectionFooterCount','window',handler.slice(0,handler.lastIndexOf('    }')))(tbody,fn=>frames.push(fn),String,(set,id,checked)=>checked?set.add(id):set.delete(id),api.selectionIndexEntries,()=>footers++,{BLGridClipboard:{state(){return clipboardClears?null:{activeCell:{}};},clear(){clipboardClears++;}},BLSelectionBar:{refresh(){}}});
@@ -101,19 +101,38 @@ test('Endeksmatik button uses exactly one visible order even with other hidden s
 });
 test('selection bar polls only key/count and reserves snapshots for open details',()=>{
  const vm=require('node:vm'),frames=[],timers=new Map(),events={},nodes=[];
- let snapshots=0,summaries=0;
+ let snapshots=0,summaries=0,summaryData={hidden:1};
  const node=()=>{const n={hidden:false,dataset:{},listeners:{},children:[],innerHTML:'',setAttribute(){},appendChild(child){this.children.push(child);},addEventListener(type,fn){this.listeners[type]=fn;},querySelector(){return {setAttribute(){},focus(){}};},contains(){return false;}};nodes.push(n);return n;};
  const body=node();body.dataset.activeTab='orders';
  const targets={navCopy:{disabled:false,title:''},navExcelBtn:{disabled:false,title:''},ordersToolsBtn:{disabled:false,title:''}};
  const doc={body,readyState:'complete',createElement:node,addEventListener(type,fn){events[type]=fn;},getElementById:id=>targets[id]||nodes.find(n=>n.id===id)};
- const context={document:doc,state:{ordersSelected:new Set([1])},appLang:'tr',requestAnimationFrame:fn=>frames.push(fn),setInterval(fn){timers.set(1,fn);return 1;},clearInterval:id=>timers.delete(id),MutationObserver:class{observe(){}},BLManagedSelection:{summary(){summaries++;return {hidden:1};},snapshot(){snapshots++;return {rows:[{_id:1}],hidden:[{_id:1}]};}}};
+ const context={document:doc,state:{ordersSelected:new Set([1])},appLang:'tr',requestAnimationFrame:fn=>frames.push(fn),setInterval(fn){timers.set(1,fn);return 1;},clearInterval:id=>timers.delete(id),MutationObserver:class{observe(){}},BLManagedSelection:{summary(){summaries++;return summaryData;},snapshot(){snapshots++;return {rows:[{_id:1}],hidden:[{_id:1}]};}}};
  context.window=context;vm.runInNewContext(bar,context);
  const flush=()=>{while(frames.length)frames.shift()();};flush();
  const selectionBar=nodes.find(n=>n.id==='blSelectionBar');
  assert.equal(selectionBar.hidden,false);assert.equal(snapshots,0);assert.match(selectionBar.innerHTML,/filtre dışında/);
  const before=summaries;for(let i=0;i<15;i++)timers.get(1)();flush();assert.equal(summaries,before);assert.equal(snapshots,0);
  targets.navCopy.disabled=true;context.BLSelectionBar.refresh();flush();assert.match(selectionBar.innerHTML,/data-selection-target="navCopy" disabled/);
+ summaryData={hidden:0};context.BLSelectionBar.refresh();flush();
+ summaryData=null;context.BLSelectionBar.refresh();flush();assert.match(selectionBar.innerHTML,/class="blSelectionCount"[^>]* disabled/);
+ summaryData={hidden:0};context.BLSelectionBar.refresh();flush();assert.doesNotMatch(selectionBar.innerHTML,/class="blSelectionCount"[^>]* disabled/);
+ summaryData={hidden:1};context.BLSelectionBar.refresh();flush();
  selectionBar.listeners.click({target:{closest:()=>({dataset:{selectionDetails:''}})},stopPropagation(){}});assert.equal(snapshots,1);
  context.appLang='en';events['bl:language-changed']();flush();assert.match(selectionBar.innerHTML,/outside filters/);assert.equal(snapshots,2);
  context.state.ordersSelected.clear();timers.get(1)();flush();assert.equal(selectionBar.hidden,true);assert.equal(timers.size,0);
+});
+
+test('row-only edits invalidate visibility and keep the shared delegated checkbox handler',()=>{
+ assert.doesNotMatch(block('function refreshCpRowOnly(','let _overviewNotesRefreshFrame'),/chk\.addEventListener/);
+ assert.match(block('function refreshRowsEverywhere(','// ================= GERİ AL'),/view\.dirty=true/);
+ assert.match(block('function managedSelectionView(','function managedSelectionSummary('),/view\.dirty\?updateManagedSelectionView/);
+});
+
+test('a row-only edit revalidates filters once and subsequent selection reads stay indexed',()=>{
+ const rows=[{_id:1},{_id:2}],state={orders:{rows},ordersSelected:new Set([2])},table={};let filters=0;
+ const api=indexApi({getElementById:()=>table},state,()=>{filters++;return [rows[0]];});
+ table._blSelectionView={sourceRows:rows,dirty:true};
+ assert.equal(api.managedSelectionSummary('orders').hidden,1);
+ assert.equal(api.managedSelectionSummary('orders').hidden,1);
+ assert.equal(filters,1);assert.equal(table._blSelectionView.dirty,undefined);
 });

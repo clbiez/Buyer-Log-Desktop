@@ -106,7 +106,7 @@
     const lang=en()?'en':'tr';
     const oldKey=lastKey;lastKey=key;
     const data=summary();
-    const signatureRows=String(data?.hidden||0)+'|'+PAGES[key].actions.map(([,id])=>{const target=doc.getElementById(id);return target?String(target.disabled)+':'+target.title:'';}).join('|');
+    const signatureRows=String(Boolean(data))+'|'+String(data?.hidden||0)+'|'+PAGES[key].actions.map(([,id])=>{const target=doc.getElementById(id);return target?String(target.disabled)+':'+target.title:'';}).join('|');
     const changed=signatureRows!==lastSignature||key!==oldKey||count!==lastCount||lang!==lastLang||bar.hidden;
     lastKey=key;lastCount=count;lastLang=lang;
     if(!changed){if(!panel.hidden)drawPanel();return;}

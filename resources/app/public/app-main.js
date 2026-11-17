@@ -3019,10 +3019,21 @@ function selectionIndexEntries(index,selected){
   }
   return entries;
 }
+function updateManagedSelectionView(table,tableKey,fullRows){
+  const actualIds=new Map();
+  for(const row of fullRows){const key=selectionIdKey(row._id);if(!actualIds.has(key))actualIds.set(key,row._id);}
+  table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,
+    visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex:selectionRowsIndex(fullRows),
+    sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]),true)};
+  return table._blSelectionView;
+}
 function managedSelectionView(tableKey){
   const table=document.getElementById(tableKey==='orders'?'ordersTable':'cpTable');
   const view=table?._blSelectionView;
-  return view&&view.sourceRows===state[tableKey]?.rows?view:null;
+  if(!view||view.sourceRows!==state[tableKey]?.rows)return null;
+  // Row-only edits do not redraw the table. Revalidate once on the next read,
+  // preserving the existing filter semantics without polling or per-tick work.
+  return view.dirty?updateManagedSelectionView(table,tableKey,tableKey==='orders'?filteredOrders():filteredCP()):view;
 }
 function managedSelectionSummary(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
@@ -8305,11 +8316,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   if(!table)return;
   const fullRows=rows;
   if((tableKey==='cp'||tableKey==='orders')&&!pageOnly){
-    const actualIds=new Map();
-    for(const row of fullRows){const key=selectionIdKey(row._id);if(!actualIds.has(key))actualIds.set(key,row._id);}
-    table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,
-      visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex:selectionRowsIndex(fullRows),
-      sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]),true)};
+    updateManagedSelectionView(table,tableKey,fullRows);
   }
   if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
     rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
@@ -8517,15 +8524,14 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         requestAnimationFrame(()=>{
           tbody._selectionUpdateQueued=false;
           const meta=tbody._chkMeta;if(!meta)return;
-          const view=meta.table._blSelectionView;
-          const count=view?selectionIndexEntries(view.visibleIndex,meta.selSet).size:undefined;
+          const count=meta.visibleIndex?selectionIndexEntries(meta.visibleIndex,meta.selSet).size:undefined;
           updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
           meta.onSelectionChange?.(meta.selSet,meta.rows);
           window.BLSelectionBar?.refresh();
         });
       });
     }
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, actualIds:table._blSelectionView?.actualIds||new Map(fullRows.map(row=>[selectionIdKey(row._id),row._id])), getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:table._blSelectionView?.visibleIndex, actualIds:table._blSelectionView?.actualIds||new Map(fullRows.map(row=>[selectionIdKey(row._id),row._id])), getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
@@ -10447,8 +10453,6 @@ function refreshCpRowOnly(id,rowIndex=null){
     const withChk = 1;
     trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
       visibleCols('cp').map(c=>cellHtml(c,row,cf)).join('');
-    const chk = trCP.querySelector('input.rowChk');
-    chk.addEventListener('change', ()=>{ if(chk.checked) state.cpSelected.add(id); else state.cpSelected.delete(id); if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility(); });
     const cpOffset=1,cpVisible=visibleCols('cp');cpVisible.forEach((c,ci)=>{const td=trCP.children[ci+cpOffset];if(td){td.dataset.r=trCP.sectionRowIndex;td.dataset.c=ci;td.dataset.key=c.k;if(c.k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}});applyGroupedBoundariesToRow(trCP,cpVisible,cpOffset);
     if(state.cpDirty.has(id)) trCP.classList.add('rowDirty'); else trCP.classList.remove('rowDirty');
     trCP.classList.toggle('rowViewOnly',row._canEdit===false);
@@ -10480,6 +10484,10 @@ function refreshRowsEverywhere(ids){
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const uniqueIds=new Set(ids),rowIndex=buildIndex();
   uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
+  for(const tableId of ['cpTable','ordersTable']){
+    const view=document.getElementById(tableId)?._blSelectionView;if(view)view.dirty=true;
+  }
+  window.BLSelectionBar?.refresh();
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
   function buildIndex(){
@@ -21143,8 +21151,8 @@ function updateShippingBtnVisibility(){
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
     const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
     if(atlasButton){
-      const view=activeTab===mode?managedSelectionView(mode):null;
       const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+      const view=activeTab===mode&&selected.size?managedSelectionView(mode):null;
       atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||selectionIndexEntries(view.visibleIndex,selected).size===0;
     }
     const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
