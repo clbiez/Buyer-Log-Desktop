@@ -21,7 +21,7 @@ test('checkbox tables render and live-update a footer count under the selection 
   assert.match(html, /function tableVisibleSelectedCount\(rows,selectedSet,getId\)/);
   assert.match(html, /function selectionFooterCellHtml\(count\)/);
   assert.match(html, /class="selectionTotalCell"/);
-  assert.match(html, /updateSelectionFooterCount\(meta\.table,meta\.rows,meta\.selSet,meta\.getId\)/);
+  assert.match(html, /updateSelectionFooterCount\(meta\.table,meta\.rows,meta\.selSet,meta\.getId,count\)/);
   // Off-page checked records remain in the selection count after pagination.
   assert.match(html, /renderQuantityTotalsFooter\(table,fullRows,cols,\{withCheck:true,selectedSet:selSet/);
   assert.match(html, /tbody\._chkMeta = \{ selSet, table, tableKey, tableId, rows:fullRows/);

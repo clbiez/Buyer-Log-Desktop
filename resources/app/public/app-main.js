@@ -1739,7 +1739,8 @@ document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.a
   const moduleId=button.dataset.orderLicenseAtlas;
   if(document.body.dataset.activeTab!==moduleId)return;
   // Atlas generation only reads visible selected rows, including view-only orders.
-  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
+  const selected=moduleId==='orders'?state.ordersSelected:state.cpSelected;
+  const rows=(moduleId==='orders'?filteredOrders():filteredCP()).filter(row=>selected.has(row._id)).map(row=>({
     license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
     licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
   }));
@@ -2989,24 +2990,33 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
 // Render-owned indexes preserve raw ID equality, numeric aliases and partial rows.
 // They are rebuilt with the full filtered set, never with just the current page.
-function selectionRowsIndex(rows){
+function selectionRowsIndex(rows,countsOnly=false){
   const entries=new Map(),index=new Map();
   for(const row of rows){
     const id=row._id;
     let entry=entries.get(id);
     if(!entry){
-      entry={id,rows:[]};entries.set(id,entry);
+      entry={id,count:0,rows:countsOnly?null:[]};entries.set(id,entry);
       const key=selectionIdKey(id),tokens=new Set([id]);
       if(key){tokens.add(key);const numeric=Number(key);if(Number.isFinite(numeric))tokens.add(numeric);}
-      for(const token of tokens){if(!index.has(token))index.set(token,[]);index.get(token).push(entry);}
+      for(const token of tokens){
+        const previous=index.get(token);
+        if(!previous)index.set(token,entry);
+        else if(Array.isArray(previous))previous.push(entry);
+        else index.set(token,[previous,entry]);
+      }
     }
-    entry.rows.push(row);
+    entry.count++;if(entry.rows)entry.rows.push(row);
   }
   return index;
 }
 function selectionIndexEntries(index,selected){
   const entries=new Set();
-  for(const value of selected)for(const entry of index.get(value)||[])entries.add(entry);
+  for(const value of selected){
+    const match=index.get(value);if(!match)continue;
+    if(Array.isArray(match))for(const entry of match)entries.add(entry);
+    else entries.add(match);
+  }
   return entries;
 }
 function managedSelectionView(tableKey){
@@ -3019,7 +3029,7 @@ function managedSelectionSummary(tableKey){
   const view=managedSelectionView(tableKey);
   if(!view)return null;
   let hidden=0;
-  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!view.visibleIds.has(String(entry.id)))hidden+=entry.rows.length;
+  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!view.visibleIds.has(String(entry.id)))hidden+=entry.count;
   return {hidden};
 }
 function managedSelectionSourceRows(tableKey){
@@ -8299,7 +8309,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     for(const row of fullRows){const key=selectionIdKey(row._id);if(!actualIds.has(key))actualIds.set(key,row._id);}
     table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,
       visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex:selectionRowsIndex(fullRows),
-      sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]))};
+      sourceIndex:selectionRowsIndex(partialViewRows(tableKey,state[tableKey]?.rows||[]),true)};
   }
   if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
     rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
@@ -8500,12 +8510,13 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
         // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi
         // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).
+        const grid=window.BLGridClipboard?.state?.(meta.tableId);
+        if(meta.selSet.size>0&&(grid?.activeCell||grid?.selectionRange||grid?.editingCell))window.BLGridClipboard.clear(meta.tableId);
         if(tbody._selectionUpdateQueued)return;
         tbody._selectionUpdateQueued=true;
         requestAnimationFrame(()=>{
           tbody._selectionUpdateQueued=false;
           const meta=tbody._chkMeta;if(!meta)return;
-          if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
           const view=meta.table._blSelectionView;
           const count=view?selectionIndexEntries(view.visibleIndex,meta.selSet).size:undefined;
           updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
@@ -8530,7 +8541,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   // CP/Orders yeni DOM satırlarını her render'da kendi kayıtlı Picture ölçüsüne
   // tekrar bağlar. Böylece CP max yükseklikte takılı kalmaz ve Orders davranışıyla
   // aynı sözleşmeyi kullanır.
-  if(tableKey==='cp'||tableKey==='orders')applyTableImageSizeDom(tableKey);
+  if(tableKey==='cp'||tableKey==='orders'){applyTableImageSizeDom(tableKey);window.BLSelectionBar?.refresh();}
   window.BLGridClipboard?.afterRender?.(tableId);
   if(typeof fitTableHeights==='function') setTimeout(fitTableHeights, 0);
 }
@@ -21131,7 +21142,11 @@ function updateShippingBtnVisibility(){
   for(const mode of ['cp','orders']){
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
     const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
-    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
+    if(atlasButton){
+      const view=activeTab===mode?managedSelectionView(mode):null;
+      const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+      atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||selectionIndexEntries(view.visibleIndex,selected).size===0;
+    }
     const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
