@@ -21778,13 +21778,13 @@ function shipClipboardScalar(value){
   if(value instanceof Date) return isNaN(value)?'':toISODate(value);
   return String(value).replace(/[\t\r\n]+/g,' ').trim();
 }
-function shipComparisonClipboardValue(key,value){
+function shipComparisonClipboardValue(key,value,formatMoney=shipMoney){
   if(value==null||value==='') return '';
   // Kopyalanan değerler arayüzün fiyat, tarih ve transit gösterimini izler.
   const prices=['fob','domesticFob','domesticLanded','seaLanded','seaAirLanded','airLanded'];
   if(prices.includes(key)||/^m:[^:]+:landed$/.test(key)){
     const amount=Number(value);
-    return Number.isFinite(amount)?shipMoney(amount):'';
+    return Number.isFinite(amount)?formatMoney(amount):'';
   }
   const dates=['opd','exFactory','retailDate','seaEta','seaAirEta','airEta'];
   if(dates.includes(key)||/^m:[^:]+:eta$/.test(key)) return fmtDate(value);
@@ -21823,7 +21823,10 @@ function shipComparisonClipboardRows(){
 }
 function shipComparisonClipboardMatrix(){
   const columns=shipComparisonClipboardColumns(), rows=shipComparisonClipboardRows();
-  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(shipComparisonClipboardValue(column.key,row[column.key]))))];
+  // Çok satırlı kopyalamada aynı USD formatter yeniden kullanılır.
+  const formatter=new Intl.NumberFormat(appLang==='en'?'en-GB':'tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const formatMoney=amount=>'$'+formatter.format(amount);
+  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(shipComparisonClipboardValue(column.key,row[column.key],formatMoney))))];
 }
 function shipComparisonFlatPlain(){
   return shipComparisonClipboardMatrix().map(row=>row.join('\t')).join('\n');
