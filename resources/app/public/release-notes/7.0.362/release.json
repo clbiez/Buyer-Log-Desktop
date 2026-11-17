@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.362",
+  "channel": "stable",
+  "publishedAt": "2026-11-17",
+  "title": {
+    "tr": "Buyer Log 7.0.362",
+    "en": "Buyer Log 7.0.362"
+  },
+  "summary": {
+    "tr": "7.0.359 STABLE davranışı yeni bir güncelleme paketiyle yeniden dağıtılıyor.",
+    "en": "The 7.0.359 STABLE behavior is available again through a new update package."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "stable-70359-recovery-release",
+      "type": "fix",
+      "module": {
+        "tr": "Güncellemeler",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "7.0.359 tabanlı kurtarma paketi",
+        "en": "7.0.359-based recovery package"
+      },
+      "body": {
+        "tr": "7.0.360 veya 7.0.361 kurulu cihazlar, uygulamanın güncelleme kanalı üzerinden 7.0.359 davranışına dönebilir.",
+        "en": "Devices running 7.0.360 or 7.0.361 can return to the 7.0.359 behavior through the application update channel."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Bu yayın, geri alınmış kaynak kodunu güncelleyicinin kabul ettiği yeni bir sürüm numarasıyla paketler.",
+          "en": "This release packages the restored source under a new version number accepted by the updater."
+        }
+      }
+    }
+  ]
+}

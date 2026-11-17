@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.362",
+      "publishedAt": "2026-11-17",
+      "title": {
+        "tr": "Buyer Log 7.0.362",
+        "en": "Buyer Log 7.0.362"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.362/release.json"
+    },
+    {
       "version": "7.0.359",
       "publishedAt": "2026-11-16",
       "title": {
