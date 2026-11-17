@@ -7,10 +7,68 @@
     "en": "Flow selection and row illumination"
   },
   "summary": {
-    "tr": "Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur.",
-    "en": "Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows."
+    "tr": "Sade seçim alanları merkezden açılır; satırın tamamı yumuşakça aydınlanır. Seçili satırdaki turuncu değişiklik işareti korunur. Açılışta kullanıcı erişim betiği geçici hata alırsa yeniden denenir; kalıcı hatada kullanıcı bilgilerine özel hata ve Tekrar dene gösterilir.",
+    "en": "Subtle row selectors fill from the center while the whole row softly lights up. The orange edit marker stays visible on selected rows. Startup retries temporary user access script failures; persistent failures show a user information error and Retry."
   },
   "changes": [
+    {
+      "id": "startup-user-access-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Kullanıcı bilgileri adımında takılmaya karşı kurtarma",
+        "en": "Recovery when user information stalls at startup"
+      },
+      "body": {
+        "tr": "Kullanıcı erişim betiği geçici bir yükleme hatası aldığında, açılış artık yavaş ekran verisinin tamamlanmasını beklemeden betiği bir kez yeniden dener. Profil, başlangıç verisi ve açılış ekranı hazır olduğunda Devam düğmesi açılır. Betik yine yüklenemezse kullanıcı bilgilerine özel hata ve Tekrar dene düğmesi gösterilir; doğrulanmış profil olmadan çalışma alanı açılmaz.",
+        "en": "If the user access script encounters a temporary loading error, startup now retries it once without waiting for slow screen data. Continue becomes available when the profile, initial data and opening screen are ready. If the script still cannot load, a user information error and Retry button appear; the workspace remains gated until a validated profile is ready."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-user-access-recovered.png",
+        "alt": {
+          "tr": "Geçici betik yükleme hatasından sonra tamamlanan kullanıcı bilgileri ve Devam düğmesi",
+          "en": "User information ready and Continue available after a temporary script loading error"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo: ekran verisi beklerken kullanıcı erişim betiği ikinci denemede yüklenir; açılış ekranı da hazır olunca Devam görünür.",
+          "en": "Actual Buyer Log with isolated demo data: the user access script loads on the second attempt while screen data is pending; Continue appears once the opening screen is also ready."
+        }
+      }
+    },
+    {
+      "id": "detail-image-strict-matching",
+      "type": "fix",
+      "module": {
+        "tr": "Alt detay raporları",
+        "en": "Detail reports"
+      },
+      "title": {
+        "tr": "Aynı adlı modellerde güvenli görsel eşleştirme",
+        "en": "Safe image matching for models sharing a name"
+      },
+      "body": {
+        "tr": "Görseller sırasıyla PLM ID + Renk Kodu, Özel Kod + Renk Kodu ve Sezon + Model Adı + Renk Kodu ile eşleştirilir. Belirsiz veya eksik kimliklerde görsel gösterilmez. Yalnız model adı, yalnız PLM ID ve eski satır görsel referansları alt detay eşleştirmesini aşamaz. PLM SYNC yalnız güvenle çözülen kimliklerle çalışır.",
+        "en": "Images match by PLM ID + colour code, special code + colour code, then season + model name + colour code. Ambiguous or incomplete identities show no image. Model-only, PLM-only and old row image references cannot bypass detail matching. PLM SYNC uses only safely resolved identities."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-image-strict-matching.png",
+        "alt": {
+          "tr": "Aynı adlı S7 ve W7 modellerinin ayrıldığı OAB alt detayı",
+          "en": "OAB detail separating S7 and W7 models with the same name"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi. Yalnız ad taşıyan üçüncü satırda görsel yok.",
+          "en": "Actual Buyer Log with isolated demo data. The third row with only a name has no image."
+        }
+      }
+    },
     {
       "id": "revision-origin-separators",
       "type": "fix",
@@ -176,6 +234,29 @@
         "reason": {
           "tr": "Uygulama ekranında değişiklik yok; düzeltme yalnız harici uygulamaya yapıştırılan pano içeriğini biçimlendirir.",
           "en": "There is no change to the in-app view; this fix only formats clipboard content pasted into an external application."
+        }
+      }
+    },
+    {
+      "id": "source-parity-check-tool",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "ASAS / IAS / Excel kaynak doğrulama aracı",
+        "en": "ASAS / IAS / Excel source verification tool"
+      },
+      "body": {
+        "tr": "BuyerLog-Kaynak-Dogrulama.cmd, Buyer Log ayarlarıyla ASAS ve IAS verisini Database üzerinden çeker. Pivotu yenilenmiş Excel raporu kopyasıyla sipariş, parsiyel, adet ve eşleştirme sonucunu birebir karşılaştırır. Excel doğruluk referansıdır. Daha hızlı IAS aday sorgusu ve kumaşsız ASAS sorgusu yalnız bu araçta ölçülür; normal yenileme değişmez. Ayarlara ve kaynak Excel dosyalarına yazılmaz.",
+        "en": "BuyerLog-Kaynak-Dogrulama.cmd pulls ASAS and IAS data from the database using the Buyer Log settings. It compares orders, partial shipments, quantities and matching results one-to-one with a pivot-refreshed copy of the Excel report. Excel is the reference. A faster IAS candidate query and an ASAS query without fabric fields are measured only in this tool; the normal refresh is unchanged. Settings and source Excel files are not modified."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Buyer Log ekranında değişiklik yok; araç ayrı bir komut penceresinde çalışır ve raporu klasöre yazar.",
+          "en": "There is no change to the Buyer Log screen; the tool runs in a separate command window and writes its report to a folder."
         }
       }
     },

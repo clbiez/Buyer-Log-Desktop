@@ -80,3 +80,11 @@ The first invocation generates synthetic Excel and refreshes an isolated temp
 root; reuse the reported `root` with `--fixture-root … --skip-refresh`. The script
 defaults to `/usr/bin/chromium` (`CHROMIUM_PATH` overrides it); Playwright can be selected with
 `PLAYWRIGHT_MODULE`. Heavy tests and measurements share the performance lock.
+
+## Subsequent Main integration
+
+Main advanced to `2f66161b` during this work. It was merged after the measurements;
+its upstream startup/image changes alter app-main.js. The numbers above describe
+the pinned measured source, not a fresh measurement of the final merged tree.
+The original L2 decision remains FAIL. Selection regressions passed 67 tests
+after integration; the release-note-only conflict preserved both additions.

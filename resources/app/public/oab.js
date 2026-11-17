@@ -2575,10 +2575,9 @@
     const row = source || {};
     const styleName = row['Option Adı'] || row['Model Adı'] || row['Model Name'] || '';
     const rawPlmId = row['PLM ID'] || row['Plm Kod'] || row['PLM Kod'] || row['PLM Code'] || row.plmId || '';
-    const plmId = global.BLDetailImages && typeof global.BLDetailImages.resolvePlmId === 'function'
-      ? (global.BLDetailImages.resolvePlmId(rawPlmId, styleName) || String(rawPlmId || '').trim())
-      : String(rawPlmId || '').trim();
+    const plmId = rawPlmId;
     return {
+      ...global.BLDetailImages?.identityFromRow?.(row,'overview'),
       plmId,
       styleName,
       colourCode: row['Renk Kodu'] || row['Renk Kod'] || row.colourCode || '',
@@ -2591,6 +2590,7 @@
     try {
       const id = oabDrillModelIdentity(source);
       return global.BLDetailImages.urlFrom(imageIndex, {
+        ...id,
         plmId: id.plmId,
         colourCode: id.colourCode,
         colour: id.colour,

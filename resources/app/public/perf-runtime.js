@@ -142,7 +142,7 @@
     layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=6'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
     lcwaiOutputEditor:['lcwai-output-layout.js?rev=6','lcwai-output-source.js?rev=1','lcwai-output-editor.js?rev=8'],
-    lfl:['lfl-calculation-engine.js','lfl.js?rev=2'],
+    lfl:['lfl-calculation-engine.js','lfl.js?rev=20261117-strict-detail-images'],
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
     manufacturers:['manufacturer-cards-engine.js?rev=1','email-groups.js?rev=2','manufacturers.js?rev=1'],
@@ -187,6 +187,7 @@
     /* user-access-ui.js LCW AI istemcisi ve güncelleme testinin hemen ardından gelir: açılış
        perdesinin "profil" kapısı ona bağlıdır ve diğer ertelenmiş modüllerin
        yüklenmesini beklemez. */
+    userAccess:['user-access-ui.js?rev=APP-UPDATE-V3'],
     deferredUi:[
       'lcwai-assistant.js?rev=1','update-test-ui.js?rev=6','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js',

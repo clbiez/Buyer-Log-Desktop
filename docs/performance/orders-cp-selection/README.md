@@ -86,6 +86,12 @@ the actual render; it does not retain an additional hidden projection dataset.
 The remaining memory increase comes from the indexes. Sampled pre-GC heap
 maxima are not continuous RSS/physical-memory peaks.
 
-The runtime source hashes are unchanged by the later test, CI and evidence-only
-commits. The new hot-path regression test is included in the ordinary PR checks.
+The measured runtime source hashes were unchanged by the test, CI and evidence-only
+commits through ce948348. Main subsequently advanced to 2f66161b and was merged:
+app-main.js picked up upstream startup/image changes without a source conflict;
+release-note additions were both preserved. These historical L2/UI samples do not
+claim to measure the final merged tree. The post-merge selection regression run
+passed 9 files / 67 tests; release-note validation passed 10 changes and i18n
+remained at zero missing strings. No second full npm invocation was made.
+The new hot-path regression test is included in the ordinary PR checks.
 Neither this document nor a green unit-test result waives the failed L2 gate.

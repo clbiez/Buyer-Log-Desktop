@@ -290,11 +290,9 @@ function modelIdentity(row){
      görsel tabloya hiç işlenmez. */
   const modelName=get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style','Option Adı','Option Name','_modelName');
   const rawPlmId=get('plmId','plm','_plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code');
-  let plmId=rawPlmId;
-  try{
-    if(root.BLDetailImages?.resolvePlmId)plmId=root.BLDetailImages.resolvePlmId(rawPlmId,modelName)||rawPlmId;
-  }catch(_){}
+  const plmId=rawPlmId;
   return {
+    ...root.BLDetailImages?.identityFromRow?.(nested||row,detailModule()),
     plmId,
     modelName,
     colourCode:get('colourCode','ccode','_colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
@@ -305,10 +303,7 @@ function modelIdentity(row){
 function imageUrl(row,index){
   const helper=root.BLDetailImages,id=modelIdentity(row);
   if(!helper)return '';
-  const directRef=clean(row&&row._imageRef);
-  return helper.urlFrom?.(index,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||
-    helper.sourceFor?.({plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||
-    (directRef?'/api/cp-images/'+encodeURIComponent(directRef):'');
+  return helper.urlFrom?.(index,id)||'';
 }
 function imageCell(row,index){
   const helper=root.BLDetailImages,id=modelIdentity(row);

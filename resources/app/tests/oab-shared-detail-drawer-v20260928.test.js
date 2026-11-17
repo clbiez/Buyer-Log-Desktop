@@ -45,7 +45,8 @@ test('ortak drawer kesin başlangıç seti, zorunlu metrik ve flat kolon modunu 
 test('ortak drawer OAB model kimliklerini görsel ve PLM SYNC için tanır',()=>{
   assert.match(DRAWER,/'Option Adı','Option Name'/);
   assert.match(DRAWER,/'Plm Kod','PLM Kod','PLM Code'/);
-  assert.match(DRAWER,/BLDetailImages\?\.resolvePlmId/);
+  assert.doesNotMatch(DRAWER,/BLDetailImages\?\.resolvePlmId/);
+  assert.match(DRAWER,/identityFromRow/);
   assert.match(DRAWER,/'Renk Adı'/);
 });
 

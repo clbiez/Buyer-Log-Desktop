@@ -1,0 +1,11 @@
+
+> buyer-log-desktop@7.0.360 test
+> node tests/run-tests.js selection-hot-path ui-polish-v70319 cp-bulk-refresh-index cp-peer-identity-history cp-orders-image-row-height-v7094 grid-checkbox-copy-precedence overview-cp-auto-refresh-v965 plm-selected-scope-regression table-selection-collection-summary-v304
+
+[Buyer Log tests] 9 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (9 dosya)
+tests 67 · pass 67 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 1/1 süresi: 0.7s.
+
+[Buyer Log tests] PASS — 9 test dosyası (0.7s).
