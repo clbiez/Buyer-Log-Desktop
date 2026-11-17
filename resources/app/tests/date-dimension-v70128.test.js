@@ -84,7 +84,8 @@ test('Collection dönem seçicisi merkezi LCW tarih motoruna bağlıdır',()=>{
   assert.match(APP,/function kolWeekCodeForDate[\s\S]{0,260}businessValid[\s\S]{0,160}lcwYear[\s\S]{0,160}lcwWeek/);
   assert.match(APP,/function kolScheduleFromMonthCode[\s\S]{0,420}businessMonthRange/);
   assert.match(APP,/function kolScheduleFromWeekCode[\s\S]{0,300}mondayFromBusinessWeek|function kolMondayFromIsoWeek[\s\S]{0,220}mondayFromBusinessWeek/);
-  assert.doesNotMatch(APP,/w>=1&&w<=53/);
+  // Shared period search accepts LCW weeks 1–53; date assignment still uses the central calendar.
+  assert.match(APP,/function kolWeekCode\([\s\S]{0,420}w>=1&&w<=53/);
 });
 
 test('Backlog detay ve filtre kovaları aynı merkezi motoru kullanır',()=>{

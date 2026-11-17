@@ -129,6 +129,8 @@
     country:{label:{en:'Country',tr:'Ülke'},type:'country',role:'dimension',aliases:['Country','Country of Origin','Ülke','Siparişin Üretildiği Ülke'],modules:{
       collection:binding(['country','Country'],'productionCountry'),cp:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),orders:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),backlog:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),overview:binding(['Country','Siparişin Üretildiği Ülke','country'],'productionCountry'),lfl:binding(['country','Country'],'productionCountry'),openCosting:binding(['country'],'productionCountry')
     }},
+    orderActivity:{label:{en:'Order state',tr:'Sipariş durumu'},type:'text',role:'dimension',aliases:['Active/Inactive'],modules:{cp:binding(['Active/Inactive'],'orderActivity'),orders:binding(['Active/Inactive'],'orderActivity')}},
+    inStoreWeek:{label:{en:'Model Budget Week',tr:'Model Bütçe Hafta'},type:'text',role:'date',aliases:['Model Budget Week'],modules:{collection:binding(['inStoreWeek'],'merchBudgetWeek')}},
     orderStatus:{label:{en:'Status',tr:'Durum'},type:'text',role:'dimension',aliases:['Order Status','Status','Durum'],modules:{
       collection:binding(['durum','status'],'collectionWorkflowStatus'),cp:binding(['STATUS','Status','status'],'asasOrderStatus'),orders:binding(['STATUS','Status','status'],'asasOrderStatus'),backlog:binding(['STATUS','Status','status'],'asasOrderStatus'),overview:binding(['STATUS','Status','status'],'asasOrderStatus'),lfl:binding(['status','STATUS'],'asasOrderStatus')
     }},

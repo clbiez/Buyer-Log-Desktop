@@ -165,7 +165,7 @@ test('Collection arama sırası aktif sütun sırasını ve geçici sabitlemeyi 
   const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
   const code=source.slice(source.indexOf('function kolGroupMembersIndex('),source.indexOf('function filteredKol('));
   const rows=[{id:1,text:'A',modelGroupId:'g',modelGroupRole:'parent'}, {id:2,text:'A',modelGroupId:'g'}, {id:3,text:'B'}];
-  const order=new Function('window','kolRows','kolSort','kolTransientTopRowId','kolIsColorSpecific','kolCompareRowsForActiveSort','kolSearchHaystack',code+';return kolGroupAwareOrder;')({BLTableSearch:table},rows,{key:'text'},1,()=>false,(a,b)=>a.text.localeCompare(b.text),row=>row.text);
+  const order=new Function('window','kolRows','kolSort','kolTransientTopRowId','kolIsColorSpecific','kolCompareRowsForActiveSort','kolSearchHaystack',code+';return kolGroupAwareOrder;')({BLTableSearch:table},rows,{key:'text'},1,()=>false,(a,b)=>a.text.localeCompare(b.text),row=>row.text.toLowerCase());
   assert.deepEqual(order(rows,table.parseTerms('B, A')).map(row=>row.id),[3,1,2]);
   assert.deepEqual(order(rows,table.parseTerms('')).map(row=>row.id),[1,2,3]);
 });
