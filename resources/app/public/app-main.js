@@ -21778,6 +21778,23 @@ function shipClipboardScalar(value){
   if(value instanceof Date) return isNaN(value)?'':toISODate(value);
   return String(value).replace(/[\t\r\n]+/g,' ').trim();
 }
+function shipComparisonClipboardValue(key,value){
+  if(value==null||value==='') return '';
+  // Kopyalanan değerler arayüzün fiyat, tarih ve transit gösterimini izler.
+  const prices=['fob','domesticFob','domesticLanded','seaLanded','seaAirLanded','airLanded'];
+  if(prices.includes(key)||/^m:[^:]+:landed$/.test(key)){
+    const amount=Number(value);
+    return Number.isFinite(amount)?shipMoney(amount):'';
+  }
+  const dates=['opd','exFactory','retailDate','seaEta','seaAirEta','airEta'];
+  if(dates.includes(key)||/^m:[^:]+:eta$/.test(key)) return fmtDate(value);
+  const transit=['seaTransit','seaAirTransit','airTransit'];
+  if(transit.includes(key)||/^m:[^:]+:transit$/.test(key)){
+    const days=Number(value);
+    return Number.isFinite(days)?`${days} ${appLang==='en'?'d':'g'}`:'';
+  }
+  return value;
+}
 function shipComparisonClipboardRows(){
   return shipCopyRows().map(source=>{
     // Copy daima kullanıcının o anda gördüğü hesapla aynı sonucu versin.
@@ -21806,7 +21823,7 @@ function shipComparisonClipboardRows(){
 }
 function shipComparisonClipboardMatrix(){
   const columns=shipComparisonClipboardColumns(), rows=shipComparisonClipboardRows();
-  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(row[column.key])))];
+  return [columns.map(column=>column.label), ...rows.map(row=>columns.map(column=>shipClipboardScalar(shipComparisonClipboardValue(column.key,row[column.key]))))];
 }
 function shipComparisonFlatPlain(){
   return shipComparisonClipboardMatrix().map(row=>row.join('\t')).join('\n');
