@@ -3036,10 +3036,10 @@ function updateManagedSelectionView(table,tableKey,fullRows){
   }
   const visibleIndex=selectionRowsIndex(eligible);
   if(checkMode){
-    for(const entry of selectionIndexEntries(visibleIndex,visibleIndex.keys()))entry.rendered=false;
+    for(const entry of selectionIndexEntries(visibleIndex,visibleIndex.keys())){entry.rendered=false;entry.rows=[];}
     for(const row of fullRows){
       const match=visibleIndex.get(row._id),entries=Array.isArray(match)?match:[match];
-      const entry=entries.find(entry=>entry&&(entry.id===row._id||Object.is(entry.id,row._id)));if(entry)entry.rendered=true;
+      const entry=entries.find(entry=>entry&&(entry.id===row._id||Object.is(entry.id,row._id)));if(entry){entry.rendered=true;entry.rows.push(row);}
     }
   }
   table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,checkMode,
@@ -25306,8 +25306,10 @@ function selectedEndeksmatikRows(mode){
   const view=managedSelectionView(mode);if(!view)return [];
   let row=null;
   for(const entry of managedVisibleSelectedEntries(view,selected)){
-    if(row||entry.rows.length!==1)return [];
-    row=entry.rows[0];
+    if(row||entry.count!==1)return [];
+    // Only rendered projections need retained records. Hidden checked-filter
+    // entries keep counts; an explicit programmatic selection resolves its ID.
+    row=entry.rows[0]||state[mode]?.rows?.find(item=>item._id===entry.id||Object.is(item._id,entry.id));
   }
   return row?[row]:[];
 }

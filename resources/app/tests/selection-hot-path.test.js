@@ -149,7 +149,7 @@ test('checked/unchecked filters keep snapshot hidden counts after Set changes wi
    const oldHidden=rows.filter(row=>api.selectionHasId(selected,row._id)&&!ids.has(String(row._id))).length;
    assert.equal(api.managedSelectionSummary('orders').hidden,oldHidden,mode+':'+mask);
    const entries=api.managedVisibleSelectedEntries(table._blSelectionView,selected);
-   assert.equal([...entries].reduce((n,e)=>n+e.rows.length,0),visible().filter(row=>selected.has(row._id)).length);
+   assert.equal([...entries].reduce((n,e)=>n+e.count,0),visible().filter(row=>selected.has(row._id)).length);
   }
  }
 });
@@ -160,4 +160,12 @@ test('render ID map keeps the original first-match and blank-key semantics',()=>
   const key=String(raw).trim(),actual=key?(ids.get(key)??raw):raw;
   assert.equal(actual,api.selectionActualId(rows,row=>row._id,raw));
  }
+});
+
+test('checkbox-filter eligibility retains counts without a second set of hidden row records',()=>{
+ const rows=[{_id:1},{_id:2}],state={orders:{rows},ordersSelected:new Set([1]),checkFilter:{orders:'checked'}},table={};
+ const api=indexApi({getElementById:()=>table},state);api.updateManagedSelectionView(table,'orders',[rows[0]]);
+ const entries=[...api.selectionIndexEntries(table._blSelectionView.visibleIndex,new Set([1,2]))];
+ assert.equal(entries.find(e=>e.id===1).rows[0],rows[0]);
+ assert.equal(entries.find(e=>e.id===2).count,1);assert.equal(entries.find(e=>e.id===2).rows.length,0);
 });
