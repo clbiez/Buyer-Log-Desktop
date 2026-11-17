@@ -56,7 +56,7 @@ test('virtualized CP ve Orders kendi satir yuksekligi degiskenini kullanir', () 
 
 test('her CP/Orders renderi kayitli Picture olcusunu yeni DOM satirlarina yeniden uygular', () => {
   const render = block(APP, 'function renderFullTable(', 'window.BLTableFramework=');
-  assert.match(render, /if\(tableKey==='cp'\|\|tableKey==='orders'\)applyTableImageSizeDom\(tableKey\)/);
+  assert.match(render, /if\(tableKey==='cp'\|\|tableKey==='orders'\)\{?\s*applyTableImageSizeDom\(tableKey\)/);
 });
 
 test('content-visibility CP ve Orders icin tabloya ozel satir yuksekligini korur', () => {

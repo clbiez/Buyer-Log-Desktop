@@ -1,0 +1,11 @@
+
+> buyer-log-desktop@7.0.359 test
+> node tests/run-tests.js ui-polish-v70319
+
+[Buyer Log tests] 1 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (1 dosya)
+tests 11 · pass 11 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 1/1 süresi: 0.4s.
+
+[Buyer Log tests] PASS — 1 test dosyası (0.4s).

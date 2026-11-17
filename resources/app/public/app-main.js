@@ -1739,7 +1739,8 @@ document.querySelectorAll('[data-order-license-atlas]').forEach(button=>button.a
   const moduleId=button.dataset.orderLicenseAtlas;
   if(document.body.dataset.activeTab!==moduleId)return;
   // Atlas generation only reads visible selected rows, including view-only orders.
-  const rows=selectedEndeksmatikRows(moduleId).map(row=>({
+  const selected=moduleId==='orders'?state.ordersSelected:state.cpSelected;
+  const rows=(moduleId==='orders'?filteredOrders():filteredCP()).filter(row=>selected.has(row._id)).map(row=>({
     license:window.BLCanonicalFields.canonicalValue(row,moduleId,'license'),
     licensor:window.BLCanonicalFields.canonicalValue(row,moduleId,'licensor')
   }));
@@ -2987,6 +2988,91 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 }
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
+// Render-owned indexes preserve raw ID equality, numeric aliases and partial rows.
+// They are rebuilt with the full filtered set, never with just the current page.
+function selectionRowsIndex(rows,countsOnly=false){
+  const entries=new Map(),index=new Map();
+  for(const row of rows){
+    const id=row._id;
+    let entry=entries.get(id);
+    if(!entry){
+      entry={id,count:0,rows:countsOnly?null:[]};entries.set(id,entry);
+      const key=selectionIdKey(id),tokens=new Set([id]);
+      if(key){tokens.add(key);const numeric=Number(key);if(Number.isFinite(numeric))tokens.add(numeric);}
+      for(const token of tokens){
+        const previous=index.get(token);
+        if(!previous)index.set(token,entry);
+        else if(Array.isArray(previous))previous.push(entry);
+        else index.set(token,[previous,entry]);
+      }
+    }
+    entry.count++;if(entry.rows)entry.rows.push(row);
+  }
+  return index;
+}
+function selectionIndexEntries(index,selected){
+  const entries=new Set();
+  for(const value of selected){
+    const match=index.get(value);if(!match)continue;
+    if(Array.isArray(match))for(const entry of match)entries.add(entry);
+    else entries.add(match);
+  }
+  return entries;
+}
+function selectionActualIds(rows){
+  const ids=new Map();
+  for(const row of rows){const key=selectionIdKey(row._id);if(key&&!ids.has(key))ids.set(key,row._id);}
+  return ids;
+}
+function updateManagedSelectionView(table,tableKey,fullRows){
+  const actualIds=selectionActualIds(fullRows);
+  const source=partialViewRows(tableKey,state[tableKey]?.rows||[]);
+  const checkMode=normalizeCheckFilterMode(state.checkFilter?.[tableKey]);
+  let eligible=fullRows;
+  if(checkMode){
+    if(tableKey==='cp')ensurePlmSampleAccessors(source);
+    const ctx=tableKey==='orders'?ordersBuildFilterContext():cpBuildFilterContext();ctx.checkFilter='';
+    eligible=source.filter(row=>tableKey==='orders'?ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS):cpRowPasses(row,ctx,CP_MIRROR_IDS));
+  }
+  const visibleIndex=selectionRowsIndex(eligible);
+  if(checkMode){
+    for(const entry of selectionIndexEntries(visibleIndex,visibleIndex.keys())){entry.rendered=false;entry.rows=[];}
+    for(const row of fullRows){
+      const match=visibleIndex.get(row._id),entries=Array.isArray(match)?match:[match];
+      const entry=entries.find(entry=>entry&&(entry.id===row._id||Object.is(entry.id,row._id)));if(entry){entry.rendered=true;entry.rows.push(row);}
+    }
+  }
+  table._blSelectionView={fullRows,actualIds,sourceRows:state[tableKey]?.rows,checkMode,
+    visibleIds:new Set(fullRows.map(row=>String(row._id))),visibleIndex,
+    sourceIndex:selectionRowsIndex(source,true)};
+  return table._blSelectionView;
+}
+function managedSelectionView(tableKey){
+  const table=document.getElementById(tableKey==='orders'?'ordersTable':'cpTable');
+  const view=table?._blSelectionView;
+  if(!view||view.sourceRows!==state[tableKey]?.rows)return null;
+  // Row-only edits do not redraw the table. Revalidate once on the next read,
+  // preserving the existing filter semantics without polling or per-tick work.
+  return view.dirty?updateManagedSelectionView(table,tableKey,tableKey==='orders'?filteredOrders():filteredCP()):view;
+}
+function managedVisibleSelectedEntries(view,selected){
+  const entries=selectionIndexEntries(view.visibleIndex,selected);
+  for(const entry of entries)if(!selected.has(entry.id)||view.checkMode==='unchecked')entries.delete(entry);
+  return entries;
+}
+function managedSelectionVisibleId(view,selected,id){
+  const key=String(id);if(!view.checkMode)return view.visibleIds.has(key);
+  const match=view.visibleIndex.get(key),entries=Array.isArray(match)?match:[match];
+  return entries.some(entry=>entry&&String(entry.id)===key&&(view.checkMode==='checked'?selected.has(entry.id):!selected.has(entry.id)));
+}
+function managedSelectionSummary(tableKey){
+  const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
+  const view=managedSelectionView(tableKey);
+  if(!view)return null;
+  let hidden=0;
+  for(const entry of selectionIndexEntries(view.sourceIndex,selected))if(!managedSelectionVisibleId(view,selected,entry.id))hidden+=entry.count;
+  return {hidden};
+}
 function managedSelectionSourceRows(tableKey){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
@@ -3015,6 +3101,7 @@ function managedSelectionChange(tableKey,change){
 window.BLManagedSelection={
   clear(tableKey){managedSelectionChange(tableKey,selected=>selected.clear());},
   snapshot:managedSelectionSnapshot,
+  summary:managedSelectionSummary,
   remove(tableKey,id){
     managedSelectionChange(tableKey,selected=>{for(const value of selected)if(String(value)===String(id))selected.delete(value);});
   },
@@ -7822,7 +7909,7 @@ function selectionFooterCellHtml(count){
 function updateSelectionFooterCount(table,rows,selectedSet,getId){
   const cell=table&&table.tFoot&&table.tFoot.querySelector('.selectionTotalCell');
   if(!cell)return;
-  const count=tableVisibleSelectedCount(rows,selectedSet,getId);
+  const count=arguments[4]??tableVisibleSelectedCount(rows,selectedSet,getId);
   const includeTotal=cell.dataset.includeTotal==='1';
   const selectedTitle=appLang==='en'?`${count} selected row${count===1?'':'s'}`:`${count} seçili satır`;
   const totalLabel=appLang==='en'?'Total':'Toplam';
@@ -8258,6 +8345,9 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   const table = document.getElementById(tableId);
   if(!table)return;
   const fullRows=rows;
+  if((tableKey==='cp'||tableKey==='orders')&&!pageOnly){
+    updateManagedSelectionView(table,tableKey,fullRows);
+  }
   if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
     rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
   }
@@ -8451,19 +8541,29 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
-        const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
+        const key=selectionIdKey(chk.dataset.id);
+        const id = key?(meta.actualIds.get(key) ?? chk.dataset.id):chk.dataset.id;
         selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
         // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
         // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi
         // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).
-        if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
-        updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId);
-        if(typeof meta.onSelectionChange==='function') meta.onSelectionChange(meta.selSet,meta.rows);
-        else if((meta.tableKey==='cp'||meta.tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
+        const grid=window.BLGridClipboard?.state?.(meta.tableId);
+        if(meta.selSet.size>0&&(grid?.activeCell||grid?.selectionRange||grid?.editingCell))window.BLGridClipboard.clear(meta.tableId);
+        if(tbody._selectionUpdateQueued)return;
+        tbody._selectionUpdateQueued=true;
+        requestAnimationFrame(()=>{
+          tbody._selectionUpdateQueued=false;
+          const meta=tbody._chkMeta;if(!meta)return;
+          const count=meta.visibleIndex?[...selectionIndexEntries(meta.visibleIndex,meta.selSet)].filter(entry=>entry.rendered!==false).length:undefined;
+          updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId,count);
+          meta.onSelectionChange?.(meta.selSet,meta.rows);
+          window.BLSelectionBar?.refresh();
+        });
       });
     }
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    const selectionView=table._blSelectionView,matchingView=selectionView?.fullRows===fullRows;
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, visibleIndex:matchingView?selectionView.visibleIndex:selectionRowsIndex(fullRows), actualIds:matchingView?selectionView.actualIds:selectionActualIds(fullRows), getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
@@ -8479,7 +8579,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   // CP/Orders yeni DOM satırlarını her render'da kendi kayıtlı Picture ölçüsüne
   // tekrar bağlar. Böylece CP max yükseklikte takılı kalmaz ve Orders davranışıyla
   // aynı sözleşmeyi kullanır.
-  if(tableKey==='cp'||tableKey==='orders')applyTableImageSizeDom(tableKey);
+  if(tableKey==='cp'||tableKey==='orders'){applyTableImageSizeDom(tableKey);window.BLSelectionBar?.refresh();}
   window.BLGridClipboard?.afterRender?.(tableId);
   if(typeof fitTableHeights==='function') setTimeout(fitTableHeights, 0);
 }
@@ -9909,12 +10009,13 @@ function quickSeasonEntries(counts){
 function sortRows(rows,key,dir){
   const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
     ||(COLS_BY_TABLE.orders||[]).some(col=>col.k===key&&col.personalNote);
+  const season=String(key).toLocaleLowerCase('tr-TR')==='season';
+  const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
+  const schema=key==='Priority'||season?null:columnSchemaFor(column||{k:key},rows);
   return [...rows].sort((a,b)=>{
     let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
     if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
-    if(String(key).toLocaleLowerCase('tr-TR')==='season') return BLBusinessRules.compareChronologicalValues(x,y,dir);
-    const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
-    const schema=columnSchemaFor(column||{k:key},rows);
+    if(season) return BLBusinessRules.compareChronologicalValues(x,y,dir);
     const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
     if(schema&&(schema.sortType==='number'||schema.sortType==='date')){
       // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
@@ -10384,8 +10485,6 @@ function refreshCpRowOnly(id,rowIndex=null){
     const withChk = 1;
     trCP.innerHTML = `<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${state.cpSelected.has(id)?'checked':''} data-id="${id}"></td>` +
       visibleCols('cp').map(c=>cellHtml(c,row,cf)).join('');
-    const chk = trCP.querySelector('input.rowChk');
-    chk.addEventListener('change', ()=>{ if(chk.checked) state.cpSelected.add(id); else state.cpSelected.delete(id); if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility(); });
     const cpOffset=1,cpVisible=visibleCols('cp');cpVisible.forEach((c,ci)=>{const td=trCP.children[ci+cpOffset];if(td){td.dataset.r=trCP.sectionRowIndex;td.dataset.c=ci;td.dataset.key=c.k;if(c.k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}});applyGroupedBoundariesToRow(trCP,cpVisible,cpOffset);
     if(state.cpDirty.has(id)) trCP.classList.add('rowDirty'); else trCP.classList.remove('rowDirty');
     trCP.classList.toggle('rowViewOnly',row._canEdit===false);
@@ -10417,6 +10516,10 @@ function refreshRowsEverywhere(ids){
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const uniqueIds=new Set(ids),rowIndex=buildIndex();
   uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
+  for(const tableId of ['cpTable','ordersTable']){
+    const view=document.getElementById(tableId)?._blSelectionView;if(view)view.dirty=true;
+  }
+  window.BLSelectionBar?.refresh();
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
   function buildIndex(){
@@ -21034,7 +21137,11 @@ function updateShippingBtnVisibility(){
   for(const mode of ['cp','orders']){
     const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
     const atlasButton=document.querySelector(`[data-order-license-atlas="${mode}"]`);
-    if(atlasButton)atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!rows.length;
+    if(atlasButton){
+      const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+      const view=activeTab===mode&&selected.size?managedSelectionView(mode):null;
+      atlasButton.disabled=Boolean(atlasButton.dataset.atlasLoading)||!view||managedVisibleSelectedEntries(view,selected).size===0;
+    }
     const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
     button.disabled=rows.length!==1;
     button.title=rows.length===1
@@ -25151,12 +25258,21 @@ function endeksmatikRoyaltyRule(mode,row){
 function selectedEndeksmatikRows(mode){
   const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
   if(!selected?.size)return [];
-  return (mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+  const view=managedSelectionView(mode);if(!view)return [];
+  let row=null;
+  for(const entry of managedVisibleSelectedEntries(view,selected)){
+    if(row||entry.count!==1)return [];
+    // Only rendered projections need retained records. Hidden checked-filter
+    // entries keep counts; an explicit programmatic selection resolves its ID.
+    row=entry.rows[0]||state[mode]?.rows?.find(item=>item._id===entry.id||Object.is(item._id,entry.id));
+  }
+  return row?[row]:[];
 }
 function selectedEndeksmatikOrder(mode){
   const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
   if(activeTab!==mode)return null;
-  const rows=selectedEndeksmatikRows(mode);
+  const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+  const rows=(mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
   if(rows.length!==1){showToast(appLang==='en'?'Select exactly one visible order for Endeksmatik.':'Endeksmatik için görünür tek bir sipariş seçin.');return null;}
   return rows[0];
 }
