@@ -14,7 +14,7 @@ fs.mkdirSync(path.join(root,'source'));
 fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify({port,sourceFolder:path.join(root,'source')}));
 const log=fs.openSync(path.join(root,'server.log'),'a');
 let server,browser;
-const baselineFile=relative=>execFileSync('git',['show','origin/main:resources/app/public/'+relative],{cwd:app,maxBuffer:16*1024*1024,encoding:'utf8'});
+const baselineFile=relative=>execFileSync('git',['show','5d2a16c51ad18560299e2598ba474a30899e392e:resources/app/public/'+relative],{cwd:app,maxBuffer:16*1024*1024,encoding:'utf8'});
 const baseline={index:baselineFile('index.html'),app:baselineFile('app-main.js'),perf:baselineFile('perf-runtime.js')};
 const samples=[];
 
