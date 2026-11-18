@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-17",
+  "publishedAt": "2026-11-18",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Rapor görünümü ve Akış seçimi",
-    "en": "Report view and Flow selection"
+    "tr": "Daha hızlı açılış, rapor görünümü ve ASAS / IAS",
+    "en": "Faster startup, report view and ASAS / IAS"
   },
   "summary": {
-    "tr": "Raporlar tablonun görsel boyutunu paylaşır ve satırları ince çizgilerle ayırır. Sabit seçim alanları klavye ve Shift aralıklarını destekler.",
-    "en": "Reports share the table's image size and separate rows with subtle rules. Pinned selectors support keyboard and Shift-range selection."
+    "tr": "Program dosyaları paralel doğrulanır ve girişten sonra çalışma alanı doğrudan açılır. Raporlar görsel boyutunu ve satır çizgilerini paylaşır; ASAS / IAS yenilemesi hızlanır.",
+    "en": "Program files are verified in parallel and the workspace opens directly after sign-in. Reports share image size and row rules; ASAS / IAS refresh is faster."
   },
   "changes": [
     {
