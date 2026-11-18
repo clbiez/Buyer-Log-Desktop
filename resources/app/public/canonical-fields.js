@@ -67,18 +67,18 @@
   var FIELDS={
     plmId:{label:{en:'PLM ID',tr:'PLM ID'},type:'code',role:'identity',aliases:['PLM ID','PLM Code','Plm Kod'],modules:{
       collection:binding(['plmId','PLM ID'],'plmId'),cp:binding(['PLM ID','Plm Kod','plmId'],'plmId'),orders:binding(['PLM ID','Plm Kod','plmId'],'plmId'),
-      backlog:binding(['PLM ID','Plm Kod','plmId'],'plmId'),overview:binding(['PLM ID','Plm Kod','plmId'],'plmId'),lfl:binding(['plmId','PLM ID','Plm Kod'],'plmId'),
+      backlog:binding(['PLM ID','Plm Kod','plmId'],'plmId'),overview:binding(['PLM ID','Plm Kod','PLM Code','plmId'],'plmId'),lfl:binding(['plmId','PLM ID','Plm Kod'],'plmId'),
       logistics:binding(['plmId','PLM ID','Plm Kod'],'plmId'),antrepo:binding(['plmId','PLM ID','Plm Kod'],'plmId'),openCosting:binding(['plmId','PLM ID'],'plmId')
     }},
     orderCode:{label:{en:'Order Code',tr:'Sipariş Kodu'},type:'code',role:'identity',aliases:['Order Code','Sipariş Kod','Sipariş Kodu'],modules:{
       cp:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),orders:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),backlog:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),
-      overview:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),lfl:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),logistics:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),antrepo:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder')
+      overview:binding(['Order Code','Sipariş Kod','Sipariş Kodu','orderCode'],'asasOrder'),lfl:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),logistics:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),antrepo:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder')
     }},
     fabricComposition:{label:{en:'Fabric Composition',tr:'Kumaş Kompozisyonu'},type:'text',role:'attribute',aliases:['Karışım','Composition','Fabric Composition'],modules:{cp:binding(['Karışım','Composition','fabricComposition','karisim'],'mainFabricComposition')}},
     cashRetailPrice:{label:{en:'Cash Retail Price',tr:'Peşin Satış Fiyatı'},type:'number',role:'measure',aliases:['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price'],modules:{cp:binding(['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price','cashRetailPrice'],'cashRetailPrice')}},
     modelName:{label:{en:'Model Name',tr:'Model Adı'},type:'text',role:'identity',aliases:['Model Name','Model Adı','Style Name','Product Name','Ürün Adı','Model'],modules:{
       collection:binding(['modelKod','Style Name'],'plmStyleName'),cp:binding(['Model Name','Model Adı','modelName'],'asasModelName'),orders:binding(['Model Name','Model Adı','modelName'],'asasModelName'),
-      backlog:binding(['Model Name','Model Adı','modelName'],'asasModelName'),overview:binding(['Model Name','Model Adı','modelName'],'asasModelName'),lfl:binding(['modelName','Model Name','Model Adı'],'asasModelName'),
+      backlog:binding(['Model Name','Model Adı','modelName'],'asasModelName'),overview:binding(['Model Name','Model Adı','modelName','Option Adı','Option Name'],'asasModelName'),lfl:binding(['modelName','Model Name','Model Adı'],'asasModelName'),
       logistics:binding(['modelName','Model Name','Ürün Adı'],'asasModelName'),antrepo:binding(['modelName','Model Name','Ürün Adı'],'asasModelName'),openCosting:binding(['modelCode','modelName'],'mixedModelName')
     }},
     productDescription:{label:{en:'Product Description',tr:'Ürün Tanımı'},type:'text',role:'dimension',aliases:['Product Description','Product Definition','Product Desc','Ürün Tanım','Ürün Tanımı'],modules:{
@@ -99,14 +99,14 @@
     }},
     colourCode:{label:{en:'Colour Code',tr:'Renk Kodu'},type:'code',role:'identity',aliases:['C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu'],modules:{
       collection:binding(['colourCode','C.Code','Colour Code'],'colourCode'),cp:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),orders:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),
-      backlog:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),overview:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),lfl:binding(['colourCode','C.Code','Colour Code'],'colourCode'),
+      backlog:binding(['C.Code','Colour Code','Color Code','Renk Kod','colourCode'],'colourCode'),overview:binding(['C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu','colourCode'],'colourCode'),lfl:binding(['colourCode','C.Code','Colour Code'],'colourCode'),
       logistics:binding(['colourCode','Renk Kod','Renk Kodu','C.Code'],'colourCode'),antrepo:binding(['colourCode','Renk Kod','Renk Kodu','C.Code'],'colourCode')
     }},
     colour:{label:{en:'Colour',tr:'Renk'},type:'text',role:'dimension',aliases:['Colour','Color','Renk','Renk Tanım'],modules:{
-      collection:binding(['colour','Colour'],'colour'),cp:binding(['Colour','Color','Renk','colour'],'colour'),orders:binding(['Colour','Color','Renk','colour'],'colour'),backlog:binding(['Colour','Color','Renk','colour'],'colour'),overview:binding(['Colour','Color','Renk','colour'],'colour'),lfl:binding(['colour','Colour','Renk'],'colour'),logistics:binding(['colour','Renk Tanım','Renk'],'colour'),antrepo:binding(['colour','Renk Tanım','Renk'],'colour')
+      collection:binding(['colour','Colour'],'colour'),cp:binding(['Colour','Color','Renk','colour'],'colour'),orders:binding(['Colour','Color','Renk','colour'],'colour'),backlog:binding(['Colour','Color','Renk','colour'],'colour'),overview:binding(['Colour','Color','Renk','colour','Renk Adı','Colour Name'],'colour'),lfl:binding(['colour','Colour','Renk'],'colour'),logistics:binding(['colour','Renk Tanım','Renk'],'colour'),antrepo:binding(['colour','Renk Tanım','Renk'],'colour')
     }},
     specialCode:{label:{en:'Special Code',tr:'Özel Kod'},type:'code',role:'dimension',aliases:['Special Code','Special Code 1','Sp. Code','Özel Kod','Özel Kod 1'],modules:{
-      collection:binding(['specialCode','Special Code'],'specialCode'),cp:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),orders:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),backlog:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),overview:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode')
+      collection:binding(['specialCode','Special Code'],'specialCode'),cp:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),orders:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),backlog:binding(['Special Code','Özel Kod 1','specialCode'],'specialCode'),overview:binding(['Special Code','Özel Kod 1','Özel Kod','specialCode'],'specialCode'),lfl:binding(['specialCode','Special Code','Özel Kod'],'specialCode')
     }},
     mag:{label:{en:'MAG',tr:'MAG'},type:'code',role:'dimension',aliases:['MAG','Merch Alt Grup','Merch Alt Grup Kod'],modules:{
       collection:binding(['mag','MAG'],'mag'),cp:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),orders:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),backlog:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),overview:binding(['MAG','Merch Alt Grup Kod','mag'],'mag'),lfl:binding(['mag','MAG'],'mag'),logistics:binding(['mag','MAG','Merch Alt Grup Kod'],'mag'),antrepo:binding(['mag','MAG','Merch Alt Grup Kod'],'mag')

@@ -55,7 +55,7 @@ test('receiver-local Collection image URLs never enter persistent workspace data
   assert.match(app, /function kolPersistableRow\(row\)/);
   assert.match(app, /delete next\._sharedCollectionImageUrl/);
   assert.match(app, /rows:kolRows\.map\(kolPersistableRow\)/);
-  assert.match(app, /if\(row&&row\._sharedCollectionImageUrl\)continue/);
+  assert.match(app, /originalImage:row\._sharedCollectionImageUrl\?'':row\.img/);
   assert.match(app, /sharedCollectionImageSource=String\(r&&r\._sharedCollectionImageUrl\|\|''\)/);
 });
 

@@ -16,7 +16,9 @@ test('v6.23 Backlog rows carry a direct image identity into every drill-down',()
   assert.match(PARSE,/_plmId: order\.plm/);
   assert.match(PARSE,/_imageRef: plmImageRef/);
   assert.match(SERVER,/\{includeInternalMeta:true\}/);
-  assert.match(APP,/directRef\?`\$\{CP_IMAGE_API\}/);
+  const cell=APP.slice(APP.indexOf('function detailImageCellHtml'),APP.indexOf('function detailImageThumbHtml'));
+  assert.doesNotMatch(cell,/directRef/);
+  assert.match(cell,/detailResolveImage/);
 });
 
 test('v6.32 Backlog Excel files no longer embed image columns while LFL still can',()=>{

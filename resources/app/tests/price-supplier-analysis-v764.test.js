@@ -104,7 +104,8 @@ test('Horizon identities survive Price & Supplier drilldown and PLM image reques
   assert.match(app,/raw\.ocode\|\|''/);
   assert.match(app,/moduleId:detailModuleId,source:'price-supplier'/);
   assert.match(app,/styleName:item\.styleName\|\|'',orderCode:item\.orderCode\|\|''/);
-  assert.match(drawer,/rawPlmId=get\('plmId','plm'/);
-  assert.match(drawer,/colourCode:get\('colourCode','ccode'/);
-  assert.match(drawer,/orderCode:get\('orderCode','ocode'/);
+  assert.match(drawer,/plmId:fromRow\?\.plmId\|\|fromNested\?\.plmId\|\|get\('plmId','plm'/);
+  assert.match(drawer,/colourCode:fromRow\?\.colourCode\|\|fromNested\?\.colourCode\|\|get\('colourCode','ccode'/);
+  assert.match(drawer,/orderCode:fromRow\?\.orderCode\|\|fromNested\?\.orderCode\|\|get\('orderCode','ocode'/);
+  assert.match(drawer,/helper\.resolve\(index,modelIdentity\(row\)\)/);
 });

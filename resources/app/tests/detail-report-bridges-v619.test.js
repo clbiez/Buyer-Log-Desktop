@@ -14,14 +14,12 @@ const SERVER = require('./helpers/server-source')();
 test('v6.19 drill-down image column is enabled by default and shares every screen image pool', () => {
   assert.match(APP, /DETAIL_IMAGE_PREF_KEY='bl\.detailTables\.showImages\.v2'/);
   assert.match(APP, /saved==null\?true:saved==='1'/);
-  assert.match(APP, /const byPlm=new Map\(\),byPlmOnly=new Map\(\),byModel=new Map\(\)/);
-  assert.match(APP, /for\(const source of \[state\.cp,state\.orders\]\)/);
-  assert.match(APP, /if\(typeof kolRows!=='undefined'\)/);
-  assert.match(APP, /index\.byPlmOnly/);
-  assert.match(APP, /const overrideImages=state\?\.overrides\?\.imagemap\|\|\{\}/);
-  assert.match(APP, /\(state\?\.asasOrders\|\|\[\]\)\.forEach/);
-  assert.match(APP, /plmStyleLinksByModel\.forEach/);
-  assert.match(APP, /modelToPlm\.get\(model\)/);
+  const index=APP.slice(APP.indexOf('function* detailImageRecords'),APP.indexOf('// Detay tablosunun başlıkları'));
+  assert.match(index, /\['cp',state\.cp\],\['orders',state\.orders\]/);
+  assert.match(index, /kolRows/);
+  assert.match(index, /state\.asasOrders/);
+  assert.match(index, /cache\.buildDetailIndex\(detailImageRecords\(\)\)/);
+  assert.doesNotMatch(index, /byModel|byPlmOnly|modelAssetCanonicalPlmId/);
   assert.match(CSS, /\.detailImgCell img\{/);
 });
 
@@ -30,33 +28,12 @@ test('v6.20 stored images are readable from every drill-down area', () => {
   assert.match(SERVER, /app\.get\('\/api\/cp-images\/:id', userAccess\.requireAnyArea\('cp','orders','backlog','koleksiyon','lfl','overview','priceanalysis','opencosting','shipping'\)/);
 });
 
-test('v6.20 Backlog model name resolves a persisted PLM-only image without loaded CP rows', () => {
-  const start = APP.indexOf('function buildDetailImageIndex(){');
-  const end = APP.indexOf('// Detay tablosunun başlıkları', start);
-  assert.ok(start >= 0 && end > start);
-  const source = APP.slice(start, end);
-  const factory = new Function(
-    'state', 'plmStyleLinksByModel', 'cpImageOverrideKey', 'cpNormalizePlmImageId',
-    'turknorm', 'norm', 'CP_IMAGE_API', 'modelAssetCanonicalPlmId', 'canonicalModelImageSource',
-    `${source}; return { buildDetailImageIndex, detailImageUrlFrom };`
-  );
-  const clean = value => String(value == null ? '' : value).trim();
-  const upper = value => clean(value).toLocaleUpperCase('tr-TR');
-  const normalizePlm = value => clean(value).replace(/^0+(?=\d)/, '');
-  const key = (plmId, colourCode) => {
-    const id = normalizePlm(plmId), colour = upper(colourCode);
-    return id && colour ? `plm:${id}|colour:${colour}` : '';
-  };
-  const { buildDetailImageIndex, detailImageUrlFrom } = factory(
-    { overrides: { imagemap: { 'plm:2108736': 'stored-image-id' } }, asasOrders: [{ plm: '2108736', model: 'KK.BDY,MINECRAFT-9-YD', ccode: 'QXM' }], cp: null, orders: null },
-    new Map(),
-    key, normalizePlm, upper, clean, '/api/cp-images', () => '', () => ''
-  );
-  const index = buildDetailImageIndex();
-  assert.equal(
-    detailImageUrlFrom(index, { modelName: 'KK.BDY,MINECRAFT-9-YD', colourCode: 'QXM', plmId: '' }),
-    '/api/cp-images/stored-image-id'
-  );
+test('Backlog refuses old PLM-only images for a name-only identity', () => {
+  const cache=require('../public/model-image-cache').createModelImageCache(globalThis);
+  cache.setRegistryMap({'plm:2108736':'stored-image-id'});
+  const index=cache.buildDetailIndex([{plmId:'2108736',modelName:'MINECRAFT-9-YD',colourCode:'QXM',season:'W7'}]);
+  assert.equal(cache.resolveDetailSource(index,{modelName:'MINECRAFT-9-YD',colourCode:'QXM'}),'');
+  assert.equal(cache.resolveDetailSource(index,{season:'W7',modelName:'MINECRAFT-9-YD',colourCode:'QXM'}),'');
 });
 
 test('v6.26 Backlog detail and Excel keep model/order cells plain', () => {

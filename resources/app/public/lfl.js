@@ -979,28 +979,24 @@
      sipariş kodu ortak çözümleyiciye bırakılır. */
   function lflModelIdentity(row){
     const styleName=norm(row&&row.modelName);
-    const plmId=window.BLDetailImages?.resolvePlmId?.(row&&row.plmId,styleName)||norm(row&&row.plmId);
-    return {plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName,orderCode:norm(row&&row.orderCode)};
+    const plmId=norm(row&&row.plmId);
+    return {...window.BLDetailImages?.identityFromRow?.(row,'lfl'),plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName,orderCode:norm(row&&row.orderCode)};
   }
   function lflModelImageCellHtml(row,imageIndex,title){
     const id=lflModelIdentity(row);
-    const url=window.BLDetailImages?.urlFrom?.(imageIndex,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.styleName})||'';
+    const match=window.BLDetailImages?.resolve?.(imageIndex,id);
     if(!window.BLDetailImages?.thumbHtml)return '';
     // Görseli olmayan satır da kimliğini bırakır; yoksa "Eksikleri Tamamla"
     // tam da o satırları hiç istemez.
-    return window.BLDetailImages.thumbHtml(url,{modelId:id.plmId||id.styleName,colourCode:id.colourCode,plmId:id.plmId,modelName:id.styleName,colour:id.colour},{title,allowEmpty:true});
+    return window.BLDetailImages.thumbHtml(match?.source,{...match,modelId:match?.plmId||id.styleName,modelName:id.styleName},{title,allowEmpty:true});
   }
   function lflRegisterModelAssetScope(panel,rows,label,repaint,imageIndex){
     if(!panel||!window.BLDetailImages?.registerScope)return;
     try{
       window.BLDetailImages.registerScope(panel,{
         contextType:'lfl-detail',label,
-        identities:(rows||[]).map((row,index)=>{
-          const id=lflModelIdentity(row);
-          return {...id,rowId:String(row&&row.id!=null?row.id:index),
-            // Görsel sütunu açıkken ekranın gerçeği bildirilir.
-            hasImage:imageIndex?Boolean(window.BLDetailImages?.urlFrom?.(imageIndex,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.styleName})):null};
-        }),
+        imageIndex,
+        identities:(rows||[]).map((row,index)=>({...lflModelIdentity(row),rowId:String(row?.id??index)})),
         repaint,
       });
     }catch(err){console.warn('LFL model varlık kapsamı kaydedilemedi:',err);}
@@ -1027,7 +1023,7 @@
       ws.columns=columns.map(col=>({header:columnLabel(col),width:col.key==='__modelImage'?14:Math.max(11,Math.min(34,Number(col.exportWidth)||Number(col.weight)||14))}));
       const thin={style:'thin',color:{argb:'FFD0D5DD'}},border={top:thin,bottom:thin,left:thin,right:thin};
       ws.getRow(1).eachCell(cell=>{cell.font={bold:true,size:10,color:{argb:'FF475467'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}};cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};cell.border=border;});
-      const imageJobs=[];(rows||[]).forEach((source,ri)=>{const row=ws.getRow(ri+2);row.height=58;columns.forEach((col,ci)=>{const cell=row.getCell(ci+1);cell.border=border;if(col.key==='__modelImage'){const url=window.BLDetailImages.urlFrom(index,{plmId:source.plmId,colourCode:source.colourCode,colour:source.colour||'',modelName:source.modelName});if(url)imageJobs.push({url,rowNum:ri+2,columnIndex:ci+1});return;}const value=columnExcelValue(col,source);cell.value=value;cell.alignment={vertical:'middle',wrapText:true};if(col.type==='date'&&value instanceof Date)cell.numFmt='dd.mm.yy';if(col.key==='colourCode'||col.key==='colorCode'||col.key==='ccode'){cell.value=String(value==null?'':value);cell.numFmt='@';}const bridge=window.BLDetailLinks?.urlFor?.(col.key,columnRawValue(col,source),source,source?.plmId||'');if(bridge)cell.value={text:String(value==null?'':value),hyperlink:bridge,tooltip:col.key==='modelName'?'CoreNectum PLM':'Order'};});});
+      const imageJobs=[];(rows||[]).forEach((source,ri)=>{const row=ws.getRow(ri+2);row.height=58;columns.forEach((col,ci)=>{const cell=row.getCell(ci+1);cell.border=border;if(col.key==='__modelImage'){const url=window.BLDetailImages.urlFrom(index,lflModelIdentity(source));if(url)imageJobs.push({url,rowNum:ri+2,columnIndex:ci+1});return;}const value=columnExcelValue(col,source);cell.value=value;cell.alignment={vertical:'middle',wrapText:true};if(col.type==='date'&&value instanceof Date)cell.numFmt='dd.mm.yy';if(col.key==='colourCode'||col.key==='colorCode'||col.key==='ccode'){cell.value=String(value==null?'':value);cell.numFmt='@';}const bridge=window.BLDetailLinks?.urlFor?.(col.key,columnRawValue(col,source),source,source?.plmId||'');if(bridge)cell.value={text:String(value==null?'':value),hyperlink:bridge,tooltip:col.key==='modelName'?'CoreNectum PLM':'Order'};});});
       for(let start=0;start<imageJobs.length;start+=12){const jobs=imageJobs.slice(start,start+12),images=await Promise.all(jobs.map(job=>window.BLDetailImages.prepareForExcel(job.url)));images.forEach((image,indexInBatch)=>{if(image)window.BLDetailImages.addToExcel(ws,wb,image,jobs[indexInBatch].rowNum,jobs[indexInBatch].columnIndex);});}
       ws.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,(rows||[]).length+1),column:Math.max(1,columns.length)}};ws.views=[{state:'frozen',ySplit:1}];
       const buffer=await wb.xlsx.writeBuffer();window.BLDetailImages.downloadBuffer(buffer,`${safeFilePart(fileName||title)}.xlsx`,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');return true;
