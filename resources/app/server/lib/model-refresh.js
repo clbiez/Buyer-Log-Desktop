@@ -10,7 +10,7 @@ const { createSourceQueryCoordinator } = require('./horizon-source-planner');
 
 const DEFAULT_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
 const filterValueTypes = require('./filter-value-types');
-const { parseASASRows, parseAntrepoRows, antrepoParseMeta, findAntrepoHit, orderCodeKey, orderLineKey, antrepoMatchKey, normalizeAntrepoMatchRule, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, dynamicAntrepoMatchKey, auditAntrepoMatching, ANTREPO_MATCH_RULE_LABELS, matchOperandForRole, matchOperandForSource, matchConditionsForPair } = require('./parse');
+const { parseASASRows, parseAntrepoRows, antrepoParseMeta, findAntrepoHit, findAntrepoHits, orderCodeKey, orderLineKey, antrepoMatchKey, normalizeAntrepoMatchRule, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, dynamicAntrepoMatchKey, auditAntrepoMatching, ANTREPO_MATCH_RULE_LABELS, matchOperandForRole, matchOperandForSource, matchConditionsForPair } = require('./parse');
 const { parseLFLRows, withFabricDimensions } = require('./lfl');
 
 class ModelRefreshError extends Error {
@@ -978,6 +978,46 @@ function enrichAsasRowsWithFabric(rows, fabricRows) {
   return { matched, keys: entries.size, duplicates: duplicateKeys.size };
 }
 
+/* IAS UFKU UYUŞMAZLIĞI (v20261118, kullanıcı kararı)
+   IAS'ta eşi bulunmayan ASAS siparişi, IAS kapsamının ufkunun DIŞINDAYSA
+   sorun ufuktadır: sessizce "Üretimde" görünmesin, uyarılsın. Ufkun İÇİNDEYSE
+   IAS'ta verisi yoktur; "Üretimde" doğru davranıştır, uyarı yok.
+   Ufuk, Excel modundaki süzmeyle aynı motorla (horizon-fields.matchesHorizon)
+   sipariş satırı üzerinde sınanır. Alanı ASAS siparişlerinde okunamayan koşul
+   değerlendirmeden çıkarılır; bir grup boşalırsa her şeyi kapsar sayılır.
+   Belirsizlikte uyarı VERMEMEK tarafında kalınır (yanlış alarm yok). */
+function evaluableIasHorizon(horizon, orders) {
+  const item = horizon && typeof horizon === 'object' ? horizon : {};
+  const readable = field => orders.some(order => String(horizonFields.rowValue(order, field) == null ? '' : horizonFields.rowValue(order, field)).trim() !== '');
+  if (horizonFields.hasActiveGroups(item)) {
+    // DAX ile aynı: alanı seçilmiş en az bir koşulu olan gruplar etkindir.
+    const active = (Array.isArray(item.groups) ? item.groups : [])
+      .map(group => (Array.isArray(group && group.conditions) ? group.conditions : [])
+        .filter(condition => condition && String(condition.field || '').trim()))
+      .filter(conditions => conditions.length)
+      .map(conditions => ({
+        // Fiziksel IAS sütun adı değil, Buyer Log başlığı ASAS siparişinde okunur.
+        conditions: conditions.map(condition => ({ ...condition, name: '' })).filter(condition => readable(condition.field)),
+      }));
+    if (!active.length || active.some(group => !group.conditions.length)) return null;
+    return { horizon: { ...item, groups: active }, fields: [...new Set(active.flatMap(group => group.conditions.map(condition => condition.field)))] };
+  }
+  const seasons = Array.isArray(item.seasons) && item.seasons.length;
+  const dates = Boolean(item.dateStart || item.dateEnd);
+  if (!seasons && !dates) return null;
+  // Eski ufukta sezon VEYA tarih: biri okunamıyorsa ufuk dar sınanır → sınama yok.
+  if ((seasons && !readable('Sezon')) || (dates && !readable('Orijinal Exfactory Merch Tarih'))) return null;
+  return { horizon: item, fields: [...(seasons ? ['Sezon'] : []), ...(dates ? ['Orijinal Exfactory Merch Tarih'] : [])] };
+}
+function iasHorizonExcludedOrders(orders, map, horizon, ruleValue) {
+  const list = Array.isArray(orders) ? orders : [];
+  const evaluable = evaluableIasHorizon(horizon, list);
+  if (!evaluable) return null;
+  const excluded = list.filter(order => !findAntrepoHits(map || {}, order, { rule: ruleValue }).length
+    && !horizonFields.matchesHorizon(order, evaluable.horizon));
+  return { excluded, fields: evaluable.fields };
+}
+
 /* SSAS'ın RELATED'ı reddetmesi: fact tablosundan bu tabloya çoka-bir ilişki
    yok (çoka-çok, pasif ya da ters yönde). Gerçekten eksik bir sütun da aynı
    metni üretebilir; bu yüzden eski ifadeyle yalnız BİR kez yeniden denenir ve
@@ -1549,6 +1589,7 @@ async function loadFromModelConnections(items, options = {}) {
   //    eşleştirme Sipariş Kod + Model/Ürün Ad + Renk Kod koşullarının tamamı
   //    birebir sağlandığında yapılır.
   const antrepoMapByTarget = {};
+  const horizonWarningDetails = [];
   let antrepoRuns = [];
   let antrepoFallback = null;
   if (antrepoPromise) {
@@ -1575,13 +1616,51 @@ async function loadFromModelConnections(items, options = {}) {
 
     if (antrepoResult) {
       connectionWarnings.push(...antrepoResult.warnings);
+      const horizonGroups = new Map();
       for (const [target, entry] of antrepoResult.byTarget) {
         const run = entry.run;
         const map = parseAntrepoRows(run.rows, options.matchRule);
+        const outside = iasHorizonExcludedOrders(asasOrdersByTarget[target] || [], map, entry.scope && entry.scope.horizon, options.matchRule);
+        if (outside && outside.excluded.length) {
+          const key = JSON.stringify(outside.excluded.map(order => antrepoMatchKey(order.ocode, order.model, order.ccode)).sort());
+          if (!horizonGroups.has(key)) horizonGroups.set(key, { targets: [], ...outside });
+          horizonGroups.get(key).targets.push(target);
+        }
         connectionWarnings.push(...validateAntrepoIntegrity(target, map, asasOrdersByTarget[target] || [], options.matchRule));
         antrepoMapByTarget[target] = map && typeof map === 'object' ? map : {};
         antrepoRuns.push(run);
         connectionWarnings.push(...describeAntrepoMatch(target, map, asasOrdersByTarget[target] || [], run, options.matchRule));
+      }
+      for (const group of horizonGroups.values()) {
+        const label = group.targets.map(target => target.toUpperCase()).join(', ');
+        const count = group.excluded.length;
+        const fieldText = group.fields.join(', ');
+        const message = `Antrepo (${label}): ${count} ASAS siparişi IAS ufkunun (Data Source and Filters) dışında kaldığı için IAS ile eşleşmedi ve "Üretimde" görünüyor. IAS ufkunu ASAS ufkuyla hizalayın. Değerlendirilen IAS ufuk alanları: ${fieldText}. / Antrepo (${label}): ${count} ASAS orders fell outside the IAS horizon (Data Source and Filters), found no IAS match and show as "In Production". Align the IAS horizon with the ASAS horizon. Evaluated IAS horizon fields: ${fieldText}.`;
+        connectionWarnings.push(message);
+        const limit = 5000;
+        horizonWarningDetails.push({
+          id: 'ias-horizon-excluded',
+          message,
+          title: 'IAS Ufku Dışında Kalan Siparişler / Orders Outside the IAS Horizon',
+          source: 'ASAS ⇄ IAS',
+          columns: [
+            { key: 'orderCode', label: 'Sipariş Kod / Order Code' },
+            { key: 'model', label: 'Model Adı / Model' },
+            { key: 'colourCode', label: 'Renk Kod / Colour Code' },
+            ...group.fields.map(field => ({ key: `field:${field}`, label: `${field} (ASAS)` })),
+          ],
+          rows: group.excluded.slice(0, limit).map(order => ({
+            orderCode: order.ocode == null ? '' : String(order.ocode),
+            model: order.model || '',
+            colourCode: order.ccode || '',
+            ...Object.fromEntries(group.fields.map(field => {
+              const value = horizonFields.rowValue(order, field);
+              return [`field:${field}`, value instanceof Date ? value.toISOString().slice(0, 10) : (value == null ? '' : String(value))];
+            })),
+          })),
+          totalRows: count,
+          truncated: count > limit,
+        });
       }
       /* Kapatılan IAS beslemesi SESSİZ KALMAZ. Siparişler'den IAS bağlantısını
          kaldırmak desteklenen bir karardır (ASAS verisi gelmeye ve yenilenmeye
@@ -1616,8 +1695,8 @@ async function loadFromModelConnections(items, options = {}) {
     ...Object.values(fabricHeaderInfoByTarget).flatMap(info => info && Array.isArray(info.warnings) ? info.warnings : []),
   ];
   const warningDetails = [...new Map(
-    Object.values(fabricHeaderInfoByTarget)
-      .flatMap(info => info && Array.isArray(info.warningDetails) ? info.warningDetails : [])
+    [...Object.values(fabricHeaderInfoByTarget)
+      .flatMap(info => info && Array.isArray(info.warningDetails) ? info.warningDetails : []), ...horizonWarningDetails]
       .map(detail => [`${String(detail && detail.id || '')}\u0000${String(detail && detail.message || '')}`, detail])
   ).values()];
   const scopeSummary = [...asasByTarget.entries()].map(([target, entry]) => ({
