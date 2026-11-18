@@ -43,14 +43,7 @@ function verifyPackagedCore(core,version){
  return compare(core,expected,F.inventory(core,{exclude:excludeIntegrityRecords}));
 }
 // Aynı sözleşme; dosyalar eşzamanlı okunur. Sonuç ve hata kodları aynıdır.
-// 'auto': mantıksal işlemci sayısına göre 4-8 okuma hattı.
-function laneCount(concurrency){
- if(concurrency!=='auto')return concurrency;
- let cpus=4;try{const os=require('node:os');cpus=typeof os.availableParallelism==='function'?os.availableParallelism():os.cpus().length;}catch(_){}
- return Math.min(8,Math.max(4,cpus||4));
-}
 async function verifyPackagedCoreParallel(core,version,{concurrency='auto',Worker}={}){
- concurrency=laneCount(concurrency);
  const expected=readExpected(core,version),profile={};
  const result=compare(core,expected,await F.inventoryParallel(core,{exclude:excludeIntegrityRecords,concurrency,profile,Worker}));
  return {...result,profile};

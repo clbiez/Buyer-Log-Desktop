@@ -129,7 +129,14 @@ function runLanes(list,lanes,Worker){
   }
  });
 }
-async function inventoryParallel(root,{exclude=excluded,concurrency=4,profile=null,Worker}={}){
+// 'auto': mantıksal işlemci sayısına göre 4-8 okuma hattı.
+function laneCount(concurrency){
+ if(concurrency!=='auto')return concurrency;
+ let cpus=4;try{const os=require('node:os');cpus=typeof os.availableParallelism==='function'?os.availableParallelism():os.cpus().length;}catch(_){}
+ return Math.min(8,Math.max(4,cpus||4));
+}
+async function inventoryParallel(root,{exclude=excluded,concurrency='auto',profile=null,Worker}={}){
+ concurrency=laneCount(concurrency);
  const startedAt=Date.now(),listed=[];
  walkRegularFiles(root,{exclude,onFile:(rel,file,stat)=>listed.push({rel,file,dev:stat.dev,ino:stat.ino,size:stat.size})});
  const walkMs=Date.now()-startedAt;

@@ -108,3 +108,14 @@ test('verified predecessor history carries all supported prior file hashes and r
  assert.throws(()=>f.build({sequence:2,previousManifest:changed}),{code:'PATCH_SIGNATURE_INVALID'});
  assert.throws(()=>require('../scripts/signed-manual-patch').historyFrom(first.manifest,f.base,3),{code:'PATCH_HISTORY_INVALID'});
 });
+test('the launcher\'s parallel patch verification keeps the receipt, replay and file checks of the sequential path',async t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const pending=manager.apply(p.manifest,p.archiveFile).pending;
+ assert.equal((await manager.verifyStagedAsync(pending)).core,pending.appCoreRoot);
+ assert.equal((await manager.verifyInstalledAsync(pending)).core,pending.appCoreRoot);
+ fs.writeFileSync(path.join(pending.appCoreRoot,'electron/main.js'),'throw Error("must not execute");');
+ await assert.rejects(manager.verifyStagedAsync(pending),{code:'PATCH_FILE_MISMATCH'});
+ await assert.rejects(manager.verifyInstalledAsync(pending),{code:'PATCH_FILE_MISMATCH'});
+ await assert.rejects(manager.verifyStagedAsync({...pending,sha256:'0'.repeat(64)}),{code:'PATCH_STAGED_INVALID'});
+ await assert.rejects(manager.verifyInstalledAsync({...pending,version:'7.0.293'}),{code:'PATCH_REPLAY'});
+});

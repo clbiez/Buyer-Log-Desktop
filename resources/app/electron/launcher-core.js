@@ -256,7 +256,11 @@ async function verifyCore(target){
   const root=path.resolve(target.appCoreRoot),key=root+'\n'+String(target.version||'');
   if(verifiedCores.has(key))return;
   const started=Date.now();
-  if(isManualCore(target.appCoreRoot)){patchManager.verifyInstalled(target);log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),manualPatch:true});return;}
+  if(isManualCore(target.appCoreRoot)){
+    // İmzalı yama çekirdeği: aynı makbuz/imza denetimi; içerik işçi hatlarında okunur.
+    if(typeof patchManager.verifyInstalledAsync==='function')await patchManager.verifyInstalledAsync(target);else patchManager.verifyInstalled(target);
+    log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),manualPatch:true});return;
+  }
   // Tarama işçi iş parçacığında yürür; ana süreç ve bildirim yanıt vermeye devam eder.
   const worker=await verifyPackagedCoreOffThread(target.appCoreRoot,target.version),offThread=Boolean(worker);
   if(!offThread)require('./manual-patch/core-verification').verifyPackagedCore(target.appCoreRoot,target.version);
@@ -284,7 +288,7 @@ if(app.isPackaged){
      * yalnız bozuk bir mevcut çekirdekte sağlam yeni sürümün de açılmasını
      * engelliyordu; soğuk diskte güncelleme açılışına 50-100 sn ekliyordu. */
     await launchStep('verify-new');
-    if(pending.manualPatch)patchManager.verifyStaged(pending);
+    if(pending.manualPatch){if(typeof patchManager.verifyStagedAsync==='function')await patchManager.verifyStagedAsync(pending);else patchManager.verifyStaged(pending);}
     else await verifyCore({appCoreRoot:pending.appCoreRoot,version:pending.version});
     const required=pendingNeedsNewerLauncher(pending);
     if(required){

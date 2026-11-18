@@ -121,9 +121,9 @@ function trustedRoot(t,body){
   fs.writeFileSync(path.join(root,'manual-patch','core-verification.js'),body);
   return root;
 }
-function launcher({trusted,paintNever=false}){
+function launcher({trusted,paintNever=false,manual=false}){
   const calls=[],notices=[],logs=[],scripts=[];
-  const pointer={appCoreRoot:'/portable/.buyerlog-versions/current/app',version:'7.0.313'};
+  const pointer={appCoreRoot:manual?'/portable/.buyerlog-versions/manual-7.0.313-1/app':'/portable/.buyerlog-versions/current/app',version:'7.0.313'};
   const app=Object.assign(new EventEmitter(),{isPackaged:true,setPath(){},requestSingleInstanceLock:()=>true,
     whenReady:()=>Promise.resolve(),exit:code=>calls.push('exit:'+code),quit(){},relaunch(){}});
   class Notice extends EventEmitter{
@@ -145,7 +145,7 @@ function launcher({trusted,paintNever=false}){
       if(name==='./portable-paths')return {resolvePortableRoot:()=>'/portable',desktopPaths:()=>({electronProfileRoot:'/profile'})};
       if(name==='./update/launcher-state')return {createLauncherState:()=>lifecycle};
       if(name==='./update/semver')return {compareSemver:()=>0};
-      if(name==='./manual-patch/manager')return {createInstalledManager:()=>({})};
+      if(name==='./manual-patch/manager')return {createInstalledManager:()=>({verifyInstalled:()=>calls.push('manual-sync'),verifyInstalledAsync:async()=>{await tick();calls.push('manual-async');}})};
       if(name==='./manual-patch/core-verification')return {verifyPackagedCore:()=>calls.push('main-thread-verify')};
       if(name===path.join(pointer.appCoreRoot,'electron/main.js')){calls.push('main');return;}
       if(name==='worker_threads')return require('node:worker_threads');
@@ -191,4 +191,13 @@ test('a slow first paint keeps the notice: it is shown, not destroyed, and catch
   assert.ok(f.scripts.some(code=>code.includes('step("verify")')));
   await until(()=>f.calls.includes('main'));
   assert.equal(f.calls.includes('destroy'),false);
+});
+
+test('a signed manual patch core is verified through the manager\'s parallel path',async t=>{
+  const trusted=trustedRoot(t,'exports.verifyPackagedCore=()=>{throw new Error("packaged path must not run");};');
+  const f=launcher({trusted,manual:true});
+  await until(()=>f.calls.includes('main'));
+  assert.ok(f.calls.indexOf('manual-async')<f.calls.indexOf('main'));
+  assert.equal(f.calls.includes('manual-sync'),false);
+  assert.ok(f.logs.some(entry=>entry.event==='core-verified'&&entry.manualPatch===true));
 });
