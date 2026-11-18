@@ -155,7 +155,7 @@ test('D2 · kullanıcı AÇIKÇA üzerine yazmayı seçerse manuel koruma aşıl
 /* ---- Kaynak sözleşmesi: ortak katman, modül başına kopya yok ---------- */
 
 test('alt detay ekranları ORTAK kapsam kaydını kullanır', () => {
-  assert.match(APP, /function registerModelAssetScopeHost\(host,\{identities,repaint,label,contextType\}=\{\}\)/);
+  assert.match(APP, /function registerModelAssetScopeHost\(host,\{identities,repaint,label,contextType,imageIndex\}=\{\}\)/);
   assert.match(APP, /function modelAssetIdentityMissing\(item\)/);
   // "Eksik" kararı tek yerdedir; kopya filtre bırakılmaz.
   assert.match(APP, /\? operation\.identities\.filter\(modelAssetIdentityMissing\)/);

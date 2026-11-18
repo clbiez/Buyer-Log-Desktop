@@ -133,6 +133,70 @@
     if(!ref)return '';
     return /^\/api\/(?:cp|collection)-images$/i.test(clean(base))?imageUrlForRef(ref):`${base}/${encodeURIComponent(ref)}`;
   };
+  const normalizeDetailPlmId=value=>{
+    const text=clean(value).replace(/^_+/,'');
+    let plmId=normalizeModelId(text);
+    if(/^\d{1,3}(?:\.\d{3})+$/.test(plmId))plmId=normalizeModelId(plmId.replace(/\./g,''));
+    return /^\d+$/.test(plmId)&&Number.isSafeInteger(Number(plmId))&&Number(plmId)>0?plmId:'';
+  };
+  const detailKey=(type,...parts)=>JSON.stringify([type,...parts]);
+  const detailKeys=(id,colourCode)=>{
+    const special=upper(id.specialCode),season=upper(id.season),model=upper(id.modelName||id.styleName);
+    return {
+      special:special?detailKey('special',special,colourCode):'',
+      season:season&&model?detailKey('season',season,model,colourCode):'',
+      option:season&&model&&id.allowOptionPrefix?detailKey('season',season,model.replace(/^[^\s,]{1,16},\s*(?=\S)/,''),colourCode):''
+    };
+  };
+  const buildDetailIndex=records=>{
+    const matches=new Map(),images=new Map();
+    for(const row of records){
+      const colourCode=normalizeColourCode(row.colourCode);
+      if(!colourCode)continue;
+      const plmId=normalizeDetailPlmId(row.plmId),{special,season}=detailKeys(row,colourCode);
+      const target=plmId?detailKey('plm',plmId,colourCode):special||season;
+      if(!target)continue;
+      const identity={plmId,colourCode,target};
+      // Aynı tam kimliğin tekrarları güvenli, farklı kimlikler belirsizdir.
+      for(const key of [special,season]){
+        if(!key)continue;
+        if(!matches.has(key))matches.set(key,identity);
+        else if(matches.get(key)?.target!==target)matches.set(key,null);
+      }
+      const url=row.originalImage&&imageUrl(row.originalImage);
+      if(url){
+        if(!images.has(target))images.set(target,url);
+        else if(images.get(target)!==url)images.set(target,'');
+      }
+    }
+    return {matches,images};
+  };
+  const resolveDetailIdentity=(index,id)=>{
+    const colourCode=normalizeColourCode(id?.colourCode);
+    if(!colourCode)return null;
+    const plmId=normalizeDetailPlmId(id.plmId);
+    if(plmId)return {plmId,colourCode,target:detailKey('plm',plmId,colourCode)};
+    const {special,season,option}=detailKeys(id,colourCode);
+    for(const key of [special,season,option]){
+      if(!key)continue;
+      const match=index?.matches.get(key);
+      if(match!==undefined)return match;
+    }
+    return null;
+  };
+  const resolveDetailImage=(index,id)=>{
+    const exact=resolveDetailIdentity(index,id);
+    if(!exact)return null;
+    let source='';
+    if(exact.plmId){
+      const ref=resolveImageRef(registryMap,exact.plmId,exact.colourCode,id.colour,registryNamed);
+      if(ref)source=imageUrlForRef(ref);
+      // Kanonik kaydın boş veya belirsiz değeri önceliğini korur.
+      if(ref||hasRegistryKey(exact.plmId,exact.colourCode,id.colour))return {...exact,source};
+    }
+    return {...exact,source:index?.images.get(exact.target)||''};
+  };
+  const resolveDetailSource=(index,id)=>resolveDetailImage(index,id)?.source||'';
   const hasRegistryKey=(modelId,colourCode,colourName='')=>hasImageKey(registryMap,modelId,colourCode,colourName,registryNamed);
   const sourceHash=value=>{
     const input=clean(value);let hash=2166136261;
@@ -315,5 +379,5 @@
     return true;
   }
   const stats=()=>({thumbnailMemoryEntries:thumbnailMemory.size,originalMemoryEntries:originalMemory.size,thumbnailInFlight:thumbnailInFlight.size,originalInFlight:originalInFlight.size});
-  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,patchRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
+  return {buildDetailIndex,resolveDetailIdentity,resolveDetailImage,resolveDetailSource,identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,patchRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,peekThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
 });

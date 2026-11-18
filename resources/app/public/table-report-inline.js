@@ -225,15 +225,14 @@ function registerSelection(key,adapter){
     }
   });
 }
-function imageCell(row){
-  const helper=root.BLDetailImages;if(!helper?.thumbHtml)return '';
-  const pick=(...keys)=>{for(const source of [row,row&&row.raw,row&&row.row]){if(!source||typeof source!=='object')continue;for(const key of keys){const v=clean(source[key]);if(v)return v;}}return '';};
-  const modelName=pick('modelKod','modelName','model','Model Adı','Model Name','Style Name');
-  let plmId=pick('plmId','PLM ID','PLM Id','PLMID');
-  try{if(helper.resolvePlmId)plmId=helper.resolvePlmId(plmId,modelName)||plmId;}catch(_){}
-  const colourCode=pick('colourCode','ccode','C.Code','Renk Kod','Colour Code'),colour=pick('colour','Colour','Renk');
-  const url=helper.sourceFor?.({plmId,colourCode,colour,modelName})||'';
-  return helper.thumbHtml(url,{modelId:plmId||modelName,plmId,modelName,colourCode,colour},{title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true});
+function imageCell(row,moduleId,index){
+  const helper=root.BLDetailImages;
+  const primary=helper.identityFromRow(row,moduleId),nested=row?.raw||row?.row;
+  const identity=nested?helper.identityFromRow(nested,moduleId):{};
+  for(const key of Object.keys(primary))if(primary[key])identity[key]=primary[key];
+  const id=helper.resolve(index,identity);
+  return helper.thumbHtml(id.source,{...id,modelId:id.plmId||id.modelName},
+    {title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true});
 }
 function sizeColumns(table,wrap,{projected,images,checkable},imageDims){
   if(images){
@@ -297,7 +296,8 @@ function render(key){
   if(editing&&root.BLIsModerator?.())controls.push(['save-all',L('Herkes için kaydet','Save for everyone')]);
   assignHtml(el.querySelector('[data-tr-actions]'),controls.map(([action,label])=>'<button type="button" class="tbtn" data-tr-action="'+action+'"'+(action==='save-all'?' title="'+esc(L('Bu tablonun tüm rapor görünümlerini herkes için günceller','Updates every report view of this table for everyone'))+'"':'')+(drafts.get(key)?.saving?' disabled':'')+'>'+esc(label)+'</button>').join(''));
 
-  const images=Boolean(root.BLDetailImages?.thumbHtml)&&adapter.images?.()!==false;
+  const images=Boolean(root.BLDetailImages?.resolve)&&adapter.images?.()!==false;
+  const imageIndex=images?root.BLDetailImages.buildIndex():null;
   const selectionColumns=images?[{key:'__report_picture',label:L('Görsel','Image'),fields:[{key:adapter.pictureKey||'__picture'}]},...projected]:projected;
   const context={id,saved,sharedId,projected,rows,shown,images,checkable,selectionColumns};
   contexts.set(key,context);
@@ -313,7 +313,7 @@ function render(key){
   }).join('')+'</tr>');
   const body=shown.map((row,r)=>'<tr data-id="'+esc(adapter.rowId?.(row)??r)+'"'+(row._partialViewIndex!=null?' data-selection-partial-index="'+esc(row._partialViewIndex)+'"':'')+(adapter.dirty?.(row)?' class="rowDirty"':'')+'>'+
     (checkable?'<td><input type="checkbox" data-tr-check="'+r+'" aria-label="'+esc(L('Satırı seç','Select row'))+'"></td>':'')+
-    (images?'<td class="blDetailImageCell" data-key="__report_picture" data-r="'+r+'" data-c="0">'+imageCell(row)+'</td>':'')+projected.map((col,c)=>'<td data-key="'+esc(col.key)+'" data-r="'+r+'" data-c="'+(c+(images?1:0))+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'>'+cellHtml(col,row,moduleId)+'</td>').join('')+'</tr>').join('');
+    (images?'<td class="blDetailImageCell" data-key="__report_picture" data-r="'+r+'" data-c="0">'+imageCell(row,moduleId,imageIndex)+'</td>':'')+projected.map((col,c)=>'<td data-key="'+esc(col.key)+'" data-r="'+r+'" data-c="'+(c+(images?1:0))+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'>'+cellHtml(col,row,moduleId)+'</td>').join('')+'</tr>').join('');
   const editor=editing?'<tr class="blReportLayoutRow">'+(checkable?'<td></td>':'')+(images?'<td></td>':'')+projected.map(editorHtml).join('')+'</tr>':'';
   const bodyChanged=assignHtml(table.querySelector('tbody'),editor+(shown.length?body+(rest>0?'<tr><td class="blDetailMore" colspan="'+span+'"><button type="button" class="tbtn" data-tr-more>'+esc(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+esc(L('satır kaldı','rows left'))+'</button></td></tr>':''):
     '<tr><td class="blDetailEmpty" colspan="'+span+'">'+esc(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>'));

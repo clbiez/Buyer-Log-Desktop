@@ -114,7 +114,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.waitForTimeout(650);
    const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=120;const x=c.getContext('2d');x.fillStyle='#ebeff3';x.fillRect(0,0,200,120);for(const offset of [0,100]){x.fillStyle=offset?'#7b263a':'#96354a';x.beginPath();for(const [i,[a,b]] of [[0,[30,10]],[1,[5,25]],[2,[0,50]],[3,[24,60]],[4,[28,45]],[5,[28,110]],[6,[78,110]],[7,[78,45]],[8,[84,60]],[9,[100,50]],[10,[95,25]],[11,[70,10]]]){if(i===0)x.moveTo(a+offset,b);else x.lineTo(a+offset,b);}x.closePath();x.fill();}return c.toDataURL('image/png');});
    await page.route('**/api/*-images/flow-demo',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/collection-images/flow-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/collection-images/flow-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
    const evidence=[];
    async function checkFlow(key,report){
      await page.evaluate(({key,report})=>BLTableReportInline.setMode(key,report),{key,report});await page.waitForTimeout(100);
@@ -209,7 +209,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
    const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
    await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.sourceFor=()=>'/api/cp-images/report-size-demo';colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/cp-images/report-size-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
    const evidence=[];
    for(const key of ['cp','orders','koleksiyon']){
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});

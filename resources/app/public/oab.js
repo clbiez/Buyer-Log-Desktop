@@ -2572,35 +2572,11 @@
     catch (_) { return null; }
   }
   function oabDrillModelIdentity(source) {
-    const row = source || {};
-    const styleName = row['Option Adı'] || row['Model Adı'] || row['Model Name'] || '';
-    const rawPlmId = row['PLM ID'] || row['Plm Kod'] || row['PLM Kod'] || row['PLM Code'] || row.plmId || '';
-    const plmId = global.BLDetailImages && typeof global.BLDetailImages.resolvePlmId === 'function'
-      ? (global.BLDetailImages.resolvePlmId(rawPlmId, styleName) || String(rawPlmId || '').trim())
-      : String(rawPlmId || '').trim();
-    return {
-      plmId,
-      styleName,
-      colourCode: row['Renk Kodu'] || row['Renk Kod'] || row.colourCode || '',
-      colour: row['Renk Adı'] || row['Renk'] || row.colour || '',
-      orderCode: row['Sipariş Kod'] || row['Sipariş Kodu'] || row['Order Code'] || row.orderCode || '',
-    };
-  }
-  function oabDrillImageUrl(source, imageIndex) {
-    if (!source || !imageIndex || !global.BLDetailImages || typeof global.BLDetailImages.urlFrom !== 'function') return '';
-    try {
-      const id = oabDrillModelIdentity(source);
-      return global.BLDetailImages.urlFrom(imageIndex, {
-        plmId: id.plmId,
-        colourCode: id.colourCode,
-        colour: id.colour,
-        modelName: id.styleName,
-      }) || '';
-    } catch (_) { return ''; }
+    return global.BLDetailImages?.identityFromRow?.(source, 'overview') || {};
   }
   function oabDrillImageCellHtml(source, imageIndex) {
-    const id = oabDrillModelIdentity(source);
-    const url = oabDrillImageUrl(source, imageIndex);
+    const id = global.BLDetailImages?.resolve?.(imageIndex, oabDrillModelIdentity(source)) || {};
+    const url = id.source || '';
     const title = oabT('Büyük önizleme için üzerine gelin', 'Hover for large preview');
     if (!global.BLDetailImages || typeof global.BLDetailImages.thumbHtml !== 'function') {
       if (!url) return `<td class="oabDrillImageCell"><span class="oabDrillImageEmpty">—</span></td>`;
@@ -2608,7 +2584,7 @@
     }
     const thumb = global.BLDetailImages.thumbHtml(
       url,
-      { modelId: id.plmId || id.styleName, colourCode: id.colourCode, plmId: id.plmId, modelName: id.styleName, colour: id.colour },
+      { modelId: id.plmId || id.modelName, colourCode: id.colourCode, plmId: id.plmId, modelName: id.modelName, colour: id.colour },
       { classes: 'oabDrillModelThumb detailModelThumb', title, allowEmpty: true }
     );
     return `<td class="oabDrillImageCell">${thumb || `<span class="oabDrillImageEmpty">—</span>`}</td>`;
@@ -2784,7 +2760,7 @@
       const columns = oabDrillFieldsWithImage(fields, showImages);
       const filtered = sortedFilteredRows();
       const shown = filtered.slice(0, 1000);
-      if (showImages) imageIndex = oabDrillImageIndex();
+      imageIndex = oabDrillImageIndex();
       count.textContent = filtered.length > shown.length
         ? oabT(`${shown.length} / ${filtered.length} satır`, `${shown.length} / ${filtered.length} rows`)
         : oabT(`${filtered.length} satır`, `${filtered.length} rows`);
@@ -2825,13 +2801,8 @@
           global.BLDetailImages.registerScope(modal.querySelector('.autoModal'), {
             contextType: 'oab-drilldown',
             label: oabT('OAB Alt Detay', 'OAB Drill-down'),
-            identities: filtered.map((source, index) => ({
-              ...oabDrillModelIdentity(source),
-              rowId: String(index),
-              /* Görsel sütunu açıksa ekranın GERÇEĞİ bildirilir; kapalıysa
-                 karar kanonik kayda bırakılır (null). */
-              hasImage: showImages ? Boolean(oabDrillImageUrl(source, imageIndex)) : null,
-            })),
+            imageIndex,
+            identities: filtered.map((source, index) => ({...oabDrillModelIdentity(source), rowId: String(index)})),
             repaint: render,
           });
         } catch (err) { console.warn('OAB model varlık kapsamı kaydedilemedi:', err); }
