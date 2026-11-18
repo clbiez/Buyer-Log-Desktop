@@ -1,0 +1,31 @@
+{
+  "base": "d0fdb8889f188e2cc1387b0850f61a841aa7e6d5",
+  "runtimeZipSha256": "8b49b9efdd73c0f467edc3c1cd5678392c384ccf224f34ff54179f736e2f384b",
+  "prototypeSha256": {
+    "scripts/prototypes/sqlite-decision-20261109/backup.cjs": "8a46c0cdbad7fbf5cfb6c7b898fd4724153be7ede94828d95e55c18f88f73aa5",
+    "scripts/prototypes/sqlite-decision-20261109/benchmark.cjs": "88bd1b279ac2c77d08b44a9118af0ffcc722d88dfd0ee7d48e45a55a5e985c0a",
+    "scripts/prototypes/sqlite-decision-20261109/validate-evidence.cjs": "eede7de60b5b449797452cd84a3eb7d161c8e0d3dee1f53a0000000d2eabec2b",
+    "scripts/prototypes/sqlite-decision-20261109/fixture-hashes.cjs": "68de787f256cd895aee11262e9831de61165baa5c0f6ce08b0988e253f8527e9",
+    "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
+    "scripts/prototypes/sqlite-decision-20261109/worker.cjs": "e1743fa84434d6f6b0bdb546b69a6f3699d2f467409aecc390aa253ba1abafe3",
+    "scripts/prototypes/sqlite-decision-20261109/README.md": "87057152d3af6468904bfd351d362f7715c1b30eb4f611f83dc38474cb062a66",
+    "scripts/prototypes/sqlite-decision-20261109/adapters.cjs": "eb2ccda9f10cbac59cb1e95e8a5dc82339ba6101d1d215caefd43d74827fae75",
+    "scripts/prototypes/sqlite-decision-20261109/summarize.cjs": "5e5c25227c67dda99fe7384df5af3c5bc89b39300413c680a9746c5f67401fd9",
+    "scripts/prototypes/sqlite-decision-20261109/workload.cjs": "69dd09bb6e3e7df3bb8a70ac513a03e68ce562212a9d2b78da9db0835ac7078a",
+    "scripts/prototypes/sqlite-decision-20261109/oracle.cjs": "d8a298682924728d9f6d83db60f4ef84435d00cb82b02c8aa2ff5735151243bc",
+    "scripts/prototypes/sqlite-decision-20261109/boundary-probes.cjs": "b50a24af9a9bef90083e86a0560e13922372e5eb35b04676578020bc08af2efa",
+    "scripts/prototypes/sqlite-decision-20261109/prototype.test.cjs": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994"
+  },
+  "productSha256": {
+    "resources/app/server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+    "resources/app/server/lib/delta-store.js": "3349ba70f425d34e193b39b03c25972e1aeebbc56a3f9515d0ff4a3cac2fb16c",
+    "resources/app/server/db.js": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+    "resources/app/server/server.js": "d60baa8cb64783df27d50b02c25b116496a44d7a619b257b3b4bfc66788aa6ea",
+    "resources/app/public/app-main.js": "a94fce3189b660294535279e02fad42bc06a65e8d9204bcef0b512c45aa9b652",
+    "resources/app/electron/backend.js": "8a676b556fddfbb556fbc03af42f45c79530ec21dd0fd8d3aefe1291ebbd97c1",
+    ".github/installer/runtime.json": "69a0857e6fbbe72c9db5416d47b9d615963858a4da16ad648ef2b090b609f0f9",
+    "resources/app/package.json": "816129d9ea8db566546b02b61d6340d16b9fe62cf43bd1d15343115e2fbb6f57",
+    "resources/app/package-lock.json": "eb0fa3be78d79d68fa85fca21b365d0de1004a13ac652412770dd9349497cc90"
+  },
+  "productMatchesBase": true
+}

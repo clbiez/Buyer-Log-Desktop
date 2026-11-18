@@ -1,0 +1,38 @@
+{
+  "copiedConversation": {
+    "claimedSha": "eec7896e",
+    "available": false,
+    "githubResult": "422 No commit found",
+    "reusedResults": false
+  },
+  "host-initial.log": {
+    "runtime": "host Node 24.19.0",
+    "result": "23 PASS / 1 FAIL; unchanged event-only failure trigger did not fire for envelope-only ACK-through; extended fault injection without removing assertions"
+  },
+  "audit-r2-red.log": {
+    "source": "pinned R2 4ac2ed4847ce4c3af32bc82d13681b101d749d20",
+    "result": "expected incremental audit failure; early test revision, excluded from final counts"
+  },
+  "invalid-invocation": {
+    "source": "68775dcc",
+    "reason": "mode argument omitted; interpreted unintended comparison; deliberately terminated, raw incomplete and retained; no PASS or performance claims"
+  },
+  "pre-review-A": {
+    "source": "3c13b592ca454bfcd771ca2b0b68a0a443ea95d4",
+    "reason": "stopped for exact SQLite affinity correction and removing read-only index allocation; partial raw samples retained, excluded from final comparisons"
+  },
+  "finalCode": "4991cff2d669d776566f8506670ad0b2d72f47eb",
+  "guards": "20 minutes per worker unchanged; single measurement lock; failures/partial samples never combined",
+  "invalid-clock-A": {
+    "source": "ccb240f4 (full SHA in source-identity.json)",
+    "reason": "Global Date.now freeze also affected production JSON lease clock. Stopped and excluded. Final harness scopes only persistence metadata Date and retains real Date.now, lease and recovery wall time."
+  },
+  "read-regression-2581c655": {
+    "source": "2581c655",
+    "A": "completed; full-state, receipt and reopen equal, strong write/CPU/I/O gains",
+    "AA": "three 10k and three 1k A/A pairs completed",
+    "reason": "1k get regression +0.4475/+0.8867/+1.0999 ms versus R3 A/A -0.066/-0.056/+0.019 ms; not accepted as noise. Main B stopped at 200k seed. Read-only callback path restored to exact R2 form; all acceptance restarted. Old measurements excluded from final code."
+  },
+  "finalAdapterAndTests": "e791fa2b6412e95291c2f1ef26e71828b8ace671",
+  "finalIntegratedValidation": "b29941e4 (full SHA in source-identity.json); final Main 4dab3493, complete server/runtime and prototype/test sources byte-equal to measured source, fresh integrated targeted/full validation"
+}

@@ -1,0 +1,69 @@
+{
+  "standardRegression": {
+    "command": "npm test -> node tests/run-tests.js",
+    "node": "24.19.0",
+    "files": 1329,
+    "batches": 10,
+    "concurrency": 4,
+    "totals": {
+      "tests": 9209,
+      "pass": 9144,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 65
+    },
+    "elapsedSeconds": 381.9,
+    "complete": true
+  },
+  "checks": {
+    "prototype": {
+      "exit": 0,
+      "counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "runtime": "Electron 44.3.0 / Node 24.20.0"
+    },
+    "contract-gates": {
+      "exit": 1,
+      "counts": {
+        "tests": 8,
+        "pass": 1,
+        "fail": 7,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "runtime": "Electron 44.3.0 / Node 24.20.0"
+    },
+    "related": {
+      "exit": 0,
+      "counts": {
+        "tests": 84,
+        "pass": 84,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "runtime": "Electron 44.3.0 / Node 24.20.0"
+    },
+    "npm-test": {
+      "exit": 0
+    },
+    "i18n": {
+      "exit": 0
+    },
+    "release-notes": {
+      "exit": 0
+    },
+    "boundaries": {
+      "exit": 0
+    },
+    "evidence-check": {
+      "exit": 0
+    }
+  },
+  "prCi": "External live result on final PR head; not claimed by local test logs."
+}

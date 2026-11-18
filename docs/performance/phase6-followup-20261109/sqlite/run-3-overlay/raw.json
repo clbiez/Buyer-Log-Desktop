@@ -1,0 +1,3541 @@
+{
+  "schema": 1,
+  "startedAt": "2026-11-09T08:56:56.260Z",
+  "sourceCommit": "4ad4b3ea682450ed38ecebb4ef5b8680252bad37",
+  "sourceHashes": {
+    "resources/app/server/lib/local-db.js": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+    "resources/app/server/lib/large-json.js": "f4400d0ba64cb120525d967b2cc7f2f47a79bdb0c35b10812d0013e82fa4125c",
+    "scripts/prototypes/sqlite-decision-20261109/adapters.cjs": "eb2ccda9f10cbac59cb1e95e8a5dc82339ba6101d1d215caefd43d74827fae75",
+    "scripts/prototypes/sqlite-decision-20261109/workload.cjs": "69dd09bb6e3e7df3bb8a70ac513a03e68ce562212a9d2b78da9db0835ac7078a",
+    "scripts/prototypes/sqlite-decision-20261109/worker.cjs": "e1743fa84434d6f6b0bdb546b69a6f3699d2f467409aecc390aa253ba1abafe3",
+    "scripts/prototypes/sqlite-decision-20261109/benchmark.cjs": "88bd1b279ac2c77d08b44a9118af0ffcc722d88dfd0ee7d48e45a55a5e985c0a"
+  },
+  "environment": {
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.3.0",
+      "chrome": "152.0.7977.78"
+    },
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.18.57",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logicalCpus": 5,
+    "totalMemoryBytes": 18882662400,
+    "filesystem": "overlayfs",
+    "cgroupMemoryMax": "17179869184",
+    "cgroupCpuMax": "400000 100000"
+  },
+  "config": {
+    "sizes": [
+      10000,
+      200000
+    ],
+    "rounds": 3,
+    "operations": 300,
+    "seedBatch": 10000,
+    "uploadedFraction": 0.8,
+    "localWal": "production defaults: 1 MiB / 2000 entries",
+    "sqlite": "WAL, FULL, 8 MiB cache, autocheckpoint 256 pages",
+    "cache": "warm OS page cache; no cache dropping; fresh process and private file copy per trial"
+  },
+  "seeds": [
+    {
+      "engine": "local",
+      "size": 10000,
+      "seedMs": 3322.277512,
+      "counts": {
+        "records": 7008,
+        "events": 10000,
+        "journal": 10000,
+        "ledger": 0,
+        "sequence": 10000
+      },
+      "digest": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+      "disk": {
+        "totalBytes": 29252150,
+        "files": [
+          {
+            "path": "BuyerLogLocal.db",
+            "bytes": 20453942,
+            "allocatedBytes": 20455424
+          },
+          {
+            "path": "BuyerLogLocal.db.bak",
+            "bytes": 442,
+            "allocatedBytes": 4096
+          },
+          {
+            "path": "BuyerLogLocal.db.wal",
+            "bytes": 95045,
+            "allocatedBytes": 98304
+          },
+          {
+            "path": "BuyerLogLocal.db.wal.bak",
+            "bytes": 8702687,
+            "allocatedBytes": 8704000
+          },
+          {
+            "path": "BuyerLogLocal.db.write-fence.json",
+            "bytes": 34,
+            "allocatedBytes": 4096
+          }
+        ]
+      },
+      "memory": {
+        "rss": 274235392,
+        "heapTotal": 103624704,
+        "heapUsed": 18923264,
+        "external": 72884193,
+        "arrayBuffers": 0,
+        "maxRssBytes": 354033664
+      },
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "seedMs": 609.463547,
+      "counts": {
+        "records": 7008,
+        "events": 10000,
+        "journal": 10000,
+        "ledger": 0,
+        "sequence": 10000
+      },
+      "digest": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+      "disk": {
+        "totalBytes": 45952096,
+        "files": [
+          {
+            "path": "prototype.sqlite",
+            "bytes": 22847488,
+            "allocatedBytes": 22847488
+          },
+          {
+            "path": "prototype.sqlite-shm",
+            "bytes": 65536,
+            "allocatedBytes": 65536
+          },
+          {
+            "path": "prototype.sqlite-wal",
+            "bytes": 23039072,
+            "allocatedBytes": 23040000
+          }
+        ]
+      },
+      "memory": {
+        "rss": 183410688,
+        "heapTotal": 46862336,
+        "heapUsed": 3363588,
+        "external": 2538656,
+        "arrayBuffers": 0,
+        "maxRssBytes": 187547648
+      },
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "seedMs": 287561.93898399995,
+      "counts": {
+        "records": 140008,
+        "events": 200000,
+        "journal": 200000,
+        "ledger": 0,
+        "sequence": 200000
+      },
+      "digest": "984e57133f4c42e7141fc7533dce571b6bc12a5d58cd2b6f993b2898ced53462",
+      "disk": {
+        "totalBytes": 843333694,
+        "files": [
+          {
+            "path": "BuyerLogLocal.db",
+            "bytes": 423642307,
+            "allocatedBytes": 423645184
+          },
+          {
+            "path": "BuyerLogLocal.db.bak",
+            "bytes": 417562307,
+            "allocatedBytes": 417562624
+          },
+          {
+            "path": "BuyerLogLocal.db.wal.bak",
+            "bytes": 2129045,
+            "allocatedBytes": 2129920
+          },
+          {
+            "path": "BuyerLogLocal.db.write-fence.json",
+            "bytes": 35,
+            "allocatedBytes": 4096
+          }
+        ]
+      },
+      "memory": {
+        "rss": 1056796672,
+        "heapTotal": 406253568,
+        "heapUsed": 306288368,
+        "external": 849858803,
+        "arrayBuffers": 0,
+        "maxRssBytes": 2471022592
+      },
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "seedMs": 12269.208068,
+      "counts": {
+        "records": 140008,
+        "events": 200000,
+        "journal": 200000,
+        "ledger": 0,
+        "sequence": 200000
+      },
+      "digest": "984e57133f4c42e7141fc7533dce571b6bc12a5d58cd2b6f993b2898ced53462",
+      "disk": {
+        "totalBytes": 707025368,
+        "files": [
+          {
+            "path": "prototype.sqlite",
+            "bytes": 506511360,
+            "allocatedBytes": 506515456
+          },
+          {
+            "path": "prototype.sqlite-shm",
+            "bytes": 393216,
+            "allocatedBytes": 393216
+          },
+          {
+            "path": "prototype.sqlite-wal",
+            "bytes": 200120792,
+            "allocatedBytes": 200122368
+          }
+        ]
+      },
+      "memory": {
+        "rss": 589500416,
+        "heapTotal": 88281088,
+        "heapUsed": 3410172,
+        "external": 2538620,
+        "arrayBuffers": 0,
+        "maxRssBytes": 793714688
+      },
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "trials": [
+    {
+      "engine": "local",
+      "size": 10000,
+      "round": 1,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T08:57:02.127Z",
+      "initialHydrateMs": 3.085356000000047,
+      "readyMs": 1515.990514,
+      "cpuMicros": {
+        "user": 3743091,
+        "system": 2621606
+      },
+      "maxEventLoopGapMs": 3211.351643,
+      "sampledPeakHeapBytes": 88419184,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 77.84136299999955,
+        "copyRestoreMs": 74.68148500000007,
+        "restoreReadyVerifyMs": 357.33217200000036,
+        "bytes": 26444040,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 13222020,
+            "sha256": "46e6f12143ba556766827ce2503cb28a0096d9f8bc2510228427648beceb7624"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 13222020,
+            "sha256": "46e6f12143ba556766827ce2503cb28a0096d9f8bc2510228427648beceb7624"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 1512.877812,
+      "mixedMs": 1511.9819420000001,
+      "fullReadMs": 2.6584609999999884,
+      "compactMs": 3196.44381,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 85.4326689999998,
+          "p50Ms": 0.28046100000028673,
+          "p95Ms": 1.4227280000000064,
+          "maxMs": 6.3502300000000105
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 182.32241900000145,
+          "p50Ms": 2.4036220000002686,
+          "p95Ms": 5.570011999999679,
+          "maxMs": 12.154665000000023
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 48.7495229999995,
+          "p50Ms": 1.1750670000001264,
+          "p95Ms": 3.622532999999976,
+          "maxMs": 5.038221999999678
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 586.4361680000011,
+          "p50Ms": 13.16290300000037,
+          "p95Ms": 33.748961000000236,
+          "maxMs": 90.20742900000005
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 591.4162789999998,
+          "p50Ms": 16.276534000000083,
+          "p95Ms": 35.620584000000235,
+          "maxMs": 49.393367000000126
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 93655040,
+          "heapTotal": 5443584,
+          "heapUsed": 3150876,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 93655040
+        },
+        "opened": {
+          "rss": 226996224,
+          "heapTotal": 88420352,
+          "heapUsed": 21794412,
+          "external": 31856451,
+          "arrayBuffers": 0,
+          "maxRssBytes": 280788992
+        },
+        "steady": {
+          "rss": 203788288,
+          "heapTotal": 85798912,
+          "heapUsed": 22853204,
+          "external": 2850861,
+          "arrayBuffers": 0,
+          "maxRssBytes": 280788992
+        },
+        "fullRead": {
+          "rss": 203632640,
+          "heapTotal": 85798912,
+          "heapUsed": 22804012,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 280788992
+        },
+        "compacted": {
+          "rss": 245710848,
+          "heapTotal": 92090368,
+          "heapUsed": 16419604,
+          "external": 36222811,
+          "arrayBuffers": 0,
+          "maxRssBytes": 337735680
+        },
+        "peakRssBytes": 337735680
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 29801011,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 20453942,
+              "allocatedBytes": 20455424
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 442,
+              "allocatedBytes": 4096
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 643905,
+              "allocatedBytes": 647168
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 8702687,
+              "allocatedBytes": 8704000
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 198.996898,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "round": 1,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T08:57:09.753Z",
+      "initialHydrateMs": 93.99745999999999,
+      "readyMs": 95.353465,
+      "cpuMicros": {
+        "user": 520734,
+        "system": 212100
+      },
+      "maxEventLoopGapMs": 252.18945800000006,
+      "sampledPeakHeapBytes": 31871116,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 50.61718500000006,
+        "copyRestoreMs": 94.29393899999991,
+        "restoreReadyVerifyMs": 277.09752100000003,
+        "bytes": 15093760,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 15093760,
+            "sha256": "9412a1268186f8e351cfefbab71691656bff4c242a43c141e4a76afb320b29d3"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 1.3540139999999923,
+      "mixedMs": 169.80388,
+      "fullReadMs": 55.83491300000003,
+      "compactMs": 218.99535599999996,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 5.323696999999953,
+          "p50Ms": 0.01809299999996483,
+          "p95Ms": 0.08020399999998062,
+          "maxMs": 0.752145999999982
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 24.02824099999995,
+          "p50Ms": 0.2784409999999866,
+          "p95Ms": 0.9336139999999773,
+          "maxMs": 2.4188480000000254
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 13.657964999999905,
+          "p50Ms": 0.33345900000000483,
+          "p95Ms": 1.068175999999994,
+          "maxMs": 1.4300670000000082
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 33.45778899999999,
+          "p50Ms": 0.7972780000000057,
+          "p95Ms": 2.646897000000024,
+          "maxMs": 4.283370999999988
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 82.02745100000013,
+          "p50Ms": 2.326274999999981,
+          "p95Ms": 4.8552740000000085,
+          "maxMs": 7.947756999999967
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94457856,
+          "heapTotal": 5443584,
+          "heapUsed": 3150880,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94457856
+        },
+        "opened": {
+          "rss": 140177408,
+          "heapTotal": 36052992,
+          "heapUsed": 11805592,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 140177408
+        },
+        "steady": {
+          "rss": 149979136,
+          "heapTotal": 33693696,
+          "heapUsed": 12078908,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 150548480
+        },
+        "fullRead": {
+          "rss": 156393472,
+          "heapTotal": 49623040,
+          "heapUsed": 20345704,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 156393472
+        },
+        "compacted": {
+          "rss": 156835840,
+          "heapTotal": 49623040,
+          "heapUsed": 20347176,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 166486016
+        },
+        "peakRssBytes": 166486016
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 24881880,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 23674880,
+              "allocatedBytes": 23674880
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1174232,
+              "allocatedBytes": 1175552
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 15126528,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 15093760,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 1.9163029999999992,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "round": 2,
+      "order": [
+        "sqlite",
+        "local"
+      ],
+      "startedAt": "2026-11-09T08:57:11.706Z",
+      "initialHydrateMs": 544.0243979999999,
+      "readyMs": 547.2893680000001,
+      "cpuMicros": {
+        "user": 1185362,
+        "system": 381353
+      },
+      "maxEventLoopGapMs": 549.949035,
+      "sampledPeakHeapBytes": 31877556,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 60.332055999999966,
+        "copyRestoreMs": 96.38749499999994,
+        "restoreReadyVerifyMs": 250.00116400000002,
+        "bytes": 15093760,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 15093760,
+            "sha256": "9412a1268186f8e351cfefbab71691656bff4c242a43c141e4a76afb320b29d3"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 3.257458999999997,
+      "mixedMs": 277.240807,
+      "fullReadMs": 54.764319,
+      "compactMs": 451.15633,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 21.578485000000683,
+          "p50Ms": 0.023056999999994332,
+          "p95Ms": 0.30855800000006184,
+          "maxMs": 8.600052000000005
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 35.37316099999998,
+          "p50Ms": 0.3283249999999498,
+          "p95Ms": 2.8912579999999934,
+          "maxMs": 2.9963070000000016
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 18.97534400000052,
+          "p50Ms": 0.4445220000000063,
+          "p95Ms": 0.8686719999999468,
+          "maxMs": 3.5857300000000123
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 43.37907000000007,
+          "p50Ms": 0.920297000000005,
+          "p95Ms": 2.3048690000000533,
+          "maxMs": 7.9394139999999425
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 139.28081399999985,
+          "p50Ms": 2.4496540000000095,
+          "p95Ms": 13.176082000000065,
+          "maxMs": 27.614645999999993
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94638080,
+          "heapTotal": 5181440,
+          "heapUsed": 3150936,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94638080
+        },
+        "opened": {
+          "rss": 140173312,
+          "heapTotal": 36577280,
+          "heapUsed": 11805592,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 140173312
+        },
+        "steady": {
+          "rss": 149606400,
+          "heapTotal": 34742272,
+          "heapUsed": 12078076,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 150024192
+        },
+        "fullRead": {
+          "rss": 157179904,
+          "heapTotal": 50409472,
+          "heapUsed": 20344752,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 157179904
+        },
+        "compacted": {
+          "rss": 157704192,
+          "heapTotal": 50409472,
+          "heapUsed": 20346344,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 167419904
+        },
+        "peakRssBytes": 167419904
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 24881880,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 23674880,
+              "allocatedBytes": 23674880
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1174232,
+              "allocatedBytes": 1175552
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 15126528,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 15093760,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 1.8251549999999952,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "local",
+      "size": 10000,
+      "round": 2,
+      "order": [
+        "sqlite",
+        "local"
+      ],
+      "startedAt": "2026-11-09T08:57:14.298Z",
+      "initialHydrateMs": 2.5106389999998555,
+      "readyMs": 1476.512197,
+      "cpuMicros": {
+        "user": 3735337,
+        "system": 2188091
+      },
+      "maxEventLoopGapMs": 2101.002362,
+      "sampledPeakHeapBytes": 88512384,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 94.08888699999989,
+        "copyRestoreMs": 71.48072300000058,
+        "restoreReadyVerifyMs": 223.33240600000045,
+        "bytes": 26444040,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 13222020,
+            "sha256": "a8be5fb239817c67b820abc5c7d69203f5bcf808e258a462aba5c551fc895885"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 13222020,
+            "sha256": "a8be5fb239817c67b820abc5c7d69203f5bcf808e258a462aba5c551fc895885"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 1473.995667,
+      "mixedMs": 1818.2609509999997,
+      "fullReadMs": 2.6142289999997956,
+      "compactMs": 2082.7885650000003,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 110.78832400000329,
+          "p50Ms": 0.35205800000039744,
+          "p95Ms": 2.7833639999998923,
+          "maxMs": 8.934222999999974
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 205.56048800000076,
+          "p50Ms": 2.7534929999997075,
+          "p95Ms": 6.724408999999923,
+          "maxMs": 9.147590000000037
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 47.772248999999874,
+          "p50Ms": 1.2338910000003125,
+          "p95Ms": 2.661818999999923,
+          "maxMs": 3.3608500000000276
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 853.0329129999982,
+          "p50Ms": 14.697430000000168,
+          "p95Ms": 51.64825900000005,
+          "maxMs": 204.5883829999998
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 582.2605289999999,
+          "p50Ms": 15.17839099999992,
+          "p95Ms": 38.00184599999966,
+          "maxMs": 55.496548000000075
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94695424,
+          "heapTotal": 5181440,
+          "heapUsed": 3150912,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94695424
+        },
+        "opened": {
+          "rss": 222076928,
+          "heapTotal": 92614656,
+          "heapUsed": 21858996,
+          "external": 31856451,
+          "arrayBuffers": 0,
+          "maxRssBytes": 282099712
+        },
+        "steady": {
+          "rss": 205725696,
+          "heapTotal": 85798912,
+          "heapUsed": 22854620,
+          "external": 2850861,
+          "arrayBuffers": 0,
+          "maxRssBytes": 282099712
+        },
+        "fullRead": {
+          "rss": 205438976,
+          "heapTotal": 85798912,
+          "heapUsed": 22805484,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 282099712
+        },
+        "compacted": {
+          "rss": 249905152,
+          "heapTotal": 93663232,
+          "heapUsed": 16421080,
+          "external": 36222811,
+          "arrayBuffers": 0,
+          "maxRssBytes": 339374080
+        },
+        "peakRssBytes": 339374080
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 29801011,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 20453942,
+              "allocatedBytes": 20455424
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 442,
+              "allocatedBytes": 4096
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 643905,
+              "allocatedBytes": 647168
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 8702687,
+              "allocatedBytes": 8704000
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 207.462968,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "local",
+      "size": 10000,
+      "round": 3,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T08:57:20.876Z",
+      "initialHydrateMs": 1.758491000000049,
+      "readyMs": 614.194251,
+      "cpuMicros": {
+        "user": 3227533,
+        "system": 1415235
+      },
+      "maxEventLoopGapMs": 2659.53117,
+      "sampledPeakHeapBytes": 88616224,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 113.46330000000034,
+        "copyRestoreMs": 532.0043839999998,
+        "restoreReadyVerifyMs": 753.8990329999997,
+        "bytes": 26444040,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 13222020,
+            "sha256": "b2eca974fa790086d2a70ee35becc610408f9156d86a58f149ba8e924cd4ed07"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 13222020,
+            "sha256": "b2eca974fa790086d2a70ee35becc610408f9156d86a58f149ba8e924cd4ed07"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 612.434162,
+      "mixedMs": 989.4851560000001,
+      "fullReadMs": 2.8112590000000637,
+      "compactMs": 2637.6961739999997,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 52.20791700000075,
+          "p50Ms": 0.22807799999998224,
+          "p95Ms": 0.8606330000000071,
+          "maxMs": 3.5666170000000648
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 163.68726399999946,
+          "p50Ms": 2.381264999999985,
+          "p95Ms": 4.26610299999993,
+          "maxMs": 8.420823999999925
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 34.594762999999375,
+          "p50Ms": 1.0049070000000029,
+          "p95Ms": 1.7902890000000298,
+          "maxMs": 2.2138149999998404
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 343.08541899999955,
+          "p50Ms": 9.47435500000006,
+          "p95Ms": 18.728450000000066,
+          "maxMs": 23.518823999999995
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 375.74764099999993,
+          "p50Ms": 11.102163999999902,
+          "p95Ms": 19.328711,
+          "maxMs": 31.359560999999985
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 93999104,
+          "heapTotal": 5181440,
+          "heapUsed": 3150948,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 93999104
+        },
+        "opened": {
+          "rss": 202842112,
+          "heapTotal": 87109632,
+          "heapUsed": 21858052,
+          "external": 31856451,
+          "arrayBuffers": 0,
+          "maxRssBytes": 281419776
+        },
+        "steady": {
+          "rss": 204689408,
+          "heapTotal": 85536768,
+          "heapUsed": 22853540,
+          "external": 2868355,
+          "arrayBuffers": 0,
+          "maxRssBytes": 281419776
+        },
+        "fullRead": {
+          "rss": 204509184,
+          "heapTotal": 85536768,
+          "heapUsed": 22804440,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 281419776
+        },
+        "compacted": {
+          "rss": 245985280,
+          "heapTotal": 90517504,
+          "heapUsed": 16419804,
+          "external": 36218443,
+          "arrayBuffers": 0,
+          "maxRssBytes": 338046976
+        },
+        "peakRssBytes": 338046976
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 29801011,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 20453942,
+              "allocatedBytes": 20455424
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 442,
+              "allocatedBytes": 4096
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 643905,
+              "allocatedBytes": 647168
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 8702687,
+              "allocatedBytes": 8704000
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 26444075,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 13222020,
+              "allocatedBytes": 13225984
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 157.812634,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "round": 3,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T08:57:26.832Z",
+      "initialHydrateMs": 85.76491899999999,
+      "readyMs": 97.81544699999998,
+      "cpuMicros": {
+        "user": 548082,
+        "system": 243523
+      },
+      "maxEventLoopGapMs": 281.0393240000001,
+      "sampledPeakHeapBytes": 31846780,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 67.17786999999998,
+        "copyRestoreMs": 129.46871499999997,
+        "restoreReadyVerifyMs": 311.38388299999997,
+        "bytes": 15093760,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 15093760,
+            "sha256": "9412a1268186f8e351cfefbab71691656bff4c242a43c141e4a76afb320b29d3"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 12.047642999999994,
+      "mixedMs": 197.17217200000002,
+      "fullReadMs": 69.80117099999995,
+      "compactMs": 232.197045,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 7.82557000000034,
+          "p50Ms": 0.01530600000000959,
+          "p95Ms": 0.10249600000003056,
+          "maxMs": 1.5284739999999886
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 23.657446999999905,
+          "p50Ms": 0.2947080000000142,
+          "p95Ms": 0.9109040000000164,
+          "maxMs": 1.6966659999999933
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 15.374407999999988,
+          "p50Ms": 0.3513849999999934,
+          "p95Ms": 1.092123999999984,
+          "maxMs": 1.7843670000000316
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 48.36814400000003,
+          "p50Ms": 0.8170949999999948,
+          "p95Ms": 4.726734000000022,
+          "maxMs": 9.04486300000002
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 90.70709899999994,
+          "p50Ms": 2.336484999999982,
+          "p95Ms": 5.3041149999999675,
+          "maxMs": 9.191870000000023
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 93437952,
+          "heapTotal": 5443584,
+          "heapUsed": 3150976,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 93437952
+        },
+        "opened": {
+          "rss": 139259904,
+          "heapTotal": 36577280,
+          "heapUsed": 11805648,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 139259904
+        },
+        "steady": {
+          "rss": 149176320,
+          "heapTotal": 33693696,
+          "heapUsed": 12079200,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 149712896
+        },
+        "fullRead": {
+          "rss": 155586560,
+          "heapTotal": 50147328,
+          "heapUsed": 20344776,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 155586560
+        },
+        "compacted": {
+          "rss": 155873280,
+          "heapTotal": 50147328,
+          "heapUsed": 20346416,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 165679104
+        },
+        "peakRssBytes": 165679104
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 24881880,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 23674880,
+              "allocatedBytes": 23674880
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1174232,
+              "allocatedBytes": 1175552
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 15126528,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 15093760,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 15093760,
+              "allocatedBytes": 15093760
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 7008,
+        "events": 10630,
+        "journal": 10630,
+        "ledger": 0,
+        "sequence": 10630
+      },
+      "countsAfter": {
+        "records": 7008,
+        "events": 3630,
+        "journal": 3630,
+        "ledger": 7000,
+        "sequence": 10630
+      },
+      "pending": 2630,
+      "finalDigest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+      "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+      "checksum": 1485164,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 2.091757000000001,
+        "digest": "74f6fa86bba5583f5fe0faab9622126d60cfff3685c88132d75f68f62a0fe6d4",
+        "counts": {
+          "records": 7008,
+          "events": 3630,
+          "journal": 3630,
+          "ledger": 7000,
+          "sequence": 10630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "3f9ef8304c8e87dee8e17610bda6d576229ebe53a901f240f72513fcba08620e",
+        "pending": 2630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "round": 1,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T09:03:16.821Z",
+      "initialHydrateMs": 31.362817999999606,
+      "readyMs": 10256.157405999998,
+      "cpuMicros": {
+        "user": 55160008,
+        "system": 21154726
+      },
+      "maxEventLoopGapMs": 41105.881642,
+      "sampledPeakHeapBytes": 608467420,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 1798.1112409999987,
+        "copyRestoreMs": 2439.1859259999983,
+        "restoreReadyVerifyMs": 7583.711941000001,
+        "bytes": 467551950,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 233775975,
+            "sha256": "07f5638c8e6bc8195358881f1b0df6f323db5e3805e93e3a35dd36990b8009b6"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 233775975,
+            "sha256": "07f5638c8e6bc8195358881f1b0df6f323db5e3805e93e3a35dd36990b8009b6"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 10224.792227999998,
+      "mixedMs": 7935.995180000002,
+      "fullReadMs": 30.979229000000487,
+      "compactMs": 40717.975003,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 116.3917780000138,
+          "p50Ms": 0.3266430000003311,
+          "p95Ms": 1.9912640000002284,
+          "maxMs": 33.43659200000002
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 5908.317638999997,
+          "p50Ms": 85.51882000000114,
+          "p95Ms": 176.09374300000127,
+          "maxMs": 298.9847059999993
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 648.0814009999976,
+          "p50Ms": 14.021767000002,
+          "p95Ms": 55.661997999999585,
+          "maxMs": 98.012150999999
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 619.0600659999982,
+          "p50Ms": 14.8064340000019,
+          "p95Ms": 30.86737600000015,
+          "maxMs": 87.32707100000152
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 598.891595000001,
+          "p50Ms": 16.11685900000157,
+          "p95Ms": 29.77113399999871,
+          "maxMs": 56.01560900000004
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94097408,
+          "heapTotal": 5181440,
+          "heapUsed": 3150892,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94097408
+        },
+        "opened": {
+          "rss": 986169344,
+          "heapTotal": 431452160,
+          "heapUsed": 395255124,
+          "external": 430441225,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403166720
+        },
+        "steady": {
+          "rss": 617537536,
+          "heapTotal": 464355328,
+          "heapUsed": 396808756,
+          "external": 2673617,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403166720
+        },
+        "fullRead": {
+          "rss": 617545728,
+          "heapTotal": 464355328,
+          "heapUsed": 396761476,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403166720
+        },
+        "compacted": {
+          "rss": 810487808,
+          "heapTotal": 411721728,
+          "heapUsed": 230197008,
+          "external": 236317974,
+          "arrayBuffers": 0,
+          "maxRssBytes": 2370940928
+        },
+        "peakRssBytes": 2370940928
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 843884186,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 423642307,
+              "allocatedBytes": 423645184
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 417562307,
+              "allocatedBytes": 417562624
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 550492,
+              "allocatedBytes": 557056
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 2129045,
+              "allocatedBytes": 2129920
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "[LEASE] renew:failed instanceId=34debaff-00ab-41ef-81c3-fb8e2661b4a5 pid=17344 resource=/workspace/sqlite-decision-952/scripts/prototypes/sqlite-decision-20261109/.scratch/bl-db-benchmark-3OaY20/trial-local/BuyerLogLocal.db error=SHARED_LEASE_LOST\n",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 4042.801679,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "round": 1,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T09:04:35.747Z",
+      "initialHydrateMs": 1465.4009059999998,
+      "readyMs": 1469.915072,
+      "cpuMicros": {
+        "user": 8941230,
+        "system": 5149902
+      },
+      "maxEventLoopGapMs": 7104.205607,
+      "sampledPeakHeapBytes": 556620824,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 1638.2500330000003,
+        "copyRestoreMs": 2546.2597149999983,
+        "restoreReadyVerifyMs": 6331.217177,
+        "bytes": 313438208,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 313438208,
+            "sha256": "9e07170ad6afd7feba9509f2e856aab822892b46752bbe5e86229218f53c84c8"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 4.5119279999999975,
+      "mixedMs": 232.92960300000004,
+      "fullReadMs": 1198.4620599999998,
+      "compactMs": 6504.351913,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 9.25025299999993,
+          "p50Ms": 0.02204600000004575,
+          "p95Ms": 0.14112900000009176,
+          "maxMs": 2.5086969999999837
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 34.078456999999844,
+          "p50Ms": 0.3862389999999323,
+          "p95Ms": 1.1088600000000497,
+          "maxMs": 5.522335999999996
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 13.180390999999418,
+          "p50Ms": 0.3524019999999837,
+          "p95Ms": 0.6844309999999041,
+          "maxMs": 2.1157690000000002
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 36.32890400000019,
+          "p50Ms": 0.9475960000002033,
+          "p95Ms": 2.546816999999919,
+          "maxMs": 4.594181000000162
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 123.36558200000013,
+          "p50Ms": 2.5710619999999835,
+          "p95Ms": 7.156226000000061,
+          "maxMs": 20.67142899999999
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 93921280,
+          "heapTotal": 5181440,
+          "heapUsed": 3150896,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 93921280
+        },
+        "opened": {
+          "rss": 565854208,
+          "heapTotal": 433004544,
+          "heapUsed": 175799520,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 568729600
+        },
+        "steady": {
+          "rss": 567009280,
+          "heapTotal": 241377280,
+          "heapUsed": 176072044,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 569319424
+        },
+        "fullRead": {
+          "rss": 729432064,
+          "heapTotal": 475475968,
+          "heapUsed": 343008808,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 731701248
+        },
+        "compacted": {
+          "rss": 729956352,
+          "heapTotal": 390541312,
+          "heapUsed": 343010216,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 739930112
+        },
+        "peakRssBytes": 739930112
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 508795728,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 507568128,
+              "allocatedBytes": 507572224
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1194832,
+              "allocatedBytes": 1196032
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 314060800,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313442304
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 622592,
+              "allocatedBytes": 622592
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 313438208,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313442304
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 2.19735,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "round": 2,
+      "order": [
+        "sqlite",
+        "local"
+      ],
+      "startedAt": "2026-11-09T09:05:04.210Z",
+      "initialHydrateMs": 1557.272673,
+      "readyMs": 1563.884593,
+      "cpuMicros": {
+        "user": 7239316,
+        "system": 4333433
+      },
+      "maxEventLoopGapMs": 4577.355394,
+      "sampledPeakHeapBytes": 556613848,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 1627.8055870000007,
+        "copyRestoreMs": 1906.6685570000009,
+        "restoreReadyVerifyMs": 7591.56594,
+        "bytes": 313438208,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 313438208,
+            "sha256": "9e07170ad6afd7feba9509f2e856aab822892b46752bbe5e86229218f53c84c8"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 6.609632000000005,
+      "mixedMs": 165.83444600000007,
+      "fullReadMs": 1160.929087,
+      "compactMs": 4028.5448610000003,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 5.894715999999789,
+          "p50Ms": 0.02054099999986647,
+          "p95Ms": 0.10656099999982871,
+          "maxMs": 0.6748630000001867
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 29.929069000000936,
+          "p50Ms": 0.38625200000001314,
+          "p95Ms": 0.9006520000000364,
+          "maxMs": 3.1609399999999823
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 12.906876000000011,
+          "p50Ms": 0.3035059999999703,
+          "p95Ms": 0.7328780000000279,
+          "maxMs": 2.0245790000001307
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 30.203246999999692,
+          "p50Ms": 0.767891999999847,
+          "p95Ms": 1.716380000000072,
+          "maxMs": 3.725584000000026
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 76.86005900000009,
+          "p50Ms": 2.131934000000001,
+          "p95Ms": 4.492762000000084,
+          "maxMs": 4.7718660000000455
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 93650944,
+          "heapTotal": 5443584,
+          "heapUsed": 3150880,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 93650944
+        },
+        "opened": {
+          "rss": 564666368,
+          "heapTotal": 431955968,
+          "heapUsed": 175799520,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 567853056
+        },
+        "steady": {
+          "rss": 565530624,
+          "heapTotal": 235347968,
+          "heapUsed": 176073112,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 567853056
+        },
+        "fullRead": {
+          "rss": 728936448,
+          "heapTotal": 432222208,
+          "heapUsed": 343008808,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 731373568
+        },
+        "compacted": {
+          "rss": 729628672,
+          "heapTotal": 388182016,
+          "heapUsed": 343010216,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 739553280
+        },
+        "peakRssBytes": 739553280
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 508795728,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 507568128,
+              "allocatedBytes": 507568128
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1194832,
+              "allocatedBytes": 1196032
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 314060800,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313438208
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 622592,
+              "allocatedBytes": 622592
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 313438208,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313438208
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 1.5516070000000042,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "round": 2,
+      "order": [
+        "sqlite",
+        "local"
+      ],
+      "startedAt": "2026-11-09T09:05:31.177Z",
+      "initialHydrateMs": 25.026976999999533,
+      "readyMs": 5350.833264999999,
+      "cpuMicros": {
+        "user": 41274107,
+        "system": 12987878
+      },
+      "maxEventLoopGapMs": 30651.619724000004,
+      "sampledPeakHeapBytes": 640171240,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 1975.9952449999982,
+        "copyRestoreMs": 2367.873716000002,
+        "restoreReadyVerifyMs": 9766.973497000006,
+        "bytes": 467551950,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 233775975,
+            "sha256": "f112da0694bb533cc56bb23f6f27719797059e4725257ea97eea615f8cba7ab8"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 233775975,
+            "sha256": "f112da0694bb533cc56bb23f6f27719797059e4725257ea97eea615f8cba7ab8"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 5325.804405,
+      "mixedMs": 5403.370250000001,
+      "fullReadMs": 34.13838599999872,
+      "compactMs": 30316.75937,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 104.98364500000935,
+          "p50Ms": 0.2666430000008404,
+          "p95Ms": 1.3828940000003058,
+          "maxMs": 38.47664900000018
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 4110.1774170000035,
+          "p50Ms": 62.932378000001336,
+          "p95Ms": 102.9986540000009,
+          "maxMs": 162.18099299999994
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 280.6672410000001,
+          "p50Ms": 8.002905999999712,
+          "p95Ms": 16.37007799999992,
+          "maxMs": 18.911325000000033
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 426.8731749999997,
+          "p50Ms": 11.388124000000971,
+          "p95Ms": 31.574384999999893,
+          "maxMs": 37.76170600000023
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 451.53576400000475,
+          "p50Ms": 12.989160999999513,
+          "p95Ms": 26.149617000000035,
+          "maxMs": 44.11437599999954
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94138368,
+          "heapTotal": 5181440,
+          "heapUsed": 3150892,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94138368
+        },
+        "opened": {
+          "rss": 984010752,
+          "heapTotal": 431714304,
+          "heapUsed": 395254996,
+          "external": 430441225,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403170816
+        },
+        "steady": {
+          "rss": 617828352,
+          "heapTotal": 464355328,
+          "heapUsed": 396808628,
+          "external": 2673617,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403170816
+        },
+        "fullRead": {
+          "rss": 617857024,
+          "heapTotal": 464093184,
+          "heapUsed": 396759000,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403170816
+        },
+        "compacted": {
+          "rss": 810414080,
+          "heapTotal": 351166464,
+          "heapUsed": 230183844,
+          "external": 236317974,
+          "arrayBuffers": 0,
+          "maxRssBytes": 2659700736
+        },
+        "peakRssBytes": 2659700736
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 843884186,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 423642307,
+              "allocatedBytes": 423645184
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 417562307,
+              "allocatedBytes": 417562624
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 550492,
+              "allocatedBytes": 557056
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 2129045,
+              "allocatedBytes": 2129920
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 5175.9680880000005,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "round": 3,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T09:06:43.347Z",
+      "initialHydrateMs": 22.277283000000352,
+      "readyMs": 5852.067194,
+      "cpuMicros": {
+        "user": 49405111,
+        "system": 17731092
+      },
+      "maxEventLoopGapMs": 40019.668084000004,
+      "sampledPeakHeapBytes": 634303348,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 2791.2404659999956,
+        "copyRestoreMs": 4429.391088999997,
+        "restoreReadyVerifyMs": 11566.533627999997,
+        "bytes": 467551950,
+        "manifest": [
+          {
+            "name": "BuyerLogLocal.db",
+            "bytes": 233775975,
+            "sha256": "350f471d47fc610e5fd6e7c7dd1adf66db7b1701758db20f299046de6a8a6d4f"
+          },
+          {
+            "name": "BuyerLogLocal.db.bak",
+            "bytes": 233775975,
+            "sha256": "350f471d47fc610e5fd6e7c7dd1adf66db7b1701758db20f299046de6a8a6d4f"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "BuyerLogLocal.db.wal.bak",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 5829.787828,
+      "mixedMs": 6015.352733,
+      "fullReadMs": 24.814782999999807,
+      "compactMs": 39666.47636,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 66.81507499999861,
+          "p50Ms": 0.2458569999998872,
+          "p95Ms": 0.5338689999998678,
+          "maxMs": 25.626187999999274
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 4639.396260999997,
+          "p50Ms": 69.52125799999976,
+          "p95Ms": 92.73545700000068,
+          "maxMs": 251.93541299999924
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 267.8353500000039,
+          "p50Ms": 8.039680999999291,
+          "p95Ms": 12.136351000001014,
+          "maxMs": 19.818222999998397
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 542.4055280000075,
+          "p50Ms": 12.918561000000409,
+          "p95Ms": 24.07940199999939,
+          "maxMs": 116.58952200000022
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 477.1403979999968,
+          "p50Ms": 13.802904000000126,
+          "p95Ms": 24.582486000001154,
+          "maxMs": 43.032460000000356
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94457856,
+          "heapTotal": 5443584,
+          "heapUsed": 3142844,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94588928
+        },
+        "opened": {
+          "rss": 986062848,
+          "heapTotal": 431976448,
+          "heapUsed": 395254664,
+          "external": 430441225,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403219968
+        },
+        "steady": {
+          "rss": 614277120,
+          "heapTotal": 460947456,
+          "heapUsed": 396808608,
+          "external": 2691319,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403219968
+        },
+        "fullRead": {
+          "rss": 582078464,
+          "heapTotal": 460423168,
+          "heapUsed": 396761208,
+          "external": 2538825,
+          "arrayBuffers": 0,
+          "maxRssBytes": 1403219968
+        },
+        "compacted": {
+          "rss": 828473344,
+          "heapTotal": 354312192,
+          "heapUsed": 230181580,
+          "external": 236317974,
+          "arrayBuffers": 0,
+          "maxRssBytes": 2330222592
+        },
+        "peakRssBytes": 2330222592
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 843884186,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 423642307,
+              "allocatedBytes": 423645184
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 417562307,
+              "allocatedBytes": 417562624
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 550492,
+              "allocatedBytes": 552960
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 2129045,
+              "allocatedBytes": 2129920
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 467551985,
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 233775975,
+              "allocatedBytes": 233779200
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 0,
+              "allocatedBytes": 0
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 35,
+              "allocatedBytes": 4096
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 15163.133404999999,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "round": 3,
+      "order": [
+        "local",
+        "sqlite"
+      ],
+      "startedAt": "2026-11-09T09:08:22.864Z",
+      "initialHydrateMs": 2387.570302,
+      "readyMs": 2393.12487,
+      "cpuMicros": {
+        "user": 8969993,
+        "system": 6235224
+      },
+      "maxEventLoopGapMs": 7010.183875,
+      "sampledPeakHeapBytes": 556613944,
+      "backup": {
+        "mode": "quiescent-full-family-copy-fsync-manifest",
+        "backupMs": 2264.5143849999986,
+        "copyRestoreMs": 3941.028129000002,
+        "restoreReadyVerifyMs": 8944.446613,
+        "bytes": 313438208,
+        "manifest": [
+          {
+            "name": "prototype.sqlite",
+            "bytes": 313438208,
+            "sha256": "9e07170ad6afd7feba9509f2e856aab822892b46752bbe5e86229218f53c84c8"
+          },
+          {
+            "name": "prototype.sqlite-wal",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "businessAndEventIdentityRestored": true,
+        "productionBackupParity": false
+      },
+      "startupMs": 5.552037999999996,
+      "mixedMs": 319.42792299999974,
+      "fullReadMs": 1513.8355059999994,
+      "compactMs": 6188.203158,
+      "latencies": {
+        "get": {
+          "count": 150,
+          "totalMs": 7.429300999998759,
+          "p50Ms": 0.0253219999999601,
+          "p95Ms": 0.13167999999996027,
+          "maxMs": 1.1915420000000267
+        },
+        "filter": {
+          "count": 60,
+          "totalMs": 35.36907399999973,
+          "p50Ms": 0.45924799999966126,
+          "p95Ms": 1.6209100000000944,
+          "maxMs": 2.187953000000107
+        },
+        "pending": {
+          "count": 30,
+          "totalMs": 19.384745999999268,
+          "p50Ms": 0.4335369999998875,
+          "p95Ms": 1.5338309999997364,
+          "maxMs": 2.2500930000001063
+        },
+        "singleWrite": {
+          "count": 30,
+          "totalMs": 69.41200900000058,
+          "p50Ms": 1.3858490000002348,
+          "p95Ms": 4.178885000000264,
+          "maxMs": 21.402888000000075
+        },
+        "batch20": {
+          "count": 30,
+          "totalMs": 168.17372000000023,
+          "p50Ms": 3.378128000000288,
+          "p95Ms": 15.019743999999719,
+          "maxMs": 35.8960689999999
+        }
+      },
+      "memory": {
+        "baseline": {
+          "rss": 94404608,
+          "heapTotal": 5443584,
+          "heapUsed": 3150976,
+          "external": 2538597,
+          "arrayBuffers": 0,
+          "maxRssBytes": 94404608
+        },
+        "opened": {
+          "rss": 566116352,
+          "heapTotal": 431955968,
+          "heapUsed": 175799616,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 569208832
+        },
+        "steady": {
+          "rss": 566910976,
+          "heapTotal": 238231552,
+          "heapUsed": 176073232,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 569208832
+        },
+        "fullRead": {
+          "rss": 730300416,
+          "heapTotal": 417017856,
+          "heapUsed": 343008904,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 732532736
+        },
+        "compacted": {
+          "rss": 730877952,
+          "heapTotal": 389754880,
+          "heapUsed": 343010304,
+          "external": 2538676,
+          "arrayBuffers": 0,
+          "maxRssBytes": 740782080
+        },
+        "peakRssBytes": 740782080
+      },
+      "disk": {
+        "before": {
+          "totalBytes": 508795728,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 507568128,
+              "allocatedBytes": 507568128
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocatedBytes": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 1194832,
+              "allocatedBytes": 1196032
+            }
+          ]
+        },
+        "after": {
+          "totalBytes": 314060800,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313438208
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 622592,
+              "allocatedBytes": 622592
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 0,
+              "allocatedBytes": 0
+            }
+          ]
+        },
+        "closed": {
+          "totalBytes": 313438208,
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 313438208,
+              "allocatedBytes": 313438208
+            }
+          ]
+        }
+      },
+      "countsBefore": {
+        "records": 140008,
+        "events": 200630,
+        "journal": 200630,
+        "ledger": 0,
+        "sequence": 200630
+      },
+      "countsAfter": {
+        "records": 140008,
+        "events": 41630,
+        "journal": 41630,
+        "ledger": 159000,
+        "sequence": 200630
+      },
+      "pending": 40630,
+      "finalDigest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+      "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+      "checksum": 29168530,
+      "addedEvents": 630,
+      "stdout": "",
+      "stderr": "",
+      "reopened": {
+        "replayMs": 1.7416999999999945,
+        "digest": "a0a18bd904d91cc7ae25ab3879c18a2f6a997bc6c51a80ef122371cbd3117462",
+        "counts": {
+          "records": 140008,
+          "events": 41630,
+          "journal": 41630,
+          "ledger": 159000,
+          "sequence": 200630
+        },
+        "ackRetained": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "inflightPresent": false,
+        "eventIds": "4468f499fc5cd631138dea2b04bc34e4a7a50449d85fb60c804249d5c7b1f218",
+        "pending": 40630,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "crashes": [
+    {
+      "engine": "local",
+      "size": 10000,
+      "scenario": "acknowledged",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 613.388361,
+      "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+      "counts": {
+        "records": 7008,
+        "events": 10005,
+        "journal": 10005,
+        "ledger": 0,
+        "sequence": 10005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+      "pending": 2005
+    },
+    {
+      "engine": "local",
+      "size": 10000,
+      "scenario": "inflight",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 535.528427,
+      "digest": "0e559d8b0088bee284f8dee54618d81831a239149dafcd8d11e9138a4d05cb60",
+      "counts": {
+        "records": 7008,
+        "events": 10006,
+        "journal": 10006,
+        "ledger": 0,
+        "sequence": 10006
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": true,
+      "eventIds": "1f51921f94bb5a6a87aaef071519bd3a1308170c09af857d565953e79c667d62",
+      "pending": 2006
+    },
+    {
+      "engine": "local",
+      "size": 10000,
+      "scenario": "compacting",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 1045.0501590000001,
+      "digest": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+      "counts": {
+        "records": 7008,
+        "events": 10000,
+        "journal": 10000,
+        "ledger": 0,
+        "sequence": 10000
+      },
+      "ackRetained": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "inflightPresent": false,
+      "eventIds": "5737b590049e0b888754bfd123974a7f482f84eda4c97fea3323a71ff1ba0da7",
+      "pending": 2000
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "scenario": "acknowledged",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 1.4817050000000052,
+      "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+      "counts": {
+        "records": 7008,
+        "events": 10005,
+        "journal": 10005,
+        "ledger": 0,
+        "sequence": 10005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+      "pending": 2005,
+      "integrity": "ok"
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "scenario": "inflight",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 1.347290000000001,
+      "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+      "counts": {
+        "records": 7008,
+        "events": 10005,
+        "journal": 10005,
+        "ledger": 0,
+        "sequence": 10005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+      "pending": 2005,
+      "integrity": "ok"
+    },
+    {
+      "engine": "sqlite",
+      "size": 10000,
+      "scenario": "compacting",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 2.106133,
+      "digest": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+      "counts": {
+        "records": 7008,
+        "events": 10000,
+        "journal": 10000,
+        "ledger": 0,
+        "sequence": 10000
+      },
+      "ackRetained": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "inflightPresent": false,
+      "eventIds": "5737b590049e0b888754bfd123974a7f482f84eda4c97fea3323a71ff1ba0da7",
+      "pending": 2000,
+      "integrity": "ok"
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "scenario": "acknowledged",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 3842.207494,
+      "digest": "777562a80249d2de16abce4f89ec1495e353db2ca6527234dce2c02a4ceec33d",
+      "counts": {
+        "records": 140008,
+        "events": 200005,
+        "journal": 200005,
+        "ledger": 0,
+        "sequence": 200005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "dfaf5a853f0092745ae9c2a743378d69ae1fcc795f46e6eea514d2acbc15c26b",
+      "pending": 40005
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "scenario": "inflight",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 4555.842518,
+      "digest": "3b13c9648f739065c90e07336cd9e1304733630e2a52a77c334fe4686ddc8bfb",
+      "counts": {
+        "records": 140008,
+        "events": 200006,
+        "journal": 200006,
+        "ledger": 0,
+        "sequence": 200006
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": true,
+      "eventIds": "a4cfdcc6309da8c497b9537294f879a2195d0f487074ab8ef92b38968cb02872",
+      "pending": 40006
+    },
+    {
+      "engine": "local",
+      "size": 200000,
+      "scenario": "compacting",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 5165.216475,
+      "digest": "984e57133f4c42e7141fc7533dce571b6bc12a5d58cd2b6f993b2898ced53462",
+      "counts": {
+        "records": 140008,
+        "events": 200000,
+        "journal": 200000,
+        "ledger": 0,
+        "sequence": 200000
+      },
+      "ackRetained": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "inflightPresent": false,
+      "eventIds": "a430535085ecb28ed8ff3a121816fb0f5542d6495ed2549e8d93866d21557987",
+      "pending": 40000
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "scenario": "acknowledged",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 1.679124999999999,
+      "digest": "777562a80249d2de16abce4f89ec1495e353db2ca6527234dce2c02a4ceec33d",
+      "counts": {
+        "records": 140008,
+        "events": 200005,
+        "journal": 200005,
+        "ledger": 0,
+        "sequence": 200005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "dfaf5a853f0092745ae9c2a743378d69ae1fcc795f46e6eea514d2acbc15c26b",
+      "pending": 40005,
+      "integrity": "ok"
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "scenario": "inflight",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 2.820954999999998,
+      "digest": "777562a80249d2de16abce4f89ec1495e353db2ca6527234dce2c02a4ceec33d",
+      "counts": {
+        "records": 140008,
+        "events": 200005,
+        "journal": 200005,
+        "ledger": 0,
+        "sequence": 200005
+      },
+      "ackRetained": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "inflightPresent": false,
+      "eventIds": "dfaf5a853f0092745ae9c2a743378d69ae1fcc795f46e6eea514d2acbc15c26b",
+      "pending": 40005,
+      "integrity": "ok"
+    },
+    {
+      "engine": "sqlite",
+      "size": 200000,
+      "scenario": "compacting",
+      "killed": true,
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "replayMs": 91.47926,
+      "digest": "984e57133f4c42e7141fc7533dce571b6bc12a5d58cd2b6f993b2898ced53462",
+      "counts": {
+        "records": 140008,
+        "events": 200000,
+        "journal": 200000,
+        "ledger": 0,
+        "sequence": 200000
+      },
+      "ackRetained": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "inflightPresent": false,
+      "eventIds": "a430535085ecb28ed8ff3a121816fb0f5542d6495ed2549e8d93866d21557987",
+      "pending": 40000,
+      "integrity": "ok"
+    }
+  ],
+  "completedAt": "2026-11-09T09:10:17.589Z",
+  "validation": "subset-passed"
+}

@@ -1,0 +1,2888 @@
+{
+  "A": {
+    "source": "2581c65543165788f783e88bf616c47b19280abd",
+    "complete": true,
+    "error": null,
+    "seeds": [
+      {
+        "label": "r2",
+        "size": 1000,
+        "seedMs": 108.25791100000001,
+        "stateHash": "29a3a8b975bda87e9f18f93b4bb75af53c22ad9c4974cea63fc299cd15e8dfe0",
+        "businessHash": "309c8de7ba5dba40a10af7597fa173bcf8a3d9ada65ec3af76ac683bbcbe8161",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 2629632,
+              "allocated": 2629632
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocated": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 2636832,
+              "allocated": 2637824
+            }
+          ],
+          "totalBytes": 5299232
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 213.410434,
+        "stderr": ""
+      },
+      {
+        "label": "r3",
+        "size": 1000,
+        "seedMs": 103.932468,
+        "stateHash": "29a3a8b975bda87e9f18f93b4bb75af53c22ad9c4974cea63fc299cd15e8dfe0",
+        "businessHash": "309c8de7ba5dba40a10af7597fa173bcf8a3d9ada65ec3af76ac683bbcbe8161",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 2633728,
+              "allocated": 2633728
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocated": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 2377272,
+              "allocated": 2379776
+            }
+          ],
+          "totalBytes": 5043768
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 192.26616700000002,
+        "stderr": ""
+      },
+      {
+        "label": "r2",
+        "size": 10000,
+        "seedMs": 1023.2999169999999,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 26013696,
+              "allocated": 26013696
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 65536,
+              "allocated": 65536
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 26157912,
+              "allocated": 26161152
+            }
+          ],
+          "totalBytes": 52237144
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1740.631963,
+        "stderr": ""
+      },
+      {
+        "label": "r3",
+        "size": 10000,
+        "seedMs": 975.7959739999999,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 26025984,
+              "allocated": 26025984
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 65536,
+              "allocated": 65536
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 22919592,
+              "allocated": 22921216
+            }
+          ],
+          "totalBytes": 49011112
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1673.886404,
+        "stderr": ""
+      }
+    ],
+    "sizes": {
+      "1000": {
+        "groups": {
+          "r2": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  47.05340399999999,
+                  47.386846,
+                  45.101273
+                ],
+                "median": 47.05340399999999
+              },
+              "get": {
+                "rawTrialValues": [
+                  8.729152499999941,
+                  9.685118500000044,
+                  9.186429500000031
+                ],
+                "median": 9.186429500000031
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.11956950000001143,
+                  0.1255629999999428,
+                  0.1305765000000747
+                ],
+                "median": 0.1255629999999428
+              },
+              "pending": {
+                "rawTrialValues": [
+                  8.787038999999936,
+                  9.838107500000206,
+                  8.999161500000014
+                ],
+                "median": 8.999161500000014
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  9.822355999999672,
+                  10.974115999999867,
+                  12.797078000000056
+                ],
+                "median": 10.974115999999867
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  26.15090950000001,
+                  29.966779500000257,
+                  26.20652700000005
+                ],
+                "median": 26.20652700000005
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  27.31600749999984,
+                  32.66118599999999,
+                  28.358608500000003
+                ],
+                "median": 28.358608500000003
+              },
+              "upload": {
+                "rawTrialValues": [
+                  42.44042900000022,
+                  35.88051299999961,
+                  35.32809700000007
+                ],
+                "median": 35.88051299999961
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  40.03781800000024,
+                  36.913039000000026,
+                  31.724099999999908
+                ],
+                "median": 36.913039000000026
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  37.79193200000009,
+                  37.09157400000004,
+                  29.87280699999974
+                ],
+                "median": 37.09157400000004
+              },
+              "compact": {
+                "rawTrialValues": [
+                  58.93034799999987,
+                  48.89644800000042,
+                  44.32144699999981
+                ],
+                "median": 48.89644800000042
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  3600.750237,
+                  3916.11906,
+                  3567.710268
+                ],
+                "median": 3600.750237
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  3302.48,
+                  3424.597,
+                  3134.792
+                ],
+                "median": 3302.48
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  421.461,
+                  586.15,
+                  565.132
+                ],
+                "median": 565.132
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  228880384,
+                  221552640,
+                  221151232
+                ],
+                "median": 221552640
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  80493204,
+                  73816736,
+                  67190040
+                ],
+                "median": 73816736
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  67.66599099999985,
+                  55.39962300000025,
+                  56.35553299999992
+                ],
+                "median": 56.35553299999992
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  401059840,
+                  401059840,
+                  401059840
+                ],
+                "median": 401059840
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  3002368,
+                  3002368,
+                  3002368
+                ],
+                "median": 3002368
+              }
+            },
+            "singleWriteDml": [
+              4027.0,
+              4027.0,
+              4027.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              3317.0,
+              3317.0,
+              3317.0
+            ],
+            "singleWriteSqlAllMs": [
+              3.1263640000000237,
+              3.5088795000000346,
+              3.255597499999965
+            ],
+            "compactEnvelopeBytes": [
+              6800,
+              6800,
+              6800
+            ]
+          },
+          "r3": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  34.363125999999994,
+                  34.62535200000001,
+                  32.698254999999996
+                ],
+                "median": 34.363125999999994
+              },
+              "get": {
+                "rawTrialValues": [
+                  9.829050500000108,
+                  10.13262450000002,
+                  10.073177500000043
+                ],
+                "median": 10.073177500000043
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.13866349999989325,
+                  0.13393199999995886,
+                  0.13742699999983188
+                ],
+                "median": 0.13742699999983188
+              },
+              "pending": {
+                "rawTrialValues": [
+                  9.487657500000012,
+                  10.027132999999822,
+                  9.156113000000005
+                ],
+                "median": 9.487657500000012
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  11.46929100000034,
+                  11.990635000000111,
+                  12.528323
+                ],
+                "median": 11.990635000000111
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  11.376832500000091,
+                  10.674281500000049,
+                  10.818412999999907
+                ],
+                "median": 10.818412999999907
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  13.113708499999973,
+                  13.36675399999993,
+                  13.001443999999992
+                ],
+                "median": 13.113708499999973
+              },
+              "upload": {
+                "rawTrialValues": [
+                  20.554569000000356,
+                  21.926101000000017,
+                  20.53235500000028
+                ],
+                "median": 20.554569000000356
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  11.728501999999935,
+                  15.039338000000043,
+                  13.898642999999993
+                ],
+                "median": 13.898642999999993
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  31.146491999999853,
+                  33.82949499999995,
+                  33.6754820000001
+                ],
+                "median": 33.6754820000001
+              },
+              "compact": {
+                "rawTrialValues": [
+                  32.72264199999972,
+                  38.710213000000294,
+                  40.668313000000126
+                ],
+                "median": 38.710213000000294
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  2712.7325530000003,
+                  2840.194205,
+                  2811.981214
+                ],
+                "median": 2811.981214
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  2682.08,
+                  2807.409,
+                  2804.838
+                ],
+                "median": 2804.838
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  303.891,
+                  317.389,
+                  320.573
+                ],
+                "median": 317.389
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  219942912,
+                  198594560,
+                  220033024
+                ],
+                "median": 219942912
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  64159616,
+                  47757736,
+                  64128360
+                ],
+                "median": 64128360
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  44.71056299999999,
+                  39.714052000000265,
+                  41.42374900000004
+                ],
+                "median": 41.42374900000004
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  25149440,
+                  25145344,
+                  25145344
+                ],
+                "median": 25145344
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  2998272,
+                  2998272,
+                  2998272
+                ],
+                "median": 2998272
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              3317.0,
+              3317.0,
+              3317.0
+            ],
+            "singleWriteSqlAllMs": [
+              3.5479080000000067,
+              3.6013190000003306,
+              3.48188400000015
+            ],
+            "compactEnvelopeBytes": [
+              6800,
+              6800,
+              6800
+            ]
+          }
+        },
+        "pairedCandidateMinusBaseline": {
+          "coldOpenToFullReadyMs": [
+            -12.690278,
+            -12.761493999999992,
+            -12.403018000000003
+          ],
+          "get": [
+            1.0998980000001666,
+            0.44750599999997576,
+            0.8867480000000114
+          ],
+          "filter": [
+            0.019093999999881817,
+            0.008369000000016058,
+            0.006850499999757176
+          ],
+          "pending": [
+            0.7006185000000755,
+            0.18902549999961593,
+            0.15695149999999103
+          ],
+          "repeatFullRead": [
+            1.646935000000667,
+            1.016519000000244,
+            -0.2687550000000556
+          ],
+          "singleWrite": [
+            -14.77407699999992,
+            -19.292498000000208,
+            -15.388114000000144
+          ],
+          "batch20": [
+            -14.202298999999869,
+            -19.294432000000057,
+            -15.35716450000001
+          ],
+          "upload": [
+            -21.885859999999866,
+            -13.954411999999593,
+            -14.795741999999791
+          ],
+          "singleAck": [
+            -28.309316000000308,
+            -21.873700999999983,
+            -17.825456999999915
+          ],
+          "ackThrough": [
+            -6.645440000000235,
+            -3.262079000000085,
+            3.802675000000363
+          ],
+          "compact": [
+            -26.207706000000144,
+            -10.186235000000124,
+            -3.6531339999996817
+          ],
+          "mixedMs": [
+            -888.0176839999999,
+            -1075.9248550000002,
+            -755.7290539999999
+          ],
+          "cpuUserMs": [
+            -620.4000000000001,
+            -617.1880000000001,
+            -329.9539999999997
+          ],
+          "cpuSystemMs": [
+            -117.57,
+            -268.76099999999997,
+            -244.55899999999997
+          ],
+          "peakRssBytes": [
+            -8937472,
+            -22958080,
+            -1118208
+          ],
+          "peakHeap": [
+            -16333588,
+            -26059000,
+            -3061680
+          ],
+          "maxEventLoopGapMs": [
+            -22.955427999999856,
+            -15.685570999999982,
+            -14.93178399999988
+          ],
+          "processWriteBytes": [
+            -375910400,
+            -375914496,
+            -375914496
+          ],
+          "closedDiskBytes": [
+            -4096,
+            -4096,
+            -4096
+          ]
+        },
+        "oracle": "all completed pairs pass complete envelope, receipt, business and reopen assertions"
+      },
+      "10000": {
+        "groups": {
+          "r2": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  374.014367,
+                  313.282442,
+                  305.818508
+                ],
+                "median": 313.282442
+              },
+              "get": {
+                "rawTrialValues": [
+                  118.12876400000005,
+                  117.68701650000094,
+                  113.78935299999966
+                ],
+                "median": 117.68701650000094
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.41277049999916926,
+                  0.4270715000002383,
+                  0.3893655000010767
+                ],
+                "median": 0.41277049999916926
+              },
+              "pending": {
+                "rawTrialValues": [
+                  120.01458750000029,
+                  122.87828250000007,
+                  116.58557499999995
+                ],
+                "median": 120.01458750000029
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  143.81682600000204,
+                  146.23513000000094,
+                  121.94570499999827
+                ],
+                "median": 143.81682600000204
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  295.4871199999991,
+                  300.68388499999946,
+                  296.34215250000125
+                ],
+                "median": 296.34215250000125
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  311.7160120000008,
+                  307.1184354999996,
+                  304.4242299999969
+                ],
+                "median": 307.1184354999996
+              },
+              "upload": {
+                "rawTrialValues": [
+                  380.13526500000444,
+                  359.0833270000003,
+                  347.55981600000086
+                ],
+                "median": 359.0833270000003
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  365.24745500000427,
+                  335.8447190000006,
+                  320.84066899999743
+                ],
+                "median": 335.8447190000006
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  337.0909480000046,
+                  327.1250069999951,
+                  312.7044969999988
+                ],
+                "median": 327.1250069999951
+              },
+              "compact": {
+                "rawTrialValues": [
+                  355.20608000000357,
+                  338.45551399999385,
+                  331.204939999996
+                ],
+                "median": 338.45551399999385
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  41509.132092,
+                  41594.798835,
+                  40034.791488999996
+                ],
+                "median": 41509.132092
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  36473.196,
+                  36820.276,
+                  35050.025
+                ],
+                "median": 36473.196
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  11524.058,
+                  11276.479,
+                  10900.614
+                ],
+                "median": 11276.479
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  322355200,
+                  322080768,
+                  323452928
+                ],
+                "median": 322355200
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  149305640,
+                  149515500,
+                  149511856
+                ],
+                "median": 149511856
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  394.3933530000013,
+                  444.10927600000286,
+                  360.0165620000007
+                ],
+                "median": 394.3933530000013
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  6122803200,
+                  6122803200,
+                  6122799104
+                ],
+                "median": 6122803200
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  14782464,
+                  14782464,
+                  14782464
+                ],
+                "median": 14782464
+              }
+            },
+            "singleWriteDml": [
+              34627.0,
+              34627.0,
+              34627.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              27617.0,
+              27617.0,
+              27617.0
+            ],
+            "singleWriteSqlAllMs": [
+              54.69561950000207,
+              54.97068049999916,
+              54.06900149999956
+            ],
+            "compactEnvelopeBytes": [
+              128069,
+              128069,
+              128069
+            ]
+          },
+          "r3": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  302.64808200000004,
+                  285.63024,
+                  283.046812
+                ],
+                "median": 285.63024
+              },
+              "get": {
+                "rawTrialValues": [
+                  116.78351400000042,
+                  113.56831150000016,
+                  117.92286250000052
+                ],
+                "median": 116.78351400000042
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.38565949999929217,
+                  0.39400200000068253,
+                  0.4322599999995873
+                ],
+                "median": 0.39400200000068253
+              },
+              "pending": {
+                "rawTrialValues": [
+                  113.76600200000121,
+                  112.00351300000045,
+                  117.62937299999976
+                ],
+                "median": 113.76600200000121
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  117.61557099999845,
+                  129.91916599999968,
+                  115.63016900000002
+                ],
+                "median": 117.61557099999845
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  114.0106539999988,
+                  111.85485049999988,
+                  118.990229
+                ],
+                "median": 114.0106539999988
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  112.62496750000037,
+                  115.13401950000025,
+                  127.20436849999896
+                ],
+                "median": 115.13401950000025
+              },
+              "upload": {
+                "rawTrialValues": [
+                  149.2281949999997,
+                  156.8384019999976,
+                  147.63546700000006
+                ],
+                "median": 149.2281949999997
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  138.04819900000075,
+                  111.50838099999964,
+                  113.80864099999962
+                ],
+                "median": 113.80864099999962
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  281.644898999999,
+                  273.5775109999995,
+                  264.9504300000008
+                ],
+                "median": 273.5775109999995
+              },
+              "compact": {
+                "rawTrialValues": [
+                  274.0463359999994,
+                  288.8584120000014,
+                  285.2398749999993
+                ],
+                "median": 285.2398749999993
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  28936.244192000002,
+                  28612.215694,
+                  30167.089014
+                ],
+                "median": 28936.244192000002
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  27359.455,
+                  27096.884,
+                  28564.258
+                ],
+                "median": 27359.455
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  7896.53,
+                  7761.46,
+                  8059.225
+                ],
+                "median": 7896.53
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  314953728,
+                  308563968,
+                  321761280
+                ],
+                "median": 314953728
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  141571008,
+                  139801568,
+                  149029544
+                ],
+                "median": 141571008
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  342.683626,
+                  331.016946,
+                  385.43669300000005
+                ],
+                "median": 342.683626
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  2809294848,
+                  2809413632,
+                  2809380864
+                ],
+                "median": 2809380864
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  14782464,
+                  14782464,
+                  14782464
+                ],
+                "median": 14782464
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              27617.0,
+              27617.0,
+              27617.0
+            ],
+            "singleWriteSqlAllMs": [
+              55.348883500000056,
+              54.37333899999976,
+              58.027759000002334
+            ],
+            "compactEnvelopeBytes": [
+              128069,
+              128069,
+              128069
+            ]
+          }
+        },
+        "pairedCandidateMinusBaseline": {
+          "coldOpenToFullReadyMs": [
+            -71.36628499999995,
+            -27.65220199999999,
+            -22.77169600000002
+          ],
+          "get": [
+            -1.3452499999996235,
+            -4.118705000000773,
+            4.133509500000855
+          ],
+          "filter": [
+            -0.027110999999877095,
+            -0.033069499999555774,
+            0.04289449999851058
+          ],
+          "pending": [
+            -6.248585499999081,
+            -10.874769499999616,
+            1.0437979999998106
+          ],
+          "repeatFullRead": [
+            -26.201255000003584,
+            -16.31596400000126,
+            -6.3155359999982466
+          ],
+          "singleWrite": [
+            -181.4764660000003,
+            -188.82903449999958,
+            -177.35192350000125
+          ],
+          "batch20": [
+            -199.0910445000004,
+            -191.98441599999933,
+            -177.21986149999793
+          ],
+          "upload": [
+            -230.90707000000475,
+            -202.2449250000027,
+            -199.9243490000008
+          ],
+          "singleAck": [
+            -227.19925600000352,
+            -224.33633800000098,
+            -207.0320279999978
+          ],
+          "ackThrough": [
+            -55.44604900000559,
+            -53.54749599999559,
+            -47.75406699999803
+          ],
+          "compact": [
+            -81.15974400000414,
+            -49.59710199999245,
+            -45.965064999996684
+          ],
+          "mixedMs": [
+            -12572.887899999998,
+            -12982.583141000003,
+            -9867.702474999995
+          ],
+          "cpuUserMs": [
+            -9113.741000000002,
+            -9723.392,
+            -6485.767
+          ],
+          "cpuSystemMs": [
+            -3627.528000000001,
+            -3515.0189999999993,
+            -2841.388999999999
+          ],
+          "peakRssBytes": [
+            -7401472,
+            -13516800,
+            -1691648
+          ],
+          "peakHeap": [
+            -7734632,
+            -9713932,
+            -482312
+          ],
+          "maxEventLoopGapMs": [
+            -51.709727000001294,
+            -113.09233000000285,
+            25.420130999999344
+          ],
+          "processWriteBytes": [
+            -3313508352,
+            -3313389568,
+            -3313418240
+          ],
+          "closedDiskBytes": [
+            0,
+            0,
+            0
+          ]
+        },
+        "oracle": "all completed pairs pass complete envelope, receipt, business and reopen assertions"
+      }
+    }
+  },
+  "AA": {
+    "source": "2581c65543165788f783e88bf616c47b19280abd",
+    "complete": true,
+    "error": null,
+    "seeds": [
+      {
+        "label": "r3a",
+        "size": 10000,
+        "seedMs": 820.763805,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 26025984,
+              "allocated": 26025984
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 65536,
+              "allocated": 65536
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 22919592,
+              "allocated": 22921216
+            }
+          ],
+          "totalBytes": 49011112
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1363.018407,
+        "stderr": ""
+      },
+      {
+        "label": "r3b",
+        "size": 10000,
+        "seedMs": 755.571288,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 26025984,
+              "allocated": 26025984
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 65536,
+              "allocated": 65536
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 22919592,
+              "allocated": 22921216
+            }
+          ],
+          "totalBytes": 49011112
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1313.573099,
+        "stderr": ""
+      }
+    ],
+    "sizes": {
+      "10000": {
+        "groups": {
+          "r3a": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  308.307316,
+                  315.41779999999994,
+                  268.65333200000003
+                ],
+                "median": 308.307316
+              },
+              "get": {
+                "rawTrialValues": [
+                  125.28203850000045,
+                  113.23414250000133,
+                  116.17300900000009
+                ],
+                "median": 116.17300900000009
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.44933050000008734,
+                  0.3949990000010075,
+                  0.3825005000016972
+                ],
+                "median": 0.3949990000010075
+              },
+              "pending": {
+                "rawTrialValues": [
+                  127.10432850000052,
+                  111.45964050000111,
+                  113.9140869999992
+                ],
+                "median": 113.9140869999992
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  129.7506280000016,
+                  113.92707099999825,
+                  134.05690599999798
+                ],
+                "median": 129.7506280000016
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  122.42456099999981,
+                  113.5359484999999,
+                  114.82356799999957
+                ],
+                "median": 114.82356799999957
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  136.55969050000022,
+                  123.92662999999993,
+                  115.09998350000012
+                ],
+                "median": 123.92662999999993
+              },
+              "upload": {
+                "rawTrialValues": [
+                  118.84095800000068,
+                  135.66801099999793,
+                  165.67291200000182
+                ],
+                "median": 135.66801099999793
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  115.98981300000014,
+                  122.01461799999743,
+                  128.58654299999762
+                ],
+                "median": 122.01461799999743
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  304.0605599999981,
+                  267.47499700000117,
+                  285.26380100000097
+                ],
+                "median": 285.26380100000097
+              },
+              "compact": {
+                "rawTrialValues": [
+                  293.4366599999994,
+                  288.6850090000007,
+                  281.2221669999999
+                ],
+                "median": 288.6850090000007
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  33040.681616,
+                  29033.709973,
+                  29147.616078
+                ],
+                "median": 29147.616078
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  30899.606,
+                  27159.481,
+                  27484.125
+                ],
+                "median": 27484.125
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  8584.136,
+                  8018.047,
+                  7923.58
+                ],
+                "median": 8018.047
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  318537728,
+                  315826176,
+                  334774272
+                ],
+                "median": 318537728
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  141218188,
+                  150414608,
+                  150690652
+                ],
+                "median": 150414608
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  392.21699200000006,
+                  327.933695,
+                  321.52671
+                ],
+                "median": 327.933695
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  2809307136,
+                  2809335808,
+                  2809294848
+                ],
+                "median": 2809307136
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  14782464,
+                  14782464,
+                  14782464
+                ],
+                "median": 14782464
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              27617.0,
+              27617.0,
+              27617.0
+            ],
+            "singleWriteSqlAllMs": [
+              58.54906949999895,
+              55.16051999999763,
+              56.631082999998625
+            ],
+            "compactEnvelopeBytes": [
+              128069,
+              128069,
+              128069
+            ]
+          },
+          "r3b": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  278.91479999999996,
+                  282.84192599999994,
+                  353.57908499999996
+                ],
+                "median": 282.84192599999994
+              },
+              "get": {
+                "rawTrialValues": [
+                  117.5141290000006,
+                  118.21444099999826,
+                  127.19578099999944
+                ],
+                "median": 118.21444099999826
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.4012434999999641,
+                  0.39471899999989546,
+                  0.4313480000000709
+                ],
+                "median": 0.4012434999999641
+              },
+              "pending": {
+                "rawTrialValues": [
+                  112.7604124999998,
+                  116.04057799999919,
+                  123.57059100000151
+                ],
+                "median": 116.04057799999919
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  123.76786100000027,
+                  105.80049099999815,
+                  114.15020200000436
+                ],
+                "median": 114.15020200000436
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  113.99328650000007,
+                  117.96333149999919,
+                  122.1291799999999
+                ],
+                "median": 117.96333149999919
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  118.05750799999987,
+                  123.24024550000013,
+                  126.33504649999986
+                ],
+                "median": 123.24024550000013
+              },
+              "upload": {
+                "rawTrialValues": [
+                  151.10013999999865,
+                  122.31897099999696,
+                  154.62712800000008
+                ],
+                "median": 151.10013999999865
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  121.86632699999973,
+                  111.84301399999822,
+                  110.66426099999808
+                ],
+                "median": 111.84301399999822
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  268.5569080000023,
+                  272.042508999999,
+                  293.52192600000126
+                ],
+                "median": 272.042508999999
+              },
+              "compact": {
+                "rawTrialValues": [
+                  263.46780899999794,
+                  304.95667500000127,
+                  305.2545730000056
+                ],
+                "median": 304.95667500000127
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  29243.503958999998,
+                  30498.83666,
+                  32291.910877
+                ],
+                "median": 30498.83666
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  27570.88,
+                  28768.452,
+                  30760.287
+                ],
+                "median": 28768.452
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  7812.851,
+                  8019.655,
+                  8405.637
+                ],
+                "median": 8019.655
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  314388480,
+                  318947328,
+                  313921536
+                ],
+                "median": 314388480
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  141618256,
+                  140986340,
+                  141385108
+                ],
+                "median": 141385108
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  330.40579400000007,
+                  334.7010450000001,
+                  353.697162
+                ],
+                "median": 334.7010450000001
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  2809315328,
+                  2809372672,
+                  2809298944
+                ],
+                "median": 2809315328
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  14782464,
+                  14782464,
+                  14782464
+                ],
+                "median": 14782464
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              27617.0,
+              27617.0,
+              27617.0
+            ],
+            "singleWriteSqlAllMs": [
+              55.56481750000057,
+              55.05862299999899,
+              60.888693500000954
+            ],
+            "compactEnvelopeBytes": [
+              128069,
+              128069,
+              128069
+            ]
+          }
+        },
+        "pairedCandidateMinusBaseline": {
+          "coldOpenToFullReadyMs": [
+            -29.392516000000057,
+            -32.575874,
+            84.92575299999993
+          ],
+          "get": [
+            -7.76790949999986,
+            4.980298499996934,
+            11.02277199999935
+          ],
+          "filter": [
+            -0.048087000000123226,
+            -0.00028000000111205736,
+            0.04884749999837368
+          ],
+          "pending": [
+            -14.343916000000718,
+            4.580937499998072,
+            9.656504000002315
+          ],
+          "repeatFullRead": [
+            -5.982767000001331,
+            -8.126580000000104,
+            -19.906703999993624
+          ],
+          "singleWrite": [
+            -8.431274499999745,
+            4.427382999999281,
+            7.3056120000003375
+          ],
+          "batch20": [
+            -18.502182500000345,
+            -0.6863844999998037,
+            11.235062999999741
+          ],
+          "upload": [
+            32.25918199999796,
+            -13.349040000000969,
+            -11.045784000001731
+          ],
+          "singleAck": [
+            5.876513999999588,
+            -10.171603999999206,
+            -17.92228199999954
+          ],
+          "ackThrough": [
+            -35.50365199999578,
+            4.567511999997805,
+            8.258125000000291
+          ],
+          "compact": [
+            -29.96885100000145,
+            16.27166600000055,
+            24.03240600000572
+          ],
+          "mixedMs": [
+            -3797.177657000004,
+            1465.126687,
+            3144.2947989999993
+          ],
+          "cpuUserMs": [
+            -3328.7259999999987,
+            1608.9710000000014,
+            3276.1620000000003
+          ],
+          "cpuSystemMs": [
+            -771.2850000000008,
+            1.6080000000001746,
+            482.0570000000007
+          ],
+          "peakRssBytes": [
+            -4149248,
+            3121152,
+            -20852736
+          ],
+          "peakHeap": [
+            400068,
+            -9428268,
+            -9305544
+          ],
+          "maxEventLoopGapMs": [
+            -61.81119799999999,
+            6.767350000000079,
+            32.17045200000001
+          ],
+          "processWriteBytes": [
+            8192,
+            36864,
+            4096
+          ],
+          "closedDiskBytes": [
+            0,
+            0,
+            0
+          ]
+        },
+        "oracle": "all completed pairs pass complete envelope, receipt, business and reopen assertions"
+      }
+    }
+  },
+  "AA-small": {
+    "source": "2581c65543165788f783e88bf616c47b19280abd",
+    "complete": true,
+    "error": null,
+    "seeds": [
+      {
+        "label": "r3",
+        "size": 1000,
+        "seedMs": 128.835718,
+        "stateHash": "29a3a8b975bda87e9f18f93b4bb75af53c22ad9c4974cea63fc299cd15e8dfe0",
+        "businessHash": "309c8de7ba5dba40a10af7597fa173bcf8a3d9ada65ec3af76ac683bbcbe8161",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 2633728,
+              "allocated": 2633728
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 32768,
+              "allocated": 32768
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 2377272,
+              "allocated": 2379776
+            }
+          ],
+          "totalBytes": 5043768
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 232.28666099999998,
+        "stderr": ""
+      }
+    ],
+    "sizes": {
+      "1000": {
+        "groups": {
+          "r3a": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  48.451954,
+                  61.159696999999994,
+                  40.600246
+                ],
+                "median": 48.451954
+              },
+              "get": {
+                "rawTrialValues": [
+                  11.165128500000037,
+                  10.529847499999732,
+                  9.707472499999938
+                ],
+                "median": 10.529847499999732
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.13858849999996892,
+                  0.13776700000005349,
+                  0.13332499999989977
+                ],
+                "median": 0.13776700000005349
+              },
+              "pending": {
+                "rawTrialValues": [
+                  11.041102499999852,
+                  9.588959499999987,
+                  9.125012000000083
+                ],
+                "median": 9.588959499999987
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  23.06444999999985,
+                  12.105888999999934,
+                  11.067896999999903
+                ],
+                "median": 12.105888999999934
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  12.305252499999824,
+                  11.804591999999957,
+                  10.57126599999998
+                ],
+                "median": 11.804591999999957
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  14.37887499999988,
+                  13.95245849999992,
+                  13.19088899999997
+                ],
+                "median": 13.95245849999992
+              },
+              "upload": {
+                "rawTrialValues": [
+                  27.607441000000108,
+                  26.705193999999665,
+                  19.511671000000206
+                ],
+                "median": 26.705193999999665
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  19.63059999999996,
+                  12.875195000000076,
+                  12.513970999999856
+                ],
+                "median": 12.875195000000076
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  44.385559999999714,
+                  40.475962999999865,
+                  32.740871999999854
+                ],
+                "median": 40.475962999999865
+              },
+              "compact": {
+                "rawTrialValues": [
+                  39.11814400000003,
+                  40.16808200000014,
+                  55.374769000000015
+                ],
+                "median": 40.16808200000014
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  3131.08542,
+                  2918.458851,
+                  2743.567778
+                ],
+                "median": 2918.458851
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  3092.721,
+                  2888.314,
+                  2745.17
+                ],
+                "median": 2888.314
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  420.801,
+                  357.888,
+                  297.216
+                ],
+                "median": 357.888
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  218689536,
+                  221638656,
+                  219791360
+                ],
+                "median": 219791360
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  64128024,
+                  67722324,
+                  64128020
+                ],
+                "median": 64128024
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  49.695012,
+                  61.151523,
+                  56.45650500000011
+                ],
+                "median": 56.45650500000011
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  25145344,
+                  25145344,
+                  25169920
+                ],
+                "median": 25145344
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  2998272,
+                  2998272,
+                  2998272
+                ],
+                "median": 2998272
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              3317.0,
+              3317.0,
+              3317.0
+            ],
+            "singleWriteSqlAllMs": [
+              4.111491000000001,
+              3.6752049999999485,
+              3.560962499999846
+            ],
+            "compactEnvelopeBytes": [
+              6800,
+              6800,
+              6800
+            ]
+          },
+          "r3b": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  37.328773999999996,
+                  51.96247999999999,
+                  35.070609
+                ],
+                "median": 37.328773999999996
+              },
+              "get": {
+                "rawTrialValues": [
+                  11.183872000000122,
+                  10.46358399999994,
+                  9.65154750000005
+                ],
+                "median": 10.46358399999994
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.1451084999998784,
+                  0.13594400000010864,
+                  0.13485800000000836
+                ],
+                "median": 0.13594400000010864
+              },
+              "pending": {
+                "rawTrialValues": [
+                  11.48540550000007,
+                  9.857807999999977,
+                  9.647691500000064
+                ],
+                "median": 9.857807999999977
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  11.590493000000151,
+                  11.428840000000037,
+                  12.733561000000009
+                ],
+                "median": 11.590493000000151
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  12.856611500000156,
+                  11.52097400000008,
+                  10.572632000000112
+                ],
+                "median": 11.52097400000008
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  13.881160999999793,
+                  14.620627500000012,
+                  12.926315999999957
+                ],
+                "median": 13.881160999999793
+              },
+              "upload": {
+                "rawTrialValues": [
+                  21.208971999999903,
+                  20.711723999999776,
+                  22.157446000000164
+                ],
+                "median": 21.208971999999903
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  16.749128000000383,
+                  18.082973000000038,
+                  12.323043000000325
+                ],
+                "median": 16.749128000000383
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  32.881147000000055,
+                  39.504623999999694,
+                  33.93297699999994
+                ],
+                "median": 33.93297699999994
+              },
+              "compact": {
+                "rawTrialValues": [
+                  36.15057200000001,
+                  41.671871999999894,
+                  31.583204000000023
+                ],
+                "median": 36.15057200000001
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  3096.1012969999997,
+                  2929.554826,
+                  2663.2784140000003
+                ],
+                "median": 2929.554826
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  3019.376,
+                  2783.272,
+                  2568.58
+                ],
+                "median": 2783.272
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  388.303,
+                  447.995,
+                  380.086
+                ],
+                "median": 388.303
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  218947584,
+                  219791360,
+                  220368896
+                ],
+                "median": 219791360
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  64128044,
+                  64127932,
+                  64125360
+                ],
+                "median": 64127932
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  44.22744399999999,
+                  53.506082000000006,
+                  37.583906
+                ],
+                "median": 44.22744399999999
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  25145344,
+                  25145344,
+                  25149440
+                ],
+                "median": 25145344
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  2998272,
+                  2998272,
+                  2998272
+                ],
+                "median": 2998272
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              3317.0,
+              3317.0,
+              3317.0
+            ],
+            "singleWriteSqlAllMs": [
+              4.369461999999942,
+              3.6455140000000483,
+              3.3525344999998197
+            ],
+            "compactEnvelopeBytes": [
+              6800,
+              6800,
+              6800
+            ]
+          }
+        },
+        "pairedCandidateMinusBaseline": {
+          "coldOpenToFullReadyMs": [
+            -11.123180000000005,
+            -9.197217000000002,
+            -5.529637000000001
+          ],
+          "get": [
+            0.018743500000084623,
+            -0.06626349999979197,
+            -0.055924999999888314
+          ],
+          "filter": [
+            0.006519999999909487,
+            -0.001822999999944841,
+            0.0015330000001085864
+          ],
+          "pending": [
+            0.44430300000021816,
+            0.26884849999999005,
+            0.5226794999999811
+          ],
+          "repeatFullRead": [
+            -11.4739569999997,
+            -0.6770489999998972,
+            1.6656640000001062
+          ],
+          "singleWrite": [
+            0.5513590000003319,
+            -0.28361799999987625,
+            0.001366000000132317
+          ],
+          "batch20": [
+            -0.49771400000008725,
+            0.6681690000000913,
+            -0.2645730000000128
+          ],
+          "upload": [
+            -6.398469000000205,
+            -5.993469999999888,
+            2.645774999999958
+          ],
+          "singleAck": [
+            -2.881471999999576,
+            5.207777999999962,
+            -0.19092799999953058
+          ],
+          "ackThrough": [
+            -11.504412999999658,
+            -0.9713390000001709,
+            1.1921050000000832
+          ],
+          "compact": [
+            -2.9675720000000183,
+            1.5037899999997535,
+            -23.79156499999999
+          ],
+          "mixedMs": [
+            -34.98412300000018,
+            11.09597500000018,
+            -80.28936399999975
+          ],
+          "cpuUserMs": [
+            -73.3449999999998,
+            -105.04199999999992,
+            -176.59000000000015
+          ],
+          "cpuSystemMs": [
+            -32.49799999999999,
+            90.10700000000003,
+            82.87
+          ],
+          "peakRssBytes": [
+            258048,
+            -1847296,
+            577536
+          ],
+          "peakHeap": [
+            20,
+            -3594392,
+            -2660
+          ],
+          "maxEventLoopGapMs": [
+            -5.467568000000007,
+            -7.645440999999991,
+            -18.872599000000108
+          ],
+          "processWriteBytes": [
+            0,
+            0,
+            -20480
+          ],
+          "closedDiskBytes": [
+            0,
+            0,
+            0
+          ]
+        },
+        "oracle": "all completed pairs pass complete envelope, receipt, business and reopen assertions"
+      }
+    }
+  },
+  "B": {
+    "source": "2581c65543165788f783e88bf616c47b19280abd",
+    "complete": false,
+    "error": null,
+    "seeds": [
+      {
+        "label": "local",
+        "size": 10000,
+        "seedMs": 1231.9436099999998,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "BuyerLogLocal.db",
+              "bytes": 20453942,
+              "allocated": 20455424
+            },
+            {
+              "path": "BuyerLogLocal.db.bak",
+              "bytes": 442,
+              "allocated": 4096
+            },
+            {
+              "path": "BuyerLogLocal.db.wal",
+              "bytes": 95045,
+              "allocated": 98304
+            },
+            {
+              "path": "BuyerLogLocal.db.wal.bak",
+              "bytes": 8702687,
+              "allocated": 8704000
+            },
+            {
+              "path": "BuyerLogLocal.db.write-fence.json",
+              "bytes": 34,
+              "allocated": 4096
+            }
+          ],
+          "totalBytes": 29252150
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1715.844259,
+        "stderr": ""
+      },
+      {
+        "label": "r3",
+        "size": 10000,
+        "seedMs": 787.12719,
+        "stateHash": "fa0dae25f31af053b73b94ae313a7339054b0803f9fc6afebf9af1349aefe81f",
+        "businessHash": "2f6ea33215cd43f304bec81185f97ab0f51474c9abb5e7acf51525e7484ab719",
+        "disk": {
+          "files": [
+            {
+              "path": "prototype.sqlite",
+              "bytes": 26025984,
+              "allocated": 26025984
+            },
+            {
+              "path": "prototype.sqlite-shm",
+              "bytes": 65536,
+              "allocated": 65536
+            },
+            {
+              "path": "prototype.sqlite-wal",
+              "bytes": 22919592,
+              "allocated": 22921216
+            }
+          ],
+          "totalBytes": 49011112
+        },
+        "versions": {
+          "node": "24.20.0",
+          "acorn": "8.18.0",
+          "ada": "4.0.0",
+          "amaro": "1.1.11",
+          "ares": "1.34.8",
+          "brotli": "1.2.0",
+          "cldr": "48.0",
+          "icu": "78.2",
+          "llhttp": "9.4.3",
+          "merve": "1.2.2",
+          "modules": "149",
+          "napi": "10",
+          "nbytes": "0.1.4",
+          "ncrypto": "0.0.1",
+          "nghttp2": "1.70.0",
+          "nghttp3": "",
+          "ngtcp2": "",
+          "openssl": "0.0.0",
+          "simdjson": "4.6.6",
+          "simdutf": "7.7.0",
+          "sqlite": "3.53.4",
+          "tz": "2025c",
+          "undici": "7.29.0",
+          "unicode": "17.0",
+          "uv": "1.52.1",
+          "uvwasi": "0.0.23",
+          "v8": "15.2.124.19-electron.0",
+          "zlib": "1.3.2.1-motley",
+          "zstd": "1.6.0",
+          "electron": "44.3.0",
+          "chrome": "152.0.7977.78"
+        },
+        "workerMs": 1348.520618,
+        "stderr": ""
+      }
+    ],
+    "sizes": {
+      "10000": {
+        "groups": {
+          "local": {
+            "rounds": 3,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  592.700655,
+                  375.058238,
+                  408.769753
+                ],
+                "median": 408.769753
+              },
+              "get": {
+                "rawTrialValues": [
+                  0.17420700000002398,
+                  0.1401804999999854,
+                  0.22902500000003556
+                ],
+                "median": 0.17420700000002398
+              },
+              "filter": {
+                "rawTrialValues": [
+                  1.8834160000001248,
+                  2.1265165000000934,
+                  2.0592255000001387
+                ],
+                "median": 2.0592255000001387
+              },
+              "pending": {
+                "rawTrialValues": [
+                  0.7337629999999535,
+                  0.7232420000000275,
+                  0.80927650000001
+                ],
+                "median": 0.7337629999999535
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  0.11550399999987349,
+                  0.08035099999983686,
+                  0.21321000000011736
+                ],
+                "median": 0.11550399999987349
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  5.620018500000015,
+                  6.454824500000086,
+                  6.6564955000000054
+                ],
+                "median": 6.454824500000086
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  6.555619499999921,
+                  6.366208499999971,
+                  8.285218500000099
+                ],
+                "median": 6.555619499999921
+              },
+              "upload": {
+                "rawTrialValues": [
+                  8.902211999999963,
+                  6.912724999999909,
+                  15.561791999999969
+                ],
+                "median": 8.902211999999963
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  5.783083000000033,
+                  6.267169999999851,
+                  9.20390499999985
+                ],
+                "median": 6.267169999999851
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  6.2606409999998505,
+                  6.205267000000049,
+                  7.618638000000146
+                ],
+                "median": 6.2606409999998505
+              },
+              "compact": {
+                "rawTrialValues": [
+                  1421.3489599999998,
+                  1478.700833,
+                  1328.0996719999998
+                ],
+                "median": 1421.3489599999998
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  635.6492109999999,
+                  712.978568,
+                  758.8556480000001
+                ],
+                "median": 712.978568
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  1974.433,
+                  2377.918,
+                  2181.308
+                ],
+                "median": 2181.308
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  1146.195,
+                  672.839,
+                  758.681
+                ],
+                "median": 758.681
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  390090752,
+                  390758400,
+                  390451200
+                ],
+                "median": 390451200
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  120405068,
+                  120523808,
+                  120526072
+                ],
+                "median": 120523808
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  1421.790373,
+                  1479.0697879999998,
+                  1328.497089
+                ],
+                "median": 1421.790373
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  107085824,
+                  107073536,
+                  107077632
+                ],
+                "median": 107077632
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  25082411,
+                  25082411,
+                  25082411
+                ],
+                "median": 25082411
+              }
+            },
+            "singleWriteDml": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "singleWriteSqlAllMs": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "compactEnvelopeBytes": [
+              0,
+              0,
+              0
+            ]
+          },
+          "r3": {
+            "rounds": 2,
+            "metrics": {
+              "coldOpenToFullReadyMs": {
+                "rawTrialValues": [
+                  300.29926400000005,
+                  295.875399
+                ],
+                "median": 298.0873315
+              },
+              "get": {
+                "rawTrialValues": [
+                  117.01975649999986,
+                  115.72022149999975
+                ],
+                "median": 116.3699889999998
+              },
+              "filter": {
+                "rawTrialValues": [
+                  0.40058650000173657,
+                  0.4044484999994893
+                ],
+                "median": 0.4025175000006129
+              },
+              "pending": {
+                "rawTrialValues": [
+                  117.5970855000005,
+                  115.66473250000126
+                ],
+                "median": 116.63090900000088
+              },
+              "repeatFullRead": {
+                "rawTrialValues": [
+                  114.52798199999961,
+                  147.22841899999912
+                ],
+                "median": 130.87820049999937
+              },
+              "singleWrite": {
+                "rawTrialValues": [
+                  117.12941749999891,
+                  115.77119949999997
+                ],
+                "median": 116.45030849999944
+              },
+              "batch20": {
+                "rawTrialValues": [
+                  120.1747264999999,
+                  115.11597099999835
+                ],
+                "median": 117.64534874999913
+              },
+              "upload": {
+                "rawTrialValues": [
+                  142.86867600000187,
+                  205.7281129999974
+                ],
+                "median": 174.29839449999963
+              },
+              "singleAck": {
+                "rawTrialValues": [
+                  127.60385200000019,
+                  126.81903800000146
+                ],
+                "median": 127.21144500000082
+              },
+              "ackThrough": {
+                "rawTrialValues": [
+                  292.5945979999997,
+                  304.6474610000005
+                ],
+                "median": 298.6210295000001
+              },
+              "compact": {
+                "rawTrialValues": [
+                  305.66876299999785,
+                  317.1920250000003
+                ],
+                "median": 311.43039399999907
+              },
+              "mixedMs": {
+                "rawTrialValues": [
+                  29680.021783,
+                  29179.413392
+                ],
+                "median": 29429.7175875
+              },
+              "cpuUserMs": {
+                "rawTrialValues": [
+                  27840.283,
+                  27996.86
+                ],
+                "median": 27918.5715
+              },
+              "cpuSystemMs": {
+                "rawTrialValues": [
+                  8122.231,
+                  7787.15
+                ],
+                "median": 7954.6905
+              },
+              "peakRssBytes": {
+                "rawTrialValues": [
+                  313733120,
+                  322551808
+                ],
+                "median": 318142464.0
+              },
+              "peakHeap": {
+                "rawTrialValues": [
+                  141014756,
+                  149038396
+                ],
+                "median": 145026576.0
+              },
+              "maxEventLoopGapMs": {
+                "rawTrialValues": [
+                  358.18109300000003,
+                  345.12067499999995
+                ],
+                "median": 351.650884
+              },
+              "processWriteBytes": {
+                "rawTrialValues": [
+                  2809315328,
+                  2809294848
+                ],
+                "median": 2809305088.0
+              },
+              "closedDiskBytes": {
+                "rawTrialValues": [
+                  14782464,
+                  14782464
+                ],
+                "median": 14782464.0
+              }
+            },
+            "singleWriteDml": [
+              3.0,
+              3.0
+            ],
+            "singleWriteSqlMaterializedRows": [
+              27617.0,
+              27617.0
+            ],
+            "singleWriteSqlAllMs": [
+              57.457639000000654,
+              55.22525450000103
+            ],
+            "compactEnvelopeBytes": [
+              128069,
+              128069
+            ]
+          }
+        },
+        "pairedCandidateMinusBaseline": {
+          "coldOpenToFullReadyMs": [
+            -292.40139099999993,
+            -79.182839
+          ],
+          "get": [
+            116.84554949999983,
+            115.58004099999977
+          ],
+          "filter": [
+            -1.4828294999983882,
+            -1.7220680000006041
+          ],
+          "pending": [
+            116.86332250000055,
+            114.94149050000124
+          ],
+          "repeatFullRead": [
+            114.41247799999974,
+            147.14806799999928
+          ],
+          "singleWrite": [
+            111.5093989999989,
+            109.31637499999988
+          ],
+          "batch20": [
+            113.61910699999999,
+            108.74976249999838
+          ],
+          "upload": [
+            133.9664640000019,
+            198.81538799999748
+          ],
+          "singleAck": [
+            121.82076900000015,
+            120.5518680000016
+          ],
+          "ackThrough": [
+            286.3339569999998,
+            298.4421940000004
+          ],
+          "compact": [
+            -1115.680197000002,
+            -1161.5088079999998
+          ],
+          "mixedMs": [
+            29044.372572,
+            28466.434824
+          ],
+          "cpuUserMs": [
+            25865.85,
+            25618.942
+          ],
+          "cpuSystemMs": [
+            6976.036,
+            7114.311
+          ],
+          "peakRssBytes": [
+            -76357632,
+            -68206592
+          ],
+          "peakHeap": [
+            20609688,
+            28514588
+          ],
+          "maxEventLoopGapMs": [
+            -1063.6092800000001,
+            -1133.949113
+          ],
+          "processWriteBytes": [
+            2702229504,
+            2702221312
+          ],
+          "closedDiskBytes": [
+            -10299947,
+            -10299947
+          ]
+        },
+        "oracle": "all completed pairs pass complete envelope, receipt, business and reopen assertions"
+      }
+    }
+  },
+  "validation": {
+    "contract-gates": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "prototype": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "compat-r2": {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "incremental-r3": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "related": {
+      "tests": 84,
+      "pass": 84,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "full": {
+      "tests": 9243,
+      "pass": 9178,
+      "fail": 0,
+      "skipped": 65,
+      "cancelled": 0
+    }
+  }
+}
