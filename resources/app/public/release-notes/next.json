@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "collection-price-drawer-direct-offer",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat Çekmecesinden doğrudan teklifleri silin",
+        "en": "Delete direct quotations from the Price Drawer"
+      },
+      "body": {
+        "tr": "Siparişten aktarılan veya doğrudan Koleksiyona kaydedilen bir teklifi çöp kutusuyla silebilirsiniz. Varsa üretici onayı da kaldırılır ve FOB yeniden hesaplanır. Fiyat açıklamasında FOB, Supp. FOB’un hemen üstünde yer alır. Royalty ve hologram maliyeti yalnızca uygulandığında gösterilir. Kaynak raporu, kural ve fiyat geçmişi kısayolları çekmeceden kaldırıldı.",
+        "en": "Use the trash button to delete a quotation copied from Orders or stored directly in Collection. Deleting it clears its manufacturer approval and recalculates FOB. The price explanation shows FOB directly above Supp. FOB and displays royalty and hologram cost when they apply. The source report, rule and pricing history shortcuts were removed from the drawer."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-drawer-direct-offer.png",
+        "alt": {
+          "tr": "Fiyat Çekmecesinde FOB, Supp. FOB, Royalty ve hologram maliyeti ile birlikte aktarılan teklifin silme düğmesi.",
+          "en": "The Price Drawer shows FOB, Supp. FOB, royalty, hologram cost and the delete button on the imported quotation."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle Koleksiyon Fiyat Çekmecesi.",
+          "en": "The Collection Price Drawer with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "report-image-size",
       "type": "improvement",
       "module": {
@@ -234,6 +263,93 @@
         "caption": {
           "tr": "İlk satırda manuel revizyon oku, izleyen satırlarda yükleme onayı ve otomatik hesap noktaları.",
           "en": "The first row shows a manual revision arrow. Following rows show loading approvals and dots for recalculated values."
+        }
+      }
+    },
+    {
+      "id": "status-filter-production-balance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler ve CP Tracker",
+        "en": "Orders and CP Tracker"
+      },
+      "title": {
+        "tr": "Status süzgeci üretimdeki bakiyeyi de bulur",
+        "en": "Status filter also finds the in-production balance"
+      },
+      "body": {
+        "tr": "Bir kısmı yüklenmiş siparişlerde üretimde kalan bakiye artık Status süzgecinde Üretimde seçildiğinde listelenir. Status sayaçları da aynı siparişi hem Üretimde hem parsiyelin durumunda sayar.",
+        "en": "For partly loaded orders, the balance still in production is now listed when In Production is selected in the Status filter. Status counters also count the same order under both In Production and its partial's status."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "status-filter-production-balance.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında Durum: Üretimde süzgeciyle listelenen, 2.977 adet üretimde ve 9.912 adet yolda olan parsiyelli sipariş.",
+          "en": "Actual Buyer Log Orders screen filtered by Status: In Production, listing a partly loaded order with 2,977 units in production and 9,912 units in transit."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama; üretim bakiyesi olan parsiyelli sipariş Üretimde süzgecinde görünür.",
+          "en": "Actual application with isolated demo data; a partly loaded order with a production balance appears under In Production."
+        }
+      }
+    },
+    {
+      "id": "price-analysis-custom-breakdowns",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Grafik kırılımını seçin",
+        "en": "Choose a chart breakdown"
+      },
+      "body": {
+        "tr": "Analizdeki Kırılım menüsünden Ürün Tanımı, diğer standart alanlar veya seçili veri kaynağının dolu sütunlarıyla gruplama yapabilirsiniz. Nerede avantajlı? grafiğinde fiyatı olan üreticiler örnek sayısı düşük olsa da görünür. Kim kiminle? grafiğindeki üretici paylarından sipariş detaylarına geçebilirsiniz.",
+        "en": "Use the Breakdown menu to group results by Product Description, other standard fields, or populated columns in the selected source. The Who wins where? chart plots suppliers with prices even for small samples. You can open order details from the supplier shares in Who works with whom?"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-analysis-product-breakdown.png",
+        "alt": {
+          "tr": "Buyer Log fiyat analizinde Ürün Tanımı seçiliyken tişört, pantolon ve sweatshirt fiyat dağılımları.",
+          "en": "Buyer Log price analysis showing price distributions for T-shirts, trousers and sweatshirts with Product Description selected."
+        },
+        "caption": {
+          "tr": "Demo siparişler Ürün Tanımına göre gruplanıyor.",
+          "en": "Demo orders are grouped by Product Description."
+        }
+      }
+    },
+    {
+      "id": "supplier-scorecard-price-coverage",
+      "type": "fix",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Üretici karnesinde fiyat değişimi ve hacim odağı",
+        "en": "Price change and volume focus on supplier scorecards"
+      },
+      "body": {
+        "tr": "Üreticinin seçili para biriminde güncel fiyatı yoksa karne, fiyatlı hacminin en yüksek olduğu para birimini gösterir. Değişim, aynı para biriminde ve iki dönemde de fiyat bulunan gruplardan hesaplanır. Karne düşük kapsamalı değişimleri de kapsama oranıyla gösterir ve fiyat kıyası yapılamadığında nedenini belirtir. Fiyat avantajı bulunmayan üreticilerde en yüksek hacimli grup Hacim odağı etiketiyle gösterilir.",
+        "en": "If the supplier has no current prices in the selected currency, the scorecard uses the currency with its highest priced volume. Price change uses groups with prices in both periods in the same currency. The scorecard shows changes even at low coverage, alongside the coverage percentage, and explains why a comparison is unavailable. When no price advantage is identified, the group with the most volume is marked Volume focus."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-analysis-scorecard-coverage.png",
+        "alt": {
+          "tr": "Buyer Log üretici karnesinde TRY ve USD fiyat konumları, yüzde 9,1 kapsamalı fiyat değişimi ve hacim odağı etiketleri.",
+          "en": "Buyer Log supplier scorecard showing TRY and USD price positions, a price change with 9.1% coverage, and volume focus labels."
+        },
+        "caption": {
+          "tr": "Demo üretici için USD fiyat değişimi, kapsadığı hacimle birlikte gösteriliyor.",
+          "en": "The demo supplier's USD price change is shown with its volume coverage."
         }
       }
     }

@@ -51,10 +51,15 @@
     return out;
   }
 
-  function offersHtml(row){
+  function hasLedgerOffer(ledger,name,price){
+    const keyOf=global.BLPricingDeskEngine?.keyOf||norm,key=keyOf(name);
+    return ledger.some(({line,valid})=>valid&&keyOf(line.manufacturer)===key&&kolParseMoneyNum(line.price)===price);
+  }
+
+  function offersHtml(row,ledger){
     const pricing=kolEffectivePricing(row)||{},confirmed=kolConfirmedPricing(row),best=kolBestPricing(row);
     const offers=Object.entries(pricing).map(([name,value])=>({name,price:kolParseMoneyNum(value)})).filter(o=>Number.isFinite(o.price)&&o.price>0).sort((a,b)=>a.price-b.price);
-    const ledger=ledgerLines(row),byName=new Map(ledger.map(item=>[norm(item.line.manufacturer),item]));
+    const byName=new Map(ledger.map(item=>[norm(item.line.manufacturer),item]));
     const waiting=ledger.filter(item=>!item.valid).map(item=>item.line.manufacturer);
     const editable=canEdit();
     const rows=offers.map(o=>{
@@ -62,11 +67,14 @@
       const neg=byName.get(norm(o.name))?.summary;
       const trail=neg&&neg.rounds>1&&Number.isFinite(neg.first)&&neg.first!==neg.last?`<s>${esc(money(neg.first))}</s> → `:'';
       const roundText=neg&&neg.rounds>1?`<span class="cpdRound">${esc(T(`${neg.rounds}. tur`,`Round ${neg.rounds}`))}</span>`:'';
+      const removeLabel=T(`${o.name} teklifini sil`,`Delete quotation from ${o.name}`);
+      const removable=editable&&!hasLedgerOffer(ledger,o.name,o.price)&&!kolCellLinkedToModel(row,`pricing:${o.name}`);
       return `<li class="cpdOffer${isConfirmed?' isConfirmed':''}${isBest?' isBest':''}">
         <button type="button" class="cpdApprove" data-cpd-approve="${esc(o.name)}" aria-pressed="${isConfirmed?'true':'false'}" title="${esc(isConfirmed?T('Üretici onayını kaldır','Remove manufacturer approval'):T('Bu üreticiyi ve fiyatı onayla','Approve this manufacturer and price'))}"${editable?'':' disabled'}>✓</button>
         <span class="cpdOfferName">${esc(o.name)}${isBest?`<em class="cpdBadge">${esc(T('En iyi','Best'))}</em>`:''}</span>
         <span class="cpdOfferTrail">${trail}<b>${esc(money(o.price))}</b>${roundText}</span>
         ${delta?`<span class="kolBestDelta ${delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${esc(delta.text)}</span>`:'<span></span>'}
+        ${removable?`<button type="button" class="iconbtn cpdRemove" data-cpd-remove="${esc(o.name)}" aria-label="${esc(removeLabel)}" title="${esc(T('Fiyatı sil','Delete price'))}"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>`:''}
       </li>`;
     }).join('');
     const waitingHtml=waiting.length?`<p class="cpdNote">${esc(T(`Cevap bekleyen: ${waiting.join(', ')}`,`Awaiting a reply: ${waiting.join(', ')}`))}</p>`:'';
@@ -75,7 +83,6 @@
       <div class="cpdActions">
         <button type="button" class="tbtn" data-cpd-manual${editable?'':' disabled'}>✎ ${esc(T('Elle fiyat gir','Enter price manually'))}</button>
         <button type="button" class="tbtn" data-cpd-desk>${esc(T("Fiyat Masası'nda aç","Open in Pricing Desk"))}</button>
-        <button type="button" class="tbtn" data-cpd-history>${esc(T('Fiyat Geçmişi','Pricing History'))}</button>
       </div></div>`;
   }
 
@@ -124,36 +131,44 @@
     if(!text)return '';
     return `<div class="cpdSection"><header><h4>Endeksmatik</h4></header><p class="cpdNote cpdPre">${esc(text)}</p></div>`;
   }
-  function lineageSnapshot(row){
+  function lineageSnapshot(row,ledger){
     let provenance={};
     if(state.module==='collection'){
       const selected=kolSuppFob(kolGroupSummaryEffectiveLandedRow(row));
-      provenance=global.BLPriceLineage.offerProvenance(ledgerLines(row),{engine:global.BLPricingDeskEngine,amount:selected?.price,manufacturer:selected?.name});
+      provenance=global.BLPriceLineage.offerProvenance(ledger||ledgerLines(row),{engine:global.BLPricingDeskEngine,amount:selected?.price,manufacturer:selected?.name});
     }
     return global.BLPriceLineageBridge.snapshot(row,state.module,provenance);
   }
   function lineageRows(snapshot){
     const sourceLabels={confirmed:T('Onaylı teklif','Confirmed offer'),best:T('En iyi teklif','Best offer'),target:T('Hedef fiyat','Target price'),manual:T('Elle girilen','Manual'),rule:T('Fiyat kuralı','Pricing rule'),'cp-update':T('CP güncellemesi','CP update'),dtr:T('DTR kaynak fiyatı','DTR source price'),missing:T('Geçerli fiyat yok','No valid price')};
     const unknown=T('Bildirilmemiş','Not reported'),date=value=>Number.isFinite(Date.parse(value||''))?new Date(value).toLocaleString(en()?'en-GB':'tr-TR'):unknown;
-    const facts=[{field:T('Kayıt','Record'),value:snapshot.record},{field:T('Fiyat kaynağı','Price source'),value:sourceLabels[snapshot.source.kind]||snapshot.source.kind},{field:T('Üretici','Manufacturer'),value:snapshot.source.name||'—'},{field:'Supp. FOB',value:snapshot.values.suppFob??'—'}];
+    const collection=snapshot.module==='collection';
+    const facts=[{field:T('Kayıt','Record'),value:snapshot.record},{field:T('Fiyat kaynağı','Price source'),value:sourceLabels[snapshot.source.kind]||snapshot.source.kind},{field:T('Üretici','Manufacturer'),value:snapshot.source.name||'—'}];
+    if(collection)facts.push({field:'FOB',value:money2(kolParseMoneyNum(snapshot.values.fob))});
+    facts.push({field:'Supp. FOB',value:snapshot.values.suppFob??'—'});
+    if(collection){
+      const {royaltyPct,hologramCost}=snapshot.values,locale=en()?'en-GB':'tr-TR';
+      if(royaltyPct>0)facts.push({field:'Royalty',value:`${royaltyPct.toLocaleString(locale,{maximumFractionDigits:4})}%`});
+      if(hologramCost>0)facts.push({field:T('Hologram maliyeti','Hologram cost'),value:`$${hologramCost.toLocaleString(locale,{minimumFractionDigits:2,maximumFractionDigits:6})}`});
+    }
     if(snapshot.precedence)facts.push({field:T('Kaynak önceliği','Source precedence'),value:T('Onaylı → En iyi → Hedef','Confirmed → Best → Target')});
     if(snapshot.source.origin)facts.push({field:T('Giriş yolu','Entry source'),value:({cpupdate:T('CP güncellemesi','CP update'),import:T('Üretici Excel’i','Supplier Excel'),manual:T('Elle giriş','Manual entry'),matrix:T('Fiyat matrisi','Pricing matrix'),paste:T('Yapıştırma','Paste'),undo:T('Geri alma','Undo'),legacy:T('Eski kayıt','Legacy record'),unconfirmed:T('Kaynağı doğrulanmamış','Source unconfirmed')})[snapshot.source.origin]||snapshot.source.origin});
     if(snapshot.source.requestId)facts.push({field:T('Teklif kayıt kimliği','Quotation record ID'),value:snapshot.source.requestId},{field:T('Teklif satırı kimliği','Quotation line ID'),value:snapshot.source.lineId});
     facts.push({field:T('Fiyat kaynağı tarihi','Price source date'),value:date(snapshot.source.at)},{field:T('Fiyat kaynağı yaşı (gün)','Price source age (days)'),value:snapshot.source.ageDays??unknown});
-    facts.push({field:T('Kural kimliği','Rule ID'),value:snapshot.rule?.id||'—'},{field:T('TR kural kimliği','TR rule ID'),value:snapshot.trRule?.id||'—'});
-    if(snapshot.module==='collection'){
-      facts.push({field:T('Kur türü','FX mode'),value:snapshot.fx.manual?T('Elle girilen','Manual'):T('Otomatik','Automatic')},{field:'USD → TRY',value:snapshot.fx.rate??'—'},{field:T('İstenen kur ayı','Requested FX month'),value:snapshot.fx.requestedMonth||'—'},{field:T('Uygulanan kur ayı','Applied FX month'),value:snapshot.fx.resolvedMonth||'—'},{field:T('Önceki/ilk mevcut aya dönüş','Earlier/first available month fallback'),value:snapshot.fx.fallback?T('Evet','Yes'):T('Hayır','No')},{field:T('Kur kaynak dosyası','FX source file'),value:snapshot.fx.manual?'—':String(snapshot.fx.sourceFile||unknown).split(/[\\/]/).at(-1)},{field:T('Kur kaynağı tarihi','FX source date'),value:snapshot.fx.manual?'—':date(snapshot.fx.sourceModifiedAt||snapshot.fx.updatedAt)},{field:T('Kur kaynağı yaşı (gün)','FX source age (days)'),value:snapshot.fx.ageDays??unknown},{field:T('Kur kaynak sürümü','FX source revision'),value:snapshot.fx.revision??'—'},{field:'Overseas Landed',value:snapshot.values.overseasLanded??'—'},{field:'TR Landed',value:snapshot.values.trLanded??'—'});
-    }
+    if(collection){
+      facts.push({field:'USD → TRY',value:snapshot.fx.rate??'—'},{field:T('Kur kaynak dosyası','FX source file'),value:snapshot.fx.manual?'—':String(snapshot.fx.sourceFile||unknown).split(/[\\/]/).at(-1)},{field:T('Kur kaynağı tarihi','FX source date'),value:snapshot.fx.manual?'—':date(snapshot.fx.sourceModifiedAt||snapshot.fx.updatedAt)},{field:T('Kur kaynağı yaşı (gün)','FX source age (days)'),value:snapshot.fx.ageDays??unknown},{field:T('Kur kaynak sürümü','FX source revision'),value:snapshot.fx.revision??'—'},{field:'Overseas Landed',value:snapshot.values.overseasLanded??'—'},{field:'TR Landed',value:snapshot.values.trLanded??'—'});
+    }else facts.push({field:T('Kural kimliği','Rule ID'),value:snapshot.rule?.id||'—'},{field:T('TR kural kimliği','TR rule ID'),value:snapshot.trRule?.id||'—'});
     Object.entries(snapshot.revisions).forEach(([key,value])=>facts.push({field:({collection:T('Koleksiyon sürümü','Collection revision'),row:T('Satır sürümü','Row revision'),pricingRules:T('Fiyat kuralı sürümü','Pricing rules revision'),orders:T('Sipariş sürümü','Orders revision'),suppFob:T('Supp. FOB sürümü','Supp. FOB revision')})[key]||key,value}));
     snapshot.blockers.forEach(value=>facts.push({field:T('Hesaplama engeli','Calculation blocker'),value}));
     facts.push({field:T('Açıklamanın alındığı an','Explanation captured at'),value:snapshot.capturedAt});
     return facts;
   }
-  function lineageHtml(row){
-    const snapshot=lineageSnapshot(row),facts=lineageRows(snapshot),rule=snapshot.rule||snapshot.trRule,manage=global.BLPriceLineageBridge.canManageRules(),needsRule=snapshot.blockers.length>0;
-    const primary=new Set([T('Fiyat kaynağı','Price source'),'Supp. FOB',T('Kural kimliği','Rule ID'),T('Kur türü','FX mode'),T('İstenen kur ayı','Requested FX month'),T('Uygulanan kur ayı','Applied FX month'),T('Hesaplama engeli','Calculation blocker')]);
+  function lineageHtml(row,ledger){
+    const snapshot=lineageSnapshot(row,ledger),facts=lineageRows(snapshot),rule=snapshot.rule||snapshot.trRule,manage=global.BLPriceLineageBridge.canManageRules(),needsRule=snapshot.blockers.length>0;
+    const primary=new Set([T('Fiyat kaynağı','Price source'),'FOB','Supp. FOB','Royalty',T('Hologram maliyeti','Hologram cost'),T('Kural kimliği','Rule ID'),T('Hesaplama engeli','Calculation blocker')]);
     const table=rows=>`<dl>${rows.map(fact=>`<div><dt>${esc(fact.field)}</dt><dd>${esc(['Overseas Landed','TR Landed'].includes(fact.field)&&Number.isFinite(fact.value)?kolMoney2(fact.value):fact.value)}</dd></div>`).join('')}</dl>`;
-    return `<div class="cpdSection cpdLineage"><header><h4>${esc(T('Bu fiyat nereden geliyor?','Why this value?'))}</h4></header>${table(facts.filter(fact=>primary.has(fact.field)))}<details><summary>${esc(T('Tüm kaynaklar ve varsayımlar','All sources and assumptions'))}</summary>${table(facts.filter(fact=>!primary.has(fact.field)))}</details>${snapshot.blockers.length?`<p class="cpdNote" role="status">${esc(T('Kural düzeltilmeden ilgili hesap üretilmez.','The relevant calculation stays unavailable until the rule is corrected.'))}</p>`:''}<div class="cpdActions"><button class="tbtn" type="button" data-cpd-source-report>${esc(T('Kaynak raporu · Excel','Source report · Excel'))}</button><button class="tbtn" type="button" data-cpd-rule="${esc(rule?.id||'')}"${manage&&(rule?.id||needsRule)?'':' disabled'} title="${esc(!manage?T('İş kuralı yönetim yetkisi gerekli','Business-rule management permission required'):rule?.id||needsRule?T('Mevcut kural ekranını aç','Open the existing rule screen'):T('Eşleşen kural yok','No matching rule'))}">${esc(rule?.id?T('İlgili kuralı aç','Open matching rule'):needsRule?T('Kuralı tanımla','Define rule'):T('Eşleşen kural yok','No matching rule'))}</button></div></div>`;
+    const actions=snapshot.module==='collection'?'':`<div class="cpdActions"><button class="tbtn" type="button" data-cpd-source-report>${esc(T('Kaynak raporu · Excel','Source report · Excel'))}</button><button class="tbtn" type="button" data-cpd-rule="${esc(rule?.id||'')}"${manage&&(rule?.id||needsRule)?'':' disabled'} title="${esc(!manage?T('İş kuralı yönetim yetkisi gerekli','Business-rule management permission required'):rule?.id||needsRule?T('Mevcut kural ekranını aç','Open the existing rule screen'):T('Eşleşen kural yok','No matching rule'))}">${esc(rule?.id?T('İlgili kuralı aç','Open matching rule'):needsRule?T('Kuralı tanımla','Define rule'):T('Eşleşen kural yok','No matching rule'))}</button></div>`;
+    return `<div class="cpdSection cpdLineage"><header><h4>${esc(T('Bu fiyat nereden geliyor?','Why this value?'))}</h4></header>${table(facts.filter(fact=>primary.has(fact.field)))}<details><summary>${esc(T('Tüm kaynaklar ve varsayımlar','All sources and assumptions'))}</summary>${table(facts.filter(fact=>!primary.has(fact.field)))}</details>${snapshot.blockers.length?`<p class="cpdNote" role="status">${esc(T('Kural düzeltilmeden ilgili hesap üretilmez.','The relevant calculation stays unavailable until the rule is corrected.'))}</p>`:''}${actions}</div>`;
   }
 
   function headHtml(row){
@@ -178,8 +193,9 @@
     const scroll=state.body?.scrollTop||0;
     const picker=state.panel.querySelector('.cpdCountryPicker');
     const pickerState=picker?.open?{scroll:picker.querySelector('.cpdCountryList').scrollTop,code:document.activeElement?.dataset.cpdLflCountry,summary:document.activeElement===picker.querySelector('summary')}:null;
+    const ledger=state.module==='collection'?ledgerLines(row):[];
     const session=state;session.rendering=true;
-    try{session.panel.innerHTML=`${headHtml(row)}<div class="cpdBody">${lineageHtml(row)}${state.module==='collection'?offersHtml(row)+(global.BLCollectionLfl?.drawer(row)||'')+waterfallHtml(row)+endeksmatikHtml(row):''}${canEdit()?'':`<p class="cpdNote">${esc(T('Bu sayfa salt okunur; değerler yalnız görüntülenir.','This page is read-only; values are view-only.'))}</p>`}</div>`;}finally{session.rendering=false;}
+    try{session.panel.innerHTML=`${headHtml(row)}<div class="cpdBody">${lineageHtml(row,ledger)}${state.module==='collection'?offersHtml(row,ledger)+(global.BLCollectionLfl?.drawer(row)||'')+waterfallHtml(row)+endeksmatikHtml(row):''}${canEdit()?'':`<p class="cpdNote">${esc(T('Bu sayfa salt okunur; değerler yalnız görüntülenir.','This page is read-only; values are view-only.'))}</p>`}</div>`;}finally{session.rendering=false;}
     state.body=state.panel.querySelector('.cpdBody');
     const nextPicker=state.panel.querySelector('.cpdCountryPicker');
     if(pickerState&&nextPicker){
@@ -227,6 +243,25 @@
     }finally{if(button.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label;}}
   }
 
+  async function removeOffer(button){
+    const binding=state.binding,manufacturer=button.dataset.cpdRemove;
+    button.disabled=true;
+    try{
+      await global.BLPerf?.ensureFeature?.('collectionTools');
+      await global.BL_QUOTATIONS?.desk?.ready?.();
+      if(state?.binding!==binding||!canEdit())return;
+      const row=findRow(state.rowId),price=kolParseMoneyNum(kolEffectivePricing(row)[manufacturer]);
+      if(!(price>0)||hasLedgerOffer(ledgerLines(row),manufacturer,price))return;
+      if(!global.confirm(T(`${manufacturer} teklifi (${money(price)}) silinsin mi?`,`Delete the quotation from ${manufacturer} (${money(price)})?`)))return;
+      if(kolApplyCollectionCellChange({rowId:row.id,key:`pricing:${manufacturer}`,source:'drawer'},{removePrice:true})){
+        render();
+        state?.panel.querySelector('[data-cpd-manual]')?.focus({preventScroll:true});
+      }
+    }catch(_){
+      showToast(T('Fiyat silinemedi.','The price could not be deleted.'));
+    }finally{button.disabled=false;}
+  }
+
   function onClick(event){
     if(event.target.closest('[data-cpd-lfl-refresh]')){void global.BLCollectionLfl?.ensure({rebuild:true});render();return;}
     if(!state||!state.overlay.contains(event.target))return;
@@ -240,9 +275,10 @@
     const rule=event.target.closest('[data-cpd-rule]');if(rule){const binding=state.binding,id=rule.dataset.cpdRule;if(!global.BLPriceLineageBridge.canManageRules())return;close();global.BLPriceLineageBridge.openRule(binding,id);return;}
     const approve=event.target.closest('[data-cpd-approve]');
     if(approve){if(!canEdit())return;kolToggleConfirmedManufacturer(row,approve.dataset.cpdApprove);render();return;}
+    const remove=event.target.closest('[data-cpd-remove]');
+    if(remove){if(canEdit()&&!remove.disabled)void removeOffer(remove);return;}
     if(event.target.closest('[data-cpd-manual]')){if(!canEdit())return;openKolManualPriceModal(row);return;}
     if(event.target.closest('[data-cpd-desk]')){close();void global.BL_QUOTATIONS?.openWorkspaceFromCollection?.([row]);return;}
-    if(event.target.closest('[data-cpd-history]')){close();void global.BL_QUOTATIONS?.openPriceHistory?.([row]);}
   }
 
   function open(row,module='collection'){

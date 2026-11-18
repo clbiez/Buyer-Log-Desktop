@@ -29,3 +29,21 @@ test('a current price without a matching latest offer never borrows an older equ
  const line={id:'pending',manufacturer:'A',price:'4',history:[{id:'old-four',type:'offer',price:'4',source:'import',at:'2026-10-01'},{id:'five',type:'offer',price:'5',source:'manual',at:'2026-10-20'}]};
  const provenance=Lineage.offerProvenance([{line,req:{id:'req'}}],{engine:Desk,amount:4,manufacturer:'A'});assert.equal(provenance.origin,'unconfirmed');assert.equal(provenance.at,null);
 });
+test('Collection lineage shows final FOB above supplier FOB and only shows applied charges',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../public/collection-price-drawer.js'),'utf8');
+ const start=source.indexOf('  function lineageRows('),end=source.indexOf('  function headHtml(',start);
+ const context={T:(_tr,en)=>en,en:()=>true,esc:String,money2:value=>Number.isFinite(value)?`$${value.toFixed(2)}`:'—',kolParseMoneyNum:value=>Number.parseFloat(String(value).replace(',','.')),global:{BLPriceLineageBridge:{canManageRules:()=>true}},lineageSnapshot:snapshot=>snapshot};
+ vm.createContext(context);vm.runInContext(source.slice(start,end),context);
+ const values={fob:'5,62',suppFob:4.87,royaltyPct:12.125,hologramCost:0.057};
+ const snapshot=module=>Lineage.snapshot({module,values,source:{kind:'confirmed'},rule:{id:'demo-rule'},fx:{requestedMonth:'2027-03',resolvedMonth:'2027-03'}});
+ const collection=context.lineageHtml(snapshot('collection'));
+ assert.match(collection,/<dt>FOB<\/dt><dd>\$5\.62<\/dd><\/div><div><dt>Supp\. FOB<\/dt><dd>4\.87<\/dd>/);
+ assert.match(collection,/<dt>Royalty<\/dt><dd>12\.125%<\/dd>/);
+ assert.match(collection,/<dt>Hologram cost<\/dt><dd>\$0\.057<\/dd>/);
+ assert.doesNotMatch(collection,/Rule ID|FX mode|FX month|data-cpd-source-report|data-cpd-rule/);
+ const noCosts=snapshot('collection');noCosts.values={fob:'',suppFob:null,royaltyPct:0,hologramCost:0};
+ assert.doesNotMatch(context.lineageHtml(noCosts),/<dt>Royalty|<dt>Hologram cost/);
+ const cp=context.lineageHtml(snapshot('cp'));
+ for(const label of ['Rule ID','data-cpd-source-report','data-cpd-rule'])assert.ok(cp.includes(label));
+ assert.doesNotMatch(cp,/<dt>FOB<\/dt>/);
+});

@@ -2061,7 +2061,10 @@ function cpLogisticSummary(segments, orderQty) {
   const list = cpLogisticSegmentsForOrder(segments);
   const primary = list[0] || null;
   const partials = list.filter(item => item.kind === 'partial');
-  const statusSource = partials.length ? partials : list.filter(item => item.kind !== 'shortage');
+  // Status filtresi/sayaçları siparişin tüm akışını kapsar: parsiyel varken de
+  // üretimde kalan bakiye 'Üretimde' süzgecinde bulunabilmeli. Eksik yükleme
+  // (shortage) satırları akışta bekleyen adet olmadığı için dışarıda kalır.
+  const statusSource = list.filter(item => item.kind !== 'shortage');
   const unique = values => [...new Set(values.map(norm).filter(Boolean))];
   const loadedQty = partials.reduce((sum, item) => sum + item.quantity, 0);
   return {
@@ -2073,9 +2076,8 @@ function cpLogisticSummary(segments, orderQty) {
     partialCount: partials.length,
     totalQty: Math.max(0, Number(orderQty) || 0),
     remainingQty: Math.max(0, Math.max(0, Number(orderQty) || 0) - loadedQty),
-    // STATUS hücresi gerçek parsiyelleri özetler: farklı durumlar ayrı ayrı,
-    // aynı durumlar tek kez görünür. Sentetik production/shortage satırları ancak
-    // gerçek parsiyel yoksa fallback olarak kullanılır.
+    // Filtre/sayaç değerleri: farklı durumlar ayrı ayrı, aynı durumlar tek kez.
+    // STATUS hücresi ise istemcide yalnız gerçek parsiyelleri özetler.
     statuses: unique(statusSource.map(item => item.status)),
     allPartialsInWarehouse: partials.length > 0 && partials.every(item => turknorm(item.status) === 'DEPODA'),
     delTypes: unique(list.map(item => item.delType)),

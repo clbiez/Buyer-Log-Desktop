@@ -6566,7 +6566,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
 function rebuildCpLogisticCaches(row){
   const segments=cpLogisticSegments(row); if(!segments.length) return;
   const partials=segments.filter(s=>s&&s.kind==='partial');
-  const statusSource=partials.length?partials:segments.filter(s=>s&&s.kind!=='shortage');
+  const statusSource=segments.filter(s=>s&&s.kind!=='shortage');
   row._logisticStatusValues=[...new Set(statusSource.map(s=>norm(s.status)).filter(Boolean))];
   row._logisticDelTypeValues=[...new Set(segments.map(s=>normalizeTransitDelType(s.delType)||norm(s.delType)).filter(Boolean))];
   row._logisticArrivalValues=segments.map(s=>coerceDateLoose(s.arrival)).filter(Boolean);
@@ -10313,7 +10313,7 @@ function renderOrdersNow(){
   const seasonCounts={},statusCounts={},delCounts={};
   scope.season.forEach(row=>{const v=norm(row.Season)||'—';seasonCounts[v]=(seasonCounts[v]||0)+1;});
   scope.status.forEach(row=>{
-    const values=partialViewEnabled('orders')?partialViewStatusGroups(row).map(group=>group.status):[row.STATUS];
+    const values=partialViewEnabled('orders')?partialViewStatusGroups(row).map(group=>group.status):(cpLogisticHasDetails(row)?(row._logisticStatusValues||cpLogisticSegments(row).map(s=>s.status)):[row.STATUS]);
     [...new Set(values.map(value=>norm(value)||'—'))].forEach(v=>{statusCounts[v]=(statusCounts[v]||0)+1;});
   });
   scope.del.forEach(row=>{const v=normalizeTransitDelType(row['Del. Type'])||norm(row['Del. Type'])||'—';delCounts[v]=(delCounts[v]||0)+1;});
@@ -29858,8 +29858,9 @@ function commitKolPriceEditor(el, options={}){
     return false;
   }
   const effectivePricing=kolEffectivePricing(row);
+  const removePrice=options.removePrice===true;
   if(!row.pricing) row.pricing = {};
-  let val = el.value;
+  let val = removePrice?'':el.value;
   if(val!==''){
     const n = kolParseMoneyNum(val);
     if(Number.isFinite(n)){ val = kolFormatMoneyDisplay(val); el.value = val; }
@@ -29868,14 +29869,29 @@ function commitKolPriceEditor(el, options={}){
   releaseKolTransientTopRow(id);
   if(pushUndo)kolPushUndo();
   const groupApi=window.BLCollectionModelGroups,groupMembers=groupApi?.groupFor?.(kolRows,row.modelGroupId)||[],isGrouped=groupMembers.length>1;
-  if(isGrouped&&row.modelGroupRole==='parent'&&!kolHasVariantOverride(row,'pricing')){
+  if(removePrice){
+    const nextPricing={...effectivePricing};
+    delete nextPricing[m];
+    row=kolWriteGroupedStorageValue(row,'pricing',nextPricing);
+  }else if(isGrouped&&row.modelGroupRole==='parent'&&!kolHasVariantOverride(row,'pricing')){
     const nextPricing={...kolEffectivePricing(row),[m]:val};kolRows=kolNormalizeModelGroups(groupApi.setSharedValue(kolRows,row.modelGroupId,'pricing',nextPricing));
   }else if(isGrouped&&row.modelGroupRole==='variant'){
     const nextPricing={...kolEffectivePricing(row),[m]:val};kolRows=kolNormalizeModelGroups(groupApi.setVariantOverride(kolRows,row.id,'pricing',nextPricing));
   }else row.pricing[m] = val;
   row=kolRows.find(item=>item.id===id)||row;
   const parsed = kolParseMoneyNum(val);
-  if(norm(row.confirmedManufacturer)===norm(m) && (val==='' || !Number.isFinite(parsed) || parsed<=0)) row.confirmedManufacturer='';
+  if(removePrice){
+    const key='confirmedManufacturer',manufacturer=norm(m),approved=norm(row[key])||norm(kolEffectiveValue(row,key));
+    if(approved===manufacturer){
+      if(kolHasVariantOverride(row,key)||isGrouped&&row.modelGroupRole==='variant'){
+        kolRows=kolNormalizeModelGroups(groupApi.setVariantOverride(kolRows,row.id,key,''));
+        row=kolRows.find(item=>item.id===id)||row;
+      }else{
+        row[key]='';
+        if(norm(row.modelSharedValues?.[key])===manufacturer)row.modelSharedValues={...row.modelSharedValues,[key]:''};
+      }
+    }
+  }else if(norm(row.confirmedManufacturer)===norm(m) && (val==='' || !Number.isFinite(parsed) || parsed<=0)) row.confirmedManufacturer='';
   kolApplyRulePricing(row);
   if(persist)saveKolRows();
   if(rerender) renderKol();
@@ -30929,7 +30945,7 @@ function priceLineageSnapshot(row,module='collection',provenance={}){
   if(module==='collection'){
     const effective=kolGroupSummaryEffectiveLandedRow(row),k=kolLandedCalc(effective),rule=kolFindPricingRule(effective),fx=kolAutoFx(effective,true),blockers=[];
     if(k.ruleInvalid)blockers.push(kolPricingRuleInvalidText());else if(k.ruleMissing)blockers.push(kolLicenseRuleMissingText(effective));if(k.trRuleInvalid)blockers.push(kolPricingRuleInvalidText(true));else if(k.trRuleMissing)blockers.push(kolTrLicenseRuleMissingText(effective));
-    return window.BLPriceLineage.snapshot({module,record:[row.modelKod,row.plmId,row.colourCode].filter(Boolean).join(' · '),source:{kind:k.supp?.source||'missing',name:k.supp?.name||'',amount:k.ydBaseFob,origin:provenance.origin||'',at:provenance.at||null,requestId:provenance.requestId||'',lineId:provenance.lineId||''},values:{suppFob:k.ydBaseFob,overseasLanded:k.ydLanded,trLanded:k.trLanded},rule:ruleFields(rule),trRule:ruleFields(k.trRule),fx:{...fx,rate:k.fx,manual:k.fxIsManual},revisions:{collection:kolWorkspaceRevision,row:Number(row._rev)||0,pricingRules:Number(revisions.pricingRules)||0},blockers,precedence:'confirmed > best > target'});
+    return window.BLPriceLineage.snapshot({module,record:[row.modelKod,row.plmId,row.colourCode].filter(Boolean).join(' · '),source:{kind:k.supp?.source||'missing',name:k.supp?.name||'',amount:k.ydBaseFob,origin:provenance.origin||'',at:provenance.at||null,requestId:provenance.requestId||'',lineId:provenance.lineId||''},values:{fob:row.fob,suppFob:k.ydBaseFob,royaltyPct:k.royaltyPct,hologramCost:k.hologramCost,overseasLanded:k.ydLanded,trLanded:k.trLanded},rule:ruleFields(rule),trRule:ruleFields(k.trRule),fx:{...fx,rate:k.fx,manual:k.fxIsManual},revisions:{collection:kolWorkspaceRevision,row:Number(row._rev)||0,pricingRules:Number(revisions.pricingRules)||0},blockers,precedence:'confirmed > best > target'});
   }
   const meta=suppFobMetaForRow(row),rule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category')),manual=hasManualSuppFob(row);
   return window.BLPriceLineage.snapshot({module,record:[row['Order Code'],row['Model Name'],row['C.Code']].filter(value=>value!=null&&value!=='').join(' · '),source:{kind:meta?.origin==='cpupdate'?'cp-update':manual?'manual':isSuppFobAutoCalculated(row)?'rule':turknorm(row.Licensor)==='DTR'?'dtr':'missing',amount:row['Supp. FOB'],origin:meta?.origin||'',at:null},values:{suppFob:row['Supp. FOB'],fob:row['FOB ($)']},rule:ruleFields(rule),revisions:{orders:Number(revisions.orders)||0,suppFob:Number(revisions.suppFob)||0,pricingRules:Number(revisions.pricingRules)||0},blockers:suppFobRuleMissing(row)?[suppFobRuleMissingText()]:[]});
