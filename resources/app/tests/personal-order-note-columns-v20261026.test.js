@@ -84,3 +84,32 @@ test('app uses private edit path even for view-only Orders; shared overrides sti
   const workspacePrefixes=prefs.split('const WORKSPACE_CATEGORY_PREFIXES')[1].split('const WORKSPACE_CATEGORIES')[0];
   assert.doesNotMatch(workspacePrefixes,/personalOrderNotes/,'private data must not enter copyable workspace categories');
 });
+
+for(const prefix of ['lcw.personalOrderNotes.value.v1.'+india.id+'.','bl.privateOrderNotes.v1.'])
+test(prefix+' imports legacy values once and never uploads local values or deletes',async()=>{
+  const vm=require('node:vm');
+  const source=fs.readFileSync(path.join(__dirname,'../public/user-storage.js'),'utf8');
+  const key=prefix+encodeURIComponent(line);
+  const raw=new Map(),writes=[];
+  const localStorage={get length(){return raw.size;},key:i=>[...raw.keys()][i]??null,
+    getItem:k=>raw.get(k)??null,setItem:(k,v)=>raw.set(k,String(v)),removeItem:k=>raw.delete(k)};
+  const window={localStorage,BL_USER_CONTEXT:{id:'buyerA'}};
+  const payload={entries:{[key]:{value:'old synced note',updatedAt:'2026-10-01T12:00:00Z'}}};
+  const fetch=async(_url,options)=>{
+    if(options.method)writes.push(options.body);
+    return {ok:true,json:async()=>payload};
+  };
+  vm.runInNewContext(source,{window,fetch});
+  assert.equal(window.BLStorage.isUserScoped(key),true);
+  assert.equal(window.BLStorage.isSynced(key),false);
+  await window.BLStorage.hydrate();
+  assert.equal(window.BLStorage.getItem(key),'old synced note');
+  window.BLStorage.setItem(key,'new private note');
+  await window.BLStorage.flushPending();
+  await window.BLStorage.hydrate();
+  assert.equal(window.BLStorage.getItem(key),'new private note');
+  window.BLStorage.removeItem(key);
+  await window.BLStorage.hydrate();
+  assert.equal(window.BLStorage.getItem(key),null,'the legacy value is not imported again');
+  assert.deepEqual(writes,[]);
+});

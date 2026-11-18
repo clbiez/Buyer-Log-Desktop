@@ -26,6 +26,7 @@
  */
 
 const test = require('node:test');
+const {loadAppMainFunctions}=require('./helpers/app-main-functions');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -125,7 +126,20 @@ test('v7.41 · hedef verilmezse tam yenileme sayılır', () => {
 
 test('v7.41 · yazma kapıları ALANA göre çalışır', () => {
   assert.match(APP, /function isAreaFrozen\(area\)\{ return _readOnlyMode && _readOnlyAreas\.includes\(String\(area \|\| ''\)\); \}/);
-  assert.match(extractFunction(APP, 'commitCpEditor'), /if\(isAreaFrozen\('cp'\)\) return false;/);
+  let frozen='cp', resolved=0;
+  const {commitCpEditor}=loadAppMainFunctions(['commitCpEditor'],{
+    window:{}, state:{cp:{rows:[]}}, isAreaFrozen:area=>frozen===area,
+    resolveCpEditorRow:()=>{resolved++;return null;},
+  });
+  const editor={dataset:{id:'1',key:'Notes',kind:'note'}};
+  const ordersEditor={dataset:{...editor.dataset,editOrigin:'orders'}};
+  for(const input of [editor,ordersEditor])assert.equal(commitCpEditor(input),false);
+  assert.equal(resolved,0,'CP freeze protects both routes');
+  frozen='orders';
+  assert.equal(commitCpEditor(ordersEditor),false);
+  assert.equal(resolved,0,'Orders freeze protects the Orders editor');
+  assert.equal(commitCpEditor(editor),false);
+  assert.equal(resolved,1,'CP still reaches its row guard when only Orders is frozen');
   assert.match(extractFunction(APP, 'commitKolEditor'), /if\(isAreaFrozen\('koleksiyon'\)\)return false;/);
 });
 

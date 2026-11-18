@@ -6,7 +6,7 @@
 })(typeof window!=='undefined'?window:globalThis,function(root){
   'use strict';
   // Kişisel notlar hiçbir zaman overrides/notesmap veya paylaşılan CP store'a yazılmaz.
-  // Mevcut BLStorage, kullanıcı kapsamını ve hesapla /api/user-preferences eşitlemesini sağlar.
+  // BLStorage değerleri bu cihazda kullanıcı kapsamında tutar.
   const KEY='lcw.personalOrderNotes.definitions.v1';
   const VALUE_PREFIX='lcw.personalOrderNotes.value.v1.';
   const MAX_COLUMNS=24, MAX_TEXT=4000;
@@ -52,7 +52,7 @@
       if(!key||!definitions().some(def=>def.id===id))throw new Error('PERSONAL_NOTE_INVALID_TARGET');
       const target=store();
       if(!target||typeof target.setItem!=='function')throw new Error('PERSONAL_NOTE_STORAGE_UNAVAILABLE');
-      // Boş değer dahi kayıt edilir: senkron edilmiş eski not geri gelmesin.
+      // Boş değer dahi kayıt edilir: eski sunucu kopyası geri gelmesin.
       const next=cleanText(value);
       target.setItem(key,next);
       return next;

@@ -27,7 +27,7 @@ function loadGrid() {
     listeners.keydown.forEach(cb => cb(event));
     return event;
   };
-  return { Grid, table, press, cleanup() { delete globalThis.document; delete globalThis.getSelection; } };
+  return { Grid, table, tables, press, cleanup() { delete globalThis.document; delete globalThis.getSelection; } };
 }
 
 function register(g, plans, extra = {}) {
@@ -94,5 +94,34 @@ test('yapıştırma kabul etmeyen tabloda Delete/Ctrl+D yazmaz; tek satırda Ctr
     g.press('d', { ctrlKey: true });
     await tick();
     assert.equal(plans.length, 0);
+  } finally { g.cleanup(); }
+});
+
+test('shortcuts stay with the focused grid and leave open text editors and previews alone',async()=>{
+  const g=loadGrid();
+  try {
+    const orders=[],cp=[];
+    let finish;
+    const pending=new Promise(resolve=>{finish=resolve;});
+    register(g,orders,{applyPaste:plan=>{orders.push(plan);return pending;}});
+    const cpTable={...g.table,id:'cpTable'};
+    g.tables.cpTable=cpTable;
+    g.Grid.register('cpTable',{
+      isActive:()=>true,rowId:r=>r._id,columnId:c=>c.k,pasteTarget:()=> 'text',
+      pasteValue:raw=>({ok:true,value:raw}),applyPaste:plan=>{cp.push(plan);return {ok:true};},
+    });
+    g.Grid.restoreActive('cpTable',{rowId:'1',columnId:'x'});
+    g.press('Delete',{target:cpTable});
+    assert.equal(cp.length,1);
+    assert.equal(orders.length,0);
+    await tick();
+    const input={closest:selector=>selector.startsWith('input')?input:null};
+    assert.equal(g.press('Delete',{target:input}).prevented,false);
+    assert.equal(g.press('d',{target:input,ctrlKey:true}).prevented,false);
+    g.press('Delete');
+    g.press('d',{ctrlKey:true});
+    assert.equal(orders.length,1,'an already open preview cannot start another write');
+    finish({ok:false});
+    await tick();
   } finally { g.cleanup(); }
 });

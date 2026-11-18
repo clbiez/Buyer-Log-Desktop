@@ -19,9 +19,9 @@
   }
   function write(storage,lineKey,value){
     var key=keyFor(lineKey),text=String(value==null?'':value).trim();
-    if(!key||!storage||typeof storage.setItem!=='function'||typeof storage.removeItem!=='function')throw new Error('Personal note storage is unavailable.');
+    if(!key||!storage||typeof storage.setItem!=='function')throw new Error('Personal note storage is unavailable.');
     if(text.length>LIMIT)throw new Error('Personal note is too long.');
-    if(text)storage.setItem(key,text);else storage.removeItem(key);
+    storage.setItem(key,text);
     return text;
   }
   function esc(value){
@@ -31,10 +31,11 @@
   function display(text,en){
     return String(text||'').replace(/\s+/g,' ').trim()||words(en,'Kişisel not ekle…','Add private note…');
   }
-  function cellHtml(row,lineKey,lang){
+  function cellHtml(row,lineKey,lang,editable){
     if(!keyFor(lineKey))return '<td class="viewOnlyCell">—</td>';
     var en=lang==='en';
     var value=read(root&&root.BLStorage,lineKey);
+    if(editable===false)return '<td class="viewOnlyCell">'+esc(value||'—')+'</td>';
     var preview=display(value,en);
     var title=words(en,'Kişisel Not · Yalnızca siz görebilirsiniz','Private Note · Visible only to you');
     var model=String(row&&row['Model Name']||''),order=String(row&&row['Order Code']||'');
@@ -44,6 +45,9 @@
     if(!root||!root.document||!button)return;
     var doc=root.document,key=button.dataset.blPrivateNoteKey;
     if(!keyFor(key))return;
+    var fromOrders=Boolean(button.closest&&button.closest('#ordersTable'));
+    var available=function(){return !fromOrders||(!root.isAreaFrozen('orders')&&root.orderLinePeerRows('cp',null,key).length>0);};
+    if(!available())return;
     var owner=String(root.BL_USER_CONTEXT&&root.BL_USER_CONTEXT.id||'');
     if(!owner||owner==='anonymous')return;
     var en=button.dataset.blPrivateNoteLang==='en';
@@ -67,13 +71,14 @@
     doc.body.appendChild(modal);
     root.BLMotionPlus&&root.BLMotionPlus.play&&root.BLMotionPlus.play('overlay',modal.querySelector('.modalCard'));
     var area=modal.querySelector('textarea');
-    area.value=initial;
+    area.value=button._blEditKey||initial;
     var close=function(){modal.remove();if(previousFocus&&previousFocus.isConnected&&previousFocus.focus)previousFocus.focus();};
     var save=function(){
       // Owner and row identity are captured by a rendered, current table cell.
       if(owner!==String(root.BL_USER_CONTEXT&&root.BL_USER_CONTEXT.id||'')){
         root.alert(words(en,'Kullanıcı değişti. Notu yeniden açın.','The user changed. Reopen the note.'));return;
       }
+      if(!available()){root.staleCpEditorNotice();return;}
       try{
         var value=write(root.BLStorage,key,area.value);
         doc.querySelectorAll('[data-bl-private-note-key]').forEach(function(other){
@@ -113,7 +118,7 @@
       if(!trigger)return;
       event.preventDefault();event.stopPropagation();
       openEditor(trigger);
-    },true);
+    });
   }
   return {PREFIX:PREFIX,LIMIT:LIMIT,keyFor:keyFor,read:read,write:write,cellHtml:cellHtml,install:install};
 });

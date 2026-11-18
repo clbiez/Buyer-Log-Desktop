@@ -23,9 +23,9 @@ test('private order notes use distinct line keys and never touch shared override
   assert.equal(notes.read(store,second),'');
   notes.write(store,first,'');
   assert.equal(notes.read(store,first),'');
-  assert.equal(store.values.size,0);
+  assert.equal(store.values.get(notes.keyFor(first)),'','a clear must outlive legacy preference hydration');
 });
-test('storage validates key, length and is per-user/synced but not profile-copyable',()=>{
+test('storage validates key and length and keeps user notes out of profile copies',()=>{
   const s=memoryStore();
   assert.throws(()=>notes.write(s,'','text'));
   assert.throws(()=>notes.write(s,'123|A|X','x'.repeat(notes.LIMIT+1)));
@@ -34,9 +34,9 @@ test('storage validates key, length and is per-user/synced but not profile-copya
   const server=storageServer.slice(storageServer.indexOf('const WORKSPACE_CATEGORY_PREFIXES'),storageServer.indexOf('const WORKSPACE_CATEGORIES'));
   assert.doesNotMatch(server,/privateOrderNotes/,'personal notes are not transferred in profile/workspace copies');
 });
-test('personal note column is offered in both CP and Orders and bypasses order edit checks',()=>{
+test('personal note column is in CP and only opens in Orders for a row present in CP',()=>{
   assert.match(app,/k:'__personalOrderNote'.*type:'privateNote'/);
-  assert.match(app,/if\(c\.type==='privateNote'\)return window\.BLPrivateOrderNotes\.cellHtml\(r,lineKeyOfRow\(r\),appLang\);/);
+  assert.match(app,/if\(c\.type==='privateNote'\)return window\.BLPrivateOrderNotes\.cellHtml\(r,lineKeyOfRow\(r\),appLang,tableKey!=='orders'\|\|Boolean\(editRow\)\);/);
   assert.match(app,/const ORDERS_COLS = ordersColumnsFromCp\(CP_COLS\)/);
   assert.match(app,/function syncOrdersColumnsFromCp\(\)/);
   assert.doesNotMatch(app,/body\.privateOrderNote|body\.personalOrderNote/);

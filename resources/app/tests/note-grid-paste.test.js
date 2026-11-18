@@ -62,7 +62,8 @@ test('note fill plans include all selected rows and skip read-only rows',()=>{
 });
 test('Orders routes the note transaction by canonical line, never by its display ID',async()=>{
   const canonical={_id:5},display={_id:99},calls=[];
-  const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste'],{
+  const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste','orderLinePeerOwner'],{
+    window:{},
     state:{cp:{rows:[canonical]}},
     isAreaFrozen:()=>false,orderLinePeerRows:()=>[canonical],cpPasteTarget:()=> 'note',
     applyCpGridPaste:(plan,range)=>{calls.push({plan,range});return {ok:true};},
@@ -75,7 +76,8 @@ test('Orders routes the note transaction by canonical line, never by its display
 test('Orders cannot paste when its canonical target disappears or its area is frozen',async()=>{
   for(const frozen of [false,true]){
     let writes=0;const toasts=[];
-    const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste'],{
+    const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste','orderLinePeerOwner'],{
+    window:{},
       state:{cp:{rows:[]}},appLang:'tr',showToast:message=>toasts.push(message),
       isAreaFrozen:()=>frozen,orderLinePeerRows:()=>[],
       applyCpGridPaste:()=>{writes++;},
@@ -87,7 +89,8 @@ test('Orders cannot paste when its canonical target disappears or its area is fr
 });
 test('Orders skips rows missing from CP or whose permission changed, and writes the rest',async()=>{
   const a={_id:5,canonical:'a'},b={_id:6,canonical:'b',_canEditShared:false},calls=[];
-  const fns=loadAppMainFunctions(['applyOrdersGridPaste','cpPasteTarget'],{
+  const fns=loadAppMainFunctions(['applyOrdersGridPaste','cpPasteTarget','orderLinePeerOwner'],{
+    window:{},
     state:{cp:{rows:[a,b]}},isAreaFrozen:()=>false,
     BLRevision:{isAutomaticExFactory:()=>false},
     orderLinePeerRows:(_t,row)=>row.canonical==='a'?[a]:row.canonical==='b'?[b]:[],
@@ -103,7 +106,10 @@ test('personal note columns paste into the private store, never the shared order
   const store=new Map(),renders=[],commits=[],toasts=[];
   const notes={readValue:(id,line)=>store.get(id+'|'+line)||'',writeValue:(id,line,value)=>{store.set(id+'|'+line,String(value));return String(value);}};
   const row={_id:1,_canEdit:false,'Order Code':'OC1'};
-  const fns=loadAppMainFunctions(['cpPasteTarget','applyCpGridPaste','applyPersonalNotePaste'],{
+  const history=[];
+  const fns=loadAppMainFunctions(['cpPasteTarget','applyCpGridPaste','applyPersonalNotePaste','renderPersonalNoteChanges',
+    'cpBulkUniqueOperations','orderLinePeerOwner','notifyPersonalNotePaste','applyHistoryAction'],{
+    isAreaFrozen:()=>false,pushUndo:action=>history.push(action),tableColumnLabel:(_table,column)=>column.k,
     window:{BLPersonalNoteColumns:notes,BL_USER_CONTEXT:{id:'u1'}},appLang:'tr',
     state:{cp:{rows:[row]},orders:null},lineKeyOfRow:r=>'1|'+r['Order Code'],
     renderCP:()=>renders.push('cp'),renderOrders:()=>renders.push('orders'),
@@ -118,11 +124,17 @@ test('personal note columns paste into the private store, never the shared order
   assert.equal(row.personal_note_x,undefined,'ortak satır nesnesine kopyalanmamalı');
   assert.equal(commits.length,0);assert.deepEqual(renders,['cp']);
   assert.match(toasts[0],/1 kişisel not güncellendi/);
+  assert.equal(history.length,1);
+  fns.applyHistoryAction(history[0],'undo');
+  assert.equal(store.get('personal_note_x|1|OC1'),'');
+  fns.applyHistoryAction(history[0],'redo');
+  assert.equal(store.get('personal_note_x|1|OC1'),'benim notum');
 });
 test('Orders loads canonical permissions on demand when CP has not been opened',async()=>{
   const state={cp:null},canonical={_id:5,canonical:'a'},display={_id:99,canonical:'a',_canEdit:false};
   let writes=0,loads=0;
-  const fns=loadAppMainFunctions(['ordersPasteTarget','cpPasteTarget','applyOrdersGridPaste'],{
+  const fns=loadAppMainFunctions(['ordersPasteTarget','cpPasteTarget','applyOrdersGridPaste','orderLinePeerOwner'],{
+    window:{},
     state,isAreaFrozen:()=>false,orderLinePeerRows:()=>state.cp?[canonical]:[],
     ensureCpLoaded:async()=>{loads++;state.cp={rows:[canonical]};return true;},
     applyCpGridPaste:()=>{writes++;return {ok:true};},
@@ -131,4 +143,164 @@ test('Orders loads canonical permissions on demand when CP has not been opened',
   assert.equal(fns.ordersPasteTarget(display,column),'note');
   assert.equal((await fns.applyOrdersGridPaste({ops:[{row:display,column,target:'note',value:'copied'}]},{})).ok,true);
   assert.equal(loads,1);assert.equal(writes,1);
+});
+
+test('Orders Supp. FOB uses canonical identity and shared edit permissions when rendered',()=>{
+  const canonical={_id:5,'Supp. FOB':2,_canEdit:true,_canEditShared:true};
+  const display={_id:99,'Supp. FOB':2,_canEdit:false};
+  const {cellHtml}=loadAppMainFunctions(['cellHtml'],{
+    state:{cp:{rows:[canonical]}},orderLinePeerRows:()=>[canonical],
+    appLang:'en',L:s=>s,escapeHtml:String,revisionInfo:()=>null,columnSchemaFor:()=>null,
+    cpEditorIdentityAttributes:row=>' data-line-key="line-'+row._id+'" data-edit-owner="buyer"',
+    CP_FABRIC_PLM_KEY:'fabric',toNum:Number,fmtMoneyPlain:String,isTurkeyCountry:()=>false,
+    suppFobRuleMissing:()=>false,suppFobHoverText:()=>'',isSuppFobAutoCalculated:()=>false,
+  });
+  const column={k:'Supp. FOB',type:'moneyEdit'};
+  assert.match(cellHtml(column,display,null,'orders',canonical),/data-id="5" data-line-key="line-5" data-edit-owner="buyer"/);
+  assert.match(cellHtml(column,display,null,'orders',{...canonical,_canEditShared:false}),/viewOnlyCell/);
+  assert.match(cellHtml(column,display,null,'orders',{...canonical,_canEdit:false}),/viewOnlyCell/);
+  assert.match(cellHtml(column,display,null,'orders',null),/viewOnlyCell/);
+  assert.equal(display._canEdit,false);
+});
+
+test('private note paste history keeps previous and next values and never writes after a user change',()=>{
+  const values=new Map([['private|line','before']]);
+  const user={id:'buyer'};
+  const fn=loadAppMainFunctions(['applyPersonalNotePaste','applyHistoryAction','renderPersonalNoteChanges'],{
+    state:{}, window:{BL_USER_CONTEXT:user,BLPersonalNoteColumns:{
+      readValue:(id,line)=>values.get(id+'|'+line)||'',
+      writeValue:(id,line,value)=>{values.set(id+'|'+line,value);return value;},
+    }},lineKeyOfRow:()=> 'line',
+  });
+  const result=fn.applyPersonalNotePaste([{row:{},column:{k:'private'},value:'after'}],user.id);
+  assert.equal(result.history.kind,'personalNote');
+  fn.applyHistoryAction(result.history,'undo');
+  assert.equal(values.get('private|line'),'before');
+  fn.applyHistoryAction(result.history,'redo');
+  assert.equal(values.get('private|line'),'after');
+  user.id='another';
+  fn.applyHistoryAction(result.history,'undo');
+  assert.equal(values.get('private|line'),'after');
+});
+
+test('Orders never forwards a provisional paste whose canonical permission is denied after lazy load',async()=>{
+  const state={cp:null},canonical={_id:5,_canEdit:false},display={_id:99,_canEdit:false};
+  const {applyOrdersGridPaste,ordersPasteTarget}=loadAppMainFunctions(['applyOrdersGridPaste','ordersPasteTarget','cpPasteTarget','orderLinePeerOwner'],{
+    window:{},
+    state,appLang:'en',isAreaFrozen:()=>false,showToast(){},
+    orderLinePeerRows:()=>state.cp?[canonical]:[],
+    ensureCpLoaded:async()=>{state.cp={rows:[canonical]};return true;},
+    applyCpGridPaste:()=>assert.fail('Unauthorised write'),
+  });
+  const column={k:'Notes',type:'text'};
+  const target=ordersPasteTarget(display,column);
+  assert.equal(target,'note');
+  assert.equal((await applyOrdersGridPaste({ops:[{row:display,column,target,value:'copy'}]},{})).ok,false);
+});
+
+test('mixed paste previews both kinds of cell and attaches one private undo to the server-confirmed history',async()=>{
+  const row={_id:5,'Order Code':1001,Notes:'shared before'};
+  const user={id:'buyer'},histories=[],sent=[];
+  let local='private before',preview;
+  const history={kind:'batch',actions:[{id:5,lineKey:'line',fields:[{key:'Notes',prev:'shared before',next:'shared after'}]}]};
+  const functions=loadAppMainFunctions(['applyCpGridPaste','applyPersonalNotePaste','cpBulkUniqueOperations','cpGridBulkTitle',
+    'orderLinePeerOwner','renderPersonalNoteChanges','applyHistoryAction','applyCpBulkHistory'],{
+    appLang:'en',state:{currentUser:user,cp:{rows:[row]},storeRevisions:{orders:2,suppFob:3}},
+    window:{BL_USER_CONTEXT:user,BLPersonalNoteColumns:{
+      readValue:()=>local,writeValue:(_id,_key,value)=>{local=value;return value;},
+    },BLBulkOperations:{run:async spec=>{
+      preview=spec.items;
+      assert.equal(spec.guard(),true);
+      const result=await spec.send();
+      return {status:'accepted',outcomes:result.outcomes};
+    }}},
+    document:{activeElement:null},lineKeyOfRow:r=>r?'line':'',sameOrderLine:(a,b)=>a===b,
+    isAreaFrozen:()=>false,tableColumnLabel:(_table,column)=>column.k,renderCP(){},managedEditorSnapshot:()=>null,
+    settleOverrideWrites:async()=>{},cpPasteTarget:()=> 'note',cpBulkInFlight:false,bulkCpHistoryBusy:false,
+    withCpBulkDraft:(_keys,apply)=>({value:apply()}),
+    enqueueOverrideMutation:async(_scope,_url,request)=>{sent.push(JSON.parse(request.body));return {updated:1,revisions:{orders:4,suppFob:3}};},
+    applyAcknowledgedCpDraft(){},cpBulkHistoryCurrent:()=>true,orderLinePeerRows:()=>[row],
+    applyCpGridPasteConfirmed:plan=>{
+      assert.equal(plan.ops.length,1);
+      assert.equal(plan.ops[0].target,'note');
+      return {ok:true,history};
+    },
+    pushUndo:action=>histories.push(action),
+  });
+  const ctx=functions.context;
+  ctx.window.captureOverrideBatch=apply=>{
+    apply();
+    return {items:[{orderCode:1001,notes:'shared only'}],resolve(){},reject(){}};
+  };
+  const result=await functions.applyCpGridPaste({ops:[
+    {row,column:{k:'Notes'},target:'note',value:'shared after'},
+    {row,column:{k:'personal_note_demo'},target:'personalNote',value:'private after'},
+  ]},{});
+  assert.equal(result.ok,true);
+  assert.equal(preview.length,2);
+  assert.equal(local,'private after');
+  assert.equal(histories.length,1);
+  assert.equal(histories[0].actions.length,1);
+  assert.equal(histories[0].personalNote.kind,'personalNote');
+  assert.deepEqual(sent,[{items:[{orderCode:1001,notes:'shared only'}]}]);
+  // Exercise the ACK boundary independently of the shared field formatter.
+  ctx.syncOverridesFromRow=()=>{};
+  const applyHistory=functions.applyHistoryAction;
+  ctx.applyHistoryAction=(action,direction)=>{if(action.kind==='personalNote')applyHistory(action,direction);};
+  assert.equal(await functions.applyCpBulkHistory(histories[0],'undo'),true);
+  assert.equal(local,'private before');
+  assert.equal(await functions.applyCpBulkHistory(histories[0],'redo'),true);
+  assert.equal(local,'private after');
+});
+
+for(const kind of ['clear','fill'])test('private-only '+kind+' previews before it writes and cancels cleanly',async()=>{
+  const user={id:'buyer'};
+  let confirmed=false,writes=0;
+  const fns=loadAppMainFunctions(['applyCpGridPaste','cpBulkUniqueOperations','cpGridBulkTitle','orderLinePeerOwner','applyPersonalNotePaste',
+    'renderPersonalNoteChanges','notifyPersonalNotePaste'],{
+    state:{},appLang:'en',lineKeyOfRow:()=> 'line',tableColumnLabel:(_table,column)=>column.k,
+    isAreaFrozen:()=>false,showToast(){},pushUndo(){},
+    window:{BL_USER_CONTEXT:user,BLPersonalNoteColumns:{readValue:()=> 'old',writeValue:(_id,_key,value)=>{writes++;return value;}},
+      BLBulkOperations:{run:async spec=>{
+        assert.equal(spec.localOnly,true);
+        assert.equal(writes,0);
+        assert.equal(spec.items[0].before,'old');
+        return confirmed?spec.send():null;
+      }}},
+  });
+  const plan={kind,ops:[{row:{},column:{k:'personal_note_demo'},target:'personalNote',value:kind==='clear'?'':'new'}]};
+  assert.equal((await fns.applyCpGridPaste(plan,{})).ok,false);
+  assert.equal(writes,0);
+  confirmed=true;
+  assert.equal((await fns.applyCpGridPaste(plan,{})).ok,true);
+  assert.equal(writes,1);
+});
+
+test('managed Excel export does not invoke the personal note renderer or include its value',()=>{
+  const {managedExcelExportRows}=loadAppMainFunctions(['managedExcelExportRows'],{
+    document:{createElement:()=>({dataset:{},children:[{dataset:{}},{dataset:{}}]})},
+    ordersCellHtml:(column,row)=>{assert.equal(column.k,'Notes');return '<td>'+row.Notes+'</td>';},
+    cellHtml:()=>assert.fail('Orders must use its own export formatter'),
+  });
+  const [row]=managedExcelExportRows([{_id:5,Notes:'exportable'}],'orders',[
+    {k:'Notes'},{k:'personal_note_demo',personalNote:true},
+  ]);
+  assert.equal(row.innerHTML,'<td>exportable</td><td></td>');
+  assert.equal(row.children[1].dataset.key,'personal_note_demo');
+});
+
+test('a virtualized Orders cell mounts its editor with the canonical row before grid IDs are assigned',()=>{
+  const display={_id:99},canonical={_id:5,_canEdit:true};
+  const column={k:'Supp. FOB',type:'moneyEdit'};
+  const table={_blRenderedRows:[display],_blRenderedColumns:[column]};
+  const td={dataset:{r:'0',c:'0'},closest:()=>table,isConnected:true,classList:{contains:()=>false}};
+  const calls=[];
+  const {prepareOrdersCellEdit}=loadAppMainFunctions(['prepareOrdersCellEdit'],{
+    state:{cp:{rows:[canonical]}},lineKeyOfRow:()=> 'line',orderLinePeerOwner:()=> 'buyer',
+    isAreaFrozen:()=>false,orderLinePeerRows:()=>[canonical],cpPasteTarget:()=> 'suppfob',
+    mountOrdersInput:(...args)=>calls.push(args),
+    ensureCpLoaded:()=>assert.fail('CP is already loaded'),
+  });
+  assert.equal(prepareOrdersCellEdit(td,()=>true),true);
+  assert.deepEqual(calls,[[td,display,column,canonical]]);
 });

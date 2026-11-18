@@ -173,9 +173,9 @@ test('açılır pencereler dışarı tıklamayı pointerdown yakalama aşamasın
   assert.doesNotMatch(app, /document\.addEventListener\('mousedown', e=>\{\n  if\(_submfrDrop/);
 });
 
-test('CP güvenlik ağı yalnız gerçek editörleri kaydeder (düğme/span boş değer yazamaz)', () => {
+test('CP/Orders güvenlik ağı yalnız gerçek editörleri kaydeder (düğme/span boş değer yazamaz)', () => {
   const app = read('public/app-main.js');
-  assert.match(app, /if\(tableId==='cpTable' && \/\^\(INPUT\|SELECT\|TEXTAREA\)\$\/\.test\(String\(editor\.tagName\|\|''\)\.toUpperCase\(\)\)\) return \{route:'cp', editor, display\};/);
+  assert.match(app, /if\(\(tableId==='cpTable'\|\|tableId==='ordersTable'\) && \/\^\(INPUT\|SELECT\|TEXTAREA\)\$\/\.test\(String\(editor\.tagName\|\|''\)\.toUpperCase\(\)\)\) return \{route:'cp', editor, display\};/);
 });
 
 test('tek hücreye tek değer yapıştırma önizlemesiz editör üzerinden kaydedilir', () => {

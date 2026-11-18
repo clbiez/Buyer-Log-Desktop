@@ -117,7 +117,7 @@ test('Licensor hücresi License yokken disabled, kural yokken görünür uyarı 
   const start = APP.indexOf("case 'licensor': {");
   assert.ok(start >= 0, 'Licensor hücresi bulunmalı');
   const block = APP.slice(start, APP.indexOf("    default: {", start));
-  assert.match(block, /licenseLicensorStateForRow\(r\)/);
+  assert.match(block, /licenseLicensorStateForRow\(editRow\|\|r\)/);
   assert.match(APP, /kolAutoLicensorState\(r\)/);
   assert.match(block, /disabled/);
   assert.match(block, /kolRuleMissing/);

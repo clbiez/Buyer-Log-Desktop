@@ -2535,22 +2535,6 @@ function setOrdersLoadingState(loading,message){
     empty.style.display='flex';content.style.display='none';
   }
 }
-// Orders projeksiyonu salt okunur gelir. Önem etiketi izni sıkıştırılmış
-// projeksiyonu yeniden üretmeden ayrı ve küçük bir istekle tamamlanır; tablo
-// bunu beklemez. İstek başarısızsa izin açılmaz (kilitli kalır).
-async function applyOrdersImportanceEditAccess(rows){
-  if(!Array.isArray(rows)||!rows.length||rows.every(row=>typeof row._canEditImportance==='boolean'))return;
-  try{
-    const codes=[...new Set(rows.map(row=>String(row['Order Code']??'')).filter(Boolean))];
-    const response=await fetch('/api/orders-importance-edit',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({codes})});
-    if(!response.ok)return;
-    const allowed=new Set(((await response.json())||{}).allowed||[]);
-    // Geç gelen yanıt daha yeni bir Orders tablosunu boyamaz.
-    if(state.orders?.rows!==rows)return;
-    for(const row of rows)row._canEditImportance=allowed.has(String(row['Order Code']));
-    window.BLOrderImportanceUI?.refreshAccess?.(rows);
-  }catch(error){console.warn('Orders importance edit access:',error);}
-}
 async function ensureOrdersLoaded(options={}){
   if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
@@ -2564,7 +2548,6 @@ async function ensureOrdersLoaded(options={}){
       reviveServerDates(rows);
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
-      void applyOrdersImportanceEditAccess(state.orders.rows);
       state.ordersLogisticExpanded.clear();
       backgroundWarmupUnrendered.add('orders');
       invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
@@ -4503,10 +4486,13 @@ function bindPersonalOrderNoteHandlers(tableId){
     const id=t.dataset.personalNoteId,key=t.dataset.personalNoteLine,owner=t.dataset.personalNoteOwner;
     const notes=window.BLPersonalNoteColumns;
     if(!notes||!id||!key)return;
+    if(!owner||owner!==String(window.BL_USER_CONTEXT?.id||'')){
+      t.value='';showToast(appLang==='en'?'Your session changed. Please reopen the note.':'Oturum değişti. Notu yeniden açın.');return;
+    }
     const old=notes.readValue(id,key);
     if(t.value===old)return;
-    if(!owner||owner!==String(window.BL_USER_CONTEXT?.id||'')){
-      t.value=old;showToast(appLang==='en'?'Your session changed. Please reopen the note.':'Oturum değişti. Notu yeniden açın.');return;
+    if(tableId==='ordersTable'&&(isAreaFrozen('orders')||!orderLinePeerRows('cp',null,key).length)){
+      t.value=old;staleCpEditorNotice();return;
     }
     try{
       const next=notes.writeValue(id,key,t.value);
@@ -6466,7 +6452,7 @@ function cpLogisticStatusCellHtml(row,tableKey='cp'){
   const title=groups.map(group=>`${statusDisplay(group.status)}: ${fmtInt(group.quantity)}`).join(' · ');
   return `<td class="cpLogisticStatusTd" title="${escapeHtml(title)}"><div class="cpLogisticMainCell"><button type="button" class="cpLogisticToggle" data-id="${row._id}" aria-expanded="${expanded?'true':'false'}" title="${escapeHtml(appLang==='en'?(expanded?'Hide logistics details':'Show logistics details'):(expanded?'Lojistik detaylarını kapat':'Lojistik detaylarını göster'))}"><span aria-hidden="true">${expanded?'▾':'▸'}</span></button><div class="cpLogisticSummaryStack">${summary}</div></div></td>`;
 }
-function cpLogisticDelTypeCellHtml(row,canEdit){
+function cpLogisticDelTypeCellHtml(row,canEdit,editRow=row){
   const segments=cpLogisticSegments(row);
   if(!segments.length) return null;
   const production=segments.find(s=>s.kind==='production'||s.kind==='shortage');
@@ -6474,9 +6460,9 @@ function cpLogisticDelTypeCellHtml(row,canEdit){
   const countMore=Math.max(0,unique.length-1);
   if(production&&canEdit){
     const cur=normalizeTransitDelType(production.delType)||norm(production.delType)||norm(row['Del. Type']);
-    return `<td class="editTd cpLogisticDelTypeTd"><div class="cpLogisticDelTypeWrap"><button type="button" class="editCell delTypeTrigger" data-id="${row._id}"${cpEditorIdentityAttributes(row)} data-key="Del. Type" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>${countMore?`<span class="cpLogisticMore">+${countMore}</span>`:''}</div></td>`;
+    return `<td class="editTd cpLogisticDelTypeTd"><div class="cpLogisticDelTypeWrap"><button type="button" class="editCell delTypeTrigger" data-id="${editRow._id}"${cpEditorIdentityAttributes(editRow)} data-key="Del. Type" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>${countMore?`<span class="cpLogisticMore">+${countMore}</span>`:''}</div></td>`;
   }
-  return `<td class="cpLogisticDelTypeTd"><div class="cpLogisticReadOnlyTypes">${unique.length?unique.map(v=>`<span>${escapeHtml(transitDelTypeDisplay(v))}</span>`).join(''):'—'}</div></td>`;
+  return `<td class="cpLogisticDelTypeTd${canEdit?'':' viewOnlyCell'}"><div class="cpLogisticReadOnlyTypes">${unique.length?unique.map(v=>`<span>${escapeHtml(transitDelTypeDisplay(v))}</span>`).join(''):'—'}</div></td>`;
 }
 function cpLogisticPriorityText(priority){
   if(appLang==='en') return priority===1?'Production / Shortage':priority===2?'Pre-warehouse':'Warehouse';
@@ -6608,22 +6594,21 @@ function cpSubManufacturerValue(r){
 }
 /* tableKey: hücreyi çizen tablonun kimliği. Lojistik STATUS hücresi açılır
    satır durumunu tablo bazında okur; diğer dallar bu parametreden etkilenmez. */
-function cellHtml(c,r,cf,tableKey='cp'){
-  if(c.type==='privateNote')return window.BLPrivateOrderNotes.cellHtml(r,lineKeyOfRow(r),appLang);
+function cellHtml(c,r,cf,tableKey='cp',editRow=tableKey==='cp'?r:null,editorIdentity=editRow?cpEditorIdentityAttributes(editRow):'',previewInput=false){
+  if(c.type==='privateNote')return window.BLPrivateOrderNotes.cellHtml(r,lineKeyOfRow(r),appLang,tableKey!=='orders'||Boolean(editRow));
   const v = r[c.k];
   const oc = r['Order Code'];
-  const id = r._id;
-  const editorIdentity=tableKey==='cp'?cpEditorIdentityAttributes(r):'';
+  const id = (editRow||r)._id;
   const sharedField = ['exfactory','retailEdit','instoreEdit','submfr','importance'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
-  const canEdit = r._canEdit !== false && (!sharedField || r._canEditShared !== false);
+  const canEdit = (tableKey!=='orders'||Boolean(editRow)) && (editRow||r)._canEdit !== false && (!sharedField || (editRow||r)._canEditShared !== false);
   if(c.personalNote){
     const line=lineKeyOfRow(r);
     const cur=readPrivateOrderNote(r,c.k);
     const owner=String(window.BL_USER_CONTEXT?.id||'');
     const hint=appLang==='en'?'Private note; only you can see and edit it.':'Kişisel not; yalnız siz görebilir ve düzenleyebilirsiniz.';
-    return line&&owner
+    return line&&owner&&(tableKey!=='orders'||editRow)
       ? `<td class="editTd blPersonalOrderNoteCell" title="${escapeHtml(hint)}"><input class="editCell blPersonalOrderNote" type="text" maxlength="4000" autocomplete="off" data-personal-note-id="${escapeHtml(c.k)}" data-personal-note-line="${escapeHtml(line)}" data-personal-note-owner="${escapeHtml(owner)}" value="${escapeHtml(cur)}" aria-label="${escapeHtml(tableColumnLabel(tableKey,c))}" title="${escapeHtml(cur||hint)}" placeholder="${escapeHtml(appLang==='en'?'Your note…':'Notunuz…')}"></td>`
-      : `<td class="viewOnlyCell">—</td>`;
+      : `<td class="viewOnlyCell">${escapeHtml(cur||'—')}</td>`;
   }
   const schema = columnSchemaFor(c);
   // Model bağlantılarından gelen sütunlar başlangıçta type:'ro' olur. Bu
@@ -6643,9 +6628,10 @@ function cellHtml(c,r,cf,tableKey='cp'){
   // Salt-okunur ekip satırlarında da revizyon geçmişi görünür kalmalı.
   // renderedHtml yalnız bu renderer'ın kendi güvenli çıktısı (revisionHtml) için
   // kullanılır; normal view-only değerler önceki gibi escape edilir.
+  const inputPreview=(value,cls='')=>`<td class="editTd ${cls}" title="${escapeHtml(value)}">${escapeHtml(value||'—')}</td>`;
   const viewOnly = (value, renderedHtml) => {
     const text = value == null || value === '' ? '—' : String(value);
-    const tip = sharedField && r._canEditShared === false ? (appLang==='en'?'Only the order owner can edit shared fields.':'Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.') : text === '—' ? L('Bu sipariş için yalnız görüntüleme yetkiniz var.') : text;
+    const tip = sharedField && (editRow||r)._canEditShared === false ? (appLang==='en'?'Only the order owner can edit shared fields.':'Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.') : text === '—' ? L('Bu sipariş için yalnız görüntüleme yetkiniz var.') : text;
     const body = renderedHtml == null ? escapeHtml(text) : String(renderedHtml);
     return `<td class="viewOnlyCell" title="${escapeHtml(tip)}"><span class="viewOnlyValue"><span class="viewOnlyLock">🔒</span><span>${body}</span></span></td>`;
   };
@@ -6700,7 +6686,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     case 'date': return `<td>${fmtDate(v)}</td>`;
     case 'exfactory': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
-      if(BLRevision.isAutomaticExFactory(r))return `<td class="viewOnlyCell">${body}</td>`;
+      if(BLRevision.isAutomaticExFactory(editRow||r))return `<td class="viewOnlyCell">${body}</td>`;
       // Orders'ta ekip arkadaşlarının satırları salt-okunur olabilir. Düzenleme
       // yetkisi olmaması revizyon kaynağını gizlememeli: orijinal → revize tarih
       // yine gösterilir, yalnız hücre düzenlenemez.
@@ -6730,6 +6716,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     case 'moneyEdit': {
       if(!canEdit){ const n=toNum(v); return viewOnly(n==null?'':fmtMoneyPlain(n)); }
       const cur = (v==null || v==='') ? '' : fmtMoneyPlain(Number(v));
+      if(previewInput)return inputPreview(cur,'money');
       /* v7.81 — Non-DTR + eşleşen License Royalty hesabı yoksa Supp. FOB
          hesaplanamaz (recalcSuppFobForRow null bırakır). Eskiden hücre
          sessizce boş görünürdü; artık nedenini söylüyor. */
@@ -6766,11 +6753,11 @@ function cellHtml(c,r,cf,tableKey='cp'){
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
     case 'importance': {
-      if(window.BLOrderImportanceUI)return window.BLOrderImportanceUI.cellHtml(r,canEdit,tableKey);
+      if(window.BLOrderImportanceUI)return window.BLOrderImportanceUI.cellHtml(r,canEdit,tableKey,editRow);
       return `<td>${escapeHtml(norm(v)||'Regular')}</td>`;
     }
     case 'deltype': {
-      const logisticCell=cpLogisticDelTypeCellHtml(r,canEdit);
+      const logisticCell=cpLogisticDelTypeCellHtml(r,canEdit,editRow);
       if(logisticCell) return logisticCell;
       const cur = norm(v);
       if(!canEdit) return viewOnly(cur?transitDelTypeDisplay(cur):'');
@@ -6784,17 +6771,20 @@ function cellHtml(c,r,cf,tableKey='cp'){
         const preview = cur || (hasRich?(appLang==='en'?'Image':'Görsel'):L('Not ekle…'));
         return `<td class="editTd"><div class="noteCellWrap"><button type="button" class="noteCellTrigger${cur||hasRich?'':' empty'}" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(cur || L('Not ekle…'))}"><svg class="ic noteCellIcon"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(preview)}</span></button><button type="button" class="noteCellDelete" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}" ${cur||hasRich?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button></div></td>`;
       }
+      if(previewInput)return inputPreview(cur);
       return `<td class="editTd"><input class="editCell" type="text" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="text"></td>`;
     }
     case 'submfr': {
-      const cur=cpSubManufacturerValue(r);
-      if(turknorm(r.Licensor)==='DTR')return `<td class="submfr-fill"><span class="submfrAuto" title="${escapeHtml(appLang==='en'?'Automatically copied from Manufacturer for DTR orders':'DTR siparişlerde Manufacturer bilgisinden otomatik gelir')}">${escapeHtml(cur)}</span></td>`;
+      const cur=cpSubManufacturerValue(editRow||r);
+      if(turknorm((editRow||r).Licensor)==='DTR')return `<td class="submfr-fill${canEdit?'':' viewOnlyCell'}"><span class="submfrAuto" title="${escapeHtml(appLang==='en'?'Automatically copied from Manufacturer for DTR orders':'DTR siparişlerde Manufacturer bilgisinden otomatik gelir')}">${escapeHtml(cur)}</span></td>`;
       if(!canEdit)return viewOnly(cur);
       const cls=cur?'submfr-fill':'';
+      if(previewInput)return inputPreview(cur,cls);
       return `<td class="editTd ${cls}"><input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="submfr" placeholder="Yaz veya seç…"></td>`;
     }
     case 'licensor': {
-      const resolution=licenseLicensorStateForRow(r);
+      if(!canEdit)return viewOnly(norm(v));
+      const resolution=licenseLicensorStateForRow(editRow||r);
       const license=resolution.hasLicense?norm(r.License):'';
       const missing=resolution.status==='missing-rule';
       // Belirsizlikte hücre KİLİTLENMEZ: kullanıcının açık seçim yapması gerekir.
@@ -6806,6 +6796,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
         : (warn?licenseLicensorWarningText(resolution):'');
       const disabled=!license||missing;
       const cls = cur ? 'submfr-fill' : '';
+      if(previewInput)return disabled?viewOnly(cur):inputPreview(cur,cls);
       return `<td class="editTd ${cls}${warn?' kolRuleMissing':''}"${title?` title="${escapeHtml(title)}"`:''}><div class="licensorDependencyCell">${warn?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}<input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="licensor" placeholder="${disabled?'':L('Yaz veya seç…')}"${disabled?' disabled aria-disabled="true"':''}></div></td>`;
     }
     default: {
@@ -8407,7 +8398,9 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     if(r._canEdit===false) tr.classList.add('rowViewOnly');
     if(r._id!=null) tr.dataset.id = r._id;
     let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
-    rowHtml += cols.map(c=>typeof opts.cellHtmlFn==='function'?opts.cellHtmlFn(c,r,cf,tableKey):cellHtml(c,r,cf,tableKey)).join('');
+    const editRow=tableKey==='orders'&&state.cp?orderLinePeerRows('cp',r)[0]||null:null;
+    const identity=editRow?cpEditorIdentityAttributes(editRow):'';
+    rowHtml += cols.map(c=>typeof opts.cellHtmlFn==='function'?opts.cellHtmlFn(c,r,cf,tableKey,editRow,identity):cellHtml(c,r,cf,tableKey)).join('');
     tr.innerHTML = rowHtml;
     const tds=tr.children,offset=withChk?1:0;
     for(let ci=0;ci<cols.length;ci++){const td=tds[ci+offset];if(td){td.dataset.r=rowIdx;td.dataset.c=ci;td.dataset.key=cols[ci].k;if(groupBoundaryKeys.has(cols[ci].k))td.classList.add('groupBoundary');if((tableKey==='cp'||tableKey==='orders')&&cols[ci].k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}}
@@ -10234,13 +10227,13 @@ function ordersImageCellHtml(row){
   const loadAttrs=known==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':known==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"';
   return `<td class="cpPictureCell"><img src="${escapeHtml(src)}" data-src="${escapeHtml(source)}" data-image-key="${escapeHtml(modelImageCacheKey(modelId,colourCode))}" data-model-id="${escapeHtml(modelId)}" data-colour-code="${escapeHtml(colourCode)}" data-id="${row._id}" data-has-image="${has?'1':'0'}" data-reuse-key="orders" data-img-box="${has?`${dims.w}x${dims.h}`:'0'}" ${loadAttrs} class="cpThumb kolThumb" aria-label="${escapeHtml(appLang==='en'?'Model image · Right-click to remove':'Model görseli · Kaldırmak için sağ tıklayın')}" style="max-width:${has?dims.w:22}px;max-height:${has?dims.h:22}px;opacity:${has?1:.55};"></td>`;
 }
-function ordersCellHtml(column,row,flags,tableKey='orders'){
+function ordersCellHtml(column,row,flags,tableKey='orders',editRow=orderLinePeerRows('cp',row)[0],editorIdentity){
   if(column.k==='Active/Inactive'){
     const active=norm(row['Active/Inactive'])==='Active';
     return `<td>${badge(active?(appLang==='en'?'Active':'Aktif'):(appLang==='en'?'Inactive':'Pasif'),active?'green':'gray')}</td>`;
   }
   if(column.type==='cpImage')return ordersImageCellHtml(row);
-  return cellHtml(column,row,flags,tableKey);
+  return cellHtml(column,row,flags,tableKey,editRow||null,editorIdentity,true);
 }
 function bindOrdersImageNode(img){
     if(!img||img.dataset.ordersImageBound==='1')return;
@@ -10511,7 +10504,7 @@ function updateOrderLinePeerIdentity(row){
   for(const tableKey of ['cp','orders','orderSummary'])if(Array.isArray(state[tableKey]?.rows))index.updateIdentity(state[tableKey].rows,row,orderLinePeerOwner());
 }
 function bindCpHistoryIdentity(action){
-  if(!action||action.kind==='ship')return;
+  if(!action||action.kind==='ship'||action.kind==='personalNote')return;
   if(action.kind==='batch'){(action.actions||[]).forEach(bindCpHistoryIdentity);return;}
   if(action.ownerId==null)action.ownerId=orderLinePeerOwner();
   if(!action.lineKey){const row=state.cp?.rows?.find(row=>row._id===action.id);if(row)action.lineKey=lineKeyOfRow(row);}
@@ -10527,10 +10520,12 @@ function cpEditorIdentityAttributes(row){
 function staleCpEditorNotice(){showToast(appLang==='en'?'The row or session changed. Reopen the current row before editing.':'Satır veya oturum değişti. Düzenlemeden önce güncel satırı yeniden açın.');}
 function resolveCpEditorRow(editor){
   const data=editor?.dataset;if(!data)return null;
-  const row=state.cp?.rows?.find(row=>row._id===Number(data.id));
-  if(!row)return null;
-  if((data.lineKey!=null&&data.lineKey!==lineKeyOfRow(row))||(data.editOwner!=null&&data.editOwner!==orderLinePeerOwner())){staleCpEditorNotice();return null;}
-  return row;
+  const id=Number(data.id);
+  const row=data.lineKey
+    ? orderLinePeerRows('cp',null,data.lineKey).find(peer=>peer._id===id)
+    : state.cp?.rows?.find(peer=>peer._id===id);
+  if((data.lineKey!=null&&(!row||data.lineKey!==lineKeyOfRow(row)))||(data.editOwner!=null&&data.editOwner!==orderLinePeerOwner())){staleCpEditorNotice();return null;}
+  return row||null;
 }
 function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
   if(!sourceRow) return 0;
@@ -10617,6 +10612,24 @@ function restoreCpPricingHistory(row,snapshot){
   row._pricingHistoryRestore=pending;
 }
 function applyHistoryAction(action, direction, options={}){
+  if(action.kind==='personalNote'){
+    if(action.ownerId!==String(window.BL_USER_CONTEXT?.id||''))return;
+    const notes=window.BLPersonalNoteColumns;
+    let changed=false,failed=false;
+    for(const {id,lineKey,prev,next} of action.items){
+      const [expected,value]=direction==='undo'?[next,prev]:[prev,next];
+      try{
+        if(notes.readValue(id,lineKey)!==expected)continue;
+        notes.writeValue(id,lineKey,value);changed=true;
+      }catch(_){failed=true;}
+    }
+    if(changed){
+      if(state.cp)renderCP();
+      if(state.orders)renderOrders();
+    }
+    if(failed)showToast(appLang==='en'?'Some private notes could not be restored.':'Bazı kişisel notlar geri yüklenemedi.',{kind:'error'});
+    return;
+  }
   if(action.kind==='importance'){
     if(action.ownerId!==orderLinePeerOwner())return;
     const row=orderLinePeerRows('cp',null,action.lineKey)[0];
@@ -10675,7 +10688,7 @@ let bulkCpHistoryBusy=false;
 function cpBulkHistoryCurrent(action){
   const g=action?.bulkGuard;
   return !g||(g.owner===orderLinePeerOwner()&&g.orders===Number(state.storeRevisions.orders)&&g.suppFob===Number(state.storeRevisions.suppFob)&&!isAreaFrozen('cp')&&(action.actions||[]).every(item=>{
-    const row=orderLinePeerRows('cp',null,item.lineKey)[0];return row&&row._canEdit!==false&&(row._canEditShared!==false||(item.kind!=='importance'&&(item.fields||[]).every(field=>['Notes','Ek Not'].includes(field.key))));
+    const row=orderLinePeerRows('cp',null,item.lineKey)[0];return row&&row._canEdit!==false&&(row._canEditShared!==false||(item.kind!=='importance'&&(item.fields||[]).every(field=>!['Ex-factory','Retail Date','In-Store (Model Budget)','Sub-Manufacturer','Supp. FOB'].includes(field.key)||item.pricing?.prev.licensor)));
   }));
 }
 async function applyCpBulkHistory(action,direction){
@@ -10691,7 +10704,11 @@ async function applyCpBulkHistory(action,direction){
     })),capture=prepared.value;
     try{
       const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{method:'POST',headers:{'Content-Type':'application/json','X-Supp-Fob-Revision':String(expected.suppFob)},expectedRevision:expected.orders,body:JSON.stringify({items:capture.items})});
-      capture.resolve(data);applyAcknowledgedCpDraft(prepared,data);action.bulkGuard={owner:expected.owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};return true;
+      capture.resolve(data);
+      if(expected.owner!==orderLinePeerOwner())return false;
+      applyAcknowledgedCpDraft(prepared,data);
+      if(action.personalNote&&Number(data.updated)===capture.items.length&&!(data.skipped?.length))applyHistoryAction(action.personalNote,direction);
+      action.bulkGuard={owner:expected.owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};return true;
     }catch(error){capture.reject(error);notifyOverrideSaveError(appLang==='en'?'Bulk undo could not be confirmed. Reload and review current records.':'Toplu geri alma doğrulanamadı. Güncel kayıtları yenileyip kontrol edin.');return false;}
   }finally{bulkCpHistoryBusy=false;}
 }
@@ -10858,6 +10875,7 @@ function openNotesEditor(id, key, options={}){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const ta = modal.querySelector('.noteEditorArea');
+  if(options.typed)ta.textContent=options.typed;
   bindRichNoteEditor(modal,ta);
   let saving=false;
   const saveButton=modal.querySelector('.notesEditorSave');
@@ -10889,7 +10907,10 @@ function openNotesEditor(id, key, options={}){
     else if(e.key==='Escape'){ e.preventDefault(); close(); }
     else if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); save(); }
   });
-  setTimeout(()=>{ ta.focus(); },0);
+  setTimeout(()=>{
+    ta.focus();
+    if(options.typed){const selection=window.getSelection();selection?.selectAllChildren(ta);selection?.collapseToEnd();}
+  },0);
 }
 // Explicit note saves use one revisioned, note-only transaction. Do not route an
 // acknowledged save through markDirty's delayed full-row write a second time.
@@ -10990,7 +11011,7 @@ function commitCpEditor(t, options={}){
   if(!t || !t.dataset) return false;
   // v6.34 — yenileme sürerken CP hücresi yazılmaz; tablo birazdan yeniden çizilir
   // ve yazılan değer kaybolurdu. v7.41: yalnız CP'yi çizen yenilemede.
-  if(isAreaFrozen('cp')) return false;
+  if(isAreaFrozen('cp')||((t.dataset.editOrigin==='orders'||t.closest?.('#ordersTable'))&&isAreaFrozen('orders'))) return false;
   const id = Number(t.dataset.id), key = t.dataset.key, kind = t.dataset.kind;
   if(!Number.isFinite(id) || !key || !kind || !state.cp || !Array.isArray(state.cp.rows)) return false;
   const row = resolveCpEditorRow(t);
@@ -10999,6 +11020,7 @@ function commitCpEditor(t, options={}){
   if(row._canEditShared===false&&['exfactory','retail','instore','submfr','suppfob'].includes(kind)){
     showToast(appLang==='en'?'Shared fields for this order are view only.':'Bu siparişin ortak alanları için yalnız görüntüleme yetkiniz var.');return false;
   }
+  if(kind==='submfr'&&turknorm(row.Licensor)==='DTR'){t.value=norm(row.Manufacturer);return false;}
   if(kind==='exfactory'){
     if(BLRevision.isAutomaticExFactory(row))return false;
     if(dateOrdinal(row['Buying Son Onay Tarihi'])!=null){
@@ -11116,9 +11138,6 @@ function commitCpEditor(t, options={}){
     return true;
   }
   if(kind==='submfr'){
-    if(turknorm(row.Licensor)==='DTR'){
-      row[key]=norm(row.Manufacturer);t.value=row[key];return false;
-    }
     const next=norm(t.value);row[key]=next;t.value=next;
     row._subManufacturerWrite={};
     markDirty(id); pushUndo({id, fields:[{key,prev,next}], refreshSubmfrList:true});
@@ -11160,7 +11179,7 @@ function bindEditHandlers(tableId){
   const el = document.getElementById(tableId);
   el.addEventListener('change', e=>{
     const t = e.target;
-    if(!t.classList.contains('editCell')) return;
+    if(!t.classList.contains('editCell')||t.matches('.blPersonalOrderNote')) return;
     commitCpEditor(t, {refresh:true});
   });
   el.addEventListener('blur', e=>{
@@ -11170,9 +11189,9 @@ function bindEditHandlers(tableId){
   }, true);
   el.addEventListener('click', e=>{
     const noteDelete=e.target.closest('.noteCellDelete');
-    if(noteDelete){ if(resolveCpEditorRow(noteDelete))clearRowNote(Number(noteDelete.dataset.id),noteDelete.dataset.key||'Notes'); return; }
+    if(noteDelete){ const row=resolveCpEditorRow(noteDelete);if(row)clearRowNote(row._id,noteDelete.dataset.key||'Notes');return; }
     const note = e.target.closest('.noteCellTrigger');
-    if(note){ if(resolveCpEditorRow(note))openNotesEditor(Number(note.dataset.id), note.dataset.key || 'Notes'); return; }
+    if(note){ const row=resolveCpEditorRow(note);if(row)openNotesEditor(row._id,note.dataset.key||'Notes',{typed:note._blEditKey});return; }
     const span = e.target.closest('.exfDisplay');
     if(span) enterDateEdit(span);
   });
@@ -11275,11 +11294,12 @@ function enterDateEdit(span){
   const row = rows?resolveCpEditorRow(span):null;
   if(!row) return;
   if(key==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return;
-  if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
+  if(row._canEdit===false||row._canEditShared===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   const input = document.createElement('input');
   input.type='date'; input.className='editCell';
   input.dataset.id=id; input.dataset.key=key; input.dataset.kind=kind;
   input.dataset.lineKey=lineKeyOfRow(row);input.dataset.editOwner=orderLinePeerOwner();
+  if(span.closest('#ordersTable'))input.dataset.editOrigin='orders';
   input.dataset.historySession=`date:${id}:${key}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
   input.value = toISODate(row ? row[key] : null);
   span.replaceWith(input);
@@ -11288,6 +11308,7 @@ function enterDateEdit(span){
   const host=input.closest('.dateFieldWrap') || input;
   visibleInput.focus();
   if(visibleInput.select) visibleInput.select();
+  if(span._blEditKey&&visibleInput!==input&&typeof visibleInput.setRangeText==='function')visibleInput.setRangeText(span._blEditKey,0,visibleInput.value.length,'end');
   // Editörü yalnızca bütün tarih bileşeninden gerçekten çıkıldığında kapat.
   // Metin alanı → takvim düğmesi/native input geçişi artık editörü yok etmez.
   host.addEventListener('focusout', function onFocusOut(e){
@@ -11306,10 +11327,10 @@ function enterDateEdit(span){
       if(!host.isConnected) return; // change handler satırı yeniden çizmiş olabilir
       const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
       if(!rows)return; // transient projection swap: editörü uydurma değerle kapatma
-      const r2 = rows.find(r=>r._id===Number(id));
+      const r2 = resolveCpEditorRow(input);
       const newSpan = document.createElement('span');
       newSpan.className='exfDisplay'; newSpan.tabIndex=0;
-      newSpan.dataset.id=id; newSpan.dataset.key=key; newSpan.dataset.kind=kind;
+      Object.assign(newSpan.dataset,span.dataset);
       // Değer değişmediyse satır yeniden çizilmez; bu yol da revizyon okunu
       // korumak zorunda, yoksa düzenleyici kapanınca "eski → yeni" kaybolur.
       const revBack = r2 ? revisionInfo(r2, key) : null;
@@ -11320,6 +11341,7 @@ function enterDateEdit(span){
   });
 }
 bindEditHandlers('cpTable');
+bindEditHandlers('ordersTable');
 bindPersonalOrderNoteHandlers('cpTable');
 bindPersonalOrderNoteHandlers('ordersTable');
 bindCpLogisticToggle('cpTable','cp',()=>renderCP());
@@ -14107,7 +14129,7 @@ window.BLAIScreenData = {
       tableKey: info.tableKey, rows, all, selectedIds: selected ? [...selected] : [], filters: all ? {} : filters,
       canonicalRow: collectionValue ? collectionRow : row => row,
       rowId: row => row && (info.tableKey === 'koleksiyon' ? row.id : row._id),
-      columns: cols.filter(col => col && col.k && col.type !== 'cpImage' && col.k !== '__picture__' &&
+      columns: cols.filter(col => col && col.k && !col.personalNote && !col.privatePersonal && col.type !== 'cpImage' && col.k !== '__picture__' &&
         (!String(col.k).startsWith('_') || col.formulaCustom || col.modelCustom || col.noteCustom || col.checklistSupplierColumn ||
           (info.tableKey === 'koleksiyon' && KOL_SYNTHETIC_COL_KEYS.includes(col.k))))
         .map(col => ({
@@ -14769,7 +14791,7 @@ function cpPasteValue(raw,kind){
     return iso ? {ok:true,value:iso} : {ok:false};
   }
   if(kind==='deltype'){
-    if(!text) return {ok:false};
+    if(!text) return {ok:true,value:''};
     // İngilizce görünümden kopyalanan etiketler (Sea / Air / Sea+Air / Sea+Truck) kanonik değere döner.
     const english={'sea':DELTYPE_OPTS[0],'air':DELTYPE_OPTS[1],'sea+air':DELTYPE_OPTS[2],'sea+truck':DELTYPE_OPTS[3]}[text.toLowerCase().replace(/\s+/g,'')];
     const canonical=english||normalizeTransitDelType(text);
@@ -14785,7 +14807,7 @@ function ordersPasteTarget(row,column){
   // girilebilen her sütun Orders'ta da yapıştırılabilir; hedef ve yetki asıl
   // CP satırından okunur. CP henüz yüklenmediyse yalnız hedef türü çözülür,
   // yetki yapıştırma anında CP yüklenip asıl satırla yeniden doğrulanır.
-  if(column.personalNote||!state.cp)return cpPasteTarget(row,column,{permissions:false});
+  if(!state.cp)return cpPasteTarget(row,column,{permissions:false});
   const canonical=orderLinePeerRows('cp',row)[0];
   return canonical?cpPasteTarget(canonical,column):null;
 }
@@ -14793,11 +14815,11 @@ async function applyOrdersGridPaste(plan,range){
   // Orders görünüm kimlikleri CP'den bağımsızdır. Mevcut revizyonlu işleme
   // girmeden asıl sipariş satırını çöz; görünüm sırasıyla kayıt yapılmaz.
   if(isAreaFrozen('orders'))return {ok:false};
-  const personal=plan.ops.filter(op=>op.target==='personalNote'),shared=plan.ops.filter(op=>op.target!=='personalNote');
-  if(shared.length&&!state.cp&&!(await ensureCpLoaded({deferRender:true,reason:'orders-grid-paste'})))return {ok:false};
-  if(isAreaFrozen('orders'))return {ok:false};
-  const ops=[...personal];let readonly=Number(plan.readonly)||0;
-  for(const op of shared){
+  const owner=orderLinePeerOwner(),personalOwner=String(window.BL_USER_CONTEXT?.id||'');
+  if(plan.ops.length&&!state.cp&&!(await ensureCpLoaded({deferRender:true,reason:'orders-grid-paste'})))return {ok:false};
+  if(isAreaFrozen('orders')||owner!==orderLinePeerOwner()||personalOwner!==String(window.BL_USER_CONTEXT?.id||''))return {ok:false};
+  const ops=[];let readonly=Number(plan.readonly)||0;
+  for(const op of plan.ops){
     // Kullanıcının CP'sinde olmayan veya yetkisi değişen satır atlanır ve sayılır.
     const row=orderLinePeerRows('cp',op.row)[0];
     if(!row||cpPasteTarget(row,op.column)!==op.target){readonly++;continue;}
@@ -14811,14 +14833,29 @@ async function applyOrdersGridPaste(plan,range){
 }
 /* Kişisel not yapıştırması yalnız kullanıcının kendi deposuna yazar: ortak
    sipariş satırına, sunucuya veya CP toplu kayıt hattına hiç girmez. */
-function applyPersonalNotePaste(ops){
-  const notes=window.BLPersonalNoteColumns;let changed=0,failed=0;
+function renderPersonalNoteChanges(){
+  if(state.cp)renderCP();
+  if(state.orders)renderOrders();
+}
+function applyPersonalNotePaste(ops,ownerId){
+  const notes=window.BLPersonalNoteColumns,items=[],failedKeys=new Set();
+  if(!ownerId||ownerId!==String(window.BL_USER_CONTEXT?.id||''))return {changed:0,failed:ops.length,history:null};
   for(const op of ops){
-    const line=lineKeyOfRow(op.row);
-    try{const before=notes.readValue(op.column.k,line);if(notes.writeValue(op.column.k,line,op.value)!==before)changed++;}catch(_){failed++;}
+    const id=op.column.k,lineKey=op.lineKey??lineKeyOfRow(op.row);
+    try{
+      const prev=notes.readValue(id,lineKey);
+      if(Object.hasOwn(op,'before')&&prev!==op.before){failedKeys.add(op.receiptKey);continue;}
+      const next=notes.writeValue(id,lineKey,op.value);
+      if(next!==prev)items.push({id,lineKey,prev,next});
+    }catch(_){failedKeys.add(op.receiptKey);}
   }
-  if(changed){if(state.cp)renderCP();if(state.orders)renderOrders();}
-  return {changed,failed};
+  if(items.length)renderPersonalNoteChanges();
+  return {changed:items.length,failed:failedKeys.size,failedKeys,history:items.length?{kind:'personalNote',ownerId,items}:null};
+}
+function notifyPersonalNotePaste(result){
+  showToast(result.failed
+    ?(appLang==='en'?`${result.failed} private note(s) could not be saved.`:`${result.failed} kişisel not kaydedilemedi.`)
+    :(appLang==='en'?`${result.changed} private note(s) updated. Only you can see them.`:`${result.changed} kişisel not güncellendi. Yalnız siz görürsünüz.`),result.failed?{kind:'error'}:undefined);
 }
 function cpGridBulkTitle(plan){
   const orders=plan.clipboardModule==='orders',en=appLang==='en';
@@ -14830,44 +14867,70 @@ function cpBulkUniqueOperations(operations){
   const seen=new Set();return operations.filter(op=>{const key=lineKeyOfRow(op.row)+'|'+op.column.k;if(seen.has(key))return false;seen.add(key);return true;});
 }
 async function applyCpGridPaste(plan,range){
-  const personal=(plan.ops||[]).filter(op=>op.target==='personalNote');
-  if(personal.length){
-    // Ortak alanlar önce kendi önizleme/onay yolundan geçer; vazgeçilirse
-    // kişisel notlara da yazılmaz.
-    const shared=plan.ops.filter(op=>op.target!=='personalNote');
-    const result=shared.length?await applyCpGridPaste({...plan,ops:shared},range):{ok:true,changed:0};
-    if(!result?.ok)return result;
-    const own=applyPersonalNotePaste(personal);
-    if(!shared.length||own.failed)showToast(own.failed
-      ?(appLang==='en'?`${own.failed} private note(s) could not be saved.`:`${own.failed} kişisel not kaydedilemedi.`)
-      :(appLang==='en'?`${own.changed} private note(s) updated. Only you can see them.`:`${own.changed} kişisel not güncellendi. Yalnız siz görürsünüz.`),own.failed?{kind:'error'}:undefined);
-    return {...result,ok:result.ok&&(own.changed>0||own.failed===0),changed:(Number(result.changed)||0)+own.changed};
-  }
   if(!plan._bulkConfirmed&&plan.ops?.length){
-    const unique=cpBulkUniqueOperations(plan.ops);plan={...plan,ops:unique,skipped:(Number(plan.skipped)||0)+plan.ops.length-unique.length};
+    const unique=cpBulkUniqueOperations(plan.ops);
+    plan={...plan,ops:unique,skipped:(Number(plan.skipped)||0)+plan.ops.length-unique.length};
+    const owner=orderLinePeerOwner(),personalOwner=String(window.BL_USER_CONTEXT?.id||'');
+    const notes=window.BLPersonalNoteColumns;
+    const personal=unique.filter(op=>op.target==='personalNote').map(op=>{
+      const key=lineKeyOfRow(op.row);
+      return {...op,lineKey:key,before:notes.readValue(op.column.k,key),receiptKey:key+'|'+op.column.k};
+    });
+    const shared=unique.filter(op=>op.target!=='personalNote');
+    const areasReady=()=>!(plan.clipboardModule==='orders'&&isAreaFrozen('orders'))&&(!shared.length||!isAreaFrozen('cp'));
+    const personalCurrent=()=>!personal.length||(personalOwner&&personalOwner===String(window.BL_USER_CONTEXT?.id||'')&&personal.every(op=>
+      lineKeyOfRow(op.row)===op.lineKey&&notes.readValue(op.column.k,op.lineKey)===op.before&&
+      (plan.clipboardModule!=='orders'||Boolean(orderLinePeerRows('cp',op.row)[0]))));
+    const ownItems=personal.map(op=>({key:op.receiptKey,label:String(op.row['Order Code'])+' · '+tableColumnLabel(plan.clipboardModule||'cp',op.column),before:op.before,after:op.value}));
+    if(!shared.length){
+      const guard=()=>owner===orderLinePeerOwner()&&areasReady()&&personalCurrent();
+      const save=()=>{
+        if(!guard())return {ok:false,changed:0};
+        const result=applyPersonalNotePaste(personal,personalOwner);
+        if(result.history)pushUndo(result.history);
+        notifyPersonalNotePaste(result);
+        return {ok:result.changed>0||result.failed===0,changed:result.changed};
+      };
+      if(plan.kind!=='clear'&&plan.kind!=='fill')return save();
+      return await window.BLBulkOperations.run({localOnly:true,title:cpGridBulkTitle(plan),counts:plan,items:ownItems,guard,send:save})||{ok:false};
+    }
     const editorSnap=managedEditorSnapshot(document.activeElement);
     if(editorSnap?.route==='cp')commitManagedEditorSnapshot(editorSnap,{refresh:false});
     await settleOverrideWrites();
-    const owner=orderLinePeerOwner(),revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
-    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
-    const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&!(plan.clipboardModule==='orders'&&isAreaFrozen('orders'))&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
+    const revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
+    const snapshots=shared.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
+    const guard=()=>owner===orderLinePeerOwner()&&areasReady()&&personalCurrent()&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
       const current=state.cp?.rows?.find(row=>row._id===Number(op.row._partialViewSourceId??op.row._id));
-      return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
+      return current&&lineKeyOfRow(current)===key&&sameOrderLine(current,op.row)&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
     });
     const items=snapshots.map(({op,key,value})=>({key:key+'|'+op.column.k,label:String(op.row['Order Code'])+' · '+op.column.k,before:value,after:op.value}));
-    const receipt=await window.BLBulkOperations.run({module:plan.clipboardModule||'cp',owner,expected:{orders:revision,suppFob},title:cpGridBulkTitle(plan),counts:plan,items,guard,
+    if(!guard()){staleCpEditorNotice();return {ok:false};}
+    const receipt=await window.BLBulkOperations.run({module:plan.clipboardModule||'cp',owner,expected:{orders:revision,suppFob},title:cpGridBulkTitle(plan),counts:plan,items:[...items,...ownItems],guard,
       hint:appLang==='en'?'Date dependencies follow the same rules as cell editing.':'Tarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.',
       async send(){
         cpBulkInFlight=true;
         let result,prepared,capture;
         try{
-          prepared=withCpBulkDraft(snapshots.map(item=>item.key),()=>window.captureOverrideBatch(()=>{result=applyCpGridPasteConfirmed({...plan,_bulkConfirmed:true,_prepareOnly:true},range);}));capture=prepared.value;
+          prepared=withCpBulkDraft(snapshots.map(item=>item.key),()=>window.captureOverrideBatch(()=>{result=applyCpGridPasteConfirmed({...plan,ops:shared,ownerId:owner,_bulkConfirmed:true,_prepareOnly:true},range);}));capture=prepared.value;
           if(!result?.ok)throw Object.assign(new Error('CP_PASTE_STALE'),{status:409});
           const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{method:'POST',headers:{'Content-Type':'application/json','X-Supp-Fob-Revision':String(suppFob)},expectedRevision:revision,body:JSON.stringify({items:capture.items})});
           capture.resolve(data);
-          applyAcknowledgedCpDraft(prepared,data);
-          if(result.history){result.history.bulkGuard={owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};pushUndo(result.history);}
-          return {revisions:data.revisions||{orders:data.revision},outcomes:items.map(item=>({key:item.key,status:Number(data.updated)===capture.items.length&&!(data.skipped?.length)?'accepted':'unknown'}))};
+          const acknowledged=Number(data.updated)===capture.items.length&&!(data.skipped?.length);
+          const sameOwner=owner===orderLinePeerOwner();
+          if(sameOwner)applyAcknowledgedCpDraft(prepared,data);
+          const own=personal.length&&acknowledged&&sameOwner&&areasReady()&&personalCurrent()
+            ?applyPersonalNotePaste(personal,personalOwner):{history:null,failed:personal.length};
+          if(result.history&&sameOwner){
+            result.history.bulkGuard={owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};
+            if(own.history)result.history.personalNote=own.history;
+            pushUndo(result.history);
+          }else if(own.history)pushUndo(own.history);
+          const localFailures=own.failed&&personal.length;
+          if(localFailures&&sameOwner&&acknowledged)notifyPersonalNotePaste(own);
+          return {revisions:data.revisions||{orders:data.revision},outcomes:[
+            ...items.map(item=>({key:item.key,status:acknowledged?'accepted':'unknown'})),
+            ...ownItems.map(item=>({key:item.key,status:localFailures&&(!own.failedKeys||own.failedKeys.has(item.key))?'rejected':'accepted'})),
+          ]};
         }catch(error){capture?.reject(error);throw error;}finally{cpBulkInFlight=false;}
       }
     });
@@ -14939,6 +15002,53 @@ function applyCpGridPasteConfirmed(plan,range){
   record(true);
   return {ok:true,changed,history};
 }
+// Pencere kayarken yalnız değer çizilir. Gerçek CP metin editörü kullanıcının
+// seçtiği hücrede kurulur ve odaktan çıkınca tekrar değer görünümüne döner.
+function mountOrdersInput(td,row,column,canonical){
+  const template=document.createElement('template'),flags=computeFlags(row);
+  const replace=preview=>{
+    template.innerHTML=cellHtml(column,row,flags,'orders',canonical,undefined,preview);
+    const cell=template.content.firstElementChild;
+    // Aralık, sabitleme ve klavye kimliği mevcut td üzerinde kalmalıdır.
+    td.replaceChildren(...cell.childNodes);
+  };
+  replace(false);
+  td.addEventListener('focusout',()=>{
+    queueMicrotask(()=>{
+      if(td.isConnected&&!td.contains(document.activeElement))replace(true);
+    });
+  },{once:true});
+}
+function prepareOrdersCellEdit(td,stillCurrent){
+  const table=td.closest('table');
+  const row=table?._blRenderedRows?.[Number(td.dataset.r)];
+  const column=table?._blRenderedColumns?.[Number(td.dataset.c)];
+  if(!row||!column||!['moneyEdit','exfactory','retailEdit','instoreEdit','deltype','submfr','licensor','importance','text','privateNote'].includes(column.type))return false;
+  const owner=orderLinePeerOwner(),key=lineKeyOfRow(row);
+  const renderedCell=()=>td.isConnected?td:table.querySelector(
+    `tbody tr[data-id="${CSS.escape(String(row._id))}"] td[data-key="${CSS.escape(column.k)}"]`);
+  const finish=()=>{
+    if(!stillCurrent()||owner!==orderLinePeerOwner()||key!==lineKeyOfRow(row)||isAreaFrozen('orders')||isAreaFrozen('cp'))return false;
+    const canonical=orderLinePeerRows('cp',row)[0];
+    if(!canonical||(column.type!=='privateNote'&&!cpPasteTarget(canonical,column)))return false;
+    let cell=renderedCell();
+    if(cell?.classList.contains('viewOnlyCell')){
+      renderOrders();
+      cell=renderedCell();
+    }
+    const inline=column.type==='moneyEdit'||column.type==='submfr'||column.type==='licensor'||
+      (column.type==='text'&&!column.personalNote&&!['Notes','Ek Not'].includes(column.k));
+    if(cell&&inline)mountOrdersInput(cell,row,column,canonical);
+    return Boolean(cell);
+  };
+  if(state.cp)return finish();
+  const dismiss=showToast(appLang==='en'?'Loading edit permissions…':'Düzenleme yetkileri yükleniyor…');
+  return ensureCpLoaded({deferRender:true,reason:'orders-cell-edit'}).then(ok=>{
+    if(!ok)return false;
+    window.BLModulePreparation?.setStatus('cp','ready');
+    return finish();
+  }).finally(()=>dismiss?.());
+}
 function registerManagedGridClipboard(tableId,tableKey){
   if(!window.BLGridClipboard)return;
   const meta=TABLE_META[tableId];
@@ -14962,6 +15072,8 @@ function registerManagedGridClipboard(tableId,tableKey){
     // düzenlenebilir hücre doğrudan düzenleme modunda açılır.
     editOnDoubleClick:true,
     editTriggerSelector:'.delTypeTrigger,.impTrigger,.clStatusTrigger,.exfDisplay,.noteCellTrigger',
+    prepareEdit:tableKey==='orders'?prepareOrdersCellEdit:null,
+    prepareOnNavigation:tableKey==='orders'?()=>Boolean(state.cp):null,
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
     pasteTarget:tableKey==='cp'?cpPasteTarget:ordersPasteTarget,
     pasteValue:cpPasteValue,
@@ -15835,7 +15947,6 @@ async function waitForRefreshJob(expectedJob=null){
     }
     if(Array.isArray(data.orders)){
       state.orders = { fname: `Sunucu: ${sourceName}`, rows: data.orders.map(row=>({...row,_canEdit:false})) };
-      void applyOrdersImportanceEditAccess(state.orders.rows);
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){
@@ -22938,7 +23049,7 @@ function* managedExcelExportRows(records,tableKey,columns,computeFn,selectedSet)
     const flags=typeof computeFn==='function'?computeFn(record):null;
     const tr=document.createElement('tr');tr.dataset.id=String(record._id);
     tr._blExportFlags=flags;
-    tr.innerHTML=columns.map(column=>tableKey==='orders'?ordersCellHtml(column,record,flags,tableKey):cellHtml(column,record,flags,tableKey)).join('');
+    tr.innerHTML=columns.map(column=>column.personalNote||column.privatePersonal?'<td></td>':tableKey==='orders'?ordersCellHtml(column,record,flags,tableKey,null):cellHtml(column,record,flags,tableKey)).join('');
     [...tr.children].forEach((td,index)=>{td.dataset.key=columns[index].k;});
     yield tr;
   }
@@ -28231,7 +28342,7 @@ function managedEditorSnapshot(el){
   // Yalnız gerçek değer taşıyan editörler kaydedilir. Odak alabilen Del. Type
   // düğmesi veya tarih gösterim span'i (value boş) kaydedilseydi hücre boş
   // değerle/baz tarihle ezilirdi.
-  if(tableId==='cpTable' && /^(INPUT|SELECT|TEXTAREA)$/.test(String(editor.tagName||'').toUpperCase())) return {route:'cp', editor, display};
+  if((tableId==='cpTable'||tableId==='ordersTable') && /^(INPUT|SELECT|TEXTAREA)$/.test(String(editor.tagName||'').toUpperCase())) return {route:'cp', editor, display};
   return null;
 }
 function commitManagedEditorSnapshot(snap, options={}){

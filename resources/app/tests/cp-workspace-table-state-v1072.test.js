@@ -46,7 +46,7 @@ test('v10.72 otomatik DTR Sub Mfr display, filter, copy ve export için kanonikt
   assert.match(APP, /function cpSubManufacturerValue\(r\)/,
     'Sub Mfr için tek kanonik accessor olmalı');
   const cellHtml = bodyOf('cellHtml');
-  assert.match(cellHtml, /case 'submfr':[\s\S]*?cpSubManufacturerValue\(r\)/,
+  assert.match(cellHtml, /case 'submfr':[\s\S]*?cpSubManufacturerValue\(editRow\|\|r\)/,
     'CP hücresi kanonik Sub Mfr accessor’ını kullanmalı');
   const plainText = bodyOf('cellPlainText');
   assert.match(plainText, /c\.k==='Sub-Manufacturer'[\s\S]*?cpSubManufacturerValue\(r\)/,

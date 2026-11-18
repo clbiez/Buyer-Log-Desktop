@@ -1,7 +1,6 @@
 'use strict';
-// Kapalı (pasif) sipariş CP'de yoktur; önem etiketi Orders'tan düzenlenebilmeli.
-// Orders satırları genel olarak salt okunur kalır; yalnız önem etiketi için
-// canlı sipariş yetkisi + paylaşılan sahiplikten türetilen ayrı izin açılır.
+// Eski Orders alan yetkisi API'si canlı sipariş sahipliğini korur.
+// Tablodaki editör için güncel kanonik CP satırı ayrıca zorunludur.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -49,18 +48,30 @@ function uiHarness(row) {
     window:{ BLOrderImportance:require('../public/order-importance'), SERVER_BACKED:true,
       addEventListener(){}, enqueueOverrideMutation:async (...args) => { sent.push(args); } },
     lineKeyOfRow:r => `${r['Order Code']}|${r['Model Name']}|${r['C.Code']}`,
+    cpEditorIdentityAttributes:r=>' data-line-key="'+r['Order Code']+'|DEMO|BLUE" data-edit-owner="alice"',
     lineIdentity:r => ({model:r['Model Name'], ccode:r['C.Code']}),
   };
   vm.createContext(context); vm.runInContext(read('public/order-importance-ui.js'), context);
   return { ui:context.window.BLOrderImportanceUI, sent, state };
 }
 
-test('closed order absent from CP can pick and persist a tag with its exact line identity', async () => {
+test('closed order absent from CP stays view only even with a legacy importance permission', () => {
   const row = { _id:7, 'Order Code':1001, 'Model Name':'DEMO', 'C.Code':'BLUE', 'Active/Inactive':'Inactive', _canEdit:false, _canEditImportance:true };
   const {ui,sent} = uiHarness(row);
-  assert.match(ui.cellHtml(row, false, 'orders'), /impTrigger/);
+  assert.match(ui.cellHtml(row, false, 'orders', null), /viewOnlyCell/);
+  assert.doesNotMatch(ui.cellHtml(row, false, 'orders', null), /impTrigger/);
+  assert.equal(ui.pasteAssign(row, 'bts'), false);
+  assert.deepEqual(sent, []);
+});
+
+test('Orders importance uses the canonical CP editor binding and persists an exact line identity', async () => {
+  const display = { _id:7, 'Order Code':1001, 'Model Name':'DEMO', 'C.Code':'BLUE', _canEdit:false };
+  const row = {...display,_id:12,_canEdit:true,_canEditShared:true};
+  const {ui,sent,state} = uiHarness(display);
+  state.cp.rows=[row];
+  assert.match(ui.cellHtml(display, true, 'orders', row), /impTrigger" data-id="12" data-line-key="1001\|DEMO\|BLUE" data-edit-owner="alice"/);
   assert.equal(ui.pasteAssign(row, 'bts'), true);
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(sent.length, 1);
   assert.equal(sent[0][1], '/api/overrides/1001');
   assert.deepEqual(JSON.parse(sent[0][2].body), {model:'DEMO', ccode:'BLUE', importance:'bts'});
@@ -84,49 +95,10 @@ test('view-only and shared-owner-denied orders stay locked; CP editing keeps wor
   assert.equal(ui.pasteAssign(cpRow, 'bayram'), true);
 });
 
-function hydrationSource() {
-  const app = read('public/app-main.js');
-  return app.slice(app.indexOf('async function applyOrdersImportanceEditAccess('), app.indexOf('async function ensureOrdersLoaded('));
-}
-
-test('Orders hydration grants mixed permissions once, without blocking the table, and fails closed', async () => {
-  let calls = 0, repaints = 0;
-  const rows = [{ 'Order Code':1001, _canEdit:false }, { 'Order Code':1002, _canEdit:false }];
-  const context = { state:{orders:{rows}}, window:{BLOrderImportanceUI:{refreshAccess:()=>{repaints++;}}}, console:{warn(){}}, fetch:async (_url, request) => {
-    calls++;
-    assert.deepEqual(JSON.parse(request.body).codes, ['1001','1002']);
-    return {ok:true, json:async () => ({allowed:['1001']})};
-  } };
-  vm.createContext(context); vm.runInContext(hydrationSource(), context);
-  await context.applyOrdersImportanceEditAccess(rows);
-  assert.equal(rows[0]._canEditImportance, true);
-  assert.equal(rows[1]._canEditImportance, false);
-  assert.equal(repaints, 1);
-  await context.applyOrdersImportanceEditAccess(rows);
-  assert.equal(calls, 1, 'hydrated rows do not request permissions again');
-  const stale = [{ 'Order Code':1001, _canEdit:false }];
-  context.state.orders = {rows:stale};
-  context.fetch = async () => { throw Error('offline'); };
-  await context.applyOrdersImportanceEditAccess(stale);
-  assert.equal(stale[0]._canEditImportance, undefined, 'network failure keeps importance locked');
-  context.fetch = async () => ({ok:false});
-  await context.applyOrdersImportanceEditAccess(stale);
-  assert.equal(stale[0]._canEditImportance, undefined, 'HTTP failure keeps importance locked');
-  const app = read('public/app-main.js');
-  assert.equal((app.match(/void applyOrdersImportanceEditAccess\(state\.orders\.rows\);/g) || []).length, 2, 'both Orders hydration paths request field access');
-  assert.doesNotMatch(app, /await applyOrdersImportanceEditAccess/, 'field access must not delay the usable table');
-});
-
-test('late access responses cannot repaint a newer Orders table', async () => {
-  const rows = [{'Order Code':1001, _canEdit:false}], nextRows = [{'Order Code':1002, _canEdit:false}];
-  let respond, repaints = 0;
-  const context = {state:{orders:{rows}}, window:{BLOrderImportanceUI:{refreshAccess:()=>{repaints++;}}}, console:{warn(){}}, fetch:()=>new Promise(resolve=>{respond=resolve;})};
-  vm.createContext(context); vm.runInContext(hydrationSource(), context);
-  const pending = context.applyOrdersImportanceEditAccess(rows);
-  context.state.orders = {rows:nextRows};
-  respond({ok:true, json:async()=>({allowed:['1001']})});
-  await pending;
-  assert.equal(repaints, 0);
-  assert.equal(rows[0]._canEditImportance, undefined);
-  assert.equal(nextRows[0]._canEditImportance, undefined);
+test('Orders hydration does not request a separate permission or repaint from its response', () => {
+  const app=read('public/app-main.js'),ui=read('public/order-importance-ui.js');
+  assert.doesNotMatch(app,/applyOrdersImportanceEditAccess|\/api\/orders-importance-edit/);
+  assert.doesNotMatch(ui,/_canEditImportance|refreshAccess/);
+  assert.match(ui,/const row=resolveCpEditorRow\(btn\)/);
+  assert.match(ui,/void assign\(findRow\(btn\), el\.dataset\.impValue/);
 });

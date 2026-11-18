@@ -318,7 +318,7 @@
   // kind: 'paste' (Ctrl+V), 'clear' (Delete) veya 'fill' (Ctrl+D). Üçü de
   // aynı hedef, doğrulama, önizleme ve tek-adım geri alma yolundan geçer.
   async function pasteEntry(entry,event,text,options={}){
-    if(typeof entry.config.applyPaste!=='function')return false;
+    if(typeof entry.config.applyPaste!=='function'||entry.pastePending)return false;
     const data=currentRange(entry);
     if(!data.range)return false;
     const kind=options.kind==='clear'||options.kind==='fill'?options.kind:'paste';
@@ -341,7 +341,10 @@
       anchor:entry.state.selectionAnchor&&{...entry.state.selectionAnchor},
       focus:entry.state.selectionFocus&&{...entry.state.selectionFocus},
     };
-    const result=await entry.config.applyPaste(plan,data.range,entry.state);
+    entry.pastePending=true;
+    let result;
+    try{result=await entry.config.applyPaste(plan,data.range,entry.state);}
+    finally{entry.pastePending=false;}
     // 7.0.300 toplu işlem önizlemesi asenkrondur. İptal/ret sonrasında
     // seçimi ve düzenleyici odağını değiştirmek bir sonraki Ctrl+C/V'yi bozar.
     if(result===false||result?.ok===false)return false;
@@ -465,23 +468,48 @@
       const id=cellIdentity(td);return id&&id.rowId===identity(cell.rowId)&&id.columnId===identity(cell.columnId);
     })||null;
   }
-  // Klavyeyle varılan hücrenin editörünü açar. Editörü olmayan (salt okunur,
-  // hesaplanan veya açılır menü tetikleyicili) hücre seçim modunda kalır.
-  function editActiveCell(entry,{selectAll=true,triggers=false}={}){
-    if(!entry?.config?.editOnDoubleClick)return false;
-    const td=cellElement(entry,entry.state.activeCell);if(!td)return false;
+  function activateEditor(entry,td,{selectAll=true,triggers=false,typed='',replay=false}={}){
     const editor=cellEditor(entry,td);
-    if(editor)return focusEditor(editor,{selectAll});
+    if(editor){
+      if(!focusEditor(editor,{selectAll}))return false;
+      if(replay&&typed&&typeof editor.setRangeText==='function'){
+        editor.setRangeText(typed,0,String(editor.value||'').length,'end');
+        editor.dispatchEvent(new root.Event('input',{bubbles:true}));
+      }
+      return true;
+    }
     const trigger=triggers?cellTrigger(entry,td):null;
-    if(trigger){trigger.click?.();return true;}
-    return false;
+    if(!trigger)return false;
+    trigger._blEditKey=typed;
+    try{trigger.click?.();}finally{delete trigger._blEditKey;}
+    return true;
+  }
+  function editActiveCell(entry,options={}){
+    if(!entry?.config?.editOnDoubleClick)return false;
+    const cell=entry.state.activeCell,td=cellElement(entry,cell);
+    if(!td)return false;
+    if(activateEditor(entry,td,options))return !(options.typed&&cellEditor(entry,td));
+    if(!entry.config.prepareEdit||(!options.triggers&&!entry.config.prepareOnNavigation?.()))return false;
+    const stillCurrent=()=>entryIsActive(entry)&&entry.state.activeCell===cell;
+    const ready=entry.config.prepareEdit(td,stillCurrent);
+    if(!ready)return false;
+    const open=ok=>{if(ok&&stillCurrent())activateEditor(entry,cellElement(entry,cell),{...options,replay:true});};
+    if(typeof ready.then==='function')void ready.then(open);
+    else open(ready);
+    return true;
   }
   function onDoubleClick(event){
     if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
     const td=event.target?.closest?.('tbody td[data-key]'),entry=doubleClickEntry(td);if(!entry)return;
     if(event.target?.closest?.('a,img'))return;
-    const editor=cellEditor(entry,td);if(!editor||isEditing(editor))return;
-    if(!focusEditor(editor,{selectAll:false}))return;
+    const editor=cellEditor(entry,td);
+    if(!editor){
+      const trigger=cellTrigger(entry,td);
+      // Düğmenin ikinci click'i zaten editörü açar; td boşluğundan da açılabilir.
+      if(entry.config.prepareEdit&&!trigger?.contains?.(event.target))editActiveCell(entry,{selectAll:false,triggers:true});
+      return;
+    }
+    if(isEditing(editor)||!focusEditor(editor,{selectAll:false}))return;
     if(String(editor.tagName||'').toUpperCase()==='SELECT'){try{editor.showPicker?.();}catch{}}
   }
   function onTriggerClick(event){
@@ -536,7 +564,7 @@
     const range=currentRange(entry).range;
     if(!range||range.startRow!==range.endRow||range.startColumn!==range.endColumn)return false;
     const td=cellElement(entry,entry.state.activeCell),editor=cellEditor(entry,td);
-    if(!editor||String(editor.tagName||'').toUpperCase()==='SELECT'||editor.classList?.contains?.('dateKeyboardInput'))return false;
+    if(!editor||String(editor.tagName||'').toUpperCase()==='SELECT'||editor.classList?.contains?.('dateKeyboardInput')||editor.dataset?.personalNoteId)return false;
     event.preventDefault?.();
     editor.value=parseClipboardText(text)[0]?.[0]??'';
     const ChangeEvent=root.Event;
@@ -612,10 +640,13 @@
       void pasteEntry(entry,event,text);
     },true);
     root.document.addEventListener('keydown',event=>{
+      if(event.defaultPrevented)return;
       if(nativeEditingTarget(event.target)){onEditorKeyDown(event);return;}
       const nativeSelection=root.getSelection?.();
       if(nativeSelection&&nativeSelection.rangeCount&&!nativeSelection.isCollapsed)return;
-      const entry=activeEntry();if(!entry)return;
+      const direct=tables.get(event.target?.closest?.('table')?.id||event.target?.id);
+      const entry=direct?(entryIsActive(direct)&&direct.state.activeCell?direct:null):activeEntry();
+      if(!entry)return;
       const key=String(event.key||'').toLowerCase();
       // Ctrl+C varsayılanı başlıksız "Kopyala"dır (Excel davranışı). Başlıklı
       // kopya sağ tık › "Başlıklarla kopyala" ile bilerek seçilir.
@@ -649,7 +680,7 @@
       if(event.key==='F2'){if(editActiveCell(entry,{selectAll:false,triggers:true}))event.preventDefault();return;}
       // Seçili hücrede yazmaya başlamak Excel'deki gibi düzenlemeyi açar; tuşun
       // karakteri odaklanan ve tümü seçili editöre düşer.
-      if(isPrintableKey(event))editActiveCell(entry);
+      if(isPrintableKey(event)&&editActiveCell(entry,{typed:event.key,triggers:Boolean(entry.config.prepareEdit)}))event.preventDefault();
     },true);
   }
 

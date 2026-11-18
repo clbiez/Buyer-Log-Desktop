@@ -78,8 +78,8 @@ test('Orders logistics toggle opens and closes the correct detail row after rere
   assert.match(js, /const expanded=cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)/);
   assert.match(js, /function cpLogisticDetailRowHtml\(row,cols,withChk,tableKey='cp'\)\{\s*\n\s*if\(row&&row\._partialViewActive\)return '';\s*\n\s*if\(!cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)\) return '';/);
   // Tablo kimliği hücre çizim zincirinde taşınır.
-  assert.match(js, /opts\.cellHtmlFn\(c,r,cf,tableKey\):cellHtml\(c,r,cf,tableKey\)/);
-  assert.match(js, /function ordersCellHtml\(column,row,flags,tableKey='orders'\)/);
+  assert.match(js, /opts\.cellHtmlFn\(c,r,cf,tableKey,editRow,identity\):cellHtml\(c,r,cf,tableKey\)/);
+  assert.match(js, /function ordersCellHtml\(column,row,flags,tableKey='orders',editRow=orderLinePeerRows\('cp',row\)\[0\],editorIdentity\)/);
 
   // Dinleyici tabloya bir kez, delegasyonla bağlanır: tbody her yeniden çizimde
   // baştan oluştuğu için satır üzerindeki doğrudan dinleyiciler yaşamaz.

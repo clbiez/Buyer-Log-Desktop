@@ -39,6 +39,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const engine = require('../public/formula-engine.js');
 const { assertLazy, sources } = require('./helpers/script-loading');
+const { loadAppMainFunctions } = require('./helpers/app-main-functions');
 
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const appMain = read('public/app-main.js');
@@ -204,12 +205,19 @@ test('sütun paneline "Hesaplanan Sütun" düğmesi eklenir ve üç tabloda aç�
 });
 
 test("cellHtml 'formula' türünü çizer ve hata durumunda tire gösterir", () => {
-  const start = appMain.indexOf('function cellHtml(');
-  assert.ok(start > 0);
-  const body = appMain.slice(start, start + 4000);
-  assert.match(body, /case 'formula':/);
-  assert.match(body, /formatValue\(v, ?c\.formulaDef\)/);
-  assert.match(body, /—/);
+  const formulaDef = { id: 'demo-formula' };
+  const {cellHtml} = loadAppMainFunctions(['cellHtml'], {
+    window: {BLFormulaColumns: {
+      errorFor: id => id==='demo-error' ? 'Invalid formula' : '',
+      formatValue(value, definition) { assert.equal(definition, formulaDef); return value==null ? '' : String(value); },
+    }},
+    cpEditorIdentityAttributes: () => '',
+    columnSchemaFor: () => null, CP_FABRIC_PLM_KEY: 'Fabric (PLM)', revisionInfo: () => null,
+    escapeHtml: String,
+  });
+  const column = { k: 'demo', type: 'formula', formulaId: 'demo-formula', formulaDef };
+  assert.match(cellHtml(column, {demo:7}), /class="num formulaCell" title="7">7<\/td>/);
+  assert.match(cellHtml({...column,formulaId:'demo-error'}, {demo:null}), /class="formulaCell isError" title="Invalid formula">—<\/td>/);
 });
 
 test('hesaplama üç çizimden de ÖNCE yapılır (sıralama ve sayfa filtreleri görsün)', () => {

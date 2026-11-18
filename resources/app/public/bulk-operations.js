@@ -84,6 +84,13 @@
       const rows=spec.items.slice(0,100),metrics=spec.counts||{};
       const accepted=await dialog(spec.title||T('Toplu işlem önizlemesi','Bulk change preview'),`<p>${esc(T(`${spec.items.length} değişiklik · ${Number(metrics.readonly)||0} salt okunur · ${Number(metrics.invalid)||0} geçersiz · ${Number(metrics.skipped)||0} atlanan`,`${spec.items.length} changes · ${Number(metrics.readonly)||0} read-only · ${Number(metrics.invalid)||0} invalid · ${Number(metrics.skipped)||0} skipped`))}</p>${spec.hint?`<p>${esc(spec.hint)}</p>`:''}<div class="blBulkTableWrap"><table><thead><tr><th>${esc(T('Kayıt / alan','Record / field'))}</th><th>${esc(T('Önce','Before'))}</th><th>${esc(T('Sonra','After'))}</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${esc(row.label||row.key)}</td><td>${esc(row.before)}</td><td>${esc(row.after)}</td></tr>`).join('')}</tbody></table></div>${spec.items.length>100?`<p>${esc(T('İlk 100 değişiklik gösteriliyor; tüm değişiklikler birlikte gönderilir.','Showing the first 100 changes; all changes are submitted together.'))}</p>`:''}`,`<button class="tbtn" data-bulk-action="cancel">${esc(T('Vazgeç','Cancel'))}</button><button class="tbtn primary" data-bulk-action="apply">${esc(T('Uygula ve kaydet','Apply and save'))}</button>`);
       if(accepted!=='apply')return null;
+      if(spec.localOnly){
+        if(spec.scope!==controller.captureScope()||!spec.guard()){
+          root.showToast?.(T('Önizleme sırasında kayıt, yetki veya oturum değişti. Güncel veriden yeniden önizleyin.','The record, permission or session changed during preview. Preview again from current data.'));
+          return null;
+        }
+        return spec.send();
+      }
       try{void dialog(T('Toplu işlem kaydediliyor','Saving bulk changes'),`<p role="status" aria-busy="true">${esc(T('Sunucu kayıt yanıtı bekleniyor. İşlem kayıtları bu cihazda korunur.','Waiting for the server save response. Operation receipts are kept on this device.'))}</p>`,'');const receipt=await controller.execute(spec);void result(receipt,spec);return receipt;}
       catch(error){if(active)active(false);root.showToast?.(error.code==='BULK_RECEIPT_STORAGE'?T('İşlem kaydı bu cihaza yazılamadı; hiçbir değişiklik gönderilmedi.','The receipt could not be stored on this device; no changes were sent.'):T('Önizleme sırasında kayıt, yetki veya oturum değişti. Güncel veriden yeniden önizleyin.','The record, permission or session changed during preview. Preview again from current data.'));return null;}
     }

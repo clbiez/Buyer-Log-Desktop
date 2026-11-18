@@ -116,7 +116,7 @@
      Filtre, kolon, görünüm ve Horizon ayarları hesapla birlikte taşınır.
      Collection satırları/notları gibi ortak iş verileri bu listede değildir. */
   var SYNCED=[
-    'bl.privateOrderNotes.v1.','lcw.personalOrderNotes.','bl.excelTemplates.','lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
+    'bl.excelTemplates.','lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.bomControl.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
     'lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',
@@ -131,6 +131,7 @@
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';
+  var PRIVATE_NOTE_IMPORT_KEY='bl.user.'+uid+'.__privateNotesImported.v1';
   var ROLE_DEFAULTS_KEY='bl.user.'+uid+'.__roleWorkspaceDefaults.v1';
   var roleDefaults={};
   try{roleDefaults=JSON.parse(native.getItem(ROLE_DEFAULTS_KEY)||'{}')||{};}catch(_){roleDefaults={};}
@@ -232,6 +233,7 @@
           roleDefaults=data.roleDefaults&&typeof data.roleDefaults==='object'?data.roleDefaults:{};
           try{native.setItem(ROLE_DEFAULTS_KEY,JSON.stringify(roleDefaults));}catch(_){}
           var meta=readMeta(),applied=0,push={};
+          var importPrivateNotes=native.getItem(PRIVATE_NOTE_IMPORT_KEY)==null;
           /* AÇIKÇA SİLİNMİŞ ANAHTARLAR ÖNCE İŞLENİR.
              Sunucuda olmayan her yerel anahtar aşağıda yukarı taşınıyor; bu,
              kullanıcının SİLDİĞİ kaydı (ör. kişisel Horizon katmanı) her
@@ -247,8 +249,16 @@
             delete pending[key];
           });
           Object.keys(data.entries).forEach(function(key){
+            var remote=data.entries[key]||{};
+            // Önceki sürümde eşitlenmiş kişisel notlar yalnız eksik yerel kopyayı doldurur.
+            if(key.indexOf('lcw.personalOrderNotes.')===0||key.indexOf('bl.privateOrderNotes.v1.')===0){
+              if(importPrivateNotes&&remote.value!=null&&native.getItem(actual(key))==null){
+                native.setItem(actual(key),String(remote.value));applied++;
+              }
+              return;
+            }
             if(!synced(key))return;
-            var remote=data.entries[key]||{},localStamp=meta[key]||'';
+            var localStamp=meta[key]||'';
             var localValue=native.getItem(actual(key));
             if(localValue==null||!localStamp||String(remote.updatedAt||'')>localStamp){
               if(remote.value!=null&&remote.value!==localValue){
@@ -269,6 +279,7 @@
             var value=native.getItem(actual(key));
             if(value!=null)push[key]={value:value,updatedAt:meta[key]};
           });
+          if(importPrivateNotes)native.setItem(PRIVATE_NOTE_IMPORT_KEY,'1');
           writeMeta(meta);
           var pushed=Object.keys(push).length;
           if(pushed){pending=Object.assign(pending,push);flushPush();}

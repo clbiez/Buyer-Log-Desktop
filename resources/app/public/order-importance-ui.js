@@ -48,36 +48,12 @@
     if (res.source === 'manual') return L('Bu sipariş için seçildi.', 'Selected for this order.');
     return L('Etiket yok: Regular.', 'No tag: Regular.');
   }
-  // Orders satırları genelde salt okunurdur (_canEdit:false). Önem etiketi için
-  // sunucunun canlı sipariş yetkisinden hesapladığı alan bazlı izin ayrıca açılır.
-  const canEditImportance = row => Boolean(row && (row._canEdit !== false || row._canEditImportance === true));
-  function cellHtml(row, canEdit, tableKey) {
+  const canEditImportance = row => Boolean(row && row._canEdit !== false && row._canEditShared !== false);
+  function cellHtml(row, canEdit, tableKey, editRow=row) {
     const res = rowResolution(row);
     const title = esc(sourceTitle(res));
-    canEdit = (canEdit || row._canEditImportance === true) && row._canEditShared !== false;
-    if (!canEdit) return `<td class="impTd" title="${title}">${chipHtml(res.tag, res.source)}</td>`;
-    return `<td class="editTd impTd"><button type="button" class="editCell impTrigger" data-id="${esc(row._id)}" data-table="${esc(tableKey || 'cp')}" aria-haspopup="listbox" aria-expanded="false" title="${title}">${chipHtml(res.tag, res.source)}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
-  }
-
-  // İzin yanıtı geldiğinde yalnız görünür önem hücrelerini etkinleştirir; satır
-  // seçimi, odak ve sütun/dondurma durumu korunsun diye tablo yeniden çizilmez.
-  function refreshAccess(rows) {
-    const cells = [...document.querySelectorAll('#ordersTable td[data-key="Importance"]')];
-    if (!cells.length) return;
-    const ids = new Set(cells.map(cell => cell.closest('tr')?.dataset.id));
-    const byId = new Map();
-    for (const row of rows) if (ids.has(String(row._id))) byId.set(String(row._id), row);
-    for (const cell of cells) {
-      const row = byId.get(cell.closest('tr')?.dataset.id);
-      if (!row) continue;
-      const holder = document.createElement('tr');
-      holder.innerHTML = cellHtml(row, false, 'orders');
-      const updated = holder.firstElementChild;
-      if (!updated) continue;
-      cell.replaceChildren(...updated.childNodes);
-      cell.classList.toggle('editTd', updated.classList.contains('editTd'));
-      if (updated.title) cell.title = updated.title; else cell.removeAttribute('title');
-    }
+    if (!canEdit || !canEditImportance(editRow)) return `<td class="impTd viewOnlyCell" title="${title}">${chipHtml(res.tag, res.source)}</td>`;
+    return `<td class="editTd impTd"><button type="button" class="editCell impTrigger" data-id="${esc(editRow._id)}"${cpEditorIdentityAttributes(editRow)} data-table="${esc(tableKey || 'cp')}" aria-haspopup="listbox" aria-expanded="false" title="${title}">${chipHtml(res.tag, res.source)}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
   }
 
   /* ---------------------------------------------------------- satır güncelleme */
@@ -195,16 +171,16 @@
     }
     return window.prompt(title, '');
   }
-  async function addTagAndAssign(row) {
+  async function addTagAndAssign(resolveRow) {
     const label = String(await askLabel(L('Yeni önem etiketi', 'New importance tag')) || '').trim();
-    if (!label) return;
+    if (!label||!resolveRow()) return;
     const existing = OI.idForLabel(settings, label);
-    if (existing) { await assign(row, existing); return; }
+    if (existing) { await assign(resolveRow(), existing); return; }
     const next = { ...settings, tags: [...settings.tags, { label, tone: OI.TONES[settings.tags.length % OI.TONES.length] }] };
     try {
       await saveSettings(next);
       const id = OI.idForLabel(settings, label);
-      if (id) await assign(row, id);
+      if (id) await assign(resolveRow(), id);
       toast(L(`"${label}" etiketi eklendi.`, `Tag "${label}" added.`));
     } catch (err) { toast(saveErrorText(err)); if (err && err.code === 'REVISION_CONFLICT') await reloadSettings(); }
   }
@@ -216,8 +192,9 @@
     menu = null; trigger = null;
   }
   function findRow(btn) {
-    const id = Number(btn.dataset.id);
-    return sourceRows(btn.dataset.table === 'orders' ? 'orders' : 'cp').find(row => row && row._id === id) || null;
+    if(isAreaFrozen('cp')||(btn.dataset.table==='orders'&&isAreaFrozen('orders')))return null;
+    const row=resolveCpEditorRow(btn);
+    return canEditImportance(row)?row:null;
   }
   function openMenu(btn) {
     if (trigger === btn) { closeMenu(); return; }
@@ -250,11 +227,13 @@
       const el = event.target.closest('[data-imp-value],[data-imp-action]');
       if (!el) return;
       closeMenu();
-      if (el.dataset.impAction === 'add') { void addTagAndAssign(row); return; }
+      if (el.dataset.impAction === 'add') { void addTagAndAssign(()=>findRow(btn)); return; }
       if (el.dataset.impAction === 'manage') { openSettings(); return; }
-      void assign(row, el.dataset.impValue || '');
+      void assign(findRow(btn), el.dataset.impValue || '');
     });
-    requestAnimationFrame(() => (menu && (menu.querySelector('[aria-selected="true"]') || menu.querySelector('.impOption')))?.focus());
+    const typed = btn._blEditKey?.toLocaleLowerCase();
+    const item = typed && [...menu.querySelectorAll('.impOption[data-imp-value]')].find(option=>option.textContent.trim().toLocaleLowerCase().startsWith(typed));
+    requestAnimationFrame(() => (menu && (item || menu.querySelector('[aria-selected="true"]') || menu.querySelector('.impOption')))?.focus());
   }
   document.addEventListener('click', event => {
     const btn = event.target.closest && event.target.closest('.impTrigger');
@@ -419,7 +398,7 @@
   function applyRemote(row, value) { if (row) applyToRow(row, value || undefined); }
 
   window.BLOrderImportanceUI = Object.freeze({
-    setSettings, getSettings, excelValues, plainText, cellHtml, refreshAccess, openSettings, reloadSettings, recomputeAllRows, applyRemote, pasteResolve, pasteAssign,
+    setSettings, getSettings, excelValues, plainText, cellHtml, openSettings, reloadSettings, recomputeAllRows, applyRemote, pasteResolve, pasteAssign,
     revision: () => revision,
   });
 })();

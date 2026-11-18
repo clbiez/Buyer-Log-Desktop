@@ -2079,7 +2079,7 @@
   }
   function choose(value){
     if(!trigger) return;
-    const editor={dataset:{...trigger.dataset,kind:'deltype'},value};
+    const editor={dataset:{...trigger.dataset,kind:'deltype',editOrigin:trigger.closest?.('#ordersTable')?'orders':'cp'},value};
     closeMenu();
     commitCpEditor(editor);
   }
@@ -2098,7 +2098,9 @@
     const maxH=Math.min(220,window.innerHeight-20);menu.style.maxHeight=maxH+'px';
     if(typeof window.positionBuyerLogPopup==='function')window.positionBuyerLogPopup(menu,btn,{gap:4});
     menu.querySelectorAll('.delTypeOption').forEach(opt=>opt.addEventListener('click',e=>{e.stopPropagation();choose(opt.dataset.value||'');}));
-    requestAnimationFrame(()=>menu.querySelector('[aria-selected="true"]')?.focus());
+    const typed=btn._blEditKey?.toLocaleLowerCase();
+    const item=typed&&[...menu.querySelectorAll('.delTypeOption')].find(option=>option.textContent.trim().toLocaleLowerCase().startsWith(typed));
+    requestAnimationFrame(()=>(menu&&(item||menu.querySelector('[aria-selected="true"]')))?.focus());
   }
   document.addEventListener('click',e=>{
     const btn=e.target.closest('.delTypeTrigger');

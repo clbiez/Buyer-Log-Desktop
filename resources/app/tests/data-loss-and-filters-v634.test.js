@@ -200,7 +200,7 @@ test('v6.34/v7.41 salt görüntüleme kipi ÇİZİLEN alanlarda düzenlemeyi kap
   // Kip bırakılırken de kapanmalı, yoksa yenileme sonrası ekran kilitli kalırdı.
   assert.match(APP, /window\.BL_REFRESH_BUSY='';\s*setReadOnlyMode\(false\)/);
   // İki düzenleme yolu da ALANINA göre erkenden dönmeli.
-  assert.match(bodyOf(APP, 'commitCpEditor'), /if\(isAreaFrozen\('cp'\)\) return false;/);
+  assert.match(bodyOf(APP, 'commitCpEditor'), /if\(isAreaFrozen\('cp'\)\|\|\(\(t\.dataset\.editOrigin==='orders'\|\|t\.closest\?\.\('#ordersTable'\)\)&&isAreaFrozen\('orders'\)\)\) return false;/);
   assert.match(bodyOf(APP, 'commitKolEditor'), /if\(isAreaFrozen\('koleksiyon'\)\)return false;/);
   // CP her yenilemede çizilir; bu yüzden hangi hedef seçilirse seçilsin donar.
   const map = APP.slice(APP.indexOf('const REFRESH_ALWAYS_REDRAWN'), APP.indexOf('function refreshFrozenAreas'));
