@@ -21,20 +21,22 @@
     tr:{title:'Fiyat & Üretici Analizi',subtitle:'Hangi üretici nerede avantajlı, kim pahalandı, kim yeni — tek bakışta.',source:'Veri',src_lfl:'LFL siparişleri',src_orders:'Siparişler',src_cp:'CP',src_collection:'Koleksiyon teklifleri',src_horizon:'Horizon',
       season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',selectAll:'Tümünü seç',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',filterSearch:'Filtrede ara…',filterStandard:'Standart alanlar',filterColumns:'Tablo sütunları',columnSearch:'Sütun ara…',noSourceData:'Bu kaynakta veri yok',noColumnMatch:'Eşleşen sütun yok.',productMainDefinition:'Ürün Ana Tanım',selected:'seçim',noFilterMatch:'Eşleşen değer yok.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Klasman',productGroup:'Ürün Grubu',country:'Ülke',manufacturer:'Üretici',
+      productDescription:'Ürün Tanımı',breakdown:'Kırılım',volumeFocus:'Hacim odağı',coverage:'Kapsama',coverageOf:'{0} kapsama',noVolume:'Güncel hacim yok',noBreakdown:'Kırılım bilgisi yok',
+      noCurrentPrice:'Güncel fiyat yok',noPreviousPrice:'Önceki dönem fiyatı yok',noMatchedPrice:'Ortak kırılımda fiyat yok',noPricePeers:'Fiyat kıyası için yeterli üretici yok',
       tab_overview:'Özet',tab_advantage:'Nerede avantajlı?',tab_scorecard:'Üretici karnesi',tab_movement:'Fiyat hareketi',tab_relations:'Kim kiminle?',
       hint_overview:'Seçili sezonun genel resmi ve sizin için öne çıkanlar.',
       hint_advantage:'Her satır bir grup. Noktalar üreticilerin ortalama fiyatı, çizgi grup ortalaması. Yeşil nokta en avantajlı üretici. Detay için satıra tıklayın.',
-      hint_scorecard:'Bir üreticiye tıklayın: hangi klasmanda ucuz/pahalı, kimlerle çalışıyor, fiyatı nasıl değişti.',
-      hint_movement:'Fiyat değişimi aynı klasmanlar içinde kıyaslanır; ürün karması farkı sonucu bozmaz.',
+      hint_scorecard:'Bir üreticiye tıklayarak seçili kırılımdaki fiyat konumunu, fiyat değişimini ve çalıştığı grupları görün.',
+      hint_movement:'Fiyat değişimi seçili kırılımın aynı grupları içinde hesaplanır.',
       hint_relations:'Her satırda o grubun en çok çalıştığı üreticiler ve payları. Bir parçaya tıklayınca siparişler açılır.',
       loading:'Veriler hazırlanıyor…',failed:'Analiz hazırlanamadı',noData:'Bu seçimde analiz edilecek kayıt yok.',noDataHint:'Başka bir veri kaynağı veya sezon seçmeyi deneyin.',
       volume:'Toplam hacim',units:'adet',records:'kayıt',avgPrice:'Ortalama fiyat',activeSuppliers:'Aktif üretici',countries:'Üretim ülkesi',
-      vsPrev:'kıyasa göre',sameCategories:'aynı klasmanlarda',newShort:'yeni',exitShort:'ayrılan',leader:'Lider',assistant:'Sizin için öne çıkanlar',show:'Göster',
+      vsPrev:'kıyasa göre',sameCategories:'aynı gruplarda',newShort:'yeni',exitShort:'ayrılan',leader:'Lider',assistant:'Sizin için öne çıkanlar',show:'Göster',
       topSuppliers:'En büyük üreticiler',countryMix:'Ülke dağılımı',current:'Bu sezon',previous:'Kıyas',other:'Diğer',unknown:'Belirtilmemiş',
       best:'En avantajlı',mostUsed:'En çok çalışılan',notComparable:'Kıyas için yeterli üretici yok',groupAvg:'Grup ortalaması',models:'model',lowSample:'az örnek',
       cheaper:'ucuz',pricier:'pahalı',onAverage:'Ortalama',priceLevel:'Fiyat seviyesi',priceChange:'Fiyat değişimi',share:'Pay',strongIn:'Güçlü olduğu',
       search:'Ara…',sortBy:'Sırala',sort_volume:'Hacim',sort_cheap:'En avantajlı',sort_rise:'En çok zamlanan',sort_name:'İsim',showAll:'Tümünü göster',showLess:'Daha az göster',
-      openOrders:'Siparişleri aç',byCategory:'Klasman bazında fiyat konumu',workWith:'En çok çalıştığı buying group’lar',madeIn:'Üretim ülkeleri',noStrength:'Belirgin bir fiyat avantajı yok.',
+      openOrders:'Siparişleri aç',byCategory:'Fiyat konumu ({0})',workWith:'En çok çalıştığı buying group’lar',madeIn:'Üretim ülkeleri',
       status_new:'Yeni',status_growing:'Büyüyor',status_declining:'Küçülüyor',status_stable:'Stabil',status_exit:'Ayrıldı',status_active:'',
       mode_price:'Fiyat değişimi',mode_volume:'Hacim değişimi',rising:'Fiyatı artanlar',falling:'Fiyatı düşenler',growing:'Hacmi artanlar',shrinking:'Hacmi azalanlar',
       market:'Piyasa geneli',newcomers:'Yeni üreticiler',leavers:'Bu sezon çalışılmayan üreticiler',none:'Kayıt yok.',needCompare:'Bu analiz için bir kıyas sezonu seçin.',
@@ -43,20 +45,22 @@
     en:{title:'Price & Supplier Analysis',subtitle:'Which supplier wins where, who got pricier, who is new — at a glance.',source:'Data',src_lfl:'LFL orders',src_orders:'Orders',src_cp:'CP',src_collection:'Collection quotes',src_horizon:'Horizon',
       season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',selectAll:'Select all',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',filterSearch:'Search filter…',filterStandard:'Standard fields',filterColumns:'Table columns',columnSearch:'Search columns…',noSourceData:'No data in this source',noColumnMatch:'No matching columns.',productMainDefinition:'Product Main Definition',selected:'selected',noFilterMatch:'No matching values.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Category',productGroup:'Product Group',country:'Country',manufacturer:'Supplier',
+      productDescription:'Product Description',breakdown:'Breakdown',volumeFocus:'Volume focus',coverage:'Coverage',coverageOf:'{0} coverage',noVolume:'No current volume',noBreakdown:'No breakdown data',
+      noCurrentPrice:'No current price',noPreviousPrice:'No comparison-period price',noMatchedPrice:'No prices in matching groups',noPricePeers:'Too few suppliers to compare prices',
       tab_overview:'Summary',tab_advantage:'Who wins where?',tab_scorecard:'Supplier scorecard',tab_movement:'Price movement',tab_relations:'Who works with whom?',
       hint_overview:'The big picture for the selected season and what stands out for you.',
       hint_advantage:'Each row is a group. Dots are supplier average prices, the line is the group average. The green dot is the best-value supplier. Click a row for details.',
-      hint_scorecard:'Click a supplier: where it is cheap or expensive, who it works with, how its prices moved.',
-      hint_movement:'Price change is compared within the same categories, so product-mix shifts do not distort it.',
+      hint_scorecard:'Click a supplier for its price position in the selected breakdown, price change and groups it works with.',
+      hint_movement:'Price change is calculated within matching groups in the selected breakdown.',
       hint_relations:'Each row shows the suppliers that group works with most and their shares. Click a segment to open the orders.',
       loading:'Preparing data…',failed:'Analysis could not be prepared',noData:'No records to analyse for this selection.',noDataHint:'Try another data source or season.',
       volume:'Total volume',units:'units',records:'records',avgPrice:'Average price',activeSuppliers:'Active suppliers',countries:'Production countries',
-      vsPrev:'vs comparison',sameCategories:'in the same categories',newShort:'new',exitShort:'left',leader:'Leader',assistant:'What stands out for you',show:'Show',
+      vsPrev:'vs comparison',sameCategories:'in the same groups',newShort:'new',exitShort:'left',leader:'Leader',assistant:'What stands out for you',show:'Show',
       topSuppliers:'Largest suppliers',countryMix:'Country mix',current:'This season',previous:'Comparison',other:'Other',unknown:'Unspecified',
       best:'Best value',mostUsed:'Most used',notComparable:'Not enough suppliers to compare',groupAvg:'Group average',models:'models',lowSample:'low sample',
       cheaper:'cheaper',pricier:'pricier',onAverage:'On average',priceLevel:'Price level',priceChange:'Price change',share:'Share',strongIn:'Strongest in',
       search:'Search…',sortBy:'Sort',sort_volume:'Volume',sort_cheap:'Best value',sort_rise:'Largest increase',sort_name:'Name',showAll:'Show all',showLess:'Show less',
-      openOrders:'Open orders',byCategory:'Price position by category',workWith:'Top buying groups',madeIn:'Production countries',noStrength:'No clear price advantage.',
+      openOrders:'Open orders',byCategory:'Price position ({0})',workWith:'Top buying groups',madeIn:'Production countries',
       status_new:'New',status_growing:'Growing',status_declining:'Shrinking',status_stable:'Stable',status_exit:'Left',status_active:'',
       mode_price:'Price change',mode_volume:'Volume change',rising:'Prices rising',falling:'Prices falling',growing:'Volume growing',shrinking:'Volume shrinking',
       market:'Market overall',newcomers:'New suppliers',leavers:'Suppliers not used this season',none:'No records.',needCompare:'Select a comparison season for this analysis.',
@@ -67,6 +71,7 @@
   let state=JSON.parse(JSON.stringify(BASE)),root=null,data=null,dataset=null,seasonList=[],model=null,loading=false,error='',requestSeq=0;
   const ui={search:'',selected:'',expanded:null,showAll:false,openFilter:'',filterSearch:{},configOpen:false,columnSearch:''};
   const analysisCache=window.BLAnalysisCache?.create?.(24)||new Map();
+  const scorecardCache=new WeakMap();
   try{
     const saved=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'{}');
     state={...state,...saved,filters:{...BASE.filters,...(saved.filters||{})},periods:{current:{...BASE.periods.current,...(saved.periods&&saved.periods.current||{})},previous:{...BASE.periods.previous,...(saved.periods&&saved.periods.previous||{})}}};
@@ -89,9 +94,9 @@
   const fmtOne=value=>Math.abs(Number(value)||0).toLocaleString(locale(),{maximumFractionDigits:1});
   const fmtShare=value=>isEn()?`${fmtOne(value)}%`:`%${fmtOne(value)}`;
   const fmtSigned=value=>value==null||!Number.isFinite(Number(value))?'—':`${Number(value)>0?'+':Number(value)<0?'−':''}${fmtShare(value)}`;
-  function fmtPrice(value){
+  function fmtPrice(value,code=model?.currency||'USD'){
     if(value==null||!Number.isFinite(Number(value)))return '—';
-    const code=model?.currency||'USD',symbol={USD:'$',TRY:'₺',EUR:'€',GBP:'£'}[code];
+    const symbol={USD:'$',TRY:'₺',EUR:'€',GBP:'£'}[code];
     const number=Number(value).toLocaleString(locale(),{minimumFractionDigits:2,maximumFractionDigits:2});
     return symbol?`${symbol}${number}`:`${number} ${code}`;
   }
@@ -102,6 +107,15 @@
   /* Kanonik boyutlar + kullanıcının eklediği ham sütun filtreleri. */
   function filterDims(){return [...new Set([...E.FILTER_DIMENSIONS,...state.filterLayout,...Object.keys(state.filters)])].filter(E.isFilterDim);}
   function dimLabel(dim){if(E.isColumnDim(dim))return E.columnName(dim);return TEXT[isEn()?'en':'tr'][dim]||window.BLCanonicalFields?.label?.(dim,isEn()?'en':'tr')||dim;}
+  const breakdownDimensions={groupBy:E.GROUP_DIMENSIONS,relationDim:E.RELATION_DIMENSIONS};
+  function normalizeBreakdowns(){
+    for(const [key,list] of Object.entries(breakdownDimensions)){
+      const dim=state[key],available=E.availableDimensions(dataset,list);
+      if(available.includes(dim)||(E.isColumnDim(dim)&&E.columnKeys(dataset).includes(E.columnName(dim))))continue;
+      const column=available.length?'':E.columnKeys(dataset)[0];
+      state[key]=available[0]||(column?E.COLUMN_PREFIX+column:BASE[key]);
+    }
+  }
   function monthLabel(value){const m=/^(\d{4})-(\d{2})$/.exec(String(value||''));if(!m)return String(value||'');const index=Number(m[2])-1;return index>=0&&index<12?`${MONTH_NAMES[isEn()?'en':'tr'][index]} ${m[1]}`:String(value||'');}
   function periodSeason(kind){return kind==='current'?(state.currentSeason===ALL_SEASONS?'':state.currentSeason):state.previousSeason;}
   function normalizePeriods(){
@@ -140,6 +154,7 @@
       if(state.previousSeason&&!seasonList.includes(state.previousSeason))state.previousSeason='';
       filterDims().forEach(dim=>{const available=new Map(E.dimensionValues(dataset,dim).map(value=>[E.keyOf(value),value]));state.filters[dim]=filterValues(dim).map(value=>available.get(E.keyOf(value))).filter(Boolean);});
       normalizePeriods();
+      normalizeBreakdowns();
       runAnalysis();
     }catch(err){if(seq!==requestSeq)return;error=err?.message||String(err);model=null;}
     finally{if(seq===requestSeq){loading=false;persist();render();}}
@@ -234,6 +249,7 @@
     const focused=document.activeElement;
     const focusedFilter=focused?.dataset?.psFilterSearch;
     const focusedColumns=focused?.dataset?.psColumnSearch!=null;
+    const focusedBreakdown=focused?.dataset?.ps;
     const head=`<div class="psaHead"><div class="psaTitle"><p>${esc(t('subtitle'))}</p></div>
       <div class="psaHeadActions"><label class="psaField psaSource"><span>${esc(t('source'))}</span><select data-ps="source">${sourceOptions()}</select></label>
       <button type="button" class="psaGhostBtn" data-ps="export"${model&&model.totals.records>0?'':' disabled'}>${icon('file-export')}<span>${esc(t('excel'))}</span></button></div></div>`;
@@ -253,20 +269,21 @@
     const columns=root.querySelector('.psaFilterConfigColumns');
     if(columns)columns.scrollTop=columnsTop;
     if(focusedColumns)root.querySelector('[data-ps-column-search]')?.focus({preventScroll:true});
+    if(Object.hasOwn(breakdownDimensions,focusedBreakdown))root.querySelector(`[data-ps="${focusedBreakdown}"]`)?.focus({preventScroll:true});
   }
   function renderList(){const target=root?.querySelector('[data-ps-list]');if(target)target.innerHTML=content();}
+  function breakdownSelect(key){
+    const standard=E.availableDimensions(dataset,breakdownDimensions[key]);
+    const columns=E.columnKeys(dataset).map(column=>E.COLUMN_PREFIX+column);
+    const option=dim=>`<option value="${esc(dim)}"${dim===state[key]?' selected':''}>${esc(dimLabel(dim))}</option>`;
+    const items=(dims,label)=>dims.length?`<optgroup label="${esc(t(label))}">${dims.map(option).join('')}</optgroup>`:'';
+    return `<label class="psaField psaInline"><span>${esc(t('breakdown'))}</span><select data-ps="${key}"${!standard.length&&!columns.length?' disabled':''}>${items(standard,'filterStandard')}${items(columns,'filterColumns')}</select></label>`;
+  }
   function tools(){
     const search=`<label class="psaSearch">${icon('search')}<input type="search" data-ps="search" placeholder="${esc(t('search'))}" value="${esc(ui.search)}"></label>`;
-    if(state.tab==='advantage'){
-      const dims=E.availableDimensions(dataset,E.GROUP_DIMENSIONS);
-      return `<div class="psaTools">${segmented('groupBy',dims.map(dim=>[dim,dimLabel(dim)]),state.groupBy)}${search}</div>`;
-    }
-    if(state.tab==='scorecard')return `<div class="psaTools">${search}<label class="psaField psaInline"><span>${esc(t('sortBy'))}</span><select data-ps="sort">${['volume','cheap','rise','name'].map(key=>`<option value="${key}"${state.sort===key?' selected':''}>${esc(t('sort_'+key))}</option>`).join('')}</select></label></div>`;
-    if(state.tab==='movement')return `<div class="psaTools">${segmented('movement',[['price',t('mode_price')],['volume',t('mode_volume')]],state.movement)}</div>`;
-    if(state.tab==='relations'){
-      const dims=E.availableDimensions(dataset,E.RELATION_DIMENSIONS);
-      return `<div class="psaTools">${segmented('relationDim',dims.map(dim=>[dim,dimLabel(dim)]),state.relationDim)}${search}</div>`;
-    }
+    if(state.tab==='advantage'||state.tab==='relations')return `<div class="psaTools">${breakdownSelect(state.tab==='advantage'?'groupBy':'relationDim')}${search}</div>`;
+    if(state.tab==='scorecard')return `<div class="psaTools">${breakdownSelect('groupBy')}${search}<label class="psaField psaInline"><span>${esc(t('sortBy'))}</span><select data-ps="sort">${['volume','cheap','rise','name'].map(key=>`<option value="${key}"${state.sort===key?' selected':''}>${esc(t('sort_'+key))}</option>`).join('')}</select></label></div>`;
+    if(state.tab==='movement')return `<div class="psaTools">${segmented('movement',[['price',t('mode_price')],['volume',t('mode_volume')]],state.movement)}${state.movement==='price'?breakdownSelect('groupBy'):''}</div>`;
     return '';
   }
   function segmented(key,items,value){return `<div class="psaSegmented" role="group" data-bl-choicebar>${items.map(([id,label])=>`<button type="button" data-ps-seg="${key}" data-value="${esc(id)}" aria-pressed="${id===value}">${esc(label)}</button>`).join('')}</div>`;}
@@ -312,10 +329,10 @@
 
   /* ---------- Nerede avantajlı? ---------- */
   function strip(group){
-    const points=group.suppliers.filter(s=>s.eligible);if(!points.length)return '<span class="psaStrip isEmpty"></span>';
+    const points=group.suppliers.filter(s=>s.price!=null);if(!points.length)return '<span class="psaStrip isEmpty"></span>';
     const prices=points.map(s=>s.price),min=Math.min(...prices,group.price||Infinity),max=Math.max(...prices,group.price||-Infinity),span=max-min;
     const at=value=>span>0?4+(value-min)/span*92:50;
-    return `<span class="psaStrip" aria-hidden="true"><span class="psaStripLine"></span>${group.price!=null?`<i class="psaStripAvg" style="left:${at(group.price).toFixed(1)}%" title="${esc(t('groupAvg'))} ${esc(fmtPrice(group.price))}"></i>`:''}${points.map(s=>`<i class="psaStripDot${group.best&&group.best.key===s.key?' isBest':''}${group.priciest&&group.priciest.key===s.key?' isHigh':''}" style="left:${at(s.price).toFixed(1)}%" title="${esc(s.name)} · ${esc(fmtPrice(s.price))}"></i>`).join('')}</span>`;
+    return `<span class="psaStrip" aria-hidden="true"><span class="psaStripLine"></span>${group.price!=null?`<i class="psaStripAvg" style="left:${at(group.price).toFixed(1)}%" title="${esc(t('groupAvg'))} ${esc(fmtPrice(group.price))}"></i>`:''}${points.map(s=>`<i class="psaStripDot${group.best?.key===s.key?' isBest':''}${group.priciest?.key===s.key?' isHigh':''}" style="left:${at(s.price).toFixed(1)}%" title="${esc(s.name)} · ${esc(fmtPrice(s.price))}${s.eligible?'':` · ${esc(t('lowSample'))}`}"></i>`).join('')}</span>`;
   }
   function advantageView(){
     const all=model.groups.filter(g=>searchMatch(g.name)||g.suppliers.some(s=>searchMatch(s.name))),shown=ui.showAll?all:all.slice(0,LIST_LIMIT);
@@ -348,8 +365,28 @@
   }
 
   /* ---------- Üretici karnesi ---------- */
+  function scorecardSuppliers(){
+    if(!scorecardCache.has(model))scorecardCache.set(model,E.scorecardSuppliers(dataset,model));
+    return scorecardCache.get(model);
+  }
+  function missingChange(m){return t(m.price==null?'noCurrentPrice':m.previousPrice==null?'noPreviousPrice':'noMatchedPrice');}
+  function scorecardChange(m){
+    if(m.priceChange==null)return `<small class="psaMuted">${esc(missingChange(m))}</small>`;
+    const coverage=esc(t('coverageOf').replace('{0}',fmtShare(m.priceChangeCoverage)));
+    return `${changeText(m.priceChange,{invert:true})}<small class="psaMuted">${coverage}</small>`;
+  }
+  function scorecardLevel(m){
+    const currency=m.price!=null?`<small class="psaMuted">${esc(m.priceCurrency)}</small>`:'';
+    if(m.priceLevel==null)return `<small class="psaMuted">${esc(t(m.price==null?'noCurrentPrice':'noPricePeers'))}</small>${currency}`;
+    return `${levelPill(m.priceLevel)}${currency}`;
+  }
+  function scorecardStrength(m){
+    if(m.strengths[0])return esc(m.strengths[0].name);
+    if(m.volumeFocus)return `${esc(m.volumeFocus.name)}<small class="psaMuted">${esc(t('volumeFocus'))}</small>`;
+    return `<small class="psaMuted">${esc(t(m.volume>0?'noBreakdown':'noVolume'))}</small>`;
+  }
   function sortedSuppliers(){
-    const list=model.manufacturers.filter(m=>(m.records>0||m.status==='exit')&&searchMatch(m.name));
+    const list=scorecardSuppliers().filter(m=>(m.records>0||m.status==='exit')&&searchMatch(m.name));
     if(state.sort==='cheap')return list.sort((a,b)=>(a.priceLevel??Infinity)-(b.priceLevel??Infinity));
     if(state.sort==='rise')return list.sort((a,b)=>(b.priceChange??-Infinity)-(a.priceChange??-Infinity));
     if(state.sort==='name')return list.sort((a,b)=>a.name.localeCompare(b.name,locale()));
@@ -362,9 +399,9 @@
     const table=`<div class="psaCard psaTableCard"><table class="psaTable"><thead><tr><th>${esc(t('manufacturer'))}</th><th class="num">${esc(t('volume'))}</th><th>${esc(t('priceLevel'))}</th>${model.hasComparison?`<th class="num">${esc(t('priceChange'))}</th>`:''}<th>${esc(t('strongIn'))}</th></tr></thead><tbody>${shown.map(m=>`<tr data-ps-select="${esc(m.key)}" class="${m.key===ui.selected?'isSelected':''}" tabindex="0">
       <td><b>${esc(m.name)}</b> ${statusBadge(m.status)}</td>
       <td class="num"><span class="psaCellBar"><span class="psaMiniTrack"><i style="width:${(m.volume/max*100).toFixed(1)}%"></i></span>${esc(fmtInt(m.volume))}</span><small class="psaMuted">${esc(fmtShare(m.share))}</small></td>
-      <td>${levelPill(m.priceLevel)}</td>${model.hasComparison?`<td class="num">${changeText(m.priceChangeCoverage>=30?m.priceChange:null,{invert:true})}</td>`:''}
-      <td>${m.strengths[0]?esc(m.strengths[0].name):'<span class="psaMuted">—</span>'}</td></tr>`).join('')}</tbody></table>${moreButton(all.length)}</div>`;
-    return `<div class="psaSplit">${table}${supplierDetail(model.manufacturers.find(m=>m.key===ui.selected))}</div>`;
+      <td>${scorecardLevel(m)}</td>${model.hasComparison?`<td class="num">${scorecardChange(m)}</td>`:''}
+      <td>${scorecardStrength(m)}</td></tr>`).join('')}</tbody></table>${moreButton(all.length)}</div>`;
+    return `<div class="psaSplit">${table}${supplierDetail(all.find(m=>m.key===ui.selected))}</div>`;
   }
   function supplierDetail(m){
     if(!m)return '';
@@ -373,12 +410,12 @@
     return `<div class="psaCard psaDetail"><div class="psaDetailHead"><div><h3>${esc(m.name)}</h3>${statusBadge(m.status)}</div><button type="button" class="psaGhostBtn" data-ps-drill="m:${dk(m.key)}">${icon('table')}${esc(t('openOrders'))}</button></div>
       <div class="psaMiniKpis">
         <div><small>${esc(t('volume'))}</small><b>${esc(fmtInt(m.volume))}</b>${model.hasComparison?changeText(m.volumeChange):''}</div>
-        <div><small>${esc(t('avgPrice'))}</small><b>${esc(fmtPrice(m.price))}</b></div>
-        <div><small>${esc(t('priceLevel'))}</small>${levelPill(m.priceLevel)}</div>
-        ${model.hasComparison?`<div><small>${esc(t('priceChange'))}</small><b>${changeText(m.priceChangeCoverage>=30?m.priceChange:null,{invert:true})}</b></div>`:''}
+        <div><small>${esc(t('avgPrice'))}</small><b>${esc(fmtPrice(m.price,m.priceCurrency))}</b></div>
+        <div><small>${esc(t('priceLevel'))}</small>${scorecardLevel(m)}</div>
+        ${model.hasComparison?`<div><small>${esc(t('priceChange'))}</small>${scorecardChange(m)}</div>`:''}
       </div>
-      <h4>${esc(t('byCategory'))}</h4>
-      ${groups.length?`<div class="psaRank isCompact">${groups.map(g=>`<button type="button" class="psaRankRow" data-ps-drill="mg:${dk(m.key)}:${dk(g.key)}" title="${esc(t('drillHint'))}"><span class="psaRankName">${esc(nameOf(g.name))}</span><span class="psaRankPrice">${esc(fmtPrice(g.price))}</span>${diverging(g.index,maxIndex,true)}<span class="psaMuted">${esc(fmtShare(g.groupShare))}</span></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('noStrength'))}</p>`}
+      <h4>${esc(t('byCategory').replace('{0}',dimLabel(model.groupBy)))}</h4>
+      ${groups.length?`<div class="psaRank isCompact">${groups.map(g=>`<button type="button" class="psaRankRow" data-ps-drill="mg:${dk(m.key)}:${dk(g.key)}" title="${esc(t('drillHint'))}"><span class="psaRankName">${esc(nameOf(g.name))}</span><span class="psaRankPrice">${esc(fmtPrice(g.price,m.priceCurrency))}</span>${diverging(g.index,maxIndex,true)}<span class="psaMuted">${esc(fmtShare(g.groupShare))}</span></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('none'))}</p>`}
       <h4>${esc(t('workWith'))}</h4>${chips(m.buyingGroups)}
       <h4>${esc(t('madeIn'))}</h4>${chips(m.countries)}
     </div>`;
@@ -443,7 +480,7 @@
         {[t('summary')]:t('volume'),[t('value')]:model.totals.volume},{[t('summary')]:`${t('avgPrice')} (${model.currency})`,[t('value')]:r(model.totals.price)},{[t('summary')]:t('activeSuppliers'),[t('value')]:model.totals.manufacturers},
         ...E.insights(model,isEn()?'en':'tr').map(item=>({[t('summary')]:t('assistant'),[t('value')]:item.text}))];
       X.utils.book_append_sheet(book,X.utils.json_to_sheet(summary),t('summary').slice(0,31));
-      const suppliers=model.manufacturers.map(m=>({[t('manufacturer')]:m.name,[t('status')]:t('status_'+m.status),[t('volume')]:m.volume,[t('prevVolume')]:m.previousVolume,[t('share')]:r(m.share),[`${t('avgPrice')} (${model.currency})`]:r(m.price),[`${t('priceLevel')} %`]:r(m.priceLevel),[`${t('priceChange')} %`]:m.priceChangeCoverage>=30?r(m.priceChange):null,[t('strongIn')]:m.strengths.map(s=>s.name).join(', ')}));
+      const suppliers=scorecardSuppliers().map(m=>({[t('manufacturer')]:m.name,[t('status')]:t('status_'+m.status),[t('volume')]:m.volume,[t('prevVolume')]:m.previousVolume,[t('share')]:r(m.share),[t('avgPrice')]:r(m.price),[t('currency')]:m.price!=null?m.priceCurrency:'',[`${t('priceLevel')} %`]:r(m.priceLevel),[`${t('priceChange')} %`]:r(m.priceChange),[`${t('coverage')} %`]:m.priceChange==null?null:r(m.priceChangeCoverage),[t('strongIn')]:m.strengths.map(s=>s.name).join(', '),[t('volumeFocus')]:m.volumeFocus?.name||''}));
       X.utils.book_append_sheet(book,X.utils.json_to_sheet(suppliers),t('sheetSuppliers').slice(0,31));
       const groups=model.groups.map(g=>({[dimLabel(model.groupBy)]:nameOf(g.name),[t('volume')]:g.volume,[`${t('groupAvg')} (${model.currency})`]:r(g.price),[t('best')]:g.best?.name||'',[`${t('best')} %`]:g.best?r(g.best.index):null,[t('mostUsed')]:g.leader?nameOf(g.leader.name):'',[`${t('mostUsed')} ${t('share')}`]:g.leader?r(g.leader.share):null}));
       X.utils.book_append_sheet(book,X.utils.json_to_sheet(groups),t('sheetAdvantage').slice(0,31));
@@ -475,6 +512,10 @@
       if(key==='currentDateField'||key==='previousDateField'){const kind=key.startsWith('current')?'current':'previous';state.periods[kind].dateField=target.value;state.periods[kind].month='';normalizePeriods();recalc();return;}
       if(key==='currentMonth'||key==='previousMonth'){const kind=key.startsWith('current')?'current':'previous';state.periods[kind].month=target.value;recalc();return;}
       if(key==='currency'){state.currency=target.value;recalc();return;}
+      if(Object.hasOwn(breakdownDimensions,key)){
+        state[key]=target.value;normalizeBreakdowns();ui.showAll=false;ui.expanded=null;
+        if(key==='groupBy')recalc();else{persist();render();}return;
+      }
       if(key==='sort'){state.sort=target.value;persist();renderList();}
     });
     root.addEventListener('input',event=>{
@@ -496,7 +537,7 @@
       }
       if(el.dataset.psTab){state.tab=el.dataset.psTab;ui.search='';ui.showAll=false;persist();render();return;}
       if(el.dataset.psGo){state.tab=el.dataset.psGo;ui.search='';ui.showAll=false;const focus=el.dataset.psFocus||'';if(state.tab==='advantage')ui.expanded=focus||null;else if(focus)ui.selected=focus;persist();render();return;}
-      if(el.dataset.psSeg){state[el.dataset.psSeg]=el.dataset.value;ui.showAll=false;ui.expanded=null;if(el.dataset.psSeg==='groupBy')recalc();else{persist();render();}return;}
+      if(el.dataset.psSeg==='movement'){state.movement=el.dataset.value;persist();render();return;}
       if(el.dataset.psExpand!=null){ui.expanded=ui.expanded===el.dataset.psExpand?null:el.dataset.psExpand;renderList();return;}
       if(el.dataset.psSelect!=null&&!event.target.closest('[data-ps-drill]')){ui.selected=el.dataset.psSelect;renderList();return;}
       if(el.dataset.psDrill){openDrill(el.dataset.psDrill);return;}

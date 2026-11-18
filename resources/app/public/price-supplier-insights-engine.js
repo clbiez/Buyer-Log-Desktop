@@ -14,15 +14,15 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(businessRules){
   'use strict';
 
-  const DIMENSIONS=['manufacturer','country','classification','productGroup','productMainDefinition','mag','mmyg','buyingGroup','buyer'];
-  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','productMainDefinition','country','manufacturer'];
+  const DIMENSIONS=['manufacturer','country','classification','productGroup','productDescription','productMainDefinition','mag','mmyg','buyingGroup','buyer'];
+  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','productDescription','productMainDefinition','country','manufacturer'];
   /* Kanonik boyutların dışında, kaynağın ham satırındaki HERHANGİ bir sütun
      "col:<başlık>" anahtarıyla filtre olarak kullanılabilir. Değerler ilk
      istekte tembel hesaplanır ve veri setinde önbelleklenir. */
   const COLUMN_PREFIX='col:';
   const PERIOD_FIELDS=Object.freeze({inStore:'inStoreMonth',opd:'opdMonth'});
-  const GROUP_DIMENSIONS=['classification','productGroup','mag','mmyg'];
-  const RELATION_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','country'];
+  const GROUP_DIMENSIONS=['classification','productDescription','productMainDefinition','productGroup','mag','mmyg','buyingGroup','buyer','country'];
+  const RELATION_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productDescription','productMainDefinition','productGroup','country'];
   const VOLUME_STATUS_BAND=10;
   const PRICE_SIGNAL=3;
 
@@ -97,6 +97,10 @@
     if(typeof value==='object')return '';
     return clean(value);
   }
+  function columnValue(rec,column){
+    const row=rawRow(rec.obs);
+    return row&&Object.hasOwn(row,column)?cellText(row[column]):'';
+  }
   /* Ham satırlarda en az bir dolu değeri olan sütun başlıkları ('_' ile
      başlayan iç alanlar hariç). */
   function columnKeys(dataset){
@@ -116,8 +120,8 @@
     let map=dataset.columnLabels.get(column);if(map)return map;
     map=new Map();
     for(const rec of dataset.records||[]){
-      const row=rawRow(rec.obs),label=row?cellText(row[column]):'',key=keyOf(label);
-      (rec.c||(rec.c={}))[column]=key;
+      const label=columnValue(rec,column),key=keyOf(label);
+      (rec.c||(rec.c=Object.create(null)))[column]=key;
       if(key&&!map.has(key))map.set(key,label);
     }
     dataset.columnLabels.set(column,map);
@@ -127,10 +131,11 @@
     if(!isColumnDim(dim))return rec.k[dim];
     const column=columnName(dim);
     if(rec.c&&rec.c[column]!==undefined)return rec.c[column];
-    const row=rawRow(rec.obs),key=keyOf(row?cellText(row[column]):'');
-    (rec.c||(rec.c={}))[column]=key;
+    const key=keyOf(columnValue(rec,column));
+    (rec.c||(rec.c=Object.create(null)))[column]=key;
     return key;
   }
+  function recordLabel(rec,dim){return isColumnDim(dim)?columnValue(rec,columnName(dim)):rec.l[dim];}
   function dimensionValues(dataset,dim){
     const map=isColumnDim(dim)?columnLabels(dataset,columnName(dim)):dataset.labels&&dataset.labels[dim];if(!map)return [];
     return [...map.values()].sort(businessRules.compareChronologicalValues);
@@ -178,14 +183,14 @@
   }
   function weightedMean(parts){let sum=0,weight=0;for(const part of parts){if(part.value==null||!(part.weight>0))continue;sum+=part.value*part.weight;weight+=part.weight;}return weight>0?{value:sum/weight,weight}:null;}
 
-  /* Ana analiz. groupBy, "klasman" kıyaslarının hangi kırılımda yapılacağını
-     belirler (Klasman, Ürün Grubu, MAG, MMYG). Fiyat değişimi ve fiyat seviyesi
+  /* Ana analiz. groupBy, fiyat kıyaslarının hangi kırılımda yapılacağını
+     belirler. Fiyat değişimi ve fiyat seviyesi
      her zaman bu kırılımın İÇİNDE hesaplanır: ürün karması farkı, üreticinin
      pahalı/ucuz görünmesine yol açmaz. */
   function analyze(dataset,options={}){
     const currency=(dataset.currencies||[]).includes(options.currency)?options.currency:(dataset.primaryCurrency||'USD');
     const minSample=Math.max(1,Math.round(Number(options.minSample)||2));
-    const groupBy=GROUP_DIMENSIONS.includes(options.groupBy)?options.groupBy:'classification';
+    const groupBy=GROUP_DIMENSIONS.includes(options.groupBy)||isColumnDim(options.groupBy)?options.groupBy:'classification';
     const currentSeason=text(options.currentSeason),previousSeasonValue=text(options.previousSeason);
     /* Kıyas yalnız belirli bir sezon seçiliyken anlamlıdır; "tüm sezonlar"
        seçiliyken kıyas sezonu güncel tarafa zaten dahildir. */
@@ -201,21 +206,21 @@
       if(!periodMatches(rec,side==='cur'?options.currentPeriod:options.previousPeriod))continue;
       (side==='cur'?current:previous).push(rec);
       add(totals[side],rec,currency);
-      const mKey=rec.k.manufacturer,gKey=rec.k[groupBy]||'';
+      const mKey=rec.k.manufacturer,gKey=recordKey(rec,groupBy)||'';
+      const g=groups.get(gKey)||ensure(groups,gKey,recordLabel(rec,groupBy),()=>({suppliers:new Map()}));
       if(mKey){
         const m=ensure(manufacturers,mKey,rec.l.manufacturer,()=>({groups:new Map(),countries:new Map(),buyingGroups:new Map()}));
         add(m[side],rec,currency);
-        add(ensure(m.groups,gKey,rec.l[groupBy])[side],rec,currency);
+        add(ensure(m.groups,gKey,g.name)[side],rec,currency);
         if(side==='cur'){add(ensure(m.countries,rec.k.country,rec.l.country).cur,rec,currency);add(ensure(m.buyingGroups,rec.k.buyingGroup,rec.l.buyingGroup).cur,rec,currency);}
       }
       if(rec.k.country)add(ensure(countries,rec.k.country,rec.l.country)[side],rec,currency);
-      const g=ensure(groups,gKey,rec.l[groupBy],()=>({suppliers:new Map()}));
       add(g[side],rec,currency);
       if(mKey)add(ensure(g.suppliers,mKey,rec.l.manufacturer)[side],rec,currency);
     }
     const curVolume=totals.cur.volume,prevVolume=totals.prev.volume;
 
-    /* Klasman bazında üretici konumu (güncel sezon). */
+    /* Seçili kırılımda üretici konumu (güncel sezon). */
     const groupList=[...groups.values()].filter(g=>g.cur.records>0).map(g=>{
       const groupAvg=avg(g.cur);
       const suppliers=[...g.suppliers.values()].filter(s=>s.cur.records>0).map(s=>{
@@ -223,27 +228,25 @@
         const price=avg(s.cur),models=s.cur.models.size,priced=s.cur.pricedModels.size;
         return {key:s.key,name:s.name,price,index:pct(price,groupAvg),volume:s.cur.volume,share:g.cur.volume>0?s.cur.volume/g.cur.volume*100:0,models,pricedModels:priced,eligible:price!=null&&priced>=minSample,items:s.cur.items};
       }).sort((a,b)=>b.volume-a.volume||a.name.localeCompare(b.name,'tr'));
-      const eligible=suppliers.filter(s=>s.eligible);
-      const ranked=eligible.slice().sort((a,b)=>a.price-b.price);
+      const ranked=suppliers.filter(s=>s.eligible).sort((a,b)=>a.price-b.price),comparable=!!g.key&&ranked.length>=2;
       return {key:g.key,name:g.name||'',volume:g.cur.volume,share:curVolume>0?g.cur.volume/curVolume*100:0,price:groupAvg,models:g.cur.models.size,suppliers,
-        best:ranked.length>=2?ranked[0]:null,priciest:ranked.length>=2?ranked[ranked.length-1]:null,leader:suppliers[0]||null,comparable:ranked.length>=2,
-        priceChange:hasComparison?pct(groupAvg,avg(g.prev)):null,items:g.cur.items};
+        best:comparable?ranked[0]:null,priciest:comparable?ranked[ranked.length-1]:null,leader:suppliers[0]||null,comparable,
+        priceChange:hasComparison&&g.key?pct(groupAvg,avg(g.prev)):null,items:g.cur.items};
     }).sort((a,b)=>b.volume-a.volume||a.name.localeCompare(b.name,'tr'));
     const groupIndex=new Map(groupList.map(g=>[g.key,g]));
 
-    /* Piyasa geneli like-for-like fiyat değişimi: her klasmanın kendi
-       ortalamasındaki değişim, güncel hacimle ağırlıklandırılır. */
-    const marketChange=hasComparison?weightedMean([...groups.values()].map(g=>({value:pct(avg(g.cur),avg(g.prev)),weight:g.cur.volume}))):null;
+    /* Her gruptaki piyasa fiyat değişimi güncel fiyatlı hacimle ağırlıklandırılır. */
+    const marketChange=hasComparison?weightedMean([...groups.values()].map(g=>({value:g.key?pct(avg(g.cur),avg(g.prev)):null,weight:g.cur.priceWeight}))):null;
 
     const manufacturerList=[...manufacturers.values()].map(m=>{
       const curPrice=avg(m.cur),groupRows=[...m.groups.values()].filter(row=>row.cur.records>0||row.prev.records>0).map(row=>{
         const g=groupIndex.get(row.key),price=avg(row.cur),models=row.cur.models.size,priced=row.cur.pricedModels.size;
         return {key:row.key,name:row.name||'',volume:row.cur.volume,previousVolume:row.prev.volume,records:row.cur.records,price,models,index:g&&g.comparable&&priced>=minSample?pct(price,g.price):null,
-          groupShare:g&&g.volume>0?row.cur.volume/g.volume*100:0,priceChange:hasComparison?pct(price,avg(row.prev)):null,items:row.cur.items};
+          groupShare:g&&g.volume>0?row.cur.volume/g.volume*100:0,priceChange:hasComparison&&row.key?pct(price,avg(row.prev)):null,items:row.cur.items};
       }).sort((a,b)=>b.volume-a.volume||a.name.localeCompare(b.name,'tr'));
       const level=weightedMean(groupRows.map(row=>({value:row.index,weight:row.volume})));
-      const change=hasComparison?weightedMean(groupRows.map(row=>({value:row.priceChange,weight:row.volume}))):null;
-      const strengths=groupRows.filter(row=>row.index!=null&&row.index<=-PRICE_SIGNAL).sort((a,b)=>a.index-b.index);
+      const change=hasComparison?weightedMean(groupRows.map(row=>({value:row.priceChange,weight:m.groups.get(row.key).cur.priceWeight}))):null;
+      const strengths=groupRows.filter(row=>row.key&&row.index!=null&&row.index<=-PRICE_SIGNAL).sort((a,b)=>a.index-b.index);
       const listOf=map=>[...map.values()].filter(row=>row.key&&row.cur.records>0).map(row=>({name:row.name,volume:row.cur.volume,share:m.cur.volume>0?row.cur.volume/m.cur.volume*100:0})).sort((a,b)=>b.volume-a.volume);
       return {key:m.key,name:m.name,volume:m.cur.volume,previousVolume:m.prev.volume,share:curVolume>0?m.cur.volume/curVolume*100:0,previousShare:prevVolume>0?m.prev.volume/prevVolume*100:0,
         volumeChange:m.prev.volume>0?(m.cur.volume-m.prev.volume)/m.prev.volume*100:null,price:curPrice,previousPrice:avg(m.prev),models:m.cur.models.size,
@@ -266,7 +269,42 @@
     };
   }
 
-  /* Fiyat hareketi: yalnız kıyas döneminde de aynı klasmanda fiyatı olan
+  /* Karnede seçili dövizde güncel fiyatı olmayan üreticiyi, güncel fiyatlı
+     hacminin en yüksek olduğu dövizde göster. Her kıyas kendi dövizinde kalır. */
+  function scorecardSuppliers(dataset,model){
+    const missing=new Set(model.manufacturers.filter(m=>m.records&&m.price==null).map(m=>m.key));
+    const weights=new Map();
+    if(missing.size&&model.currencies.length>1){
+      for(const rec of model.current){
+        if(!missing.has(rec.k.manufacturer)||!rec.price||!(rec.weight>0)||rec.currency===model.currency)continue;
+        if(!weights.has(rec.k.manufacturer))weights.set(rec.k.manufacturer,new Map());
+        const currencies=weights.get(rec.k.manufacturer);
+        currencies.set(rec.currency,(currencies.get(rec.currency)||0)+rec.weight);
+      }
+    }
+    const preferred=new Map([...weights].map(([key,currencies])=>[key,[...currencies].sort((a,b)=>b[1]-a[1])[0][0]]));
+    const alternate=new Map();
+    for(const currency of new Set(preferred.values())){
+      const priced=rec=>rec.currency===currency&&rec.price&&rec.weight>0;
+      const records=model.current.filter(priced).concat(model.previous.filter(priced));
+      const comparison=analyze({...dataset,records},{currency,groupBy:model.groupBy,minSample:model.minSample,currentSeason:model.currentSeason,previousSeason:model.previousSeason});
+      for(const m of comparison.manufacturers)if(preferred.get(m.key)===currency)alternate.set(m.key,m);
+    }
+    return model.manufacturers.map(m=>{
+      const volumeFocus=m.groups.find(row=>row.key&&row.records>0&&row.volume>0)||null;
+      const prices=alternate.get(m.key);
+      if(!prices)return {...m,priceCurrency:model.currency,volumeFocus};
+      const pricedGroups=new Map(prices.groups.map(row=>[row.key,row]));
+      const groups=m.groups.map(row=>{
+        const priced=pricedGroups.get(row.key);
+        return {...row,price:priced?.price??null,index:priced?.index??null,priceChange:priced?.priceChange??null};
+      });
+      return {...m,groups,volumeFocus,priceCurrency:preferred.get(m.key),price:prices.price,previousPrice:prices.previousPrice,
+        priceLevel:prices.priceLevel,priceChange:prices.priceChange,priceChangeCoverage:prices.priceChangeCoverage*prices.volume/m.volume,strengths:prices.strengths};
+    });
+  }
+
+  /* Fiyat hareketi: yalnız kıyas döneminde de aynı grupta fiyatı olan
      üreticiler. En az %30 hacim kapsaması aranır; aksi hâlde "değişim" birkaç
      modelin tesadüfi fiyatını yansıtır. */
   function priceMovers(model,limit=8){
@@ -284,10 +322,10 @@
 
   /* "Kim kiminle çalışıyor": seçilen kırılımın her değeri için üretici payları. */
   function relations(model,dimension='buyingGroup',top=3){
-    const dim=RELATION_DIMENSIONS.includes(dimension)?dimension:'buyingGroup',rows=new Map();
+    const dim=RELATION_DIMENSIONS.includes(dimension)||isColumnDim(dimension)?dimension:'buyingGroup',rows=new Map();
     for(const rec of model.current||[]){
-      const key=rec.k[dim];if(!key)continue;
-      let row=rows.get(key);if(!row){row={key,name:rec.l[dim],volume:0,suppliers:new Map(),items:[]};rows.set(key,row);}
+      const key=recordKey(rec,dim);if(!key)continue;
+      let row=rows.get(key);if(!row){row={key,name:recordLabel(rec,dim),volume:0,suppliers:new Map(),items:[]};rows.set(key,row);}
       row.volume+=rec.weight;row.items.push(rec.obs);
       const mKey=rec.k.manufacturer||'',name=rec.l.manufacturer||'';
       let supplier=row.suppliers.get(mKey);if(!supplier){supplier={key:mKey,name,volume:0,items:[]};row.suppliers.set(mKey,supplier);}
@@ -315,12 +353,12 @@
       text:en?`Best value in ${opportunity.name}: ${opportunity.best.name}, ${p(opportunity.best.index)}% below the average price.`:`${opportunity.name} için en avantajlı üretici ${opportunity.best.name}: ortalama fiyatın %${p(opportunity.best.index)} altında.`});
     const movers=priceMovers(model,1);
     if(movers.up[0]&&movers.up[0].priceChange>=PRICE_SIGNAL)out.push({tone:'bad',tab:'movement',icon:'arrows-down-up',focus:movers.up[0].key,
-      text:en?`Largest price increase: ${movers.up[0].name}, +${p(movers.up[0].priceChange)}% in the same categories.`:`Fiyatı en çok artan üretici ${movers.up[0].name}: aynı klasmanlarda +%${p(movers.up[0].priceChange)}.`});
+      text:en?`Largest price increase: ${movers.up[0].name}, +${p(movers.up[0].priceChange)}% in matching groups.`:`Fiyatı en çok artan üretici ${movers.up[0].name}: eşleşen gruplarda +%${p(movers.up[0].priceChange)}.`});
     if(movers.down[0]&&movers.down[0].priceChange<=-PRICE_SIGNAL)out.push({tone:'good',tab:'movement',icon:'arrows-down-up',focus:movers.down[0].key,
-      text:en?`Largest price decrease: ${movers.down[0].name}, −${p(movers.down[0].priceChange)}% in the same categories.`:`Fiyatı en çok düşen üretici ${movers.down[0].name}: aynı klasmanlarda −%${p(movers.down[0].priceChange)}.`});
+      text:en?`Largest price decrease: ${movers.down[0].name}, −${p(movers.down[0].priceChange)}% in matching groups.`:`Fiyatı en çok düşen üretici ${movers.down[0].name}: eşleşen gruplarda −%${p(movers.down[0].priceChange)}.`});
     const expensive=(model.manufacturers||[]).filter(m=>m.records>0).slice(0,5).filter(m=>m.priceLevel!=null&&m.priceLevel>=8).sort((a,b)=>b.priceLevel-a.priceLevel)[0];
     if(expensive)out.push({tone:'warn',tab:'scorecard',icon:'coins',focus:expensive.key,
-      text:en?`${expensive.name} is a major supplier but prices ${p(expensive.priceLevel)}% above category averages — room to negotiate.`:`${expensive.name} büyük bir üretici ama klasman ortalamalarının %${p(expensive.priceLevel)} üstünde fiyat veriyor — pazarlık fırsatı.`});
+      text:en?`${expensive.name} is a major supplier but prices ${p(expensive.priceLevel)}% above group averages — room to negotiate.`:`${expensive.name} büyük bir üretici ama grup ortalamalarının %${p(expensive.priceLevel)} üstünde fiyat veriyor — pazarlık fırsatı.`});
     const fresh=newcomers(model);
     if(fresh.length)out.push({tone:'info',tab:'movement',icon:'star',
       text:en?`${fresh.length} new supplier${fresh.length>1?'s':''} this season: ${fresh.slice(0,3).map(m=>m.name).join(', ')}${fresh.length>3?'…':''}.`:`Bu sezon ${fresh.length} yeni üretici var: ${fresh.slice(0,3).map(m=>m.name).join(', ')}${fresh.length>3?'…':''}.`});
@@ -342,10 +380,11 @@
     if(!fields)throw new Error('Canonical field registry is unavailable.');
     const read=id=>fields.value(row,moduleId,id),country=norm(read('country')),inStore=norm(read('inStore')),manufacturer=norm(read('manufacturer')),subManufacturer=norm(read('subManufacturer'));
     const plmId=norm(read('plmId')),orderCode=norm(read('orderCode')),colourCode=norm(read('colourCode')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
+    const productDescription=moduleId==='collection'?norm(read('productDescription')):productMainDefinition;
     const quantity=base.quantity!=null?base.quantity:toNum(read(moduleId==='collection'?'collectionQuantity':'orderQuantity'));
     return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,plmId,orderCode,orderKey:orderCode,colourCode,modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
       manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
-      productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
+      productGroup:norm(read('productGroup')),productDescription,productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
   }
   // ASAS order row priced by Final FOB or Supplier FOB; TRY for Turkey, USD otherwise.
   function orderPriceObservation(row,moduleId,chosen,index,fields){
@@ -353,5 +392,5 @@
     return canonicalObservation(row,moduleId,{rowId:row._id??index,price:Number.isFinite(price)&&price>0?price:null,currency:isTurkeyCountry(country)?'TRY':'USD'},fields);
   }
 
-  return {canonicalObservation,orderPriceObservation,DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
+  return {canonicalObservation,orderPriceObservation,DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,scorecardSuppliers,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
 });
