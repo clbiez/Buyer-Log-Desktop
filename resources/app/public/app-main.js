@@ -16134,8 +16134,8 @@ async function setAsasFabricMode(mode){
     asasFabricMode=saved.mode==='off'?'off':'separate';asasFabricRevision=Number(saved.revision)||0;
     renderAsasFabricControl();
     const msg=asasFabricMode==='off'
-      ?(appLang==='en'?'ASAS fabric details turned off. Fabric fields stay empty from the next Database refresh.':'ASAS kumaş bilgileri kapatıldı. Bir sonraki Database yenilemesinden itibaren kumaş alanları boş kalır.')
-      :(appLang==='en'?'ASAS fabric details turned on. Fabric is fetched with a separate query from the next Database refresh.':'ASAS kumaş bilgileri açıldı. Bir sonraki Database yenilemesinden itibaren kumaş ayrı sorguyla çekilir.');
+      ?(appLang==='en'?'ASAS fabric details turned off. Fabric fields stay empty from the next Database refresh.':'ASAS kumaş bilgileri kapatıldı. Bir sonraki Veritabanı yenilemesinden itibaren kumaş alanları boş kalır.')
+      :(appLang==='en'?'ASAS fabric details turned on. Fabric is fetched with a separate query from the next Database refresh.':'ASAS kumaş bilgileri açıldı. Bir sonraki Veritabanı yenilemesinden itibaren kumaş ayrı sorguyla çekilir.');
     showToast(msg);updSourceHint(msg);
   }catch(err){showToast(err.message||String(err));}
   finally{buttons.forEach(btn=>btn.disabled=false);}

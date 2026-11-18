@@ -630,7 +630,7 @@
       id: 'asasFabricControl', attr: 'data-asas-fabric-mode', fileId: 'asasFabricState',
       label: { tr: 'ASAS Kumaş Bilgileri', en: 'ASAS Fabric Details' },
       hint: {
-        tr: 'Açıkken kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir. Kapalıyken kumaş alanları boş kalır. Database yenilemesine uygulanır.',
+        tr: 'Açıkken kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir. Kapalıyken kumaş alanları boş kalır. Veritabanı yenilemesine uygulanır.',
         en: 'When on, fabric is fetched separately from the main ASAS query, main-fabric rows only. When off, fabric fields stay empty. Applies to Database refresh.',
       },
       modes: [['separate', { tr: 'Açık', en: 'On' }], ['off', { tr: 'Kapalı', en: 'Off' }]],

@@ -179,7 +179,7 @@ function fullLoader() {
   c.state.cpLogisticExpanded = new Set();
   const noop = () => {};
   for (const key of ['setServerStatus', 'updSourceHint', 'hideSourceFilterRequiredNotice',
-    'syncModelImageRegistry', 'renderAntrepoSourceControl', 'renderAsasSourceControl',
+    'syncModelImageRegistry', 'renderAntrepoSourceControl', 'renderAsasSourceControl', 'renderAsasFabricControl',
     'renderLflSourceControl', 'applyLicensorMerges', 'applyIncomingPricingRules',
     'saveLocalTransitRules', 'saveLocalNonDtrManufacturers', 'renderHorizonBadges',
     'setWarnings', 'buildCPFilters', 'refreshSubmfrList', 'refreshLicenseList',
