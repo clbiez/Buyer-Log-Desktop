@@ -34,8 +34,8 @@
       "module": {"tr": "Açılış", "en": "Startup"},
       "title": {"tr": "Program dosyaları daha hızlı doğrulanır", "en": "Program files are verified faster"},
       "body": {
-        "tr": "Açılışta program dosyaları birkaç kanaldan paralel okunur; her dosya yine SHA-256 ile denetlenir. Güncelleme uygulanırken yalnız yeni sürüm taranır; önceki sürüm geri dönüş gerekirse açılmadan önce doğrulanır. Açılış penceresi yavaş bilgisayarda da görünür kalır.",
-        "en": "At startup, program files are read in parallel and each file is still checked with SHA-256. When an update is applied, only the new version is scanned; the previous version is verified before it opens if a rollback is needed. The startup window stays visible on slow computers too."
+        "tr": "Açılışta program dosyaları birkaç kanaldan paralel okunur; her dosya yine SHA-256 ile denetlenir. Paket yalnız çalışma zamanı dosyalarını içerir; doğrulanan dosya sayısı yaklaşık dörtte bir azaldı. Güncelleme uygulanırken yalnız yeni sürüm taranır; önceki sürüm geri dönüş gerekirse açılmadan önce doğrulanır. Açılış penceresi yavaş bilgisayarda da görünür kalır.",
+        "en": "At startup, program files are read in parallel and each file is still checked with SHA-256. The package now holds only runtime files, so about a quarter fewer files are verified. When an update is applied, only the new version is scanned; the previous version is verified before it opens if a rollback is needed. The startup window stays visible on slow computers too."
       },
       "visual": {
         "kind": "screenshot",

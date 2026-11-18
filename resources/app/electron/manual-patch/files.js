@@ -53,7 +53,23 @@ function hashFile(relative,file,stat,buffer){
   return {path:relative,size,sha256:hash.digest('hex')};
  }finally{fs.closeSync(fd);}
 }
-function excluded(relative){return relative===RECEIPT||relative==='.release-pending.json'||/^(tests|dist-updates|dist-installer|\.desktop-dev|\.git)(\/|$)/.test(relative)||/^server\/data(\/|$)/.test(relative)||/^node_modules\/(\.bin|\.cache)(\/|$)/.test(relative);}
+/* Paket yalnız çalışma zamanı dosyalarını taşır. Her açılışta her dosya SHA-256
+ * ile okunduğu için çalışırken hiç kullanılmayan dosyalar soğuk diskte açılışı
+ * uzatıyordu. Paketleyici, imzalı yama üreticisi ve tarama bu listeyi paylaşır.
+ * Lisans/NOTICE dosyaları korunur. scripts/ altında yalnız uygulamanın çalıştırdığı
+ * taşıma betiği ve kullanıcıya verilen .cmd kurtarma araçları (ve çağırdıkları)
+ * kalır; geliştirme, ölçüm ve yayın betikleri pakete girmez. */
+const RUNTIME_SCRIPTS=new Set(['scripts/import-legacy-data.js','scripts/setup-release-signing.js']);
+const PACKAGE_DEV_FILE=/(^|\/)(?:[^/]+\.(?:md|markdown|map|ts|mts|cts)|(?:readme|changelog|history|authors|contributors?|contributing|security)(?:\.[a-z]+)?|tsconfig[^/]*\.json|bower\.json|\.(?:eslintrc[^/]*|eslintignore|npmignore|editorconfig|nycrc[^/]*|travis\.yml|prettierrc[^/]*|gitattributes|jshintrc|airtap\.yml|taprc))$/i;
+const PACKAGE_DEV_DIR=/^node_modules\/(?:@[^/]+\/)?[^/]+\/(?:.*\/)?(?:test|tests|__tests__|\.github)\//i;
+function devOnly(relative){
+ if(relative.startsWith('scripts/'))return !RUNTIME_SCRIPTS.has(relative)&&!/^scripts\/[^/]+\.cmd$/i.test(relative);
+ if(!relative.startsWith('node_modules/'))return false;
+ const name=relative.slice(relative.lastIndexOf('/')+1);
+ if(/^(?:licen[cs]e|notice|copying)(?:[.-][^/]*)?$/i.test(name))return false;
+ return PACKAGE_DEV_DIR.test(relative)||PACKAGE_DEV_FILE.test(name);
+}
+function excluded(relative){return relative===RECEIPT||relative==='.release-pending.json'||/^(tests|dist-updates|dist-installer|\.desktop-dev|\.git)(\/|$)/.test(relative)||/^server\/data(\/|$)/.test(relative)||/^node_modules\/(\.bin|\.cache)(\/|$)/.test(relative)||devOnly(relative);}
 function inventory(root,{exclude=excluded}={}){
  // The same buffer serves every file in a scan, including multi-megabyte assets.
  const out=[],buffer=Buffer.allocUnsafe(SCAN_BUFFER_BYTES);
