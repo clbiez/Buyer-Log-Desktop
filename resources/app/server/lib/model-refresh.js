@@ -853,7 +853,14 @@ function buildConnectionQuery(item, options = {}) {
     // Ufuk alanları (Sezon, MAG, MMYG, Buyer Grup…) çıktıya projekte edilmez ama
     // filtre koşulları onları Field Mapping'deki gerçek sütuna çözmelidir. Aksi
     // halde ASAS başlığı IAS tablosunda sütun adı sanılıp DAX'a yazılıyordu.
-    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, { grainTable, columnType: options.columnType, filterMapping: fullMapping });
+    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, {
+      grainTable, columnType: options.columnType, filterMapping: fullMapping,
+      // v20261118 — fact dışı alanlar varsayılan olarak RELATED ile okunur.
+      // Saha ölçümü (37.031 IAS satırı, 5 tur): sonuç birebir aynı, IAS sunucu
+      // süresi ~19,7 sn → ~5,3 sn. Model ilişkisi çoka-bir değilse SSAS
+      // RELATED'ı reddeder; queryConnectionRows bir kez eski ifadeye döner.
+      lookup: options.iasLookup === 'selectedvalue' ? 'selectedvalue' : 'related',
+    });
   } else {
     built = modelHorizon.buildMappedQuery(horizonWithExtra, mapping, { columnType: options.columnType });
   }
@@ -866,6 +873,16 @@ function buildConnectionQuery(item, options = {}) {
     horizonRepaired: Boolean(aligned.repaired),
     generated: true,
   };
+}
+
+/* SSAS'ın RELATED'ı reddetmesi: fact tablosundan bu tabloya çoka-bir ilişki
+   yok (çoka-çok, pasif ya da ters yönde). Gerçekten eksik bir sütun da aynı
+   metni üretebilir; bu yüzden eski ifadeyle yalnız BİR kez yeniden denenir ve
+   o denemenin hatası olağan Field Mapping onarım yoluna gider. */
+function isRelatedLookupError(error, query) {
+  if (!/\bRELATED\(/.test(String(query || ''))) return false;
+  const text = String(error && (error.publicMessage || error.message) || error || '');
+  return /have a relationship|relationship to any table|ilişki/i.test(text);
 }
 
 async function queryConnectionRows(item, options = {}) {
@@ -887,30 +904,43 @@ async function queryConnectionRows(item, options = {}) {
   if (telemetry) telemetry({ type:'end', category:'wait', connection:label, operation:'mapping-check', timestampMs:Date.now(), durationMs:mappingMs });
   const columnType = await resolveColumnTypes(item, options);
   const liveHorizonRepair = repairHorizonAgainstSchema(item, columnType && columnType.schema);
-  const built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType });
+  let built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: options.iasLookup });
   debugGeneratedDax(label, built.query, options);
   const runRows = options.runModelRows || modelQuery.runModelRows;
   const queryStartedMs = Date.now();
-  const queryPlan={
+  const lookupWarnings = [];
+  const planFor = current => ({
     connectionId:item.id, server:item.server, catalog:item.catalog, role:item.role,
-    query:built.query, requiredFields:built.headerMap||null,
+    query:current.query, requiredFields:current.headerMap||null,
     queryOptions:Object.fromEntries(Object.entries(options.queryOptions||{}).filter(([key])=>key!=='signal')),
-  };
-  const execute=()=>runRows({
+  });
+  const executeFor = current => () => runRows({
     server: item.server,
     catalog: item.catalog,
-    query: built.query,
-    headerMap: built.headerMap,
+    query: current.query,
+    headerMap: current.headerMap,
     // Uygulamanın ürettiği sorgular kullanıcı metni değildir; uzunluk sınırı ayrıdır.
-    generated: Boolean(built.generated),
+    generated: Boolean(current.generated),
     maxRows: 2000000,
     timeoutMs: options.timeoutMs || DEFAULT_REFRESH_TIMEOUT_MS,
   }, { ...(options.queryOptions || {}), signal:options.signal || (options.queryOptions && options.queryOptions.signal) });
+  const runBuilt = current => options.queryCoordinator
+    ? options.queryCoordinator.run(planFor(current), executeFor(current))
+    : executeFor(current)();
+  let queryPlan = planFor(built);
   let result;
   try {
-    result = options.queryCoordinator
-      ? await options.queryCoordinator.run(queryPlan, execute)
-      : await execute();
+    try {
+      result = await runBuilt(built);
+    } catch (error) {
+      if (!(built.generated && built.role === 'antrepo' && isRelatedLookupError(error, built.query))) throw error;
+      if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-related-fallback', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
+      built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: 'selectedvalue' });
+      debugGeneratedDax(label, built.query, options);
+      queryPlan = planFor(built);
+      lookupWarnings.push(`${label}: IAS modelinde ilişki çoka-bir olmadığı için RELATED okuma reddedildi; sorgu eski CALCULATE(SELECTEDVALUE(...)) ifadesiyle yeniden çalıştırıldı (veri aynı, sunucu süresi daha uzun). / ${label}: the IAS model rejected RELATED because the relationship is not many-to-one; the query was re-run with the previous CALCULATE(SELECTEDVALUE(...)) form (same data, longer server time).`);
+      result = await runBuilt(built);
+    }
   } catch (error) {
     if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-failed', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
     const repairAction = fieldMappingRepairFromError(item, error);
@@ -979,7 +1009,7 @@ async function queryConnectionRows(item, options = {}) {
     rows,
     query: built.query,
     queryFingerprint: options.queryCoordinator ? options.queryCoordinator.fingerprint(queryPlan) : '',
-    warnings: [...(repair.warnings || []), ...(liveHorizonRepair.warnings || []), ...(built.warnings || [])],
+    warnings: [...(repair.warnings || []), ...(liveHorizonRepair.warnings || []), ...(built.warnings || []), ...lookupWarnings],
     mappingRepaired: Boolean(repair.repaired || liveHorizonRepair.repaired || built.horizonRepaired),
     repairedHeaders: repair.repairedHeaders || [],
     summary: {
@@ -1501,7 +1531,7 @@ module.exports = {
   repairHorizonAgainstSchema,
   ensureConnectionMapping,
   alignHorizonWithMapping,
-  buildConnectionQuery, resolveColumnTypes,
+  buildConnectionQuery, resolveColumnTypes, isRelatedLookupError,
   antrepoProjectionMapping,
   antrepoGrainTable,
   normalizeAntrepoDatabaseRows,

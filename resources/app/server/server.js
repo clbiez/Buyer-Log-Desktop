@@ -375,7 +375,7 @@ const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
-const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery } = require('./lib/model-refresh');
+const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError } = require('./lib/model-refresh');
 const refreshErrorDiagnostics = require('./lib/refresh-error-diagnostics');
 const {
   POWER_BI_IMPORT_DASHBOARD_URL, PowerBiImportDashboardConnector,
@@ -11687,16 +11687,25 @@ async function integrationLabProbeTabularSource(req, source, storedItem, probe) 
     const descriptor = integrationLabScopeDescriptor(scope);
     try {
       const scoped = { ...storedItem, horizon: scope.horizon || {}, _scopeTargets: scope.targets || [] };
-      const built = buildConnectionQuery(scoped, { columnType, matchRule });
-      const result = await modelQuery.runModelRows({
+      let built = buildConnectionQuery(scoped, { columnType, matchRule });
+      const runLab = current => modelQuery.runModelRows({
         server: storedItem.server,
         catalog: storedItem.catalog,
-        query: built.query,
-        headerMap: built.headerMap,
-        generated: Boolean(built.generated),
+        query: current.query,
+        headerMap: current.headerMap,
+        generated: Boolean(current.generated),
         maxRows: 250,
         timeoutMs: 120000,
       });
+      let result;
+      // Yenilemeyle aynı kural: IAS ilişkisi çoka-bir değilse RELATED yerine
+      // eski ifadeyle bir kez yeniden denenir (model-refresh.isRelatedLookupError).
+      try { result = await runLab(built); }
+      catch (error) {
+        if (!(built.generated && built.role === 'antrepo' && isRelatedLookupError(error, built.query))) throw error;
+        built = buildConnectionQuery(scoped, { columnType, matchRule, iasLookup: 'selectedvalue' });
+        result = await runLab(built);
+      }
       const rows = Array.isArray(result.rows) ? result.rows : [];
       if (!sample.length && rows.length) sample = rows.slice(0, 5);
       sampledRows += rows.length;

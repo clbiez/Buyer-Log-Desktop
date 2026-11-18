@@ -634,6 +634,10 @@ function buildFactRowQuery(horizonInput, mapping, options = {}) {
     if (String(entry.table || '').toLocaleUpperCase('tr-TR') === grainTable.toLocaleUpperCase('tr-TR')) {
       return column;
     }
+    // RELATED: fact satırından çoka-bir ilişkiyle tek değeri doğrudan okur;
+    // satır başına CALCULATE gerektirmez. İlişki çoka-bir değilse SSAS hata
+    // verir (yanlış değer üretmez); çağıran eski ifadeyle yeniden dener.
+    if (options.lookup === 'related') return `RELATED(${column})`;
     // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
     // tabloya (ör. Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE BLANK döner.
     // Geçerli fact satırı tablo filtresi olarak verildiğinde genişletilmiş tablo
