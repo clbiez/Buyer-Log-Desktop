@@ -101,7 +101,7 @@ function launcherNoticeUrl(language){
   await np.evaluate(()=>{window.BLNotice.step('verify-new');window.BLNotice.step('backup');});
   const steps=await np.evaluate(()=>[...document.querySelectorAll('li')].map(li=>li.dataset.step+':'+li.dataset.state));
   console.log('notice',JSON.stringify(steps));
-  assert.deepEqual(steps,['verify-current:done','verify-new:done','backup:active','activate:pending','start:pending']);
+  assert.deepEqual(steps,['verify-new:done','backup:active','activate:pending','start:pending']);
   await np.screenshot({path:path.join(assets,'launcher-update-steps.png')});
   assert.deepEqual(errors.filter(e=>!/ResizeObserver/.test(e)),[],'no page errors');
   console.log('OK');

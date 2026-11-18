@@ -73,8 +73,8 @@ test('launcher bildirimi bekleyen güncellemede "Güncelleme uygulanıyor", kapa
   assert.doesNotMatch(html, /Buyer Log açılıyor…/);
   // Güncellemeden sonra yapılan launcher adımları sırasıyla görünür.
   const steps = [...html.matchAll(/<li data-step="([a-z-]+)"/g)].map(match => match[1]);
-  assert.deepEqual(steps, ['verify-current', 'verify-new', 'backup', 'activate', 'start']);
-  for (const text of ['Mevcut sürüm doğrulanıyor', 'Yeni sürüm doğrulanıyor', 'Verileriniz yedekleniyor', 'Yeni sürüm etkinleştiriliyor', 'Buyer Log başlatılıyor']) assert.ok(html.includes(text), text);
+  assert.deepEqual(steps, ['verify-new', 'backup', 'activate', 'start']);
+  for (const text of ['Yeni sürüm doğrulanıyor', 'Verileriniz yedekleniyor', 'Yeni sürüm etkinleştiriliyor', 'Buyer Log başlatılıyor']) assert.ok(html.includes(text), text);
   assert.match(html, /prefers-reduced-motion:reduce\)\{i::after\{animation:none/);
   assert.match(html, /script-src 'unsafe-inline'/);
   assert.doesNotMatch(html, /https?:\/\//, 'the notice loads nothing from outside');
@@ -83,7 +83,7 @@ test('launcher bildirimi bekleyen güncellemede "Güncelleme uygulanıyor", kapa
   const english = decodeURIComponent(englishNotices[0].url);
   assert.match(english, /Applying the update…/);
   assert.match(english, /Please do not close Buyer Log/);
-  for (const text of ['Verifying the current version', 'Verifying the new version', 'Backing up your data', 'Activating the new version', 'Starting Buyer Log']) assert.ok(english.includes(text), text);
+  for (const text of ['Verifying the new version', 'Backing up your data', 'Activating the new version', 'Starting Buyer Log']) assert.ok(english.includes(text), text);
 });
 
 test('launcher bildirimi onaylanmamış denemede geri alma metnini, normal açılışta açılış metnini kayıtlı/sistem dilinde gösterir', async () => {

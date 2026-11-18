@@ -77,18 +77,18 @@ const LAUNCH_NOTICE_TEXT={
     start:{title:'Buyer Log açılıyor…'},
     update:{title:'Güncelleme uygulanıyor…',detail:'Yeni sürüm dosyaları doğrulanıyor ve verinizin yedeği alınıyor. Lütfen kapatmayın.'},
     rollback:{title:'Önceki sürüme dönülüyor…',detail:'Yeni sürüm önceki açılışta tamamlanamadı; verileriniz korunarak geri alınıyor. Lütfen kapatmayın.'},
-    steps:{verify:'Program dosyaları doğrulanıyor','verify-current':'Mevcut sürüm doğrulanıyor','verify-new':'Yeni sürüm doğrulanıyor',
+    steps:{verify:'Program dosyaları doğrulanıyor','verify-new':'Yeni sürüm doğrulanıyor',
       backup:'Verileriniz yedekleniyor',activate:'Yeni sürüm etkinleştiriliyor',rollback:'Önceki sürüm ve veriler geri yükleniyor',start:'Buyer Log başlatılıyor'},
     elapsed:'Geçen süre {0}',slow:'Bu adım normalden uzun sürüyor. Buyer Log çalışıyor; lütfen kapatmayın.'},
   en:{
     start:{title:'Buyer Log is opening…'},
     update:{title:'Applying the update…',detail:'Verifying the new version and backing up your data. Please do not close Buyer Log.'},
     rollback:{title:'Returning to the previous version…',detail:'The new version did not finish starting last time; it is being rolled back with your data preserved. Please do not close Buyer Log.'},
-    steps:{verify:'Verifying program files','verify-current':'Verifying the current version','verify-new':'Verifying the new version',
+    steps:{verify:'Verifying program files','verify-new':'Verifying the new version',
       backup:'Backing up your data',activate:'Activating the new version',rollback:'Restoring the previous version and data',start:'Starting Buyer Log'},
     elapsed:'Elapsed {0}',slow:'This step is taking longer than usual. Buyer Log is working; please do not close it.'},
 };
-const LAUNCH_NOTICE_STEPS={start:['verify','start'],update:['verify-current','verify-new','backup','activate','start'],rollback:['rollback','verify','start']};
+const LAUNCH_NOTICE_STEPS={start:['verify','start'],update:['verify-new','backup','activate','start'],rollback:['rollback','verify','start']};
 function launchNoticeLanguage(){
   try{
     const file=path.join(desktopPaths(PORTABLE_ROOT).localDataRoot,'desktop-ui-language.json');
@@ -245,9 +245,11 @@ let activating=false;
 if(app.isPackaged){
   const pending=lifecycle.readState().pending;
   if(pending?.ready){
-    // Before a real activation, validate the rollback target as well.
-    await launchStep('verify-current');
-    await verifyCore(lifecycle.currentPointer());
+    /* Geri dönüş hedefi (mevcut çekirdek) burada taranmaz: geri alma açılışında
+     * seçilen çekirdek main.js yüklenmeden önce aynı SHA-256 doğrulamasından
+     * geçer (aşağıdaki 'verify' adımı). Ön tarama hiçbir kurtarma yolu açmıyor,
+     * yalnız bozuk bir mevcut çekirdekte sağlam yeni sürümün de açılmasını
+     * engelliyordu; soğuk diskte güncelleme açılışına 50-100 sn ekliyordu. */
     await launchStep('verify-new');
     if(pending.manualPatch)patchManager.verifyStaged(pending);
     else await verifyCore({appCoreRoot:pending.appCoreRoot,version:pending.version});
