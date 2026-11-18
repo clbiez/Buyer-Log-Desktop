@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "collection-price-drawer-direct-offer",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat Çekmecesinden doğrudan teklifleri silin",
+        "en": "Delete direct quotations from the Price Drawer"
+      },
+      "body": {
+        "tr": "Siparişten aktarılan veya doğrudan Koleksiyona kaydedilen bir teklifi çöp kutusuyla silebilirsiniz. Varsa üretici onayı da kaldırılır ve FOB yeniden hesaplanır. Fiyat açıklamasında FOB, Supp. FOB’un hemen üstünde yer alır. Royalty ve hologram maliyeti yalnızca uygulandığında gösterilir. Kaynak raporu, kural ve fiyat geçmişi kısayolları çekmeceden kaldırıldı.",
+        "en": "Use the trash button to delete a quotation copied from Orders or stored directly in Collection. Deleting it clears its manufacturer approval and recalculates FOB. The price explanation shows FOB directly above Supp. FOB and displays royalty and hologram cost when they apply. The source report, rule and pricing history shortcuts were removed from the drawer."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-drawer-direct-offer.png",
+        "alt": {
+          "tr": "Fiyat Çekmecesinde FOB, Supp. FOB, Royalty ve hologram maliyeti ile birlikte aktarılan teklifin silme düğmesi.",
+          "en": "The Price Drawer shows FOB, Supp. FOB, royalty, hologram cost and the delete button on the imported quotation."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle Koleksiyon Fiyat Çekmecesi.",
+          "en": "The Collection Price Drawer with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "report-image-size",
       "type": "improvement",
       "module": {
