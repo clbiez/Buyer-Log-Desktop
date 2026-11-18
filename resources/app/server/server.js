@@ -5989,6 +5989,7 @@ function intakeHorizonFields(fields) {
     const resolved = horizonFields.schemaFieldTypeInfo({ dataType: field.dataType, name: field.name });
     return {
       header: field.id, key: field.id, name: field.name, table: field.table, sourceUniqueName: field.sourceUniqueName,
+      ...(field.folder ? { folder: field.folder } : {}),
       dynamic: true, tr: field.defaultLabel || field.name, en: field.defaultLabel || field.name,
       type: resolved.type, typeSource: resolved.confidence,
     };

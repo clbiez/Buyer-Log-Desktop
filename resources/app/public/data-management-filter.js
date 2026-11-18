@@ -145,6 +145,26 @@
     return (fieldsCache.get(fieldsKey(sourceId)) || {}).fields || [];
   }
 
+  /* Alan seçicisi satırları. Database alanları Excel alan listesindeki gibi
+     Tablo → Klasör başlıkları altında gruplanır; görünüm aynı yüzen liste
+     olarak kalır. Başlık zaten tabloyu söylediği için satırda "Tablo · Sütun"
+     tekrarlanmaz. Mantıksal Buyer Log alanları kendi başlıklarında durur. */
+  function horizonFieldEntries(fields) {
+    const cmp = (a, b) => String(a).localeCompare(String(b), 'tr', { sensitivity: 'base', numeric: true });
+    return (Array.isArray(fields) ? fields : []).map(entry => {
+      const display = (en() ? entry.en : entry.tr) || entry.header;
+      if (!entry.dynamic) {
+        return { value: entry.header, label: display, hint: T('mantıksal alan', 'logical field'), group: [T('Buyer Log alanları', 'Buyer Log fields')] };
+      }
+      const table = String(entry.table || '').trim();
+      const name = String(entry.name || '').trim();
+      const generic = !display || display === entry.header || (table && display === `${table} · ${name}`);
+      const label = generic ? (name || display) : display;
+      const group = window.BLSchemaTree ? window.BLSchemaTree.entryPath(entry) : [table].filter(Boolean);
+      return { value: entry.header, label, hint: label === name ? '' : name, group };
+    }).sort((a, b) => cmp(a.label, b.label));
+  }
+
   function fieldMeta(condition, sourceId) {
     return fieldsFor(sourceId).find(entry => entry.header === condition.field) || null;
   }
@@ -1630,11 +1650,7 @@
       const all = fieldsFor(pair.sourceId);
       const physical = all.filter(entry => entry && entry.dynamic && entry.table && entry.name);
       const entries = [{ value: '__none__', label: T('— IAS\'ta uygulanmaz —', '— not applied in IAS —'), hint: T('bu koşul IAS filtresine eklenmez', 'this condition is not added to the IAS filter') }]
-        .concat((physical.length ? physical : all).map(entry => ({
-          value: entry.header,
-          label: (en() ? entry.en : entry.tr) || entry.header,
-          hint: entry.dynamic ? [entry.table, entry.name].filter(Boolean).join(' · ') : T('mantıksal alan', 'logical field'),
-        })));
+        .concat(horizonFieldEntries(physical.length ? physical : all));
       openPicker(pickPairField, entries, value => {
         if (value === '__none__') {
           pair.links.set(condition.id, { condition: null, origin: 'none', valuesEdited: false, manualPair: true, stale: false });
@@ -1795,13 +1811,7 @@
       const allFields = fieldsFor();
       const physicalFields = allFields.filter(entry => entry && entry.dynamic && entry.table && entry.name);
       const selectableFields = physicalFields.length ? physicalFields : allFields;
-      const entries = selectableFields.map(entry => ({
-        value: entry.header,
-        label: (en() ? entry.en : entry.tr) || entry.header,
-        hint: entry.dynamic
-          ? [entry.table, entry.name].filter(Boolean).join(' · ')
-          : T('mantıksal alan', 'logical field'),
-      }));
+      const entries = horizonFieldEntries(selectableFields);
       openPicker(pickField, entries, value => {
         const meta = fieldsFor().find(entry => entry.header === value);
         condition.field = value;

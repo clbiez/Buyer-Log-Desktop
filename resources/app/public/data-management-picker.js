@@ -37,10 +37,11 @@
    *   keepOpen      true ise seçimden sonra pencere açık kalır (çoklu seçim)
    *   selectedValues önceden seçili değerler; keepOpen ile tekrar seçimi engeller
    *   limit         listede gösterilecek azami satır (varsayılan 300)
+   * Öğe `group: ['Tablo', 'Klasör']` taşıyorsa liste hiyerarşik başlıklarla çizilir.
    */
   function open(anchor, items, onPick, options = {}) {
     close();
-    const list = Array.isArray(items) ? items : [];
+    const list = Array.isArray(items) ? items.slice() : [];
     const search = options.search !== false;
     const keepOpen = options.keepOpen === true;
     const selected = new Set((Array.isArray(options.selectedValues) ? options.selectedValues : [])
@@ -56,17 +57,45 @@
     document.body.appendChild(picker);
 
     const listEl = picker.querySelector('.dmfPickerList');
+    /* HİYERARŞİ (isteğe bağlı): öğe `group` dizisi taşıyorsa (ör. [tablo,
+       klasör]) liste o yola göre sıralanır ve yol değiştikçe başlık satırı
+       çizilir — Excel alan listesindeki Tablo → Klasör düzeni. Görünüm aynı
+       yüzen liste olarak kalır; başlıklar tıklanmaz, yalnız yön gösterir. */
+    const pathOf = entry => (Array.isArray(entry.group) ? entry.group.map(part => String(part || '').trim()).filter(Boolean) : []);
+    const grouped = list.some(entry => pathOf(entry).length);
+    if (grouped) {
+      const cmp = (a, b) => String(a).localeCompare(String(b), 'tr', { sensitivity: 'base', numeric: true });
+      list.sort((a, b) => {
+        const pa = pathOf(a), pb = pathOf(b);
+        for (let i = 0; i < Math.min(pa.length, pb.length); i += 1) { const c = cmp(pa[i], pb[i]); if (c) return c; }
+        // Aynı yol içinde çağıranın sırası korunur (sort kararlıdır).
+        return pa.length - pb.length;
+      });
+    }
+    const headersFor = (previous, path) => {
+      let same = 0;
+      while (same < path.length && same < previous.length && previous[same] === path[same]) same += 1;
+      return path.slice(same).map((part, offset) => {
+        const depth = same + offset;
+        return `<p class="dmfPickerGroup${depth ? '' : ' isTable'}" style="--tree-depth:${depth}" role="presentation" data-no-i18n title="${esc(path.slice(0, depth + 1).join(' › '))}">${esc(part)}</p>`;
+      }).join('');
+    };
     const draw = entries => {
       /* Uzun listeler KESİLİR ve bu SÖYLENİR. Sessizce ilk 300'ü göstermek,
          kullanıcının aradığı sütunu "yok" sanmasına yol açardı. */
       const shown = entries.slice(0, limit);
+      let previousPath = [];
       listEl.innerHTML = shown.length
         ? shown.map(entry => {
             const value = String(entry.value == null ? '' : entry.value);
             const isSelected = selected.has(value);
-            return `<button type="button" class="dmfPickerItem${isSelected ? ' isSelected' : ''}" data-value="${esc(value)}"
+            const path = grouped ? pathOf(entry) : [];
+            const headers = grouped ? headersFor(previousPath, path) : '';
+            previousPath = path;
+            const depthAttr = grouped ? ` data-tree-depth="${path.length}" style="--tree-depth:${path.length}"` : '';
+            return `${headers}<button type="button" class="dmfPickerItem${isSelected ? ' isSelected' : ''}" data-value="${esc(value)}"${depthAttr}
               aria-selected="${isSelected ? 'true' : 'false'}"${isSelected && keepOpen ? ' disabled' : ''}>
-              ${esc(entry.label)}${entry.hint ? `<span class="dmfPickerHint">${esc(entry.hint)}</span>` : ''}
+              ${grouped ? `<span data-no-i18n>${esc(entry.label)}</span>` : esc(entry.label)}${entry.hint ? `<span class="dmfPickerHint">${esc(entry.hint)}</span>` : ''}
             </button>`;
           }).join('')
           + (entries.length > shown.length
@@ -84,7 +113,8 @@
     if (field) {
       field.addEventListener('input', () => {
         const needle = field.value.trim().toLocaleLowerCase('tr');
-        draw(needle ? list.filter(entry => String(entry.label).toLocaleLowerCase('tr').includes(needle)) : list);
+        /* Gruplu listede tablo/klasör adıyla da aranır (Excel alan listesi gibi). */
+        draw(needle ? list.filter(entry => `${grouped ? pathOf(entry).join(' ') + ' ' + (entry.hint || '') + ' ' : ''}${entry.label}`.toLocaleLowerCase('tr').includes(needle)) : list);
       });
       if (options.allowFree) {
         field.addEventListener('keydown', event => {

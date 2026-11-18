@@ -96,6 +96,8 @@ function fromSchema(schema) {
     const resolved = schemaFieldTypeInfo(entry);
     out.push({
       header, key: header, name, table, dynamic: true,
+      // Seçicideki Tablo → Klasör hiyerarşisi için (Excel alan listesi düzeni).
+      ...(clean(entry.folder) ? { folder: clean(entry.folder) } : {}),
       tr: table ? `${table} · ${name}` : name,
       en: table ? `${table} · ${name}` : name,
       type: resolved.type,

@@ -291,6 +291,9 @@
 }
 .dmfPickerItem:disabled { opacity: 1; }
 .dmfPickerEmpty { margin: 0; padding: 9px; }
+.dmfPickerGroup { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmfPickerGroup.isTable { position: sticky; top: 0; }
+.dmfPickerList .dmfPickerItem[data-tree-depth] { padding-left: calc(9px + var(--tree-depth, 0) * 14px); }
 
 @media (max-width: 900px) {
   .dmfRow { grid-template-columns: 1fr; }

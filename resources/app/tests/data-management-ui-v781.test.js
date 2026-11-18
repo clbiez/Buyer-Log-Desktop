@@ -267,7 +267,7 @@ test('v7.81 alan listesi TÜM şema sütunlarını sunar', () => {
   assert.match(FILTER_UI, /fetch\(\`\/api\/horizon\/fields\?\$\{fieldParams\}\`/);
   assert.match(
     FILTER_UI,
-    /const pickField = event\.target\.closest\('\[data-pick-field\]'\);[\s\S]{0,1600}?const allFields = fieldsFor\(\);[\s\S]{0,600}?const physicalFields = allFields\.filter[\s\S]{0,600}?const selectableFields = physicalFields\.length \? physicalFields : allFields;[\s\S]{0,300}?selectableFields\.map/,
+    /const pickField = event\.target\.closest\('\[data-pick-field\]'\);[\s\S]{0,1600}?const allFields = fieldsFor\(\);[\s\S]{0,600}?const physicalFields = allFields\.filter[\s\S]{0,600}?const selectableFields = physicalFields\.length \? physicalFields : allFields;[\s\S]{0,300}?(?:selectableFields\.map|horizonFieldEntries\(selectableFields\))/,
     'alan seçici canlı şema varsa TÜM fiziksel database sütunlarını, yoksa tüm alanları sunmalı',
   );
 });
