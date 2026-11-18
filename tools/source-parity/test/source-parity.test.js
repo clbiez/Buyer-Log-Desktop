@@ -78,9 +78,16 @@ fs.writeFileSync(path.join(tmp, 'local', 'refresh-performance', 'history', '2026
 
 function fakeDb(mutate = {}) {
   const queries = [];
-  const runModelRows = async plan => {
+  const runModelRows = async (plan, options = {}) => {
     const q = plan.query;
     queries.push(q);
+    // Aktarım deneyi: BL'ın runner kancası gerçekten çağrılır (PowerShell yerine sahte).
+    if (options && typeof options.runner === 'function') {
+      const dir = fs.mkdtempSync(path.join(tmp, 'q-'));
+      const qf = path.join(dir, 'query.dax'), of = path.join(dir, 'result.csv');
+      fs.writeFileSync(qf, q);
+      await options.runner(['-QueryFile', qf, '-OutFile', of], 1000, {});
+    }
     let rows, key;
     if (q.includes(`'${FACT}'`)) { key = /RELATED\(/.test(q) ? 'ias-candidate' : 'ias-current'; rows = IAS.map(r => ({ ...r })); }
     else if (q.includes('[Ana Kumaş Mı]')) { key = 'asas-fabric'; rows = ORDERS.flatMap(o => [{ ...o, 'Ana Kumaş Mı': 1, 'Kumaşçı': 'MILL' }, { ...o, 'Ana Kumaş Mı': 0, 'Kumaşçı': 'ASTAR' }]); }
@@ -91,7 +98,18 @@ function fakeDb(mutate = {}) {
   return { runModelRows, queries };
 }
 
-async function run(args = [], { mutate, refreshFails, inspect } = {}) {
+function fakeExec(differ) {
+  return (cmd, argv, opts, cb) => {
+    const script = argv[argv.indexOf('-File') + 1];
+    const out = argv[argv.indexOf('-OutFile') + 1];
+    const query = fs.readFileSync(argv[argv.indexOf('-QueryFile') + 1], 'utf8');
+    fs.writeFileSync(out, `${query.length};satir\r\n${differ && /csharp/.test(script) ? 'X' : ''}`);
+    setImmediate(() => cb(null, '{"ok":true}', ''));
+    return { kill() {} };
+  };
+}
+
+async function run(args = [], { mutate, refreshFails, inspect, transferDiffers } = {}) {
   const db = fakeDb(mutate);
   const out = path.join(tmp, `rapor-${Math.random().toString(36).slice(2)}`);
   const logs = [];
@@ -99,7 +117,7 @@ async function run(args = [], { mutate, refreshFails, inspect } = {}) {
     skipEnvironment: true, log: t => logs.push(t),
     runModelRows: db.runModelRows, discoverSchema: async () => ({ columns: [], measures: [] }),
     refreshExcelFile: async () => { if (refreshFails) throw new Error('Excel COM yok'); return 'ok'; },
-    loadOptions: { columnType: false }, inspect,
+    loadOptions: { columnType: false }, inspect, transferExec: fakeExec(transferDiffers),
   });
   const read = name => fs.readFileSync(path.join(out, name), 'utf8');
   const summary = JSON.parse(read('ozet.json'));
@@ -175,7 +193,7 @@ test('Excel pivot yenilenemezse Excel karşılaştırması GEÇERSİZ (fail-clos
 });
 
 test('--tekrar turlarında mevcut/aday sırası dönüşümlü; medyan raporlanır', async () => {
-  const r = await run(['--tekrar', '2', '--excel', 'hayir']);
+  const r = await run(['--tekrar', '2', '--excel', 'hayir', '--aktarim', 'hayir']);
   const ias = r.queries.filter(q => q.includes(`'${FACT}'`)).map(q => /RELATED\(/.test(q) ? 'aday' : 'mevcut');
   assert.deepEqual(ias, ['mevcut', 'mevcut', 'aday', 'aday', 'mevcut']);
   assert.match(r.perf, /IAS aday \(RELATED\): .* koşu 2/);
@@ -300,4 +318,49 @@ test('kumaşlı sorgu bazı siparişleri düşürüyorsa yön ve olası neden ya
   assert.match(check.lines.join('\n'), /kumaşsız sorgu 1 siparişi FAZLA getiriyor/);
   assert.match(check.lines.join('\n'), /COUNTROWS\('Kumaş'\)/);
   assert.match(r.read('kumas-etkisi-cp.csv'), /YOK;var;W6;300/);
+});
+
+test('aktarım deneyi: BL ModelQuery.ps1 kopyası yamalanır, sonuç dosyaları bayt bayt karşılaştırılır', async () => {
+  const blScript = path.join(CORE, 'server', 'lib', 'ModelQuery.ps1');
+  const before = fs.readFileSync(blScript);
+  const r = await run(['--excel', 'hayir', '--kumas', 'dahil', '--aday', 'hayir', '--tekrar', '2']);
+  assert.equal(r.verdict('aktarim'), 'GEÇTİ', r.report);
+  const patched = fs.readFileSync(path.join(r.out, 'aktarim-deneyi', 'ModelQuery-csharp.ps1'), 'utf8');
+  assert.match(patched, /\[BLFastCsv\]::WriteBatch/);
+  assert.match(patched, /public static class BLFastCsv/);
+  assert.deepEqual(fs.readFileSync(blScript), before, 'BL dosyası değişmez');
+  assert.match(r.perf, /7\) AKTARIM DENEYİ/);
+  assert.match(r.perf, /Veri eşitliği \(sonuç dosyası SHA-256\): GEÇTİ/);
+  const events = r.read('olaylar.jsonl').trim().split('\n').map(JSON.parse);
+  const files = events.filter(e => e.type === 'transfer-file');
+  assert.ok(files.some(e => e.variant === 'baseline') && files.some(e => e.variant === 'csharp'));
+  // Sıra dönüşümlü: tur 1 PowerShell önce, tur 2 C# önce
+  const phases = events.filter(e => e.type === 'phase-start' && /^Aktarım/.test(e.run)).map(e => e.run.split(' · ')[0]);
+  assert.deepEqual(phases, ['Aktarım PowerShell (BL bugünkü)', 'Aktarım C# derlenmiş', 'Aktarım C# derlenmiş', 'Aktarım PowerShell (BL bugünkü)']);
+});
+
+test('aktarım deneyi: C# çıktısı bir bayt bile farklıysa BAŞARISIZ', async () => {
+  const r = await run(['--excel', 'hayir', '--kumas', 'dahil', '--aday', 'hayir'], { transferDiffers: true });
+  assert.equal(r.verdict('aktarim'), 'BAŞARISIZ', r.report);
+  assert.equal(r.code, 1);
+});
+
+test('aktarım deneyi: BL betiği beklenen yapıda değilse yarım yama çalıştırılmaz', () => {
+  const transfer = require(path.join(__dirname, '..', 'transfer-experiment.js'));
+  const real = fs.readFileSync(path.join(CORE, 'server', 'lib', 'ModelQuery.ps1'), 'utf8');
+  assert.equal(transfer.buildPatchedScript(real).ok, true);
+  const broken = transfer.buildPatchedScript(real.replace('Write-Row $columns $values $Format', 'Write-Row $values'));
+  assert.equal(broken.ok, false);
+  assert.ok(broken.problems.length > 0);
+  // CRLF kopya da yamalanabilir
+  assert.equal(transfer.buildPatchedScript(real.replace(/\n/g, '\r\n')).ok, true);
+});
+
+test('Database tarafında statüsü boş IAS satırları ham haliyle dışa aktarılır', async () => {
+  const addBlank = rows => [...rows, { 'İthalat Dosya No': '', 'Sipariş Kod': 1002, 'Model Adı': 'MODEL B', 'Renk Kod': '002', 'Supplier Portal Statü': '', 'Tahmini Antrepo Giriş Tarihi': '', 'Yükleme Toplam Adet': 40 }];
+  const r = await run(['--excel', 'hayir', '--kumas', 'dahil', '--aday', 'hayir', '--aktarim', 'hayir'], { mutate: { 'ias-current': addBlank } });
+  const text = r.read('ias-statusu-bos-db.csv');
+  assert.match(text, /^\uFEFFBL Siparişler\/Backlog siparişi;/);
+  assert.match(text, /\r\nEvet;;1002;MODEL B;002;;;40/);
+  assert.match(r.report, /IAS statüsü boş : Database ham sonucunda 1 satır/);
 });

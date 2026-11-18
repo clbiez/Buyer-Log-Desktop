@@ -83,3 +83,4 @@ Thumbs.db
 
 # Release build writes this integrity manifest only inside the artifact.
 /resources/app/electron/app-integrity.json
+tools/source-parity/out/

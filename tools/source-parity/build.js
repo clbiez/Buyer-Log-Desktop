@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DIR = __dirname;
-const FILES = ['compare.js', 'source-parity.js'];
+const FILES = ['compare.js', 'transfer-experiment.js', 'source-parity.js'];
 const MARKER = '//@@BLFILE ';
 
 const HEADER = String.raw`@echo off
@@ -24,7 +24,7 @@ rem  Bu dosyayi Buyer Log klasorune (BuyerLog.exe'nin yanina) koyup
 rem  cift tiklayin. Rapor: Kaynak-Dogrulama-Raporlari\<tarih>\
 rem
 rem  Menusuz kullanim:
-rem    BuyerLog-Kaynak-Dogrulama.cmd --kumas ikisi --aday evet --tekrar 3 --excel evet
+rem    BuyerLog-Kaynak-Dogrulama.cmd --kumas ikisi --aday evet --aktarim evet --tekrar 3 --excel evet
 rem ------------------------------------------------------------------
 
 set "ROOT=%~dp0"
@@ -64,6 +64,15 @@ if "%ARGS%"=="" (
   if /I "!A1!"=="H" set "ADAY=hayir"
   if /I "!A1!"=="N" set "ADAY=hayir"
   echo.
+  echo Aktarim deneyi: sonuc satirlarini yazan PowerShell dongusu ile derlenmis C# karsilastirilsin mi?
+  echo ^(BL dosyalarina dokunmaz; sonuclar bayt bayt karsilastirilir^)
+  set "T=E"
+  set /p "T=Evet/Hayir [E]: "
+  set "AKTARIM=evet"
+  set "T1=!T:~0,1!"
+  if /I "!T1!"=="H" set "AKTARIM=hayir"
+  if /I "!T1!"=="N" set "AKTARIM=hayir"
+  echo.
   echo Sure olcumu icin tekrar sayisi ^(1-5^). 3 onerilir; sure uzar.
   set "N=1"
   set /p "N=Tekrar [1]: "
@@ -75,7 +84,7 @@ if "%ARGS%"=="" (
   set "E1=!E:~0,1!"
   if /I "!E1!"=="H" set "EXCEL=hayir"
   if /I "!E1!"=="N" set "EXCEL=hayir"
-  set "ARGS=--kumas !KUMAS! --aday !ADAY! --tekrar !N! --excel !EXCEL!"
+  set "ARGS=--kumas !KUMAS! --aday !ADAY! --aktarim !AKTARIM! --tekrar !N! --excel !EXCEL!"
 )
 
 set "BL_WORK=%TEMP%\BuyerLog-Kaynak-Dogrulama-%RANDOM%%RANDOM%"

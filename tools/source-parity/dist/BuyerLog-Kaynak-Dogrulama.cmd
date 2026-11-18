@@ -11,7 +11,7 @@ rem  Bu dosyayi Buyer Log klasorune (BuyerLog.exe'nin yanina) koyup
 rem  cift tiklayin. Rapor: Kaynak-Dogrulama-Raporlari\<tarih>\
 rem
 rem  Menusuz kullanim:
-rem    BuyerLog-Kaynak-Dogrulama.cmd --kumas ikisi --aday evet --tekrar 3 --excel evet
+rem    BuyerLog-Kaynak-Dogrulama.cmd --kumas ikisi --aday evet --aktarim evet --tekrar 3 --excel evet
 rem ------------------------------------------------------------------
 
 set "ROOT=%~dp0"
@@ -51,6 +51,15 @@ if "%ARGS%"=="" (
   if /I "!A1!"=="H" set "ADAY=hayir"
   if /I "!A1!"=="N" set "ADAY=hayir"
   echo.
+  echo Aktarim deneyi: sonuc satirlarini yazan PowerShell dongusu ile derlenmis C# karsilastirilsin mi?
+  echo ^(BL dosyalarina dokunmaz; sonuclar bayt bayt karsilastirilir^)
+  set "T=E"
+  set /p "T=Evet/Hayir [E]: "
+  set "AKTARIM=evet"
+  set "T1=!T:~0,1!"
+  if /I "!T1!"=="H" set "AKTARIM=hayir"
+  if /I "!T1!"=="N" set "AKTARIM=hayir"
+  echo.
   echo Sure olcumu icin tekrar sayisi ^(1-5^). 3 onerilir; sure uzar.
   set "N=1"
   set /p "N=Tekrar [1]: "
@@ -62,7 +71,7 @@ if "%ARGS%"=="" (
   set "E1=!E:~0,1!"
   if /I "!E1!"=="H" set "EXCEL=hayir"
   if /I "!E1!"=="N" set "EXCEL=hayir"
-  set "ARGS=--kumas !KUMAS! --aday !ADAY! --tekrar !N! --excel !EXCEL!"
+  set "ARGS=--kumas !KUMAS! --aday !ADAY! --aktarim !AKTARIM! --tekrar !N! --excel !EXCEL!"
 )
 
 set "BL_WORK=%TEMP%\BuyerLog-Kaynak-Dogrulama-%RANDOM%%RANDOM%"
@@ -415,6 +424,181 @@ module.exports = {
   compareOrders, compareIas, matchSummary, compareMatches, compareRawRows,
   ordersFingerprint, iasFingerprint, iasEntries,
 };
+//@@BLFILE transfer-experiment.js
+'use strict';
+
+/*
+ * AKTARIM DENEYİ — PowerShell hücre döngüsü ⇄ derlenmiş C# döngüsü
+ *
+ * BL'ın ModelQuery.ps1 dosyasına DOKUNULMAZ. Etkin çekirdekteki dosyanın bir
+ * KOPYASI rapor klasörüne yazılır ve yalnız sonuç satırlarını CSV'ye dönüştüren
+ * sıcak döngü, aynı biçimlendirme kurallarını uygulayan derlenmiş C# koduyla
+ * değiştirilir. Sağlayıcı, bağlantı, sorgu, sütun adları, yazıcı ve özet aynen
+ * kalır.
+ *
+ * Doğruluk: Her iki yolun ürettiği sonuç dosyası SHA-256 ile karşılaştırılır
+ * (bayt bayt aynı olmalı). BL bu dosyayı okuduğu için aynı bayt = aynı veri.
+ *
+ * Çalıştırma, BL'ın kendi kancasıyla yapılır: modelQuery.runModelQuery
+ * options.runner kabul eder ve queryConnectionRows queryOptions'ı oraya iletir.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { execFile } = require('child_process');
+
+const CSHARP = String.raw`
+using System;
+using System.Data;
+using System.Globalization;
+using System.IO;
+using System.Text;
+
+public static class BLFastCsv
+{
+    static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    // ModelQuery.ps1 Write-Row (csv) ile birebir aynı kurallar.
+    public static void AppendCell(StringBuilder sb, object cell)
+    {
+        if (cell == null || cell is DBNull) return;
+        string text;
+        if (cell is string) text = (string)cell;
+        else if (cell is DateTime) { sb.Append(((DateTime)cell).ToString("yyyy-MM-dd")); return; }
+        else if (cell is double || cell is decimal || cell is float || cell is int || cell is long) { sb.Append(string.Format(Inv, "{0}", cell)); return; }
+        else text = Convert.ToString(cell, Inv);
+        if (text == null || text.Length == 0) return;
+        if (text.IndexOf('\n') >= 0 || text.IndexOf('\r') >= 0) text = text.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
+        if (text.IndexOf('"') >= 0 || text.IndexOf(';') >= 0) sb.Append('"').Append(text.Replace("\"", "\"\"")).Append('"');
+        else sb.Append(text);
+    }
+
+    // ADODB GetRows(...) dizisi: [alan, satır]. Yazılan satır sayısını döndürür.
+    public static int WriteBatch(TextWriter writer, object[,] batch, int rows, int fields, int remaining)
+    {
+        StringBuilder sb = new StringBuilder(16384);
+        int written = 0;
+        for (int r = 0; r < rows; r++)
+        {
+            if (written >= remaining) break;
+            sb.Length = 0;
+            for (int c = 0; c < fields; c++) { if (c > 0) sb.Append(';'); AppendCell(sb, batch[c, r]); }
+            writer.WriteLine(sb.ToString());
+            written++;
+        }
+        return written;
+    }
+
+    public static bool Truncated;
+
+    // ADOMD.NET okuyucusu (IDataReader).
+    public static int WriteReader(TextWriter writer, IDataReader reader, int fields, int remaining)
+    {
+        Truncated = false;
+        StringBuilder sb = new StringBuilder(16384);
+        object[] values = new object[fields];
+        int written = 0;
+        while (reader.Read())
+        {
+            if (written >= remaining) { Truncated = true; break; }
+            reader.GetValues(values);
+            sb.Length = 0;
+            for (int c = 0; c < fields; c++) { if (c > 0) sb.Append(';'); AppendCell(sb, values[c]); }
+            writer.WriteLine(sb.ToString());
+            written++;
+        }
+        return written;
+    }
+}
+`;
+
+const ADODB_LOOP = `          for ($r = 0; $r -lt $batchRows; $r++) {
+            if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
+            $values = New-Object object[] $fieldCount
+            for ($c = 0; $c -lt $fieldCount; $c++) { $values[$c] = $batch[$c, $r] }
+            Write-Row $columns $values $Format
+          }`;
+const ADODB_FAST = `          if ($Format -eq "csv" -and $PreviewRows -le 0) {
+            $remaining = $MaxRows - $script:rowsWritten
+            $written = [BLFastCsv]::WriteBatch($script:writer, $batch, $batchRows, $fieldCount, $remaining)
+            $script:rowsWritten += $written
+            if ($written -lt $batchRows) { $truncated = $true }
+          } else {
+${ADODB_LOOP.split('\n').map(line => `  ${line}`).join('\n')}
+          }`;
+const ADOMD_LOOP = `        while ($reader.Read()) {
+          if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
+          $values = New-Object object[] $fieldCount
+          [void]$reader.GetValues($values)
+          Write-Row $columns $values $Format
+        }`;
+const ADOMD_FAST = `        if ($Format -eq "csv" -and $PreviewRows -le 0) {
+          $script:rowsWritten += [BLFastCsv]::WriteReader($script:writer, $reader, $fieldCount, $MaxRows - $script:rowsWritten)
+          if ([BLFastCsv]::Truncated) { $truncated = $true }
+        } else {
+${ADOMD_LOOP.split('\n').map(line => `  ${line}`).join('\n')}
+        }`;
+const ANCHOR = '$ProgressPreference = "SilentlyContinue"';
+
+/* Etkin çekirdeğin ModelQuery.ps1 kopyasını yamalar. Beklenen yapı yoksa
+   (BL sürümü değişmişse) deney yapılmaz; yarım yama asla çalıştırılmaz. */
+function buildPatchedScript(original) {
+  const bom = original.charCodeAt(0) === 0xFEFF;
+  const text = (bom ? original.slice(1) : original).replace(/\r\n/g, '\n');
+  const problems = [];
+  for (const [label, needle] of [['ADODB döngüsü', ADODB_LOOP], ['ADOMD döngüsü', ADOMD_LOOP], ['başlangıç', ANCHOR]]) {
+    const count = text.split(needle).length - 1;
+    if (count !== 1) problems.push(`${label} ${count} kez bulundu (1 bekleniyordu)`);
+  }
+  if (problems.length) return { ok: false, problems };
+  const addType = `${ANCHOR}\n# --- Kaynak doğrulama aracı: aktarım deneyi (BL dosyası değil, kopya) ---\nAdd-Type -Language CSharp -ReferencedAssemblies System.Data -TypeDefinition @'\n${CSHARP.trim()}\n'@\n`;
+  const patched = text.replace(ANCHOR, addType).replace(ADODB_LOOP, ADODB_FAST).replace(ADOMD_LOOP, ADOMD_FAST);
+  return { ok: true, script: '﻿' + patched.replace(/\n/g, '\r\n') };
+}
+
+function sha256File(file) {
+  try { return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'); } catch (_) { return ''; }
+}
+
+/* modelQuery.runModelQuery ile aynı runner sözleşmesi:
+   (args, timeoutMs, {signal}) → {stdout, stderr, error}. Sonuç dosyası BL onu
+   okuyup silmeden önce özetlenir. */
+function createRunner(scriptPath, variant, record, deps = {}) {
+  const exec = deps.execFile || execFile;
+  return (args, timeoutMs, options = {}) => new Promise((resolve, reject) => {
+    const queryFile = args[args.indexOf('-QueryFile') + 1];
+    const outFile = args[args.indexOf('-OutFile') + 1];
+    let queryHash = '';
+    try { queryHash = crypto.createHash('sha256').update(fs.readFileSync(queryFile)).digest('hex').slice(0, 16); } catch (_) {}
+    const started = Date.now();
+    const child = exec('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args],
+      { timeout: timeoutMs, windowsHide: true, maxBuffer: 8 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        if (err && !stdout) return reject(Object.assign(err, { stderr: String(stderr || '') }));
+        let bytes = 0;
+        try { bytes = fs.statSync(outFile).size; } catch (_) {}
+        record({ variant, queryHash, sha256: sha256File(outFile), bytes, processMs: Date.now() - started });
+        resolve({ stdout: String(stdout || ''), stderr: String(stderr || ''), error: err || null });
+      });
+    if (options.signal) options.signal.addEventListener('abort', () => { try { child.kill(); } catch (_) {} }, { once: true });
+  });
+}
+
+/* Aynı turdaki temel ⇄ C# sonuç dosyalarını sorgu bazında eşleştirir. */
+function compareHashes(records) {
+  const byRound = new Map();
+  for (const r of records) {
+    const key = `${r.round}|${r.queryHash}`;
+    if (!byRound.has(key)) byRound.set(key, {});
+    byRound.get(key)[r.variant] = r;
+  }
+  const pairs = [...byRound.values()].filter(p => p.baseline && p.csharp);
+  const mismatches = pairs.filter(p => p.baseline.sha256 !== p.csharp.sha256 || !p.baseline.sha256);
+  return { pairs: pairs.length, mismatches };
+}
+
+module.exports = { CSHARP, buildPatchedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };
 //@@BLFILE source-parity.js
 'use strict';
 
@@ -450,8 +634,9 @@ module.exports = {
 const fs = require('fs');
 const path = require('path');
 const cmp = require('./compare.js');
+const transfer = require('./transfer-experiment.js');
 
-const TOOL_VERSION = '2026-11-18.3';
+const TOOL_VERSION = '2026-11-18.4';
 const MATCH_TARGETS = Object.freeze(['cp', 'orders', 'backlog']);
 const ALL_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 const TARGET_LABELS = { cp: 'CP', orders: 'Siparişler', backlog: 'Backlog', lfl: 'LFL', priceanalysis: 'Price & Supplier' };
@@ -477,7 +662,7 @@ function median(values) {
 function usageError(message) { const error = new Error(message); error.exitCode = 2; return error; }
 
 function parseArgs(argv) {
-  const args = { user: 'moderator', kumas: 'ikisi', aday: true, tekrar: 1, excel: true, root: '', core: '', cikti: '' };
+  const args = { user: 'moderator', kumas: 'ikisi', aday: true, aktarim: true, tekrar: 1, excel: true, root: '', core: '', cikti: '' };
   for (let i = 0; i < argv.length; i++) {
     const name = String(argv[i] || '').replace(/^--/, '').toLowerCase();
     const take = () => { i += 1; return String(argv[i] == null ? '' : argv[i]).trim(); };
@@ -487,6 +672,7 @@ function parseArgs(argv) {
     else if (name === 'user') args.user = take() || 'moderator';
     else if (name === 'kumas') args.kumas = take().toLowerCase();
     else if (name === 'aday') args.aday = !no(take());
+    else if (name === 'aktarim') args.aktarim = !no(take());
     else if (name === 'tekrar') args.tekrar = Number(take());
     else if (name === 'excel') args.excel = !no(take());
     else if (name === 'cikti') args.cikti = take();
@@ -673,7 +859,7 @@ function createTracer() {
 /* runModelRows / discoverSchema sarmalayıcıları: BL bunları options üzerinden
    kabul eder (model-refresh.js queryConnectionRows / ensureConnectionMapping);
    davranış aynen korunur, yalnız süre ve hacim kaydedilir. */
-function instrumentedQueryFns(bl, ctx, tracer, deps, captured) {
+function instrumentedQueryFns(bl, ctx, tracer, deps, captured, blankStatusRows = []) {
   const baseRun = deps.runModelRows || bl.modelQuery.runModelRows;
   const baseSchema = deps.discoverSchema || bl.modelQuery.discoverSchema;
   const roleOf = input => {
@@ -695,6 +881,16 @@ function instrumentedQueryFns(bl, ctx, tracer, deps, captured) {
         provider: String(result && result.provider || ''), queryChars: String(input.query || '').length,
       });
       captured.push({ run: tracer.state.run, role, query: String(input.query || '') });
+      // BL statüsü boş IAS satırlarını ayrıştırmadan ÖNCE atar; ham hali burada
+      // görülebilir. Yalnız BL ile birebir koşudan toplanır.
+      if (role === 'antrepo' && tracer.state.run.startsWith('BL yenilemesi') && result && Array.isArray(result.rows)) {
+        for (const row of result.rows) {
+          const status = row && row['Supplier Portal Statü'];
+          if (status == null || String(status).trim() === '') {
+            if (blankStatusRows.length < 100000) blankStatusRows.push({ ...row });
+          }
+        }
+      }
       return result;
     } catch (error) {
       tracer.add({ type: 'model-query-error', role, catalog: input.catalog, ms: Date.now() - started, error: String(error && error.message || error) });
@@ -844,11 +1040,13 @@ function heapMb() { return Math.round(process.memoryUsage().heapUsed / 1048576);
 async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   const captured = [];
   const probes = [];
+  const blankStatusRows = [];
   const cctx = { parseLib: bl.parse, rule: ctx.matchRule, canon: cmp.createCanon(bl.parse) };
-  const fns = instrumentedQueryFns(bl, ctx, tracer, deps, captured);
+  const fns = instrumentedQueryFns(bl, ctx, tracer, deps, captured, blankStatusRows);
   const load = bl.modelRefresh.loadFromModelConnections;
   const base = { matchRule: ctx.matchRule, runModelRows: fns.runModelRows, discoverSchema: fns.discoverSchema, telemetry: fns.telemetry, ...(deps.loadOptions || {}) };
-  const out = { captured, probes, full: null, ias: { current: [], candidate: [] }, asas: { fabric: [], noFabric: [] }, variantProblems: [] };
+  const out = { captured, probes, blankStatusRows, full: null, ias: { current: [], candidate: [] }, asas: { fabric: [], noFabric: [] },
+    transfer: { baseline: [], csharp: [], records: [], enabled: false }, variantProblems: [] };
   const time = (label, fn) => {
     const started = process.hrtime.bigint();
     const value = fn();
@@ -934,6 +1132,41 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
           stripRows(value);
           slimTargets(value, cctx);
         });
+      }
+    }
+  }
+
+  // 4) Aktarım deneyi: aynı yenileme, BL'ın PowerShell döngüsü ⇄ derlenmiş C#.
+  if (args.aktarim) {
+    const originalPath = path.join(deps.corePath || '', 'server', 'lib', 'ModelQuery.ps1');
+    let patched;
+    try { patched = transfer.buildPatchedScript(fs.readFileSync(originalPath, 'utf8')); }
+    catch (error) { patched = { ok: false, problems: [String(error.message || error)] }; }
+    if (!patched.ok) out.variantProblems.push({ id: 'aktarim', message: `BL ModelQuery.ps1 beklenen yapıda değil; deney yapılmadı: ${patched.problems.join('; ')}` });
+    else {
+      out.transfer.enabled = true;
+      const dir = path.join(deps.outDir || '.', 'aktarim-deneyi');
+      fs.mkdirSync(dir, { recursive: true });
+      const patchedPath = path.join(dir, 'ModelQuery-csharp.ps1');
+      fs.writeFileSync(patchedPath, patched.script, 'utf8');
+      let round = 0;
+      const record = r => { const item = { ...r, round, run: tracer.state.run }; out.transfer.records.push(item); tracer.add({ type: 'transfer-file', ...item }); };
+      const runners = {
+        baseline: transfer.createRunner(originalPath, 'baseline', record, { execFile: deps.transferExec }),
+        csharp: transfer.createRunner(patchedPath, 'csharp', record, { execFile: deps.transferExec }),
+      };
+      const rounds = Math.min(args.tekrar, 3);
+      for (round = 1; round <= rounds; round++) {
+        const order = round % 2 === 1 ? ['baseline', 'csharp'] : ['csharp', 'baseline'];
+        for (const variant of order) {
+          const label = `Aktarım ${variant === 'baseline' ? 'PowerShell (BL bugünkü)' : 'C# derlenmiş'} · tur ${round}/${rounds}`;
+          const step = await tracer.phase(label, log, () => load(ctx.items, {
+            ...matchBase, includeAsas: true, includeAntrepo: true, queryOptions: { runner: runners[variant] },
+          }));
+          step.value = undefined;
+          out.transfer[variant].push(step);
+          tracer.add({ type: 'heap', heapMb: heapMb() });
+        }
       }
     }
   }
@@ -1050,6 +1283,21 @@ function buildComparisons(bl, ctx, args, excel, db) {
       const unstable = new Set(prints).size > 1;
       if (unstable) lines.push('DİKKAT: Mevcut IAS sorgusu turlar arasında farklı veri döndürdü; model test sırasında güncelleniyor olabilir.');
       checks.push({ id: 'ias-aday', title: 'IAS mevcut ⇄ aday sorgu (RELATED)', verdict: verdictOf({ fail, warn: unstable }), lines });
+    }
+  }
+
+  // A2) Aktarım deneyi: sonuç dosyaları bayt bayt aynı mı?
+  if (args.aktarim) {
+    const problems = problemFor('aktarim');
+    const failed = [...db.transfer.baseline, ...db.transfer.csharp].filter(step => step && !step.ok);
+    if (problems.length) checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#)', verdict: 'GEÇERSİZ', lines: problems });
+    else if (failed.length) checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#)', verdict: 'HATA', lines: failed.map(step => `${step.run}: ${step.error}`) });
+    else {
+      const result = transfer.compareHashes(db.transfer.records);
+      const lines = [`Karşılaştırılan sonuç dosyası çifti: ${result.pairs} · bayt bayt farklı: ${result.mismatches.length}`];
+      for (const m of result.mismatches.slice(0, 10)) lines.push(`  tur ${m.baseline && m.baseline.round}: sorgu ${m.baseline && m.baseline.queryHash} · PowerShell ${m.baseline && m.baseline.bytes} bayt · C# ${m.csharp && m.csharp.bytes} bayt`);
+      if (result.mismatches.length) lines.push('C# çıktısı BL\'ınkiyle birebir değil; bu haliyle kullanılamaz (fark modelin canlı güncellenmesinden de kaynaklanabilir; tekrar edin).');
+      checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#) · sonuç dosyaları birebir', verdict: verdictOf({ invalid: result.pairs === 0, fail: result.mismatches.length > 0 }), lines });
     }
   }
 
@@ -1280,6 +1528,25 @@ function performanceReport(report, tracer, db, excel, probes) {
   const iasCheck = report.checks.find(c => c.id === 'ias-aday');
   if (iasCheck) line(`   Veri eşitliği: ${iasCheck.verdict}`);
   line('');
+  line('7) AKTARIM DENEYİ (sonuç satırlarını CSV\'ye yazan döngü: BL PowerShell ⇄ derlenmiş C#)');
+  line('-'.repeat(76));
+  if (!db.transfer || !db.transfer.enabled) line('   Yapılmadı.');
+  else {
+    const stat = variant => {
+      const steps = (db.transfer[variant] || []).filter(s => s && s.ok);
+      const per = role => median(steps.map(s => sumBy(runQueryEvents(tracer, s.run, role), 'writeMs')));
+      const exec = role => median(steps.map(s => sumBy(runQueryEvents(tracer, s.run, role), 'executeMs')));
+      return { n: steps.length, wall: median(steps.map(s => s.ms)), asasWrite: per('asas'), iasWrite: per('antrepo'), asasExec: exec('asas'), iasExec: exec('antrepo'), samples: steps.map(s => s.ms) };
+    };
+    const b = stat('baseline'), c = stat('csharp');
+    line(`   Uçtan uca (ASAS + IAS paralel): ${seconds(b.wall)} → ${seconds(c.wall)} · fark ${seconds(b.wall - c.wall)} (${pct(b.wall - c.wall, b.wall)}) · koşu ${b.n}/${c.n}`);
+    line(`   ASAS aktarım: ${seconds(b.asasWrite)} → ${seconds(c.asasWrite)} (${pct(b.asasWrite - c.asasWrite, b.asasWrite)}) · sunucu ${seconds(b.asasExec)} / ${seconds(c.asasExec)}`);
+    line(`   IAS aktarım : ${seconds(b.iasWrite)} → ${seconds(c.iasWrite)} (${pct(b.iasWrite - c.iasWrite, b.iasWrite)}) · sunucu ${seconds(b.iasExec)} / ${seconds(c.iasExec)}`);
+    line(`   Örnekler: PowerShell ${b.samples.map(seconds).join(', ')} · C# ${c.samples.map(seconds).join(', ')}`);
+    const check = report.checks.find(x => x.id === 'aktarim');
+    if (check) line(`   Veri eşitliği (sonuç dosyası SHA-256): ${check.verdict}`);
+  }
+  line('');
   line('Bu dosyayı (veri içeren CSV\'ler olmadan) Claude ile birlikte inceleyin; hangi kalemin süreyi taşıdığını gösterir.');
   return L.join('\r\n');
 }
@@ -1312,7 +1579,8 @@ function accuracyReport(report) {
   line(`Buyer Log        : ${report.blVersion} · çekirdek: ${report.coreSource}`);
   line(`Kullanıcı        : ${report.user}`);
   line(`Kaynak klasör    : ${report.sourceFolder || '(seçili değil)'}`);
-  line(`Seçenekler       : kumaş=${report.kumas} · aday=${report.aday ? 'evet' : 'hayır'} · tekrar=${report.tekrar}`);
+  line(`Seçenekler       : kumaş=${report.kumas} · aday=${report.aday ? 'evet' : 'hayır'} · aktarım=${report.aktarim ? 'evet' : 'hayır'} · tekrar=${report.tekrar}`);
+  if (report.blankStatusDb != null) line(`IAS statüsü boş : Database ham sonucunda ${report.blankStatusDb} satır (BL bu satırları atar) → ias-statusu-bos-db.csv`);
   line(`BL kaynak modları: ASAS=${report.sourceModes.asas}, Antrepo=${report.sourceModes.antrepo}, LFL=${report.sourceModes.lfl} (araç ASAS ve IAS'ı her durumda Database'den çeker)`);
   for (const c of report.connections) line(`Bağlantı         : ${c.role === 'antrepo' ? 'IAS ' : 'ASAS'} · ${c.name || c.id} · ${c.catalog}`);
   for (const s of report.horizons) line(`Kullanılan ufuk  : ${s.target} · ${s.connection} · ${s.text || '(sınırsız)'}`);
@@ -1391,11 +1659,21 @@ async function main(argv, deps = {}) {
   tracer.add({ type: 'context', blVersion: coreInfo.version, core: coreInfo.core, toolVersion: TOOL_VERSION, connections: ctx.connections.map(c => ({ role: c.role, catalog: c.catalog })) });
 
   const excel = args.excel ? await excelStep(bl, ctx, outDir, log, tracer, deps, coreInfo.core) : { enabled: false, problems: [] };
-  const db = await databaseSteps(bl, ctx, args, log, tracer, deps);
+  const db = await databaseSteps(bl, ctx, args, log, tracer, { ...deps, corePath: coreInfo.core, outDir });
   const probes = db.probes || [];
   if (typeof deps.inspect === 'function') deps.inspect({ db });
 
   const { checks, csv } = buildComparisons(bl, ctx, args, excel, db);
+  if (db.blankStatusRows.length) {
+    const cctx = { canon: cmp.createCanon(bl.parse) };
+    const orders = db.full && db.full.ok && db.full.value.asasOrdersByTarget && (db.full.value.asasOrdersByTarget.backlog || db.full.value.asasOrdersByTarget.cp) || [];
+    const lineKey = (o, a, b) => [o, a, b].map(v => cctx.canon(v)).join('|');
+    const orderLines = new Set(orders.map(o => lineKey(o.ocode, o.model, o.ccode)));
+    const headers = [...new Set(db.blankStatusRows.flatMap(row => Object.keys(row)))];
+    csv['ias-statusu-bos-db.csv'] = [['BL Siparişler/Backlog siparişi', ...headers], ...db.blankStatusRows.map(row => [
+      orderLines.has(lineKey(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod'])) ? 'Evet' : 'Hayır', ...headers.map(h => row[h]),
+    ])];
+  }
   if (db.full && !db.full.ok) checks.unshift({ id: 'bl-yenileme', title: 'BL Database yenilemesi', verdict: 'HATA', lines: [db.full.error] });
   const verdicts = checks.map(c => c.verdict);
   const overall = verdicts.includes('HATA') || verdicts.includes('GEÇERSİZ') ? 'TAMAMLANAMADI (ayrıntılara bakın)'
@@ -1404,7 +1682,8 @@ async function main(argv, deps = {}) {
   const localDataRoot = paths ? paths.localDataRoot : (bl.userData.LOCAL_DATA_ROOT || '');
   const report = {
     startedAt: startedAt.toISOString(), finishedAt: new Date().toISOString(), toolVersion: TOOL_VERSION,
-    blVersion: coreInfo.version, coreSource: coreInfo.source, user: args.user, kumas: args.kumas, aday: args.aday, tekrar: args.tekrar,
+    blVersion: coreInfo.version, coreSource: coreInfo.source, user: args.user, kumas: args.kumas, aday: args.aday, aktarim: args.aktarim, tekrar: args.tekrar,
+    blankStatusDb: db.full && db.full.ok ? db.blankStatusRows.length : null,
     sourceFolder: ctx.sourceFolder, sourceModes: ctx.sourceModes, connections: ctx.connections,
     horizons: db.full && db.full.ok ? (db.full.value.scopes || []).map(s => ({
       target: TARGET_LABELS[s.target] || s.target, connection: s.connection, rowCount: s.rowCount,
