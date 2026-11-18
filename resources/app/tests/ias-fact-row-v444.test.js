@@ -339,6 +339,7 @@ test('IAS Database teknik fact parçalarını Antrepo Excel iş granülünde bir
     inputRows: 6,
     outputRows: 2,
     blankStatusRows: 2,
+    loadingRequestRows: 0,
     collapsedRows: 2,
   });
 });

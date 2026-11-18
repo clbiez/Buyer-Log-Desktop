@@ -674,6 +674,17 @@ function antrepoGrainTable(mapping, fallbackTable = '', horizonTable = '') {
  */
 const ANTREPO_DATABASE_QTY_HEADER = 'Yükleme Toplam Adet';
 const ANTREPO_DATABASE_STATUS_HEADER = 'Supplier Portal Statü';
+const ANTREPO_DATABASE_FILE_HEADER = 'İthalat Dosya No';
+const ANTREPO_DATABASE_REQUEST_HEADER = 'Yükleme Talep Tarih';
+/* v20261118 — Statüsü boş AMA ithalat dosyası henüz oluşmamış ve yükleme
+   talebi açılmış satırlar Antrepo Excel'de "Dosyası Oluşmamıştır" diye ayrı
+   parsiyel olarak görünür (saha: 210 satır, hepsi Kamyon, HANDOVER yok).
+   Database bunları da atıyordu; adetleri yanlışlıkla "Üretimde" kalıyordu.
+   BL yeni statü metni üretmez: aşama mevcut "Yükleme Operasyonları"dır,
+   dosya etiketi Excel'in kendi etiketidir. Dosyası OLAN statüsüz satırlar
+   (saha: 7.547) Antrepo Excel'de yoktur ve atılmaya devam eder. */
+const ANTREPO_LOADING_REQUEST_STATUS = 'Yükleme Operasyonları'; // i18n-ignore
+const ANTREPO_NO_FILE_LABEL = 'Dosyası Oluşmamıştır'; // i18n-ignore
 
 function antrepoDatabaseIdentityValue(value) {
   if (value == null) return '';
@@ -700,9 +711,10 @@ function normalizeAntrepoDatabaseRows(rows) {
   const output = [];
   const byBusinessGrain = new Map();
   let blankStatusRows = 0;
+  let loadingRequestRows = 0;
   let retainedInputRows = 0;
 
-  for (const sourceRow of input) {
+  for (let sourceRow of input) {
     if (!sourceRow || typeof sourceRow !== 'object' || Array.isArray(sourceRow)) {
       // Sağlayıcı normalde yalnız nesne satırı döndürür. Beklenmeyen bir değer
       // varsa sessiz veri kaybı yaratmamak için olduğu gibi koru.
@@ -713,8 +725,18 @@ function normalizeAntrepoDatabaseRows(rows) {
     const status = String(sourceRow[ANTREPO_DATABASE_STATUS_HEADER] == null
       ? '' : sourceRow[ANTREPO_DATABASE_STATUS_HEADER]).trim();
     if (!status) {
-      blankStatusRows += 1;
-      continue;
+      const text = header => String(sourceRow[header] == null ? '' : sourceRow[header]).trim();
+      const loadingRequestWithoutFile = !text(ANTREPO_DATABASE_FILE_HEADER) && Boolean(text(ANTREPO_DATABASE_REQUEST_HEADER));
+      if (!loadingRequestWithoutFile) {
+        blankStatusRows += 1;
+        continue;
+      }
+      loadingRequestRows += 1;
+      sourceRow = {
+        ...sourceRow,
+        [ANTREPO_DATABASE_STATUS_HEADER]: ANTREPO_LOADING_REQUEST_STATUS,
+        [ANTREPO_DATABASE_FILE_HEADER]: ANTREPO_NO_FILE_LABEL,
+      };
     }
     retainedInputRows += 1;
 
@@ -751,6 +773,7 @@ function normalizeAntrepoDatabaseRows(rows) {
       inputRows: input.length,
       outputRows: output.length,
       blankStatusRows,
+      loadingRequestRows,
       collapsedRows: Math.max(0, retainedInputRows - byBusinessGrain.size),
     },
   };
@@ -1002,6 +1025,10 @@ async function queryConnectionRows(item, options = {}) {
   if (built.generated && built.role === 'antrepo') {
     databaseNormalization = normalizeAntrepoDatabaseRows(rows);
     rows = databaseNormalization.rows;
+    const kept = databaseNormalization.stats.loadingRequestRows;
+    if (kept) {
+      lookupWarnings.push(`${label}: Supplier Portal statüsü boş, ithalat dosyası oluşmamış ve yükleme talebi açılmış ${kept} IAS satırı Antrepo Excel'deki gibi "Yükleme Operasyonları · Dosyası Oluşmamıştır" parsiyeli olarak alındı. / ${label}: ${kept} IAS rows with a blank Supplier Portal status, no import file yet and an open loading request were included as "Loading Operations · no import file" partials, as in the Antrepo Excel.`);
+    }
   }
 
   return {
