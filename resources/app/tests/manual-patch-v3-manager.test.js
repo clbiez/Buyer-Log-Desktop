@@ -119,3 +119,12 @@ test('the launcher\'s parallel patch verification keeps the receipt, replay and 
  await assert.rejects(manager.verifyStagedAsync({...pending,sha256:'0'.repeat(64)}),{code:'PATCH_STAGED_INVALID'});
  await assert.rejects(manager.verifyInstalledAsync({...pending,version:'7.0.293'}),{code:'PATCH_REPLAY'});
 });
+test('a staged patch older than the accepted watermark is rejected as a replay on both verification paths',async t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const pending=manager.apply(p.manifest,p.archiveFile).pending,key='7.0.294:'+'a'.repeat(40);
+ const state=JSON.parse(fs.readFileSync(f.stateFile,'utf8'));
+ assert.equal(state.manualPatchWatermarks[key],1);
+ state.manualPatchWatermarks[key]=2;fs.writeFileSync(f.stateFile,JSON.stringify(state));
+ assert.throws(()=>manager.verifyStaged(pending),{code:'PATCH_REPLAY'});
+ await assert.rejects(manager.verifyStagedAsync(pending),{code:'PATCH_REPLAY'});
+});

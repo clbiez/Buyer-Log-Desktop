@@ -48,6 +48,8 @@ function createInstalledManager({bootstrapCore,trustRoot=bootstrapCore,portableR
   const core=managedCore(pending.appCoreRoot),receipt=F.readJsonStrict(F.regularFile(core,F.RECEIPT)),m=receipt.manifest;
   authenticate(m);
   if(pending.version!==m.baseVersion||pending.sha256!==m.artifact.sha256||pending.manualPatch?.sequence!==m.sequence||pending.manualPatch.manifestSha256!==manifestHash(m))mismatch('PATCH_STAGED_INVALID');
+  const state=readState(),key=m.baseVersion+':'+m.baseSourceCommit;
+  if(state?.manualPatchWatermarks?.[key]!==m.sequence)mismatch('PATCH_REPLAY');
   return {manifest:m,core};
  }
  function installedReceipt(selected){
